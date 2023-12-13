@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-
-#include <string>
-
-#include <json/json.h>
-#include "yaml-cpp/yaml.h"
+#include "plugin/interface/Processor.h"
 
 namespace logtail {
 
-bool ParseYamlTable(const std::string& config, YAML::Node& yamlRoot, std::string& errorMsg);
-Json::Value ConvertYamlToJson(const YAML::Node& rootNode);
-Json::Value ParseScalar(const YAML::Node& node);
+void Processor::Process(std::vector<PipelineEventGroup>& logGroupList) {
+    for (auto& logGroup : logGroupList) {
+        Process(logGroup);
+    }
+}
 
 } // namespace logtail

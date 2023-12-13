@@ -20,22 +20,22 @@
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
 #include "processor/CommonParserOptions.h"
+
 namespace logtail {
 
 class ProcessorParseApsaraNative : public Processor {
 public:
     static const std::string sName;
 
-    // Source field name.
-    std::string mSourceKey;
-    // The time zone to which the log time belongs. The format is GMT+HH:MM (Eastern Zone) or GMT-HH:MM (Western Zone).
-    std::string mTimezone = "";
-
-    CommonParserOptions mCommonParserOptions;
-
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
+
+    // Source field name.
+    std::string mSourceKey;
+    // The time zone to which the log time belongs. The format is GMT+HH:MM (Eastern Zone) or GMT-HH:MM (Western Zone).
+    std::string mTimezone;
+    CommonParserOptions mCommonParserOptions;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
@@ -47,9 +47,9 @@ private:
     time_t
     ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
     bool IsPrefixString(const char* all, const StringView& prefix);
-    int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
+    int32_t ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent);
 
-    int mLogTimeZoneOffsetSecond = 0;
+    int32_t mLogTimeZoneOffsetSecond = 0;
     bool mSourceKeyOverwritten = false;
 
     int* mLogGroupSize = nullptr;
@@ -60,6 +60,7 @@ private:
     CounterPtr mProcDiscardRecordsTotal;
     CounterPtr mProcParseErrorTotal;
     CounterPtr mProcHistoryFailureTotal;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
 #endif

@@ -30,18 +30,40 @@ bool CommonParserOptions::Init(const Json::Value& config, const PipelineContext&
 
     // KeepingSourceWhenParseFail
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mKeepingSourceWhenParseFail, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mKeepingSourceWhenParseFail,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // KeepingSourceWhenParseSucceed
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mKeepingSourceWhenParseSucceed,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // RenamedSourceKey
     if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
-        PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             pluginName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
     }
     if (mRenamedSourceKey.empty()) {
         // SourceKey is guranteed to exist in config
@@ -50,7 +72,15 @@ bool CommonParserOptions::Init(const Json::Value& config, const PipelineContext&
 
     // CopingRawLog
     if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mCopingRawLog, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mCopingRawLog,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     return true;

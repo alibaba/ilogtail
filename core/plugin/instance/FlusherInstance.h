@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "plugin/instance/PluginInstance.h"
 #include "plugin/interface/Flusher.h"

@@ -16,18 +16,18 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <unordered_map>
+#include <json/json.h>
 
-#include "json/json.h"
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "config/Config.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
-#include "plugin/instance/InputInstance.h"
 #include "plugin/instance/FlusherInstance.h"
+#include "plugin/instance/InputInstance.h"
 #include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
@@ -36,12 +36,12 @@ class Pipeline {
 public:
     bool Init(Config&& config);
     void Start();
-    void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
+    void Process(std::vector<PipelineEventGroup>& logGroupList);
     void Stop(bool isRemoving);
 
     const std::string& Name() const { return mName; }
     PipelineContext& GetContext() const { return mContext; }
-    const Json::Value& GetConfig() const { return mConfig; }
+    const Json::Value& GetConfig() const { return *mConfig; }
     const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }
     bool IsFlushingThroughGoPipeline() const { return !mGoPipelineWithoutInput.isNull(); }
     const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
@@ -66,8 +66,8 @@ private:
     Json::Value mGoPipelineWithoutInput;
     mutable PipelineContext mContext;
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
-    Json::Value mConfig;
-    
+    std::unique_ptr<Json::Value> mConfig;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;
     friend class PipelineUnittest;

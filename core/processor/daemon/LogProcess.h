@@ -114,7 +114,7 @@ private:
                           sls_logs::LogGroup& resultGroup) const;
 
     bool mInitialized;
-    int mLocalTimeZoneOffsetSecond;
+    // int mLocalTimeZoneOffsetSecond;
     ThreadPtr* mProcessThreads;
     int32_t mThreadCount;
     LogstoreFeedbackQueue<LogBuffer*> mLogFeedbackQueue;

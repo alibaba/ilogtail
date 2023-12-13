@@ -109,27 +109,26 @@ class ProcessorFilterNative : public Processor {
 public:
     static const std::string sName;
 
+    const std::string& Name() const override { return sName; }
+    bool Init(const Json::Value& config) override;
+    void Process(PipelineEventGroup& logGroup) override;
+
     // Log field whitelist. The relationship between multiple conditions is "and". Only when all conditions are met, the
     // log will be collected.
     std::unordered_map<std::string, std::string> mInclude;
     BaseFilterNodePtr mConditionExp = nullptr;
     bool mDiscardingNonUTF8 = false;
 
-    const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config) override;
-    void Process(PipelineEventGroup& logGroup) override;
-
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
     enum class Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE };
-    Mode mFilterMode = Mode::BYPASS_MODE;
+
     struct LogFilterRule {
         std::vector<std::string> FilterKeys;
         std::vector<boost::regex> FilterRegs;
     };
-    std::shared_ptr<LogFilterRule> mFilterRule;
 
     bool ProcessEvent(PipelineEventPtr& e);
 
@@ -144,8 +143,13 @@ private:
     bool CheckNoneUtf8(const StringView& strSrc);
     void FilterNoneUtf8(std::string& strSrc);
 
+    Mode mFilterMode = Mode::BYPASS_MODE;
+
+    std::shared_ptr<LogFilterRule> mFilterRule;
+
     CounterPtr mProcFilterErrorTotal;
     CounterPtr mProcFilterRecordsTotal;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorFilterNativeUnittest;
 #endif

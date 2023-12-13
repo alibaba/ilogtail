@@ -21,25 +21,55 @@ using namespace std;
 namespace logtail {
 bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
+
     // Mode
     string mode;
     if (!GetOptionalStringParam(config, "Multiline.Mode", mode, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, "custom", pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              "custom",
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     } else if (mode == "JSON") {
         mMode = Mode::JSON;
         mIsMultiline = true;
     } else if (!mode.empty() && mode != "custom") {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, "custom", pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              "string param Multiline.Mode is not valid",
+                              "custom",
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     if (mMode == Mode::CUSTOM) {
         // StartPattern
         string pattern;
         if (!GetOptionalStringParam(config, "Multiline.StartPattern", pattern, errorMsg)) {
-            PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+            PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                                 ctx.GetAlarm(),
+                                 errorMsg,
+                                 pluginName,
+                                 ctx.GetConfigName(),
+                                 ctx.GetProjectName(),
+                                 ctx.GetLogstoreName(),
+                                 ctx.GetRegion());
         } else if (!ParseRegex(pattern, mStartPatternRegPtr)) {
-            PARAM_WARNING_IGNORE(
-                ctx.GetLogger(), "Multiline.StartPattern is not a valid regex", pluginName, ctx.GetConfigName());
+            PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                                 ctx.GetAlarm(),
+                                 "string param Multiline.StartPattern is not a valid regex",
+                                 pluginName,
+                                 ctx.GetConfigName(),
+                                 ctx.GetProjectName(),
+                                 ctx.GetLogstoreName(),
+                                 ctx.GetRegion());
         } else {
             mStartPattern = pattern;
         }
@@ -47,10 +77,23 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
         // ContinuePattern
         pattern.clear();
         if (!GetOptionalStringParam(config, "Multiline.ContinuePattern", pattern, errorMsg)) {
-            PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+            PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                                 ctx.GetAlarm(),
+                                 errorMsg,
+                                 pluginName,
+                                 ctx.GetConfigName(),
+                                 ctx.GetProjectName(),
+                                 ctx.GetLogstoreName(),
+                                 ctx.GetRegion());
         } else if (!ParseRegex(pattern, mContinuePatternRegPtr)) {
-            PARAM_WARNING_IGNORE(
-                ctx.GetLogger(), "Multiline.ContinuePattern is not a valid regex", pluginName, ctx.GetConfigName());
+            PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                                 ctx.GetAlarm(),
+                                 "string param Multiline.ContinuePattern is not a valid regex",
+                                 pluginName,
+                                 ctx.GetConfigName(),
+                                 ctx.GetProjectName(),
+                                 ctx.GetLogstoreName(),
+                                 ctx.GetRegion());
         } else {
             mContinuePattern = pattern;
         }
@@ -58,10 +101,23 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
         // EndPattern
         pattern.clear();
         if (!GetOptionalStringParam(config, "Multiline.EndPattern", pattern, errorMsg)) {
-            PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+            PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                                 ctx.GetAlarm(),
+                                 errorMsg,
+                                 pluginName,
+                                 ctx.GetConfigName(),
+                                 ctx.GetProjectName(),
+                                 ctx.GetLogstoreName(),
+                                 ctx.GetRegion());
         } else if (!ParseRegex(pattern, mEndPatternRegPtr)) {
-            PARAM_WARNING_IGNORE(
-                ctx.GetLogger(), "Multiline.EndPattern is not a valid regex", pluginName, ctx.GetConfigName());
+            PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                                 ctx.GetAlarm(),
+                                 "string param Multiline.EndPattern is not a valid regex",
+                                 pluginName,
+                                 ctx.GetConfigName(),
+                                 ctx.GetProjectName(),
+                                 ctx.GetLogstoreName(),
+                                 ctx.GetRegion());
         } else {
             mEndPattern = pattern;
         }
@@ -72,9 +128,42 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
                         ("problem encountered in config parsing",
                          "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is not")(
                             "action", "ignore multiline config")("module", pluginName)("config", ctx.GetConfigName()));
+            ctx.GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
+                                     "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is "
+                                     "not: ignore multiline config, module: "
+                                         + pluginName + ", config: " + ctx.GetConfigName(),
+                                     ctx.GetProjectName(),
+                                     ctx.GetLogstoreName(),
+                                     ctx.GetRegion());
         } else if (mStartPatternRegPtr || mEndPatternRegPtr) {
             mIsMultiline = true;
         }
+    }
+
+    // UnmatchedContentTreatment
+    string treatment;
+    if (!GetOptionalStringParam(config, "Multiline.UnmatchedContentTreatment", treatment, errorMsg)) {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              "single_line",
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
+    } else if (treatment == "discard") {
+        mUnmatchedContentTreatment = UnmatchedContentTreatment::DISCARD;
+    } else if (!treatment.empty() && treatment != "single_line") {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              "string param Multiline.UnmatchedContentTreatment is not valid",
+                              "single_line",
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     return true;

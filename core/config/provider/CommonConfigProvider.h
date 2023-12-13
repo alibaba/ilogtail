@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <atomic>
+#include <condition_variable>
 #include <cstdint>
+#include <future>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "common/Thread.h"
 #include "config/provider/ConfigProvider.h"
 #include "config_server_pb/agent.pb.h"
 
@@ -73,8 +73,10 @@ private:
     int mConfigServerAddressId = 0;
     std::vector<std::string> mConfigServerTags;
 
-    JThread mCheckUpdateThread;
-    std::atomic_bool mThreadIsRunning = false;
+    std::future<void> mThreadRes;
+    mutable std::mutex mThreadRunningMux;
+    bool mIsThreadRunning = true;
+    mutable std::condition_variable mStopCV;
     std::unordered_map<std::string, int64_t> mConfigNameVersionMap;
     bool mConfigServerAvailable = false;
 };

@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include <thread>
-#include <memory>
-#include <utility>
-#include <functional>
+#include <boost/thread.hpp>
 
-#include "boost/thread.hpp"
+#include <functional>
+#include <memory>
+#include <thread>
+#include <utility>
 
 namespace logtail {
 

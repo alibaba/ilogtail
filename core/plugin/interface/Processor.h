@@ -16,8 +16,10 @@
 
 #pragma once
 
-#include "json/json.h"
+#include <json/json.h>
 
+#include "models/PipelineEventGroup.h"
+#include "models/PipelineEventPtr.h"
 #include "plugin/interface/Plugin.h"
 
 namespace logtail {
@@ -27,10 +29,11 @@ public:
     virtual ~Processor() {}
 
     virtual bool Init(const Json::Value& config) = 0;
-    virtual void Process(PipelineEventGroup& logGroup) = 0;
+    virtual void Process(std::vector<PipelineEventGroup>& logGroupList);
 
 protected:
     virtual bool IsSupportedEvent(const PipelineEventPtr& e) const = 0;
+    virtual void Process(PipelineEventGroup& logGroup) = 0;
 };
 
 } // namespace logtail

@@ -15,7 +15,7 @@
 #include <memory>
 #include <string>
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "common/JsonUtil.h"
 #include "file_server/MultilineOptions.h"
@@ -57,7 +57,8 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "Mode": "custom",
             "StartPattern": "\\d+:\\d+:\\d",
             "ContinuePattern": "aaa",
-            "EndPattern": "\\S+"
+            "EndPattern": "\\S+",
+            "UnmatchedContentTreatment": "single_line"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -67,6 +68,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("\\d+:\\d+:\\d", config->mStartPattern);
     APSARA_TEST_EQUAL("aaa", config->mContinuePattern);
     APSARA_TEST_EQUAL("\\S+", config->mEndPattern);
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
     APSARA_TEST_NOT_EQUAL(nullptr, config->GetStartPatternReg());
     APSARA_TEST_NOT_EQUAL(nullptr, config->GetContinuePatternReg());
     APSARA_TEST_NOT_EQUAL(nullptr, config->GetEndPatternReg());
@@ -78,7 +80,8 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "Mode": true,
             "StartPattern": true,
             "ContinuePattern": true,
-            "EndPattern": true
+            "EndPattern": true,
+            "UnmatchedContentTreatment": true
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -88,6 +91,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("", config->mStartPattern);
     APSARA_TEST_EQUAL("", config->mContinuePattern);
     APSARA_TEST_EQUAL("", config->mEndPattern);
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
     APSARA_TEST_EQUAL(nullptr, config->GetStartPatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetContinuePatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetEndPatternReg());
@@ -185,6 +189,27 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(nullptr, config->GetContinuePatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetEndPatternReg());
     APSARA_TEST_FALSE(config->IsMultiline());
+
+    // UnmatchedContentTreatment
+    configStr = R"(
+        {
+            "UnmatchedContentTreatment": "discard"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new MultilineOptions());
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::DISCARD, config->mUnmatchedContentTreatment);
+
+    configStr = R"(
+        {
+            "UnmatchedContentTreatment": "unknown"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new MultilineOptions());
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
 }
 
 UNIT_TEST_CASE(MultilineOptionsUnittest, OnSuccessfulInit)

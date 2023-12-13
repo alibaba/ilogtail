@@ -16,12 +16,12 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <string>
 #include <utility>
 
-#include "json/json.h"
 #include "boost/regex.hpp"
-
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -29,6 +29,7 @@ namespace logtail {
 class MultilineOptions {
 public:
     enum class Mode { CUSTOM, JSON };
+    enum class UnmatchedContentTreatment { DISCARD, SINGLE_LINE };
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
     const std::shared_ptr<boost::regex>& GetStartPatternReg() const { return mStartPatternRegPtr; }
@@ -40,6 +41,7 @@ public:
     std::string mStartPattern;
     std::string mContinuePattern;
     std::string mEndPattern;
+    UnmatchedContentTreatment mUnmatchedContentTreatment = UnmatchedContentTreatment::SINGLE_LINE;
 
 private:
     bool ParseRegex(const std::string& pattern, std::shared_ptr<boost::regex>& reg);

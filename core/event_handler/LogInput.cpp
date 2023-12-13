@@ -88,41 +88,20 @@ void LogInput::Start() {
 
     mInteruptFlag = false;
     new Thread([this]() { ProcessLoop(); });
-    LOG_INFO(sLogger, ("LogInput", "start"));
 }
 
-void LogInput::Resume(bool addCheckPointEventFlag) {
-    // Resume sequence: inotify -> LogProcess -> LogInput -> polling (PollingModify -> PollingDirFile)
-    ConfigManager::GetInstance()->RegisterHandlers();
-    if (addCheckPointEventFlag) {
-        EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
-    }
-    LOG_INFO(sLogger, ("LogInput Resume", "start"));
-    // LogProcess::GetInstance()->Resume();
+void LogInput::Resume() {
+    LOG_INFO(sLogger, ("event handle daemon resume", "starts"));
     mInteruptFlag = false;
     mAccessMainThreadRWL.unlock();
-    PollingModify::GetInstance()->Resume();
-    PollingDirFile::GetInstance()->Resume();
-    LOG_INFO(sLogger, ("LogInput Resume", "success"));
+    LOG_INFO(sLogger, ("event handle daemon resume", "succeeded"));
 }
 
 void LogInput::HoldOn() {
-    LOG_INFO(sLogger, ("LogInput HoldOn", "start"));
-    auto holdOnStart = GetCurrentTimeInMilliSeconds();
-
-    // Hold on sequence: polling (PollingDirFile -> PollingModify) -> LogInput -> LogProcess
-    PollingDirFile::GetInstance()->HoldOn();
-    PollingModify::GetInstance()->HoldOn();
+    LOG_INFO(sLogger, ("event handle daemon pause", "starts"));
     mInteruptFlag = true;
     mAccessMainThreadRWL.lock();
-    // LogProcess::GetInstance()->HoldOn();
-
-    auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
-    LOG_INFO(sLogger, ("LogInput HoldOn", "success")("cost", holdOnCost));
-    if (holdOnCost >= 60 * 1000) {
-        LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
-                                               "Input HoldOn is too slow: " + std::to_string(holdOnCost));
-    }
+    LOG_INFO(sLogger, ("event handle daemon pause", "succeeded"));
 }
 
 void LogInput::TryReadEvents(bool forceRead) {
@@ -179,7 +158,7 @@ void LogInput::FlowControl() {
     int32_t curTime = time(NULL);
     if (curTime - lastCheckTime >= 1) {
         lastCheckTime = curTime;
-        double cpuUsageLevel = LogtailMonitor::Instance()->GetRealtimeCpuLevel();
+        double cpuUsageLevel = LogtailMonitor::GetInstance()->GetRealtimeCpuLevel();
         if (cpuUsageLevel >= 1.5) {
             sleepCount += 5;
             if (sleepCount > MAX_SLEEP_COUNT)
@@ -351,20 +330,20 @@ void LogInput::ProcessEvent(EventDispatcher* dispatcher, Event* ev) {
 }
 
 void LogInput::UpdateCriticalMetric(int32_t curTime) {
-    LogtailMonitor::Instance()->UpdateMetric("last_read_event_time",
+    LogtailMonitor::GetInstance()->UpdateMetric("last_read_event_time",
                                              GetTimeStamp(mLastReadEventTime, "%Y-%m-%d %H:%M:%S"));
 
-    LogtailMonitor::Instance()->UpdateMetric("event_tps", 1.0 * mEventProcessCount / (curTime - mLastUpdateMetricTime));
-    LogtailMonitor::Instance()->UpdateMetric("open_fd",
+    LogtailMonitor::GetInstance()->UpdateMetric("event_tps", 1.0 * mEventProcessCount / (curTime - mLastUpdateMetricTime));
+    LogtailMonitor::GetInstance()->UpdateMetric("open_fd",
                                              GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize());
-    LogtailMonitor::Instance()->UpdateMetric("register_handler", EventDispatcher::GetInstance()->GetHandlerCount());
-    LogtailMonitor::Instance()->UpdateMetric("reader_count", CheckPointManager::Instance()->GetReaderCount());
-    LogtailMonitor::Instance()->UpdateMetric("multi_config", AppConfig::GetInstance()->IsAcceptMultiConfig());
+    LogtailMonitor::GetInstance()->UpdateMetric("register_handler", EventDispatcher::GetInstance()->GetHandlerCount());
+    LogtailMonitor::GetInstance()->UpdateMetric("reader_count", CheckPointManager::Instance()->GetReaderCount());
+    LogtailMonitor::GetInstance()->UpdateMetric("multi_config", AppConfig::GetInstance()->IsAcceptMultiConfig());
     mEventProcessCount = 0;
 }
 
 void* LogInput::ProcessLoop() {
-    LOG_DEBUG(sLogger, ("LogInputThread", "Start"));
+    LOG_INFO(sLogger, ("event handle daemon", "started"));
     EventDispatcher* dispatcher = EventDispatcher::GetInstance();
     dispatcher->StartTimeCount();
     int32_t prevTime = time(NULL);

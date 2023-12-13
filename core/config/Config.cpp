@@ -45,12 +45,15 @@ static string UnescapeDollar(string::const_iterator beginIt, string::const_itera
     return outStr;
 }
 
-static string ReplaceEnvVarRefInStr(const string& inStr) {
-    string outStr;
+static bool ReplaceEnvVarRefInStr(const string& inStr, string& outStr) {
     string::const_iterator lastMatchEnd = inStr.begin();
     static boost::regex reg(R"((?<!\$)\${([\w]+)(:(.*?))?(?<!\$)})");
     boost::regex_iterator<string::const_iterator> it{inStr.begin(), inStr.end(), reg};
     boost::regex_iterator<string::const_iterator> end;
+    if (it == end) {
+        outStr.append(UnescapeDollar(lastMatchEnd, inStr.end())); // original part
+        return false;
+    }
     for (; it != end; ++it) {
         outStr.append(UnescapeDollar(lastMatchEnd, (*it)[0].first)); // original part
         char* env = getenv((*it)[1].str().c_str());
@@ -65,43 +68,72 @@ static string ReplaceEnvVarRefInStr(const string& inStr) {
         lastMatchEnd = (*it)[0].second;
     }
     outStr.append(UnescapeDollar(lastMatchEnd, inStr.end())); // original part
-    return outStr;
+    return true;
 }
 
-static void ReplaceEnvVarRef(Json::Value& value) {
+static void ReplaceEnvVarRef(Json::Value& value, bool& res) {
     if (value.isString()) {
-        Json::Value tempValue{ReplaceEnvVarRefInStr(value.asString())};
+        string outStr;
+        if (ReplaceEnvVarRefInStr(value.asString(), outStr)) {
+            res = true;
+        }
+        Json::Value tempValue{outStr};
         value.swapPayload(tempValue);
     } else if (value.isArray()) {
         Json::ValueIterator it = value.begin();
         Json::ValueIterator end = value.end();
         for (; it != end; ++it) {
-            ReplaceEnvVarRef(*it);
+            ReplaceEnvVarRef(*it, res);
         }
     } else if (value.isObject()) {
         Json::ValueIterator it = value.begin();
         Json::ValueIterator end = value.end();
         for (; it != end; ++it) {
-            ReplaceEnvVarRef(*it);
+            ReplaceEnvVarRef(*it, res);
         }
     }
 }
 
 bool Config::Parse() {
     if (BOOL_FLAG(enable_env_ref_in_config)) {
-        ReplaceEnvVar();
+        if (ReplaceEnvVar()) {
+            LOG_INFO(sLogger, ("env vars in config are replaced, config", mDetail->toStyledString())("config", mName));
+        }
     }
 
-    string errorMsg;
-    if (!GetOptionalUIntParam(mDetail, "createTime", mCreateTime, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, noModule, mName);
+    string key, errorMsg;
+    const Json::Value* itr = nullptr;
+    LogtailAlarm& alarm = *LogtailAlarm::GetInstance();
+#ifdef __ENTERPRISE__
+    // to send alarm, project, logstore and region should be extracted first.
+    key = "flushers";
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
+    if (itr && itr->isArray()) {
+        for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
+            const Json::Value& plugin = (*itr)[i];
+            if (plugin.isObject()) {
+                key = "Type";
+                const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
+                if (it && it->isString() && it->asString() == "flusherSLS") {
+                    GetMandatoryStringParam(plugin, "Project", mProject, errorMsg);
+                    GetMandatoryStringParam(plugin, "Logstore", mLogstore, errorMsg);
+                    GetMandatoryStringParam(plugin, "Region", mRegion, errorMsg);
+                }
+            }
+        }
+    }
+#endif
+
+    if (!GetOptionalUIntParam(*mDetail, "createTime", mCreateTime, errorMsg)) {
+        PARAM_WARNING_DEFAULT(sLogger, alarm, errorMsg, mCreateTime, noModule, mName, mProject, mLogstore, mRegion);
     }
 
-    string key = "global";
-    const Json::Value* itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    key = "global";
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isObject()) {
-            PARAM_ERROR_RETURN(sLogger, "global module is not of type object", noModule, mName);
+            PARAM_ERROR_RETURN(
+                sLogger, alarm, "global module is not of type object", noModule, mName, mProject, mLogstore, mRegion);
         }
         mGlobal = itr;
     }
@@ -113,29 +145,58 @@ bool Config::Parse() {
     bool hasStreamInput = false;
 #endif
     key = "inputs";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (!itr) {
-        PARAM_ERROR_RETURN(sLogger, "mandatory inputs module is missing", noModule, mName);
+        PARAM_ERROR_RETURN(
+            sLogger, alarm, "mandatory inputs module is missing", noModule, mName, mProject, mLogstore, mRegion);
     }
     if (!itr->isArray()) {
-        PARAM_ERROR_RETURN(sLogger, "mandatory inputs module is not of type array", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger,
+                           alarm,
+                           "mandatory inputs module is not of type array",
+                           noModule,
+                           mName,
+                           mProject,
+                           mLogstore,
+                           mRegion);
     }
     if (itr->empty()) {
-        PARAM_ERROR_RETURN(sLogger, "mandatory inputs module has no plugin", noModule, mName);
+        PARAM_ERROR_RETURN(
+            sLogger, alarm, "mandatory inputs module has no plugin", noModule, mName, mProject, mLogstore, mRegion);
     }
     for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
         const Json::Value& plugin = (*itr)[i];
         if (!plugin.isObject()) {
-            PARAM_ERROR_RETURN(sLogger, "param inputs[" + ToString(i) + "] is not of type object", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "param inputs[" + ToString(i) + "] is not of type object",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         key = "Type";
         const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
         if (it == nullptr) {
-            PARAM_ERROR_RETURN(sLogger, "param inputs[" + ToString(i) + "].Type is missing", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "param inputs[" + ToString(i) + "].Type is missing",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         if (!it->isString()) {
-            PARAM_ERROR_RETURN(
-                sLogger, "param inputs[" + ToString(i) + "].Type is not of type string", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "param inputs[" + ToString(i) + "].Type is not of type string",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         const string pluginName = it->asString();
         if (i == 0) {
@@ -144,22 +205,46 @@ bool Config::Parse() {
             } else if (PluginRegistry::GetInstance()->IsValidNativeInputPlugin(pluginName)) {
                 mHasNativeInput = true;
             } else {
-                PARAM_ERROR_RETURN(sLogger, "unsupported input plugin", pluginName, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, alarm, "unsupported input plugin", pluginName, mName, mProject, mLogstore, mRegion);
             }
         } else {
             if (mHasGoInput) {
                 if (PluginRegistry::GetInstance()->IsValidNativeInputPlugin(pluginName)) {
-                    PARAM_ERROR_RETURN(sLogger, "native and extended input plugins coexist", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger,
+                                       alarm,
+                                       "native and extended input plugins coexist",
+                                       noModule,
+                                       mName,
+                                       mProject,
+                                       mLogstore,
+                                       mRegion);
                 } else if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                    PARAM_ERROR_RETURN(sLogger, "unsupported input plugin", pluginName, mName);
+                    PARAM_ERROR_RETURN(
+                        sLogger, alarm, "unsupported input plugin", pluginName, mName, mProject, mLogstore, mRegion);
                 }
             } else {
                 if (PluginRegistry::GetInstance()->IsValidNativeInputPlugin(pluginName)) {
-                    PARAM_ERROR_RETURN(sLogger, "more than 1 native input plugin is given", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger,
+                                       alarm,
+                                       "more than 1 native input plugin is given",
+                                       noModule,
+                                       mName,
+                                       mProject,
+                                       mLogstore,
+                                       mRegion);
                 } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                    PARAM_ERROR_RETURN(sLogger, "native and extended input plugins coexist", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger,
+                                       alarm,
+                                       "native and extended input plugins coexist",
+                                       noModule,
+                                       mName,
+                                       mProject,
+                                       mLogstore,
+                                       mRegion);
                 } else {
-                    PARAM_ERROR_RETURN(sLogger, "unsupported input plugin", pluginName, mName);
+                    PARAM_ERROR_RETURN(
+                        sLogger, alarm, "unsupported input plugin", pluginName, mName, mProject, mLogstore, mRegion);
                 }
             }
         }
@@ -169,7 +254,8 @@ bool Config::Parse() {
 #ifdef __ENTERPRISE__
         } else if (pluginName == "input_stream") {
             if (!AppConfig::GetInstance()->GetOpenStreamLog()) {
-                PARAM_ERROR_RETURN(sLogger, "stream log is not enabled", noModule, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, alarm, "stream log is not enabled", noModule, mName, mProject, mLogstore, mRegion);
             }
             hasStreamInput = true;
 #endif
@@ -177,41 +263,87 @@ bool Config::Parse() {
     }
 
     key = "processors";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isArray()) {
-            PARAM_ERROR_RETURN(sLogger, "processors module is not of type array", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "processors module is not of type array",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
 #ifdef __ENTERPRISE__
         if (hasStreamInput && !itr->empty()) {
-            PARAM_ERROR_RETURN(sLogger, "processor plugins coexist with input_stream", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "processor plugins coexist with input_stream",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
 #endif
         bool isCurrentPluginNative = true;
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR_RETURN(
-                    sLogger, "param processors[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param processors[" + ToString(i) + "] is not of type object",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
             if (it == nullptr) {
-                PARAM_ERROR_RETURN(sLogger, "param processors[" + ToString(i) + "].Type is missing", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param processors[" + ToString(i) + "].Type is missing",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             if (!it->isString()) {
-                PARAM_ERROR_RETURN(
-                    sLogger, "param processors[" + ToString(i) + "].Type is not of type string", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param processors[" + ToString(i) + "].Type is not of type string",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             const string pluginName = it->asString();
             if (mHasGoInput) {
                 if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
-                    PARAM_ERROR_RETURN(
-                        sLogger, "native processor plugins coexist with extended input plugins", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger,
+                                       alarm,
+                                       "native processor plugins coexist with extended input plugins",
+                                       noModule,
+                                       mName,
+                                       mProject,
+                                       mLogstore,
+                                       mRegion);
                 } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                     mHasGoProcessor = true;
                 } else {
-                    PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
+                    PARAM_ERROR_RETURN(sLogger,
+                                       alarm,
+                                       "unsupported processor plugin",
+                                       pluginName,
+                                       mName,
+                                       mProject,
+                                       mLogstore,
+                                       mRegion);
                 }
             } else {
                 if (isCurrentPluginNative) {
@@ -219,29 +351,57 @@ bool Config::Parse() {
                         isCurrentPluginNative = false;
                         mHasGoProcessor = true;
                     } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
-                        PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
+                        PARAM_ERROR_RETURN(sLogger,
+                                           alarm,
+                                           "unsupported processor plugin",
+                                           pluginName,
+                                           mName,
+                                           mProject,
+                                           mLogstore,
+                                           mRegion);
                     } else if (pluginName == "processor_spl" && (i != 0 || itr->size() != 1)) {
-                        PARAM_ERROR_RETURN(
-                            sLogger, "native processor plugins coexist with spl processor", noModule, mName);
+                        PARAM_ERROR_RETURN(sLogger,
+                                           alarm,
+                                           "native processor plugins coexist with spl processor",
+                                           noModule,
+                                           mName,
+                                           mProject,
+                                           mLogstore,
+                                           mRegion);
                     } else {
                         if (hasObserverInput) {
                             PARAM_ERROR_RETURN(sLogger,
+                                               alarm,
                                                "native processor plugins coexist with input_observer_network",
                                                noModule,
-                                               mName);
+                                               mName,
+                                               mProject,
+                                               mLogstore,
+                                               mRegion);
                         }
                         mHasNativeProcessor = true;
                     }
                 } else {
                     if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
                         PARAM_ERROR_RETURN(sLogger,
+                                           alarm,
                                            "native processor plugin comes after extended processor plugin",
                                            pluginName,
-                                           mName);
+                                           mName,
+                                           mProject,
+                                           mLogstore,
+                                           mRegion);
                     } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                         mHasGoProcessor = true;
                     } else {
-                        PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
+                        PARAM_ERROR_RETURN(sLogger,
+                                           alarm,
+                                           "unsupported processor plugin",
+                                           pluginName,
+                                           mName,
+                                           mProject,
+                                           mLogstore,
+                                           mRegion);
                     }
                 }
             }
@@ -255,29 +415,58 @@ bool Config::Parse() {
     }
 
     key = "flushers";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (!itr) {
-        PARAM_ERROR_RETURN(sLogger, "mandatory flushers module is missing", noModule, mName);
+        PARAM_ERROR_RETURN(
+            sLogger, alarm, "mandatory flushers module is missing", noModule, mName, mProject, mLogstore, mRegion);
     }
     if (!itr->isArray()) {
-        PARAM_ERROR_RETURN(sLogger, "mandatory flushers module is not of type array", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger,
+                           alarm,
+                           "mandatory flushers module is not of type array",
+                           noModule,
+                           mName,
+                           mProject,
+                           mLogstore,
+                           mRegion);
     }
     if (itr->empty()) {
-        PARAM_ERROR_RETURN(sLogger, "mandatory flushers module has no plugin", noModule, mName);
+        PARAM_ERROR_RETURN(
+            sLogger, alarm, "mandatory flushers module has no plugin", noModule, mName, mProject, mLogstore, mRegion);
     }
     for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
         const Json::Value& plugin = (*itr)[i];
         if (!plugin.isObject()) {
-            PARAM_ERROR_RETURN(sLogger, "param flushers[" + ToString(i) + "] is not of type object", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "param flushers[" + ToString(i) + "] is not of type object",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         key = "Type";
         const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
         if (it == nullptr) {
-            PARAM_ERROR_RETURN(sLogger, "param flushers[" + ToString(i) + "].Type is missing", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "param flushers[" + ToString(i) + "].Type is missing",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         if (!it->isString()) {
-            PARAM_ERROR_RETURN(
-                sLogger, "param flushers[" + ToString(i) + "].Type is not of type string", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "param flushers[" + ToString(i) + "].Type is not of type string",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         const string pluginName = it->asString();
         if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
@@ -285,79 +474,155 @@ bool Config::Parse() {
         } else if (PluginRegistry::GetInstance()->IsValidNativeFlusherPlugin(pluginName)) {
             mHasNativeFlusher = true;
         } else {
-            PARAM_ERROR_RETURN(sLogger, "unsupported flusher plugin", pluginName, mName);
+            PARAM_ERROR_RETURN(
+                sLogger, alarm, "unsupported flusher plugin", pluginName, mName, mProject, mLogstore, mRegion);
         }
 #ifdef __ENTERPRISE__
         if (hasStreamInput && pluginName != "flusher_sls") {
-            PARAM_ERROR_RETURN(
-                sLogger, "flusher plugins other than flusher_sls coexist with input_stream", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "flusher plugins other than flusher_sls coexist with input_stream",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
 #endif
         mFlushers.push_back(&plugin);
     }
 
     key = "aggregators";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!IsFlushingThroughGoPipelineExisted()) {
-            PARAM_ERROR_RETURN(sLogger, "aggregator plugins exist in native flushing mode", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "aggregator plugins exist in native flushing mode",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         if (!itr->isArray()) {
-            PARAM_ERROR_RETURN(sLogger, "aggregators module is not of type array", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "aggregators module is not of type array",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         if (itr->size() != 1) {
-            PARAM_ERROR_RETURN(sLogger, "more than 1 aggregator is given", noModule, mName);
+            PARAM_ERROR_RETURN(
+                sLogger, alarm, "more than 1 aggregator is given", noModule, mName, mProject, mLogstore, mRegion);
         }
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR_RETURN(
-                    sLogger, "param aggregators[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param aggregators[" + ToString(i) + "] is not of type object",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
             if (it == nullptr) {
-                PARAM_ERROR_RETURN(sLogger, "param aggregators[" + ToString(i) + "].Type is missing", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param aggregators[" + ToString(i) + "].Type is missing",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             if (!it->isString()) {
-                PARAM_ERROR_RETURN(
-                    sLogger, "param aggregators[" + ToString(i) + "].Type is not of type string", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param aggregators[" + ToString(i) + "].Type is not of type string",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             const string pluginName = it->asString();
             if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                PARAM_ERROR_RETURN(sLogger, "unsupported aggregator plugin", pluginName, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, alarm, "unsupported aggregator plugin", pluginName, mName, mProject, mLogstore, mRegion);
             }
             mAggregators.push_back(&plugin);
         }
     }
 
     key = "extensions";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!HasGoPlugin()) {
-            PARAM_ERROR_RETURN(sLogger, "extension plugins exist when no extended plugin is given", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "extension plugins exist when no extended plugin is given",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         if (!itr->isArray()) {
-            PARAM_ERROR_RETURN(sLogger, "extensions module is not of type array", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "extensions module is not of type array",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR_RETURN(
-                    sLogger, "param extensions[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param extensions[" + ToString(i) + "] is not of type object",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
             if (it == nullptr) {
-                PARAM_ERROR_RETURN(sLogger, "param extensions[" + ToString(i) + "].Type is missing", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param extensions[" + ToString(i) + "].Type is missing",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             if (!it->isString()) {
-                PARAM_ERROR_RETURN(
-                    sLogger, "param extensions[" + ToString(i) + "].Type is not of type string", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger,
+                                   alarm,
+                                   "param extensions[" + ToString(i) + "].Type is not of type string",
+                                   noModule,
+                                   mName,
+                                   mProject,
+                                   mLogstore,
+                                   mRegion);
             }
             const string pluginName = it->asString();
             if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                PARAM_ERROR_RETURN(sLogger, "unsupported extension plugin", pluginName, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, alarm, "unsupported extension plugin", pluginName, mName, mProject, mLogstore, mRegion);
             }
             mExtensions.push_back(&plugin);
         }
@@ -366,8 +631,10 @@ bool Config::Parse() {
     return true;
 }
 
-void Config::ReplaceEnvVar() {
-    ReplaceEnvVarRef(mDetail);
+bool Config::ReplaceEnvVar() {
+    bool res = false;
+    ReplaceEnvVarRef(*mDetail, res);
+    return res;
 }
 
 bool LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) {

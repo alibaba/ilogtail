@@ -363,7 +363,7 @@ private:
 public:
     static Sender* Instance();
     // void ResetProfileSender();
-    bool InitSender(); // Backward compatible
+    bool Init(); // Backward compatible
     // from collector to batchmap
     bool Send(const std::string& projectName,
               const std::string& sourceId,

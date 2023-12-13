@@ -15,6 +15,8 @@
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorDesensitizeNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -29,6 +31,8 @@ public:
     void TestCastSensWordFail();
     void TestCastSensWordLoggroup();
     void TestCastSensWordMulti();
+    void TestMultipleLines();
+
     PipelineContext mContext;
 };
 
@@ -43,6 +47,8 @@ UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordFail);
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordLoggroup);
 
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMulti);
+
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLines);
 
 Json::Value
 ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey = std::string("cast1"),
@@ -61,6 +67,109 @@ ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey 
     config["ReplacedContentPattern"] = Json::Value(replacedContentPattern);
     config["ReplacingAll"] = Json::Value(replaceAll);
     return config;
+}
+
+void ProcessorDesensitizeNativeUnittest::TestMultipleLines() {
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,
+dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+
+
+    std::string expectJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "asf@@@324 FS2$%pwd,pwd=********,,"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "dbf@@@324 FS2$%pwd,pwd=********,,"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+
+    // ProcessorSplitLogStringNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config = GetCastSensWordConfig("content");
+        std::string pluginId = "testID";
+        config["SplitChar"] = "\n";
+        config["AppendingLogPositionMeta"] = false;
+
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
+
+        // run function ProcessorDesensitizeNative
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+    // ProcessorSplitRegexNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config = GetCastSensWordConfig("content");
+        std::string pluginId = "testID";
+        config["StartPattern"] = ".*";
+        config["UnmatchedContentTreatment"] = "split";
+        config["AppendingLogPositionMeta"] = false;
+
+        // run function ProcessorSplitRegexNative
+        ProcessorSplitRegexNative processorSplitRegexNative;
+        processorSplitRegexNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
+        processorSplitRegexNative.Process(eventGroup);
+
+        // run function ProcessorDesensitizeNative
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorDesensitizeNativeUnittest::TestInit() {
@@ -89,7 +198,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -100,7 +208,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -108,7 +219,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -117,7 +227,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case2
@@ -136,7 +246,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -147,7 +256,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -155,7 +267,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -164,7 +275,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case3
@@ -183,7 +294,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -194,7 +304,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -202,7 +315,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -211,7 +323,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case4
@@ -231,7 +343,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -242,7 +353,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -250,7 +364,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -259,7 +372,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case5
@@ -279,7 +392,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=sdfpsw=543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -290,7 +402,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -298,7 +413,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -307,7 +421,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -331,7 +445,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -342,7 +455,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -350,7 +466,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=91F6CFCF46787E8A02082B58F7117AFA,,"
                     },
                     "timestamp" : 12345678901,
@@ -359,7 +474,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case2
@@ -380,7 +495,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -391,7 +505,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -399,7 +516,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -408,7 +524,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 3
@@ -429,7 +545,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwdsaf543#$@,,pwd=12341"
                     },
                     "timestampNanosecond" : 0,
@@ -440,7 +555,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -448,7 +566,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwdsaf543#$@,,pwd=F190CE9AC8445D249747CAB7BE43F7D5"
                     },
                     "timestamp" : 12345678901,
@@ -457,7 +574,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 4
@@ -478,7 +595,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=12341"
                     },
                     "timestampNanosecond" : 0,
@@ -489,7 +605,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -497,7 +616,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=F190CE9AC8445D249747CAB7BE43F7D5"
                     },
                     "timestamp" : 12345678901,
@@ -506,7 +624,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 5
@@ -528,7 +646,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -539,7 +656,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -547,7 +667,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=F190CE9AC8445D249747CAB7BE43F7D5,df"
                     },
                     "timestamp" : 12345678901,
@@ -556,7 +675,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 6
@@ -578,7 +697,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=saf543#$@,,pwd=12341f"
                     },
                     "timestampNanosecond" : 0,
@@ -589,7 +707,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -597,7 +718,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=2369B00C6DB80BF0794658225730FF0B"
                     },
                     "timestamp" : 12345678901,
@@ -606,7 +726,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 7
@@ -628,7 +748,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=saf543#$@,,pwd=12341f,asfasf"
                     },
                     "timestampNanosecond" : 0,
@@ -639,7 +758,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -647,7 +769,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=2369B00C6DB80BF0794658225730FF0B,asfasf"
                     },
                     "timestamp" : 12345678901,
@@ -656,7 +777,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 8
@@ -678,7 +799,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -689,7 +809,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -697,7 +820,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=91F6CFCF46787E8A02082B58F7117AFA,,"
                     },
                     "timestamp" : 12345678901,
@@ -706,7 +828,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 9
@@ -728,7 +850,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,\npwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -739,7 +860,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -747,7 +871,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,\npwd=91F6CFCF46787E8A02082B58F7117AFA,,"
                     },
                     "timestamp" : 12345678901,
@@ -756,7 +879,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -779,7 +902,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast0" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -790,7 +912,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -798,7 +923,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast0" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestamp" : 12345678901,
@@ -807,7 +931,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 2
@@ -827,7 +951,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "123214" : "asf@@@324 FS2$%psw,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -838,7 +961,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -846,8 +972,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "123214" : "asf@@@324 FS2$%psw,pwd=saf543#$@,,pwd=12341,df",
-                        "__file_offset__": "0"
+                        "123214" : "asf@@@324 FS2$%psw,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -855,7 +980,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 3
@@ -876,7 +1001,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -887,7 +1011,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -895,7 +1022,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -904,7 +1030,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 4
@@ -925,7 +1051,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -936,7 +1061,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -944,7 +1072,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -953,7 +1080,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -971,8 +1098,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
                     "user" : "ali-sls-logtail",
                     "cast1" : "pwd=donottellanyone!,",
                     "id" : "33032119850506123X",
-                    "content" : "{'account':'18122100036969','password':'04adf38'};akProxy=null;",
-                    "__file_offset__": "0"
+                    "content" : "{'account':'18122100036969','password':'04adf38'};akProxy=null;"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -983,8 +1109,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
                 {
                     "user" : "ali-sls-logtail1",
                     "cast1" : "pwd=dafddasf@@!123!,",
-                    "id" : "33032119891206123X",
-                    "__file_offset__": "0"
+                    "id" : "33032119891206123X"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -993,6 +1118,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ]
     })";
     eventGroup.FromJsonString(inJson);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
 
     {
         Json::Value config = GetCastSensWordConfig();
@@ -1002,7 +1129,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ProcessorInstance processorInstance(&processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
-        processorInstance.Process(eventGroup);
+        processorInstance.Process(eventGroupList);
     }
     {
         Json::Value config = GetCastSensWordConfig("id", "const", "********", "\\d{6}", "\\d{8}", true);
@@ -1012,7 +1139,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ProcessorInstance processorInstance(&processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
-        processorInstance.Process(eventGroup);
+        processorInstance.Process(eventGroupList);
     }
     {
         Json::Value config = GetCastSensWordConfig("content", "const", "********", "'password':'", "[^']*", true);
@@ -1022,7 +1149,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ProcessorInstance processorInstance(&processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
-        processorInstance.Process(eventGroup);
+        processorInstance.Process(eventGroupList);
     }
 
     // judge result
@@ -1032,7 +1159,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "cast1" : "pwd=********,",
                     "content" : "{'account':'18122100036969','password':'********'};akProxy=null;",
                     "id" : "330321********123X",
@@ -1045,7 +1171,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "cast1" : "pwd=********,",
                     "id" : "330321********123X",
                     "user" : "ali-sls-logtail1"
@@ -1056,7 +1181,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 }
 
@@ -1078,7 +1203,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -1089,7 +1213,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1097,7 +1224,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -1106,7 +1232,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 2
@@ -1126,7 +1252,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -1137,7 +1262,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1145,7 +1273,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -1154,7 +1281,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 3
@@ -1174,7 +1301,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1185,7 +1311,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1193,7 +1322,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -1202,7 +1330,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 4
@@ -1223,7 +1351,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1234,7 +1361,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1242,7 +1372,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -1251,7 +1380,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 5
@@ -1272,7 +1401,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=sdfpsw=543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1283,7 +1411,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1291,7 +1422,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -1300,7 +1430,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }

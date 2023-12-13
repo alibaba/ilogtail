@@ -70,7 +70,6 @@ void PollingDirFile::Start() {
     ClearCache();
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
-    LOG_INFO(sLogger, ("PollingDirFile", "start"));
 }
 
 void PollingDirFile::Stop() {
@@ -86,15 +85,17 @@ void PollingDirFile::Stop() {
 }
 
 void PollingDirFile::HoldOn() {
+    LOG_INFO(sLogger, ("polling discovery pause", "starts"));
     mHoldOnFlag = true;
     mPollingThreadLock.lock();
-    LOG_INFO(sLogger, ("PollingDirFile", "hold on"));
+    LOG_INFO(sLogger, ("polling discovery pause", "succeeded"));
 }
 
 void PollingDirFile::Resume() {
+    LOG_INFO(sLogger, ("polling discovery resume", "starts"));
     mHoldOnFlag = false;
     mPollingThreadLock.unlock();
-    LOG_INFO(sLogger, ("PollingDirFile", "resume"));
+    LOG_INFO(sLogger, ("polling discovery resume", "succeeded"));
 }
 
 void PollingDirFile::CheckConfigPollingStatCount(const int32_t lastStatCount,
@@ -121,6 +122,7 @@ void PollingDirFile::CheckConfigPollingStatCount(const int32_t lastStatCount,
 }
 
 void PollingDirFile::Polling() {
+    LOG_INFO(sLogger, ("polling discovery", "started"));
     mHoldOnFlag = false;
     while (mRuningFlag) {
         LOG_DEBUG(sLogger, ("start dir file polling, mCurrentRound", mCurrentRound));
@@ -143,11 +145,11 @@ void PollingDirFile::Polling() {
             }
             sort(sortedConfigs.begin(), sortedConfigs.end(), FileDiscoveryOptions::CompareByPathLength);
 
-            LogtailMonitor::Instance()->UpdateMetric("config_count", nameConfigMap.size());
+            LogtailMonitor::GetInstance()->UpdateMetric("config_count", nameConfigMap.size());
             {
                 ScopedSpinLock lock(mCacheLock);
-                LogtailMonitor::Instance()->UpdateMetric("polling_dir_cache", mDirCacheMap.size());
-                LogtailMonitor::Instance()->UpdateMetric("polling_file_cache", mFileCacheMap.size());
+                LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", mDirCacheMap.size());
+                LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", mFileCacheMap.size());
             }
 
             // Iterate all normal configs, make sure stat count will not exceed limit.

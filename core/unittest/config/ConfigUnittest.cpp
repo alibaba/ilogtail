@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <json/json.h>
+
 #include <memory>
 #include <string>
-
-#include "json/json.h"
 
 #include "common/JsonUtil.h"
 #include "config/Config.h"
@@ -47,7 +47,7 @@ private:
 };
 
 void ConfigUnittest::HandleValidConfig() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -90,7 +90,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(configName, config->mName);
@@ -122,7 +123,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -153,7 +155,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -180,7 +183,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -204,7 +208,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -235,7 +240,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -274,7 +280,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -301,7 +308,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -340,7 +348,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -375,7 +384,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -394,7 +404,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -420,7 +431,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -454,7 +466,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -478,7 +491,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -514,7 +528,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -546,7 +561,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -570,7 +586,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -601,7 +618,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -640,7 +658,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -667,7 +686,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -706,7 +726,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -741,7 +762,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -760,7 +782,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -786,7 +809,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -820,7 +844,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -847,7 +872,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -886,7 +912,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -921,7 +948,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -948,7 +976,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -982,7 +1011,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -1024,7 +1054,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1054,7 +1085,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -1096,7 +1128,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1134,7 +1167,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1156,7 +1190,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -1185,7 +1220,8 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
@@ -1222,13 +1258,14 @@ void ConfigUnittest::HandleValidConfig() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidCreateTime() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -1247,14 +1284,15 @@ void ConfigUnittest::HandleInvalidCreateTime() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(0, config->mCreateTime);
 }
 
 void ConfigUnittest::HandleInvalidGlobal() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -1264,13 +1302,14 @@ void ConfigUnittest::HandleInvalidGlobal() const {
             "global": []
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidInputs() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -1284,7 +1323,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1299,7 +1339,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1314,7 +1355,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1331,7 +1373,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1350,7 +1393,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1369,7 +1413,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1388,7 +1433,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1409,7 +1455,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1430,7 +1477,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1452,7 +1500,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1474,7 +1523,8 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1495,13 +1545,14 @@ void ConfigUnittest::HandleInvalidInputs() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidProcessors() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -1516,7 +1567,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             "processors": {}
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1533,7 +1585,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1552,7 +1605,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1571,7 +1625,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1590,7 +1645,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1608,7 +1664,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1629,7 +1686,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1651,7 +1709,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1670,7 +1729,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1689,7 +1749,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1711,7 +1772,8 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1732,13 +1794,14 @@ void ConfigUnittest::HandleInvalidProcessors() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidAggregators() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -1758,7 +1821,8 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1780,7 +1844,8 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1804,7 +1869,8 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1828,7 +1894,8 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1852,7 +1919,8 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1879,7 +1947,8 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1903,13 +1972,14 @@ void ConfigUnittest::HandleInvalidAggregators() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidFlushers() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -1923,7 +1993,8 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1938,7 +2009,8 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             "flushers": {}
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1953,7 +2025,8 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             "flushers": []
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1970,7 +2043,8 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1989,7 +2063,8 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2008,7 +2083,8 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2027,13 +2103,14 @@ void ConfigUnittest::HandleInvalidFlushers() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidExtensions() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -2053,7 +2130,8 @@ void ConfigUnittest::HandleInvalidExtensions() const {
             "extensions": {}
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2075,7 +2153,8 @@ void ConfigUnittest::HandleInvalidExtensions() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2099,7 +2178,8 @@ void ConfigUnittest::HandleInvalidExtensions() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2123,7 +2203,8 @@ void ConfigUnittest::HandleInvalidExtensions() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2147,7 +2228,8 @@ void ConfigUnittest::HandleInvalidExtensions() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2171,7 +2253,8 @@ void ConfigUnittest::HandleInvalidExtensions() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
@@ -2185,7 +2268,8 @@ void ConfigUnittest::TestReplaceEnvVarRef() const {
     _putenv_s("__file4ut", "!transaction/~un-do.log");
 #endif
 
-    Json::Value configJson, resJson;
+    unique_ptr<Json::Value> configJson;
+    Json::Value resJson;
     string configStr, resStr, errorMsg;
     unique_ptr<Config> config;
 
@@ -2214,11 +2298,12 @@ void ConfigUnittest::TestReplaceEnvVarRef() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(resStr, resJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
-    config->ReplaceEnvVar();
-    APSARA_TEST_TRUE(config->mDetail == resJson);
+    APSARA_TEST_TRUE(config->ReplaceEnvVar());
+    APSARA_TEST_TRUE(*config->mDetail == resJson);
 }
 
 UNIT_TEST_CASE(ConfigUnittest, HandleValidConfig)

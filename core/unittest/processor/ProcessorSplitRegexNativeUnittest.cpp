@@ -60,7 +60,7 @@ void ProcessorSplitRegexNativeUnittest::TestInit() {
     // make config
     Json::Value config;
     config["StartPattern"] = ".*";
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
@@ -72,7 +72,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
     // make config
     Json::Value config;
     config["StartPattern"] = ".*";
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -135,7 +135,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -206,7 +206,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -292,7 +292,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch(
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -349,7 +349,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -431,7 +431,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchDisc
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -471,7 +471,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
     // make config
     Json::Value config;
     config["StartPattern"] = "line.*";
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = true;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -558,7 +558,7 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -705,7 +705,7 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -871,7 +871,7 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -961,7 +961,7 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
     Json::Value config;
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -1097,7 +1097,7 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     // make config
     Json::Value config;
     config["EndPattern"] = LOG_END_REGEX;
-    config["KeepingSourceWhenParseFail"] = false;
+    config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -1206,7 +1206,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -1399,7 +1399,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -1647,7 +1647,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -1763,7 +1763,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
     Json::Value config;
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;
@@ -1935,7 +1935,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
     // make config
     Json::Value config;
     config["EndPattern"] = LOG_END_REGEX;
-    config["KeepingSourceWhenParseFail"] = true;
+    config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     ProcessorSplitRegexNative processor;

@@ -60,8 +60,7 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
                 "contents" :
                 {
                     "key1" : "value1xxxxx",
-                    "key2" : "value2xxxxx",
-                    "__file_offset__": "0"
+                    "key2" : "value2xxxxx"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -71,8 +70,7 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
                 "contents" :
                 {
                     "key1" : "abcdeavalue1",
-                    "key2" : "value2xxxxx",
-                    "__file_offset__": "0"
+                    "key2" : "value2xxxxx"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -82,8 +80,11 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     })";
     eventGroup1.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup1);
-    std::string outJson = eventGroup1.ToJsonString();
+    std::vector<PipelineEventGroup> eventGroupList1;
+    eventGroupList1.emplace_back(std::move(eventGroup1));
+    processorInstance.Process(eventGroupList1);
+
+    std::string outJson = eventGroupList1[0].ToJsonString();
     // judge result
     std::string expectJson = R"({
         "events" : 
@@ -91,7 +92,6 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
             {
                 "contents" : 
                 {
-                    "__file_offset__": "0",
                     "key1" : "abcdeavalue1",
                     "key2" : "value2xxxxx"
                 },
@@ -112,8 +112,7 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
             {
                 "contents" :
                 {
-                    "key1" : "abcvalue1",
-                    "__file_offset__": "0"
+                    "key1" : "abcvalue1"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -123,8 +122,11 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     })";
     eventGroup2.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup2);
-    outJson = eventGroup2.ToJsonString();
+    std::vector<PipelineEventGroup> eventGroupList2;
+    eventGroupList2.emplace_back(std::move(eventGroup2));
+    processorInstance.Process(eventGroupList2);
+
+    outJson = eventGroupList2[0].ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
 }
@@ -168,7 +170,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "key1" : "value1xxxxx",
                         "key2" : "value2xxxxx"
                     },
@@ -179,7 +180,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "key1" : "abcdeavalue1",
                         "key2" : "value2xxxxx"
                     },
@@ -191,8 +191,11 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         eventGroup1.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup1);
-        std::string outJson = eventGroup1.ToJsonString();
+        std::vector<PipelineEventGroup> eventGroupList1;
+        eventGroupList1.emplace_back(std::move(eventGroup1));
+        processorInstance.Process(eventGroupList1);
+
+        std::string outJson = eventGroupList1[0].ToJsonString();
         // judge result
         std::string expectJson = R"({
             "events" : 
@@ -200,7 +203,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" : 
                     {
-                        "__file_offset__": "0",
                         "key1" : "abcdeavalue1",
                         "key2" : "value2xxxxx"
                     },
@@ -221,7 +223,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "key1" : "abcvalue1"
                     },
                     "timestampNanosecond" : 0,
@@ -232,8 +233,11 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         eventGroup2.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup2);
-        outJson = eventGroup2.ToJsonString();
+        std::vector<PipelineEventGroup> eventGroupList2;
+        eventGroupList2.emplace_back(std::move(eventGroup2));
+        processorInstance.Process(eventGroupList2);
+
+        outJson = eventGroupList2[0].ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
@@ -305,7 +309,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "a" : "100",
                         "b" : "xxx",
                         "c" : "192.168.1.1",
@@ -318,7 +321,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "a" : "100",
                         "b" : "xxx",
                         "c" : "888.168.1.1",
@@ -331,7 +333,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "a" : "aaa",
                         "b" : "xxx",
                         "c" : "8.8.8.8",
@@ -345,8 +346,11 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         eventGroup1.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup1);
-        std::string outJson = eventGroup1.ToJsonString();
+        std::vector<PipelineEventGroup> eventGroupList1;
+        eventGroupList1.emplace_back(std::move(eventGroup1));
+        processorInstance.Process(eventGroupList1);
+
+        std::string outJson = eventGroupList1[0].ToJsonString();
         // judge result
         // judge result
         std::string expectJson = R"({
@@ -355,7 +359,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
                 {
                     "contents" : 
                     {
-                        "__file_offset__": "0",
                         "a" : "100",
                         "b" : "xxx",
                         "c" : "888.168.1.1",

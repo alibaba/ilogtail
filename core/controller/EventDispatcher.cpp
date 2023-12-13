@@ -14,61 +14,58 @@
 
 #include "EventDispatcher.h"
 #if defined(__linux__)
+#include <fnmatch.h>
 #include <sys/epoll.h>
 #include <sys/inotify.h>
-#include <fnmatch.h>
 #include <sys/ioctl.h>
-#include <sys/un.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #endif
-#include <sys/types.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <errno.h>
-#include <vector>
 #include <sys/types.h>
-#if !defined(LOGTAIL_NO_TC_MALLOC)
-#include <gperftools/malloc_extension.h>
-#include <gperftools/tcmalloc.h>
-#endif
-#include "common/version.h"
-#include "common/StringTools.h"
+
+#include <vector>
+
+#include "app_config/AppConfig.h"
+#include "checkpoint/CheckPointManager.h"
+#include "checkpoint/CheckpointManagerV2.h"
+#include "common/ErrorUtil.h"
+#include "common/FileSystemUtil.h"
 #include "common/HashUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
-#include "common/ErrorUtil.h"
-#include "common/FileSystemUtil.h"
+#include "common/StringTools.h"
 #include "common/TimeUtil.h"
-#include "app_config/AppConfig.h"
+#include "common/version.h"
+#include "event/Event.h"
 #include "event_handler/EventHandler.h"
 #include "event_handler/LogInput.h"
-#include "event/Event.h"
-#include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
-#include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
-#include "monitor/LogIntegrity.h"
-#include "monitor/LogLineCount.h"
-#include "monitor/MetricExportor.h"
 #include "log_pb/metric.pb.h"
 #include "log_pb/sls_logs.pb.h"
-#include "checkpoint/CheckPointManager.h"
-#include "checkpoint/CheckpointManagerV2.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/MetricExportor.h"
 #include "polling/PollingDirFile.h"
 #include "polling/PollingModify.h"
+#include "processor/daemon/LogProcess.h"
+#include "sender/Sender.h"
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "polling/PollingEventQueue.h"
 #endif
-#include "go_pipeline/LogtailPlugin.h"
-#include "plugin/PluginRegistry.h"
-#include "pipeline/PipelineManager.h"
-#include "config_manager/ConfigManager.h"
 #include "application/Application.h"
+#include "config_manager/ConfigManager.h"
+#include "go_pipeline/LogtailPlugin.h"
+#include "pipeline/PipelineManager.h"
+#include "plugin/PluginRegistry.h"
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"
 #endif
-#include "input/InputFile.h"
 #include "file_server/FileServer.h"
+#include "input/InputFile.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -134,25 +131,25 @@ EventDispatcher::EventDispatcher() : mWatchNum(0), mInotifyWatchNum(0) {
 }
 
 EventDispatcher::~EventDispatcher() {
-// #if defined(__linux__)
-//     if (mStreamLogManagerPtr != NULL) {
-//         delete (StreamLogManager*)mStreamLogManagerPtr;
-//     }
-//     if (mEpollFd >= 0)
-//         close(mEpollFd);
-//     if (mStreamLogTcpFd >= 0)
-//         close(mStreamLogTcpFd);
-//     if (mListenFd >= 0)
-//         close(mListenFd);
-// #endif
+    // #if defined(__linux__)
+    //     if (mStreamLogManagerPtr != NULL) {
+    //         delete (StreamLogManager*)mStreamLogManagerPtr;
+    //     }
+    //     if (mEpollFd >= 0)
+    //         close(mEpollFd);
+    //     if (mStreamLogTcpFd >= 0)
+    //         close(mStreamLogTcpFd);
+    //     if (mListenFd >= 0)
+    //         close(mListenFd);
+    // #endif
     mEventListener->Destroy();
     if (mTimeoutHandler)
         delete mTimeoutHandler;
 }
 
 bool EventDispatcher::RegisterEventHandler(const char* path,
-                                               const FileDiscoveryConfig& config,
-                                               EventHandler*& handler) {
+                                           const FileDiscoveryConfig& config,
+                                           EventHandler*& handler) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
@@ -405,10 +402,8 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
         LogInput::GetInstance()->PushEventQueue(eventVec);
 }
 
-EventDispatcher::ValidateCheckpointResult
-EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
-                                        map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
-                                        vector<Event*>& eventVec) {
+EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
+    CheckPointPtr& checkpoint, map<DevInode, SplitedFilePath>& cachePathDevInodeMap, vector<Event*>& eventVec) {
     shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
     if (config == NULL) {
         LOG_INFO(sLogger,
@@ -638,15 +633,15 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
             auto& cptPair = exactlyOnceCpts[idx];
             auto& cpt = cptPair.second;
             auto v1Cpt = make_shared<CheckPoint>(cpt.log_path(),
-                                                      0,
-                                                      cpt.sig_size(),
-                                                      cpt.sig_hash(),
-                                                      DevInode(cpt.dev(), cpt.inode()),
-                                                      cpt.config_name(),
-                                                      cpt.real_path(),
-                                                      1,
-                                                      0,
-                                                      0);
+                                                 0,
+                                                 cpt.sig_size(),
+                                                 cpt.sig_hash(),
+                                                 DevInode(cpt.dev(), cpt.inode()),
+                                                 cpt.config_name(),
+                                                 cpt.real_path(),
+                                                 1,
+                                                 0,
+                                                 0);
             const auto result = validateCheckpoint(v1Cpt, cachePathDevInodeMap, eventVec);
             switch (result) {
                 case ValidateCheckpointResult::kNormal:
@@ -797,8 +792,7 @@ void EventDispatcher::ReadInotifyEvents(vector<Event*>& eventVec) {
     mEventListener->ReadEvents(eventVec);
 }
 
-vector<pair<string, EventHandler*>>
-EventDispatcher::FindAllSubDirAndHandler(const string& baseDir) {
+vector<pair<string, EventHandler*>> EventDispatcher::FindAllSubDirAndHandler(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Find all sub dir", baseDir));
     vector<pair<string, EventHandler*>> dirAndHandlers;
     size_t baseDirSize = baseDir.size();
@@ -980,6 +974,7 @@ void EventDispatcher::DumpAllHandlersMeta(bool remove) {
         }
         CheckPointManager::Instance()->AddDirCheckPoint(path);
     }
+    LOG_INFO(sLogger, ("save log reader status", "succeeded"));
 }
 
 void EventDispatcher::ProcessHandlerTimeOut() {
@@ -992,18 +987,18 @@ void EventDispatcher::ProcessHandlerTimeOut() {
 
 void EventDispatcher::DumpCheckPointPeriod(int32_t curTime) {
     if (CheckPointManager::Instance()->NeedDump(curTime)) {
-        LOG_INFO(sLogger, ("Start dump checkpoint, hold on LogInput", curTime));
-        LogInput::GetInstance()->HoldOn();
+        LOG_INFO(sLogger, ("checkpoint dump", "starts"));
+        FileServer::GetInstance()->Pause(false);
         DumpAllHandlersMeta(false);
 
         if (!(CheckPointManager::Instance()->DumpCheckPointToLocal()))
-            LOG_WARNING(sLogger, ("dump checkpoint to local", "fail"));
+            LOG_WARNING(sLogger, ("dump checkpoint to local", "failed"));
         else
-            LOG_DEBUG(sLogger, ("dump checkpoint to local", "success"));
+            LOG_DEBUG(sLogger, ("dump checkpoint to local", "succeeded"));
         // after save checkpoint, we should clear all checkpoint
         CheckPointManager::Instance()->RemoveAllCheckPoint();
-        LogInput::GetInstance()->Resume(false);
-        LOG_INFO(sLogger, ("Finish dump checkpoint, LogInput resumed", curTime));
+        FileServer::GetInstance()->Resume(false);
+        LOG_INFO(sLogger, ("checkpoint dump", "succeeded"));
     }
 }
 

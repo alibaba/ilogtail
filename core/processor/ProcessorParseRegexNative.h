@@ -18,14 +18,21 @@
 
 #include <boost/regex.hpp>
 
+#include <vector>
+
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
 #include "processor/CommonParserOptions.h"
 
 namespace logtail {
+
 class ProcessorParseRegexNative : public Processor {
 public:
     static const std::string sName;
+
+    const std::string& Name() const override { return sName; }
+    bool Init(const Json::Value& config) override;
+    void Process(PipelineEventGroup& logGroup) override;
 
     // Source field name.
     std::string mSourceKey;
@@ -34,10 +41,6 @@ public:
     // Extracted field list.
     std::vector<std::string> mKeys;
     CommonParserOptions mCommonParserOptions;
-
-    const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config) override;
-    void Process(PipelineEventGroup& logGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;

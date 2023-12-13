@@ -1,5 +1,10 @@
 #include "application/Application.h"
 
+#ifndef LOGTAIL_NO_TC_MALLOC
+#include <gperftools/malloc_extension.h>
+#include <gperftools/tcmalloc.h>
+#endif
+
 #include <thread>
 
 #include "app_config/AppConfig.h"
@@ -19,7 +24,6 @@
 #include "event_handler/LogInput.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "gperftools/malloc_extension.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
@@ -46,6 +50,7 @@ DEFINE_FLAG_INT32(file_tags_update_interval, "second", 1);
 DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
 DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
+DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(global_network_success);
@@ -108,7 +113,7 @@ void Application::Init() {
     const string& configIP = AppConfig::GetInstance()->GetConfigIP();
     if (!configIP.empty()) {
         LogFileProfiler::mIpAddr = configIP;
-        LogtailMonitor::Instance()->UpdateConstMetric("logtail_ip", GetHostIp());
+        LogtailMonitor::GetInstance()->UpdateConstMetric("logtail_ip", GetHostIp());
     } else if (!interface.empty()) {
         LogFileProfiler::mIpAddr = GetHostIp(interface);
         if (LogFileProfiler::mIpAddr.empty()) {
@@ -126,7 +131,7 @@ void Application::Init() {
     const string& configHostName = AppConfig::GetInstance()->GetConfigHostName();
     if (!configHostName.empty()) {
         LogFileProfiler::mHostname = configHostName;
-        LogtailMonitor::Instance()->UpdateConstMetric("logtail_hostname", GetHostName());
+        LogtailMonitor::GetInstance()->UpdateConstMetric("logtail_hostname", GetHostName());
     }
 
     int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
@@ -162,15 +167,16 @@ void Application::Init() {
 }
 
 void Application::Start() {
-    LogtailMonitor::Instance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
+    LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
 #endif
     // flusher_sls should always be loaded, since profiling will rely on this.
-    Sender::Instance()->InitSender();
+    Sender::Instance()->Init();
 
-    LogtailMonitor::Instance()->InitMonitor();
+    LogtailAlarm::GetInstance()->Init();
+    LogtailMonitor::GetInstance()->Init();
 
     // add local config dir
     filesystem::path localConfigPath
@@ -258,6 +264,8 @@ void Application::Start() {
             FileServer::GetInstance()->Pause();
             FileServer::GetInstance()->Resume();
         }
+
+        this_thread::sleep_for(chrono::seconds(1));
     }
 }
 
@@ -274,11 +282,31 @@ bool Application::TryGetUUID() {
 }
 
 void Application::Exit() {
+#if defined(__ENTERPRISE__) && defined(__linux__)
+    if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
+        ShennongManager::GetInstance()->Stop();
+    }
+#endif
+
     PipelineManager::GetInstance()->StopAllPipelines();
+
     PluginRegistry::GetInstance()->UnloadPlugins();
+
+    LogtailMonitor::GetInstance()->Stop();
+    LogtailAlarm::GetInstance()->Stop();
+    // from now on, alarm should not be used.
+    
+    if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
+        LOG_WARNING(sLogger, ("flush SLS sender data", "failed"));
+    } else {
+        LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
+    }
+
+    
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif
+    LOG_INFO(sLogger, ("exit", "bye!"));
     exit(0);
 }
 
@@ -327,7 +355,7 @@ void Application::CheckCriticalCondition(int32_t curTime) {
         _exit(1);
     }
 
-    LogtailMonitor::Instance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
+    LogtailMonitor::GetInstance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
 }
 
 bool Application::GetUUIDThread() {

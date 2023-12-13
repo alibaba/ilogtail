@@ -39,20 +39,23 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
     return true;
 }
 
-void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
-    size_t inSize = logGroup.GetEvents().size();
-
-    mProcInRecordsTotal->Add(inSize);
+void ProcessorInstance::Process(std::vector<PipelineEventGroup>& logGroupList) {
+    if (logGroupList.empty()) {
+        return;
+    } 
+    for (const auto& logGroup : logGroupList) {
+        mProcInRecordsTotal->Add(logGroup.GetEvents().size());
+    }
 
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
-    mPlugin->Process(logGroup);
+    mPlugin->Process(logGroupList);
     uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
 
     mProcTimeMS->Add(durationTime);
 
-    size_t outSize = logGroup.GetEvents().size();
-    mProcOutRecordsTotal->Add(outSize);
-    LOG_DEBUG(mPlugin->GetContext().GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
+    for (const auto& logGroup : logGroupList) {
+        mProcOutRecordsTotal->Add(logGroup.GetEvents().size());
+    }    
 }
 
 } // namespace logtail

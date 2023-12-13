@@ -62,7 +62,7 @@ public:
     void SetCreateTime(uint32_t time) { mCreateTime = time; }
     const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
     bool InitGlobalConfig(const Json::Value& config, Json::Value& extendedParams) {
-        return mGlobalConfig.Init(config, mConfigName, extendedParams);
+        return mGlobalConfig.Init(config, *this, extendedParams);
     }
     const Pipeline& GetPipeline() const { return *mPipeline; }
     Pipeline& GetPipeline() { return *mPipeline; }

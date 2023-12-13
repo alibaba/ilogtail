@@ -662,7 +662,7 @@ bool Sender::LZ4CompressLogGroup(const sls_logs::LogGroup& logGroup, std::string
 }
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool Sender::InitSender(void) {
+bool Sender::Init(void) {
     static Aggregator* aggregator = Aggregator::GetInstance();
     aggregator->CleanLogPackSeqMap();
 
@@ -1422,7 +1422,7 @@ void Sender::DaemonSender() {
 
         sendBufferCount += logGroupToSend.size();
         if (curTime - lastUpdateMetricTime >= 40) {
-            static auto sMonitor = LogtailMonitor::Instance();
+            static auto sMonitor = LogtailMonitor::GetInstance();
 
             sMonitor->UpdateMetric("send_tps", 1.0 * sendBufferCount / (curTime - lastUpdateMetricTime));
             sMonitor->UpdateMetric("send_bytes_ps", 1.0 * sendBufferBytes / (curTime - lastUpdateMetricTime));
