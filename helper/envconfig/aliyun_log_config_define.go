@@ -134,6 +134,7 @@ const (
 // AliyunLogConfigDetail logtail config detail
 type AliyunLogConfigDetail struct {
 	ConfigName string                   `json:"configName"`
+	InputType  string                   `json:"inputType"`
 	Inputs     []map[string]interface{} `json:"inputs"`
 	Global     map[string]interface{}   `json:"global"`
 	Processors []map[string]interface{} `json:"processors"`
@@ -175,6 +176,7 @@ func isDockerStdout(configType string) bool {
 
 // nolint: unparam
 func initDockerStdoutConfig(dockerInfo *helper.DockerInfoDetail, config *AliyunLogConfigSpec, configType string) {
+	config.LogtailConfig.InputType = "service_docker_stdout"
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	stdoutDetail := make(map[string]interface{})
 	stdoutDetail["Type"] = "service_docker_stdout"
@@ -207,6 +209,7 @@ const invalidFilePattern = "invalid_file_pattern"
 
 // nolint: unparam
 func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePath string, jsonFlag, dockerFile bool) {
+	config.LogtailConfig.InputType = "input_file"
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	logPath, filePattern, err := splitLogPathAndFilePattern(filePath)
 	var input map[string]interface{}
@@ -410,31 +413,21 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 	// config
 	// makesure exist
 	configType := envConfigInfo.ConfigItemMap[""]
-	config.LogtailConfig.LogtailConfig = make(map[string]interface{})
-	if configDetail, ok := envConfigInfo.ConfigItemMap["detail"]; ok {
-		totalConfig += configDetail
-		if err := json.Unmarshal([]byte(configDetail), &config.LogtailConfig.LogtailConfig); err != nil {
-			logger.Error(context.Background(), "INVALID_ENV_CONFIG_DETAIL", "unmarshal error", err, "detail", configDetail)
-		}
-		config.LogtailConfig.InputType = configType
-		config.SimpleConfig = false
+	totalConfig += configType
+	config.SimpleConfig = true
+	logger.Debug(context.Background(), "container", dockerInfo.ContainerInfo.Name, "docker k8s info", dockerInfo.K8SInfo)
+	// stdout or filepath
+	if isDockerStdout(configType) {
+		initDockerStdoutConfig(dockerInfo, config, configType)
 	} else {
-		totalConfig += configType
-		config.SimpleConfig = true
-		logger.Debug(context.Background(), "container", dockerInfo.ContainerInfo.Name, "docker k8s info", dockerInfo.K8SInfo)
-		// stdout or filepath
-		if isDockerStdout(configType) {
-			initDockerStdoutConfig(dockerInfo, config, configType)
-		} else {
-			jsonFlag := isJSONFile(envConfigInfo, config)
-			dockerFileFlag := isDockerFile(envConfigInfo)
-			initFileConfig(dockerInfo.K8SInfo, config, configType, jsonFlag, dockerFileFlag)
-		}
+		jsonFlag := isJSONFile(envConfigInfo, config)
+		dockerFileFlag := isDockerFile(envConfigInfo)
+		initFileConfig(dockerInfo.K8SInfo, config, configType, jsonFlag, dockerFileFlag)
+	}
 
-		if len(config.ProductCode) > 0 {
-			logger.Debug(context.Background(), "init product", config.ProductCode, "project", config.Project, "logstore", config.Logstore)
-			initLogtailConfigForProduct(dockerInfo.K8SInfo, config, configType)
-		}
+	if len(config.ProductCode) > 0 {
+		logger.Debug(context.Background(), "init product", config.ProductCode, "project", config.Project, "logstore", config.Logstore)
+		initLogtailConfigForProduct(dockerInfo.K8SInfo, config, configType)
 	}
 	config.hash(totalConfig)
 	return config
