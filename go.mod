@@ -8,7 +8,6 @@ require (
 	github.com/VictoriaMetrics/VictoriaMetrics v1.83.1
 	github.com/alibaba/ilogtail/pkg v0.0.0
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner v0.0.0
-	github.com/aliyun/aliyun-log-go-sdk v0.1.37
 	github.com/apache/pulsar-client-go v0.10.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -152,7 +151,6 @@ require (
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1483
 	github.com/andrewkroh/sys v0.0.0-20151128191922-287798fe3e43 // indirect
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.8 // indirect
 	github.com/containerd/continuity v0.2.2 // indirect
@@ -285,6 +283,7 @@ require (
 )
 
 require (
+	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.5
 	github.com/alibabacloud-go/sls-20201230/v5 v5.1.2
 	github.com/alibabacloud-go/tea v1.2.1
 )
@@ -296,7 +295,6 @@ require (
 	github.com/alibabacloud-go/darabonba-array v0.1.0 // indirect
 	github.com/alibabacloud-go/darabonba-encode-util v0.0.2 // indirect
 	github.com/alibabacloud-go/darabonba-map v0.0.2 // indirect
-	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.5 // indirect
 	github.com/alibabacloud-go/darabonba-signature-util v0.0.7 // indirect
 	github.com/alibabacloud-go/darabonba-string v1.0.2 // indirect
 	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect

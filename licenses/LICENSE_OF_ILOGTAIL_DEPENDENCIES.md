@@ -160,7 +160,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/Microsoft/hcsshim](https://pkg.go.dev/github.com/Microsoft/hcsshim?tab=licenses)
 - [github.com/Shopify/sarama](https://pkg.go.dev/github.com/Shopify/sarama?tab=licenses)
 - [github.com/VictoriaMetrics/fasthttp](https://pkg.go.dev/github.com/VictoriaMetrics/fasthttp?tab=licenses)
-- [github.com/aliyun/aliyun-log-go-sdk](https://pkg.go.dev/github.com/aliyun/aliyun-log-go-sdk?tab=licenses)
+- [github.com/alibabacloud-go/sls-20201230](https://pkg.go.dev/github.com/alibabacloud-go/sls-20201230?tab=licenses)
 - [github.com/buger/jsonparser](https://pkg.go.dev/github.com/buger/jsonparser?tab=licenses)
 - [github.com/cenkalti/backoff](https://pkg.go.dev/github.com/cenkalti/backoff?tab=licenses)
 - [github.com/cespare/xxhash](https://pkg.go.dev/github.com/cespare/xxhash?tab=licenses)

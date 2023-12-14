@@ -18,10 +18,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
-	"github.com/alibabacloud-go/tea/tea"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/alibabacloud-go/tea/tea"
 
 	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
 	"github.com/gogo/protobuf/proto"
@@ -135,7 +136,6 @@ const (
 // AliyunLogConfigDetail logtail config detail
 type AliyunLogConfigDetail struct {
 	aliyunlog.LogtailPipelineConfig
-	InputTypes string `json:"inputType"`
 }
 
 // Hash generate sha256 hash
@@ -174,7 +174,6 @@ func isDockerStdout(configType string) bool {
 
 // nolint: unparam
 func initDockerStdoutConfig(dockerInfo *helper.DockerInfoDetail, config *AliyunLogConfigSpec, configType string) {
-	config.LogtailConfig.InputTypes = "service_docker_stdout"
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	stdoutDetail := make(map[string]interface{})
 	stdoutDetail["Type"] = "service_docker_stdout"
@@ -207,7 +206,6 @@ const invalidFilePattern = "invalid_file_pattern"
 
 // nolint: unparam
 func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePath string, jsonFlag, dockerFile bool) {
-	config.LogtailConfig.InputTypes = "input_file"
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	logPath, filePattern, err := splitLogPathAndFilePattern(filePath)
 	var input map[string]interface{}
