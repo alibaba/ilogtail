@@ -265,7 +265,7 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 	err := CreateProductLogstore(*flags.DefaultRegion, project, logstore, product, lang, hotTTL)
 
 	// 获取注解
-	annotations := GetAnnotationByObject(config, project, logstore, product, config.LogtailConfig.ConfigName, false)
+	annotations := GetAnnotationByObject(config, project, logstore, product, tea.StringValue(config.LogtailConfig.ConfigName), false)
 
 	// 如果创建过程中出现错误
 	if err != nil {
@@ -453,7 +453,7 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 		}
 	}
 	// 获取注解
-	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, false)
+	annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), false)
 	// 如果创建logStore失败,那么发送错误事件
 	if err != nil {
 		if k8s_event.GetEventRecorder() != nil {
@@ -537,7 +537,7 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 	logstore := ""
 	// 如果配置不为 nil,获取配置名称和logStore
 	if config != nil {
-		configName = config.LogtailConfig.ConfigName
+		configName = tea.StringValue(config.LogtailConfig.ConfigName)
 		logstore = config.Logstore
 	}
 	// 获取注解
@@ -656,23 +656,35 @@ func (o *operationWrapper) updateConfig(config *AliyunLogConfigSpec) error {
 	return o.updateConfigInner(config)
 }
 
-// nolint:unused
-// createConfig 函数用于创建配置
-func (o *operationWrapper) createConfig(config *AliyunLogConfigSpec) error {
-	// 调用 updateConfigInner 方法来创建配置
-	return o.updateConfigInner(config)
-}
-
 // checkFileConfigChanged 函数用于检查文件配置是否发生了变化
-func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel string, serverConfigDetail map[string]interface{}) bool {
-	// 从 serverConfigDetail 中获取各项配置信息
-	serverFilePath, _ := util.InterfaceToString(serverConfigDetail["logPath"])
-	serverFilePattern, _ := util.InterfaceToString(serverConfigDetail["filePattern"])
-	serverIncludeEnv, _ := util.InterfaceToJSONString(serverConfigDetail["dockerIncludeEnv"])
-	serverIncludeLabel, _ := util.InterfaceToJSONString(serverConfigDetail["dockerIncludeLabel"])
+func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, inputs map[string]interface{}) bool {
+	// 判断FilePaths是否存在
+	if _, ok := inputs["FilePaths"]; !ok {
+		return false
+	}
+	serverFilePaths, _ := util.InterfaceToString(inputs["logPath"])
+	// 判断ContainerFilters是否存在
+	if _, ok := inputs["ContainerFilters"]; !ok {
+		return false
+	}
+	var containerFilters map[string]interface{}
+	var ok bool
+	// 判断ContainerFilters类型是否正确
+	if containerFilters, ok = inputs["ContainerFilters"].(map[string]interface{}); !ok {
+		return false
+	}
+	// 判断IncludeEnv是否存在
+	if _, ok = containerFilters["IncludeEnv"]; !ok {
+		return false
+	}
+	serverIncludeEnv, _ := util.InterfaceToJSONString(containerFilters["IncludeEnv"])
+	// 判断IncludeContainerLabel是否存在
+	if _, ok = containerFilters["IncludeContainerLabel"]; !ok {
+		return false
+	}
+	serverIncludeLabel, _ := util.InterfaceToJSONString(containerFilters["IncludeContainerLabel"])
 	// 检查各项配置是否发生了变化
-	return filePath != serverFilePath ||
-		filePattern != serverFilePattern ||
+	return filePaths != serverFilePaths ||
 		includeEnv != serverIncludeEnv ||
 		includeLabel != serverIncludeLabel
 }
@@ -748,262 +760,204 @@ func (o *operationWrapper) TagMachineGroup(project, machineGroup, tagKey, tagVal
 // nolint:govet,ineffassign
 // 定义一个名为updateConfigInner的方法,该方法接收一个AliyunLogConfigSpec类型的指针作为参数,并返回一个错误类型的值
 func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error {
-	// 获取operationWrapper的project属性
 	project := o.project
-	// 如果config的Project属性的长度不为0,即Project属性不为空,则将其值赋给project
 	if len(config.Project) != 0 {
 		project = config.Project
 	}
-	// 获取config的Logstore属性
 	logstore := config.Logstore
 	// 调用makesureLogstoreExist方法,确保logStore存在
 	err := o.makesureLogstoreExist(config)
-	// 如果上述方法返回错误,则返回一个新的错误,错误信息包含config的LogtailConfig的ConfigName属性和错误信息
 	if err != nil {
 		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
 	}
 
-	// 获取config的LogtailConfig的InputType属性
-	inputType := config.LogtailConfig.InputType
-	// 如果inputType的长度为0,即inputType为空,则将aliyunlog.InputTypeFile赋给inputType
-	if len(inputType) == 0 {
-		inputType = aliyunlog.InputTypeFile
-	}
-	// 创建一个新的aliyunlog.LogConfig类型的指针,并初始化其属性
-	aliyunLogConfig := &aliyunlog.LogConfig{
-		Name:        config.LogtailConfig.ConfigName,                                  // Name属性为config的LogtailConfig的ConfigName属性
-		InputDetail: addNecessaryInputConfigField(config.LogtailConfig.LogtailConfig), // InputDetail属性为调用addNecessaryInputConfigField方法返回的值
-		InputType:   inputType,                                                        // InputType属性为inputType
-		OutputType:  aliyunlog.OutputTypeLogService,                                   // OutputType属性为aliyunlog.OutputTypeLogService
-		OutputDetail: aliyunlog.OutputDetail{ // OutputDetail属性为一个新的aliyunlog.OutputDetail类型的值
-			ProjectName:  project,  // ProjectName属性为project
-			LogStoreName: logstore, // LogStoreName属性为logstore
-		},
-	}
+	logger.Info(context.Background(), "create or update config", config.LogtailConfig.ConfigName, "detail", config.LogtailConfig.GoString())
 
-	// 使用logger的Info方法,记录一条信息,信息内容为"create or update config",并附带config的LogtailConfig的ConfigName属性和aliyunLogConfig的详细信息
-	logger.Info(context.Background(), "create or update config", config.LogtailConfig.ConfigName, "detail", *aliyunLogConfig)
-
-	// 初始化一个布尔变量ok为false
 	ok := false
-	// if o.configCacheExists(project, config.LogtailConfig.ConfigName) {
-	// 	ok = true
-	// } else {
-	// 	// 检查配置是否存在
-	// 	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
-	// 		ok, err = (*o.logClient).CheckConfigExist(project, config.LogtailConfig.ConfigName)
-	// 		if err == nil {
-	// 			break
-	// 		}
-	// 	}
-	// }
 
-	// 初始化一个指向aliyunlog.LogConfig的指针变量serverConfig
+	// 服务端配置
 	var serverConfig *aliyunlog.LogtailPipelineConfig
 	var getLogtailPipelineConfigResponse *aliyunlog.GetLogtailPipelineConfigResponse
-	// 循环尝试获取配置,直到成功或达到最大重试次数
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用logClient的GetConfig方法获取配置
-		getLogtailPipelineConfigResponse, err = (*o.logClient).GetLogtailPipelineConfig(&project, &config.LogtailConfig.ConfigName)
-		// 如果获取配置出错
+		getLogtailPipelineConfigResponse, err = (*o.logClient).GetLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName)
 		if err != nil {
-			// 判断错误是否为aliyunlog.Error类型
 			var slsErr *tea.SDKError
 			if errors.As(err, &slsErr) {
-				// 如果错误代码为"ConfigNotExist",则设置ok为false并跳出循环
 				if tea.StringValue(slsErr.Code) == "ConfigNotExist" {
 					ok = false
 					break
 				}
 			}
 		} else {
-			// 如果获取配置成功,则设置ok为true并跳出循环
 			ok = true
 			serverConfig = getLogtailPipelineConfigResponse.Body
 			break
 		}
 	}
 
-	// 记录日志,输出获取配置的结果
 	logger.Info(context.Background(), "get config", config.LogtailConfig.ConfigName, "result", ok)
 
-	// 创建配置或更新配置
-	// 如果获取配置成功并且serverConfig不为nil
+	// 如果服务端配置存在
 	if ok && serverConfig != nil {
 		// 如果配置为简单配置
 		if config.SimpleConfig {
-			// 将serverConfig.InputDetail转换为map[string]interface{}类型
-			//configDetail, ok := serverConfig.InputDetail.(map[string]interface{})
-			// 只更新文件类型的filePattern和logPath
-			// 如果配置的输入类型为"file",并且serverConfig的输入类型也为"file",并且转换类型成功
-			if config.LogtailConfig.Inputs[0]["Type"].(string) == "input_file" && serverConfig.Inputs[0]["Type"].(string) == "input_file" && ok {
-				// 获取filePaths、logPath、includeEnv、includeLabel的值
+			if config.LogtailConfig.Inputs == nil || len(config.LogtailConfig.Inputs) == 0 {
+				updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
+					Aggregators: config.LogtailConfig.Aggregators,
+					ConfigName:  config.LogtailConfig.ConfigName,
+					Flushers: []map[string]interface{}{
+						{
+							"Logstore": logstore,
+							"Type":     "flusher_sls",
+						},
+					},
+					Global:     config.LogtailConfig.Global,
+					Inputs:     config.LogtailConfig.Inputs,
+					LogSample:  config.LogtailConfig.LogSample,
+					Processors: config.LogtailConfig.Processors,
+				}
+				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
+					if err == nil {
+						break
+					}
+				}
+			} else if config.LogtailConfig.Inputs[0]["Type"].(string) == "input_file" && serverConfig.Inputs[0]["Type"].(string) == "input_file" {
+				// 如果配置的输入类型为"input_file",并且serverConfig的输入类型也为"input_file"
+				// 则检查env配置的FilePaths、includeEnv、includeLabel是否和服务端配置相同, 如果不同则更新服务端配置
+
+				// 获取FilePaths、includeEnv、includeLabel的值
 				filePaths, _ := util.InterfaceToString(config.LogtailConfig.Inputs[0]["FilePaths"])
 				includeEnv, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeEnv"])
 				includeLabel, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeContainerLabel"])
 
-				// 如果filePaths的长度大于0
 				if len(filePaths) > 0 {
 
-					// 如果文件配置发生了变化
-					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, configDetail) {
-						// 记录日志,输出旧的配置和新的配置
-						logger.Info(context.Background(), "file config changed, old", serverConfig.GoString(), "new", config.LogtailConfig.LogtailConfig)
-						// 更新配置
-						configDetail["logPath"] = logPath
-						configDetail["filePattern"] = filePattern
-						configDetail["dockerIncludeEnv"] = config.LogtailConfig.LogtailConfig["dockerIncludeEnv"]
-						// 如果configDetail中包含"dockerIncludeLabel"键
-						if _, hasLabel := configDetail["dockerIncludeLabel"]; hasLabel {
-							// 如果config.LogtailConfig.LogtailConfig中也包含"dockerIncludeLabel"键
-							if _, hasLocalLabel := config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]; hasLocalLabel {
-								// 更新"dockerIncludeLabel"的值
-								configDetail["dockerIncludeLabel"] = config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]
-							}
+					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, serverConfig.Inputs[0]) {
+						logger.Info(context.Background(), "file config changed, old", serverConfig.GoString(), "new", config.LogtailConfig.GoString())
+						serverConfig.Inputs[0]["FilePaths"] = filePaths
+						if _, ok = serverConfig.Inputs[0]["ContainerFilters"]; !ok {
+							serverConfig.Inputs[0]["ContainerFilters"] = map[string]interface{}{}
 						}
-						// 更新serverConfig.InputDetail的值
-						serverConfig.InputDetail = configDetail
-						// 更新配置
+						serverConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeEnv"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeEnv"]
+						serverConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeContainerLabel"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeContainerLabel"]
 						updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
-							Aggregators: nil,
-							ConfigName:  &config.LogtailConfig.ConfigName,
-							Flushers:    nil,
-							Global:      nil,
-							Inputs:      nil,
-							LogSample:   nil,
-							Processors:  nil,
+							Aggregators: serverConfig.Aggregators,
+							ConfigName:  serverConfig.ConfigName,
+							Flushers:    serverConfig.Flushers,
+							Global:      serverConfig.Global,
+							Inputs:      serverConfig.Inputs,
+							LogSample:   serverConfig.LogSample,
+							Processors:  serverConfig.Processors,
 						}
 						// 循环尝试更新配置,直到成功或达到最大重试次数
 						for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-							_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, &config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
+							_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 							if err == nil {
 								break
 							}
 						}
 
-						// 获取注解
-						annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
-						// 如果更新配置出错
+						// 拼装事件, 记录到k8s_event中
+						annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
 						if err != nil {
-							// 如果事件记录器存在
 							if k8s_event.GetEventRecorder() != nil {
-								// 获取自定义错误
 								customErr := CustomErrorFromSlsSDKError(err)
-								// 发送错误事件
 								k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
 							}
 						} else {
-							// 如果事件记录器存在
 							if k8s_event.GetEventRecorder() != nil {
-								// 发送正常事件
 								k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 							}
 						}
 
 					} else {
-						// 如果文件配置没有发生变化,记录日志,跳过更新
 						logger.Info(context.Background(), "file config not changed", "skip update")
 					}
 				}
-			}
-			// 如果配置的输入类型和serverConfig的输入类型不一致,并且转换类型成功
-			// 如果当前配置的输入类型与服务器配置的输入类型不同,并且类型转换成功
-			if config.LogtailConfig.Inputs[0]["Type"].(string) != serverConfig.Inputs[0]["Type"].(string) && ok {
-				// 强制更新
-				// 记录日志,输出配置输入类型的变化
-				// 记录一条信息级别的日志,表示配置输入类型的变化,并强制更新
+			} else if config.LogtailConfig.Inputs[0]["Type"].(string) != serverConfig.Inputs[0]["Type"].(string) && ok {
+				// 如果配置的输入类型和serverConfig的输入类型不一致, 强制更新
 				logger.Info(context.Background(), "config input type change from", serverConfig.Inputs[0]["Type"].(string),
 					"to", config.LogtailConfig.Inputs[0]["Type"].(string), "force update")
-				// update config
-				// 更新配置
 				updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
-					Aggregators: nil,
-					ConfigName:  &config.LogtailConfig.ConfigName,
-					Flushers:    nil,
-					Global:      nil,
-					Inputs:      nil,
-					LogSample:   nil,
-					Processors:  nil,
+					Aggregators: config.LogtailConfig.Aggregators,
+					ConfigName:  config.LogtailConfig.ConfigName,
+					Flushers: []map[string]interface{}{
+						{
+							"Logstore": logstore,
+							"Type":     "flusher_sls",
+						},
+					},
+					Global:     config.LogtailConfig.Global,
+					Inputs:     config.LogtailConfig.Inputs,
+					LogSample:  config.LogtailConfig.LogSample,
+					Processors: config.LogtailConfig.Processors,
 				}
 				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-					// 调用阿里云日志服务的客户端更新配置
-					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, &config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
-					// 如果没有错误,跳出循环
+					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 					if err == nil {
 						break
 					}
 				}
 			}
-			// 记录一条信息级别的日志,表示配置已更新
 			logger.Info(context.Background(), "config updated, server config", *serverConfig, "local config", *config)
 		}
 
 	} else {
-		// 如果配置不存在
+		// 如果配置不存在, 创建新的配置
 		createLogtailPipelineConfigRequest := aliyunlog.CreateLogtailPipelineConfigRequest{
-			Aggregators: nil,
-			ConfigName:  nil,
-			Flushers:    nil,
-			Global:      nil,
-			Inputs:      nil,
-			LogSample:   nil,
-			Processors:  nil,
+			Aggregators: config.LogtailConfig.Aggregators,
+			ConfigName:  config.LogtailConfig.ConfigName,
+			Flushers: []map[string]interface{}{
+				{
+					"Logstore": logstore,
+					"Type":     "flusher_sls",
+				},
+			},
+			Global:     config.LogtailConfig.Global,
+			Inputs:     config.LogtailConfig.Inputs,
+			LogSample:  config.LogtailConfig.LogSample,
+			Processors: config.LogtailConfig.Processors,
 		}
 		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-			// 创建新的配置
 			_, err = (*o.logClient).CreateLogtailPipelineConfig(&project, &createLogtailPipelineConfigRequest)
-			// 如果没有错误,跳出循环
 			if err == nil {
 				break
 			}
 		}
-		// 获取注解
-		annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
-		// 如果有错误
+		// 拼装事件, 记录到k8s_event中
+		annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
 		if err != nil {
-			// 如果事件记录器存在
 			if k8s_event.GetEventRecorder() != nil {
-				// 从SlsSDKError创建自定义错误
 				customErr := CustomErrorFromSlsSDKError(err)
-				// 发送带有注解的错误事件
 				k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
 			}
 		} else if k8s_event.GetEventRecorder() != nil {
-			// 如果事件记录器存在,并且没有错误,发送带有注解的正常事件
 			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 		}
 	}
-	// 如果有错误,返回错误
 	if err != nil {
 		return fmt.Errorf("UpdateConfig error, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
 	}
-	// 记录一条信息级别的日志,表示创建或更新配置成功
-	logger.Info(context.Background(), "create or update config success", config.LogtailConfig.ConfigName) // Tag config
+	logger.Info(context.Background(), "create or update config success", config.LogtailConfig.ConfigName)
 
-	// Tag config
-	// 创建一个空的map,用于存储日志配置的标签
+	// 为Logtail配置添加标签
 	logtailConfigTags := map[string]string{}
-	// 遍历配置中的标签,将它们添加到新创建的map中
 	for k, v := range config.ConfigTags {
 		logtailConfigTags[k] = v
 	}
-	// 添加一个特定的标签到map中
 	logtailConfigTags[SlsLogtailChannalKey] = SlsLogtailChannalEnv
-	// 调用TagLogtailConfig函数,为日志配置添加标签
-	err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, logtailConfigTags)
-	// 调用GetAnnotationByObject函数,获取注解
-	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
-	// 检查是否有错误
+	err = o.TagLogtailConfig(project, tea.StringValue(config.LogtailConfig.ConfigName), logtailConfigTags)
+
+	// 拼装事件, 记录到k8s_event中
+	annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
 	if err != nil {
-		// 如果有错误,发送一个错误事件
 		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config %s error :%s", config.LogtailConfig.ConfigName, err.Error()))
 	} else {
-		// 如果没有错误,发送一个正常事件
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, fmt.Sprintf("tag config %s success", config.LogtailConfig.ConfigName))
 	}
 
-	// 检查配置是否在机器组中
-	// 只在创建配置时检查
+	// 检查配置是否在机器组中, 只在创建配置时检查
 	var machineGroup string
 	// 如果配置中有机器组,取第一个机器组
 	if len(config.MachineGroups) > 0 {
@@ -1013,40 +967,14 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		machineGroup = *flags.DefaultLogMachineGroup
 	}
 	// 确保机器组存在
-	_ = o.makesureMachineGroupExist(project, machineGroup)
-	// 如果ok为true,执行以下操作
-	if ok {
-		var machineGroups []*string
-		var getAppliedMachineGroupsResponse *aliyunlog.GetAppliedMachineGroupsResponse
-		// 重试获取应用的机器组
-		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-			getAppliedMachineGroupsResponse, err = (*o.logClient).GetAppliedMachineGroups(&project, &config.LogtailConfig.ConfigName)
-			// 如果没有错误,跳出循环
-			if err == nil {
-				break
-			}
-		}
-		// 如果有错误,返回错误
-		if err != nil {
-			return fmt.Errorf("GetAppliedMachineGroups error, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
-		}
-		// 设置ok为false
-		ok = false
-		machineGroups = getAppliedMachineGroupsResponse.Body.Machinegroups
-		// 遍历机器组
-		for _, key := range machineGroups {
-			// 如果找到了匹配的机器组,设置ok为true并跳出循环
-			if *key == machineGroup {
-				ok = true
-				break
-			}
-		}
+	err = o.makesureMachineGroupExist(project, machineGroup)
+	if err != nil {
+		return fmt.Errorf("makesureMachineGroupExist error, config : %s, machineGroup : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), machineGroup, err.Error())
 	}
-	// 将配置应用到机器组
+
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用ApplyConfigToMachineGroup函数,将配置应用到机器组
-		_, err = (*o.logClient).ApplyConfigToMachineGroup(&project, &machineGroup, &config.LogtailConfig.ConfigName)
-		// 如果没有错误,跳出循环
+		// 将配置应用到机器组
+		_, err = (*o.logClient).ApplyConfigToMachineGroup(&project, &machineGroup, config.LogtailConfig.ConfigName)
 		if err == nil {
 			break
 		}
@@ -1056,6 +984,6 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	}
 	logger.Info(context.Background(), "apply config to machine group success", config.LogtailConfig.ConfigName, "group", machineGroup)
 	// 将配置添加到缓存中
-	o.addConfigCache(project, config.LogtailConfig.ConfigName)
+	o.addConfigCache(project, tea.StringValue(config.LogtailConfig.ConfigName))
 	return nil
 }

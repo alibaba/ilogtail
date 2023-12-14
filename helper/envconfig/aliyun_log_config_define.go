@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"github.com/alibabacloud-go/tea/tea"
 	"strconv"
 	"strings"
 	"time"
@@ -133,11 +134,8 @@ const (
 
 // AliyunLogConfigDetail logtail config detail
 type AliyunLogConfigDetail struct {
-	ConfigName string                   `json:"configName"`
-	InputType  string                   `json:"inputType"`
-	Inputs     []map[string]interface{} `json:"inputs"`
-	Global     map[string]interface{}   `json:"global"`
-	Processors []map[string]interface{} `json:"processors"`
+	aliyunlog.LogtailPipelineConfig
+	InputTypes string `json:"inputType"`
 }
 
 // Hash generate sha256 hash
@@ -149,7 +147,7 @@ func (alcs *AliyunLogConfigSpec) hash(hashValue string) {
 
 // Key return the unique key
 func (alcs *AliyunLogConfigSpec) Key() string {
-	return alcs.Project + "@" + alcs.LogtailConfig.ConfigName + "@" + alcs.ContainerName
+	return alcs.Project + "@" + tea.StringValue(alcs.LogtailConfig.ConfigName) + "@" + alcs.ContainerName
 }
 
 // all log config spec, must been cleared before next process
@@ -176,7 +174,7 @@ func isDockerStdout(configType string) bool {
 
 // nolint: unparam
 func initDockerStdoutConfig(dockerInfo *helper.DockerInfoDetail, config *AliyunLogConfigSpec, configType string) {
-	config.LogtailConfig.InputType = "service_docker_stdout"
+	config.LogtailConfig.InputTypes = "service_docker_stdout"
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	stdoutDetail := make(map[string]interface{})
 	stdoutDetail["Type"] = "service_docker_stdout"
@@ -199,7 +197,7 @@ func initDockerStdoutConfig(dockerInfo *helper.DockerInfoDetail, config *AliyunL
 	// 	}
 	// }
 	stdoutDetail["IncludeEnv"] = map[string]string{
-		*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: configType,
+		*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): configType,
 	}
 	config.LogtailConfig.Inputs = append(config.LogtailConfig.Inputs, stdoutDetail)
 	config.LogtailConfig.Global = map[string]interface{}{"AlwaysOnline": true}
@@ -209,7 +207,7 @@ const invalidFilePattern = "invalid_file_pattern"
 
 // nolint: unparam
 func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePath string, jsonFlag, dockerFile bool) {
-	config.LogtailConfig.InputType = "input_file"
+	config.LogtailConfig.InputTypes = "input_file"
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	logPath, filePattern, err := splitLogPathAndFilePattern(filePath)
 	var input map[string]interface{}
@@ -224,7 +222,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 			"EnableContainerDiscovery": dockerFile,
 			"ContainerFilters": map[string]map[string]interface{}{
 				"IncludeEnv": {
-					*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: filePath,
+					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
 			"MaxDirSearchDepth": 20,
@@ -237,7 +235,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 			"EnableContainerDiscovery": dockerFile,
 			"ContainerFilters": map[string]map[string]interface{}{
 				"IncludeEnv": {
-					*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: filePath,
+					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
 			"MaxDirSearchDepth": 20,
@@ -284,7 +282,7 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 	config.LastFetchTime = time.Now().Unix()
 	// save all config info, and keep sequence
 	var totalConfig string
-	config.LogtailConfig.ConfigName = envConfigInfo.ConfigName
+	config.LogtailConfig.ConfigName = tea.String(envConfigInfo.ConfigName)
 	// @note add image name to prevent key conflict
 	if len(dockerInfo.K8SInfo.ContainerName) > 0 {
 		config.ContainerName = dockerInfo.K8SInfo.ContainerName
