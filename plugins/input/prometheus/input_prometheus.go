@@ -238,10 +238,10 @@ func getNameAndTagsFrom(labels []prompbmarshal.Label) (string, models.Tags) {
 	metricName := ""
 	for _, label := range labels {
 		if label.Name == prometheusKeyName {
-			metricName = label.Value
+			metricName = strings.Clone(label.Value)
 			continue
 		}
-		tags[label.Name] = label.Value
+		tags[label.Name] = strings.Clone(label.Value)
 	}
 	return metricName, models.NewMetadataWithMap(tags)
 }
