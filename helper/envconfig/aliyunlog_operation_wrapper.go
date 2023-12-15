@@ -589,10 +589,10 @@ func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, inputs m
 	if _, ok := inputs["ContainerFilters"]; !ok {
 		return false
 	}
-	var containerFilters map[string]interface{}
+	var containerFilters map[string]map[string]interface{}
 	var ok bool
 	// 判断ContainerFilters类型是否正确
-	if containerFilters, ok = inputs["ContainerFilters"].(map[string]interface{}); !ok {
+	if containerFilters, ok = inputs["ContainerFilters"].(map[string]map[string]interface{}); !ok {
 		return false
 	}
 	// 判断IncludeEnv是否存在
@@ -750,8 +750,8 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 				// 获取FilePaths、includeEnv、includeLabel的值
 				filePaths, _ := util.InterfaceToString(config.LogtailConfig.Inputs[0]["FilePaths"])
-				includeEnv, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeEnv"])
-				includeLabel, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeContainerLabel"])
+				includeEnv, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"])
+				includeLabel, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"])
 
 				if len(filePaths) > 0 {
 
@@ -761,8 +761,8 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						if _, ok = serverConfig.Inputs[0]["ContainerFilters"]; !ok {
 							serverConfig.Inputs[0]["ContainerFilters"] = map[string]interface{}{}
 						}
-						serverConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeEnv"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeEnv"]
-						serverConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeContainerLabel"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]interface{})["IncludeContainerLabel"]
+						serverConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"]
+						serverConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"]
 						updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
 							Aggregators: serverConfig.Aggregators,
 							ConfigName:  serverConfig.ConfigName,
