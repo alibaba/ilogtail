@@ -202,13 +202,11 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 	annotations := GetAnnotationByObject(config, project, logstore, product, config.LogtailConfig.ConfigName, false)
 
 	if err != nil {
-		if k8s_event.GetEventRecorder() != nil {
-			customErr := CustomErrorFromPopError(err)
-			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, "", fmt.Sprintf("create product log failed, error: %s", err.Error()))
-		}
+		customErr := CustomErrorFromPopError(err)
+		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, "", fmt.Sprintf("create product log failed, error: %s", err.Error()))
 		logger.Warning(context.Background(), "CREATE_PRODUCT_ALARM", "create product error, error", err)
 		return err
-	} else if k8s_event.GetEventRecorder() != nil {
+	} else {
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
 	}
 
@@ -335,12 +333,10 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	}
 	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, false)
 	if err != nil {
-		if k8s_event.GetEventRecorder() != nil {
-			customErr := CustomErrorFromSlsSDKError(err)
-			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, "", fmt.Sprintf("create logstore failed, error: %s", err.Error()))
-		}
+		customErr := CustomErrorFromSlsSDKError(err)
+		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, "", fmt.Sprintf("create logstore failed, error: %s", err.Error()))
 		return err
-	} else if k8s_event.GetEventRecorder() != nil {
+	} else {
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
 	}
 
