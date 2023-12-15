@@ -95,29 +95,29 @@ import (
 
 // AliyunLogConfigSpec logtail config struct for wrapper
 type AliyunLogConfigSpec struct {
-	Project                string                `json:"project"`
-	Logstore               string                `json:"logstore"`
-	ShardCount             *int32                `json:"shardCount"`
-	LifeCycle              *int32                `json:"lifeCycle"`
-	MachineGroups          []string              `json:"machineGroups"`
-	LogtailConfig          AliyunLogConfigDetail `json:"logtailConfig"`
-	ContainerName          string                `json:"containerName"`
-	HashCode               []byte                `json:"hashCode"`
-	ErrorCount             int                   `json:"errorCount"`
-	NextTryTime            int64                 `json:"nextTryTime"`
-	SimpleConfig           bool                  `json:"simpleConfig"`
-	LastFetchTime          int64                 `json:"lastFetchTime"`
-	ProductCode            string                `json:"productCode"`
-	ProductLang            string                `json:"productLang"`
-	LogstoreMode           string                `json:"logstoreMode"`
-	LogstoreHotTTL         *int32                `json:"logstoreHotTTL"`
-	LogstoreTelemetryType  string                `json:"logstoreTelemetryType"`
-	LogstoreAppendMeta     bool                  `json:"logstoreAppendMeta"`
-	LogstoreMaxSplitShard  *int32                `json:"logstoreMaxSplitShard"`
-	LogstoreEnableTracking bool                  `json:"logstoreEnableTracking"`
-	LogstoreAutoSplit      bool                  `json:"logstoreAutoSplit"`
-	LogstoreEncryptConf    aliyunlog.EncryptConf `json:"logstoreEncryptConf"`
-	ConfigTags             map[string]string     `json:"configTags"`
+	Project                string                          `json:"project"`
+	Logstore               string                          `json:"logstore"`
+	ShardCount             *int32                          `json:"shardCount"`
+	LifeCycle              *int32                          `json:"lifeCycle"`
+	MachineGroups          []string                        `json:"machineGroups"`
+	LogtailConfig          aliyunlog.LogtailPipelineConfig `json:"logtailConfig"`
+	ContainerName          string                          `json:"containerName"`
+	HashCode               []byte                          `json:"hashCode"`
+	ErrorCount             int                             `json:"errorCount"`
+	NextTryTime            int64                           `json:"nextTryTime"`
+	SimpleConfig           bool                            `json:"simpleConfig"`
+	LastFetchTime          int64                           `json:"lastFetchTime"`
+	ProductCode            string                          `json:"productCode"`
+	ProductLang            string                          `json:"productLang"`
+	LogstoreMode           string                          `json:"logstoreMode"`
+	LogstoreHotTTL         *int32                          `json:"logstoreHotTTL"`
+	LogstoreTelemetryType  string                          `json:"logstoreTelemetryType"`
+	LogstoreAppendMeta     bool                            `json:"logstoreAppendMeta"`
+	LogstoreMaxSplitShard  *int32                          `json:"logstoreMaxSplitShard"`
+	LogstoreEnableTracking bool                            `json:"logstoreEnableTracking"`
+	LogstoreAutoSplit      bool                            `json:"logstoreAutoSplit"`
+	LogstoreEncryptConf    aliyunlog.EncryptConf           `json:"logstoreEncryptConf"`
+	ConfigTags             map[string]string               `json:"configTags"`
 }
 
 const (
@@ -132,11 +132,6 @@ const (
 	SlsMachinegroupDeployModeKey       string = "sls.machinegroup.deploy_mode"
 	SlsMachinegroupDeployModeDeamonset string = "deamonset"
 )
-
-// AliyunLogConfigDetail logtail config detail
-type AliyunLogConfigDetail struct {
-	aliyunlog.LogtailPipelineConfig
-}
 
 // Hash generate sha256 hash
 func (alcs *AliyunLogConfigSpec) hash(hashValue string) {
@@ -223,8 +218,6 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
-			"MaxDirSearchDepth": 20,
-			"FileEncoding":      "utf8",
 		}
 	} else {
 		input = map[string]interface{}{
@@ -236,8 +229,6 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
-			"MaxDirSearchDepth": 20,
-			"FileEncoding":      "utf8",
 		}
 		config.LogtailConfig.Processors = []map[string]interface{}{
 			{

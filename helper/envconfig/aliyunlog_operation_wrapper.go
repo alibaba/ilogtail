@@ -863,8 +863,10 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 	// 为Logtail配置添加标签
 	logtailConfigTags := map[string]string{}
-	for k, v := range config.ConfigTags {
-		logtailConfigTags[k] = v
+	if config.ConfigTags != nil {
+		for k, v := range config.ConfigTags {
+			logtailConfigTags[k] = v
+		}
 	}
 	logtailConfigTags[SlsLogtailChannalKey] = SlsLogtailChannalEnv
 	err = o.TagLogtailConfig(project, tea.StringValue(config.LogtailConfig.ConfigName), logtailConfigTags)
