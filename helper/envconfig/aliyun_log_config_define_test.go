@@ -15,8 +15,8 @@
 package envconfig
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/alibabacloud-go/tea/tea"
 	"testing"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
@@ -74,14 +74,14 @@ func (s *logConfigTestSuite) TestNormal(c *check.C) {
 	c.Assert(config.ShardCount, check.IsNil)
 	c.Assert(config.LifeCycle, check.IsNil)
 	c.Assert(config.SimpleConfig, check.Equals, true)
-	c.Assert(config.LogtailConfig.InputType, check.Equals, "plugin")
-	c.Assert(config.LogtailConfig.ConfigName, check.Equals, "catalina")
-	c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 1)
-	c.Assert(config.LogtailConfig.LogtailConfig["plugin"], check.NotNil)
-	jsonStr := "{\"global\":{\"AlwaysOnline\":true},\"inputs\":[{\"detail\":{\"IncludeEnv\":{\"aliyun_logs_catalina\":\"stdout\"},\"Stderr\":true,\"Stdout\":true},\"type\":\"service_docker_stdout\"}]}"
-	configDetail, err := json.Marshal(config.LogtailConfig.LogtailConfig["plugin"])
-	c.Assert(err, check.IsNil)
-	c.Assert(string(configDetail), check.Equals, jsonStr)
+
+	c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 4)
+	c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "service_docker_stdout")
+	c.Assert(config.LogtailConfig.Inputs[0]["Stderr"].(bool), check.Equals, true)
+	c.Assert(config.LogtailConfig.Inputs[0]["Stdout"], check.Equals, true)
+	c.Assert(config.LogtailConfig.Inputs[0]["IncludeEnv"].(map[string]string)["aliyun_logs_catalina"], check.Equals, "stdout")
+	c.Assert(config.LogtailConfig.Global["AlwaysOnline"], check.Equals, true)
+	c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "catalina")
 }
 
 func (s *logConfigTestSuite) TestK8S(c *check.C) {
@@ -103,14 +103,14 @@ func (s *logConfigTestSuite) TestK8S(c *check.C) {
 	c.Assert(config.ShardCount, check.IsNil)
 	c.Assert(config.LifeCycle, check.IsNil)
 	c.Assert(config.SimpleConfig, check.Equals, true)
-	c.Assert(config.LogtailConfig.InputType, check.Equals, "plugin")
-	c.Assert(config.LogtailConfig.ConfigName, check.Equals, "catalina")
-	c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 1)
-	c.Assert(config.LogtailConfig.LogtailConfig["plugin"], check.NotNil)
-	jsonStr := "{\"global\":{\"AlwaysOnline\":true},\"inputs\":[{\"detail\":{\"IncludeEnv\":{\"aliyun_logs_catalina\":\"stdout\"},\"Stderr\":true,\"Stdout\":true},\"type\":\"service_docker_stdout\"}]}"
-	configDetail, err := json.Marshal(config.LogtailConfig.LogtailConfig["plugin"])
-	c.Assert(err, check.IsNil)
-	c.Assert(string(configDetail), check.Equals, jsonStr)
+
+	c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 4)
+	c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "service_docker_stdout")
+	c.Assert(config.LogtailConfig.Inputs[0]["Stderr"].(bool), check.Equals, true)
+	c.Assert(config.LogtailConfig.Inputs[0]["Stdout"], check.Equals, true)
+	c.Assert(config.LogtailConfig.Inputs[0]["IncludeEnv"].(map[string]string)["aliyun_logs_catalina"], check.Equals, "stdout")
+	c.Assert(config.LogtailConfig.Global["AlwaysOnline"], check.Equals, true)
+	c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "catalina")
 }
 
 func (s *logConfigTestSuite) TestTags(c *check.C) {
@@ -137,14 +137,13 @@ func (s *logConfigTestSuite) TestMulti(c *check.C) {
 		c.Assert(config.ShardCount, check.IsNil)
 		c.Assert(config.LifeCycle, check.IsNil)
 		c.Assert(config.SimpleConfig, check.Equals, true)
-		c.Assert(config.LogtailConfig.InputType, check.Equals, "plugin")
-		c.Assert(config.LogtailConfig.ConfigName, check.Equals, "catalina")
-		c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 1)
-		c.Assert(config.LogtailConfig.LogtailConfig["plugin"], check.NotNil)
-		jsonStr := "{\"global\":{\"AlwaysOnline\":true},\"inputs\":[{\"detail\":{\"IncludeEnv\":{\"aliyun_logs_catalina\":\"stdout\"},\"Stderr\":true,\"Stdout\":true},\"type\":\"service_docker_stdout\"}]}"
-		configDetail, err := json.Marshal(config.LogtailConfig.LogtailConfig["plugin"])
-		c.Assert(err, check.IsNil)
-		c.Assert(string(configDetail), check.Equals, jsonStr)
+		c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 4)
+		c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "service_docker_stdout")
+		c.Assert(config.LogtailConfig.Inputs[0]["Stderr"].(bool), check.Equals, true)
+		c.Assert(config.LogtailConfig.Inputs[0]["Stdout"], check.Equals, true)
+		c.Assert(config.LogtailConfig.Inputs[0]["IncludeEnv"].(map[string]string)["aliyun_logs_catalina"], check.Equals, "stdout")
+		c.Assert(config.LogtailConfig.Global["AlwaysOnline"], check.Equals, true)
+		c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "catalina")
 	}
 
 	{
@@ -157,14 +156,14 @@ func (s *logConfigTestSuite) TestMulti(c *check.C) {
 		c.Assert(config.ShardCount, check.IsNil)
 		c.Assert(config.LifeCycle, check.IsNil)
 		c.Assert(config.SimpleConfig, check.Equals, true)
-		c.Assert(config.LogtailConfig.InputType, check.Equals, "file")
-		c.Assert(config.LogtailConfig.ConfigName, check.Equals, "filelogs")
-		c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 5)
-		c.Assert(config.LogtailConfig.LogtailConfig["logType"].(string), check.Equals, "common_reg_log")
-		c.Assert(config.LogtailConfig.LogtailConfig["logPath"].(string), check.Equals, invalidLogPath)
-		c.Assert(config.LogtailConfig.LogtailConfig["filePattern"].(string), check.Equals, invalidFilePattern)
-		c.Assert(config.LogtailConfig.LogtailConfig["dockerFile"].(bool), check.Equals, true)
-		c.Assert(config.LogtailConfig.LogtailConfig["dockerIncludeEnv"].(map[string]string)["aliyun_logs_filelogs"], check.Equals, "invalid-file-path")
+
+		c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 5)
+		c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "input_file")
+		c.Assert(config.LogtailConfig.Inputs[0]["FilePaths"].([]string)[0], check.Equals, invalidLogPath+"/**/"+invalidFilePattern)
+		c.Assert(config.LogtailConfig.Inputs[0]["EnableContainerDiscovery"].(bool), check.Equals, true)
+		c.Assert(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"]["aliyun_logs_filelogs"], check.Equals, "invalid-file-path")
+		c.Assert(config.LogtailConfig.Inputs[0]["MaxDirSearchDepth"].(int), check.Equals, 20)
+		c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "filelogs")
 	}
 }
 
@@ -176,7 +175,7 @@ func (s *logConfigTestSuite) TestAllConfigs(c *check.C) {
 		"aliyun_logs_catalina_shard=10",
 		"aliyun_logs_catalina_ttl=3650",
 		"aliyun_logs_catalina_machinegroup=my-group",
-		"aliyun_logs_catalina_detail={\n  \"logType\": \"delimiter_log\",\n  \"logPath\": \"/usr/local/ilogtail\",\n  \"filePattern\": \"delimiter_log.LOG\",\n  \"separator\": \"|&|\",\n  \"key\": [\n    \"time\",\n    \"level\",\n    \"method\",\n    \"file\",\n    \"line\",\n    \"message\"\n  ],\n  \"timeKey\": \"time\",\n  \"timeFormat\": \"%Y-%m-%dT%H:%M:%S\",\n  \"dockerFile\": true,\n  \"dockerIncludeEnv\": {\n    \"ALIYUN_LOGTAIL_USER_DEFINED_ID\": \"\"\n  }\n}",
+		"aliyun_logs_catalina_detail={\"configName\":\"envTest\",\"global\":{\"EnableTag\":true,\"ProcessPriority\":2,\"TopicType\":\"default\"},\"inputs\":[{\"Type\":\"input_file\",\"MaxDirSearchDepth\":0,\"EnableContainerDiscovery\":true,\"TailSizeKB\":1024,\"FilePaths\":[\"/python/logs/*.LOG\"],\"ExcludeFilePaths\":[\"/asdf/asdfasdfaesdf\",\"/asdf/asdfasdf34qrt\"],\"ExcludeDirs\":[\"/asdf/asdfasdf\",\"/asdf/asdfasdfasdadsf\"],\"ExternalK8sLabelTag\":{\"avd\":\"adsv\"},\"ExternalEnvTag\":{\"adsv\":\"avds\"},\"ContainerFilters\":{\"K8sNamespaceRegex\":\"asdf\",\"K8sPodRegex\":\"asdf\",\"K8sContainerRegex\":\"asdf\",\"IncludeK8sLabel\":{\"asdf\":\"adsf\"},\"ExcludeK8sLabel\":{\"adsf\":\"vads\"},\"IncludeEnv\":{\"aerv\":\"advf\",\"sb\":\"avergf\"},\"ExcludeEnv\":{\"adsvf\":\"adsv\",\"asdvc\":\"asdv\"},\"IncludeContainerLabel\":{\"aef\":\"asdf\",\"srabgth\":\"srtb\"},\"ExcludeContainerLabel\":{\"asdf\":\"xfgb\",\"sfvb\":\"sbfr\"}},\"PreservedDirDepth\":0}],\"processors\":[{\"Type\":\"processor_parse_apsara_native\",\"SourceKey\":\"content\",\"KeepingSourceWhenParseFail\":true,\"KeepingSourceWhenParseSucceed\":true,\"RenamedSourceKey\":\"__raw__\",\"AdjustingMicroTimezone\":false},{\"Type\":\"processor_filter_regex_native\",\"Include\":{\"a\":\"b\"}},{\"Type\":\"processor_desensitize_native\",\"SourceKey\":\"k1\",\"Method\":\"const\",\"ReplacingString\":\"******\",\"ContentPatternBeforeReplacedString\":\"password:\",\"ReplacedContentPattern\":\"\\\\\\\\d+\"}],\"flushers\":[{\"Type\":\"flusher_sls\",\"CompressType\":\"lz4\",\"Project\":\"test\",\"Logstore\":\"test\",\"TelemetryType\":\"logs\",\"Endpoint\":\"cn-shanghai-b-intranet.log.aliyuncs.com\",\"Region\":\"cn-shanghai-b\"}]}",
 		"aliyun_logs_catalina_configtags={\"sls.logtail.creator\":\"test-user\", \"sls.logtail.group\":\"test-group\", \"sls.logtail.datasource\":\"k8s\", \"test-tag\":\"test-value\"}",
 	})
 	c.Assert(info.EnvConfigInfoMap["catalina"], check.NotNil)
@@ -189,10 +188,12 @@ func (s *logConfigTestSuite) TestAllConfigs(c *check.C) {
 	c.Assert(*config.ShardCount, check.Equals, int32(10))
 	c.Assert(*config.LifeCycle, check.Equals, int32(3650))
 	c.Assert(config.SimpleConfig, check.Equals, false)
-	c.Assert(config.LogtailConfig.InputType, check.Equals, "file")
-	c.Assert(config.LogtailConfig.ConfigName, check.Equals, "catalina")
-	c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 9)
-	c.Assert(config.LogtailConfig.LogtailConfig["logType"], check.Equals, "delimiter_log")
+
+	c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 11)
+	c.Assert(len(config.LogtailConfig.Processors), check.Equals, 3)
+	c.Assert(len(config.LogtailConfig.Flushers), check.Equals, 1)
+	c.Assert(len(config.LogtailConfig.Global), check.Equals, 3)
+	c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "envTest")
 	c.Assert(config.ConfigTags["sls.logtail.creator"], check.Equals, "test-user")
 	c.Assert(config.ConfigTags["sls.logtail.group"], check.Equals, "test-group")
 	c.Assert(config.ConfigTags["sls.logtail.datasource"], check.Equals, "k8s")
@@ -216,15 +217,49 @@ func (s *logConfigTestSuite) TestNginxIngress(c *check.C) {
 		c.Assert(config.ShardCount, check.IsNil)
 		c.Assert(config.LifeCycle, check.IsNil)
 		c.Assert(config.SimpleConfig, check.Equals, true)
-		c.Assert(config.LogtailConfig.InputType, check.Equals, "plugin")
-		c.Assert(config.LogtailConfig.ConfigName, check.Equals, "ingress-access-abc123")
-		c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 1)
-		c.Assert(config.LogtailConfig.LogtailConfig["plugin"], check.NotNil)
-		c.Assert(config.LogtailConfig.LogtailConfig["plugin"].(map[string]interface{})["processors"], check.NotNil)
-		jsonStr := "{\"global\":{\"AlwaysOnline\":true},\"inputs\":[{\"detail\":{\"IncludeEnv\":{\"aliyun_logs_ingress-access-abc123\":\"stdout-only\"},\"Stderr\":false,\"Stdout\":true},\"type\":\"service_docker_stdout\"}],\"processors\":[{\"detail\":{\"KeepSource\":true,\"Keys\":[\"client_ip\",\"x_forward_for\",\"remote_user\",\"time\",\"method\",\"url\",\"version\",\"status\",\"body_bytes_sent\",\"http_referer\",\"http_user_agent\",\"request_length\",\"request_time\",\"proxy_upstream_name\",\"upstream_addr\",\"upstream_response_length\",\"upstream_response_time\",\"upstream_status\",\"req_id\"],\"NoKeyError\":true,\"NoMatchError\":true,\"Regex\":\"^(\\\\S+)\\\\s-\\\\s\\\\[([^]]+)]\\\\s-\\\\s(\\\\S+)\\\\s\\\\[(\\\\S+)\\\\s\\\\S+\\\\s\\\"(\\\\w+)\\\\s(\\\\S+)\\\\s([^\\\"]+)\\\"\\\\s(\\\\d+)\\\\s(\\\\d+)\\\\s\\\"([^\\\"]*)\\\"\\\\s\\\"([^\\\"]*)\\\"\\\\s(\\\\S+)\\\\s(\\\\S+)+\\\\s\\\\[([^]]*)]\\\\s(\\\\S+)\\\\s(\\\\S+)\\\\s(\\\\S+)\\\\s(\\\\S+)\\\\s(\\\\S+).*\",\"SourceKey\":\"content\"},\"type\":\"processor_regex\"}]}"
-		configDetail, err := json.Marshal(config.LogtailConfig.LogtailConfig["plugin"])
-		c.Assert(err, check.IsNil)
-		c.Assert(string(configDetail), check.Equals, jsonStr)
+
+		c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 4)
+		c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "service_docker_stdout")
+		c.Assert(config.LogtailConfig.Inputs[0]["Stderr"].(bool), check.Equals, false)
+		c.Assert(config.LogtailConfig.Inputs[0]["Stdout"], check.Equals, true)
+		c.Assert(config.LogtailConfig.Inputs[0]["IncludeEnv"].(map[string]string)["aliyun_logs_ingress-access-abc123"], check.Equals, "stdout-only")
+		c.Assert(config.LogtailConfig.Global["AlwaysOnline"], check.Equals, true)
+
+		c.Assert(len(config.LogtailConfig.Processors[0]), check.Equals, 7)
+		c.Assert(config.LogtailConfig.Processors[0]["Type"], check.Equals, "processor_regex")
+		c.Assert(config.LogtailConfig.Processors[0]["SourceKey"], check.Equals, "content")
+		c.Assert(config.LogtailConfig.Processors[0]["Regex"], check.Equals, "^(\\S+)\\s-\\s\\[([^]]+)]\\s-\\s(\\S+)\\s\\[(\\S+)\\s\\S+\\s\"(\\w+)\\s(\\S+)\\s([^\"]+)\"\\s(\\d+)\\s(\\d+)\\s\"([^\"]*)\"\\s\"([^\"]*)\"\\s(\\S+)\\s(\\S+)+\\s\\[([^]]*)]\\s(\\S+)\\s(\\S+)\\s(\\S+)\\s(\\S+)\\s(\\S+).*")
+		c.Assert(config.LogtailConfig.Processors[0]["NoMatchError"], check.Equals, true)
+		c.Assert(config.LogtailConfig.Processors[0]["NoKeyError"], check.Equals, true)
+		c.Assert(config.LogtailConfig.Processors[0]["KeepSource"], check.Equals, true)
+		expectedKeys := []interface{}{
+			"client_ip",
+			"x_forward_for",
+			"remote_user",
+			"time",
+			"method",
+			"url",
+			"version",
+			"status",
+			"body_bytes_sent",
+			"http_referer",
+			"http_user_agent",
+			"request_length",
+			"request_time",
+			"proxy_upstream_name",
+			"upstream_addr",
+			"upstream_response_length",
+			"upstream_response_time",
+			"upstream_status",
+			"req_id",
+		}
+		keys := config.LogtailConfig.Processors[0]["Keys"].([]interface{})
+		c.Assert(len(expectedKeys), check.Equals, len(keys))
+		for i := 0; i < len(expectedKeys); i++ {
+			c.Assert(keys[i], check.Equals, expectedKeys[i])
+		}
+
+		c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "ingress-access-abc123")
 	}
 	{
 		c.Assert(info.EnvConfigInfoMap["ingress-error-abc123"], check.NotNil)
@@ -236,13 +271,14 @@ func (s *logConfigTestSuite) TestNginxIngress(c *check.C) {
 		c.Assert(config.ShardCount, check.IsNil)
 		c.Assert(config.LifeCycle, check.IsNil)
 		c.Assert(config.SimpleConfig, check.Equals, true)
-		c.Assert(config.LogtailConfig.InputType, check.Equals, "plugin")
-		c.Assert(config.LogtailConfig.ConfigName, check.Equals, "ingress-error-abc123")
-		c.Assert(len(config.LogtailConfig.LogtailConfig), check.Equals, 1)
-		c.Assert(config.LogtailConfig.LogtailConfig["plugin"], check.NotNil)
-		jsonStr := "{\"global\":{\"AlwaysOnline\":true},\"inputs\":[{\"detail\":{\"IncludeEnv\":{\"aliyun_logs_ingress-error-abc123\":\"stderr-only\"},\"Stderr\":true,\"Stdout\":false},\"type\":\"service_docker_stdout\"}]}"
-		configDetail, err := json.Marshal(config.LogtailConfig.LogtailConfig["plugin"])
-		c.Assert(err, check.IsNil)
-		c.Assert(string(configDetail), check.Equals, jsonStr)
+
+		c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 4)
+		c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "service_docker_stdout")
+		c.Assert(config.LogtailConfig.Inputs[0]["Stderr"].(bool), check.Equals, true)
+		c.Assert(config.LogtailConfig.Inputs[0]["Stdout"], check.Equals, false)
+		c.Assert(config.LogtailConfig.Inputs[0]["IncludeEnv"].(map[string]string)["aliyun_logs_ingress-error-abc123"], check.Equals, "stderr-only")
+		c.Assert(config.LogtailConfig.Global["AlwaysOnline"], check.Equals, true)
+
+		c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "ingress-error-abc123")
 	}
 }

@@ -491,11 +491,18 @@ func (o *operationWrapper) updateConfig(config *AliyunLogConfigSpec) error {
 func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, serverInput map[string]interface{}) bool {
 	var ok bool
 
-	// 判断FilePaths是否存在
+	// 判断FilePaths是否存在, 且长度是否为0
 	if _, ok = serverInput["FilePaths"]; !ok {
 		return false
 	}
-	serverFilePaths, _ := util.InterfaceToString(serverInput["FilePaths"])
+	if len(serverInput["FilePaths"].([]string)) == 0 {
+		return false
+	}
+	filePath := serverInput["FilePaths"].([]string)[0]
+	serverFilePath, _ := util.InterfaceToString(filePath)
+	if len(serverFilePath) == 0 {
+		return false
+	}
 
 	// 判断ContainerFilters是否存在
 	if _, ok = serverInput["ContainerFilters"]; !ok {
@@ -520,7 +527,7 @@ func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, serverIn
 	serverIncludeLabel, _ := util.InterfaceToJSONString(containerFilters["IncludeContainerLabel"])
 
 	// 检查各项配置是否发生了变化
-	return filePaths != serverFilePaths ||
+	return filePaths != serverFilePath ||
 		includeEnv != serverIncludeEnv ||
 		includeLabel != serverIncludeLabel
 }
@@ -663,7 +670,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 				// 则检查env配置的FilePaths、includeEnv、includeLabel是否和服务端配置相同, 如果不同则更新服务端配置
 
 				// 获取FilePaths、includeEnv、includeLabel的值
-				filePaths, _ := util.InterfaceToString(config.LogtailConfig.Inputs[0]["FilePaths"])
+				filePaths, _ := util.InterfaceToString(config.LogtailConfig.Inputs[0]["FilePaths"].([]string)[0])
 				includeEnv, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"])
 				includeLabel, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"])
 
@@ -671,7 +678,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, serverConfig.Inputs[0]) {
 						oldConfig := serverConfig.GoString()
 
-						serverConfig.Inputs[0]["FilePaths"] = filePaths
+						serverConfig.Inputs[0]["FilePaths"] = config.LogtailConfig.Inputs[0]["FilePaths"]
 						if _, ok = serverConfig.Inputs[0]["ContainerFilters"]; !ok {
 							serverConfig.Inputs[0]["ContainerFilters"] = map[string]map[string]interface{}{}
 						}
