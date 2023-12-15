@@ -433,6 +433,7 @@ func (did *DockerInfoDetail) FindAllEnvConfig(envConfigPrefix string, selfConfig
 				}
 			}
 		}
+		logger.Debug(context.Background(), "envConfig.ConfigItemMap", envConfig.ConfigItemMap)
 	}
 	logger.Debug(context.Background(), "docker env", did.ContainerInfo.Config.Env, "prefix", envConfigPrefix, "env config", did.EnvConfigInfoMap, "self env config", selfEnvConfig)
 	// ignore self env config

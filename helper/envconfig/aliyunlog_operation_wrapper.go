@@ -18,7 +18,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/alibabacloud-go/tea/tea"
+
 	//"k8s.io/client-go/openapi"
 	"strings"
 	"sync"
@@ -39,13 +41,6 @@ const (
 	MachineIDTypeIP          = "ip"
 	MachineIDTypeUserDefined = "userdefined"
 )
-
-// nolint:unused
-// 定义一个结构体,用于检查配置
-type configCheckPoint struct {
-	ProjectName string // project名称
-	ConfigName  string // 配置名称
-}
 
 // 定义一个操作包装器结构体
 type operationWrapper struct {
@@ -147,7 +142,7 @@ func createAliyunLogOperationWrapper(project string, logClient **aliyunlog.Clien
 		}
 		logger.Warning(context.Background(), "CREATE_PROJECT_ALARM", "create project error, project", project, "error", err)
 		// 等待30秒
-		time.Sleep(time.Second * time.Duration(30))
+		time.Sleep(time.Second * time.Duration(5))
 	}
 
 	// 重试当创建机器组失败时
@@ -198,23 +193,6 @@ func (o *operationWrapper) addLogstoreCache(project, logstore string) {
 	o.logstoreCacheMap[project+"@@"+logstore] = time.Now()
 }
 
-// configCacheExists 检查给定的project和配置是否在缓存中存在
-// 并且其最后更新时间距离现在的时间小于缓存过期时间。
-func (o *operationWrapper) configCacheExists(project, config string) bool {
-	// 读锁
-	o.lock.RLock()
-	// 解锁
-	defer o.lock.RUnlock()
-	// 检查project和配置是否在缓存中
-	if lastUpdateTime, ok := o.configCacheMap[project+"@@"+config]; ok {
-		// 检查最后更新时间是否在缓存过期时间内
-		if time.Since(lastUpdateTime) < time.Second*time.Duration(*flags.LogResourceCacheExpireSec) {
-			return true
-		}
-	}
-	return false
-}
-
 // addConfigCache 将给定的project和配置添加到缓存中。
 func (o *operationWrapper) addConfigCache(project, config string) {
 	// 写锁
@@ -223,39 +201,6 @@ func (o *operationWrapper) addConfigCache(project, config string) {
 	defer o.lock.Unlock()
 	// 将project和配置添加到缓存中
 	o.configCacheMap[project+"@@"+config] = time.Now()
-}
-
-// removeConfigCache 从缓存中删除给定的project和配置。
-func (o *operationWrapper) removeConfigCache(project, config string) {
-	// 写锁
-	o.lock.Lock()
-	// 解锁
-	defer o.lock.Unlock()
-	// 从缓存中删除project和配置
-	delete(o.configCacheMap, project+"@@"+config)
-}
-
-// retryCreateIndex 重试创建索引,如果索引已存在,则返回。
-func (o *operationWrapper) retryCreateIndex(project, logstore, logstoremode string) {
-	// 等待10秒
-	time.Sleep(time.Second * 10)
-	// 创建默认的K8S索引
-	index := createDefaultK8SIndex(logstoremode)
-	// 创建索引,创建索引不返回错误, 重试10次
-	for i := 0; i < 10; i++ {
-		// 创建索引
-		_, err := (*o.logClient).CreateIndex(&project, &logstore, index)
-		if err != nil {
-			// 如果索引已存在,就返回
-			var clientError *tea.SDKError
-			if errors.As(err, &clientError) && tea.StringValue(clientError.Code) == "IndexAlreadyExist" {
-				return
-			}
-			time.Sleep(time.Second * 10) // 等待10秒
-		} else {
-			break
-		}
-	}
 }
 
 // createProductLogstore 创建logStore
@@ -364,12 +309,14 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	// 初始化 ok 为 nil
 	var ok *aliyunlog.GetLogStoreResponse
 	var err error
-	// 尝试最大重试次数
+	// 检查logStore是否存在
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 检查logStore是否存在
 		if ok, err = (*o.logClient).GetLogStore(&project, &logstore); err != nil {
-			// 如果存在错误,则等待 100 毫秒
 			time.Sleep(time.Millisecond * 100)
+			var clientError *tea.SDKError
+			if errors.As(err, &clientError) && tea.StringValue(clientError.Code) == "LogStoreNotExist" {
+				break
+			}
 		} else {
 			// 如果没有错误,则跳出循环
 			break
@@ -435,7 +382,7 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 		logStore.MaxSplitShard = tea.Int32(*config.LogstoreMaxSplitShard)
 	}
 	// 如果启用了加密,那么设置logStore的加密配置
-	if *config.LogstoreEncryptConf.Enable {
+	if tea.BoolValue((*config).LogstoreEncryptConf.Enable) {
 		logStore.EncryptConf = &config.LogstoreEncryptConf
 	}
 	// 尝试最大重试次数
@@ -496,17 +443,25 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 // 如果project不存在,该函数将尝试创建它。
 // config 参数是阿里云日志配置的规格,project 是要检查或创建的project的名称。
 func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, project string) error {
-	var ok *aliyunlog.GetProjectResponse // 初始化 ok 为 false,表示project是否存在的标志
-	var err error                        // 初始化 err 为 nil,用于存储错误信息
+	// 初始化 ok 为 false,表示project是否存在的标志
+	var ok *aliyunlog.GetProjectResponse
+	var err error
 
-	// 尝试最大重试次数来检查project是否存在
+	// 检查project是否存在
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用 logClient 的 CheckProjectExist 方法检查project是否存在
 		if ok, err = (*o.logClient).GetProject(&project); err != nil {
-			// 如果出现错误,暂停一秒后再次尝试
+			var clientError *tea.SDKError
+			if errors.As(err, &clientError) {
+				if tea.StringValue(clientError.Code) == "ProjectNotExist" {
+					ok = nil
+					break
+				} else if tea.StringValue(clientError.Code) == "Unauthorized" {
+					// The project does not belong to you.
+					return fmt.Errorf("GetProject error, project : %s, Endpoint : %s, error : %s", project, *(*o.logClient).Endpoint, tea.StringValue(clientError.Message))
+				}
+			}
 			time.Sleep(time.Millisecond * 1000)
 		} else {
-			// 如果没有错误,跳出循环
 			break
 		}
 	}
@@ -514,21 +469,21 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 	if ok != nil && ok.Body != nil && err == nil {
 		return nil
 	}
-	// 如果project不存在,尝试最大重试次数来创建project
+	// 如果project不存在, 创建project
 	createProjectRequest := aliyunlog.CreateProjectRequest{
-		DataRedundancyType: tea.String(""),
-		Description:        tea.String("k8s log project, created by alibaba cloud log controller"),
-		ProjectName:        tea.String(project),
-		ResourceGroupId:    nil,
+		Description: tea.String("k8s log project, created by alibaba cloud log controller"),
+		ProjectName: tea.String(project),
 	}
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用 logClient 的 CreateProject 方法创建project
 		_, err = (*o.logClient).CreateProject(&createProjectRequest)
 		if err != nil {
-			// 如果出现错误,暂停一秒后再次尝试
+			var clientError *tea.SDKError
+			if errors.As(err, &clientError) && tea.StringValue(clientError.Code) == "ProjectAlreadyExist" {
+				err = nil
+				break
+			}
 			time.Sleep(time.Millisecond * 1000)
 		} else {
-			// 如果没有错误,跳出循环
 			break
 		}
 	}
@@ -540,19 +495,16 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 		configName = tea.StringValue(config.LogtailConfig.ConfigName)
 		logstore = config.Logstore
 	}
-	// 获取注解
+	// 拼装事件, 记录到k8s_event中
 	annotations := GetAnnotationByObject(config, project, logstore, "", configName, false)
-	// 如果创建project过程中出现错误,发送错误事件
 	if err != nil {
 		if k8s_event.GetEventRecorder() != nil {
 			customErr := CustomErrorFromSlsSDKError(err)
 			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProject, "", fmt.Sprintf("create project failed, error: %s", err.Error()))
 		}
 	} else if k8s_event.GetEventRecorder() != nil {
-		// 如果创建project成功,发送正常事件
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProject, "create project success")
 	}
-	// 返回错误信息
 	return err
 }
 
@@ -560,27 +512,37 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 // 如果机器组不存在,该函数将尝试创建它。
 // project 是project的名称,machineGroup 是要检查或创建的机器组的名称。
 func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup string) error {
-	var ok *aliyunlog.GetMachineGroupResponse // 初始化 ok 为 nil,表示机器组是否存在的标志
-	var err error                             // 初始化 err 为 nil,用于存储错误信息
+	// 初始化 ok 为 nil,表示机器组是否存在的标志
+	var ok *aliyunlog.GetMachineGroupResponse
+	var err error
 
-	// 尝试最大重试次数来检查机器组是否存在
+	// 检查机器组是否存在
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用 logClient 的 CheckMachineGroupExist 方法检查机器组是否存在
 		if ok, err = (*o.logClient).GetMachineGroup(&project, &machineGroup); err != nil {
-			// 如果出现错误,暂停100Ms后再次尝试
+			var clientError *tea.SDKError
+			if errors.As(err, &clientError) {
+				if tea.StringValue(clientError.Code) == "MachineGroupNotExist" {
+					ok = nil
+					err = nil
+					break
+				} else if tea.StringValue(clientError.Code) == "MachineGroupAlreadyExist" {
+					return nil
+				}
+			}
 			time.Sleep(time.Millisecond * 100)
 		} else {
 			// 如果没有错误,跳出循环
 			break
 		}
 	}
-	if err != nil {
-		return err
-	}
 	// 如果机器组存在,返回 nil
-	if ok != nil && ok.Body != nil {
+	if ok != nil && ok.Body != nil && err == nil {
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("GetMachineGroup error, project : %s, machineGroup : %s, Endpoint : %s, error : %s", project, machineGroup, *(*o.logClient).Endpoint, err.Error())
+	}
+
 	// 如果机器组不存在,创建一个新的机器组
 	createMachineGroupRequest := aliyunlog.CreateMachineGroupRequest{
 		GroupAttribute:      nil,
@@ -589,64 +551,24 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 		MachineIdentifyType: tea.String(MachineIDTypeUserDefined),
 		MachineList:         tea.StringSlice([]string{machineGroup}),
 	}
-	// 尝试最大重试次数来创建机器组
+	// 创建机器组
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用 logClient 的 CreateMachineGroup 方法创建机器组
 		_, err = (*o.logClient).CreateMachineGroup(&project, &createMachineGroupRequest)
 		if err != nil {
-			// 如果出现错误,暂停一秒后再次尝试
 			time.Sleep(time.Millisecond * 100)
 		} else {
-			// 如果没有错误,尝试最大重试次数来标记机器组
+			// 标记机器组
 			for j := 0; j < *flags.LogOperationMaxRetryTimes; j++ {
-				// 调用 TagMachineGroup 方法标记机器组
 				err = o.TagMachineGroup(project, machineGroup, SlsMachinegroupDeployModeKey, SlsMachinegroupDeployModeDeamonset)
 				if err != nil {
-					// 如果出现错误,暂停一秒后再次尝试
 					time.Sleep(time.Millisecond * 100)
 				} else {
-					// 如果没有错误,跳出循环
 					break
 				}
 			}
-			// 跳出创建机器组的循环
 			break
 		}
 	}
-	// 返回错误信息
-	return err
-}
-
-// nolint:unused
-// deleteConfig 函数用于删除配置
-func (o *operationWrapper) deleteConfig(checkpoint *configCheckPoint) error {
-	var err error
-	// 循环尝试删除配置,最大尝试次数为 LogOperationMaxRetryTimes
-	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		// 调用 logClient 的 DeleteConfig 方法来删除配置
-		_, err = (*o.logClient).DeleteConfig(&checkpoint.ProjectName, &checkpoint.ConfigName)
-		// 如果没有错误,那么从缓存中移除配置并返回 nil
-		if err == nil {
-			o.removeConfigCache(checkpoint.ProjectName, checkpoint.ConfigName)
-			return nil
-		}
-		// 如果错误是 tea.SDKError 类型
-		var sdkError *tea.SDKError
-		if errors.As(err, &sdkError) {
-			// 如果 HTTP 状态码是 404,那么从缓存中移除配置并返回 nil
-			if tea.IntValue(sdkError.StatusCode) == 404 {
-				o.removeConfigCache(checkpoint.ProjectName, checkpoint.ConfigName)
-				return nil
-			}
-		}
-		// 等待 100 毫秒
-		time.Sleep(time.Millisecond * 100)
-	}
-	// 如果有错误,那么返回错误信息
-	if err != nil {
-		return fmt.Errorf("DeleteConfig error, config : %s, error : %s", checkpoint.ConfigName, err.Error())
-	}
-	// 返回错误
 	return err
 }
 
@@ -754,7 +676,7 @@ func (o *operationWrapper) TagMachineGroup(project, machineGroup, tagKey, tagVal
 		}
 		time.Sleep(time.Millisecond * 100) // 等待100毫秒
 	}
-	return err // 返回错误
+	return fmt.Errorf("TagResources error, project : %s, machineGroup : %s, tagKey : %s, tagValue : %s, error : %s", project, machineGroup, tagKey, tagValue, err.Error())
 }
 
 // nolint:govet,ineffassign
@@ -768,7 +690,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	// 调用makesureLogstoreExist方法,确保logStore存在
 	err := o.makesureLogstoreExist(config)
 	if err != nil {
-		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
+		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", *config.LogtailConfig.ConfigName, err.Error())
 	}
 
 	logger.Info(context.Background(), "create or update config", config.LogtailConfig.ConfigName, "detail", config.LogtailConfig.GoString())
@@ -865,10 +787,8 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 								customErr := CustomErrorFromSlsSDKError(err)
 								k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
 							}
-						} else {
-							if k8s_event.GetEventRecorder() != nil {
-								k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
-							}
+						} else if k8s_event.GetEventRecorder() != nil {
+							k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 						}
 
 					} else {
@@ -951,9 +871,9 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 	// 拼装事件, 记录到k8s_event中
 	annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
-	if err != nil {
+	if err != nil && k8s_event.GetEventRecorder() != nil {
 		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config %s error :%s", config.LogtailConfig.ConfigName, err.Error()))
-	} else {
+	} else if k8s_event.GetEventRecorder() != nil {
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, fmt.Sprintf("tag config %s success", config.LogtailConfig.ConfigName))
 	}
 
