@@ -495,10 +495,10 @@ func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, serverIn
 	if _, ok = serverInput["FilePaths"]; !ok {
 		return false
 	}
-	if len(serverInput["FilePaths"].([]string)) == 0 {
+	if len(serverInput["FilePaths"].([]interface{})) == 0 {
 		return false
 	}
-	filePath := serverInput["FilePaths"].([]string)[0]
+	filePath := serverInput["FilePaths"].([]interface{})[0]
 	serverFilePath, _ := util.InterfaceToString(filePath)
 	if len(serverFilePath) == 0 {
 		return false
