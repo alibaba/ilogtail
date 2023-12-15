@@ -487,43 +487,34 @@ func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, serverIn
 
 	// 判断FilePaths是否存在, 且长度是否为0
 	if _, ok = serverInput["FilePaths"]; !ok {
-		return false
+		return true
 	}
 	if len(serverInput["FilePaths"].([]interface{})) == 0 {
-		return false
+		return true
 	}
-	filePath := serverInput["FilePaths"].([]interface{})[0]
-	serverFilePath, _ := util.InterfaceToString(filePath)
-	if len(serverFilePath) == 0 {
-		return false
+	serverFilePath, _ := util.InterfaceToString(serverInput["FilePaths"].([]interface{})[0])
+	if serverFilePath != filePaths {
+		return true
 	}
 
 	// 判断ContainerFilters是否存在
 	if _, ok = serverInput["ContainerFilters"]; !ok {
-		return false
+		return true
 	}
-	var containerFilters map[string]map[string]interface{}
+	var containerFilters map[string]interface{}
 	// 判断ContainerFilters类型是否正确
-	if containerFilters, ok = serverInput["ContainerFilters"].(map[string]map[string]interface{}); !ok {
-		return false
+	if containerFilters, ok = serverInput["ContainerFilters"].(map[string]interface{}); !ok {
+		return true
 	}
 
-	// 判断IncludeEnv是否存在
-	if _, ok = containerFilters["IncludeEnv"]; !ok {
-		return false
-	}
 	serverIncludeEnv, _ := util.InterfaceToJSONString(containerFilters["IncludeEnv"])
-
-	// 判断IncludeContainerLabel是否存在
-	if _, ok = containerFilters["IncludeContainerLabel"]; !ok {
-		return false
+	if includeEnv != serverIncludeEnv {
+		return true
 	}
+
 	serverIncludeLabel, _ := util.InterfaceToJSONString(containerFilters["IncludeContainerLabel"])
 
-	// 检查各项配置是否发生了变化
-	return filePaths != serverFilePath ||
-		includeEnv != serverIncludeEnv ||
-		includeLabel != serverIncludeLabel
+	return includeLabel != serverIncludeLabel
 }
 
 // UnTagLogtailConfig 移除 Logtail 配置所有的标签
@@ -606,7 +597,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	// 确保logStore存在
 	err := o.makesureLogstoreExist(config)
 	if err != nil {
-		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
+		return fmt.Errorf("create logconfig error when update config, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
 	}
 
 	logger.Info(context.Background(), "create or update config", tea.StringValue(config.LogtailConfig.ConfigName), "detail", config.LogtailConfig.GoString())
@@ -668,16 +659,13 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 				includeEnv, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"])
 				includeLabel, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"])
 
+				logger.Info(context.Background(), "filePaths", filePaths, "includeEnv", includeEnv, "includeLabel", includeLabel, "serverConfig", serverConfig.GoString())
+
 				if len(filePaths) > 0 {
 					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, serverConfig.Inputs[0]) {
 						oldConfig := serverConfig.GoString()
 
-						serverConfig.Inputs[0]["FilePaths"] = config.LogtailConfig.Inputs[0]["FilePaths"]
-						if _, ok = serverConfig.Inputs[0]["ContainerFilters"]; !ok {
-							serverConfig.Inputs[0]["ContainerFilters"] = map[string]map[string]interface{}{}
-						}
-						serverConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"]
-						serverConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"] = config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"]
+						serverConfig.Inputs = config.LogtailConfig.Inputs
 
 						logger.Info(context.Background(), "file config changed, old", oldConfig, "new", config.LogtailConfig.GoString())
 
