@@ -99,6 +99,9 @@ func (e *EventRecorder) SendErrorEvent(object runtime.Object, action Action, ala
 }
 
 func (e *EventRecorder) SendNormalEventWithAnnotation(object runtime.Object, annotations map[string]string, action Action, message string) {
+	if e == nil || e.recorder == nil {
+		return
+	}
 	if message == "" {
 		message = "success"
 	}
@@ -112,6 +115,9 @@ func (e *EventRecorder) SendNormalEventWithAnnotation(object runtime.Object, ann
 }
 
 func (e *EventRecorder) SendErrorEventWithAnnotation(object runtime.Object, annotations map[string]string, action Action, alarm Alarm, message string) {
+	if e == nil || e.recorder == nil {
+		return
+	}
 	if message == "" {
 		message = "failed"
 	}
