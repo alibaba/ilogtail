@@ -38,12 +38,12 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 		nowTime := time.Now()
 		c.lock.Lock()
 		sleepTime := c.nextExpire.Sub(nowTime)
-		if sleepTime < time.Duration(time.Minute) {
-			sleepTime = time.Duration(time.Second * 30)
+		if sleepTime < time.Minute {
+			sleepTime = time.Second * 30
 
-		} else if sleepTime < time.Duration(time.Minute*10) {
+		} else if sleepTime < time.Minute*10 {
 			sleepTime = sleepTime / 10 * 7
-		} else if sleepTime < time.Duration(time.Hour) {
+		} else if sleepTime < time.Hour {
 			sleepTime = sleepTime / 10 * 6
 		} else {
 			sleepTime = sleepTime / 10 * 5
@@ -149,9 +149,9 @@ func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFun
 		shutdown:               shutdown,
 		tokenUpdateFunc:        tokenUpdateFunc,
 		maxTryTimes:            3,
-		waitIntervalMin:        time.Duration(time.Second * 1),
-		waitIntervalMax:        time.Duration(time.Second * 60),
-		updateTokenIntervalMin: time.Duration(time.Second * 1),
+		waitIntervalMin:        time.Second * 1,
+		waitIntervalMax:        time.Second * 60,
+		updateTokenIntervalMin: time.Second * 1,
 		nextExpire:             expireTime,
 	}
 	go tauc.flushSTSToken()

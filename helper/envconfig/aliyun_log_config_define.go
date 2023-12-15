@@ -218,6 +218,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
+			"MaxDirSearchDepth": 20,
 		}
 	} else {
 		input = map[string]interface{}{
@@ -229,6 +230,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
+			"MaxDirSearchDepth": 20,
 		}
 		config.LogtailConfig.Processors = []map[string]interface{}{
 			{
@@ -247,6 +249,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 }
 
 func isJSONFile(envConfigInfo *helper.EnvConfigInfo, config *AliyunLogConfigSpec) bool {
+	// aliyun_logs_****_jsonfile=true or aliyun_logs_****_jsonfile=TRUE
 	if jsonfile, ok := envConfigInfo.ConfigItemMap["jsonfile"]; ok && (jsonfile == "true" || jsonfile == "TRUE") {
 		return true
 	}
@@ -400,21 +403,30 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 	// config
 	// makesure exist
 	configType := envConfigInfo.ConfigItemMap[""]
-	totalConfig += configType
-	config.SimpleConfig = true
-	logger.Debug(context.Background(), "container", dockerInfo.ContainerInfo.Name, "docker k8s info", dockerInfo.K8SInfo)
-	// stdout or filepath
-	if isDockerStdout(configType) {
-		initDockerStdoutConfig(dockerInfo, config, configType)
+	// 疑问：新版配置需要支持detail吗
+	if configDetail, ok := envConfigInfo.ConfigItemMap["detail"]; ok {
+		totalConfig += configDetail
+		if err := json.Unmarshal([]byte(configDetail), &config.LogtailConfig); err != nil {
+			logger.Error(context.Background(), "INVALID_ENV_CONFIG_DETAIL", "unmarshal error", err, "detail", configDetail)
+		}
+		config.SimpleConfig = false
 	} else {
-		jsonFlag := isJSONFile(envConfigInfo, config)
-		dockerFileFlag := isDockerFile(envConfigInfo)
-		initFileConfig(dockerInfo.K8SInfo, config, configType, jsonFlag, dockerFileFlag)
-	}
+		totalConfig += configType
+		config.SimpleConfig = true
+		logger.Debug(context.Background(), "container", dockerInfo.ContainerInfo.Name, "docker k8s info", dockerInfo.K8SInfo)
+		// stdout or filepath
+		if isDockerStdout(configType) {
+			initDockerStdoutConfig(dockerInfo, config, configType)
+		} else {
+			jsonFlag := isJSONFile(envConfigInfo, config)
+			dockerFileFlag := isDockerFile(envConfigInfo)
+			initFileConfig(dockerInfo.K8SInfo, config, configType, jsonFlag, dockerFileFlag)
+		}
 
-	if len(config.ProductCode) > 0 {
-		logger.Debug(context.Background(), "init product", config.ProductCode, "project", config.Project, "logstore", config.Logstore)
-		initLogtailConfigForProduct(dockerInfo.K8SInfo, config, configType)
+		if len(config.ProductCode) > 0 {
+			logger.Debug(context.Background(), "init product", config.ProductCode, "project", config.Project, "logstore", config.Logstore)
+			initLogtailConfigForProduct(dockerInfo.K8SInfo, config, configType)
+		}
 	}
 	config.hash(totalConfig)
 	return config
