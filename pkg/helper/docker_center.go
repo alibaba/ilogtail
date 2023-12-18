@@ -158,10 +158,10 @@ func (info *K8SInfo) GetLabel(key string) string {
 
 // ExtractK8sLabels only work for original docker container.
 func (info *K8SInfo) ExtractK8sLabels(containerInfo types.ContainerJSON) {
-	info.mu.Lock()
-	defer info.mu.Unlock()
 	// only pause container has k8s labels
 	if info.ContainerName == "POD" || info.ContainerName == "pause" {
+		info.mu.Lock()
+		defer info.mu.Unlock()
 		info.PausedContainer = true
 		if info.Labels == nil {
 			info.Labels = make(map[string]string)
