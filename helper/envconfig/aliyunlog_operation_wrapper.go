@@ -208,9 +208,9 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 		o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, "", fmt.Sprintf("create product log failed, error: %s", err.Error()))
 		logger.Warning(context.Background(), "CREATE_PRODUCT_ALARM", "create product error, error", err)
 		return err
-	} else {
-		o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
 	}
+
+	o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
 
 	o.addLogstoreCache(project, logstore)
 	return nil
@@ -338,9 +338,9 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 		customErr := CustomErrorFromSlsSDKError(err)
 		o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, "", fmt.Sprintf("create logstore failed, error: %s", err.Error()))
 		return err
-	} else {
-		o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
 	}
+
+	o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
 
 	// after create logstore success, wait 1 sec
 	time.Sleep(time.Second)
