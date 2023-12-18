@@ -194,6 +194,9 @@ func (info *K8SInfo) Merge(o *K8SInfo) {
 
 // IsMatch ...
 func (info *K8SInfo) IsMatch(filter *K8SFilter) bool {
+	info.mu.Lock()
+	defer info.mu.Unlock()
+
 	if info.PausedContainer {
 		return false
 	}
@@ -201,8 +204,6 @@ func (info *K8SInfo) IsMatch(filter *K8SFilter) bool {
 		return true
 	}
 
-	info.mu.Lock()
-	defer info.mu.Unlock()
 	if info.matchedCache == nil {
 		info.matchedCache = make(map[uint64]bool)
 	} else if cacheRst, ok := info.matchedCache[filter.hashKey]; ok {
