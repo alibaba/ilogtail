@@ -25,7 +25,7 @@ class Pipeline {
 public:
     Pipeline() {}
     const std::string& Name() const { return mName; }
-    bool Init(const PipelineConfig& config);
+    bool Init(PipelineConfig& config);
     void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
     PipelineContext& GetContext() { return mContext; }
     PipelineConfig& GetPipelineConfig() { return mConfig; }
