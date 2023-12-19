@@ -48,7 +48,7 @@ func CustomErrorNew(code string, requestID string, msg string) *CustomError {
 type SDKErrorMsg struct {
 	HttpCode   int    `json:"httpCode"`
 	RequestId  string `json:"requestId"`
-	StatusCode string `json:"statusCode"`
+	StatusCode int    `json:"statusCode"`
 }
 
 func CustomErrorFromSlsSDKError(err error) *CustomError {
