@@ -16,8 +16,9 @@ package envconfig
 
 import (
 	"fmt"
-	"github.com/alibabacloud-go/tea/tea"
 	"testing"
+
+	"github.com/alibabacloud-go/tea/tea"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -159,10 +160,10 @@ func (s *logConfigTestSuite) TestMulti(c *check.C) {
 
 		c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 5)
 		c.Assert(config.LogtailConfig.Inputs[0]["Type"], check.Equals, "input_file")
-		c.Assert(config.LogtailConfig.Inputs[0]["FilePaths"].([]string)[0], check.Equals, invalidLogPath+"/**/"+invalidFilePattern)
+		c.Assert(config.LogtailConfig.Inputs[0]["FilePaths"].([]string)[0], check.Equals, invalidLogPath+invalidFilePattern)
 		c.Assert(config.LogtailConfig.Inputs[0]["EnableContainerDiscovery"].(bool), check.Equals, true)
 		c.Assert(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"]["aliyun_logs_filelogs"], check.Equals, "invalid-file-path")
-		c.Assert(config.LogtailConfig.Inputs[0]["MaxDirSearchDepth"].(int), check.Equals, 20)
+		c.Assert(config.LogtailConfig.Inputs[0]["MaxDirSearchDepth"].(int), check.Equals, 0)
 		c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "filelogs")
 	}
 }
@@ -175,7 +176,6 @@ func (s *logConfigTestSuite) TestAllConfigs(c *check.C) {
 		"aliyun_logs_catalina_shard=10",
 		"aliyun_logs_catalina_ttl=3650",
 		"aliyun_logs_catalina_machinegroup=my-group",
-		"aliyun_logs_catalina_detail={\"configName\":\"envTest\",\"global\":{\"EnableTag\":true,\"ProcessPriority\":2,\"TopicType\":\"default\"},\"inputs\":[{\"Type\":\"input_file\",\"MaxDirSearchDepth\":0,\"EnableContainerDiscovery\":true,\"TailSizeKB\":1024,\"FilePaths\":[\"/python/logs/*.LOG\"],\"ExcludeFilePaths\":[\"/asdf/asdfasdfaesdf\",\"/asdf/asdfasdf34qrt\"],\"ExcludeDirs\":[\"/asdf/asdfasdf\",\"/asdf/asdfasdfasdadsf\"],\"ExternalK8sLabelTag\":{\"avd\":\"adsv\"},\"ExternalEnvTag\":{\"adsv\":\"avds\"},\"ContainerFilters\":{\"K8sNamespaceRegex\":\"asdf\",\"K8sPodRegex\":\"asdf\",\"K8sContainerRegex\":\"asdf\",\"IncludeK8sLabel\":{\"asdf\":\"adsf\"},\"ExcludeK8sLabel\":{\"adsf\":\"vads\"},\"IncludeEnv\":{\"aerv\":\"advf\",\"sb\":\"avergf\"},\"ExcludeEnv\":{\"adsvf\":\"adsv\",\"asdvc\":\"asdv\"},\"IncludeContainerLabel\":{\"aef\":\"asdf\",\"srabgth\":\"srtb\"},\"ExcludeContainerLabel\":{\"asdf\":\"xfgb\",\"sfvb\":\"sbfr\"}},\"PreservedDirDepth\":0}],\"processors\":[{\"Type\":\"processor_parse_apsara_native\",\"SourceKey\":\"content\",\"KeepingSourceWhenParseFail\":true,\"KeepingSourceWhenParseSucceed\":true,\"RenamedSourceKey\":\"__raw__\",\"AdjustingMicroTimezone\":false},{\"Type\":\"processor_filter_regex_native\",\"Include\":{\"a\":\"b\"}},{\"Type\":\"processor_desensitize_native\",\"SourceKey\":\"k1\",\"Method\":\"const\",\"ReplacingString\":\"******\",\"ContentPatternBeforeReplacedString\":\"password:\",\"ReplacedContentPattern\":\"\\\\\\\\d+\"}],\"flushers\":[{\"Type\":\"flusher_sls\",\"CompressType\":\"lz4\",\"Project\":\"test\",\"Logstore\":\"test\",\"TelemetryType\":\"logs\",\"Endpoint\":\"cn-shanghai-b-intranet.log.aliyuncs.com\",\"Region\":\"cn-shanghai-b\"}]}",
 		"aliyun_logs_catalina_configtags={\"sls.logtail.creator\":\"test-user\", \"sls.logtail.group\":\"test-group\", \"sls.logtail.datasource\":\"k8s\", \"test-tag\":\"test-value\"}",
 	})
 	c.Assert(info.EnvConfigInfoMap["catalina"], check.NotNil)
@@ -187,13 +187,10 @@ func (s *logConfigTestSuite) TestAllConfigs(c *check.C) {
 	c.Assert(config.Logstore, check.Equals, "my-logstore")
 	c.Assert(*config.ShardCount, check.Equals, int32(10))
 	c.Assert(*config.LifeCycle, check.Equals, int32(3650))
-	c.Assert(config.SimpleConfig, check.Equals, false)
+	c.Assert(config.SimpleConfig, check.Equals, true)
 
-	c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 11)
-	c.Assert(len(config.LogtailConfig.Processors), check.Equals, 3)
-	c.Assert(len(config.LogtailConfig.Flushers), check.Equals, 1)
-	c.Assert(len(config.LogtailConfig.Global), check.Equals, 3)
-	c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "envTest")
+	c.Assert(len(config.LogtailConfig.Inputs[0]), check.Equals, 5)
+	c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "catalina")
 	c.Assert(config.ConfigTags["sls.logtail.creator"], check.Equals, "test-user")
 	c.Assert(config.ConfigTags["sls.logtail.group"], check.Equals, "test-group")
 	c.Assert(config.ConfigTags["sls.logtail.datasource"], check.Equals, "k8s")

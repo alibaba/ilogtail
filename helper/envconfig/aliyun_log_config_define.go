@@ -225,7 +225,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
-			"MaxDirSearchDepth": tea.Int(maxDirSearchDepth),
+			"MaxDirSearchDepth": maxDirSearchDepth,
 		}
 	} else {
 		input = map[string]interface{}{
@@ -237,7 +237,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
-			"MaxDirSearchDepth": tea.Int(maxDirSearchDepth),
+			"MaxDirSearchDepth": maxDirSearchDepth,
 		}
 		config.LogtailConfig.Processors = []map[string]interface{}{
 			{

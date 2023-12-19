@@ -31,7 +31,7 @@ func splitLogPathAndFilePattern(filePath string) (logPath string, filePattern st
 		filePattern = invalidFilePattern
 		err = errors.New("invalid Unix file path")
 	} else {
-		logPath = filePath[0:lastSeperatorPos]
+		logPath = filePath[0 : lastSeperatorPos+1]
 		filePattern = filePath[lastSeperatorPos+1:]
 	}
 	return
