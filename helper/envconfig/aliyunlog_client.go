@@ -3,12 +3,13 @@ package envconfig
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
 	"github.com/alibabacloud-go/tea/tea"
-	"sync"
-	"time"
 )
 
 type UpdateTokenFunc func() (accessKeyID, accessKeySecret, securityToken string, expireTime time.Time, err error)
@@ -58,11 +59,11 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 				logger.Error(c.ctx, "msg", "fetch sts token done, error : ", err)
 			}
 		case <-c.shutdown:
-			logger.Debug(c.ctx, "msg", "receive shutdown signal, exit flushSTSToken")
+			logger.Info(c.ctx, "msg", "receive shutdown signal, exit flushSTSToken")
 			return
 		}
 		if c.closeFlag {
-			logger.Debug(c.ctx, "msg", "close flag is true, exit flushSTSToken")
+			logger.Info(c.ctx, "msg", "close flag is true, exit flushSTSToken")
 			return
 		}
 	}
@@ -110,7 +111,7 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 			return err
 		}
 		c.Client = *logClient
-		logger.Debug(c.ctx, "msg", "fetch sts token success id : ", accessKeyID)
+		logger.Info(c.ctx, "msg", "fetch sts token success id : ", accessKeyID)
 	} else {
 		c.lock.Lock()
 		c.lastRetryFailCount++
