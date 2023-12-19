@@ -31,7 +31,7 @@
 
 namespace logtail {
 
-bool Pipeline::Init(PipelineConfig& config) {
+bool Pipeline::Init(const PipelineConfig& config) {
     mName = config.mConfigName;
     mConfig = config;
 
@@ -78,7 +78,6 @@ bool Pipeline::Init(PipelineConfig& config) {
                                                                           std::to_string(pluginIndex++));
             break;
         case REGEX_LOG:
-            config.mTimeKey = "time";
             pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::sName,
                                                                           std::to_string(pluginIndex++));
             break;

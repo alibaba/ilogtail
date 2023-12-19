@@ -31,6 +31,9 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig)
     const PipelineConfig& config = componentConfig.GetConfig();
 
     mTimeFormat = config.mTimeFormat;
+    if (config.mLogType == REGEX_LOG){
+        mTimeKey = "time";
+    }
     mTimeKey = config.mTimeKey;
     mSpecifiedYear = config.mAdvancedConfig.mSpecifiedYear;
     mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
