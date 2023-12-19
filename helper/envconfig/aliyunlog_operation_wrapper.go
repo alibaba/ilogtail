@@ -110,8 +110,8 @@ func createClientInterface(endpoint, accessKeyID, accessKeySecret, stsToken stri
 func createAliyunLogOperationWrapper(project string, logClient **aliyunlog.Client) (*operationWrapper, error) {
 	var err error
 	wrapper := &operationWrapper{
-		logClient: logClient,
-		project:   project,
+		logClient:     logClient,
+		project:       project,
 		eventRecorder: k8s_event.GetEventRecorder(),
 	}
 	logger.Info(context.Background(), "init aliyun log operation wrapper", "begin")
@@ -330,8 +330,8 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 		customErr := CustomErrorFromSlsSDKError(err)
 		o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, "", fmt.Sprintf("create logstore failed, error: %s", err.Error()))
 		return err
-	} 
-	
+	}
+
 	o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
 	// 创建logStore成功后,等待 1 秒
 	time.Sleep(time.Second)
@@ -495,6 +495,9 @@ func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, serverIn
 		return true
 	}
 	serverFilePath, _ := util.InterfaceToString(serverInput["FilePaths"].([]interface{})[0])
+	// 把/**/ 替换为/ 后再进行比较
+	serverFilePath = strings.ReplaceAll(serverFilePath, "/**/", "/")
+	filePaths = strings.ReplaceAll(filePaths, "/**/", "/")
 	if serverFilePath != filePaths {
 		return true
 	}

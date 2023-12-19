@@ -202,6 +202,13 @@ const invalidFilePattern = "invalid_file_pattern"
 // nolint: unparam
 func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePath string, jsonFlag, dockerFile bool) {
 	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
+
+	// 判断有没有 /**/
+	maxDirSearchDepth := 0
+	if strings.Contains(filePath, "/**/") {
+		maxDirSearchDepth = 100
+	}
+
 	logPath, filePattern, err := splitLogPathAndFilePattern(filePath)
 	var input map[string]interface{}
 	if err != nil {
@@ -211,26 +218,26 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 	if !jsonFlag {
 		input = map[string]interface{}{
 			"Type":                     "input_file",
-			"FilePaths":                []string{logPath + "/**/" + filePattern},
+			"FilePaths":                []string{logPath + filePattern},
 			"EnableContainerDiscovery": dockerFile,
 			"ContainerFilters": map[string]map[string]interface{}{
 				"IncludeEnv": {
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
-			"MaxDirSearchDepth": 20,
+			"MaxDirSearchDepth": tea.Int(maxDirSearchDepth),
 		}
 	} else {
 		input = map[string]interface{}{
 			"Type":                     "input_file",
-			"FilePaths":                []string{logPath + "/**/" + filePattern},
+			"FilePaths":                []string{logPath + filePattern},
 			"EnableContainerDiscovery": dockerFile,
 			"ContainerFilters": map[string]map[string]interface{}{
 				"IncludeEnv": {
 					*flags.LogConfigPrefix + tea.StringValue(config.LogtailConfig.ConfigName): filePath,
 				},
 			},
-			"MaxDirSearchDepth": 20,
+			"MaxDirSearchDepth": tea.Int(maxDirSearchDepth),
 		}
 		config.LogtailConfig.Processors = []map[string]interface{}{
 			{
@@ -403,12 +410,12 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 	// config
 	// makesure exist
 	configType := envConfigInfo.ConfigItemMap[""]
-	// 疑问：新版配置需要支持detail吗
+
 	if configDetail, ok := envConfigInfo.ConfigItemMap["detail"]; ok {
 		totalConfig += configDetail
-		if err := json.Unmarshal([]byte(configDetail), &config.LogtailConfig); err != nil {
-			logger.Error(context.Background(), "INVALID_ENV_CONFIG_DETAIL", "unmarshal error", err, "detail", configDetail)
-		}
+		// if err := json.Unmarshal([]byte(configDetail), &config.LogtailConfig); err != nil {
+		// 	logger.Error(context.Background(), "INVALID_ENV_CONFIG_DETAIL", "unmarshal error", err, "detail", configDetail)
+		// }
 		config.SimpleConfig = false
 	} else {
 		totalConfig += configType
