@@ -734,6 +734,78 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 	})
 }
 
+func TestHttpFlusherDropEvents(t *testing.T) {
+	Convey("Given a http flusher that drops events when queue is full", t, func() {
+		mockIntercepter := &mockInterceptor{}
+		flusher := &FlusherHTTP{
+			RemoteURL: "http://test.com/write",
+			Convert: helper.ConvertConfig{
+				Protocol: converter.ProtocolInfluxdb,
+				Encoding: converter.EncodingCustom,
+			},
+			interceptor:            mockIntercepter,
+			context:                mock.NewEmptyContext("p", "l", "c"),
+			AsyncIntercept:         true,
+			Timeout:                defaultTimeout,
+			Concurrency:            1,
+			queue:                  make(chan interface{}, 1),
+			DropEventWhenQueueFull: true,
+		}
+
+		metricLabels := flusher.buildLabels()
+		flusher.droppedGroups = helper.NewCounterMetric("http_flusher_dropped_groups", metricLabels...)
+		flusher.droppedEvents = helper.NewCounterMetric("http_flusher_dropped_events", metricLabels...)
+		flusher.retryCounts = helper.NewCounterMetric("http_flusher_retry_counts", metricLabels...)
+		flusher.flushLatency = helper.NewAverageMetric("http_flusher_flush_latency_ns", metricLabels...)
+
+		Convey("should discard events when queue is full", func() {
+			groupEvents := models.PipelineGroupEvents{
+				Events: []models.PipelineEvent{&models.Metric{
+					Name:      "cpu.load.short",
+					Timestamp: 1672321328000000000,
+					Tags:      models.NewTagsWithKeyValues("host", "server01", "region", "cn"),
+					Value:     &models.MetricSingleValue{Value: 0.64},
+				}},
+			}
+			err := flusher.Export([]*models.PipelineGroupEvents{&groupEvents}, nil)
+			So(err, ShouldBeNil)
+			err = flusher.Export([]*models.PipelineGroupEvents{&groupEvents}, nil)
+			So(err, ShouldBeNil)
+			So(len(flusher.queue), ShouldEqual, 1)
+			err = flusher.convertAndFlush(<-flusher.queue)
+			So(err, ShouldBeNil)
+			log := &protocol.Log{}
+			flusher.context.MetricSerializeToPB(log)
+			So(len(log.Contents), ShouldBeGreaterThanOrEqualTo, 1)
+		})
+	})
+}
+
+func TestBuildLabels(t *testing.T) {
+	flusher := &FlusherHTTP{
+		RemoteURL: "http://example.com",
+		Query: map[string]string{
+			"u":        "user",
+			"password": "secret",
+			"status":   "active",
+		},
+	}
+
+	expectedLabels := []*protocol.Log_Content{
+		{Key: "RemoteURL", Value: "http://example.com"},
+		{Key: "status", Value: "active"},
+	}
+
+	labels := flusher.buildLabels()
+
+	assert.Equal(t, len(expectedLabels), len(labels))
+
+	for i, expected := range expectedLabels {
+		assert.Equal(t, expected.Key, labels[i].Key)
+		assert.Equal(t, expected.Value, labels[i].Value)
+	}
+}
+
 type mockContext struct {
 	pipeline.Context
 	basicAuth   *basicAuth
@@ -749,6 +821,12 @@ func (c mockContext) GetExtension(name string, cfg any) (pipeline.Extension, err
 		return c.interceptor, nil
 	}
 	return nil, fmt.Errorf("basicAuth not set")
+}
+
+func (c mockContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
+}
+
+func (c mockContext) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
 }
 
 func (c mockContext) GetConfigName() string {
