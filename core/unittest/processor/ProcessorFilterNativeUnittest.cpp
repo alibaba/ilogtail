@@ -14,7 +14,7 @@
 #include "unittest/Unittest.h"
 #include "common/JsonUtil.h"
 #include "processor/ProcessorFilterNative.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include "common/ExceptionBase.h"
 #include "config/UserLogConfigParser.h"
 
@@ -191,7 +191,6 @@ void ProcessorFilterNativeUnittest::TestFilter() {
         ]
     })";
     eventGroup1.FromJsonString(inJson);
-    std::cout<<inJson<<std::endl;
     // run function
     processorInstance.Process(eventGroup1);
     std::string outJson = eventGroup1.ToJsonString();

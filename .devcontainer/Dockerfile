@@ -12,10 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:gcc_9.3.1-1
+FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:gcc_9.3.1-3
 
 ARG USERNAME=admin
 USER root
+
+RUN wget http://mirrors.ustc.edu.cn/gnu/libc/glibc-2.18.tar.gz && \
+    tar -zxvf glibc-2.18.tar.gz && \
+    cd glibc-2.18 && \
+    mkdir build && \
+    cd build && \
+    ../configure --prefix=/usr && \
+    make -j$(nproc) && \
+    make install && \
+    cd ../ && \
+    rm -fr glibc-2.18*
 
 # Create the user
 COPY .env /tmp/.env

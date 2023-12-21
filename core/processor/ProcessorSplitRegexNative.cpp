@@ -21,10 +21,12 @@
 #include "reader/LogFileReader.h" //SplitState
 #include "models/LogEvent.h"
 #include "logger/Logger.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
+#include "monitor/MetricConstants.h"
 
 
 namespace logtail {
+const std::string ProcessorSplitRegexNative::sName = "processor_split_regex_native";
 
 bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
@@ -36,7 +38,6 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 
@@ -55,7 +56,7 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorSplitRegexNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorSplitRegexNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

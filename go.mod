@@ -93,7 +93,6 @@ require (
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
-	github.com/frankban/quicktest v1.14.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.6.1 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -263,6 +262,11 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute v1.18.0 // indirect
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
+	github.com/VictoriaMetrics/metrics v1.23.0 // indirect
+	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -270,24 +274,18 @@ require (
 	github.com/openkruise/kruise-api v1.4.0
 	github.com/panjf2000/ants/v2 v2.8.1
 	github.com/richardartoul/molecule v1.0.0 // indirect
-	golang.org/x/mod v0.8.0 // indirect
-	gopkg.in/ini.v1 v1.66.2 // indirect
-	sigs.k8s.io/gateway-api v0.6.2 // indirect
-)
-
-require (
-	cloud.google.com/go/compute v1.18.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
-	github.com/VictoriaMetrics/metrics v1.23.0 // indirect
-	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/valyala/gozstd v1.17.0 // indirect
 	github.com/valyala/histogram v1.2.0 // indirect
 	github.com/valyala/quicktemplate v1.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	gopkg.in/ini.v1 v1.66.2 // indirect
+	sigs.k8s.io/gateway-api v0.6.2 // indirect
 )
+
+require github.com/rogpeppe/go-internal v1.6.1 // indirect
 
 replace (
 	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.83.4-ilogtail

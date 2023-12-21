@@ -15,13 +15,16 @@
  */
 
 #include "processor/ProcessorParseDelimiterNative.h"
+
 #include "common/Constants.h"
 #include "models/LogEvent.h"
+#include "monitor/MetricConstants.h"
 #include "parser/LogParser.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 
 
 namespace logtail {
+const std::string ProcessorParseDelimiterNative::sName = "processor_parse_delimiter_native";
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
@@ -58,7 +61,7 @@ bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig)
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
+
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
@@ -245,8 +248,14 @@ bool ProcessorParseDelimiterNative::SplitString(
     size_t pos = begIdx;
     size_t top = endIdx - d_size;
     while (pos <= top) {
-        const char* pch = strstr(buffer + pos, mSeparator.c_str());
-        size_t pos2 = pch == NULL ? endIdx : (pch - buffer);
+        const char* pch = std::search(buffer + pos, buffer + endIdx, mSeparator.begin(), mSeparator.end());
+        size_t pos2;
+        // if not found, pos2 = endIdx
+        if (pch == buffer + endIdx) {
+            pos2 = endIdx;
+        } else {
+            pos2 = pch - buffer;
+        }
         if (pos2 != pos) {
             colBegIdxs.push_back(pos);
             colLens.push_back(pos2 - pos);
@@ -276,7 +285,7 @@ void ProcessorParseDelimiterNative::AddLog(const StringView& key, const StringVi
     mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
-bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 
