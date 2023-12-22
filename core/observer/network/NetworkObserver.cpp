@@ -493,13 +493,13 @@ void NetworkObserver::EventLoop() {
             LOG_DEBUG(sLogger, ("observer_protocol_mem_statistic", sPDStat->ToString()));
             LOG_DEBUG(sLogger, ("observer_network_statistic", mNetworkStatistic->ToString()));
 
-            sPMStat->FlushMetrics();
-            sCMStat->FlushMetrics();
-            sPStat->FlushMetrics();
-            sPDStat->FlushMetrics(BOOL_FLAG(sls_observer_network_protocol_stat));
-            mNetworkStatistic->FlushMetrics();
-            LogtailMonitor::Instance()->UpdateMetric("observer_container_category",
-                                                     ContainerProcessGroupManager::GetInstance()->GetContainerType());
+//            sPMStat->FlushMetrics();
+//            sCMStat->FlushMetrics();
+//            sPStat->FlushMetrics();
+//            sPDStat->FlushMetrics(BOOL_FLAG(sls_observer_network_protocol_stat));
+//            mNetworkStatistic->FlushMetrics();
+//            LogtailMonitor::Instance()->UpdateMetric("observer_container_category",
+//                                                     ContainerProcessGroupManager::GetInstance()->GetContainerType());
             lastProfilingTime = nowTimeNs;
         }
         if (!hasMoreData) {
