@@ -9,6 +9,7 @@ require (
 	github.com/alibaba/ilogtail/pkg v0.0.0
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner v0.0.0
 	github.com/aliyun/aliyun-log-go-sdk v0.1.37
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.9+incompatible
 	github.com/apache/pulsar-client-go v0.10.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/cespare/xxhash v1.1.0 // indirect

@@ -95,6 +95,7 @@
   * [Pulsar](data-pipeline/flusher/flusher-pulsar.md)
   * [HTTP](data-pipeline/flusher/flusher-http.md)
   * [Loki](data-pipeline/flusher/loki.md)
+  * [OSS](data-pipeline/flusher/flusher-oss.md)
 * [加速](data-pipeline/accelerator/README.md)
   * [分隔符加速](data-pipeline/accelerator/delimiter-accelerate.md)
   * [Json加速](data-pipeline/accelerator/json-accelerate.md)
