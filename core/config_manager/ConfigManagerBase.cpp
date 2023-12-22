@@ -1313,7 +1313,7 @@ ConfigManagerBase::ConfigManagerBase() {
     CorrectionLogtailSysConfDir(); // first create dir then rewrite system-uuid file in GetSystemUUID
     // use a thread to get uuid, work around for CalculateDmiUUID hang
     // mUUID = CalculateDmiUUID();
-    mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
+    mInstanceId = LogFileProfiler::mIpAddr + "_" + ToString(getpid()) + "_" + ToString(time(NULL));
     ReloadMappingConfig();
 }
 

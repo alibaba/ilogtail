@@ -278,6 +278,7 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     heartBeatReq.set_agent_type("iLogtail");
     attributes.set_version(ILOGTAIL_VERSION);
     attributes.set_ip(LogFileProfiler::mIpAddr);
+    attributes.set_hostname(LogFileProfiler::mHostname);
     heartBeatReq.mutable_attributes()->MergeFrom(attributes);
     heartBeatReq.mutable_tags()->MergeFrom({AppConfig::GetInstance()->GetConfigServerTags().begin(),
                                             AppConfig::GetInstance()->GetConfigServerTags().end()});
