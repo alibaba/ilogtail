@@ -3,6 +3,7 @@ package envconfig
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -18,26 +19,28 @@ var errSTSFetchHighFrequency = errors.New("sts token fetch frequency is too high
 
 type TokenAutoUpdateClient struct {
 	*aliyunlog.Client
-	shutdown               <-chan struct{}
-	closeFlag              bool
-	tokenUpdateFunc        UpdateTokenFunc
-	maxTryTimes            int
-	waitIntervalMin        time.Duration
-	waitIntervalMax        time.Duration
-	updateTokenIntervalMin time.Duration
-	nextExpire             time.Time
+	shutdown               <-chan struct{} // 用于接收关闭信号的通道
+	closeFlag              bool            // 关闭标志
+	tokenUpdateFunc        UpdateTokenFunc // 更新Token的函数
+	maxTryTimes            int             // 最大尝试次数 默认3
+	waitIntervalMin        time.Duration   // 最小等待间隔 默认1s
+	waitIntervalMax        time.Duration   // 最大等待间隔 默认60s
+	updateTokenIntervalMin time.Duration   // 更新Token的最小间隔 默认1s
+	nextExpire             time.Time       // 下次过期时间
 
 	lock               sync.Mutex
-	lastFetch          time.Time
-	lastRetryFailCount int
-	lastRetryInterval  time.Duration
+	lastFetch          time.Time     // 最后一次获取Token的时间
+	lastRetryFailCount int           // 最后一次重试失败的次数
+	lastRetryInterval  time.Duration // 最后一次重试的间隔
 	ctx                context.Context
 }
 
+// flushSTSToken方法用于刷新STS Token
 func (c *TokenAutoUpdateClient) flushSTSToken() {
 	for {
 		nowTime := time.Now()
 		c.lock.Lock()
+		// 计算下次过期时间与当前时间的差值，即需要睡眠的时间, 并根据不同的情况调整睡眠时间
 		sleepTime := c.nextExpire.Sub(nowTime)
 		if sleepTime < time.Minute {
 			sleepTime = time.Second * 30
@@ -50,13 +53,13 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 			sleepTime = sleepTime / 10 * 5
 		}
 		c.lock.Unlock()
-		logger.Debug(c.ctx, "msg", "next fetch sleep interval : ", sleepTime.String())
+		logger.Info(c.ctx, "msg", "next fetch sleep interval", sleepTime.String())
 		trigger := time.After(sleepTime)
 		select {
 		case <-trigger:
 			err := c.fetchSTSToken()
 			if err != nil {
-				logger.Error(c.ctx, "msg", "fetch sts token done, error : ", err)
+				logger.Error(c.ctx, "FetchSTSTokenError", "fetch sts token done, error", err)
 			}
 		case <-c.shutdown:
 			logger.Info(c.ctx, "msg", "receive shutdown signal, exit flushSTSToken")
@@ -69,25 +72,33 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 	}
 }
 
+// fetchSTSToken方法用于获取STS Token
 func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 	nowTime := time.Now()
 	skip := false
 	sleepTime := time.Duration(0)
 	c.lock.Lock()
+	// 如果当前时间与最后一次获取Token的时间差值小于更新Token的最小间隔，就跳过获取Token
 	if nowTime.Sub(c.lastFetch) < c.updateTokenIntervalMin {
 		skip = true
 	} else {
+		// 更新最后一次获取Token的时间
 		c.lastFetch = nowTime
+		// 如果最后一次重试失败的次数为0，就不需要睡眠
 		if c.lastRetryFailCount == 0 {
 			sleepTime = 0
 		} else {
+			// 否则，将最后一次重试的间隔翻倍
 			c.lastRetryInterval *= 2
+			// 如果最后一次重试的间隔小于最小等待间隔，就设置为最小等待间隔
 			if c.lastRetryInterval < c.waitIntervalMin {
 				c.lastRetryInterval = c.waitIntervalMin
 			}
+			// 如果最后一次重试的间隔大于等于最大等待间隔，就设置为最大等待间隔
 			if c.lastRetryInterval >= c.waitIntervalMax {
 				c.lastRetryInterval = c.waitIntervalMax
 			}
+			// 设置需要睡眠的时间为最后一次重试的间隔
 			sleepTime = c.lastRetryInterval
 		}
 	}
@@ -99,29 +110,33 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 		time.Sleep(sleepTime)
 	}
 
+	// 调用更新Token的函数获取Token
 	accessKeyID, accessKeySecret, securityToken, expireTime, err := c.tokenUpdateFunc()
-	if err == nil {
+	if err == nil { // 如果获取Token成功
 		c.lock.Lock()
+		// 将最后一次重试失败的次数设置为0, 将最后一次重试的间隔设置为0,更新下次过期时间
 		c.lastRetryFailCount = 0
 		c.lastRetryInterval = time.Duration(0)
 		c.nextExpire = expireTime
 		c.lock.Unlock()
+		// 创建一个新的日志服务客户端
 		logClient, err := CreateNormalInterface(*c.Client.Endpoint, accessKeyID, accessKeySecret, securityToken, *c.Client.UserAgent)
 		if err != nil {
 			return err
 		}
 		c.Client = *logClient
-		logger.Info(c.ctx, "msg", "fetch sts token success id : ", accessKeyID)
-	} else {
+		logger.Info(c.ctx, "msg", "fetch sts token success id", accessKeyID)
+	} else { // 如果获取Token失败
 		c.lock.Lock()
+		// 将最后一次重试失败的次数加1, 记录获取Token失败的错误信息
 		c.lastRetryFailCount++
 		c.lock.Unlock()
-		logger.Warning(c.ctx, "msg", "fetch sts token error : ", err.Error())
+		err = fmt.Errorf("tokenUpdateFunc error:%v", err.Error())
 	}
 	return err
 }
 
-// CreateNormalInterface create a normal client
+// CreateNormalInterface函数用于创建一个普通的日志服务客户端
 func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken string, userAgent string) (**aliyunlog.Client, error) {
 	openapiConfig := &openapi.Config{
 		AccessKeyId:     tea.String(accessKeyID),
@@ -132,15 +147,20 @@ func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken
 	openapiConfig.Endpoint = tea.String(endpoint)
 	logClient := &aliyunlog.Client{}
 	logClient, err := aliyunlog.NewClient(openapiConfig)
+	err = fmt.Errorf("aliyunlog NewClient error:%v", err.Error())
 	return &logClient, err
 }
 
+// CreateTokenAutoUpdateClient函数用于创建一个自动更新Token的客户端
 func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFunc, shutdown <-chan struct{}, userAgent string) (**aliyunlog.Client, error) {
+	// 调用更新Token的函数获取Token
 	accessKeyID, accessKeySecret, securityToken, expireTime, err := tokenUpdateFunc()
 	if err != nil {
+		err = fmt.Errorf("tokenUpdateFunc error:%v", err.Error())
 		return nil, err
 	}
 
+	// 创建一个普通的日志服务客户端
 	logClient, err := CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken, userAgent)
 	if err != nil {
 		return nil, err
