@@ -180,7 +180,6 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 	// 调用 CreateProductLogstore 函数创建logStore
 	err := CreateProductLogstore(*flags.DefaultRegion, project, logstore, product, lang, hotTTL)
 
-	// 获取注解
 	annotations := GetAnnotationByObject(config, project, logstore, product, tea.StringValue(config.LogtailConfig.ConfigName), false)
 
 	if err != nil {
@@ -385,7 +384,7 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 	}
 	// 如果project不存在, 创建project
 	createProjectRequest := aliyunlog.CreateProjectRequest{
-		Description: tea.String("k8s log project, created by alibaba cloud log controller"),
+		Description: tea.String("k8s log project, created by alibaba ilogtail"),
 		ProjectName: tea.String(project),
 	}
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
