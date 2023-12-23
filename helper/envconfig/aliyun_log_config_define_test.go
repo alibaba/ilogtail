@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/alibabacloud-go/tea/tea"
+	"gotest.tools/assert"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -277,5 +278,121 @@ func (s *logConfigTestSuite) TestNginxIngress(c *check.C) {
 		c.Assert(config.LogtailConfig.Global["AlwaysOnline"], check.Equals, true)
 
 		c.Assert(tea.StringValue(config.LogtailConfig.ConfigName), check.Equals, "ingress-error-abc123")
+	}
+}
+
+func TestCheckFileConfigChanged(t *testing.T) {
+	tests := []struct {
+		name          string
+		filePaths     string
+		includeEnv    string
+		includeLabel  string
+		serverInput   map[string]interface{}
+		expectedValue bool
+	}{
+		{
+			name:          "FilePaths not exist",
+			filePaths:     "/test/path",
+			includeEnv:    "{\"env\":\"env\"}",
+			includeLabel:  "{\"label\":\"label\"}",
+			serverInput:   map[string]interface{}{},
+			expectedValue: true,
+		},
+		{
+			name:          "FilePaths exist but empty",
+			filePaths:     "/test/path",
+			serverInput:   map[string]interface{}{"FilePaths": []interface{}{}},
+			expectedValue: true,
+		},
+		{
+			name:          "FilePaths exist and not empty but different",
+			filePaths:     "/test/path",
+			serverInput:   map[string]interface{}{"FilePaths": []interface{}{"/different/path"}},
+			expectedValue: true,
+		},
+		{
+			name:          "ContainerFilters not exist",
+			filePaths:     "/test/path",
+			includeEnv:    "{\"env\":\"env\"}",
+			includeLabel:  "{\"label\":\"label\"}",
+			serverInput:   map[string]interface{}{"FilePaths": []interface{}{"/test/path"}},
+			expectedValue: true,
+		},
+		{
+			name:         "ContainerFilters exist but IncludeEnv and IncludeContainerLabel different",
+			filePaths:    "/test/path",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "differentEnv"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "differentLabel"},
+				},
+			},
+			expectedValue: true,
+		},
+		{
+			name:         "ContainerFilters exist and IncludeEnv and IncludeContainerLabel same",
+			filePaths:    "/test/path",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "env"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "label"},
+				},
+			},
+			expectedValue: false,
+		},
+		{
+			name:         "filePaths compatibility test",
+			filePaths:    "/test/path/**/a.log",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path/a.log"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "env"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "label"},
+				},
+			},
+			expectedValue: false,
+		},
+		{
+			name:         "filePaths compatibility test",
+			filePaths:    "/test/path/a.log",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path/**/a.log"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "env"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "label"},
+				},
+			},
+			expectedValue: false,
+		},
+		{
+			name:         "filePaths compatibility test",
+			filePaths:    "/test/**/path/**/a.log",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path/**/a.log"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "env"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "label"},
+				},
+			},
+			expectedValue: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expectedValue, checkFileConfigChanged(tt.filePaths, tt.includeEnv, tt.includeLabel, tt.serverInput))
+		})
 	}
 }
