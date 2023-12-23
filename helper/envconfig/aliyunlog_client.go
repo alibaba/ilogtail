@@ -147,7 +147,9 @@ func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken
 	openapiConfig.Endpoint = tea.String(endpoint)
 	logClient := &aliyunlog.Client{}
 	logClient, err := aliyunlog.NewClient(openapiConfig)
-	err = fmt.Errorf("aliyunlog NewClient error:%v", err.Error())
+	if err != nil {
+		err = fmt.Errorf("aliyunlog NewClient error:%v", err.Error())
+	}
 	return &logClient, err
 }
 
