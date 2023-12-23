@@ -30,6 +30,7 @@ struct CommonParserOptions {
     bool mKeepingSourceWhenParseFail = false;
     bool mKeepingSourceWhenParseSucceed = false;
     std::string mRenamedSourceKey;
+    // for backward compatability only, should not be explicitly used!
     bool mCopingRawLog = false;
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);

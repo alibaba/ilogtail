@@ -153,36 +153,8 @@ bool Aggregator::Add(const std::string& projectName,
         return true;
     vector<int32_t> neededLogs;
     int32_t neededLogSize = logSize;
-    // if (!BOOL_FLAG(enable_new_pipeline)) {
-    //     static const vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
-    //     if (!sEnvTags.empty()) {
-    //         for (size_t i = 0; i < sEnvTags.size(); ++i) {
-    //             sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
-    //             logTagPtr->set_key(sEnvTags[i].key());
-    //             logTagPtr->set_value(sEnvTags[i].value());
-    //         }
-    //     }
-
-    //     if (!STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
-    //         vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
-    //         if (!sFileTags.empty()) {
-    //             for (size_t i = 0; i < sFileTags.size(); ++i) {
-    //                 sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
-    //                 logTagPtr->set_key(sFileTags[i].key());
-    //                 logTagPtr->set_value(sFileTags[i].value());
-    //             }
-    //         }
-    //     }
-    //     neededLogSize = FilterNoneUtf8Metric(logGroup, config, neededLogs, context);
-    //     if (neededLogSize == 0)
-    //         return true;
-    //     if (config != NULL && config->mSensitiveWordCastOptions.size() > (size_t)0) {
-    //         LogFilter::CastSensitiveWords(logGroup, config);
-    //     }
-    // } else {
     neededLogs.resize(logSize);
     std::iota(std::begin(neededLogs), std::end(neededLogs), 0);
-    // }
 
     static Sender* sender = Sender::Instance();
     const string& region = (config == NULL ? defaultRegion : config->mRegion);

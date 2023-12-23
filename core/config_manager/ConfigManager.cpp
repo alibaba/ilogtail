@@ -270,6 +270,7 @@ bool ConfigManager::RegisterHandlers() {
             }
         }
     }
+    LOG_INFO(sLogger, ("watch dirs", "succeeded"));
     return result;
 }
 

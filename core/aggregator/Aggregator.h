@@ -158,11 +158,6 @@ private:
 
     int64_t GetAndIncLogPackSeq(int64_t key);
 
-    // int32_t FilterNoneUtf8Metric(sls_logs::LogGroup& logGroup,
-    //                              const Config* config,
-    //                              std::vector<int32_t>& neededLogs,
-    //                              const LogGroupContext& context);
-
     void AddPackIDForLogGroup(const std::string& packIDPrefix, int64_t logGroupKey, sls_logs::LogGroup& logGroup);
 
 private:
