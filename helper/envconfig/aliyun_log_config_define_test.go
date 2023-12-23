@@ -333,6 +333,58 @@ func TestCheckFileConfigChanged(t *testing.T) {
 			expectedValue: true,
 		},
 		{
+			name:       "ContainerFilters exist but IncludeEnv and IncludeContainerLabel different",
+			filePaths:  "/test/path",
+			includeEnv: "{\"env\":\"env\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "differentEnv"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "differentLabel"},
+				},
+			},
+			expectedValue: true,
+		},
+		{
+			name:         "ContainerFilters exist but IncludeEnv and IncludeContainerLabel different",
+			filePaths:    "/test/path",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv": map[string]interface{}{"env": "differentEnv"},
+				},
+			},
+			expectedValue: true,
+		},
+		{
+			name:         "ContainerFilters exist but IncludeEnv and IncludeContainerLabel different",
+			filePaths:    "/test/path",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "differentEnv"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "differentLabel"},
+				},
+			},
+			expectedValue: true,
+		},
+		{
+			name:         "ContainerFilters exist but IncludeEnv and IncludeContainerLabel different",
+			filePaths:    "/test/path",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeContainerLabel": map[string]interface{}{"label": "differentLabel"},
+				},
+			},
+			expectedValue: true,
+		},
+		{
 			name:         "ContainerFilters exist and IncludeEnv and IncludeContainerLabel same",
 			filePaths:    "/test/path",
 			includeEnv:   "{\"env\":\"env\"}",
