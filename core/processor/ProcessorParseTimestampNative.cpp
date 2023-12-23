@@ -147,10 +147,11 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath,
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
                             ("drop log event",
-                             "log time falls " + ToString(INT32_FLAG(ilogtail_discard_interval))
+                             "log time falls more than " + ToString(INT32_FLAG(ilogtail_discard_interval))
                                  + " secs behind current time")("log time", logTime.tv_sec)(
-                                "project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())(
-                                "config", GetContext().GetConfigName())("file", logPath));
+                                "gap", ToString(time(NULL) - logTime.tv_sec))("project", GetContext().GetProjectName())(
+                                "logstore", GetContext().GetLogstoreName())("config", GetContext().GetConfigName())(
+                                "file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(OUTDATED_LOG_ALARM,
                                                    std::string("logTime: ") + ToString(logTime.tv_sec),

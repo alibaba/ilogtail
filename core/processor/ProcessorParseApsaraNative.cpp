@@ -168,18 +168,20 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
         }
         return true;
     }
-    if (BOOL_FLAG(ilogtail_discard_old_data)
-        && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval)) {
+    if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             StringView bufOut(buffer);
             if (buffer.size() > (size_t)(1024)) {
                 bufOut = buffer.substr(0, 1024);
             }
             if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
-                LOG_WARNING(sLogger,
-                            ("discard history data, first 1k",
-                             bufOut)("parsed time", logTime)("project", GetContext().GetProjectName())(
-                                "logstore", GetContext().GetLogstoreName())("file", logPath));
+                LOG_WARNING(
+                    sLogger,
+                    ("drop log event",
+                     "log time falls more than " + ToString(INT32_FLAG(ilogtail_discard_interval))
+                         + " secs behind current time")("log time", logTime)("gap", ToString(time(NULL) - logTime))(
+                        "project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())(
+                        "config", GetContext().GetConfigName())("file", logPath));
             }
             GetContext().GetAlarm().SendAlarm(OUTDATED_LOG_ALARM,
                                               std::string("logTime: ") + ToString(logTime)
