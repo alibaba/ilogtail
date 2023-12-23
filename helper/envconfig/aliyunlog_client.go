@@ -170,12 +170,18 @@ func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFun
 	tauc := &TokenAutoUpdateClient{
 		Client:                 *logClient,
 		shutdown:               shutdown,
+		closeFlag:              false,
 		tokenUpdateFunc:        tokenUpdateFunc,
 		maxTryTimes:            3,
 		waitIntervalMin:        time.Second * 1,
 		waitIntervalMax:        time.Second * 60,
 		updateTokenIntervalMin: time.Second * 1,
 		nextExpire:             expireTime,
+		lock:                   sync.Mutex{},
+		lastFetch:              time.Now(),
+		lastRetryFailCount:     0,
+		lastRetryInterval:      0,
+		ctx:                    context.Background(),
 	}
 	go tauc.flushSTSToken()
 	return &tauc.Client, nil
