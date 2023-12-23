@@ -448,3 +448,35 @@ func TestCheckFileConfigChanged(t *testing.T) {
 		})
 	}
 }
+
+func (s *logConfigTestSuite) TestSplitLogPathAndFilePattern(c *check.C) {
+	// Test with valid file path
+	logPath, filePattern, err := splitLogPathAndFilePattern("/usr/local/tomcat/logs/catalina.*.log")
+	c.Assert(err, check.IsNil)
+	c.Assert(logPath, check.Equals, "/usr/local/tomcat/logs/")
+	c.Assert(filePattern, check.Equals, "catalina.*.log")
+
+	// Test with no separators
+	logPath, filePattern, err = splitLogPathAndFilePattern("catalina.*.log")
+	c.Assert(err, check.NotNil)
+	c.Assert(logPath, check.Equals, invalidLogPath)
+	c.Assert(filePattern, check.Equals, invalidFilePattern)
+
+	// Test with separator at the end
+	logPath, filePattern, err = splitLogPathAndFilePattern("/usr/local/tomcat/logs/")
+	c.Assert(err, check.NotNil)
+	c.Assert(logPath, check.Equals, invalidLogPath)
+	c.Assert(filePattern, check.Equals, invalidFilePattern)
+
+	// Test with empty file path
+	logPath, filePattern, err = splitLogPathAndFilePattern("")
+	c.Assert(err, check.NotNil)
+	c.Assert(logPath, check.Equals, invalidLogPath)
+	c.Assert(filePattern, check.Equals, invalidFilePattern)
+
+	// Test with /**/ in file path
+	logPath, filePattern, err = splitLogPathAndFilePattern("/usr/local/tomcat/logs/**/catalina.*.log")
+	c.Assert(err, check.IsNil)
+	c.Assert(logPath, check.Equals, "/usr/local/tomcat/logs/**/")
+	c.Assert(filePattern, check.Equals, "catalina.*.log")
+}
