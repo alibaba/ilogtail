@@ -19,8 +19,9 @@ import (
 	"encoding/json"
 	"regexp"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibabacloud-go/tea/tea"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type CustomError struct {

@@ -21,7 +21,6 @@ import (
 
 	"github.com/alibabacloud-go/tea/tea"
 
-	//"k8s.io/client-go/openapi"
 	"strings"
 	"sync"
 	"time"
@@ -301,7 +300,7 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	if config.LogstoreMaxSplitShard != nil {
 		logStore.MaxSplitShard = tea.Int32(*config.LogstoreMaxSplitShard)
 	}
-	if tea.BoolValue((*config).LogstoreEncryptConf.Enable) {
+	if tea.BoolValue(config.LogstoreEncryptConf.Enable) {
 		logStore.EncryptConf = &config.LogstoreEncryptConf
 	}
 	// 创建logStore
@@ -582,7 +581,7 @@ func (o *operationWrapper) TagMachineGroup(project, machineGroup, tagKey, tagVal
 	return err
 }
 
-// nolint:govet,ineffassign
+// nolint:govet,ineffassign,gocritic
 // updateConfigInner 更新配置
 func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error {
 	project := o.project

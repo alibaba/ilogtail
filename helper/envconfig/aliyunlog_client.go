@@ -7,10 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
 	"github.com/alibabacloud-go/tea/tea"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type UpdateTokenFunc func() (accessKeyID, accessKeySecret, securityToken string, expireTime time.Time, err error)
@@ -42,14 +43,14 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 		c.lock.Lock()
 		// 计算下次过期时间与当前时间的差值，即需要睡眠的时间, 并根据不同的情况调整睡眠时间
 		sleepTime := c.nextExpire.Sub(nowTime)
-		if sleepTime < time.Minute {
+		switch {
+		case sleepTime < time.Minute:
 			sleepTime = time.Second * 30
-
-		} else if sleepTime < time.Minute*10 {
+		case sleepTime < time.Minute*10:
 			sleepTime = sleepTime / 10 * 7
-		} else if sleepTime < time.Hour {
+		case sleepTime < time.Hour:
 			sleepTime = sleepTime / 10 * 6
-		} else {
+		default:
 			sleepTime = sleepTime / 10 * 5
 		}
 		c.lock.Unlock()
@@ -120,7 +121,8 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 		c.nextExpire = expireTime
 		c.lock.Unlock()
 		// 创建一个新的日志服务客户端
-		logClient, err := CreateNormalInterface(*c.Client.Endpoint, accessKeyID, accessKeySecret, securityToken, *c.Client.UserAgent)
+		var logClient **aliyunlog.Client
+		logClient, err = CreateNormalInterface(*c.Client.Endpoint, accessKeyID, accessKeySecret, securityToken, *c.Client.UserAgent)
 		if err != nil {
 			return err
 		}
@@ -145,7 +147,7 @@ func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken
 		UserAgent:       tea.String(userAgent),
 	}
 	openapiConfig.Endpoint = tea.String(endpoint)
-	logClient := &aliyunlog.Client{}
+	var logClient *aliyunlog.Client
 	logClient, err := aliyunlog.NewClient(openapiConfig)
 	if err != nil {
 		err = fmt.Errorf("aliyunlog NewClient error:%v", err.Error())
