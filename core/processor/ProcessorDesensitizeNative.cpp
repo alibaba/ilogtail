@@ -221,7 +221,6 @@ void ProcessorDesensitizeNative::CastOneSensitiveWord(std::string* value) {
             if (endOffset >= maxSize) {
                 break;
             }
-
         } while (mReplacingAll);
 
         if (rst && beginPos < pVal->size()) {

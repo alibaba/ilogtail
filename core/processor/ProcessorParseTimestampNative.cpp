@@ -142,16 +142,16 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath,
     }
     if (logTime.tv_sec <= 0
         || (BOOL_FLAG(ilogtail_discard_old_data)
-            // Adjust time(NULL) from local timezone to target timezone
-            && (time(NULL) - mLogTimeZoneOffsetSecond - logTime.tv_sec) > INT32_FLAG(ilogtail_discard_interval))) {
+            && (time(NULL) - logTime.tv_sec) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
-                            ("discard history data", timeStr)("time now", time(NULL))("timestamp", logTime.tv_sec)(
-                                "nanosecond", logTime.tv_nsec)("tzOffsetSecond", mLogTimeZoneOffsetSecond)(
-                                "INT32_FLAG(ilogtail_discard_interval)",
-                                INT32_FLAG(ilogtail_discard_interval))("project", GetContext().GetProjectName())(
-                                "logstore", GetContext().GetLogstoreName())("file", logPath));
+                            ("drop log event",
+                             "log time falls more than " + ToString(INT32_FLAG(ilogtail_discard_interval))
+                                 + " secs behind current time")("log time", logTime.tv_sec)(
+                                "gap", ToString(time(NULL) - logTime.tv_sec))("project", GetContext().GetProjectName())(
+                                "logstore", GetContext().GetLogstoreName())("config", GetContext().GetConfigName())(
+                                "file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(OUTDATED_LOG_ALARM,
                                                    std::string("logTime: ") + ToString(logTime.tv_sec),

@@ -96,6 +96,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         mPipelineNameEntityMap[config.mName]->Stop(false);
         DecreasePluginUsageCnt(mPipelineNameEntityMap[config.mName]->GetPluginStatistics());
         mPipelineNameEntityMap[config.mName] = p;
+        IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
     }
     for (auto& config : diff.mAdded) {
@@ -114,11 +115,12 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         LOG_INFO(sLogger,
                  ("pipeline building for new config succeeded", "begin to start pipeline")("config", config.mName));
         mPipelineNameEntityMap[config.mName] = p;
+        IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
     }
 
 #ifndef APSARA_UNIT_TEST_MAIN
-    // 过渡使用
+    // 过渡使用，有变更的流水线的Go流水线加载在BuildPipeline中完成
     for (auto& name : diff.mUnchanged) {
         mPipelineNameEntityMap[name]->LoadGoPipelines();
     }
@@ -235,7 +237,6 @@ shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
     if (!p->Init(std::move(config))) {
         return nullptr;
     }
-    IncreasePluginUsageCnt(p->GetPluginStatistics());
     return p;
 }
 

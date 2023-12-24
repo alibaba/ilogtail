@@ -35,6 +35,7 @@ void FileServer::Start() {
     ConfigManager::GetInstance()->LoadDockerConfig();
     CheckPointManager::Instance()->LoadCheckPoint();
     ConfigManager::GetInstance()->RegisterHandlers();
+    LOG_INFO(sLogger, ("watch dirs", "succeeded"));
     EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
     if (BOOL_FLAG(enable_polling_discovery)) {
         PollingModify::GetInstance()->Start();
@@ -82,6 +83,7 @@ void FileServer::Resume(bool isConfigUpdate) {
 
     LOG_INFO(sLogger, ("file server resume", "starts"));
     ConfigManager::GetInstance()->RegisterHandlers();
+    LOG_INFO(sLogger, ("watch dirs", "succeeded"));
     if (isConfigUpdate) {
         EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
     }

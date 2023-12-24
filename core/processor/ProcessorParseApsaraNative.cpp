@@ -59,7 +59,7 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
                              mContext->GetProjectName(),
                              mContext->GetLogstoreName(),
                              mContext->GetRegion());
-    } else if (!ParseLogTimeZoneOffsetSecond(mTimezone, false, mLogTimeZoneOffsetSecond)) {
+    } else if (!ParseLogTimeZoneOffsetSecond(mTimezone, true, mLogTimeZoneOffsetSecond)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
                              mContext->GetAlarm(),
                              "string param Timezone is not valid",
@@ -168,18 +168,20 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
         }
         return true;
     }
-    if (BOOL_FLAG(ilogtail_discard_old_data)
-        && (time(NULL) - logTime + mLogTimeZoneOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
+    if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             StringView bufOut(buffer);
             if (buffer.size() > (size_t)(1024)) {
                 bufOut = buffer.substr(0, 1024);
             }
             if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
-                LOG_WARNING(sLogger,
-                            ("discard history data, first 1k",
-                             bufOut)("parsed time", logTime)("project", GetContext().GetProjectName())(
-                                "logstore", GetContext().GetLogstoreName())("file", logPath));
+                LOG_WARNING(
+                    sLogger,
+                    ("drop log event",
+                     "log time falls more than " + ToString(INT32_FLAG(ilogtail_discard_interval))
+                         + " secs behind current time")("log time", logTime)("gap", ToString(time(NULL) - logTime))(
+                        "project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())(
+                        "config", GetContext().GetConfigName())("file", logPath));
             }
             GetContext().GetAlarm().SendAlarm(OUTDATED_LOG_ALARM,
                                               std::string("logTime: ") + ToString(logTime)
@@ -218,7 +220,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
             }
         }
     }
-    logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
+    // logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
     StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(20);
 #if defined(__linux__)
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%ld", logTime_in_micro));
@@ -290,6 +292,7 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         }
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         timeStr = StringView(buffer.data() + 1, 19);
+        lastLogTime.tv_sec = lastLogTime.tv_sec - mLogTimeZoneOffsetSecond;
         microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
         return lastLogTime.tv_sec;
     }

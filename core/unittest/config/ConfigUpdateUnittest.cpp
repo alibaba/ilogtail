@@ -56,7 +56,6 @@ private:
         if (!p->Init(std::move(config))) {
             return nullptr;
         }
-        IncreasePluginUsageCnt(p->GetPluginStatistics());
         return p;
     }
 };
