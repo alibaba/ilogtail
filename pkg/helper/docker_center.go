@@ -142,7 +142,7 @@ type K8SInfo struct {
 	PausedContainer bool
 
 	matchedCache map[uint64]bool
-	mu           sync.RWMutex // 使用读写锁代替互斥锁
+	mu           sync.RWMutex
 }
 
 func (info *K8SInfo) IsSamePod(o *K8SInfo) bool {
@@ -150,8 +150,8 @@ func (info *K8SInfo) IsSamePod(o *K8SInfo) bool {
 }
 
 func (info *K8SInfo) GetLabel(key string) string {
-	info.mu.RLock()         // 使用读锁
-	defer info.mu.RUnlock() // 解读锁
+	info.mu.RLock()
+	defer info.mu.RUnlock()
 	if info.Labels != nil {
 		return info.Labels[key]
 	}
@@ -178,7 +178,7 @@ func (info *K8SInfo) ExtractK8sLabels(containerInfo types.ContainerJSON) {
 }
 
 func (info *K8SInfo) Merge(o *K8SInfo) {
-	info.mu.Lock() // 使用写锁
+	info.mu.Lock()
 	o.mu.Lock()
 	defer info.mu.Unlock()
 	defer o.mu.Unlock()
