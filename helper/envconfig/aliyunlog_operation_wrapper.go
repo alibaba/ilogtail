@@ -632,7 +632,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	if ok && serverConfig != nil {
 		// 如果配置为简单配置
 		if config.SimpleConfig {
-			isUpdated := false
+			needUpdate := false
 			// 服务端配置的inputs为空时, 强制更新服务端config
 			if serverConfig.Inputs == nil || len(serverConfig.Inputs) == 0 {
 				updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
@@ -652,7 +652,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 					if err == nil {
-						isUpdated = true
+						needUpdate = true
 						break
 					}
 				}
@@ -687,7 +687,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 							_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 							if err == nil {
-								isUpdated = true
+								needUpdate = true
 								break
 							}
 						}
@@ -725,14 +725,12 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 					if err == nil {
-						isUpdated = true
+						needUpdate = true
 						break
 					}
 				}
 			}
-			if isUpdated {
-				logger.Info(context.Background(), "config updated", "server config", *serverConfig, "local config", *config)
-			}
+			logger.Info(context.Background(), "config updated", "needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
 		}
 
 	} else {
