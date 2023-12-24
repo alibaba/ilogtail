@@ -81,15 +81,17 @@ func getToken() (result []byte, err error) {
 		logger.Warning(context.Background(), "UPDATE_STS_ALARM", "parse role list error", err)
 		return nil, err
 	}
-	logger.Info(context.Background(), "get role list response", string(body))
+	logger.Debug(context.Background(), "get role list response", string(body))
 
 	bodyStr := string(body)
 	bodyStr = strings.TrimSpace(bodyStr)
 	roles := strings.Split(bodyStr, "\n")
 	role := roles[0]
 
+	logger.Info(context.Background(), "get role", role)
+
 	var respGet *http.Response
-	logger.Info(context.Background(), "get token request", aliyunECSRamURL+role)
+	logger.Debug(context.Background(), "get token request", aliyunECSRamURL+role)
 	respGet, err = client.Get(aliyunECSRamURL + role)
 	if err != nil {
 		logger.Warning(context.Background(), "UPDATE_STS_ALARM", "get token error", err, "role", role)
