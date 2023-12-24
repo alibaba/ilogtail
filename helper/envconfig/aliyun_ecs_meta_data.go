@@ -68,7 +68,7 @@ func getToken() (result []byte, err error) {
 		Timeout: time.Second * 3,
 	}
 	var respList *http.Response
-	logger.Info(context.Background(), "get role list request", aliyunECSRamURL)
+	logger.Debug(context.Background(), "get role list request", aliyunECSRamURL)
 	respList, err = client.Get(aliyunECSRamURL)
 	if err != nil {
 		logger.Warning(context.Background(), "UPDATE_STS_ALARM", "get role list error", err)
