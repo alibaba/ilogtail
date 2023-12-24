@@ -730,7 +730,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 					}
 				}
 			}
-			logger.Info(context.Background(), "config updated", "needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
+			logger.Info(context.Background(), "config updated", "", "needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
 		}
 
 	} else {
