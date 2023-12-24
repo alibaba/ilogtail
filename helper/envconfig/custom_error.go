@@ -47,8 +47,8 @@ func CustomErrorNew(code string, requestID string, msg string) *CustomError {
 }
 
 type SDKErrorMsg struct {
-	HttpCode   int    `json:"httpCode"`
-	RequestId  string `json:"requestId"`
+	HTTPCode   int    `json:"httpCode"`
+	RequestID  string `json:"requestId"`
 	StatusCode int    `json:"statusCode"`
 }
 
@@ -81,7 +81,7 @@ func CustomErrorFromSlsSDKError(err error) *CustomError {
 
 	return &CustomError{
 		Code:      tea.StringValue(sdkError.Code),
-		RequestID: sdkErrorMsg.RequestId,
+		RequestID: sdkErrorMsg.RequestID,
 		Message:   tea.StringValue(sdkError.Message),
 		RawError:  err,
 	}

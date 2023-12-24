@@ -26,7 +26,6 @@ import (
 	"time"
 
 	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
-	_ "github.com/alibabacloud-go/tea/tea"
 
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/flags"
