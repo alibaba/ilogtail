@@ -122,11 +122,7 @@ func createAliyunLogOperationWrapper(project string, logClient **aliyunlog.Clien
 			break
 		}
 		logger.Warning(context.Background(), "CREATE_PROJECT_ALARM", "create project error, project", project, "error", err)
-		if logger.DebugFlag() {
-			time.Sleep(time.Second * time.Duration(5))
-		} else {
-			time.Sleep(time.Second * time.Duration(30))
-		}
+		time.Sleep(time.Second * time.Duration(30))
 	}
 
 	// 确保机器组存在
@@ -136,11 +132,7 @@ func createAliyunLogOperationWrapper(project string, logClient **aliyunlog.Clien
 			break
 		}
 		logger.Warning(context.Background(), "CREATE_MACHINEGROUP_ALARM", "create machine group error, project", project, "error", err)
-		if logger.DebugFlag() {
-			time.Sleep(time.Second * time.Duration(5))
-		} else {
-			time.Sleep(time.Second * time.Duration(30))
-		}
+		time.Sleep(time.Second * time.Duration(30))
 	}
 	if err != nil {
 		return nil, err
@@ -730,7 +722,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 					}
 				}
 			}
-			logger.Info(context.Background(), "config updated", "", "needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
+			logger.Info(context.Background(), "config updated, needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
 		}
 
 	} else {

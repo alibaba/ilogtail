@@ -53,7 +53,7 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 			sleepTime = sleepTime / 10 * 5
 		}
 		c.lock.Unlock()
-		logger.Info(c.ctx, "msg", "next fetch sleep interval", sleepTime.String())
+		logger.Info(c.ctx, "next fetch sleep interval", sleepTime.String())
 		trigger := time.After(sleepTime)
 		select {
 		case <-trigger:
@@ -62,11 +62,11 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 				logger.Error(c.ctx, "FetchSTSTokenError", "fetch sts token done, error", err)
 			}
 		case <-c.shutdown:
-			logger.Info(c.ctx, "msg", "receive shutdown signal, exit flushSTSToken")
+			logger.Info(c.ctx, "receive shutdown signal", "exit flushSTSToken")
 			return
 		}
 		if c.closeFlag {
-			logger.Info(c.ctx, "msg", "close flag is true, exit flushSTSToken")
+			logger.Info(c.ctx, "close flag is true", "exit flushSTSToken")
 			return
 		}
 	}
@@ -125,7 +125,7 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 			return err
 		}
 		c.Client = *logClient
-		logger.Info(c.ctx, "msg", "fetch sts token success id", accessKeyID)
+		logger.Info(c.ctx, "fetch sts token success id", accessKeyID)
 	} else { // 如果获取Token失败
 		c.lock.Lock()
 		// 将最后一次重试失败的次数加1, 记录获取Token失败的错误信息
