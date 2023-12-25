@@ -206,7 +206,7 @@ func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePa
 	// 判断有没有 /**/
 	maxDirSearchDepth := 0
 	if strings.Contains(filePath, "/**/") {
-		maxDirSearchDepth = 100
+		maxDirSearchDepth = 10
 	}
 
 	logPath, filePattern, err := splitLogPathAndFilePattern(filePath)
