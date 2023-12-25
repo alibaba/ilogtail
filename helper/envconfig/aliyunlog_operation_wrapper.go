@@ -487,11 +487,11 @@ func checkFileConfigChanged(filePaths, includeEnv, includeLabel string, serverIn
 	// 把/**/ 替换为/ 后再进行比较
 	for strings.Contains(serverFilePath, "/**/") {
 		serverFilePath = strings.ReplaceAll(serverFilePath, "/**/", "/")
-		serverFilePath = strings.Replace(serverFilePath, "//", "/", -1)
+		serverFilePath = strings.ReplaceAll(serverFilePath, "//", "/")
 	}
 	for strings.Contains(filePaths, "/**/") {
 		filePaths = strings.ReplaceAll(filePaths, "/**/", "/")
-		filePaths = strings.Replace(filePaths, "//", "/", -1)
+		filePaths = strings.ReplaceAll(filePaths, "//", "/")
 	}
 	if serverFilePath != filePaths {
 		return true
