@@ -64,7 +64,7 @@ func (k *StaticConfig) convertStaticConfig() (discovery.StaticConfig, error) {
 		} else {
 			return nil, errors.New("not found required service labels")
 		}
-		addr := net.JoinHostPort(util.TryConvertLocalhost2RealIp(address.Host), strconv.Itoa(int(address.Port)))
+		addr := net.JoinHostPort(util.TryConvertLocalhost2RealIP(address.Host), strconv.Itoa(int(address.Port)))
 		innerLabels := make(model.LabelSet)
 		innerLabels[model.AddressLabel] = model.LabelValue(addr)
 		innerLabels[model.AppNameLabel] = appName
