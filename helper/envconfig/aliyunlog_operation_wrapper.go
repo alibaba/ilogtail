@@ -662,11 +662,6 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 				if len(filePaths) > 0 {
 					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, serverConfig.Inputs[0]) {
-						tmp := serverConfig
-						tmp.Inputs = config.LogtailConfig.Inputs
-
-						logger.Info(context.Background(), "file config changed, old", serverConfig.GoString(), "new", tmp.GoString())
-
 						updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
 							Aggregators: serverConfig.Aggregators,
 							ConfigName:  serverConfig.ConfigName,
