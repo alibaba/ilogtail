@@ -88,10 +88,8 @@ func getToken() (result []byte, err error) {
 	roles := strings.Split(bodyStr, "\n")
 	role := roles[0]
 
-	logger.Info(context.Background(), "get role", role)
-
 	var respGet *http.Response
-	logger.Debug(context.Background(), "get token request", aliyunECSRamURL+role)
+	logger.Info(context.Background(), "get token request", aliyunECSRamURL+role)
 	respGet, err = client.Get(aliyunECSRamURL + role)
 	if err != nil {
 		logger.Warning(context.Background(), "UPDATE_STS_ALARM", "get token error", err, "role", role)

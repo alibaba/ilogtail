@@ -69,7 +69,7 @@ func (decm *Manager) removeUselessCache() {
 func (decm *Manager) run() {
 	decm.shutdown = make(chan struct{})
 	var err error
-	var logClient **aliyunlog.Client
+	var logClient *aliyunlog.Client
 	// always retry when create client interface fail
 	sleepInterval := 0
 	for {
@@ -85,7 +85,7 @@ func (decm *Manager) run() {
 			break
 		}
 	}
-	if logClient == nil || *logClient == nil {
+	if logClient == nil {
 		return
 	}
 	logger.Info(context.Background(), "create client interface success", "")
