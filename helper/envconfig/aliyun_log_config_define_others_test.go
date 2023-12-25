@@ -63,7 +63,7 @@ func (s *logConfigTestSuite) TestFile(c *check.C) {
 	c.Assert(config.LogtailConfig.Inputs[0]["FilePaths"].([]string)[0], check.Equals, "/usr/local/tomcat/logs/**/catalina.*.log")
 	c.Assert(config.LogtailConfig.Inputs[0]["EnableContainerDiscovery"].(bool), check.Equals, true)
 	c.Assert(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"]["aliyun_logs_catalina"], check.Equals, "/usr/local/tomcat/logs/**/catalina.*.log")
-	c.Assert(config.LogtailConfig.Inputs[0]["MaxDirSearchDepth"].(int), check.Equals, 100)
+	c.Assert(config.LogtailConfig.Inputs[0]["MaxDirSearchDepth"].(int), check.Equals, 10)
 }
 
 func (s *logConfigTestSuite) TestJsonFile(c *check.C) {

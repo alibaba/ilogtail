@@ -440,6 +440,20 @@ func TestCheckFileConfigChanged(t *testing.T) {
 			},
 			expectedValue: false,
 		},
+		{
+			name:         "filePaths compatibility test",
+			filePaths:    "/test/**/**/path/**/a.log",
+			includeEnv:   "{\"env\":\"env\"}",
+			includeLabel: "{\"label\":\"label\"}",
+			serverInput: map[string]interface{}{
+				"FilePaths": []interface{}{"/test/path/**/**/a.log"},
+				"ContainerFilters": map[string]interface{}{
+					"IncludeEnv":            map[string]interface{}{"env": "env"},
+					"IncludeContainerLabel": map[string]interface{}{"label": "label"},
+				},
+			},
+			expectedValue: false,
+		},
 	}
 
 	for _, tt := range tests {
