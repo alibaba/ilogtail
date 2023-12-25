@@ -46,7 +46,7 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
-#include "spl/ProcessorSPL.h"
+#include "processor/ProcessorSPL.h"
 
 using namespace std;
 

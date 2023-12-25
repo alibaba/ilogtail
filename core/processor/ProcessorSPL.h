@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#include "plugin/interface/Processor.h"
 #include <string>
+
 #include "monitor/LogtailMetric.h"
+#include "plugin/interface/Processor.h"
 
 namespace apsara::sls::spl {
-    class SplPipeline;
+class SplPipeline;
 }
 
 namespace logtail {
@@ -31,10 +32,8 @@ public:
 
     // Source field name.
     std::string mSpl;
-    // Regular expression.
-    uint32_t mTimeoutMills;
-    // Extracted field list.
-    uint32_t mMaxMemoryBytes;
+    uint32_t mTimeoutMills = 1000;
+    uint32_t mMaxMemoryBytes = 50*1024*1024;
 
     bool Init(const Json::Value& config) override;
     void Process(std::vector<PipelineEventGroup>& logGroupList) override;
