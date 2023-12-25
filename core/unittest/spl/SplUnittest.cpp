@@ -2,7 +2,7 @@
 
 #include "common/JsonUtil.h"
 #include "config/Config.h"
-#include "spl/ProcessorSPL.h"
+#include "processor/ProcessorSPL.h"
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include <iostream>

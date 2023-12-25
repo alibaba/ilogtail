@@ -149,6 +149,11 @@ private:
     // Statistics data
     int64_t mAllocated;
     int64_t mUsed;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class SourceBufferUnittest;
+#endif
+
 private : 
     BufferAllocator(const BufferAllocator&);
 };

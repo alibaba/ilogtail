@@ -17,8 +17,6 @@ file(GLOB LIB_SOURCE_FILES *.cpp *.h .c)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 
-
-include_directories("/opt/logtail_spl/include")
 link_directories("/opt/logtail_spl/lib")
 
 link_spl(${PROJECT_NAME})

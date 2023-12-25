@@ -96,6 +96,7 @@ macro(append_source_files source_files)
 endmacro()
 # Module includes & add_subdirectory.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories("/opt/logtail_spl/include")
 foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${DIR_NAME})
 endforeach (DIR_NAME)
