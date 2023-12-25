@@ -200,7 +200,7 @@ func (s *logConfigTestSuite) TestAllConfigs(c *check.C) {
 
 func (s *logConfigTestSuite) TestNginxIngress(c *check.C) {
 	info := MockDockerInfoDetail("containerName", []string{
-		"aliyun_logs_ingress-access-abc123_product=k8s-ingress-nginx",
+		"aliyun_logs_ingress-access-abc123_product=k8s-nginx-ingress",
 		"aliyun_logs_ingress-access-abc123=stdout-only",
 		"aliyun_logs_ingress-error-abc123=stderr-only",
 	})

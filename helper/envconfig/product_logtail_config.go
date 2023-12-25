@@ -72,7 +72,7 @@ func initNginxIngress(_ *helper.K8SInfo, config *AliyunLogConfigSpec, configType
 }
 
 func initLogtailConfigForProduct(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, configType string) {
-	if config.ProductCode == "k8s-ingress-nginx" {
+	if config.ProductCode == "k8s-nginx-ingress" {
 		initNginxIngress(k8sInfo, config, configType)
 	}
 }
