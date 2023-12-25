@@ -45,7 +45,7 @@ APSARA_UNIT_TEST_CASE(SplUnittest, TestTag, 6);
 
 Json::Value SplUnittest::GetCastConfig(std::string spl) {
     Json::Value config;
-    config["Spl"] = Json::Value(spl);
+    config["Script"] = Json::Value(spl);
     config["TimeoutMilliSeconds"] = Json::Value(1000);
     config["MaxMemoryBytes"] = Json::Value(50*1024*1024);
     return config;
