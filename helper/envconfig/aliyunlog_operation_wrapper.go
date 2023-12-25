@@ -692,8 +692,6 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 							o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 						}
 
-					} else {
-						logger.Info(context.Background(), "file config not changed", "skip update")
 					}
 				}
 			} else if config.LogtailConfig.Inputs[0]["Type"].(string) != serverConfig.Inputs[0]["Type"].(string) && ok {
@@ -725,7 +723,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 			if needUpdate {
 				logger.Info(context.Background(), "config updated, needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
 			} else {
-				logger.Info(context.Background(), "skip update, needUpdate", needUpdate)
+				logger.Info(context.Background(), "config not changed", "skip update")
 			}
 		}
 
