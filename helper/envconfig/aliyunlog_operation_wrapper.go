@@ -600,6 +600,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		return fmt.Errorf("create logconfig error when update config, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
 	}
 	logger.Info(context.Background(), "create or update config", config.LogtailConfig.ConfigName)
+
 	ok := false
 
 	// 获取服务端配置
@@ -661,18 +662,17 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 				if len(filePaths) > 0 {
 					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, serverConfig.Inputs[0]) {
-						oldConfig := serverConfig.GoString()
+						tmp := serverConfig
+						tmp.Inputs = config.LogtailConfig.Inputs
 
-						serverConfig.Inputs = config.LogtailConfig.Inputs
-
-						logger.Info(context.Background(), "file config changed, old", oldConfig, "new", config.LogtailConfig.GoString())
+						logger.Info(context.Background(), "file config changed, old", serverConfig.GoString(), "new", tmp.GoString())
 
 						updateLogtailPipelineConfigRequest := aliyunlog.UpdateLogtailPipelineConfigRequest{
 							Aggregators: serverConfig.Aggregators,
 							ConfigName:  serverConfig.ConfigName,
 							Flushers:    serverConfig.Flushers,
 							Global:      serverConfig.Global,
-							Inputs:      serverConfig.Inputs,
+							Inputs:      config.LogtailConfig.Inputs,
 							LogSample:   serverConfig.LogSample,
 							Processors:  serverConfig.Processors,
 						}
