@@ -600,8 +600,6 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		return fmt.Errorf("create logconfig error when update config, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
 	}
 
-	logger.Info(context.Background(), "create or update config", tea.StringValue(config.LogtailConfig.ConfigName), "detail", config.LogtailConfig.GoString())
-
 	ok := false
 
 	// 获取服务端配置
@@ -660,8 +658,6 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 				filePaths, _ := util.InterfaceToString(config.LogtailConfig.Inputs[0]["FilePaths"].([]string)[0])
 				includeEnv, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeEnv"])
 				includeLabel, _ := util.InterfaceToJSONString(config.LogtailConfig.Inputs[0]["ContainerFilters"].(map[string]map[string]interface{})["IncludeContainerLabel"])
-
-				logger.Info(context.Background(), "filePaths", filePaths, "includeEnv", includeEnv, "includeLabel", includeLabel, "serverConfig", serverConfig.GoString())
 
 				if len(filePaths) > 0 {
 					if checkFileConfigChanged(filePaths, includeEnv, includeLabel, serverConfig.Inputs[0]) {
@@ -758,6 +754,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		} else {
 			o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 		}
+		logger.Info(context.Background(), "config created, config", *config)
 	}
 	if err != nil {
 		return fmt.Errorf("UpdateConfig error, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
