@@ -52,7 +52,7 @@ private:
     CounterPtr mProcessMicros;
     CounterPtr mInputMicros;
     CounterPtr mOutputMicros;
-    CounterPtr mMemPeakBytes;
+    GaugePtr mMemPeakBytes;
     CounterPtr mTotalTaskCount;
     CounterPtr mSuccTaskCount;
     CounterPtr mFailTaskCount;

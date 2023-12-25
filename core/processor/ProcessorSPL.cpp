@@ -41,7 +41,7 @@ const std::string ProcessorSPL::sName = "processor_spl";
 
 bool ProcessorSPL::Init(const Json::Value& config) {
     std::string errorMsg;
-    if (!GetMandatoryStringParam(config, "Spl", mSpl, errorMsg)) {
+    if (!GetMandatoryStringParam(config, "Script", mSpl, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            errorMsg,
@@ -111,7 +111,7 @@ bool ProcessorSPL::Init(const Json::Value& config) {
     mProcessMicros = GetMetricsRecordRef().CreateCounter("proc_spl_process_micros");
     mInputMicros = GetMetricsRecordRef().CreateCounter("proc_spl_input_micros");
     mOutputMicros = GetMetricsRecordRef().CreateCounter("proc_spl_output_micros");
-    mMemPeakBytes = GetMetricsRecordRef().CreateCounter("proc_spl_mem_peak_bytes");
+    mMemPeakBytes = GetMetricsRecordRef().CreateGauge("proc_spl_mem_peak_bytes");
     mTotalTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_total_task_count");
     mSuccTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_succ_task_count");
     mFailTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_fail_task_count");
@@ -121,6 +121,10 @@ bool ProcessorSPL::Init(const Json::Value& config) {
 
 
 void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
+    LOG_ERROR(
+        sLogger,
+        ("ProcessorSPL error", "unexpected enter in ProcessorSPL::Process(PipelineEventGroup& logGroup)")("project", mContext->GetProjectName())("logstore", mContext->GetLogstoreName())(
+            "region", mContext->GetRegion())("configName", mContext->GetConfigName()));
 }
 
 
@@ -187,7 +191,7 @@ void ProcessorSPL::Process(std::vector<PipelineEventGroup>& logGroupList) {
         mProcessMicros->Add(pipelineStats.processMicros_);
         mInputMicros->Add(pipelineStats.inputMicros_);
         mOutputMicros->Add(pipelineStats.outputMicros_);
-        mMemPeakBytes->Add(pipelineStats.memPeakBytes_);
+        mMemPeakBytes->Set(pipelineStats.memPeakBytes_);
         mTotalTaskCount->Add(pipelineStats.totalTaskCount_);
         mSuccTaskCount->Add(pipelineStats.succTaskCount_);
         mFailTaskCount->Add(pipelineStats.failTaskCount_);

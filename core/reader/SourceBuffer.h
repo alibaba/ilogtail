@@ -58,7 +58,7 @@ public:
 
     ~BufferAllocator()
     {
-        for (; !mAllocatedChunks.empty(); mAllocatedChunks.pop_back()) {
+        for(size_t i = 1 ; i < mAllocatedChunks.size() ; i++) {
             delete[] mAllocatedChunks.back();
         }
     }

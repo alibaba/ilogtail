@@ -62,12 +62,12 @@ void PipelineEventGroupOutput::addRow(const std::vector<SplStringPiece>& row,
         boost::hash_combine(tagStrHash, row[idxTag].hash());
     }
 
-    int32_t logGroupKeyIdx = -1;
-    if (tagStrHash != lastTagStrHash) {
+    if (mLogGroupList->empty() || tagStrHash != lastTagStrHash) {
         mLogGroupList->emplace_back(mLogGroup->GetSourceBuffer());
         mLogGroupList->back().SetAllMetadata(mLogGroup->GetAllMetadata());
     }
-    logGroupKeyIdx = mLogGroupList->size() - 1;
+
+    PipelineEventGroup& current = mLogGroupList->back();
     lastTagStrHash = tagStrHash;
 
     targetEvent->SetTimestamp(time, timeNsPart);
@@ -84,10 +84,10 @@ void PipelineEventGroupOutput::addRow(const std::vector<SplStringPiece>& row,
     }
 
     for (const auto& idxTag : mTagsIdxs) {
-        mLogGroupList->at(logGroupKeyIdx).SetTag(mColumns[idxTag], StringView(row[idxTag].mPtr, row[idxTag].mLen));
+        current.SetTag(mColumns[idxTag], StringView(row[idxTag].mPtr, row[idxTag].mLen));
     }
 
-    mLogGroupList->at(logGroupKeyIdx).AddEvent(std::move(targetEvent));
+    current.AddEvent(std::move(targetEvent));
     if (!errorKV.second.empty()) {
         LOG_WARNING(sLogger,
                     ("__error__", errorKV.second)("project", mContext->GetProjectName())("logstore",
