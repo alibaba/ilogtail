@@ -294,8 +294,10 @@ void do_worker_process() {
     APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
     ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
-    ConfigManager::GetInstance()->RegisterHandlers();
-    EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    if (configExistFlag) {
+        ConfigManager::GetInstance()->RegisterHandlers();
+        EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    }
     APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
 
     // [Main thread] Run the Dispatch routine.
