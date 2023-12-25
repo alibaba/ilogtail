@@ -599,7 +599,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	if err != nil {
 		return fmt.Errorf("create logconfig error when update config, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
 	}
-
+	logger.Info(context.Background(), "create or update config", config.LogtailConfig.ConfigName)
 	ok := false
 
 	// 获取服务端配置
