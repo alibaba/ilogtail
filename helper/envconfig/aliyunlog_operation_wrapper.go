@@ -599,7 +599,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	if err != nil {
 		return fmt.Errorf("create logconfig error when update config, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
 	}
-	logger.Info(context.Background(), "create or update config", config.LogtailConfig.ConfigName)
+	logger.Info(context.Background(), "create or update config", tea.StringValue(config.LogtailConfig.ConfigName))
 
 	ok := false
 
@@ -650,6 +650,13 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						needUpdate = true
 						break
 					}
+				}
+				annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
+				if err != nil {
+					customErr := CustomErrorFromSlsSDKError(err)
+					o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
+				} else {
+					o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 				}
 			} else if config.LogtailConfig.Inputs[0]["Type"].(string) == "input_file" && serverConfig.Inputs[0]["Type"].(string) == "input_file" {
 				// 如果配置的输入类型为"input_file",并且serverConfig的输入类型也为"input_file"
@@ -714,11 +721,18 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						break
 					}
 				}
+				annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
+				if err != nil {
+					customErr := CustomErrorFromSlsSDKError(err)
+					o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
+				} else {
+					o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
+				}
 			}
 			if needUpdate {
-				logger.Info(context.Background(), "config updated, needUpdate", needUpdate, "server config", *serverConfig, "local config", *config)
+				logger.Info(context.Background(), "config updated, server config", *serverConfig, "local config", *config)
 			} else {
-				logger.Info(context.Background(), "config not changed", "skip update")
+				logger.Debug(context.Background(), "config not changed", "skip update")
 			}
 		}
 
@@ -747,16 +761,16 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		annotations := GetAnnotationByObject(config, project, logstore, "", tea.StringValue(config.LogtailConfig.ConfigName), true)
 		if err != nil {
 			customErr := CustomErrorFromSlsSDKError(err)
-			o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
+			o.eventRecorder.SendErrorEventWithAnnotation(o.eventRecorder.GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateConfig, "", fmt.Sprintf("create config failed, error: %s", err.Error()))
 		} else {
-			o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
+			o.eventRecorder.SendNormalEventWithAnnotation(o.eventRecorder.GetObject(), annotations, k8s_event.CreateConfig, "create config success")
 		}
 		logger.Info(context.Background(), "config created, config", *config)
 	}
 	if err != nil {
 		return fmt.Errorf("UpdateConfig error, config : %s, error : %s", tea.StringValue(config.LogtailConfig.ConfigName), err.Error())
 	}
-	logger.Info(context.Background(), "create or update config success", tea.StringValue(config.LogtailConfig.ConfigName))
+	logger.Debug(context.Background(), "create or update config success", tea.StringValue(config.LogtailConfig.ConfigName))
 
 	// 为Logtail配置添加标签
 	logtailConfigTags := map[string]string{}

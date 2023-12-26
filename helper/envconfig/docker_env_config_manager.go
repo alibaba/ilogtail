@@ -17,7 +17,6 @@ package envconfig
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
@@ -136,7 +135,7 @@ func (decm *Manager) run() {
 			} else {
 				// when update success, set config.ErrorCount = 0
 				config.ErrorCount = 0
-				logger.Info(context.Background(), "update config success, config key", config.Key(), "detail", fmt.Sprintf("%+v", *config))
+				logger.Info(context.Background(), "create or update config success, config key", config.Key())
 			}
 		}
 		if !errorFlag && flags.SelfEnvConfigFlag {
