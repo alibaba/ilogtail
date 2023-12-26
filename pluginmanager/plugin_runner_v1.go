@@ -432,10 +432,11 @@ func (p *pluginv1Runner) ReceiveRawLog(log *pipeline.LogWithContext) {
 }
 
 func (p *pluginv1Runner) ReceiveLogGroup(logGroup pipeline.LogGroupWithContext) {
-	context := logGroup.Context
 	topic := logGroup.LogGroup.GetTopic()
-	context[ctxKeyTopic] = topic
 	for _, log := range logGroup.LogGroup.Logs {
+		context := map[string]interface{}{}
+		context[ctxKeySource] = logGroup.Context[ctxKeySource]
+		context[ctxKeyTopic] = topic
 		if len(topic) > 0 {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagKeyLogTopic, Value: topic})
 		}
