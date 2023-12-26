@@ -44,7 +44,6 @@ const name = "service_http_server"
 type ServiceHTTP struct {
 	context     pipeline.Context
 	collector   pipeline.Collector
-	decoder     extensions.Decoder
 	server      *http.Server
 	listener    net.Listener
 	wg          sync.WaitGroup
@@ -52,10 +51,13 @@ type ServiceHTTP struct {
 	version     int8
 	paramCount  int
 	dumper      *helper.Dumper
+	decoder     extensions.Decoder
+	shuffler    extensions.Shuffler
 
 	DumpDataKeepFiles  int
-	DumpData           bool   // would dump the received data to a local file, which is only used to valid data by the developers.
-	Decoder            string // the decoder to use, default is "ext_default_decoder"
+	DumpData           bool                        // would dump the received data to a local file, which is only used to valid data by the developers.
+	Decoder            string                      // the decoder to use, default is "ext_default_decoder"
+	Shuffler           *extensions.ExtensionConfig // whether to shuffler data to other ilogtail instance
 	Format             string
 	Address            string
 	Path               string
@@ -100,6 +102,14 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 		return 0, fmt.Errorf("extension %s with type %T not implement extensions.Decoder", s.Decoder, ext)
 	}
 	s.decoder = decoder
+
+	if s.Shuffler != nil {
+		if ext, _ := context.GetExtension(s.Shuffler.Type, s.Shuffler.Options); ext != nil {
+			if shuffler, ok := ext.(extensions.Shuffler); ok {
+				s.shuffler = shuffler
+			}
+		}
+	}
 
 	if s.Path == "" {
 		switch s.Format {
@@ -190,7 +200,12 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				g.Group.Metadata.Merge(models.NewMetadataWithMap(reqParams))
 			}
 		}
-		s.collectorV2.CollectList(groups...)
+
+		if s.shuffler != nil {
+			s.shuffler.CollectList(groups...)
+		} else {
+			s.collectorV2.CollectList(groups...)
+		}
 	}
 
 	switch s.Format {
@@ -243,6 +258,19 @@ func (s *ServiceHTTP) StartService(context pipeline.PipelineContext) error {
 
 func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
+
+	if s.shuffler != nil {
+		go func() {
+			for {
+				select {
+				case v := <-s.shuffler.RecvChan():
+					s.collectorV2.CollectList(v)
+				case <-s.shuffler.Done():
+					return
+				}
+			}
+		}()
+	}
 
 	server := &http.Server{
 		Addr:        s.Address,
@@ -330,6 +358,7 @@ func (s *ServiceHTTP) Stop() error {
 		logger.Info(s.context.GetRuntimeContext(), "http server stop", s.Address)
 		s.wg.Wait()
 	}
+
 	if s.dumper != nil {
 		s.dumper.Close()
 	}
@@ -348,4 +377,9 @@ func init() {
 			Tags:               map[string]string{},
 		}
 	}
+}
+
+type ShufflerConfig struct {
+	Name       string         `json:"Name" mapstructure:"Name"`
+	Properties map[string]any `json:"Properties" mapstructure:"Properties"`
 }
