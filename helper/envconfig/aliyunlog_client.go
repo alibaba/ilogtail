@@ -36,7 +36,7 @@ type TokenAutoUpdateClient struct {
 	ctx                context.Context
 }
 
-// flushSTSToken方法用于刷新STS Token
+// flushSTSToken 用于刷新STS Token
 func (c *TokenAutoUpdateClient) flushSTSToken() {
 	for {
 		nowTime := time.Now()
@@ -73,7 +73,7 @@ func (c *TokenAutoUpdateClient) flushSTSToken() {
 	}
 }
 
-// fetchSTSToken方法用于获取STS Token
+// fetchSTSToken 用于获取STS Token
 func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 	nowTime := time.Now()
 	skip := false
@@ -138,7 +138,7 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 	return err
 }
 
-// CreateNormalInterface函数用于创建一个普通的日志服务客户端
+// CreateNormalInterface 用于创建一个普通的日志服务客户端
 func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken string, userAgent string) (**aliyunlog.Client, error) {
 	openapiConfig := &openapi.Config{
 		AccessKeyId:     tea.String(accessKeyID),
@@ -155,7 +155,7 @@ func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken
 	return &logClient, err
 }
 
-// CreateTokenAutoUpdateClient函数用于创建一个自动更新Token的客户端
+// CreateTokenAutoUpdateClient 用于创建一个自动更新Token的客户端
 func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFunc, shutdown <-chan struct{}, userAgent string) (**aliyunlog.Client, error) {
 	// 调用更新Token的函数获取Token
 	accessKeyID, accessKeySecret, securityToken, expireTime, err := tokenUpdateFunc()
