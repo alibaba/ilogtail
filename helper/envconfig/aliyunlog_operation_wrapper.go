@@ -41,7 +41,7 @@ const (
 )
 
 type operationWrapper struct {
-	logClient        **aliyunlog.Client   // 日志客户端接口
+	logClient        *AliyunLogClient     // 日志客户端接口
 	lock             sync.RWMutex         // 读写锁
 	project          string               // project名称
 	logstoreCacheMap map[string]time.Time // logStore缓存映射
@@ -85,18 +85,18 @@ func createDefaultK8SIndex(logstoreMode string) *aliyunlog.CreateIndexRequest {
 	}
 }
 
-func createClientInterface(endpoint, accessKeyID, accessKeySecret, stsToken string, shutdown <-chan struct{}) (**aliyunlog.Client, error) {
-	var logClient **aliyunlog.Client
+func createClientInterface(endpoint, accessKeyID, accessKeySecret, stsToken string, shutdown <-chan struct{}) (*AliyunLogClient, error) {
+	var logClient *AliyunLogClient
 	var err error
 	if *flags.AliCloudECSFlag {
 		// 如果是阿里云ECS, 创建一个自动更新令牌的客户端
-		logClient, err = CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown, config.UserAgent)
+		logClient, err = CreateTokenAutoUpdateAliyunLogClient(endpoint, UpdateTokenFunction, shutdown, config.UserAgent)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// 如果不是阿里云ECS, 创建一个普通的客户端接口
-		logClient, err = CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, stsToken, config.UserAgent)
+		logClient, err = CreateNormalAliyunLogClient(endpoint, accessKeyID, accessKeySecret, stsToken, config.UserAgent)
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +105,7 @@ func createClientInterface(endpoint, accessKeyID, accessKeySecret, stsToken stri
 }
 
 // createAliyunLogOperationWrapper 保证project和机器组存在, 并初始化logStore缓存映射
-func createAliyunLogOperationWrapper(project string, logClient **aliyunlog.Client) (*operationWrapper, error) {
+func createAliyunLogOperationWrapper(project string, logClient *AliyunLogClient) (*operationWrapper, error) {
 	var err error
 	wrapper := &operationWrapper{
 		logClient:     logClient,
@@ -242,7 +242,7 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	var err error
 	// 检查logStore是否存在
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		if ok, err = (*o.logClient).GetLogStore(&project, &logstore); err != nil {
+		if ok, err = o.logClient.GetClient().GetLogStore(&project, &logstore); err != nil {
 			time.Sleep(time.Millisecond * 100)
 			var clientError *tea.SDKError
 			if errors.As(err, &clientError) && tea.StringValue(clientError.Code) == "LogStoreNotExist" {
@@ -304,7 +304,7 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	}
 	// 创建logStore
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).CreateLogStore(&project, logStore)
+		_, err = o.logClient.GetClient().CreateLogStore(&project, logStore)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 		} else {
@@ -328,7 +328,7 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	index := createDefaultK8SIndex(mode)
 	// 创建索引
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).CreateIndex(&project, &logstore, index)
+		_, err = o.logClient.GetClient().CreateIndex(&project, &logstore, index)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 		} else {
@@ -352,7 +352,7 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 
 	// 检查project是否存在
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		if ok, err = (*o.logClient).GetProject(&project); err != nil {
+		if ok, err = o.logClient.GetClient().GetProject(&project); err != nil {
 			var clientError *tea.SDKError
 			if errors.As(err, &clientError) {
 				if tea.StringValue(clientError.Code) == "ProjectNotExist" {
@@ -360,7 +360,7 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 					break
 				} else if tea.StringValue(clientError.Code) == "Unauthorized" {
 					// The project does not belong to you.
-					return fmt.Errorf("GetProject error, project : %s, Endpoint : %s, error : %s", project, *(*o.logClient).Endpoint, tea.StringValue(clientError.Message))
+					return fmt.Errorf("GetProject error, project : %s, Endpoint : %s, error : %s", project, *o.logClient.GetClient().Endpoint, tea.StringValue(clientError.Message))
 				}
 			}
 			time.Sleep(time.Millisecond * 1000)
@@ -378,7 +378,7 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 		ProjectName: tea.String(project),
 	}
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).CreateProject(&createProjectRequest)
+		_, err = o.logClient.GetClient().CreateProject(&createProjectRequest)
 		if err != nil {
 			var clientError *tea.SDKError
 			if errors.As(err, &clientError) && tea.StringValue(clientError.Code) == "ProjectAlreadyExist" {
@@ -415,7 +415,7 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 
 	// 检查机器组是否存在
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		if ok, err = (*o.logClient).GetMachineGroup(&project, &machineGroup); err != nil {
+		if ok, err = o.logClient.GetClient().GetMachineGroup(&project, &machineGroup); err != nil {
 			var clientError *tea.SDKError
 			if errors.As(err, &clientError) {
 				if tea.StringValue(clientError.Code) == "MachineGroupNotExist" {
@@ -434,7 +434,7 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("GetMachineGroup error, project : %s, machineGroup : %s, Endpoint : %s, error : %s", project, machineGroup, *(*o.logClient).Endpoint, err.Error())
+		return fmt.Errorf("GetMachineGroup error, project : %s, machineGroup : %s, Endpoint : %s, error : %s", project, machineGroup, *o.logClient.GetClient().Endpoint, err.Error())
 	}
 
 	// 如果机器组不存在,创建一个新的机器组
@@ -447,7 +447,7 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 	}
 	// 创建机器组
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).CreateMachineGroup(&project, &createMachineGroupRequest)
+		_, err = o.logClient.GetClient().CreateMachineGroup(&project, &createMachineGroupRequest)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 		} else {
@@ -528,7 +528,7 @@ func (o *operationWrapper) UnTagLogtailConfig(project string, logtailConfig stri
 	}
 	// 移除标签
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).UntagResources(&untagResourcesRequest)
+		_, err = o.logClient.GetClient().UntagResources(&untagResourcesRequest)
 		if err == nil {
 			return nil
 		}
@@ -558,7 +558,7 @@ func (o *operationWrapper) TagLogtailConfig(project string, logtailConfig string
 	}
 	// 添加标签
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).TagResources(&tagResourcesRequest)
+		_, err = o.logClient.GetClient().TagResources(&tagResourcesRequest)
 		if err == nil {
 			return nil
 		}
@@ -577,7 +577,7 @@ func (o *operationWrapper) TagMachineGroup(project, machineGroup, tagKey, tagVal
 	var err error
 	// 添加标签
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).TagResources(&tagResourcesRequest)
+		_, err = o.logClient.GetClient().TagResources(&tagResourcesRequest)
 		if err == nil {
 			return nil
 		}
@@ -607,7 +607,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	var serverConfig *aliyunlog.LogtailPipelineConfig
 	var getLogtailPipelineConfigResponse *aliyunlog.GetLogtailPipelineConfigResponse
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		getLogtailPipelineConfigResponse, err = (*o.logClient).GetLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName)
+		getLogtailPipelineConfigResponse, err = o.logClient.GetClient().GetLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName)
 		if err != nil {
 			var slsErr *tea.SDKError
 			if errors.As(err, &slsErr) && tea.StringValue(slsErr.Code) == "ConfigNotExist" {
@@ -645,7 +645,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 					Processors: config.LogtailConfig.Processors,
 				}
 				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
+					_, err = o.logClient.GetClient().UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 					if err == nil {
 						needUpdate = true
 						break
@@ -672,7 +672,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 							Processors:  serverConfig.Processors,
 						}
 						for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-							_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
+							_, err = o.logClient.GetClient().UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 							if err == nil {
 								needUpdate = true
 								break
@@ -708,7 +708,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 					Processors: config.LogtailConfig.Processors,
 				}
 				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-					_, err = (*o.logClient).UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
+					_, err = o.logClient.GetClient().UpdateLogtailPipelineConfig(&project, config.LogtailConfig.ConfigName, &updateLogtailPipelineConfigRequest)
 					if err == nil {
 						needUpdate = true
 						break
@@ -739,7 +739,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 			Processors: config.LogtailConfig.Processors,
 		}
 		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-			_, err = (*o.logClient).CreateLogtailPipelineConfig(&project, &createLogtailPipelineConfigRequest)
+			_, err = o.logClient.GetClient().CreateLogtailPipelineConfig(&project, &createLogtailPipelineConfigRequest)
 			if err == nil {
 				break
 			}
@@ -790,7 +790,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 	// 将配置应用到机器组
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = (*o.logClient).ApplyConfigToMachineGroup(&project, &machineGroup, config.LogtailConfig.ConfigName)
+		_, err = o.logClient.GetClient().ApplyConfigToMachineGroup(&project, &machineGroup, config.LogtailConfig.ConfigName)
 		if err == nil {
 			break
 		}

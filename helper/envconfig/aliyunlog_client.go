@@ -18,6 +18,17 @@ type UpdateTokenFunc func() (accessKeyID, accessKeySecret, securityToken string,
 
 var errSTSFetchHighFrequency = errors.New("sts token fetch frequency is too high")
 
+type AliyunLogClient struct {
+	client **aliyunlog.Client
+}
+
+func (c *AliyunLogClient) GetClient() *aliyunlog.Client {
+	if c == nil || c.client == nil || *c.client == nil {
+		return nil
+	}
+	return *c.client
+}
+
 type TokenAutoUpdateClient struct {
 	*aliyunlog.Client
 	shutdown               <-chan struct{} // 用于接收关闭信号的通道
@@ -187,4 +198,24 @@ func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFun
 	}
 	go tauc.flushSTSToken()
 	return &tauc.Client, nil
+}
+
+func CreateNormalAliyunLogClient(endpoint, accessKeyID, accessKeySecret, securityToken string, userAgent string) (*AliyunLogClient, error) {
+	logClient, err := CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken, userAgent)
+	if err != nil {
+		return nil, err
+	}
+	return &AliyunLogClient{
+		client: logClient,
+	}, nil
+}
+
+func CreateTokenAutoUpdateAliyunLogClient(endpoint string, tokenUpdateFunc UpdateTokenFunc, shutdown <-chan struct{}, userAgent string) (*AliyunLogClient, error) {
+	logClient, err := CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown, userAgent)
+	if err != nil {
+		return nil, err
+	}
+	return &AliyunLogClient{
+		client: logClient,
+	}, nil
 }

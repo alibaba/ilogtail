@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
-
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
@@ -69,7 +67,7 @@ func (decm *Manager) removeUselessCache() {
 func (decm *Manager) run() {
 	decm.shutdown = make(chan struct{})
 	var err error
-	var logClient **aliyunlog.Client
+	var logClient *AliyunLogClient
 	// always retry when create client interface fail
 	sleepInterval := 0
 	for {
@@ -85,7 +83,7 @@ func (decm *Manager) run() {
 			break
 		}
 	}
-	if logClient == nil || *logClient == nil {
+	if logClient == nil || logClient.GetClient() == nil {
 		return
 	}
 	logger.Info(context.Background(), "create client interface success", "")
