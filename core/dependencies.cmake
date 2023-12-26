@@ -465,7 +465,6 @@ macro(link_spl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfolly.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotobuf.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libuuid.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libzstd.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfmt.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_context.a")
 
