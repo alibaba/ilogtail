@@ -19,7 +19,7 @@ type UpdateTokenFunc func() (accessKeyID, accessKeySecret, securityToken string,
 var errSTSFetchHighFrequency = errors.New("sts token fetch frequency is too high")
 
 type TokenAutoUpdateClient struct {
-	client                 **aliyunlog.Client
+	*aliyunlog.Client
 	shutdown               <-chan struct{} // 用于接收关闭信号的通道
 	closeFlag              bool            // 关闭标志
 	tokenUpdateFunc        UpdateTokenFunc // 更新Token的函数
@@ -121,10 +121,12 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 		c.nextExpire = expireTime
 		c.lock.Unlock()
 		// 创建一个新的日志服务客户端
-		err = CreateNormalInterface(tea.StringValue((*c.client).Endpoint), accessKeyID, accessKeySecret, securityToken, tea.StringValue((*c.client).UserAgent), c.client)
+		var logClient **aliyunlog.Client
+		logClient, err = CreateNormalInterface(*c.Client.Endpoint, accessKeyID, accessKeySecret, securityToken, *c.Client.UserAgent)
 		if err != nil {
 			return err
 		}
+		c.Client = *logClient
 		logger.Info(c.ctx, "fetch sts token success id", accessKeyID)
 	} else { // 如果获取Token失败
 		c.lock.Lock()
@@ -137,7 +139,7 @@ func (c *TokenAutoUpdateClient) fetchSTSToken() error {
 }
 
 // CreateNormalInterface函数用于创建一个普通的日志服务客户端
-func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken string, userAgent string, client **aliyunlog.Client) error {
+func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken string, userAgent string) (**aliyunlog.Client, error) {
 	openapiConfig := &openapi.Config{
 		AccessKeyId:     tea.String(accessKeyID),
 		AccessKeySecret: tea.String(accessKeySecret),
@@ -150,26 +152,25 @@ func CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken
 	if err != nil {
 		err = fmt.Errorf("aliyunlog NewClient error:%v", err.Error())
 	}
-	*client = logClient
-	return err
+	return &logClient, err
 }
 
 // CreateTokenAutoUpdateClient函数用于创建一个自动更新Token的客户端
-func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFunc, shutdown <-chan struct{}, userAgent string, client **aliyunlog.Client) error {
+func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFunc, shutdown <-chan struct{}, userAgent string) (**aliyunlog.Client, error) {
 	// 调用更新Token的函数获取Token
 	accessKeyID, accessKeySecret, securityToken, expireTime, err := tokenUpdateFunc()
 	if err != nil {
 		err = fmt.Errorf("tokenUpdateFunc error:%v", err.Error())
-		return err
+		return nil, err
 	}
 
 	// 创建一个普通的日志服务客户端
-	err = CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken, userAgent, client)
+	logClient, err := CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, securityToken, userAgent)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	tauc := &TokenAutoUpdateClient{
-		client:                 client,
+		Client:                 *logClient,
 		shutdown:               shutdown,
 		closeFlag:              false,
 		tokenUpdateFunc:        tokenUpdateFunc,
@@ -185,5 +186,5 @@ func CreateTokenAutoUpdateClient(endpoint string, tokenUpdateFunc UpdateTokenFun
 		ctx:                    context.Background(),
 	}
 	go tauc.flushSTSToken()
-	return nil
+	return &tauc.Client, nil
 }
