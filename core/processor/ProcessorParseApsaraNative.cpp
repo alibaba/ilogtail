@@ -284,11 +284,18 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         struct tm tm;
         memset(&tm, 0, sizeof(tm));
         int nanosecondLength = 0;
-        auto strptimeResult = Strptime(strTime.c_str(), "%Y-%m-%d %H:%M:%S.%f", &lastLogTime, nanosecondLength);
-        if (NULL == strptimeResult || strptimeResult[0] != ']') {
+        // parse second part
+        auto strptimeResult = Strptime(strTime.c_str(), "%Y-%m-%d %H:%M:%S", &lastLogTime, nanosecondLength);
+        if (NULL == strptimeResult) {
+            LOG_WARNING(sLogger,
+                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S"));
+            return 0;
+        }
+        // parse nanosecond part (optional)
+        strptimeResult = Strptime(strptimeResult + 1, "%f", &lastLogTime, nanosecondLength);
+        if (NULL == strptimeResult) {
             LOG_WARNING(sLogger,
                         ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S.%f"));
-            return 0;
         }
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         timeStr = StringView(buffer.data() + 1, 19);
