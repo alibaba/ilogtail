@@ -27,7 +27,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type Instance struct {
@@ -159,7 +158,7 @@ func (m *Jmx) Start(collector pipeline.Collector) error {
 			for k, v := range m.Tags {
 				m.StaticInstances[i].Tags[k] = v
 			}
-			inner := NewInstanceInner(m.StaticInstances[i].Port, util.TryConvertLocalhost2RealIP(m.StaticInstances[i].Host), m.StaticInstances[i].User,
+			inner := NewInstanceInner(m.StaticInstances[i].Port, m.StaticInstances[i].Host, m.StaticInstances[i].User,
 				m.StaticInstances[i].Password, m.StaticInstances[i].Tags, m.DefaultJvmMetrics)
 			m.instances[inner.Hash()] = inner
 		}
