@@ -4,14 +4,15 @@
 
 | 名称                                                                            | 提供方                                                        | 简介                                                    |
 |-------------------------------------------------------------------------------|------------------------------------------------------------|-------------------------------------------------------|
-| [`file_log`](input/file-log.md)<br> 文本日志                                      | SLS官方<br>[`messixukejia`](https://github.com/messixukejia) | 文本采集。                                                 |
+| [`input_file`](input/input-file.md)<br> 文本日志                                      | SLS官方 | 文本采集。                                                 |
+| [`input_observer_network`](input/metric-observer.md)<br>eBPF网络调用数据         | SLS官方                                                      | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。
 | [`input_command`](input/input-command.md)<br>脚本执行数据                           | 社区<br>[`didachuxing`](https://github.com/didachuxing)      | 采集脚本执行数据。                                             |
 | [`input_docker_stdout`](input/service-docker-stdout.md)<br>容器标准输出             | SLS官方                                                      | 从容器标准输出/标准错误流中采集日志。                                   |
 | [`metric_debug_file`](input/metric-debug-file.md)<br>文本日志（debug）              | SLS官方                                                      | 用于调试的读取文件内容的插件。                                       |
 | [`metric_input_example`](input/metric-input-example.md)<br>MetricInput示例插件    | SLS官方                                                      | MetricInput示例插件。                                      |
 | [`metric_meta_host`](input/metric-meta-host.md)<br>主机Meta数据                   | SLS官方                                                      | 主机Meta数据。                                             |
 | [`metric_mock`](input/metric-mock.md)<br>Mock数据-Metric                        | SLS官方                                                      | 生成metric模拟数据的插件。                                      |
-| [`observer_ilogtail_network`](input/metric-observer.md)<br>eBPF网络调用数据         | SLS官方                                                      | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。            |
+         |
 | [`metric_system_v2`](input/metric-system.md)<br>主机监控数据                        | SLS官方                                                      | 主机监控数据。                                               |
 | [`service_canal`](input/service-canal.md)<br>MySQL Binlog                     | SLS官方                                                      | 将MySQL Binlog输入到iLogtail。                             |
 | [`service_go_profile`](input/service-goprofile.md)<br>GO Profile              | SLS官方                                                      | 采集Golang pprof 性能数据。                                  |
@@ -28,27 +29,40 @@
 
 ## 处理
 
-| 名称                                                                                           | 提供方                                                    | 简介                               |
-|----------------------------------------------------------------------------------------------|--------------------------------------------------------|----------------------------------|
-| [`processor_add_fields`](processor/processor-add-fields.md)<br>添加字段                          | SLS官方                                                  | 添加字段。                            |
-| [`processor_cloud_meta`](processor/processor-cloudmeta.md)<br>添加云资产信息                        | SLS官方                                                  | 为日志增加云平台元数据信息。                   |
-| [`processor_default`](processor/processor-default.md)<br>原始数据                                | SLS官方                                                  | 不对数据任何操作，只是简单的数据透传。              |
-| [`processor_desensitize`](processor/processor-desensitize.md)<br>数据脱敏                        | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 对敏感数据进行脱敏处理。                     |
-| [`processor_drop`](processor/processor-drop.md)<br>丢弃字段                                      | SLS官方                                                  | 丢弃字段。                            |
-| [`processor_encrypt`](processor/processor-encrypy.md)<br>字段加密                                | SLS官方                                                  | 加密字段                             |
-| [`processor_fields_with_conditions`](processor/processor-fields-with-condition.md)<br>条件字段处理 | 社区<br>[`pj1987111`](https://github.com/pj1987111)      | 根据日志部分字段的取值，动态进行字段扩展或删除。         |
-| [`processor_filter_regex`](processor/processor-filter-regex.md)<br>日志过滤                      | SLS官方                                                  | 通过正则匹配过滤日志。                      |
-| [`processor_gotime`](processor/processor-gotime.md)<br>Gotime                                | SLS官方                                                  | 以 Go 语言时间格式解析原始日志中的时间字段。         |
-| [`processor_grok`](processor/processor-grok.md)<br>Grok                                      | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理                |
-| [`processor_json`](processor/processor-json.md)<br>Json                                      | SLS官方                                                  | 实现对Json格式日志的解析。                  |
-| [`processor_log_to_sls_metric`](processor/processor-log-to-sls-metric.md)<br>日志转sls metric   | SLS官方                                                  | 将日志转sls metric                   |
-| [`processor_regex`](processor/processor-regex.md)<br>正则                                      | SLS官方                                                  | 通过正则匹配的模式实现文本日志的字段提取。            |
-| [`processor_rename`](processor/processor-rename.md)<br>重命名字段                                 | SLS官方                                                  | 重命名字段。                           |
-| [`processor_split_char`](processor/processor-delimiter.md)<br>分隔符                            | SLS官方                                                  | 通过单字符的分隔符提取字段。                   |
-| [`processor_split_string`](processor/processor-delimiter.md)<br>分隔符                          | SLS官方                                                  | 通过多字符的分隔符提取字段。                   |
-| [`processor_split_key_value`](processor/processor-split-key-value.md)<br>键值对                 | SLS官方                                                  | 通过切分键值对的方式提取字段。                  |
-| [`processor_split_log_regex`](processor/processor-split-log-regex.md)<br>多行切分                | SLS官方                                                  | 实现多行日志（例如Java程序日志）的采集。           |
-| [`processor_string_replace`](processor/processor-string-replace.md)<br>字符串替换                 | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)   | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。 |
+### 原生插件
+
+| 名称 | 提供方 | 简介 |
+| --- | ----- | ---- |
+| [`processor_parse_regex_native`](processor/native/processor-parse-regex-native.md)<br>正则解析原生处理插件 | SLS官方 | 通过正则匹配解析事件指定字段内容并提取新字段。 |
+| [`processor_parse_json_native`](processor/native/processor-parse-json-native.md)<br>Json解析原生处理插件 | SLS官方 | 解析事件中`Json`格式字段内容并提取新字段。 |
+| [`processor_parse_delimiter_native`](processor/native/processor-parse-delimiter-native.md)<br>分隔符解析原生处理插件 | SLS官方 | 解析事件中分隔符格式字段内容并提取新字段。 |
+| [`processor_parse_timestamp_native`](processor/native/processor-parse-timestamp-native.md)<br>时间解析原生处理插件 | SLS官方 | 解析事件中记录时间的字段，并将结果置为事件的__time__字段。 |
+| [`processor_filter_regex_native`](processor/native/processor-filter-regex-native.md)<br>过滤原生处理插件 | SLS官方 | 根据事件字段内容来过滤事件。 |
+| [`processor_desensitize_native`](processor/native/processor-desensitize-native.md)<br>脱敏原生处理插件 | SLS官方 | 对事件指定字段内容进行脱敏。 |
+
+### 拓展插件
+
+| 名称 | 提供方 | 简介 |
+| --- | ----- | ---- |
+| [`processor_add_fields`](processor/extended/extenprocessor-add-fields.md)<br>添加字段                          | SLS官方                                                  | 添加字段。                            |
+| [`processor_cloud_meta`](processor/extended/processor-cloudmeta.md)<br>添加云资产信息                        | SLS官方                                                  | 为日志增加云平台元数据信息。                   |
+| [`processor_default`](processor/extended/processor-default.md)<br>原始数据                                | SLS官方                                                  | 不对数据任何操作，只是简单的数据透传。              |
+| [`processor_desensitize`](processor/extended/processor-desensitize.md)<br>数据脱敏                        | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 对敏感数据进行脱敏处理。                     |
+| [`processor_drop`](processor/extended/processor-drop.md)<br>丢弃字段                                      | SLS官方                                                  | 丢弃字段。                            |
+| [`processor_encrypt`](processor/extended/processor-encrypy.md)<br>字段加密                                | SLS官方                                                  | 加密字段                             |
+| [`processor_fields_with_conditions`](processor/extended/processor-fields-with-condition.md)<br>条件字段处理 | 社区<br>[`pj1987111`](https://github.com/pj1987111)      | 根据日志部分字段的取值，动态进行字段扩展或删除。         |
+| [`processor_filter_regex`](processor/extended/processor-filter-regex.md)<br>日志过滤                      | SLS官方                                                  | 通过正则匹配过滤日志。                      |
+| [`processor_gotime`](processor/extended/processor-gotime.md)<br>Gotime                                | SLS官方                                                  | 以 Go 语言时间格式解析原始日志中的时间字段。         |
+| [`processor_grok`](processor/extended/processor-grok.md)<br>Grok                                      | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理                |
+| [`processor_json`](processor/extended/processor-json.md)<br>Json                                      | SLS官方                                                  | 实现对Json格式日志的解析。                  |
+| [`processor_log_to_sls_metric`](processor/extended/processor-log-to-sls-metric.md)<br>日志转sls metric   | SLS官方                                                  | 将日志转sls metric                   |
+| [`processor_regex`](processor/extended/processor-regex.md)<br>正则                                      | SLS官方                                                  | 通过正则匹配的模式实现文本日志的字段提取。            |
+| [`processor_rename`](processor/extended/processor-rename.md)<br>重命名字段                                 | SLS官方                                                  | 重命名字段。                           |
+| [`processor_split_char`](processor/extended/processor-delimiter.md)<br>分隔符                            | SLS官方                                                  | 通过单字符的分隔符提取字段。                   |
+| [`processor_split_string`](processor/extended/processor-delimiter.md)<br>分隔符                          | SLS官方                                                  | 通过多字符的分隔符提取字段。                   |
+| [`processor_split_key_value`](processor/extended/processor-split-key-value.md)<br>键值对                 | SLS官方                                                  | 通过切分键值对的方式提取字段。                  |
+| [`processor_split_log_regex`](processor/extended/processor-split-log-regex.md)<br>多行切分                | SLS官方                                                  | 实现多行日志（例如Java程序日志）的采集。           |
+| [`processor_string_replace`](processor/extended/processor-string-replace.md)<br>字符串替换                 | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)   | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。 |
 
 ## 聚合
 
@@ -71,14 +85,6 @@
 | [`flusher_clickhouse`](flusher/flusher-clickhouse.md)<br>ClickHouse          | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
 | [`flusher_elasticsearch`](flusher/flusher-elasticsearch.md)<br>ElasticSearch | 社区<br>[`joeCarf`](https://github.com/joeCarf)       | 将采集到的数据输出到ElasticSearch。                  |
 | [`flusher_loki`](flusher/loki.md)<br>Loki                                    | 社区<br>[`abingcbc`](https://github.com/abingcbc)     | 将采集到的数据输出到Loki。                           |
-
-## 加速
-
-| 名称                                                                               | 提供方   | 简介                      |
-|----------------------------------------------------------------------------------|-------|-------------------------|
-| [`processor_delimiter_accelerate`](accelerator/delimiter-accelerate.md)<br>分隔符加速 | SLS官方 | 以加速模式实现分隔符日志的字段提取。      |
-| [`processor_json_accelerate`](accelerator/json-accelerate.md)<br>Json加速          | SLS官方 | 以加速模式实现`Json`格式日志的字段提取。 |
-| [`processor_regex_accelerate`](accelerator/regex-accelerate.md)<br>正则加速          | SLS官方 | 通过正则匹配以加速模式实现文本日志的字段提取。 |
 
 ## 扩展
 

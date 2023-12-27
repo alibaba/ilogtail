@@ -17,7 +17,7 @@
 # After Process: {"client":"10.0.0.0","method":"GET","request":"/index.html","bytes":"15824","duration":"0.043"}
 #
 # You may change SourceKey and other parameters.
-# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/processor/processor-grok.md
+# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/plugins/processor/processor-grok.md
 
 enable: true
 inputs:

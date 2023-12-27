@@ -67,7 +67,7 @@ cat stdout.log
 [采集配置](../configuration/collection-config.md)
 
 查看采集配置项：
-[数据流水线组件概览](../data-pipeline/overview.md)
+[插件概览](../plugins/overview.md)
 
 参考更多可组合的日志采集和处理配置样例：
 <https://github.com/alibaba/ilogtail/blob/main/example_config>

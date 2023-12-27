@@ -75,7 +75,7 @@ iLogtail支持使用容器标签、环境变量、K8s标签、Pod名称、命名
 
 ## 部署iLogtail采集业务日志到Kafka <a href="#tsshm" id="tsshm"></a>
 
-这部分将完成数据驱动应用架构的第一步，将日志统一采集写入Kafka。本章节所使用的配置可在[GitHub](https://github.com/alibaba/ilogtail/blob/main/k8s_templates/ilogtail-daemonset-kafka.yaml)下载，容器标准输出插件详细配置可移步[iLogtail用户手册](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/input/input-docker-stdout)。
+这部分将完成数据驱动应用架构的第一步，将日志统一采集写入Kafka。本章节所使用的配置可在[GitHub](https://github.com/alibaba/ilogtail/blob/main/k8s_templates/ilogtail-daemonset-kafka.yaml)下载，容器标准输出插件详细配置可移步[iLogtail用户手册](https://ilogtail.gitbook.io/ilogtail-docs/plugins/input/input-docker-stdout)。
 
 #### 前提条件 <a href="#sra69" id="sra69"></a>
 
@@ -146,7 +146,7 @@ kubectl apply -f ilogtail-user-configmap.yaml
 
 这里的ConfigMap期望以文件夹的方式挂载到iLogtail容器中作为采集配置目录，因此可以包含多个iLogtail采集配置文件，第7行起到最后19行为一个采集配置，将nginx的标准输出采集到Kafka access-log主题，10-33为另一个采集配置，将nginx的标准错误输出到Kafka error-log主题。
 
-第13-14和26-28行展示了如何为日志采集筛选容器，前者使用Kubernetes Label作为筛选条件，后者则使用了Namespace、Pod和Container名称作筛选，所有支持的配置项可以参考iLogtail用户手册中的[容器标准输出](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/input/input-docker-stdout)。
+第13-14和26-28行展示了如何为日志采集筛选容器，前者使用Kubernetes Label作为筛选条件，后者则使用了Namespace、Pod和Container名称作筛选，所有支持的配置项可以参考iLogtail用户手册中的[容器标准输出](https://ilogtail.gitbook.io/ilogtail-docs/plugins/input/input-docker-stdout)。
 
 #### 第二步，部署iLogtail DaemonSet <a href="#mwxf7" id="mwxf7"></a>
 

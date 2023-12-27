@@ -139,7 +139,7 @@ spec:
 
 ### 部署iLogtail <a href="#vmyyq" id="vmyyq"></a>
 
-本章节所使用的配置可在[GitHub](https://github.com/alibaba/ilogtail/blob/main/k8s\_templates/ilogtail-daemonset-sls.yaml)下载，容器标准输出插件详细配置可移步[iLogtail用户手册](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/input/input-docker-stdout)。
+本章节所使用的配置可在[GitHub](https://github.com/alibaba/ilogtail/blob/main/k8s\_templates/ilogtail-daemonset-sls.yaml)下载，容器标准输出插件详细配置可移步[iLogtail用户手册](https://ilogtail.gitbook.io/ilogtail-docs/plugins/input/input-docker-stdout)。
 
 * 创建命名空间
 
@@ -254,9 +254,9 @@ kubectl apply -f ilogtail-user-configmap.yaml
 
 这里的ConfigMap期望以文件夹的方式挂载到iLogtail容器中作为采集配置目录，因此可以包含多个iLogtail采集配置文件，第7-39行为一个采集配置，40-57为另一个采集配置，分别将nginx的标准输出流和标准错误流采集到`SLS`不同的`logstore` 及`Kafka`不同的`Topic`中。双写适用于从`Kafka`迁移到SLS的场景，如果迁移完成稳定后，可以删除`flusher_kafka`，只保留`flusher_sls`即可。
 
-第13-14和46-48行展示了如何为日志采集筛选容器，前者使用Kubernetes Label作为筛选条件，后者则使用了Namespace、Pod和Container名称作筛选，所有支持的配置项可以参考iLogtail用户手册中的[容器标准输出](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/input/input-docker-stdout)。
+第13-14和46-48行展示了如何为日志采集筛选容器，前者使用Kubernetes Label作为筛选条件，后者则使用了Namespace、Pod和Container名称作筛选，所有支持的配置项可以参考iLogtail用户手册中的[容器标准输出](https://ilogtail.gitbook.io/ilogtail-docs/plugins/input/input-docker-stdout)。
 
-第16-30行展示了如何使用插件对日志进行正则解析，配置项含义可以参考iLogtail用户手册中的[正则](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/processor/regex)。
+第16-30行展示了如何使用插件对日志进行正则解析，配置项含义可以参考iLogtail用户手册中的[正则](https://ilogtail.gitbook.io/ilogtail-docs/plugins/processor/regex)。
 
 * 获取阿里云AK，并创建密钥
 

@@ -15,9 +15,9 @@
 # To collect file logs in container and write to SLS.
 # 
 # You may change ContainerInfo parameters to select containers for collection.
-# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/input/file-log
+# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/plugins/input/file-log
 # You may change <sls_endpoint>, <sls_project> and <sls_logstore> according to you SLS setup.
-# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/flusher/sls
+# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/plugins/flusher/sls
 
 ---
 apiVersion: v1

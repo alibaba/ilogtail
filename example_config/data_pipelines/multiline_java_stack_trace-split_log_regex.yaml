@@ -21,7 +21,7 @@
 # {"content":"2022-08-09 14:47:17  [ main:1 ] - [ ERROR ] com.aliyun.NullPointerTest.main(NullPointerTest.java:13) Param Error\njava.lang.NullPointerException\n\tat com.aliyun.NullPointerTest.main(NullPointerTest.java:11)"}
 #
 # You may change SplitRegex according to multi-line header.
-# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/processor/split-log-regex
+# For a full list of parameters, visit https://ilogtail.gitbook.io/ilogtail-docs/plugins/processor/split-log-regex
 
 enable: true
 inputs:
