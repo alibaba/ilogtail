@@ -15,13 +15,11 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 var mu sync.Mutex
@@ -48,10 +46,6 @@ func (s *StrMetric) Get() string {
 	return v
 }
 
-func (s *StrMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: s.Get()})
-}
-
 type NormalMetric struct {
 	name  string
 	value int64
@@ -71,10 +65,6 @@ func (s *NormalMetric) Get() int64 {
 
 func (s *NormalMetric) Name() string {
 	return s.name
-}
-
-func (s *NormalMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: strconv.FormatInt(s.Get(), 10)})
 }
 
 type AvgMetric struct {
@@ -121,10 +111,6 @@ func (s *AvgMetric) Name() string {
 	return s.name
 }
 
-func (s *AvgMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: strconv.FormatFloat(s.GetAvg(), 'f', 4, 64)})
-}
-
 type LatMetric struct {
 	name       string
 	t          time.Time
@@ -166,10 +152,6 @@ func (s *LatMetric) Get() int64 {
 	}
 	mu.Unlock()
 	return v
-}
-
-func (s *LatMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: strconv.FormatFloat(float64(s.Get())/1000, 'f', 4, 64)})
 }
 
 func NewCounterMetric(n string) pipeline.CounterMetric {

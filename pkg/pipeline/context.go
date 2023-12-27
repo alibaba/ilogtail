@@ -15,8 +15,6 @@
 package pipeline
 
 import (
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"context"
 )
 
@@ -24,6 +22,21 @@ type CommonContext struct {
 	Project    string
 	Logstore   string
 	ConfigName string
+}
+
+type CommonMetrics struct {
+	ProcInRecordsTotal  CounterMetric
+	ProcOutRecordsTotal CounterMetric
+	ProcTimeMS          CounterMetric
+}
+
+type MetricsRecord struct {
+	Labels map[string]string
+
+	CommonMetrics
+	CounterMetrics []CounterMetric
+	StringMetrics  []StringMetric
+	LatencyMetrics []LatencyMetric
 }
 
 // Context for plugin
@@ -35,11 +48,14 @@ type Context interface {
 	GetLogstore() string
 	GetRuntimeContext() context.Context
 	GetExtension(name string, cfg any) (Extension, error)
-	RegisterCounterMetric(metric CounterMetric)
-	RegisterStringMetric(metric StringMetric)
-	RegisterLatencyMetric(metric LatencyMetric)
 
-	MetricSerializeToPB(log *protocol.Log)
+	GetMetricRecords() []map[string]string
+
+	RegisterMetricRecord(labels map[string]string) MetricsRecord
+
+	RegisterCounterMetric(metricsRecord MetricsRecord, metric CounterMetric)
+	RegisterStringMetric(metricsRecord MetricsRecord, metric StringMetric)
+	RegisterLatencyMetric(metricsRecord MetricsRecord, metric LatencyMetric)
 
 	SaveCheckPoint(key string, value []byte) error
 	GetCheckPoint(key string) (value []byte, exist bool)

@@ -23,7 +23,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
@@ -122,37 +121,6 @@ func (p *ContextImp) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
 		p.LatencyMetrics = make(map[string]pipeline.LatencyMetric)
 	}
 	p.LatencyMetrics[metric.Name()] = metric
-}
-
-func (p *ContextImp) MetricSerializeToPB(log *protocol.Log) {
-	if log == nil {
-		return
-	}
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: p.GetProject()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "config_name", Value: p.GetConfigName()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "plugins", Value: p.pluginNames})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "category", Value: p.GetLogstore()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "source_ip", Value: util.GetIPAddress()})
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	if p.CounterMetrics != nil {
-		for _, value := range p.CounterMetrics {
-			value.Serialize(log)
-			value.Clear(0)
-		}
-	}
-	if p.StringMetrics != nil {
-		for _, value := range p.StringMetrics {
-			value.Serialize(log)
-			value.Set("")
-		}
-	}
-	if p.LatencyMetrics != nil {
-		for _, value := range p.LatencyMetrics {
-			value.Serialize(log)
-			value.Clear()
-		}
-	}
 }
 
 func (p *ContextImp) SaveCheckPoint(key string, value []byte) error {
