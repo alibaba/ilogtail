@@ -40,6 +40,7 @@ type ProcessorRegex struct {
 	SourceKey              string
 
 	context       pipeline.Context
+	metricRecord  pipeline.MetricsRecord
 	logPairMetric pipeline.CounterMetric
 	re            *regexp.Regexp
 }
@@ -59,8 +60,14 @@ func (p *ProcessorRegex) Init(context pipeline.Context) error {
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", p.Regex)
 		return err
 	}
+	labels := make(map[string]string)
+	labels["project"] = p.context.GetProject()
+	labels["logstore"] = p.context.GetLogstore()
+	labels["configName"] = p.context.GetConfigName()
+	p.metricRecord = p.context.RegisterMetricRecord(labels)
+
 	p.logPairMetric = helper.NewAverageMetric("anchor_pairs_per_log")
-	p.context.RegisterCounterMetric(p.logPairMetric)
+	p.context.RegisterCounterMetric(p.metricRecord, p.logPairMetric)
 	return nil
 }
 

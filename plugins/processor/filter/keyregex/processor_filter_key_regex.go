@@ -30,8 +30,10 @@ type ProcessorKeyFilter struct {
 	Include []string
 	Exclude []string
 
-	includeRegex    []*regexp.Regexp
-	excludeRegex    []*regexp.Regexp
+	includeRegex []*regexp.Regexp
+	excludeRegex []*regexp.Regexp
+
+	metricRecord    pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
@@ -62,10 +64,16 @@ func (p *ProcessorKeyFilter) Init(context pipeline.Context) error {
 			p.excludeRegex[key] = reg
 		}
 	}
+	labels := make(map[string]string)
+	labels["project"] = p.context.GetProject()
+	labels["logstore"] = p.context.GetLogstore()
+	labels["configName"] = p.context.GetConfigName()
+	p.metricRecord = p.context.RegisterMetricRecord(labels)
+
 	p.filterMetric = helper.NewCounterMetric(fmt.Sprintf("%v_filtered", pluginName))
-	p.context.RegisterCounterMetric(p.filterMetric)
+	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+	p.context.RegisterCounterMetric(p.metricRecord, p.processedMetric)
 	return nil
 }
 

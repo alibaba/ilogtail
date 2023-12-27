@@ -29,6 +29,7 @@ type ProcessorDropLastKey struct {
 
 	includeMap map[string]struct{}
 
+	metricRecord pipeline.MetricsRecord
 	filterMetric pipeline.CounterMetric
 	context      pipeline.Context
 }
@@ -37,8 +38,14 @@ type ProcessorDropLastKey struct {
 func (p *ProcessorDropLastKey) Init(context pipeline.Context) error {
 	p.context = context
 
+	labels := make(map[string]string)
+	labels["project"] = p.context.GetProject()
+	labels["logstore"] = p.context.GetLogstore()
+	labels["configName"] = p.context.GetConfigName()
+	p.metricRecord = p.context.RegisterMetricRecord(labels)
+
 	p.filterMetric = helper.NewCounterMetric("drop_key_count")
-	p.context.RegisterCounterMetric(p.filterMetric)
+	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)
 
 	if len(p.DropKey) == 0 {
 		return fmt.Errorf("Invalid config, DropKey is empty")

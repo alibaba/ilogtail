@@ -44,6 +44,7 @@ type ProcessorFieldsWithCondition struct {
 	DropIfNotMatchCondition bool        `comment:"Optional. When the case condition is not met, whether the log is discarded (true) or retained (false)"`
 	Switch                  []Condition `comment:"The switch-case conditions"`
 
+	metricRecord    pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
@@ -202,10 +203,16 @@ func (p *ProcessorFieldsWithCondition) Init(context pipeline.Context) error {
 			}
 		}
 	}
+	labels := make(map[string]string)
+	labels["project"] = p.context.GetProject()
+	labels["logstore"] = p.context.GetLogstore()
+	labels["configName"] = p.context.GetConfigName()
+	p.metricRecord = p.context.RegisterMetricRecord(labels)
+
 	p.filterMetric = helper.NewCounterMetric(fmt.Sprintf("%v_filtered", PluginName))
-	p.context.RegisterCounterMetric(p.filterMetric)
+	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", PluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+	p.context.RegisterCounterMetric(p.metricRecord, p.processedMetric)
 	return nil
 }
 

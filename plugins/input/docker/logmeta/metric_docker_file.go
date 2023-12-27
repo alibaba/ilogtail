@@ -80,11 +80,13 @@ type InputDockerFile struct {
 	context              pipeline.Context
 	lastClearTime        time.Time
 	updateEmptyFlag      bool
-	avgInstanceMetric    pipeline.CounterMetric
-	addMetric            pipeline.CounterMetric
-	updateMetric         pipeline.CounterMetric
-	deleteMetric         pipeline.CounterMetric
-	lastUpdateTime       int64
+
+	metricRecord      pipeline.MetricsRecord
+	avgInstanceMetric pipeline.CounterMetric
+	addMetric         pipeline.CounterMetric
+	updateMetric      pipeline.CounterMetric
+	deleteMetric      pipeline.CounterMetric
+	lastUpdateTime    int64
 
 	// Last return of GetAllAcceptedInfoV2
 	fullList              map[string]bool
@@ -145,10 +147,17 @@ func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 	idf.addMetric = helper.NewCounterMetric("add_container")
 	idf.deleteMetric = helper.NewCounterMetric("remove_container")
 	idf.updateMetric = helper.NewCounterMetric("update_container")
-	idf.context.RegisterCounterMetric(idf.avgInstanceMetric)
-	idf.context.RegisterCounterMetric(idf.addMetric)
-	idf.context.RegisterCounterMetric(idf.deleteMetric)
-	idf.context.RegisterCounterMetric(idf.updateMetric)
+
+	labels := make(map[string]string)
+	labels["project"] = idf.context.GetProject()
+	labels["logstore"] = idf.context.GetLogstore()
+	labels["configName"] = idf.context.GetConfigName()
+	idf.metricRecord = idf.context.RegisterMetricRecord(labels)
+
+	idf.context.RegisterCounterMetric(idf.metricRecord, idf.avgInstanceMetric)
+	idf.context.RegisterCounterMetric(idf.metricRecord, idf.addMetric)
+	idf.context.RegisterCounterMetric(idf.metricRecord, idf.deleteMetric)
+	idf.context.RegisterCounterMetric(idf.metricRecord, idf.updateMetric)
 
 	var err error
 	idf.IncludeEnv, idf.IncludeEnvRegex, err = helper.SplitRegexFromMap(idf.IncludeEnv)

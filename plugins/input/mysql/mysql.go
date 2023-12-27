@@ -83,9 +83,11 @@ type Mysql struct {
 	shutdown              chan struct{}
 	waitGroup             sync.WaitGroup
 	context               pipeline.Context
-	collectLatency        pipeline.LatencyMetric
-	collectTotal          pipeline.CounterMetric
-	checkpointMetric      pipeline.StringMetric
+
+	metricRecord     pipeline.MetricsRecord
+	collectLatency   pipeline.LatencyMetric
+	collectTotal     pipeline.CounterMetric
+	checkpointMetric pipeline.StringMetric
 }
 
 func (m *Mysql) Init(context pipeline.Context) (int, error) {
@@ -105,13 +107,19 @@ func (m *Mysql) Init(context pipeline.Context) (int, error) {
 		m.StateMent += " limit ?, " + strconv.Itoa(m.PageSize)
 	}
 
+	labels := make(map[string]string)
+	labels["project"] = m.context.GetProject()
+	labels["logstore"] = m.context.GetLogstore()
+	labels["configName"] = m.context.GetConfigName()
+	m.metricRecord = m.context.RegisterMetricRecord(labels)
+
 	m.collectLatency = helper.NewLatencyMetric("mysql_collect_avg_cost")
 	m.collectTotal = helper.NewCounterMetric("mysql_collect_total")
-	m.context.RegisterCounterMetric(m.collectTotal)
-	m.context.RegisterLatencyMetric(m.collectLatency)
+	m.context.RegisterCounterMetric(m.metricRecord, m.collectTotal)
+	m.context.RegisterLatencyMetric(m.metricRecord, m.collectLatency)
 	if m.CheckPoint {
 		m.checkpointMetric = helper.NewStringMetric("mysql_checkpoint")
-		m.context.RegisterStringMetric(m.checkpointMetric)
+		m.context.RegisterStringMetric(m.metricRecord, m.checkpointMetric)
 	}
 	return 10000, nil
 }
