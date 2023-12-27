@@ -41,7 +41,7 @@ public:
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
     void TestMultipleLines();
-    void TestProcessEventNanosecondUnmatch();
+    void TestProcessEventMicrosecondUnmatch();
 
     PipelineContext mContext;
 };
@@ -55,7 +55,7 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
-UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventNanosecondUnmatch);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 
 void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
@@ -827,7 +827,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcParseErrorTotal->GetValue());
 }
 
-void ProcessorParseApsaraNativeUnittest::TestProcessEventNanosecondUnmatch() {
+void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
     // make config
     Json::Value config;
     config["SourceKey"] = "content";
@@ -852,7 +852,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventNanosecondUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:16:04,862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
+                    "content" : "[2023-09-04 13:16:04]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -878,10 +878,10 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventNanosecondUnmatch() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "microtime": "1693833304862181"
+                    "microtime": "1693833304000000"
                 },
                 "timestamp": 1693833304,
-                "timestampNanosecond": 862181000,
+                "timestampNanosecond": 0,
                 "type": 1
             },
             {
@@ -890,10 +890,10 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventNanosecondUnmatch() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "microtime": "1693833364862181"
+                    "microtime": "1693833364000000"
                 },
                 "timestamp": 1693833364,
-                "timestampNanosecond": 862181000,
+                "timestampNanosecond": 0,
                 "type": 1
             }
         ]
