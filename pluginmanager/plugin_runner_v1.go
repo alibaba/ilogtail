@@ -435,7 +435,9 @@ func (p *pluginv1Runner) ReceiveLogGroup(logGroup pipeline.LogGroupWithContext) 
 	topic := logGroup.LogGroup.GetTopic()
 	for _, log := range logGroup.LogGroup.Logs {
 		context := map[string]interface{}{}
-		context[ctxKeySource] = logGroup.Context[ctxKeySource]
+		for key, value := range logGroup.Context {
+			context[key] = value
+		}
 		context[ctxKeyTopic] = topic
 		if len(topic) > 0 {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagKeyLogTopic, Value: topic})
@@ -445,6 +447,8 @@ func (p *pluginv1Runner) ReceiveLogGroup(logGroup pipeline.LogGroupWithContext) 
 			context[ctxKeyTags] = logGroup.LogGroup.LogTags
 			p.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: context})
 		} else {
+			context := logGroup.Context
+			context[ctxKeyTopic] = topic
 			for _, tag := range logGroup.LogGroup.LogTags {
 				log.Contents = append(log.Contents, &protocol.Log_Content{
 					Key:   tagPrefix + tag.GetKey(),
