@@ -26,6 +26,7 @@ import (
 	"sync/atomic"
 
 	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -119,23 +120,30 @@ type LogstoreConfig struct {
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
-	/*
-		p.CollecLatencytMetric = helper.NewLatencyMetric("collect_latency")
-		p.RawLogMetric = helper.NewCounterMetric("raw_log")
-		p.SplitLogMetric = helper.NewCounterMetric("processed_log")
-		p.FlushLogMetric = helper.NewCounterMetric("flush_log")
-		p.FlushLogGroupMetric = helper.NewCounterMetric("flush_loggroup")
-		p.FlushReadyMetric = helper.NewAverageMetric("flush_ready")
-		p.FlushLatencyMetric = helper.NewLatencyMetric("flush_latency")
 
-		context.RegisterLatencyMetric(p.CollecLatencytMetric)
-		context.RegisterCounterMetric(p.RawLogMetric)
-		context.RegisterCounterMetric(p.SplitLogMetric)
-		context.RegisterCounterMetric(p.FlushLogMetric)
-		context.RegisterCounterMetric(p.FlushLogGroupMetric)
-		context.RegisterCounterMetric(p.FlushReadyMetric)
-		context.RegisterLatencyMetric(p.FlushLatencyMetric)
-	*/
+	labels := make(map[string]string)
+	labels["project"] = context.GetProject()
+	labels["logstore"] = context.GetLogstore()
+	labels["configName"] = context.GetConfigName()
+
+	metricRecord := context.RegisterMetricRecord(labels)
+
+	p.CollecLatencytMetric = helper.NewLatencyMetric("collect_latency")
+	p.RawLogMetric = helper.NewCounterMetric("raw_log")
+	p.SplitLogMetric = helper.NewCounterMetric("processed_log")
+	p.FlushLogMetric = helper.NewCounterMetric("flush_log")
+	p.FlushLogGroupMetric = helper.NewCounterMetric("flush_loggroup")
+	p.FlushReadyMetric = helper.NewAverageMetric("flush_ready")
+	p.FlushLatencyMetric = helper.NewLatencyMetric("flush_latency")
+
+	context.RegisterLatencyMetric(metricRecord, p.CollecLatencytMetric)
+	context.RegisterCounterMetric(metricRecord, p.RawLogMetric)
+	context.RegisterCounterMetric(metricRecord, p.SplitLogMetric)
+	context.RegisterCounterMetric(metricRecord, p.FlushLogMetric)
+	context.RegisterCounterMetric(metricRecord, p.FlushLogGroupMetric)
+	context.RegisterCounterMetric(metricRecord, p.FlushReadyMetric)
+	context.RegisterLatencyMetric(metricRecord, p.FlushLatencyMetric)
+
 }
 
 // Start initializes plugin instances in config and starts them.

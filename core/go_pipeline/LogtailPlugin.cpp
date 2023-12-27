@@ -440,6 +440,12 @@ bool LogtailPlugin::LoadPluginBase() {
             return mPluginValid;
         }
 
+        mGetPipelineMetricsFun = (GetPipelineMetricsFun)loader.LoadMethod("GetPipelineMetrics", error);
+        if (!error.empty()) {
+            LOG_ERROR(sLogger, ("load GetPipelineMetrics error, Message", error));
+            return mPluginValid;
+        }
+
         mPluginBasePtr = loader.Release();
     }
 
@@ -520,7 +526,7 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
 void LogtailPlugin::GetPipelineMetrics() {
     if (mGetPipelineMetricsFun != nullptr) {
         GoString result = mGetPipelineMetricsFun();
-        std::string resultStr = std::string(result.c_str, result.size());
+        std::string resultStr = std::string(result.p, result.n);
         LOG_WARNING(sLogger, ("GetPipelineMetrics", resultStr));
     }
 }

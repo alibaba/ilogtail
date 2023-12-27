@@ -5,6 +5,7 @@
 #include "config_manager/ConfigManager.h"
 #include "LogFileProfiler.h"
 #include "MetricConstants.h"
+#include "go_pipeline/LogtailPlugin.h"
 
 using namespace sls_logs;
 using namespace std;

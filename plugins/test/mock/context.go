@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg"
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -66,6 +67,34 @@ func (p *EmptyContext) AddPlugin(name string) {
 
 func (p *EmptyContext) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
+}
+
+func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) pipeline.MetricsRecord {
+	contextMutex.Lock()
+	defer contextMutex.Unlock()
+	procInRecordsTotal := helper.NewCounterMetric("proc_in_records_total")
+	procOutRecordsTotal := helper.NewCounterMetric("proc_out_records_total")
+	procTimeMS := helper.NewCounterMetric("proc_time_ms")
+
+	counterMetrics := make([]pipeline.CounterMetric, 0)
+	stringMetrics := make([]pipeline.StringMetric, 0)
+	latencyMetric := make([]pipeline.LatencyMetric, 0)
+
+	counterMetrics = append(counterMetrics, procInRecordsTotal, procOutRecordsTotal, procTimeMS)
+
+	metricRecord := pipeline.MetricsRecord{
+		Labels: labels,
+		CommonMetrics: pipeline.CommonMetrics{
+			ProcInRecordsTotal:  procInRecordsTotal,
+			ProcOutRecordsTotal: procOutRecordsTotal,
+			ProcTimeMS:          procTimeMS,
+		},
+		CounterMetrics: counterMetrics,
+		StringMetrics:  stringMetrics,
+		LatencyMetrics: latencyMetric,
+	}
+	p.MetricsRecords = append(p.MetricsRecords, metricRecord)
+	return metricRecord
 }
 
 func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {

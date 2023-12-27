@@ -57,9 +57,7 @@ struct containerMeta{
 	char** envsKey;
 	char** envsVal;
 };
-
 */
-
 import "C" //nolint:typecheck
 
 var initOnce sync.Once
@@ -266,6 +264,7 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 	return returnStruct
 }
 
+//export GetPipelineMetrics
 func GetPipelineMetrics() string {
 	return pluginmanager.GetMetrics()
 }

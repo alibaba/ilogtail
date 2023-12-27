@@ -27,7 +27,7 @@ type Processor interface {
 	// Description returns a one-sentence description on the Input
 	Description() string
 
-	GetMetricRecordRef()
+	//GetMetricRecordRef()
 }
 
 type ProcessorV1 interface {

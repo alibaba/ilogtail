@@ -23,21 +23,6 @@ const (
 	AggregatorType   = iota
 )
 
-
-// Processor also can be a filter
-type Plugin interface {
-	// Init called for init some system resources, like socket, mutex...
-	Init(Context) error
-
-	// Description returns a one-sentence description on the Input
-	Description() string
-
-	SetMetricRecordRef()
-
-	GetMetricRecordRef()
-}
-
-
 type MetricCreator func() MetricInput
 
 var MetricInputs = map[string]MetricCreator{}
