@@ -447,7 +447,10 @@ func (p *pluginv1Runner) ReceiveLogGroup(logGroup pipeline.LogGroupWithContext) 
 			context[ctxKeyTags] = logGroup.LogGroup.LogTags
 			p.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: context})
 		} else {
-			context := logGroup.Context
+			context := map[string]interface{}{}
+			for key, value := range logGroup.Context {
+				context[key] = value
+			}
 			context[ctxKeyTopic] = topic
 			for _, tag := range logGroup.LogGroup.LogTags {
 				log.Contents = append(log.Contents, &protocol.Log_Content{
