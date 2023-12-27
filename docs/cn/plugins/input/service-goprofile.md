@@ -77,7 +77,7 @@
 
 2. 采集结果
 
-```
+```plain
 2023-04-03 14:04:52 [INF] [flusher_stdout.go:120] [Flush] [1.0#PluginProject_0##Config0,PluginLogstore_0]       {"name":"github.com/denisenkom/go-mssqldb/internal/cp.init /Users/evan/go/pkg/mod/github.com/denisenkom/go-mssqldb@v0.12.2/internal/cp/cp950.go","stack":"runtime.doInit /usr/local/go/src/runtime/proc.go\nruntime.doInit /usr/local/go/src/runtime/proc.go\nruntime.doInit /usr/local/go/src/runtime/proc.go\nruntime.doInit /usr/local/go/src/runtime/proc.go\nruntime.doInit /usr/local/go/src/runtime/proc.go\nruntime.main /usr/local/go/src/runtime/proc.go","stackID":"c4bbfc9dff64151d","language":"go","type":"profile_mem","dataType":"CallStack","durationNs":"0","profileID":"f6a443c0-cca0-45ac-b50a-b1e25a48fb74","labels":"{\"__name__\":\"service\",\"global\":\"outer\",\"instance\":\"inner\",\"job\":\"1_0_pluginproject_0__config0\"}","units":"bytes","valueTypes":"inuse_space","aggTypes":"sum","val":"1615794.00","__time__":"1680501892"}:  
 ```
 

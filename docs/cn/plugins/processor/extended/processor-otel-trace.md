@@ -17,7 +17,6 @@
 | SpanIDNeedDecode       | Boolean | 否    | 是否对SpanID做一次Base64 Encode。默认值为false，当Format为protojson时，需要考虑将当前值改为True。具体原因如下：protojson转换时将SpanID数据Base64 Decode转码，而ProtoJson格式存在没有对TraceID做Base64 Encode转码的情况，这样会导致转换失败。             |
 | ParentSpanIDNeedDecode | Boolean | 否    | 是否对ParentSpanID做一次Base64 Encode。默认值为false，当Format为protojson时，需要考虑将当前值改为True。具体原因如下：protojson转换时将ParentSpanID数据Base64 Decode转码，而ProtoJson格式存在没有对TraceID做Base64 Encode转码的情况，这样会导致转换失败。 |
 
-
 ## 样例
 
 采集当前路径下的`simple.log`文件，根据指定的配置选项提取日志信息。

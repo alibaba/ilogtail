@@ -105,4 +105,3 @@ Tens of thousands of companies use iLogtail in Alibaba Cloud, IDC, or other clou
 ## Licence
 
 [Apache 2.0 License](./LICENSE)
-

@@ -14,9 +14,9 @@
 
 enable: true
 inputs:
-  - Type: file_log           # 文件输入类型
-    LogPath: .               # 文件路径
-    FilePattern: simple.log  # 文件名模式
+  - Type: file_log          # 文件输入类型
+    FilePaths: 
+      - ./simple.log
 flushers:
-  - Type: flusher_stdout     # 标准输出流输出类型
+  - Type: flusher_stdout    # 标准输出流输出类型
     OnlyStdout: true

@@ -62,6 +62,7 @@ flushers:
 ```json
 {"payload":"foo"}
 ```
+
 ### 采集配置（v2）
 
 `v2`是`ilogtail 1.6.0`新增的实现，主要是支持配置`Format`指定一些特定的数据格式化方式`raw`, `prometheus`,  `otlp_metricv1`、`otlp_tracev1`，
@@ -91,4 +92,3 @@ flushers:
 ```json
 {"eventType":"byteArray","name":"","timestamp":0,"observedTimestamp":0,"tags":{},"byteArray":"{\"payload \": \"foo \"}"}
 ```
-

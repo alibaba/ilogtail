@@ -14,7 +14,6 @@
 | Format                 | String  | 是    | 转换后的格式（枚举类型）。共有三类：protobuf, json, protojson                                                                                                                                          |
 | NoKeyError             | Boolean | 否    | 当没有对应字段时，是否报错。默认值为false                                                                                                                                                              |
 
-
 ## 样例
 
 采集当前路径下的`simple.log`文件，根据指定的配置选项提取日志信息。

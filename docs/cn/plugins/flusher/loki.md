@@ -32,7 +32,7 @@ Alpha
 
 ## 样例
 
-本样例采集`/home/test-log/`路径下的所有文件名匹配`*.log`规则的文件，并将采集结果发送到 Loki。在执行该任务之前，需要确保系统已经安装了Loki。在 `ilogtail` 同级的 `user_yaml_config.d` 文件夹下，创建如下的配置文件：
+本样例采集`/home/test-log/`路径下的所有文件名匹配`*.log`规则的文件，并将采集结果发送到 Loki。在执行该任务之前，需要确保系统已经安装了Loki。
 
 ```yaml
 enable: true
@@ -56,12 +56,11 @@ flushers:
 
 运行 `ilogtail` 并收集到日志后，在 `Grafana` 或 `Logcli` 中可以通过以下的命令查询日志：
 
-```
+```plain
 { source="ilogtail" }
 ```
 
 ## 进阶配置
-
 
 以下面的一段日志为例，后来将展开介绍ilogtail loki flusher的一些高阶配置
 

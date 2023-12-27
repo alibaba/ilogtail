@@ -31,7 +31,6 @@
 | Authentication.TLS.MaxVersion     | String   | 否    | TLS 支持协议最大版本,可选配置：`1.0, 1.1, 1.2, 1.3`,默认采用：`crypto/tls`支持的版本，当前`1.3`                                              |
 | HTTPConfig.MaxIdleConnsPerHost    | Int      | 否    | 每个host的连接池最大空闲连接数                                                                                                  |
 | HTTPConfig.ResponseHeaderTimeout  | String   | 否    | 读取头部的时间限制，可选配置`Nanosecond`，`Microsecond`，`Millisecond`，`Second`，`Minute`，`Hour`                                    |
- 
 
 ## 样例
 
@@ -81,6 +80,7 @@ flushers:
 
 `ilogtail 1.8.0`新增数据平铺协议`custom_single_flatten`，`contents`、`tags`和`time`三个`convert`层的协议字段中数据做一级打平。
 当前`convert`协议在单条数据处理仅支持`json`编码，因此`custom_single_flatten`需要配合`json`编码一起使用。
+
 ```yaml
 enable: true
 inputs:
@@ -119,7 +119,9 @@ flushers:
   "time": 1664435098
 }
 ```
+
 使用平铺协议后`custom_single_flatten`，`json`全部被一级平铺。
+
 ```json
 {
     "class": "org.springframework.web.servlet.DispatcherServlet@initServletBean:547",

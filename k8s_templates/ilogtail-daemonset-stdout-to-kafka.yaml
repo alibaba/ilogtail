@@ -132,7 +132,7 @@ spec:
             readOnly: true
           - mountPath: /usr/local/ilogtail/checkpoint
             name: checkpoint
-          - mountPath: /usr/local/ilogtail/user_yaml_config.d
+          - mountPath: /usr/local/ilogtail/config/local
             name: user-config
             readOnly: true
       dnsPolicy: ClusterFirstWithHostNet

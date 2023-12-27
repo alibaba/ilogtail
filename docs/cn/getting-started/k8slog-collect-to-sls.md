@@ -65,6 +65,7 @@
 ![](../.gitbook/assets/getting-started/collect-to-sls/endpoint.png)
 
 * K8s环境已部署nginx。
+
 ```yaml  {.line-numbers}
 apiVersion: apps/v1
 kind: Deployment
@@ -97,6 +98,7 @@ spec:
 ```
 
 * K8s环境已部署打印json日志文件的程序。
+
 ```yaml {.line-numbers}
 apiVersion: apps/v1
 kind: Deployment
@@ -361,7 +363,7 @@ spec:
             readOnly: true
           - mountPath: /usr/local/ilogtail/checkpoint
             name: checkpoint
-          - mountPath: /usr/local/ilogtail/user_yaml_config.d
+          - mountPath: /usr/local/ilogtail/config/local
             name: user-config
             readOnly: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -407,7 +409,7 @@ kubectl apply -f ilogtail-deployment.yaml
 
 `/usr/local/ilogtail/checkpoint`：将状态持久化到主机磁盘，iLogtail容器重启不丢失
 
-`/usr/local/ilogtail/user_yaml_config.d`：将configmap中的配置挂载到容器中
+`/usr/local/ilogtail/config/local`：将configmap中的配置挂载到容器中
 
 ### 验证 <a href="#fr6wn" id="fr6wn"></a>
 

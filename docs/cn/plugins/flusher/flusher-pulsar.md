@@ -236,7 +236,9 @@ flushers:
   "time": 1664435098
 }
 ```
+
 使用平铺协议后`custom_single_flatten`，`json`全部被一级平铺。
+
 ```json
 {
     "class": "org.springframework.web.servlet.DispatcherServlet@initServletBean:547",

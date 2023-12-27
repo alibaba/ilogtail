@@ -12,7 +12,7 @@
 
 ## 日志输入样例
 
-```
+```text
 2023-07-04 13:20:00.352 [info] Reading sessions from secret storage...
 2023-07-04 13:20:00.352 [info] Got 0 stored sessions
 2023-07-04 13:20:00.352 [info] Getting sessions for all scopes...

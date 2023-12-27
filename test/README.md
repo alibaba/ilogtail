@@ -26,31 +26,31 @@ The following configuration is to test nginx plugin behavior, the case would hel
 case.
 
 - boot: [**Required**]
-    - category: the virtual environment category, currently only support `docker-compose`.
-    - timeout: the timeout period of virtual environment, the default value is `60s`.
+  - category: the virtual environment category, currently only support `docker-compose`.
+  - timeout: the timeout period of virtual environment, the default value is `60s`.
 - ilogtail: [**Required**]
-    - config: the ILogtail configuration array, the including items would be loaded to ILogtail container before
+  - config: the ILogtail configuration array, the including items would be loaded to ILogtail container before
       testing.
-        - name: the config name.
-        - content: the ILogtail configuration array.
-    - close_wait: the wait period before closing the test case to transfer the data on the way.
-    - env: the env in ILogtail container.
-    - depend_on: control the sequence of starting ILogtail container, which is same as docker-compose.
+    - name: the config name.
+    - content: the ILogtail configuration array.
+  - close_wait: the wait period before closing the test case to transfer the data on the way.
+  - env: the env in ILogtail container.
+  - depend_on: control the sequence of starting ILogtail container, which is same as docker-compose.
 - subscriber: [**Optional**] the default subscriber is `gRPC subscriber`. More details please
   see [here](./docs/plugin-list.md).
-    - name: the subscriber category.
-    - config: the subscriber configuration map.
+  - name: the subscriber category.
+  - config: the subscriber configuration map.
 - trigger: [**Optional**]
-    - url: the HTTP request URL.
-    - method: the request method.
-    - interval: the interval between 2 requests.
-    - times: the trigger times.
+  - url: the HTTP request URL.
+  - method: the request method.
+  - interval: the interval between 2 requests.
+  - times: the trigger times.
 - verify: [**Required**]
-    - log_rules: the LogValidator configuration array. More details please see [here](./docs/plugin-list.md).
-    - system_rules: the SysValidator configuration array. More details please see [here](./docs/plugin-list.md).
+  - log_rules: the LogValidator configuration array. More details please see [here](./docs/plugin-list.md).
+  - system_rules: the SysValidator configuration array. More details please see [here](./docs/plugin-list.md).
 - retry: [**Optional**] the retry times when facing test failed.
-    - times: the retry times, the default value is `1`.
-    - interval: the retry interval, the default value is `10s`.
+  - times: the retry times, the default value is `1`.
+  - interval: the retry interval, the default value is `10s`.
 - test_interval: [**Required**] the total test interval.
 
 ```yaml
@@ -125,4 +125,4 @@ services:
 ## Try to run nginx test demo
 
 In the root dir，the test reports are contained in `beaverhor-test/report` dir after executing the following commands.
-`TEST_SCOPE=input_nginx  TEST_DEBUG=true   make e2e `
+`TEST_SCOPE=input_nginx  TEST_DEBUG=true   make e2e`

@@ -6,11 +6,11 @@
 
 ## 描述
 
-`CBS.log`日志文件是在`Windows`下提供有关脱机处理故障的详细信息的处理日志文件，路径为：`C:\Windows\Logs\CBS\CBS.log`，通常用于记录系统的配置信息和事件，可以通过查看文件内容来查看系统的运行情况，如系统Windows update更新日志，windows的错误报告等。 
+`CBS.log`日志文件是在`Windows`下提供有关脱机处理故障的详细信息的处理日志文件，路径为：`C:\Windows\Logs\CBS\CBS.log`，通常用于记录系统的配置信息和事件，可以通过查看文件内容来查看系统的运行情况，如系统Windows update更新日志，windows的错误报告等。
 
 ## 日志输入样例
 
-```
+```text
 2023-07-02 10:44:52, Info                  CBS    Starting TrustedInstaller finalization.
 2023-07-02 10:44:52, Info                  CBS    Lock: Lock removed: WinlogonNotifyLock, level: 8, total lock:6
 2023-07-02 10:44:52, Info                  CBS    Ending TrustedInstaller finalization.
@@ -67,4 +67,3 @@ flushers:
   - Type: flusher_stdout     # 标准输出流输出类型
     OnlyStdout: true
 ```
-

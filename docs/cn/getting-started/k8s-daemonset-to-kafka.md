@@ -198,7 +198,7 @@ spec:
             readOnly: true
           - mountPath: /usr/local/ilogtail/checkpoint
             name: checkpoint
-          - mountPath: /usr/local/ilogtail/user_yaml_config.d
+          - mountPath: /usr/local/ilogtail/config/local
             name: user-config
             readOnly: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -240,7 +240,7 @@ kubectl apply -f ilogtail-deployment.yaml
 
 `/usr/local/ilogtail/checkpoint`：将状态持久化到主机磁盘，iLogtail容器重启不丢失
 
-`/usr/local/ilogtail/user_yaml_config.d`：将configmap中的配置挂载到容器中
+`/usr/local/ilogtail/config/local`：将configmap中的配置挂载到容器中
 
 #### 第三步，部署Nginx，发送测试请求并验证 <a href="#eiejy" id="eiejy"></a>
 
@@ -379,6 +379,7 @@ kubectl exec -n ilogtail ilogtail-ds-krm8t -- /bin/sh -c "kill 1"
 ```
 
 ## 采集容器内的文件
+
 某些应用选择将日志打印在容器内使用自带的日志机制进行轮转，iLogtail也支持这种场景的日志采集。这里我们以采集json格式日志为例。
 
 前提条件和对iLogtail DaemonSet的部署不再赘述，仅关注配置和验证过程。
@@ -415,7 +416,6 @@ data:
           - 39.99.61.125:9092
         Topic: json-log
 ```
-
 
 第13行表明采集的文件来自容器内，14-15行使用容器名对目标容器进行筛选。17-21行使用了json处理插件对日志进行结构化解析。
 
@@ -484,6 +484,7 @@ bin/kafka-console-consumer.sh --topic json-log --bootstrap-server <kafka_host>:<
 ```
 
 可以看到消费端已经有日志输出，并且进行了结构化解析：
+
 ```json
 {"Time":1658341942,"Contents":[
   {"Key":"__tag__:__path__","Value":"/root/log/json.log"},
@@ -512,6 +513,3 @@ bin/kafka-console-consumer.sh --topic json-log --bootstrap-server <kafka_host>:<
 * 交流群请扫描
 
 ![](../.gitbook/assets/chatgroup.png)
-
-
-

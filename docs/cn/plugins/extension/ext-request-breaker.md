@@ -15,10 +15,9 @@
 | FailureRatio    | Float | 是    | 熔断的阈值，失败的请求在 WindowInSeconds 窗口时间内的失败率，默认值 0.10 |
 | WindowInSeconds | Int   | 是    | 统计请求成功失败的窗口时间，默认值 10                            |
 
-
 ## 样例
 
-使用 `metric_mock` input 插件生成数据，并将采集结果以 `custom_single` 协议、`json`格式提交到 `http://localhost:8086/write `。
+使用 `metric_mock` input 插件生成数据，并将采集结果以 `custom_single` 协议、`json`格式提交到 `http://localhost:8086/write`。
 
 且在flusher处理时，配置熔断策略
 
