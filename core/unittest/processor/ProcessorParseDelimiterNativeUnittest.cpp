@@ -942,18 +942,140 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
-    // make config
-    Config config;
-    config.mSeparator = ",";
-    config.mQuote = '\'';
-    config.mColumnKeys = {"time", "method", "url", "request_time"};
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    // make events
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
-    std::string inJson = R"({
+    {
+        std::string inJson = R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : " 2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
+ 2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
+      2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
+           2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "1": "2023-12-25 1",
+                        "2": "zdfvzdfv zfdv",
+                        "3": "zfdvzdfv zfd",
+                        "4": "fzdvzdfvzdfvz",
+                        "5": "zfvzfdzv zfdb",
+                        "6": "zfdvzdfbvzb",
+                        "7": "zdfvzdfbvzdb",
+                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                        "9": "zdfbvzbszfbsfb",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "1": "2023-12-25 1",
+                        "2": "zdfvzdfv zfdv",
+                        "3": "zfdvzdfv zfd",
+                        "4": "fzdvzdfvzdfvz",
+                        "5": "zfvzfdzv zfdb",
+                        "6": "zfdvzdfbvzb",
+                        "7": "zdfvzdfbvzdb",
+                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                        "9": "zdfbvzbszfbsfb",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "1": "2023-12-25 1",
+                        "2": "zdfvzdfv zfdv",
+                        "3": "zfdvzdfv zfd",
+                        "4": "fzdvzdfvzdfvz",
+                        "5": "zfvzfdzv zfdb",
+                        "6": "zfdvzdfbvzb",
+                        "7": "zdfvzdfbvzdb",
+                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                        "9": "zdfbvzbszfbsfb",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "1": "2023-12-25 1",
+                        "2": "zdfvzdfv zfdv",
+                        "3": "zfdvzdfv zfd",
+                        "4": "fzdvzdfvzdfvz",
+                        "5": "zfvzfdzv zfdb",
+                        "6": "zfdvzdfbvzb",
+                        "7": "zdfvzdfbvzdb",
+                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                        "9": "zdfbvzbszfbsfb",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Config config;
+        config.mSeparator = "|";
+        config.mQuote = '\'';
+        config.mColumnKeys = {"1","2","3","4","5","6","7","8","9","10","11", "12", "13", "14", "15", "16"};
+        config.mDiscardUnmatch = false;
+        config.mUploadRawLog = false;
+        config.mAdvancedConfig.mRawLogTag = "__raw__";
+        config.mAcceptNoEnoughKeys = true;
+
+        std::string pluginId = "testID";
+        ComponentConfig componentConfig(pluginId, config);
+        // run function processorSplitRegexNative
+        ProcessorSplitRegexNative processorSplitRegexNative;
+        processorSplitRegexNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(componentConfig));
+        processorSplitRegexNative.Process(eventGroup);
+        // run function ProcessorParseDelimiterNative
+        ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+        processor.Process(eventGroup);
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+    {
+        // make config
+        Config config;
+        config.mSeparator = ",";
+        config.mQuote = '\'';
+        config.mColumnKeys = {"time", "method", "url", "request_time"};
+        config.mDiscardUnmatch = false;
+        config.mUploadRawLog = false;
+        config.mAdvancedConfig.mRawLogTag = "__raw__";
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string inJson = R"({
         "events" :
         [
             {
@@ -985,15 +1107,15 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             }
         ]
     })";
-    eventGroup.FromJsonString(inJson);
-    // run function
-    ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-    processor.Process(eventGroup);
-    std::string expectJson = R"({
+        eventGroup.FromJsonString(inJson);
+        // run function
+        ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        ComponentConfig componentConfig(pluginId, config);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+        processor.Process(eventGroup);
+        std::string expectJson = R"({
         "events" :
         [
             {
@@ -1033,9 +1155,10 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             }
         ]
     })";
-    // judge result
-    std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
