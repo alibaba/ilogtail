@@ -37,9 +37,9 @@ echo '::1 - - [18/Jul/2022:07:28:01 +0000] "GET /hello/ilogtail HTTP/1.1" 404 15
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log
-    FilePattern: nginx.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_regex
     SourceKey: content
@@ -66,11 +66,6 @@ processors:
       nginx: test
     IgnoreError: false
 flushers:
-  - Type: flusher_sls
-    Region: cn-xxx
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

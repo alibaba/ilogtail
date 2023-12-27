@@ -43,10 +43,8 @@ inputs:
     Labels:
       cluster: ilogtail-test-cluster
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-hangzhou.log.aliyuncs.com
-    ProjectName: test-ilogtail-xxx
-    LogstoreName: metric-meta
+  - Type: flusher_stdout
+    OnlyStdout: true
 ```
 
 #### 输出

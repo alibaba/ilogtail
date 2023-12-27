@@ -14,10 +14,10 @@
 
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /root
-    FilePattern: simple.log
-    DockerFile: true
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
+    EnableContainerDiscovery: true
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true

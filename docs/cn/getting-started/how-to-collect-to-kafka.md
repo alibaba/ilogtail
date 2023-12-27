@@ -94,9 +94,9 @@ drwxr-xr-x 2 root root    4096 7月  12 09:55 config
 $ cat config/lcoal/access_log.yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /root/bin/input_data/
-    FilePattern: access.log
+  - Type: input_file
+    FilePaths: 
+      - /root/bin/input_data/access.log
 processors:
   - Type: processor_regex
     SourceKey: content
@@ -124,9 +124,9 @@ flushers:
 $ cat config/local/error_log.yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /root/bin/input_data/
-    FilePattern: error.log
+  - Type: input_file
+    FilePaths: 
+      - /root/bin/input_data/error.log
 flushers:
   - Type: flusher_kafka
     Brokers:

@@ -22,7 +22,7 @@
 
 ## 样例
 
-采集`/home/test-ilogtail/test-log/`路径下包含敏感数据的`processor-desensitize.log`文件，根据指定的配置选项提取日志信息。
+采集`/home/test-log/`路径下包含敏感数据的`processor-desensitize.log`文件，根据指定的配置选项提取日志信息。
 
 * 输入
   
@@ -35,9 +35,9 @@ echo "[{'account':'1812213231432969','password':'04a23f38'}, {account':'18122136
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-ilogtail/test-log/
-    FilePattern: processor-desensitize.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_desensitize
     SourceKey: content
@@ -62,9 +62,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-ilogtail/test-log/
-    FilePattern: processor-desensitize.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_desensitize
     SourceKey: content
@@ -91,9 +91,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-ilogtail/test-log/
-    FilePattern: processor-desensitize.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_desensitize
     SourceKey: content

@@ -398,12 +398,12 @@ data:
   json_log.yaml: |
     enable: true
     inputs:
-      - Type: file_log
-        LogPath: /root/log
-        FilePattern: "json.log"
-        DockerFile: true
-        DockerIncludeLabel:
-          io.kubernetes.container.name: json-log
+      - Type: input_file
+        FilePaths: /root/log/json.log
+        EnableContainerDiscovery: true
+        ContainerFilters:
+          IncludeContainerLabel:
+            io.kubernetes.container.name: json-log
     processors:
       - Type: processor_json
         SourceKey: content

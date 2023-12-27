@@ -103,9 +103,9 @@ $ cat ilogtail_config.json
 $ cat config/local/access_log.yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /root/bin/input_data/
-    FilePattern: access.log
+  - Type: input_file
+    FilePaths: 
+      - /root/bin/input_data/access.log
 processors:
   - Type: processor_regex
     SourceKey: content
@@ -123,9 +123,10 @@ processors:
       - browser
 flushers:
   - Type: flusher_sls
+    Region: cn-hangzhou
     Endpoint: cn-hangzhou.log.aliyuncs.com
-    ProjectName: test-ilogtail
-    LogstoreName: access-log
+    Project: test-ilogtail
+    Logstore: access-log
   - Type: flusher_kafka
     Brokers:
       - localhost:9092
@@ -137,14 +138,14 @@ flushers:
 $ cat config/local/error_log.yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /root/bin/input_data/
-    FilePattern: error.log
+  - Type: input_file
+    FilePaths: 
+      - /root/bin/input_data/error.log
 flushers:
   - Type: flusher_sls
     Endpoint: cn-hangzhou.log.aliyuncs.com
-    ProjectName: test-ilogtail
-    LogstoreName: access-log
+    Project: test-ilogtail
+    Logstore: access-log
   - Type: flusher_kafka
     Brokers:
       - localhost:9092

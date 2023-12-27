@@ -47,9 +47,9 @@ echo '{"key1": 123456, "key2": "abcd"}' >> /home/test-log/json.log
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: json.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_json
     SourceKey: content
@@ -57,10 +57,6 @@ processors:
     ExpandDepth: 1
     ExpandConnector: ""
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

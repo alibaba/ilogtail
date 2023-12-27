@@ -148,7 +148,7 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
+  - Type: input_file
     FilePaths: 
       - /home/test-log/regMulti.log
     Multiline:
@@ -201,7 +201,7 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
+  - Type: input_file
     FilePaths: 
       - /home/test-log/regMulti.log
     Multiline:

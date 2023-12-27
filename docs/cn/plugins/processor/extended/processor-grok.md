@@ -26,16 +26,15 @@
 
 ## 样例
 
-采集`/home/test-ilogtail/test-log/`路径下的`processor-grok.log`文件，根据指定的配置选项提取日志信息。
+采集`/home/test-log/`路径下的`processor-grok.log`文件，根据指定的配置选项提取日志信息。
 
 * 采集配置
 
 ```yaml
 enable: true
-inputs:
-  - Type: file_log
-    LogPath: /home/test-ilogtail/test-log/
-    FilePattern: processor-grok.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_grok
     SourceKey: content

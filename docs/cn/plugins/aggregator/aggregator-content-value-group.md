@@ -33,9 +33,9 @@ echo '127.0.0.1 - - [10/Aug/2017:14:57:51 +0800] "POST /PutData?Category=YunOsAc
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: "reg.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/reg.log
 processors:
   - Type: processor_regex
     SourceKey: content
@@ -57,8 +57,6 @@ aggregators:
       - url
       - method
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
+  - Type: flusher_stdout
+    OnlyStdout: true
 ```

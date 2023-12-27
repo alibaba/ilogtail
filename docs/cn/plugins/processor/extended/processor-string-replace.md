@@ -36,9 +36,9 @@ echo 'hello,how old are you? nice to meet you' >> /home/test-log/string_replace.
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: string_replace.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_string_replace
     SourceKey: content
@@ -46,10 +46,6 @@ processors:
     Match: 'how old are you?'
     ReplaceString: ''
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -79,9 +75,9 @@ echo '2022-09-16 09:03:31.013 \u001b[32mINFO \u001b[0;39m \u001b[34m[TID: N/A]\u
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: string_replace.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_string_replace
     SourceKey: content
@@ -89,10 +85,6 @@ processors:
     Match: \\u\w+\[\d{1,3};*\d{1,3}m|N/A
     ReplaceString: ''
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -123,9 +115,9 @@ echo '10.10.239.16' >> /home/test-log/string_replace.log
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: string_replace.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_string_replace
     SourceKey: content
@@ -134,10 +126,6 @@ processors:
     ReplaceString: $1*/24
     DestKey: new_ip
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -169,18 +157,14 @@ echo '\\u554a\\u554a\\u554a' >> /home/test-log/string_replace.log
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: string_replace.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_string_replace
     SourceKey: content
     Method: unquote
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

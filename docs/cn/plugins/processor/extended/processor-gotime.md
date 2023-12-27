@@ -48,14 +48,14 @@ const (
 
 ## 样例
 
-采集当前路径下的`simple.log`文件，根据指定的配置选项提取日志信息。
+采集`/home/test-log/`目录下的`simple.log`文件，根据指定的配置选项提取日志信息。
 
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: .
-    FilePattern: simple.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_gotime
     SourceKey: "content"

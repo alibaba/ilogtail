@@ -23,9 +23,9 @@
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_http
     RemoteURL: "http://localhost:8086/write"
@@ -49,9 +49,9 @@ extensions:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_http
     RemoteURL: "http://localhost:8086/write"

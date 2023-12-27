@@ -31,19 +31,15 @@ echo 'this is a test log' >> /home/test-log/test.log
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: key_value.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_add_fields
     Fields: 
       service: A
     IgnoreIfExist: false
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

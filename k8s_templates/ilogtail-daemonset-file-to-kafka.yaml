@@ -34,11 +34,11 @@ data:
   regex_log.yaml: |
     enable: true
     inputs:
-      - Type: file_log
-        LogPath: /root/bin/input_data/
-        FilePattern: access.log
-        ContainerFile: true
-        ContainerInfo:
+      - Type: input_file
+        FilePaths: 
+          - /root/bin/input_data/access.log
+        EnableContainerDiscovery: true
+        ContainerFilters:
           K8sPodRegex: regex-log
           K8sNamespaceRegex: regex-ns
           IncludeEnv:

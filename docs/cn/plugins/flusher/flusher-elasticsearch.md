@@ -41,9 +41,9 @@
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_elasticsearch
     Addresses: 
@@ -84,9 +84,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_elasticsearch
     Addresses:

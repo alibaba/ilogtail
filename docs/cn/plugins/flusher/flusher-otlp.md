@@ -41,9 +41,9 @@ v1流水线目前只支持Logs数据，v2流水线支持Logs/Metrics/Traces三�
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_otlp
     Logs:

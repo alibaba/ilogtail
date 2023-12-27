@@ -21,9 +21,9 @@
 
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-ilogtail/test-log/
-    FilePattern: processor-grok.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_grok
     SourceKey: content

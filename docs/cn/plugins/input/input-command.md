@@ -48,10 +48,6 @@ inputs:
     Environments:
       - "DEBUG=true"
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxxxxx.log.aliyuncs.com
-    ProjectName: xxxxxx
-    LogstoreName: xxxxxx
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -90,10 +86,6 @@ inputs:
       - "DEBUG=true"
     TimeoutMilliseconds: 1005
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxxxxx.log.aliyuncs.com
-    ProjectName: xxxxxx
-    LogstoreName: xxxxxx
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -124,10 +116,6 @@ inputs:
       - "DEBUG=true"
     TimeoutMilliseconds: 1005
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxxxxx.log.aliyuncs.com
-    ProjectName: xxxxxx
-    LogstoreName: xxxxxx
   - Type: flusher_stdout
     OnlyStdout: true
 ```

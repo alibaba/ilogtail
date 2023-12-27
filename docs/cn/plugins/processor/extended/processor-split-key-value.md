@@ -42,19 +42,15 @@ echo -e 'class:main\tuserid:123456\tmethod:get\tmessage:\"wrong user\"' >> /home
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: key_value.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_split_key_value
     SourceKey: content
     Delimiter: "\t"
     Separator: ":"
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -87,9 +83,9 @@ echo -e 'class:main http_user_agent:"User Agent" "中文" "hello\t\"ilogtail\"\t
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: key_value.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_split_key_value
     SourceKey: content
@@ -97,10 +93,6 @@ processors:
     Separator: ":"
     Quote: "\""
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -133,9 +125,9 @@ echo -e 'class:main http_user_agent:"""User Agent""" """中文"""' >> /home/test
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: key_value.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_split_key_value
     SourceKey: content
@@ -143,10 +135,6 @@ processors:
     Separator: ":"
     Quote: "\"\"\""
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

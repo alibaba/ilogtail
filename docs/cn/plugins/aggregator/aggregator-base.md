@@ -25,15 +25,13 @@
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 aggregators:
   - Type: aggregator_base
     Topic: file
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
+  - Type: flusher_stdout
+    OnlyStdout: true
 ```

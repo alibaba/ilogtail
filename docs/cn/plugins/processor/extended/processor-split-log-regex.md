@@ -36,19 +36,15 @@ echo -e  '[2022-03-03 18:00:00] xxx1\nyyyyy\nzzzzzz\n[2022-03-03 18:00:01] xxx2\
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: multiline.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_split_log_regex
     SplitRegex: \[\d+-\d+-\d+\s\d+:\d+:\d+]\s.*
     SplitKey: content
     PreserveOthers: true
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

@@ -33,9 +33,9 @@ echo '{"ip": "192.168.**.**", "method": "POST", "brower": "aliyun-sls-ilogtail"}
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test-log/
-    FilePattern: proccessor-filter-regex.log
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 processors:
   - Type: processor_json
     SourceKey: content
@@ -49,10 +49,6 @@ processors:
     Exclude:
       brower: "aliyun.*"
 flushers:
-  - Type: flusher_sls
-    Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```

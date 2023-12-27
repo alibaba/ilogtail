@@ -37,9 +37,9 @@ Alpha
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_loki
     URL: http://<loki 服务的地址与端口>/loki/api/v1/push

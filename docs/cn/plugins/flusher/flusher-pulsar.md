@@ -60,9 +60,9 @@
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     URL: "pulsar://192.168.6.128:6650,192.168.6.129:6650,192.168.6.130:6650"
@@ -133,9 +133,9 @@ Topic: test_%{content.application}
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     URL: "pulsar://192.168.6.128:6650,192.168.6.129:6650,192.168.6.130:6650"
@@ -155,9 +155,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     URL: "pulsar://192.168.6.128:6650,192.168.6.129:6650,192.168.6.130:6650"
@@ -179,9 +179,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     PartitionKeys:
@@ -203,9 +203,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     Convert:
@@ -273,9 +273,9 @@ JWT Token认证配置比较简单，参照前面的配置表配置即可，下�
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     URL: "pulsar://192.168.6.128:6650,192.168.6.129:6650,192.168.6.130:6650"
@@ -308,9 +308,9 @@ credentials_file.json配置内容样例
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     URL: "pulsar+ssl://192.168.6.128:6651,192.168.6.129:6651,192.168.6.130:6651"
@@ -334,9 +334,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/test_log
-    FilePattern: "*.log"
+  - Type: input_file
+    FilePaths: 
+      - /home/test-log/*.log
 flushers:
   - Type: flusher_pulsar
     URL: "pulsar+ssl://192.168.6.128:6651,192.168.6.129:6651,192.168.6.130:6651"

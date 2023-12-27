@@ -15,7 +15,7 @@
     ```yaml
     enable: true
     inputs:
-      - Type: file_log          # 文件输入类型
+      - Type: input_file          # 文件输入类型
         FilePaths: 
           - ./simple.log
     flushers:

@@ -27,9 +27,9 @@ data:
   json_log.yaml: |
     enable: true
     inputs:
-      - Type: file_log
-        LogPath: /root/log
-        FilePattern: "json.log"
+      - Type: input_file
+        FilePaths: 
+          - /root/log/json.log
     processors:
       - Type: processor_json
         SourceKey: content
@@ -39,8 +39,8 @@ data:
     flushers:
       - Type: flusher_sls
         Endpoint: <sls_endpoint>
-        ProjectName: <sls_project>
-        LogstoreName: <sls_logstore>
+        Project: <sls_project>
+        Logstore: <sls_logstore>
 ---
 apiVersion: v1
 kind: Secret

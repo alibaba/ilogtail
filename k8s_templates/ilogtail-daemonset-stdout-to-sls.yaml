@@ -58,8 +58,8 @@ data:
     flushers:
       - Type: flusher_sls
         Endpoint: <sls_endpoint>
-        ProjectName: <sls_project>
-        LogstoreName: <sls_logstore>
+        Project: <sls_project>
+        Logstore: <sls_logstore>
   nginx_stderr.yaml: |
     enable: true
     inputs:
@@ -72,8 +72,8 @@ data:
     flushers:
       - Type: flusher_sls
         Endpoint: <sls_endpoint>
-        ProjectName: <sls_project>
-        LogstoreName: <sls_logstore>
+        Project: <sls_project>
+        Logstore: <sls_logstore>
 ---
 apiVersion: v1
 kind: Secret
