@@ -81,9 +81,9 @@ stdout_logfile=/var/log/supervisor/flask_gunicorn.log
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: ./test-log
-    FilePattern: reg.log
+  - Type: input_file
+    FilePaths: 
+      - ./test-log/reg.log
 processors:
   - Type: processor_split_log_regex
     SplitKey: content

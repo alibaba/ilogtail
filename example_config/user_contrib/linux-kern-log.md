@@ -33,9 +33,9 @@ Jul 16 17:25:29 printSomething kernel: [   49.142593] hv_balloon: Max. dynamic m
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /var/log/
-    FilePattern: kern.log
+  - Type: input_file
+    FilePaths: 
+      - /var/log/kern.log
 processors:
   - Type: processor_regex
     SourceKey: content

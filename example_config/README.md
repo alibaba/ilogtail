@@ -16,6 +16,6 @@ The `user_contrib` directory is convenient for developers to freely contribute c
 
 模版内注释需要说明清楚适用场景和应用前需要替换的部分。
 
-原则上模版应尽量全面精简正交，便于用户理解后查找，自由组合。模版中若不需要突出input或flusher的使用，直接使用file_log / flusher_stdout即可，避免意义不大的重复建设。
+原则上模版应尽量全面精简正交，便于用户理解后查找，自由组合。模版中若不需要突出input或flusher的使用，直接使用input_log / flusher_stdout即可，避免意义不大的重复建设。
 
 提交模版时，Issue / PR 请打上标签`example config`。

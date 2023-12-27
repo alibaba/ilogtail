@@ -35,10 +35,9 @@ Jul 13 18:55:14 VM-4-4-centos sshd[17022]: Disconnected from 74.235.236.64 port 
 ```yaml
 enable: true
 inputs:
-  - Type: file_log          # 文件输入类型
-    LogPath: /var/log/              # 文件路径Glob匹配规则
-    FilePattern: secure # 文件名Glob匹配规则
-    maxDepth:0
+  - Type: input_file
+    FilePaths: 
+      - /var/log/secure*
 processors:
   - Type: processor_filter_regex
     Include:

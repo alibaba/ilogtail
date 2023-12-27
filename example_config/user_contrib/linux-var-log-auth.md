@@ -56,9 +56,9 @@ $ActionFileDefaultTemplate CustomFormat
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /var/log/
-    FilePattern: auth.log
+  - Type: input_file
+    FilePaths: 
+      - /var/log/auth.log
 processors:
   - Type: processor_regex
     SourceKey: content

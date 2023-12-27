@@ -43,9 +43,9 @@
 ``` YAML
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /var/log/mysql/
-    FilePattern: error.log 
+  - Type: input_file
+    FilePaths: 
+      - /var/log/mysql/error.log
 processors:
   - Type: processor_regex
     SourceKey: content

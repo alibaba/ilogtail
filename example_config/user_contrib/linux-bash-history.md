@@ -13,7 +13,7 @@
 * 将文件保存时覆盖写切换成追加写。
 * 文件超过规定大小前，及时归档，避免原始文件被重写导致重复采集。
 
-```
+```text
 # 设置追加而不是覆盖
 shopt -s histappend  
 export HISTTIMEFORMAT="%F %T "
@@ -29,7 +29,7 @@ fi
 
 ## 日志输入样例
 
-```
+```text
 #1685803902
 cat user_log_config.json
 #1685803906
@@ -40,7 +40,7 @@ exit
 
 ## 日志输出样例
 
-```
+```json
 {
     "__tag__:__path__": "/root/.bash_history",
     "cmd": "cat user_log_config.json",
@@ -62,13 +62,12 @@ exit
 
 ## 采集配置
 
-```
+```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /root/
-    FilePattern: .bash_history
-    MaxDepth: 0
+  - Type: input_file         
+    FilePaths: 
+      - /root/.bash_history
 processors:
   - Type: processor_split_log_regex
     SplitRegex: \#\d+
@@ -96,10 +95,9 @@ flushers:
 
 备注：以上采集配置只会采集`root`用户的操作，如果需要采集其他用户的`.bash_history`，在上述采集配置基础上调整路径即可：
 
-```
+```yaml
 inputs:
-  - Type: file_log
-    LogPath: /homme/
-    FilePattern: .bash_history
-    MaxDepth: 1
+  - Type: input_file
+    FilePaths:
+      - /others/.bash_history
 ```

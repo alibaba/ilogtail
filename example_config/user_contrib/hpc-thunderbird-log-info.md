@@ -42,9 +42,9 @@
 ``` yaml
 enable: true
 inputs:
-  - Type: file_log         
-    LogPath: .              
-    FilePattern: hpc-info.log 
+  - Type: input_file
+    FilePaths: 
+      - ./hpc-info.log
 processors:
   - Type: processor_regex
     SourceKey: content

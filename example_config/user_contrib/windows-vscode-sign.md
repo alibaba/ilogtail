@@ -38,10 +38,9 @@
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: .
-    FilePattern: vscode_Microsoft_sign.log
-    MaxDepth: 0
+  - Type: input_file
+    FilePaths: 
+      - ./vscode_Microsoft_sign.log
 processors:
   - Type: processor_regex
     SourceKey: content

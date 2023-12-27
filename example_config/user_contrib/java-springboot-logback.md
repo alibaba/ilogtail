@@ -141,9 +141,9 @@ logging.config = /home/tomcat/conf/logback-spring.xml
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/tomcat/logs/app
-    FilePattern: app.*.ing
+  - Type: input_file
+    FilePaths: 
+      - /home/tomcat/logs/app/app.*.ing
 processors:
   - Type: processor_split_log_regex
     SplitRegex: \d+-\d+-\d+\s\d+:\d+:\d+\.\d+\|.*
@@ -185,9 +185,9 @@ flushers:
 ```yaml
 enable: true
 inputs:
-  - Type: file_log
-    LogPath: /home/tomcat/logs/err
-    FilePattern: err.*.ing
+  - Type: input_file
+    FilePaths: 
+      - /home/tomcat/logs/err/err.*.ing
 processors:
   - Type: processor_split_log_regex
     SplitRegex: \d+-\d+-\d+\s\d+:\d+:\d+\.\d+\|.*

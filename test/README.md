@@ -6,7 +6,7 @@ test scenario is not met, the pluggable structure is provided to extend. Current
 provided, namely [validator](docs/How-to-write-test-engine-plugin.md)
 and [subscriber](docs/How-to-write-test-engine-plugin.md).
 
-# DataFlow
+## DataFlow
 
 When the test case config is loaded, Test Engine would start a virtual environment to do the test case. ILogtail
 container would transfer the telemetry data to the selected Subscriber. LogValidator and SysValidator would valid the
@@ -14,13 +14,13 @@ received telemetry data according to the given configuration, such as valid log 
 log num. In addition, SysValidator also read the ILogtail CPU and memory cost to do performance check.
 ![e2e_data_flow](./dataflow.png)
 
-# Contribution
+## Contribution
 
 If you want to add custom plugins for Test Engine, please read the [doc](./docs/How-to-write-test-engine-plugin.md).
 
-# Config Test Case
+## Config Test Case
 
-## Define the test process
+### Define the test process
 
 The following configuration is to test nginx plugin behavior, the case would help you to learn how to config a test
 case.
@@ -96,11 +96,11 @@ verify:
 testing_interval: 15s
 ```
 
-## Define dependency environment
+### Define dependency environment
 
 If you only depends on the ILogtail container, please skip the part.
 
-### Docker-Compose Environment
+#### Docker-Compose Environment
 
 Only need to define a `docker-compose.yaml` without any ILogtail configuration.
 
@@ -122,7 +122,7 @@ services:
       retries: 3
 ```
 
-## Try to run nginx test demo
+### Try to run nginx test demo
 
 In the root dir，the test reports are contained in `beaverhor-test/report` dir after executing the following commands.
 `TEST_SCOPE=input_nginx  TEST_DEBUG=true   make e2e`
