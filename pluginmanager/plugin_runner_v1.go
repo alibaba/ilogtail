@@ -434,16 +434,16 @@ func (p *pluginv1Runner) ReceiveRawLog(log *pipeline.LogWithContext) {
 func (p *pluginv1Runner) ReceiveLogGroup(logGroup pipeline.LogGroupWithContext) {
 	topic := logGroup.LogGroup.GetTopic()
 	for _, log := range logGroup.LogGroup.Logs {
-		context := map[string]interface{}{}
-		for key, value := range logGroup.Context {
-			context[key] = value
-		}
-		context[ctxKeyTopic] = topic
 		if len(topic) > 0 {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagKeyLogTopic, Value: topic})
 		}
 		// When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
 		if !p.LogstoreConfig.GlobalConfig.UsingOldContentTag {
+			context := map[string]interface{}{}
+			for key, value := range logGroup.Context {
+				context[key] = value
+			}
+			context[ctxKeyTopic] = topic
 			context[ctxKeyTags] = logGroup.LogGroup.LogTags
 			p.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: context})
 		} else {
