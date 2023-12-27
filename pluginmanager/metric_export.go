@@ -20,5 +20,5 @@ func GetMetrics() string {
 		//config.Context.GetMetricRecords()
 		metrics = append(metrics, config.Context.GetMetricRecords()...)
 	}
-	return "taiye-123"
+	return "[{\"label.config_name\":\"##1.0##adb5-log-hangzhou$access-log\",\"label.logstore\":\"rc-access-log\",\"label.plugin_name\":\"processor_csv\",\"label.plugin_id\":1,\"label.project\":\"test\",\"label.region\":\"cn-shanghai\",\"proc_in_records_total\":123,\"proc_out_records_total\":123,\"proc_time_ms\":123},{\"label.config_name\":\"##1.0##adb5-log-hangzhou$access-log\",\"label.logstore\":\"rc-access-log\",\"label.plugin_name\":\"processor_regex\",\"label.plugin_id\":2,\"label.project\":\"test\",\"label.region\":\"cn-shanghai\",\"proc_in_records_total\":123,\"proc_out_records_total\":123,\"proc_time_ms\":123}]"
 }

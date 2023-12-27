@@ -18,6 +18,9 @@ void MetricExportor::PushMetrics(bool forceSend) {
     if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
         return;
     }
+
+    LogtailPlugin::GetInstance()->GetPipelineMetrics();
+
     ReadMetrics::GetInstance()->UpdateMetrics();
     
     std::map<std::string, sls_logs::LogGroup*> logGroupMap;

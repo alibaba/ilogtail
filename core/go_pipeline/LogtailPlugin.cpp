@@ -517,6 +517,14 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     }
 }
 
+void LogtailPlugin::GetPipelineMetrics() {
+    if (mGetPipelineMetricsFun != nullptr) {
+        GoString result = mGetPipelineMetricsFun();
+        std::string resultStr = std::string(result.c_str, result.size());
+        LOG_WARNING(sLogger, ("GetPipelineMetrics", resultStr));
+    }
+}
+
 K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
     if (mPluginValid && mGetContainerMetaFun != nullptr) {
         GoString id;
