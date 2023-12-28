@@ -39,7 +39,6 @@ private:
     bool mUploadRawLog = false;
     bool mSourceKeyOverwritten = false;
     std::string mRawLogTag;
-    bool mRawLogTagOverwritten = false;
 
     int* mParseFailures = nullptr;
     int* mLogGroupSize = nullptr;
@@ -49,7 +48,11 @@ private:
     CounterPtr mProcDiscardRecordsTotal;
     CounterPtr mProcParseErrorTotal;
 
-    bool JsonLogLineParser(LogEvent& sourceEvent, const StringView& logPath, PipelineEventPtr& e);
+    bool JsonLogLineParser(LogEvent& sourceEvent,
+                           const StringView& logPath,
+                           PipelineEventPtr& e,
+                           bool& sourceKeyOverwritten,
+                           bool& rawLogTagOverwritten);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     static std::string RapidjsonValueToString(const rapidjson::Value& value);
