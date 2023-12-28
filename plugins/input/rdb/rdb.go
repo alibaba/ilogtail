@@ -79,7 +79,7 @@ type Rdb struct {
 	waitGroup             sync.WaitGroup
 	Context               pipeline.Context
 
-	metricRecord     pipeline.MetricsRecord
+	metricRecord     *pipeline.MetricsRecord
 	collectLatency   pipeline.LatencyMetric
 	collectTotal     pipeline.CounterMetric
 	checkpointMetric pipeline.StringMetric

@@ -34,7 +34,7 @@ type ProcessorPickKey struct {
 	includeLen int
 	excludeLen int
 
-	metricRecord    pipeline.MetricsRecord
+	metricRecord    *pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context

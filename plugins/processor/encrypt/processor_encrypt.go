@@ -67,7 +67,7 @@ type ProcessorEncrypt struct {
 	key       []byte
 	iv        []byte
 
-	metricRecord         pipeline.MetricsRecord
+	metricRecord         *pipeline.MetricsRecord
 	encryptedCountMetric pipeline.CounterMetric
 	encryptedBytesMetric pipeline.CounterMetric
 }
@@ -91,10 +91,10 @@ func (p *ProcessorEncrypt) Init(context pipeline.Context) error {
 	labels["project"] = p.context.GetProject()
 	labels["logstore"] = p.context.GetLogstore()
 	labels["configName"] = p.context.GetConfigName()
-	metricRecord := p.context.RegisterMetricRecord(labels)
+	p.metricRecord = p.context.RegisterMetricRecord(labels)
 
-	p.encryptedCountMetric = helper.NewCounterMetricAndRegister(metricRecord, "encrypted_count", p.context)
-	p.encryptedBytesMetric = helper.NewCounterMetricAndRegister(metricRecord, "encrypted_bytes", p.context)
+	p.encryptedCountMetric = helper.NewCounterMetricAndRegister(p.metricRecord, "encrypted_count", p.context)
+	p.encryptedBytesMetric = helper.NewCounterMetricAndRegister(p.metricRecord, "encrypted_bytes", p.context)
 	return nil
 }
 

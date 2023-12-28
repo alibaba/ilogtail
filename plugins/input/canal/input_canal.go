@@ -157,7 +157,7 @@ type ServiceCanal struct {
 	lastErrorCount     int
 	lastErrorChan      chan error
 
-	metricRecord      pipeline.MetricsRecord
+	metricRecord      *pipeline.MetricsRecord
 	rotateCounter     pipeline.CounterMetric
 	syncCounter       pipeline.CounterMetric
 	ddlCounter        pipeline.CounterMetric
@@ -197,16 +197,16 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 	labels["project"] = sc.context.GetProject()
 	labels["logstore"] = sc.context.GetLogstore()
 	labels["configName"] = sc.context.GetConfigName()
-	metricRecord := sc.context.RegisterMetricRecord(labels)
+	sc.metricRecord = sc.context.RegisterMetricRecord(labels)
 
-	sc.rotateCounter = helper.NewCounterMetricAndRegister(metricRecord, "binlog_rotate", context)
-	sc.syncCounter = helper.NewCounterMetricAndRegister(metricRecord, "binlog_sync", context)
-	sc.ddlCounter = helper.NewCounterMetricAndRegister(metricRecord, "binlog_ddl", context)
-	sc.rowCounter = helper.NewCounterMetricAndRegister(metricRecord, "binlog_row", context)
-	sc.xgidCounter = helper.NewCounterMetricAndRegister(metricRecord, "binlog_xgid", context)
-	sc.checkpointCounter = helper.NewCounterMetricAndRegister(metricRecord, "binlog_checkpoint", context)
-	sc.lastBinLogMetric = helper.NewStringMetricAndRegister(metricRecord, "binlog_filename", context)
-	sc.lastGTIDMetric = helper.NewStringMetricAndRegister(metricRecord, "binlog_gtid", context)
+	sc.rotateCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_rotate", context)
+	sc.syncCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_sync", context)
+	sc.ddlCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_ddl", context)
+	sc.rowCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_row", context)
+	sc.xgidCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_xgid", context)
+	sc.checkpointCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_checkpoint", context)
+	sc.lastBinLogMetric = helper.NewStringMetricAndRegister(sc.metricRecord, "binlog_filename", context)
+	sc.lastGTIDMetric = helper.NewStringMetricAndRegister(sc.metricRecord, "binlog_gtid", context)
 
 	return 0, nil
 }

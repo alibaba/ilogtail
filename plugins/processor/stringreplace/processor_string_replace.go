@@ -36,7 +36,7 @@ type ProcessorStringReplace struct {
 
 	re            *regexp2.Regexp
 	context       pipeline.Context
-	metricRecord  pipeline.MetricsRecord
+	metricRecord  *pipeline.MetricsRecord
 	logPairMetric pipeline.CounterMetric
 }
 

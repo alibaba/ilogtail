@@ -51,11 +51,11 @@ type Context interface {
 
 	GetMetricRecords() []map[string]string
 
-	RegisterMetricRecord(labels map[string]string) MetricsRecord
+	RegisterMetricRecord(labels map[string]string) *MetricsRecord
 
-	RegisterCounterMetric(metricsRecord MetricsRecord, metric CounterMetric)
-	RegisterStringMetric(metricsRecord MetricsRecord, metric StringMetric)
-	RegisterLatencyMetric(metricsRecord MetricsRecord, metric LatencyMetric)
+	RegisterCounterMetric(metricsRecord *MetricsRecord, metric CounterMetric)
+	RegisterStringMetric(metricsRecord *MetricsRecord, metric StringMetric)
+	RegisterLatencyMetric(metricsRecord *MetricsRecord, metric LatencyMetric)
 
 	SaveCheckPoint(key string, value []byte) error
 	GetCheckPoint(key string) (value []byte, exist bool)

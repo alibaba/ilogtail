@@ -265,8 +265,9 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 }
 
 //export GetPipelineMetrics
-func GetPipelineMetrics() string {
-	return pluginmanager.GetMetrics()
+func GetPipelineMetrics() *C.char {
+	cStr := C.CString(pluginmanager.GetMetrics())
+	return cStr
 }
 
 func initPluginBase(cfgStr string) int {

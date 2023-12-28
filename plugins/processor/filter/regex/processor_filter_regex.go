@@ -38,7 +38,7 @@ type ProcessorRegexFilter struct {
 	includeRegex map[string]*regexp.Regexp
 	excludeRegex map[string]*regexp.Regexp
 
-	metricRecord    pipeline.MetricsRecord
+	metricRecord    *pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context

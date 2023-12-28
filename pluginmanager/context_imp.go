@@ -29,7 +29,7 @@ import (
 )
 
 type ContextImp struct {
-	MetricsRecords []pipeline.MetricsRecord
+	MetricsRecords []*pipeline.MetricsRecord
 
 	common      *pkg.LogtailContextMeta
 	pluginNames string
@@ -96,7 +96,7 @@ func (p *ContextImp) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMeta(project, logstore, configName)
 }
 
-func (p *ContextImp) RegisterMetricRecord(labels map[string]string) pipeline.MetricsRecord {
+func (p *ContextImp) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 	procInRecordsTotal := helper.NewCounterMetric("proc_in_records_total")
@@ -120,8 +120,8 @@ func (p *ContextImp) RegisterMetricRecord(labels map[string]string) pipeline.Met
 		StringMetrics:  stringMetrics,
 		LatencyMetrics: latencyMetric,
 	}
-	p.MetricsRecords = append(p.MetricsRecords, metricRecord)
-	return metricRecord
+	p.MetricsRecords = append(p.MetricsRecords, &metricRecord)
+	return &metricRecord
 }
 
 func (p *ContextImp) GetMetricRecords() (results []map[string]string) {
@@ -130,27 +130,36 @@ func (p *ContextImp) GetMetricRecords() (results []map[string]string) {
 
 	results = make([]map[string]string, 0)
 	for _, metricRecord := range p.MetricsRecords {
+		fmt.Println("GetMetricRecords", metricRecord)
+
 		oneResult := make(map[string]string)
 		for key, value := range metricRecord.Labels {
-			oneResult[key] = value
+			oneResult["label."+key] = value
 		}
 		for _, counterMetric := range metricRecord.CounterMetrics {
-			oneResult[counterMetric.Name()] = strconv.FormatInt(counterMetric.Get(), 10)
+			fmt.Println("GetMetricRecords key:", "key."+counterMetric.Name())
+			fmt.Println("GetMetricRecords value:", strconv.FormatInt(counterMetric.Get(), 10))
+
+			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.Get(), 10)
 		}
 		results = append(results, oneResult)
 	}
 	return results
 }
 
-func (p *ContextImp) RegisterCounterMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.CounterMetric) {
+func (p *ContextImp) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {
 	metricsRecord.CounterMetrics = append(metricsRecord.CounterMetrics, metric)
+
+	jsonData, _ := json.Marshal(metricsRecord)
+	fmt.Println("RegisterCounterMetric:", string(jsonData))
+	fmt.Println("RegisterCounterMetric counterLength:", len(metricsRecord.CounterMetrics))
 }
 
-func (p *ContextImp) RegisterStringMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.StringMetric) {
+func (p *ContextImp) RegisterStringMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.StringMetric) {
 	metricsRecord.StringMetrics = append(metricsRecord.StringMetrics, metric)
 }
 
-func (p *ContextImp) RegisterLatencyMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.LatencyMetric) {
+func (p *ContextImp) RegisterLatencyMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.LatencyMetric) {
 	metricsRecord.LatencyMetrics = append(metricsRecord.LatencyMetrics, metric)
 }
 

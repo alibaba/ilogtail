@@ -40,7 +40,7 @@ type ProcessorRegex struct {
 	SourceKey              string
 
 	context       pipeline.Context
-	metricRecord  pipeline.MetricsRecord
+	metricRecord  *pipeline.MetricsRecord
 	logPairMetric pipeline.CounterMetric
 	re            *regexp.Regexp
 }

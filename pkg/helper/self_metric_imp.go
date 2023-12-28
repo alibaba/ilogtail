@@ -170,25 +170,25 @@ func NewLatencyMetric(n string) pipeline.LatencyMetric {
 	return &LatMetric{name: n}
 }
 
-func NewCounterMetricAndRegister(metricsRecord pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.CounterMetric {
+func NewCounterMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.CounterMetric {
 	metric := &NormalMetric{name: n}
 	c.RegisterCounterMetric(metricsRecord, metric)
 	return metric
 }
 
-func NewAverageMetricAndRegister(metricsRecord pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.CounterMetric {
+func NewAverageMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.CounterMetric {
 	metric := &AvgMetric{name: n}
 	c.RegisterCounterMetric(metricsRecord, metric)
 	return metric
 }
 
-func NewStringMetricAndRegister(metricsRecord pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.StringMetric {
+func NewStringMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.StringMetric {
 	metric := &StrMetric{name: n}
 	c.RegisterStringMetric(metricsRecord, metric)
 	return metric
 }
 
-func NewLatencyMetricAndRegister(metricsRecord pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.LatencyMetric {
+func NewLatencyMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string, c pipeline.Context) pipeline.LatencyMetric {
 	metric := &LatMetric{name: n}
 	c.RegisterLatencyMetric(metricsRecord, metric)
 	return metric

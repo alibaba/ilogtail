@@ -38,7 +38,7 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 }
 
 type EmptyContext struct {
-	MetricsRecords []pipeline.MetricsRecord
+	MetricsRecords []*pipeline.MetricsRecord
 	common         *pkg.LogtailContextMeta
 	ctx            context.Context
 	checkpoint     map[string][]byte
@@ -69,7 +69,7 @@ func (p *EmptyContext) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
 }
 
-func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) pipeline.MetricsRecord {
+func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 	procInRecordsTotal := helper.NewCounterMetric("proc_in_records_total")
@@ -93,8 +93,8 @@ func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) pipeline.M
 		StringMetrics:  stringMetrics,
 		LatencyMetrics: latencyMetric,
 	}
-	p.MetricsRecords = append(p.MetricsRecords, metricRecord)
-	return metricRecord
+	p.MetricsRecords = append(p.MetricsRecords, &metricRecord)
+	return &metricRecord
 }
 
 func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {
@@ -115,15 +115,15 @@ func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {
 	return results
 }
 
-func (p *EmptyContext) RegisterCounterMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.CounterMetric) {
+func (p *EmptyContext) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {
 	metricsRecord.CounterMetrics = append(metricsRecord.CounterMetrics, metric)
 }
 
-func (p *EmptyContext) RegisterStringMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.StringMetric) {
+func (p *EmptyContext) RegisterStringMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.StringMetric) {
 	metricsRecord.StringMetrics = append(metricsRecord.StringMetrics, metric)
 }
 
-func (p *EmptyContext) RegisterLatencyMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.LatencyMetric) {
+func (p *EmptyContext) RegisterLatencyMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.LatencyMetric) {
 	metricsRecord.LatencyMetrics = append(metricsRecord.LatencyMetrics, metric)
 }
 

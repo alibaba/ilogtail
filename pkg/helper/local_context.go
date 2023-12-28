@@ -27,7 +27,7 @@ import (
 )
 
 type LocalContext struct {
-	MetricsRecords []pipeline.MetricsRecord
+	MetricsRecords []*pipeline.MetricsRecord
 
 	AllCheckPoint map[string][]byte
 
@@ -70,7 +70,7 @@ func (p *LocalContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 	return nil, nil
 }
 
-func (p *LocalContext) RegisterMetricRecord(labels map[string]string) pipeline.MetricsRecord {
+func (p *LocalContext) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 	procInRecordsTotal := NewCounterMetric("proc_in_records_total")
@@ -94,8 +94,8 @@ func (p *LocalContext) RegisterMetricRecord(labels map[string]string) pipeline.M
 		StringMetrics:  stringMetrics,
 		LatencyMetrics: latencyMetric,
 	}
-	p.MetricsRecords = append(p.MetricsRecords, metricRecord)
-	return metricRecord
+	p.MetricsRecords = append(p.MetricsRecords, &metricRecord)
+	return &metricRecord
 }
 
 func (p *LocalContext) GetMetricRecords() (results []map[string]string) {

@@ -160,7 +160,7 @@ type ServiceDockerStdout struct {
 	// for tracker
 	tracker *helper.ReaderMetricTracker
 
-	metricRecord pipeline.MetricsRecord
+	metricRecord *pipeline.MetricsRecord
 
 	avgInstanceMetric pipeline.CounterMetric
 	addMetric         pipeline.CounterMetric

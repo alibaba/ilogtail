@@ -525,9 +525,10 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
 
 void LogtailPlugin::GetPipelineMetrics() {
     if (mGetPipelineMetricsFun != nullptr) {
-        GoString result = mGetPipelineMetricsFun();
-        std::string resultStr = std::string(result.p, result.n);
+        char* result = mGetPipelineMetricsFun();
+        std::string resultStr(result);
         LOG_WARNING(sLogger, ("GetPipelineMetrics", resultStr));
+        free(result);
     }
 }
 

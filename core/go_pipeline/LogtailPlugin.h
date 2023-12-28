@@ -122,7 +122,7 @@ typedef GoInt (*InitPluginBaseV2Fun)(GoString cfg);
 typedef GoInt (*ProcessLogsFun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
 typedef GoInt (*ProcessLogGroupFun)(GoString c, GoSlice l, GoString p);
 typedef struct innerContainerMeta* (*GetContainerMetaFun)(GoString containerID);
-typedef GoString (*GetPipelineMetricsFun)();
+typedef char* (*GetPipelineMetricsFun)();
 
 // Methods export by adapter.
 typedef int (*IsValidToSendFun)(long long logstoreKey);

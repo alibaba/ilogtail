@@ -33,7 +33,7 @@ type ProcessorKeyFilter struct {
 	includeRegex []*regexp.Regexp
 	excludeRegex []*regexp.Regexp
 
-	metricRecord    pipeline.MetricsRecord
+	metricRecord    *pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context

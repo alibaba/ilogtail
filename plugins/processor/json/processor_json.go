@@ -19,6 +19,7 @@ import (
 
 	"github.com/buger/jsonparser"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -38,7 +39,9 @@ type ProcessorJSON struct {
 	IgnoreFirstConnector   bool // 是否忽略第一个Connector
 	ExpandArray            bool // 是否展开数组类型
 
-	context pipeline.Context
+	context      pipeline.Context
+	metricRecord *pipeline.MetricsRecord
+	addMetric    pipeline.CounterMetric
 }
 
 const pluginName = "processor_json"
@@ -49,6 +52,15 @@ func (p *ProcessorJSON) Init(context pipeline.Context) error {
 		return fmt.Errorf("must specify SourceKey for plugin %v", pluginName)
 	}
 	p.context = context
+
+	labels := make(map[string]string)
+	labels["project"] = p.context.GetProject()
+	labels["logstore"] = p.context.GetLogstore()
+	labels["configName"] = p.context.GetConfigName()
+	labels["plugin_name"] = pluginName
+	p.metricRecord = p.context.RegisterMetricRecord(labels)
+	p.addMetric = helper.NewCounterMetric("add_container")
+	p.context.RegisterCounterMetric(p.metricRecord, p.addMetric)
 	return nil
 }
 
@@ -65,6 +77,7 @@ func (p *ProcessorJSON) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 
 func (p *ProcessorJSON) processLog(log *protocol.Log) {
 	findKey := false
+	p.addMetric.Add(2)
 	for idx := range log.Contents {
 		if log.Contents[idx].Key == p.SourceKey {
 			objectVal := log.Contents[idx].Value

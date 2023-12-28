@@ -29,7 +29,7 @@ type ProcessorDropLastKey struct {
 
 	includeMap map[string]struct{}
 
-	metricRecord pipeline.MetricsRecord
+	metricRecord *pipeline.MetricsRecord
 	filterMetric pipeline.CounterMetric
 	context      pipeline.Context
 }

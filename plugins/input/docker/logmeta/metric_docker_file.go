@@ -81,7 +81,7 @@ type InputDockerFile struct {
 	lastClearTime        time.Time
 	updateEmptyFlag      bool
 
-	metricRecord      pipeline.MetricsRecord
+	metricRecord      *pipeline.MetricsRecord
 	avgInstanceMetric pipeline.CounterMetric
 	addMetric         pipeline.CounterMetric
 	updateMetric      pipeline.CounterMetric

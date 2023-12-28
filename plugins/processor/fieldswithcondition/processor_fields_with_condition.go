@@ -44,7 +44,7 @@ type ProcessorFieldsWithCondition struct {
 	DropIfNotMatchCondition bool        `comment:"Optional. When the case condition is not met, whether the log is discarded (true) or retained (false)"`
 	Switch                  []Condition `comment:"The switch-case conditions"`
 
-	metricRecord    pipeline.MetricsRecord
+	metricRecord    *pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
