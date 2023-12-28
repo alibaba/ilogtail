@@ -16,9 +16,10 @@ package goprofile
 
 import (
 	"errors"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"net"
 	"strconv"
+
+	"github.com/alibaba/ilogtail/pkg/util"
 
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery"
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery/targetgroup"
