@@ -856,6 +856,14 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:17:04,1]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
             }
         ]
     })";
@@ -878,10 +886,10 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "microtime": "1693833304000000"
+                    "microtime": "1693833304862181"
                 },
                 "timestamp": 1693833304,
-                "timestampNanosecond": 0,
+                "timestampNanosecond": 862181000,
                 "type": 1
             },
             {
@@ -895,6 +903,18 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
                 "timestamp": 1693833364,
                 "timestampNanosecond": 0,
                 "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "100",
+                    "AppConfigBase AppConfigBase": "success",
+                    "__LEVEL__": "INFO",
+                    "__THREAD__": "385658",
+                    "microtime": "1693833424100000"
+                },
+                "timestamp": 1693833424,
+                "timestampNanosecond": 100000000,
+                "type": 1
             }
         ]
     })";
@@ -902,8 +922,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     // check observablity
     APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().parseFailures);
-    APSARA_TEST_EQUAL_FATAL(uint64_t(2), processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(2), processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(3), processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(3), processorInstance.mProcOutRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcParseErrorTotal->GetValue());
 }
