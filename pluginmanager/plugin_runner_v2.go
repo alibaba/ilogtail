@@ -73,10 +73,11 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	return nil
 }
 
-func (p *pluginv2Runner) Initialized() error {
+func (p *pluginv2Runner) Initialized(pluginNum int) error {
 	if len(p.AggregatorPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
-		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
+		pluginNum++
+		if err := loadAggregator("aggregator_default", pluginNum, p.LogstoreConfig, nil); err != nil {
 			return err
 		}
 	}
@@ -84,7 +85,7 @@ func (p *pluginv2Runner) Initialized() error {
 	return nil
 }
 
-func (p *pluginv2Runner) AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
+func (p *pluginv2Runner) AddPlugin(pluginName string, pluginNum int, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:
 		if metric, ok := plugin.(pipeline.MetricInputV2); ok {

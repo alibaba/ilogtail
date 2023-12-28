@@ -16,6 +16,7 @@ package pluginmanager
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/models"
@@ -45,11 +46,12 @@ type FlusherWrapperV2 struct {
 	Flusher pipeline.FlusherV2
 }
 
-func (wrapper *FlusherWrapperV1) Init(name string) error {
+func (wrapper *FlusherWrapperV1) Init(name string, pluginNum int) error {
 	labels := make(map[string]string)
 	labels["project"] = wrapper.Config.Context.GetProject()
 	labels["logstore"] = wrapper.Config.Context.GetLogstore()
-	labels["configName"] = wrapper.Config.Context.GetConfigName()
+	labels["config_name"] = wrapper.Config.Context.GetConfigName()
+	labels["plugin_id"] = strconv.FormatInt(int64(pluginNum), 10)
 	labels["plugin_name"] = name
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 

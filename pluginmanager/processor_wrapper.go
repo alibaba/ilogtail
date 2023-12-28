@@ -16,6 +16,7 @@ package pluginmanager
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -43,11 +44,12 @@ type ProcessorWrapperV2 struct {
 	Processor pipeline.ProcessorV2
 }
 
-func (wrapper *ProcessorWrapperV1) Init(name string) error {
+func (wrapper *ProcessorWrapperV1) Init(name string, pluginNum int) error {
 	labels := make(map[string]string)
 	labels["project"] = wrapper.Config.Context.GetProject()
 	labels["logstore"] = wrapper.Config.Context.GetLogstore()
-	labels["configName"] = wrapper.Config.Context.GetConfigName()
+	labels["config_name"] = wrapper.Config.Context.GetConfigName()
+	labels["plugin_id"] = strconv.FormatInt(int64(pluginNum), 10)
 	labels["plugin_name"] = name
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 

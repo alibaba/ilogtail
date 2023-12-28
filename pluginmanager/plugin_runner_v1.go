@@ -63,24 +63,26 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	return nil
 }
 
-func (p *pluginv1Runner) Initialized() error {
+func (p *pluginv1Runner) Initialized(pluginNum int) error {
 	if len(p.AggregatorPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
-		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
+		pluginNum++
+		if err := loadAggregator("aggregator_default", pluginNum, p.LogstoreConfig, nil); err != nil {
 			return err
 		}
 	}
 	if len(p.FlusherPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
 		category, options := flags.GetFlusherConfiguration()
-		if err := loadFlusher(category, p.LogstoreConfig, options); err != nil {
+		pluginNum++
+		if err := loadFlusher(category, pluginNum, p.LogstoreConfig, options); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
+func (p *pluginv1Runner) AddPlugin(pluginName string, pluginNum int, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:
 		if metric, ok := plugin.(pipeline.MetricInputV1); ok {
@@ -92,7 +94,7 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, p
 		}
 	case pluginProcessor:
 		if processor, ok := plugin.(pipeline.ProcessorV1); ok {
-			return p.addProcessor(pluginName, processor, config["priority"].(int))
+			return p.addProcessor(pluginName, pluginNum, processor, config["priority"].(int))
 		}
 	case pluginAggregator:
 		if aggregator, ok := plugin.(pipeline.AggregatorV1); ok {
@@ -100,7 +102,7 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, p
 		}
 	case pluginFlusher:
 		if flusher, ok := plugin.(pipeline.FlusherV1); ok {
-			return p.addFlusher(pluginName, flusher)
+			return p.addFlusher(pluginName, pluginNum, flusher)
 		}
 	case pluginExtension:
 		if extension, ok := plugin.(pipeline.Extension); ok {
@@ -152,14 +154,14 @@ func (p *pluginv1Runner) addServiceInput(input pipeline.ServiceInputV1) error {
 	return nil
 }
 
-func (p *pluginv1Runner) addProcessor(name string, processor pipeline.ProcessorV1, priority int) error {
+func (p *pluginv1Runner) addProcessor(name string, pluginNum int, processor pipeline.ProcessorV1, priority int) error {
 	var wrapper ProcessorWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Processor = processor
 	wrapper.LogsChan = p.LogsChan
 	wrapper.Priority = priority
 	p.ProcessorPlugins = append(p.ProcessorPlugins, &wrapper)
-	return wrapper.Init(name)
+	return wrapper.Init(name, pluginNum)
 }
 
 func (p *pluginv1Runner) addAggregator(aggregator pipeline.AggregatorV1) error {
@@ -180,14 +182,14 @@ func (p *pluginv1Runner) addAggregator(aggregator pipeline.AggregatorV1) error {
 	return nil
 }
 
-func (p *pluginv1Runner) addFlusher(name string, flusher pipeline.FlusherV1) error {
+func (p *pluginv1Runner) addFlusher(name string, pluginNum int, flusher pipeline.FlusherV1) error {
 	var wrapper FlusherWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Flusher = flusher
 	wrapper.LogGroupsChan = p.LogGroupsChan
 	wrapper.Interval = time.Millisecond * time.Duration(p.LogstoreConfig.GlobalConfig.FlushIntervalMs)
 	p.FlusherPlugins = append(p.FlusherPlugins, &wrapper)
-	return wrapper.Init(name)
+	return wrapper.Init(name, pluginNum)
 }
 
 func (p *pluginv1Runner) addExtension(name string, extension pipeline.Extension) error {

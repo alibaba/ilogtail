@@ -59,7 +59,7 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 
 	// create if not found
 	typeWithID := genEmbeddedPluginName(getPluginType(name))
-	err := loadExtension(typeWithID, p.logstoreC, cfg)
+	err := loadExtension(typeWithID, 0, p.logstoreC, cfg)
 	if err != nil {
 		return nil, err
 	}
