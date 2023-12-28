@@ -15,24 +15,66 @@
 package pluginmanager
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type ProcessorWrapper struct {
+type CommonWrapper struct {
+	pipeline.PluginContext
+
+	Config              *LogstoreConfig
+	procInRecordsTotal  pipeline.CounterMetric
+	procOutRecordsTotal pipeline.CounterMetric
+	procTimeMS          pipeline.CounterMetric
+}
+
+type ProcessorWrapperV1 struct {
+	CommonWrapper
 	Processor pipeline.ProcessorV1
-	Config    *LogstoreConfig
 	LogsChan  chan *pipeline.LogWithContext
-	Priority  int
 }
 
-type ProcessorWrapperArray []*ProcessorWrapper
+type ProcessorWrapperV2 struct {
+	CommonWrapper
+	Processor pipeline.ProcessorV2
+	LogsChan  chan *pipeline.LogWithContext
+}
 
-func (c ProcessorWrapperArray) Len() int {
-	return len(c)
+func (wrapper *ProcessorWrapperV1) Init(name string) error {
+	labels := make(map[string]string)
+	labels["project"] = wrapper.Config.Context.GetProject()
+	labels["logstore"] = wrapper.Config.Context.GetLogstore()
+	labels["configName"] = wrapper.Config.Context.GetConfigName()
+	labels["plugin_name"] = name
+	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
+
+	fmt.Println("wrapper :", wrapper.MetricRecord)
+
+	wrapper.procInRecordsTotal = wrapper.MetricRecord.CommonMetrics.ProcInRecordsTotal
+	wrapper.procOutRecordsTotal = wrapper.MetricRecord.CommonMetrics.ProcOutRecordsTotal
+	wrapper.procTimeMS = wrapper.MetricRecord.CommonMetrics.ProcTimeMS
+
+	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
+	return wrapper.Processor.Init(wrapper.Config.Context)
 }
-func (c ProcessorWrapperArray) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
+
+func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol.Log {
+	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
+	startTime := time.Now()
+	result := wrapper.Processor.ProcessLogs(logArray)
+	wrapper.procTimeMS.Add(int64(time.Since(startTime)))
+	wrapper.procOutRecordsTotal.Add(int64(len(result)))
+	return result
 }
-func (c ProcessorWrapperArray) Less(i, j int) bool {
-	return c[i].Priority < c[j].Priority
+
+func (wrapper *ProcessorWrapperV2) Init(name string) error {
+	return wrapper.Processor.Init(wrapper.Config.Context)
+}
+
+func (wrapper *ProcessorWrapperV2) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
+	wrapper.Processor.Process(in, context)
 }

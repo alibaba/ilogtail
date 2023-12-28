@@ -32,7 +32,7 @@ type pluginv1Runner struct {
 
 	MetricPlugins     []*MetricWrapper
 	ServicePlugins    []*ServiceWrapper
-	ProcessorPlugins  []*ProcessorWrapper
+	ProcessorPlugins  []*ProcessorWrapperV1
 	AggregatorPlugins []*AggregatorWrapper
 	FlusherPlugins    []*FlusherWrapper
 	ExtensionPlugins  map[string]pipeline.Extension
@@ -53,7 +53,7 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.FlushControl = pipeline.NewAsyncControl()
 	p.MetricPlugins = make([]*MetricWrapper, 0)
 	p.ServicePlugins = make([]*ServiceWrapper, 0)
-	p.ProcessorPlugins = make([]*ProcessorWrapper, 0)
+	p.ProcessorPlugins = make([]*ProcessorWrapperV1, 0)
 	p.AggregatorPlugins = make([]*AggregatorWrapper, 0)
 	p.FlusherPlugins = make([]*FlusherWrapper, 0)
 	p.ExtensionPlugins = make(map[string]pipeline.Extension, 0)
@@ -92,7 +92,7 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, p
 		}
 	case pluginProcessor:
 		if processor, ok := plugin.(pipeline.ProcessorV1); ok {
-			return p.addProcessor(processor, config["priority"].(int))
+			return p.addProcessor(pluginName, processor, config["priority"].(int))
 		}
 	case pluginAggregator:
 		if aggregator, ok := plugin.(pipeline.AggregatorV1); ok {
@@ -152,14 +152,14 @@ func (p *pluginv1Runner) addServiceInput(input pipeline.ServiceInputV1) error {
 	return nil
 }
 
-func (p *pluginv1Runner) addProcessor(processor pipeline.ProcessorV1, priority int) error {
-	var wrapper ProcessorWrapper
+func (p *pluginv1Runner) addProcessor(name string, processor pipeline.ProcessorV1, priority int) error {
+	var wrapper ProcessorWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Processor = processor
 	wrapper.LogsChan = p.LogsChan
 	wrapper.Priority = priority
 	p.ProcessorPlugins = append(p.ProcessorPlugins, &wrapper)
-	return nil
+	return wrapper.Init(name)
 }
 
 func (p *pluginv1Runner) addAggregator(aggregator pipeline.AggregatorV1) error {
@@ -240,7 +240,7 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 			logs := []*protocol.Log{logCtx.Log}
 			p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(logs)))
 			for _, processor := range p.ProcessorPlugins {
-				logs = processor.Processor.ProcessLogs(logs)
+				logs = processor.Process(logs)
 				if len(logs) == 0 {
 					break
 				}

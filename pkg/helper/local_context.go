@@ -27,7 +27,8 @@ import (
 )
 
 type LocalContext struct {
-	MetricsRecords []*pipeline.MetricsRecord
+	MetricsRecords   []*pipeline.MetricsRecord
+	tmpMetricsRecord *pipeline.MetricsRecord
 
 	AllCheckPoint map[string][]byte
 
@@ -85,7 +86,7 @@ func (p *LocalContext) RegisterMetricRecord(labels map[string]string) *pipeline.
 
 	metricRecord := pipeline.MetricsRecord{
 		Labels: labels,
-		CommonMetrics: pipeline.CommonMetrics{
+		CommonMetrics: &pipeline.CommonMetrics{
 			ProcInRecordsTotal:  procInRecordsTotal,
 			ProcOutRecordsTotal: procOutRecordsTotal,
 			ProcTimeMS:          procTimeMS,
@@ -114,6 +115,14 @@ func (p *LocalContext) GetMetricRecords() (results []map[string]string) {
 		results = append(results, oneResult)
 	}
 	return results
+}
+
+func (p *LocalContext) SetMetricRecord(metricsRecord *pipeline.MetricsRecord) {
+	p.tmpMetricsRecord = metricsRecord
+}
+
+func (p *LocalContext) GetMetricRecord() *pipeline.MetricsRecord {
+	return p.tmpMetricsRecord
 }
 
 func (p *LocalContext) RegisterCounterMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.CounterMetric) {

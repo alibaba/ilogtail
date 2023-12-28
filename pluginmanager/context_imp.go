@@ -30,11 +30,11 @@ import (
 
 type ContextImp struct {
 	MetricsRecords []*pipeline.MetricsRecord
-
-	common      *pkg.LogtailContextMeta
-	pluginNames string
-	ctx         context.Context
-	logstoreC   *LogstoreConfig
+	tmpMetricsRecord  *pipeline.MetricsRecord
+	common         *pkg.LogtailContextMeta
+	pluginNames    string
+	ctx            context.Context
+	logstoreC      *LogstoreConfig
 }
 
 var contextMutex sync.Mutex
@@ -111,7 +111,7 @@ func (p *ContextImp) RegisterMetricRecord(labels map[string]string) *pipeline.Me
 
 	metricRecord := pipeline.MetricsRecord{
 		Labels: labels,
-		CommonMetrics: pipeline.CommonMetrics{
+		CommonMetrics: &pipeline.CommonMetrics{
 			ProcInRecordsTotal:  procInRecordsTotal,
 			ProcOutRecordsTotal: procOutRecordsTotal,
 			ProcTimeMS:          procTimeMS,
@@ -145,6 +145,14 @@ func (p *ContextImp) GetMetricRecords() (results []map[string]string) {
 		results = append(results, oneResult)
 	}
 	return results
+}
+
+func (p *ContextImp) SetMetricRecord(metricsRecord *pipeline.MetricsRecord) {
+	p.tmpMetricsRecord = metricsRecord
+}
+
+func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
+	return p.tmpMetricsRecord 
 }
 
 func (p *ContextImp) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {

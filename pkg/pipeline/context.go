@@ -33,7 +33,7 @@ type CommonMetrics struct {
 type MetricsRecord struct {
 	Labels map[string]string
 
-	CommonMetrics
+	*CommonMetrics
 	CounterMetrics []CounterMetric
 	StringMetrics  []StringMetric
 	LatencyMetrics []LatencyMetric
@@ -50,8 +50,10 @@ type Context interface {
 	GetExtension(name string, cfg any) (Extension, error)
 
 	GetMetricRecords() []map[string]string
-
 	RegisterMetricRecord(labels map[string]string) *MetricsRecord
+
+	SetMetricRecord(metricsRecord *MetricsRecord)
+	GetMetricRecord() *MetricsRecord
 
 	RegisterCounterMetric(metricsRecord *MetricsRecord, metric CounterMetric)
 	RegisterStringMetric(metricsRecord *MetricsRecord, metric StringMetric)

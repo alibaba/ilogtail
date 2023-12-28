@@ -38,11 +38,12 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 }
 
 type EmptyContext struct {
-	MetricsRecords []*pipeline.MetricsRecord
-	common         *pkg.LogtailContextMeta
-	ctx            context.Context
-	checkpoint     map[string][]byte
-	pluginNames    string
+	MetricsRecords   []*pipeline.MetricsRecord
+	tmpMetricsRecord *pipeline.MetricsRecord
+	common           *pkg.LogtailContextMeta
+	ctx              context.Context
+	checkpoint       map[string][]byte
+	pluginNames      string
 }
 
 var contextMutex sync.Mutex
@@ -84,7 +85,7 @@ func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) *pipeline.
 
 	metricRecord := pipeline.MetricsRecord{
 		Labels: labels,
-		CommonMetrics: pipeline.CommonMetrics{
+		CommonMetrics: &pipeline.CommonMetrics{
 			ProcInRecordsTotal:  procInRecordsTotal,
 			ProcOutRecordsTotal: procOutRecordsTotal,
 			ProcTimeMS:          procTimeMS,
@@ -113,6 +114,14 @@ func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {
 		results = append(results, oneResult)
 	}
 	return results
+}
+
+func (p *EmptyContext) SetMetricRecord(metricsRecord *pipeline.MetricsRecord) {
+	p.tmpMetricsRecord = metricsRecord
+}
+
+func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
+	return p.tmpMetricsRecord
 }
 
 func (p *EmptyContext) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {

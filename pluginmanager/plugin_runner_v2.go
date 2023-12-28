@@ -44,7 +44,7 @@ type pluginv2Runner struct {
 
 	MetricPlugins     []pipeline.MetricInputV2
 	ServicePlugins    []pipeline.ServiceInputV2
-	ProcessorPlugins  []pipeline.ProcessorV2
+	ProcessorPlugins  []*ProcessorWrapperV2
 	AggregatorPlugins []pipeline.AggregatorV2
 	FlusherPlugins    []pipeline.FlusherV2
 	ExtensionPlugins  map[string]pipeline.Extension
@@ -61,7 +61,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.FlushControl = pipeline.NewAsyncControl()
 	p.MetricPlugins = make([]pipeline.MetricInputV2, 0)
 	p.ServicePlugins = make([]pipeline.ServiceInputV2, 0)
-	p.ProcessorPlugins = make([]pipeline.ProcessorV2, 0)
+	p.ProcessorPlugins = make([]*ProcessorWrapperV2, 0)
 	p.AggregatorPlugins = make([]pipeline.AggregatorV2, 0)
 	p.FlusherPlugins = make([]pipeline.FlusherV2, 0)
 	p.ExtensionPlugins = make(map[string]pipeline.Extension, 0)
@@ -96,7 +96,7 @@ func (p *pluginv2Runner) AddPlugin(pluginName string, category pluginCategory, p
 		}
 	case pluginProcessor:
 		if processor, ok := plugin.(pipeline.ProcessorV2); ok {
-			return p.addProcessor(processor, config["priority"].(int))
+			return p.addProcessor(pluginName, processor, config["priority"].(int))
 		}
 	case pluginAggregator:
 		if aggregator, ok := plugin.(pipeline.AggregatorV2); ok {
@@ -152,9 +152,12 @@ func (p *pluginv2Runner) addServiceInput(input pipeline.ServiceInputV2) error {
 	return nil
 }
 
-func (p *pluginv2Runner) addProcessor(processor pipeline.ProcessorV2, _ int) error {
-	p.ProcessorPlugins = append(p.ProcessorPlugins, processor)
-	return nil
+func (p *pluginv2Runner) addProcessor(name string, processor pipeline.ProcessorV2, _ int) error {
+	var wrapper ProcessorWrapperV2
+	wrapper.Config = p.LogstoreConfig
+	wrapper.Processor = processor
+	p.ProcessorPlugins = append(p.ProcessorPlugins, &wrapper)
+	return wrapper.Init(name)
 }
 
 func (p *pluginv2Runner) addAggregator(aggregator pipeline.AggregatorV2) error {

@@ -749,9 +749,6 @@ func loadService(pluginType string, logstoreConfig *LogstoreConfig, configInterf
 	if err = applyPluginConfig(service, configInterface); err != nil {
 		return err
 	}
-	if _, err = service.Init(logstoreConfig.Context); err != nil {
-		return err
-	}
 	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginServiceInput, service, map[string]interface{}{})
 }
 
@@ -763,9 +760,6 @@ func loadProcessor(pluginType string, priority int, logstoreConfig *LogstoreConf
 	}
 	processor := creator()
 	if err = applyPluginConfig(processor, configInterface); err != nil {
-		return err
-	}
-	if err = processor.Init(logstoreConfig.Context); err != nil {
 		return err
 	}
 	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginProcessor, processor, map[string]interface{}{"priority": priority})

@@ -23,6 +23,12 @@ const (
 	AggregatorType   = iota
 )
 
+type PluginContext struct {
+	ID           string
+	Priority     int
+	MetricRecord *MetricsRecord
+}
+
 type MetricCreator func() MetricInput
 
 var MetricInputs = map[string]MetricCreator{}
