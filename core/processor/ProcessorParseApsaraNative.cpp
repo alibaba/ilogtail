@@ -291,12 +291,18 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
                         ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S"));
             return 0;
         }
-        auto microTimePart = GetApsaraLogMicroTimePart(strptimeResult);
+        // parse nanosecond part (optional)
+        if (*(strptimeResult + 1) != '\0') {
+            strptimeResult = Strptime(strptimeResult + 1, "%f", &lastLogTime, nanosecondLength);
+            if (NULL == strptimeResult) {
+                LOG_WARNING(sLogger,
+                            ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S.%f"));
+            }
+        }
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         timeStr = StringView(buffer.data() + 1, 19);
         lastLogTime.tv_sec = lastLogTime.tv_sec - mLogTimeZoneOffsetSecond;
-        lastLogTime.tv_nsec = microTimePart * 1000;
-        microTime = (int64_t)lastLogTime.tv_sec * 1000000 + microTimePart;
+        microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
         return lastLogTime.tv_sec;
     }
 }
@@ -463,32 +469,6 @@ void ProcessorParseApsaraNative::AddLog(const StringView& key,
 
 bool ProcessorParseApsaraNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
-}
-
-int32_t ProcessorParseApsaraNative::GetApsaraLogMicroTimePart(const char* buffer) {
-    int begIndex = 0;
-    static const int MICRO_TIME_LEN = 6;
-    char tmp[MICRO_TIME_LEN + 1]{};
-    while (buffer[begIndex]) {
-        if (buffer[begIndex] == '.') {
-            begIndex++;
-            break;
-        }
-        begIndex++;
-    }
-    int index = 0;
-    while (buffer[begIndex + index] && index < MICRO_TIME_LEN) {
-        if (buffer[begIndex + index] == ']' || buffer[begIndex + index] == '\0') {
-            break;
-        }
-        tmp[index] = buffer[begIndex + index];
-        index++;
-    }
-    for (; index < MICRO_TIME_LEN; ++index) {
-        tmp[index] = '0';
-    }
-    char* endPtr{};
-    return strtol(tmp, &endPtr, 10);
 }
 
 } // namespace logtail

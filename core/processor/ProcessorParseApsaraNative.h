@@ -48,7 +48,6 @@ private:
     ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent);
-    int32_t GetApsaraLogMicroTimePart(const char* buffer);
 
     int32_t mLogTimeZoneOffsetSecond = 0;
     bool mSourceKeyOverwritten = false;
