@@ -294,7 +294,7 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
             return 0;
         }
         // parse nanosecond part (optional)
-        if (*(strptimeResult + 1) != '\0') {
+        if (*strptimeResult != '\0') {
             strptimeResult = Strptime(strptimeResult + 1, "%f", &lastLogTime, nanosecondLength);
             if (NULL == strptimeResult) {
                 LOG_WARNING(sLogger,
