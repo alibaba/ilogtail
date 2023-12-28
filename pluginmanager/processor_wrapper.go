@@ -18,30 +18,29 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type CommonWrapper struct {
+type ProcessorWrapper struct {
 	pipeline.PluginContext
-
 	Config              *LogstoreConfig
 	procInRecordsTotal  pipeline.CounterMetric
 	procOutRecordsTotal pipeline.CounterMetric
 	procTimeMS          pipeline.CounterMetric
+	LogsChan            chan *pipeline.LogWithContext
 }
 
 type ProcessorWrapperV1 struct {
-	CommonWrapper
+	ProcessorWrapper
 	Processor pipeline.ProcessorV1
-	LogsChan  chan *pipeline.LogWithContext
 }
 
 type ProcessorWrapperV2 struct {
-	CommonWrapper
+	ProcessorWrapper
 	Processor pipeline.ProcessorV2
-	LogsChan  chan *pipeline.LogWithContext
 }
 
 func (wrapper *ProcessorWrapperV1) Init(name string) error {
@@ -54,9 +53,13 @@ func (wrapper *ProcessorWrapperV1) Init(name string) error {
 
 	fmt.Println("wrapper :", wrapper.MetricRecord)
 
-	wrapper.procInRecordsTotal = wrapper.MetricRecord.CommonMetrics.ProcInRecordsTotal
-	wrapper.procOutRecordsTotal = wrapper.MetricRecord.CommonMetrics.ProcOutRecordsTotal
-	wrapper.procTimeMS = wrapper.MetricRecord.CommonMetrics.ProcTimeMS
+	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
+	wrapper.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
+	wrapper.procTimeMS = helper.NewCounterMetric("proc_time_ms")
+
+	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procInRecordsTotal)
+	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procOutRecordsTotal)
+	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procTimeMS)
 
 	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
 	return wrapper.Processor.Init(wrapper.Config.Context)

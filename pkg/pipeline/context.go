@@ -24,16 +24,9 @@ type CommonContext struct {
 	ConfigName string
 }
 
-type CommonMetrics struct {
-	ProcInRecordsTotal  CounterMetric
-	ProcOutRecordsTotal CounterMetric
-	ProcTimeMS          CounterMetric
-}
-
 type MetricsRecord struct {
 	Labels map[string]string
 
-	*CommonMetrics
 	CounterMetrics []CounterMetric
 	StringMetrics  []StringMetric
 	LatencyMetrics []LatencyMetric

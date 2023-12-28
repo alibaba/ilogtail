@@ -22,19 +22,18 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg"
-	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type ContextImp struct {
-	MetricsRecords []*pipeline.MetricsRecord
-	tmpMetricsRecord  *pipeline.MetricsRecord
-	common         *pkg.LogtailContextMeta
-	pluginNames    string
-	ctx            context.Context
-	logstoreC      *LogstoreConfig
+	MetricsRecords   []*pipeline.MetricsRecord
+	tmpMetricsRecord *pipeline.MetricsRecord
+	common           *pkg.LogtailContextMeta
+	pluginNames      string
+	ctx              context.Context
+	logstoreC        *LogstoreConfig
 }
 
 var contextMutex sync.Mutex
@@ -99,23 +98,13 @@ func (p *ContextImp) InitContext(project, logstore, configName string) {
 func (p *ContextImp) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
-	procInRecordsTotal := helper.NewCounterMetric("proc_in_records_total")
-	procOutRecordsTotal := helper.NewCounterMetric("proc_out_records_total")
-	procTimeMS := helper.NewCounterMetric("proc_time_ms")
 
 	counterMetrics := make([]pipeline.CounterMetric, 0)
 	stringMetrics := make([]pipeline.StringMetric, 0)
 	latencyMetric := make([]pipeline.LatencyMetric, 0)
 
-	counterMetrics = append(counterMetrics, procInRecordsTotal, procOutRecordsTotal, procTimeMS)
-
 	metricRecord := pipeline.MetricsRecord{
-		Labels: labels,
-		CommonMetrics: &pipeline.CommonMetrics{
-			ProcInRecordsTotal:  procInRecordsTotal,
-			ProcOutRecordsTotal: procOutRecordsTotal,
-			ProcTimeMS:          procTimeMS,
-		},
+		Labels:         labels,
 		CounterMetrics: counterMetrics,
 		StringMetrics:  stringMetrics,
 		LatencyMetrics: latencyMetric,
@@ -152,7 +141,7 @@ func (p *ContextImp) SetMetricRecord(metricsRecord *pipeline.MetricsRecord) {
 }
 
 func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
-	return p.tmpMetricsRecord 
+	return p.tmpMetricsRecord
 }
 
 func (p *ContextImp) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {

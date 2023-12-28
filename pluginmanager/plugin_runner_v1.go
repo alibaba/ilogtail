@@ -34,7 +34,7 @@ type pluginv1Runner struct {
 	ServicePlugins    []*ServiceWrapper
 	ProcessorPlugins  []*ProcessorWrapperV1
 	AggregatorPlugins []*AggregatorWrapper
-	FlusherPlugins    []*FlusherWrapper
+	FlusherPlugins    []*FlusherWrapperV1
 	ExtensionPlugins  map[string]pipeline.Extension
 
 	FlushOutStore  *FlushOutStore[protocol.LogGroup]
@@ -55,7 +55,7 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.ServicePlugins = make([]*ServiceWrapper, 0)
 	p.ProcessorPlugins = make([]*ProcessorWrapperV1, 0)
 	p.AggregatorPlugins = make([]*AggregatorWrapper, 0)
-	p.FlusherPlugins = make([]*FlusherWrapper, 0)
+	p.FlusherPlugins = make([]*FlusherWrapperV1, 0)
 	p.ExtensionPlugins = make(map[string]pipeline.Extension, 0)
 	p.LogsChan = make(chan *pipeline.LogWithContext, inputQueueSize)
 	p.LogGroupsChan = make(chan *protocol.LogGroup, helper.Max(flushQueueSize, p.FlushOutStore.Len()))
@@ -100,7 +100,7 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, p
 		}
 	case pluginFlusher:
 		if flusher, ok := plugin.(pipeline.FlusherV1); ok {
-			return p.addFlusher(flusher)
+			return p.addFlusher(pluginName, flusher)
 		}
 	case pluginExtension:
 		if extension, ok := plugin.(pipeline.Extension); ok {
@@ -180,14 +180,14 @@ func (p *pluginv1Runner) addAggregator(aggregator pipeline.AggregatorV1) error {
 	return nil
 }
 
-func (p *pluginv1Runner) addFlusher(flusher pipeline.FlusherV1) error {
-	var wrapper FlusherWrapper
+func (p *pluginv1Runner) addFlusher(name string, flusher pipeline.FlusherV1) error {
+	var wrapper FlusherWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Flusher = flusher
 	wrapper.LogGroupsChan = p.LogGroupsChan
 	wrapper.Interval = time.Millisecond * time.Duration(p.LogstoreConfig.GlobalConfig.FlushIntervalMs)
 	p.FlusherPlugins = append(p.FlusherPlugins, &wrapper)
-	return nil
+	return wrapper.Init(name)
 }
 
 func (p *pluginv1Runner) addExtension(name string, extension pipeline.Extension) error {
@@ -352,7 +352,7 @@ func (p *pluginv1Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 					for _, flusher := range p.FlusherPlugins {
 						p.LogstoreConfig.Statistics.FlushReadyMetric.Add(1)
 						p.LogstoreConfig.Statistics.FlushLatencyMetric.Begin()
-						err := flusher.Flusher.Flush(p.LogstoreConfig.ProjectName,
+						err := flusher.Flush(p.LogstoreConfig.ProjectName,
 							p.LogstoreConfig.LogstoreName, p.LogstoreConfig.ConfigName, logGroups)
 						p.LogstoreConfig.Statistics.FlushLatencyMetric.End()
 						if err != nil {
@@ -401,8 +401,8 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 			flushers[idx] = flusher.Flusher
 		}
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flushout loggroups, count", p.FlushOutStore.Len())
-		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, flushers, func(lc *LogstoreConfig, sf pipeline.FlusherV1, store *FlushOutStore[protocol.LogGroup]) error {
-			return sf.Flush(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
+		rst := flushOutStoreV1(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, sf *FlusherWrapperV1, store *FlushOutStore[protocol.LogGroup]) error {
+			return sf.Flusher.Flush(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
 		})
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flushout loggroups, result", rst)
 	}

@@ -787,9 +787,6 @@ func loadFlusher(pluginType string, logstoreConfig *LogstoreConfig, configInterf
 	if err = applyPluginConfig(flusher, configInterface); err != nil {
 		return err
 	}
-	if err = flusher.Init(logstoreConfig.Context); err != nil {
-		return err
-	}
 	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginFlusher, flusher, map[string]interface{}{})
 }
 

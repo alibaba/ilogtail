@@ -74,23 +74,13 @@ func (p *LocalContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 func (p *LocalContext) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
-	procInRecordsTotal := NewCounterMetric("proc_in_records_total")
-	procOutRecordsTotal := NewCounterMetric("proc_out_records_total")
-	procTimeMS := NewCounterMetric("proc_time_ms")
 
 	counterMetrics := make([]pipeline.CounterMetric, 0)
 	stringMetrics := make([]pipeline.StringMetric, 0)
 	latencyMetric := make([]pipeline.LatencyMetric, 0)
 
-	counterMetrics = append(counterMetrics, procInRecordsTotal, procOutRecordsTotal, procTimeMS)
-
 	metricRecord := pipeline.MetricsRecord{
 		Labels: labels,
-		CommonMetrics: &pipeline.CommonMetrics{
-			ProcInRecordsTotal:  procInRecordsTotal,
-			ProcOutRecordsTotal: procOutRecordsTotal,
-			ProcTimeMS:          procTimeMS,
-		},
 		CounterMetrics: counterMetrics,
 		StringMetrics:  stringMetrics,
 		LatencyMetrics: latencyMetric,
