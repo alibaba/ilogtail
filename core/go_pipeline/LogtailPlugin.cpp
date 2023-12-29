@@ -523,12 +523,45 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     }
 }
 
-void LogtailPlugin::GetPipelineMetrics() {
+void LogtailPlugin::GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList) {
     if (mGetPipelineMetricsFun != nullptr) {
-        char* result = mGetPipelineMetricsFun();
-        std::string resultStr(result);
-        LOG_WARNING(sLogger, ("GetPipelineMetrics", resultStr));
-        free(result);
+        auto metrics = mGetPipelineMetricsFun();
+        if (metrics != nullptr) {
+            for (int i = 0; i < metrics->count; ++i) {
+                std::map<std::string, std::string> item;
+                InnerPluginMetric* innerpm = metrics->metrics[i];
+                if (innerpm != nullptr) {
+                    for (int j = 0; j < innerpm->count; ++j) {
+                        InnerKeyValue* innerkv = innerpm->keyValues[j];
+                        if (innerkv != nullptr) {
+                            item.insert(std::make_pair(std::string(innerkv->key), std::string(innerkv->value)));                       
+                        }
+                    }
+                }
+                metircsList.emplace_back(item);
+            }
+            if (metrics->count > 0) {
+                for (int i = 0; i < metrics->count; ++i) {
+                    InnerPluginMetric* innerpm = metrics->metrics[i];
+                    if (innerpm != nullptr) {
+                        if (innerpm->count > 0) {
+                            for (int j = 0; j < innerpm->count; ++j) {
+                                InnerKeyValue* innerkv = innerpm->keyValues[j];
+                                if (innerkv != nullptr) {
+                                    free(innerkv->key);
+                                    free(innerkv->value);
+                                    free(innerkv);
+                                }
+                            }
+                            free(innerpm->keyValues);
+                        }
+                        free(innerpm);
+                    }
+                }
+                free(metrics->metrics);
+            }
+            free(metrics);
+        }
     }
 }
 

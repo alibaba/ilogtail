@@ -14,19 +14,57 @@ namespace logtail {
 
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {}
 
-void MetricExportor::PushMetrics(bool forceSend) {
-    int32_t curTime = time(NULL);
-    if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
-        return;
+void MetricExportor::PushGoPluginMetrics() {
+    std::vector<std::map<std::string, std::string>> goPluginMetircsList;
+    LogtailPlugin::GetInstance()->GetPipelineMetrics(goPluginMetircsList);
+    std::map<std::string, sls_logs::LogGroup*> goLogGroupMap;
+    std::map<std::string, std::string> tmpConfigNameToRegion;
+    for (auto& item :  goPluginMetircsList) {
+        std::string configName = "";
+        std::string region = METRIC_REGION_DEFAULT;
+        {
+            for (const auto& pair : item) {
+                if (pair.first == "label.config_name") {
+                    configName = pair.second;
+                    break;
+                }
+            }
+            if (configName != "") {
+                auto search = tmpConfigNameToRegion.find("configName");
+                if (search != tmpConfigNameToRegion.end()) {
+                    region = search->second;
+                } else {
+                    Config* config = ConfigManager::GetInstance()->FindConfigByName(configName);
+                    tmpConfigNameToRegion.insert(std::make_pair(configName, config->mRegion));
+                }
+            } 
+        }
+        Log* logPtr = nullptr;
+        auto LogGroupIter = goLogGroupMap.find(region);
+        if (LogGroupIter != goLogGroupMap.end()) {
+            sls_logs::LogGroup* logGroup = LogGroupIter->second;
+            logPtr = logGroup->add_logs();
+        } else {
+            sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
+            logPtr = logGroup->add_logs();
+            goLogGroupMap.insert(std::pair<std::string, sls_logs::LogGroup*>(region, logGroup));
+        }
+        
+        auto now = GetCurrentLogtailTime();
+        SetLogTime(logPtr,
+                   AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
+        for (const auto& pair : item) {
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(pair.first);
+            contentPtr->set_value(pair.second);
+        }   
     }
+    LOG_INFO(sLogger, ("goLogGroupMap", goLogGroupMap.size()));
 
-    LogtailPlugin::GetInstance()->GetPipelineMetrics();
+    SendMetrics(goLogGroupMap);
+}
 
-    ReadMetrics::GetInstance()->UpdateMetrics();
-    
-    std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-    ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
-
+void MetricExportor::SendMetrics(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
     std::map<std::string, sls_logs::LogGroup*>::iterator iter;
     for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter ++) {
         sls_logs::LogGroup* logGroup = iter->second;
@@ -40,5 +78,21 @@ void MetricExportor::PushMetrics(bool forceSend) {
         }
         delete logGroup;
     }
+}
+
+void MetricExportor::PushMetrics(bool forceSend) {
+    int32_t curTime = time(NULL);
+    if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
+        return;
+    }
+
+    PushGoPluginMetrics();
+
+
+    ReadMetrics::GetInstance()->UpdateMetrics();    
+    std::map<std::string, sls_logs::LogGroup*> logGroupMap;
+    ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
+
+    SendMetrics(logGroupMap);
 }
 }
