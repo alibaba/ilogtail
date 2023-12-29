@@ -131,13 +131,14 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         processorSplitLogStringNative.Process(eventGroup);
 
         // run function ProcessorDesensitizeNative
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-        processor.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
 
         // judge result
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // ProcessorSplitRegexNative
@@ -161,13 +162,15 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         processorSplitRegexNative.Process(eventGroup);
 
         // run function ProcessorDesensitizeNative
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-        processor.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+
+        processorInstance.Process(eventGroupList);
 
         // judge result
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -175,9 +178,8 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
 void ProcessorDesensitizeNativeUnittest::TestInit() {
     Json::Value config = GetCastSensWordConfig();
     // run function
-    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -185,9 +187,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case1
     {
         Json::Value config = GetCastSensWordConfig();
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -233,9 +234,9 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case2
     {
         Json::Value config = GetCastSensWordConfig();
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
+
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -281,9 +282,9 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case3
     {
         Json::Value config = GetCastSensWordConfig();
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -330,9 +331,9 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     {
         Json::Value config = GetCastSensWordConfig();
         config["ReplacingAll"] = true;
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -379,9 +380,9 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     {
         Json::Value config = GetCastSensWordConfig();
         config["ReplacingAll"] = true;
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -432,9 +433,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Json::Value config = GetCastSensWordConfig();
         config["Method"] = "md5";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -482,9 +482,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Json::Value config = GetCastSensWordConfig();
         config["Method"] = "md5";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -532,9 +531,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Json::Value config = GetCastSensWordConfig();
         config["Method"] = "md5";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -582,9 +580,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Json::Value config = GetCastSensWordConfig();
         config["Method"] = "md5";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -633,9 +630,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config["Method"] = "md5";
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -684,9 +680,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config["Method"] = "md5";
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -735,9 +730,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config["Method"] = "md5";
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -786,9 +780,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config["Method"] = "md5";
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -837,9 +830,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config["Method"] = "md5";
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -889,9 +881,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
     {
         Json::Value config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -938,9 +929,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
     {
         Json::Value config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -988,9 +978,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         Json::Value config = GetCastSensWordConfig();
         config["ReplacingString"] = "********";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1038,9 +1027,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         Json::Value config = GetCastSensWordConfig();
         config["ReplacingString"] = "********";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1124,9 +1112,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
     {
         Json::Value config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
         processorInstance.Process(eventGroupList);
@@ -1134,9 +1121,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
     {
         Json::Value config = GetCastSensWordConfig("id", "const", "********", "\\d{6}", "\\d{8}", true);
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
         processorInstance.Process(eventGroupList);
@@ -1144,9 +1130,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
     {
         Json::Value config = GetCastSensWordConfig("content", "const", "********", "'password':'", "[^']*", true);
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
         processorInstance.Process(eventGroupList);
@@ -1190,9 +1175,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     {
         Json::Value config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1239,9 +1223,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     {
         Json::Value config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1288,9 +1271,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     {
         Json::Value config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1338,9 +1320,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         Json::Value config = GetCastSensWordConfig();
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1388,9 +1369,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         Json::Value config = GetCastSensWordConfig();
         config["ReplacingAll"] = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();

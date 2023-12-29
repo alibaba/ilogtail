@@ -56,9 +56,9 @@ void ProcessorParseRegexNativeUnittest::TestInit() {
     config["RenamedSourceKey"] = "rawLog";
 
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
 }
 
@@ -128,9 +128,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -142,14 +142,14 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     // metric
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "line1\nline2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor->mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     expectValue = "contentline1\nline2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * 2, processor->mProcParseOutSizeBytes->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcKeyCountNotMatchErrorTotal->GetValue());
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
@@ -190,9 +190,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -269,9 +269,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -346,9 +346,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -399,18 +399,18 @@ void ProcessorParseRegexNativeUnittest::TestAddLog() {
     config["KeepingSourceWhenParseSucceed"] = true;
     config["CopingRawLog"] = true;
     config["RenamedSourceKey"] = "rawLog";
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
 
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
     char key[] = "key";
     char value[] = "value";
-    processor.AddLog(key, value, *logEvent);
+    processor->AddLog(key, value, *logEvent);
     // check observability
-    APSARA_TEST_EQUAL_FATAL(strlen(key) + strlen(value) + 5, processor.GetContext().GetProcessProfile().logGroupSize);
+    APSARA_TEST_EQUAL_FATAL(strlen(key) + strlen(value) + 5, processor->GetContext().GetProcessProfile().logGroupSize);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
@@ -476,9 +476,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -488,20 +488,20 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     int count = 5;
 
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor->GetContext().GetProcessProfile().regexMatchFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor->GetContext().GetProcessProfile().parseFailures);
 
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor->mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcOutRecordsTotal->GetValue());
     expectValue = "rawLogvalue1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor->mProcParseOutSizeBytes->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcDiscardRecordsTotal->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor->mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcKeyCountNotMatchErrorTotal->GetValue());
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
@@ -567,9 +567,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -579,19 +579,19 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     int count = 5;
 
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor->GetContext().GetProcessProfile().regexMatchFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor->GetContext().GetProcessProfile().parseFailures);
 
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor->mProcParseInSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor->mProcDiscardRecordsTotal->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor->mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcKeyCountNotMatchErrorTotal->GetValue());
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
@@ -659,9 +659,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     eventGroup.FromJsonString(inJson);
 
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -670,20 +670,20 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
 
     int count = 5;
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor->GetContext().GetProcessProfile().regexMatchFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor->GetContext().GetProcessProfile().parseFailures);
 
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1\tvalue2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor->mProcParseInSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor->mProcDiscardRecordsTotal->GetValue());
 
     // mProcKeyCountNotMatchErrorTotal should equal count
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor->mProcKeyCountNotMatchErrorTotal->GetValue());
 }
 
 UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestInit)

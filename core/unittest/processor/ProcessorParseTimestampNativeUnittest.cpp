@@ -293,9 +293,9 @@ void ProcessorParseTimestampNativeUnittest::TestInit() {
     config["SourceTimezone"] = "GMT+08:00";
     config["SourceYear"] = 0;
 
-    ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -306,9 +306,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessNoFormat() {
     config["SourceFormat"] = "";
     config["SourceTimezone"] = "GMT+08:00";
     // run function
-    ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
 }
 
@@ -353,9 +353,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
     })";
     eventGroup.FromJsonString(inJsonSs.str());
     // run function
-    ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -374,7 +374,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
                  << timebuff << R"("
                 },
                 "timestamp" : )"
-                 << now - processor.mLogTimeZoneOffsetSecond << R"(,
+                 << now - processor->mLogTimeZoneOffsetSecond << R"(,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -385,7 +385,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
                  << timebuff << R"("
                 },
                 "timestamp" : )"
-                 << now - processor.mLogTimeZoneOffsetSecond << R"(,
+                 << now - processor->mLogTimeZoneOffsetSecond << R"(,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -393,15 +393,15 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
     })";
     APSARA_TEST_EQUAL_FATAL(CompactJson(expectJsonSs.str()), CompactJson(outJson));
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);
+    APSARA_TEST_EQUAL_FATAL(0, processor->GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor->mProcParseInSizeBytes->GetValue());
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     // size of one timestamp and one nanosecond equals to 8 byte, respectively
-    APSARA_TEST_EQUAL_FATAL(8 * 4, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(8 * 4, processor->mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseErrorTotal->GetValue());
 }
 
 void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
@@ -447,9 +447,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     std::string inJson = inJsonSs.str();
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -459,15 +459,15 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);
+    APSARA_TEST_EQUAL_FATAL(0, processor->GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor->mProcParseInSizeBytes->GetValue());
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     // size of one timestamp and one nanosecond equals to 8 byte, respectively
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(2, processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2, processor->mProcParseErrorTotal->GetValue());
 }
 
 void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
@@ -509,9 +509,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     })";
     eventGroup.FromJsonString(inJsonSs.str());
     // run function
-    ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -519,14 +519,14 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     
     // check observablity
     std::string outJson = eventGroupList[0].ToJsonString();
-    APSARA_TEST_EQUAL_FATAL(2, processor.GetContext().GetProcessProfile().historyFailures);
+    APSARA_TEST_EQUAL_FATAL(2, processor->GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor->mProcParseInSizeBytes->GetValue());
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(2, processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2, processor->mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor->mProcParseErrorTotal->GetValue());
 }
 
 void ProcessorParseTimestampNativeUnittest::TestProcessEventPreciseTimestampLegacy() {
@@ -550,13 +550,13 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventPreciseTimestampLega
     })";
     logEvent->FromJsonString(inJsonSs.str());
     // run function
-    ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     logtail::StringView timeStrCache;
     LogtailTime logTime = {0, 0};
-    APSARA_TEST_TRUE_FATAL(processor.ProcessEvent("/var/log/message", logEvent, logTime, timeStrCache));
+    APSARA_TEST_TRUE_FATAL(processor->ProcessEvent("/var/log/message", logEvent, logTime, timeStrCache));
     // judge result
     std::string outJson = logEvent->ToJsonString();
     std::stringstream expectJsonSs;
@@ -566,7 +566,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventPreciseTimestampLega
             "time" : "2017-1-11 15:05:07.012"
         },
         "timestamp" : )"
-                 << 1484147107 - processor.mLogTimeZoneOffsetSecond << R"(,
+                 << 1484147107 - processor->mLogTimeZoneOffsetSecond << R"(,
         "timestampNanosecond": 12000000,
         "type" : 1
     })";
@@ -622,14 +622,14 @@ void ProcessorParseLogTimeUnittest::TestParseLogTime() {
         config["SourceFormat"] = c.fmtStr;
         config["SourceFormat"] = c.fmtStr;
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         LogtailTime outTime = {0, 0};
         uint64_t preciseTimestamp = 0;
         StringView timeStrCache;
-        bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+        bool ret = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
         EXPECT_EQ(ret, true) << "failed: " + c.inputTimeStr;
         EXPECT_EQ(outTime.tv_sec, c.exceptedLogTime) << "failed: " + c.inputTimeStr;
         EXPECT_EQ(outTime.tv_nsec, c.exceptedLogTimeNanosecond) << "failed: " + c.inputTimeStr;
@@ -657,9 +657,9 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
     { // case: second
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -679,7 +679,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -688,9 +688,9 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
     { // case: nanosecond
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S.%f";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -711,7 +711,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -720,9 +720,9 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
     { // case: timestamp second
         config["SourceFormat"] = "%s";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1484147107;
@@ -741,7 +741,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -750,9 +750,9 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
     { // case: timestamp nanosecond
         config["SourceFormat"] = "%s";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1484147107;
@@ -773,7 +773,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -782,9 +782,9 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
     { // case: nanosecond in the middle
         config["SourceFormat"] = "%H:%M:%S.%f %Y-%m-%d";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -805,7 +805,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -834,9 +834,9 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         config["SourceTimezone"] = "GMT+00:00";
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S.%f";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -857,7 +857,7 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -867,9 +867,9 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         config["SourceTimezone"] = "GMT+07:00";
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S.%f";
         // run function
-        ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
+        ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325405100;
@@ -890,7 +890,7 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
             bool ret
-                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+                = processor->ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);

@@ -75,9 +75,9 @@ static void BM_SplRegex(int size, int batchSize) {
     std::string inJson = oss.str();
     //std::cout << "inJson: " << inJson << std::endl;
 
-    ProcessorSPL& processor = *(new ProcessorSPL);
+    ProcessorSPL* processor = (new ProcessorSPL);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     
     bool init = processorInstance.Init(config, mContext);
     if (init) {
@@ -176,9 +176,9 @@ static void BM_RawRegex(int size, int batchSize) {
     //std::cout << "inJson: " << inJson << std::endl;
 
     // run function
-    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    ProcessorParseRegexNative* processor = (new ProcessorParseRegexNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     
 
     bool init = processorInstance.Init(config, mContext);
@@ -246,9 +246,9 @@ static void BM_SplJson(int size, int batchSize) {
     std::string inJson = oss.str();
     //std::cout << "inJson: " << inJson << std::endl;
 
-    ProcessorSPL& processor = *(new ProcessorSPL);
+    ProcessorSPL* processor = (new ProcessorSPL);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     
     bool init = processorInstance.Init(config, mContext);
     if (init) {
@@ -320,9 +320,9 @@ static void BM_RawJson(int size, int batchSize) {
     //std::cout << "inJson: " << inJson << std::endl;
 
     // run function
-    ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
+    ProcessorParseJsonNative* processor = (new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     
 
     bool init = processorInstance.Init(config, mContext);
@@ -389,9 +389,9 @@ static void BM_SplSplit(int size, int batchSize) {
     std::string inJson = oss.str();
     //std::cout << "inJson: " << inJson << std::endl;
 
-    ProcessorSPL& processor = *(new ProcessorSPL);
+    ProcessorSPL* processor = (new ProcessorSPL);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     
     bool init = processorInstance.Init(config, mContext);
     if (init) {
@@ -508,9 +508,9 @@ static void BM_RawSplit(int size, int batchSize) {
     //std::cout << "inJson: " << inJson << std::endl;
 
     // run function
-    ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+    ProcessorParseDelimiterNative* processor = (new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     
 
     bool init = processorInstance.Init(config, mContext);

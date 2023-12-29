@@ -45,9 +45,9 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     config["DiscardingNonUTF8"] = true;
 
     // run function
-    ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+    ProcessorFilterNative* processor = new ProcessorFilterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     // case 1 : the field are all provided,  only one matched
@@ -156,9 +156,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         config["DiscardingNonUTF8"] = true;
 
         // run function
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         // case 1 : the field are all provided,  only one matched
@@ -296,9 +296,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         // (a and not d) and (b or c)
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         auto sourceBuffer1 = std::make_shared<SourceBuffer>();
@@ -372,7 +372,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 
-        APSARA_TEST_EQUAL_FATAL(2, processor.mProcFilterRecordsTotal->GetValue());
+        APSARA_TEST_EQUAL_FATAL(2, processor->mProcFilterRecordsTotal->GetValue());
     }
     {
         const char* jsonStr = "{\n"
@@ -398,9 +398,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
@@ -418,9 +418,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
@@ -444,9 +444,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
@@ -484,9 +484,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
@@ -520,9 +520,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
@@ -560,9 +560,9 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
@@ -594,11 +594,11 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-        APSARA_TEST_TRUE(processor.mConditionExp->GetNodeType() == OPERATOR_NODE);
+        APSARA_TEST_TRUE(processor->mConditionExp->GetNodeType() == OPERATOR_NODE);
     }
 }
 
@@ -950,8 +950,9 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
                     flow[index - 4] = flow[index - 3] = flow[index - 2] = true;
             }
         }
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
-        processor.FilterNoneUtf8(testStr);
+        ProcessorFilterNative* processor = new ProcessorFilterNative;
+        processor->FilterNoneUtf8(testStr);
+        delete processor;
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
                 APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');
