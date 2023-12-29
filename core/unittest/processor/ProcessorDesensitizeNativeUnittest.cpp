@@ -148,10 +148,9 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
         processorSplitLogStringNative.Process(eventGroup);
 
         // run function ProcessorDesensitizeNative
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-        processor.Process(eventGroup);
+        processorInstance.Process(eventGroup);
 
         // judge result
         std::string outJson = eventGroup.ToJsonString();
@@ -176,10 +175,9 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
         APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(componentConfig));
         processorSplitRegexNative.Process(eventGroup);
         // run function ProcessorDesensitizeNative
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-        processor.Process(eventGroup);
+        processorInstance.Process(eventGroup);
         // judge result
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
@@ -189,9 +187,8 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
 void ProcessorDesensitizeNativeUnittest::TestInit() {
     Config config = GetCastSensWordConfig();
     // run function
-    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
@@ -213,11 +210,11 @@ void ProcessorDesensitizeNativeUnittest::TestParseCastSensWordConfig() {
     Json::Value allVal;
     allVal.append(constVal);
     allVal.append(md5Val);
-    Config* pConfig = new Config;
-    ConfigManager::GetInstance()->GetSensitiveKeys(allVal, pConfig);
-    APSARA_TEST_EQUAL((size_t)2, pConfig->mSensitiveWordCastOptions.size());
-    std::vector<SensitiveWordCastOption>& param1Vec = pConfig->mSensitiveWordCastOptions["param1"];
-    std::vector<SensitiveWordCastOption>& param2Vec = pConfig->mSensitiveWordCastOptions["param2"];
+    Config config;
+    ConfigManager::GetInstance()->GetSensitiveKeys(allVal, &config);
+    APSARA_TEST_EQUAL((size_t)2, config.mSensitiveWordCastOptions.size());
+    std::vector<SensitiveWordCastOption>& param1Vec = config.mSensitiveWordCastOptions["param1"];
+    std::vector<SensitiveWordCastOption>& param2Vec = config.mSensitiveWordCastOptions["param2"];
     APSARA_TEST_EQUAL(param1Vec[0].key, "param1");
     APSARA_TEST_EQUAL(param1Vec[0].constValue, "\\1********");
     auto CONST_OPTION = SensitiveWordCastOption::CONST_OPTION;
@@ -235,9 +232,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case1
     {
         Config config = GetCastSensWordConfig();
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -283,9 +279,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case2
     {
         Config config = GetCastSensWordConfig();
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -331,9 +326,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case3
     {
         Config config = GetCastSensWordConfig();
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -380,9 +374,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -429,9 +422,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -482,9 +474,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -532,9 +523,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -582,9 +572,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -632,9 +621,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -683,9 +671,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -734,9 +721,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -785,9 +771,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -836,9 +821,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -887,9 +871,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         config.mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -939,9 +922,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
     {
         Config config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -988,9 +970,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
     {
         Config config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1038,9 +1019,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].constValue = "********";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1088,9 +1068,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].constValue = "\\2********";
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1139,9 +1118,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         config.mSensitiveWordCastOptions.begin()->second[0].constValue = "\\2********";
         config.mSensitiveWordCastOptions.begin()->second[0].mRegex.reset(new re2::RE2("pwd=[^,]+"));
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1188,12 +1166,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
     {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].constValue = "\\2********";
-        config.mSensitiveWordCastOptions.begin()->second[0].mRegex.reset(new re2::RE2("pwd=[^,]+"));
         config.mSensitiveWordCastOptions.begin()->second[0].mRegex.reset(new re2::RE2(""));
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1255,9 +1231,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
     cntVec[0].replaceAll = true;
     cntVec[0].mRegex.reset(new re2::RE2("('password':')[^']*"));
     // init
-    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     // make events
@@ -1336,9 +1311,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     {
         Config config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1385,9 +1359,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     {
         Config config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1434,9 +1407,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     {
         Config config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1484,9 +1456,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         Config config = GetCastSensWordConfig();
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1535,9 +1506,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         config.mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         // make events
@@ -1585,9 +1555,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
 void ProcessorDesensitizeNativeUnittest::TestCastWholeKey() {
     Config config = GetCastSensWordConfig("pwd", "().*", 1, false, "\\1********");
     // init
-    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorDesensitizeNative, pluginId);
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     // make events
