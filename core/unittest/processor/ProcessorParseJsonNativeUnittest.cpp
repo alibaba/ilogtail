@@ -127,13 +127,14 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             processor.Process(eventGroup);
 
             // run function ProcessorParseJsonNative
-            ProcessorParseJsonNative* processorParseJsonNative = new ProcessorParseJsonNative;
-            ProcessorInstance processorInstance(processorParseJsonNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseJsonNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseJsonNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
 
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -211,13 +212,14 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             processor.Process(eventGroup);
 
             // run function ProcessorParseJsonNative
-            ProcessorParseJsonNative* processorParseJsonNative = new ProcessorParseJsonNative;
-            ProcessorInstance processorInstance(processorParseJsonNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseJsonNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseJsonNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
 
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }

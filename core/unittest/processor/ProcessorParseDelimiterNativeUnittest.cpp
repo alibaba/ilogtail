@@ -100,11 +100,12 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseDelimiterNative* processor = new ProcessorParseDelimiterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processor->Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
     std::string expectJson = R"({
         "events": [
             {
@@ -131,7 +132,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
         ]
     })";
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     // AllowingShortenedFields false
     {
@@ -203,13 +204,14 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             processor.Process(eventGroup);
 
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
 
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -245,13 +247,14 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             processor.Process(eventGroup);
 
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
 
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -326,12 +329,13 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -366,12 +370,13 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -393,9 +398,8 @@ void ProcessorParseDelimiterNativeUnittest::TestInit() {
     config["RenamedSourceKey"] = "rawLog";
     config["AllowingShortenedFields"] = false;
 
-    ProcessorParseDelimiterNative* processor = new ProcessorParseDelimiterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -476,12 +480,13 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -517,12 +522,13 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -603,12 +609,13 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -643,12 +650,13 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -726,13 +734,13 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processor.Process(eventGroup);
 
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
-
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -767,12 +775,13 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -849,12 +858,13 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -888,12 +898,13 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -974,12 +985,13 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
         // ProcessorSplitRegexNative
@@ -1014,12 +1026,13 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-            processorParseDelimiterNative->Process(eventGroup);
+            std::vector<PipelineEventGroup> eventGroupList;
+            eventGroupList.emplace_back(std::move(eventGroup));
+            processorInstance.Process(eventGroupList);
             // judge result
-            std::string outJson = eventGroup.ToJsonString();
+            std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
@@ -1065,11 +1078,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseDelimiterNative* processor = new ProcessorParseDelimiterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processor->Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
     std::string expectJson = R"({
         "events" :
         [
@@ -1232,14 +1246,11 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             processor.Process(eventGroup);
 
             // run function ProcessorParseDelimiterNative
-            ProcessorParseDelimiterNative* processorParseDelimiterNative = new ProcessorParseDelimiterNative;
-            ProcessorInstance processorInstance(processorParseDelimiterNative, pluginId);
+            ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
             std::vector<PipelineEventGroup> eventGroupList;
             eventGroupList.emplace_back(std::move(eventGroup));
-
             processorInstance.Process(eventGroupList);
-
             // judge result
             std::string outJson = eventGroupList[0].ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
@@ -1293,15 +1304,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        // run function
-        ProcessorParseDelimiterNative* processor = new ProcessorParseDelimiterNative;
-        std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
-        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-                std::vector<PipelineEventGroup> eventGroupList;
-        eventGroupList.emplace_back(std::move(eventGroup));
-
-        processorInstance.Process(eventGroupList);
         std::string expectJson = R"({
             "events" :
             [
@@ -1337,6 +1339,13 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
                 }
             ]
         })";
+        // run function
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
         // judge result
         std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
@@ -1385,11 +1394,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseDelimiterNative* processor = new ProcessorParseDelimiterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processor->Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
     std::string expectJson = R"({
         "events" :
         [
@@ -1464,11 +1474,12 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseDelimiterNative* processor = new ProcessorParseDelimiterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseDelimiterNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processor->Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
     std::string expectJson = R"({
         "events" :
         [
