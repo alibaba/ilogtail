@@ -119,16 +119,11 @@ func (p *ContextImp) GetMetricRecords() (results []map[string]string) {
 
 	results = make([]map[string]string, 0)
 	for _, metricRecord := range p.MetricsRecords {
-		fmt.Println("GetMetricRecords", metricRecord)
-
 		oneResult := make(map[string]string)
 		for key, value := range metricRecord.Labels {
 			oneResult["label."+key] = value
 		}
 		for _, counterMetric := range metricRecord.CounterMetrics {
-			fmt.Println("GetMetricRecords key:", "key."+counterMetric.Name())
-			fmt.Println("GetMetricRecords value:", strconv.FormatInt(counterMetric.Get(), 10))
-
 			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.Get(), 10)
 		}
 		results = append(results, oneResult)
@@ -146,10 +141,6 @@ func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
 
 func (p *ContextImp) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {
 	metricsRecord.CounterMetrics = append(metricsRecord.CounterMetrics, metric)
-
-	jsonData, _ := json.Marshal(metricsRecord)
-	fmt.Println("RegisterCounterMetric:", string(jsonData))
-	fmt.Println("RegisterCounterMetric counterLength:", len(metricsRecord.CounterMetrics))
 }
 
 func (p *ContextImp) RegisterStringMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.StringMetric) {

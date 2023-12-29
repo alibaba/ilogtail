@@ -55,8 +55,6 @@ func (wrapper *FlusherWrapperV1) Init(name string, pluginNum int) error {
 	labels["plugin_name"] = name
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
-	fmt.Println("FlusherWrapperV1 init")
-
 	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
 	wrapper.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
 	wrapper.procTimeMS = helper.NewCounterMetric("proc_time_ms")
@@ -74,8 +72,6 @@ func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, 
 	for _, logGroup := range logGroupList {
 		total += len(logGroup.Logs)
 	}
-
-	fmt.Println("FlusherWrapperV1 Flush")
 
 	wrapper.procInRecordsTotal.Add(int64(total))
 	startTime := time.Now()
