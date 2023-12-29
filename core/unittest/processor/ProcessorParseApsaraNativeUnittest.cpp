@@ -180,13 +180,14 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         processorSplitLogStringNative.Process(eventGroup);
 
         // run function ProcessorParseApsaraNative
-        ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-        processor->Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
 
         // judge result
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // ProcessorSplitRegexNative
@@ -217,10 +218,11 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         processorSplitRegexNative.Process(eventGroup);
 
         // run function ProcessorParseApsaraNative
-        ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-        processor->Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
 
         // judge result
         std::string outJson = eventGroup.ToJsonString();
@@ -239,10 +241,8 @@ void ProcessorParseApsaraNativeUnittest::TestInit() {
     config["RenamedSourceKey"] = "rawLog";
     config["Timezone"] = "";
 
-    ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-    processor->SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -289,10 +289,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-    processor->SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -469,10 +467,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-    processor->SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -545,10 +541,8 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-    processor->SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));

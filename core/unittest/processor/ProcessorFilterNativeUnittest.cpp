@@ -45,9 +45,8 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     config["DiscardingNonUTF8"] = true;
 
     // run function
-    ProcessorFilterNative* processor = new ProcessorFilterNative;
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     // case 1 : the field are all provided,  only one matched
@@ -156,9 +155,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         config["DiscardingNonUTF8"] = true;
 
         // run function
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         // case 1 : the field are all provided,  only one matched
@@ -398,9 +396,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
@@ -418,9 +415,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
@@ -444,9 +440,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
@@ -484,9 +479,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
@@ -520,9 +514,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
@@ -560,9 +553,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value config;
         config["ConditionExp"] = rootNode;
         config["DiscardingNonUTF8"] = true;
-        ProcessorFilterNative* processor = new ProcessorFilterNative;
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(processor, pluginId);
+        ProcessorInstance processorInstance(new ProcessorFilterNative, pluginId);
         APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 

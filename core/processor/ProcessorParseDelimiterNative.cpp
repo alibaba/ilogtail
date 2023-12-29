@@ -106,8 +106,7 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
                              mContext->GetRegion());
     }
 
-    mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
-
+    mDelimiterModeFsmParserPtr = std::make_shared<DelimiterModeFsmParser>(mQuote, mSeparatorChar);
     // Keys
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),

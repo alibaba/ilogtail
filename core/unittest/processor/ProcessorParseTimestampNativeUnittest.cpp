@@ -293,9 +293,8 @@ void ProcessorParseTimestampNativeUnittest::TestInit() {
     config["SourceTimezone"] = "GMT+08:00";
     config["SourceYear"] = 0;
 
-    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseTimestampNative, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -306,9 +305,8 @@ void ProcessorParseTimestampNativeUnittest::TestProcessNoFormat() {
     config["SourceFormat"] = "";
     config["SourceTimezone"] = "GMT+08:00";
     // run function
-    ProcessorParseTimestampNative* processor = (new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseTimestampNative, pluginId);
     APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
 }
 

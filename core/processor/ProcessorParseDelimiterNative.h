@@ -58,7 +58,6 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    ~ProcessorParseDelimiterNative() override { delete mDelimiterModeFsmParserPtr; };
     static const std::string s_mDiscardedFieldKey;
 
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
@@ -71,8 +70,8 @@ private:
 
     char mSeparatorChar;
     bool mSourceKeyOverwritten = false;
-    DelimiterModeFsmParser* mDelimiterModeFsmParserPtr = nullptr;
-    
+    std::shared_ptr<DelimiterModeFsmParser> mDelimiterModeFsmParserPtr = nullptr;
+
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;
     CounterPtr mProcParseInSizeBytes;
