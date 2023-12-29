@@ -55,16 +55,6 @@ func (p *ProcessorJSON) Init(context pipeline.Context) error {
 	p.metricRecord = p.context.GetMetricRecord()
 	p.addMetric = helper.NewCounterMetric("add_container")
 	p.context.RegisterCounterMetric(p.metricRecord, p.addMetric)
-	/*
-		labels := make(map[string]string)
-		labels["project"] = p.context.GetProject()
-		labels["logstore"] = p.context.GetLogstore()
-		labels["configName"] = p.context.GetConfigName()
-		labels["plugin_name"] = pluginName
-		p.metricRecord = p.context.RegisterMetricRecord(labels)
-
-		p.context.RegisterCounterMetric(p.metricRecord, p.addMetric)
-	*/
 	return nil
 }
 

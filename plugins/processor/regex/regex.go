@@ -60,11 +60,7 @@ func (p *ProcessorRegex) Init(context pipeline.Context) error {
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", p.Regex)
 		return err
 	}
-	labels := make(map[string]string)
-	labels["project"] = p.context.GetProject()
-	labels["logstore"] = p.context.GetLogstore()
-	labels["configName"] = p.context.GetConfigName()
-	p.metricRecord = p.context.RegisterMetricRecord(labels)
+	p.metricRecord = p.context.GetMetricRecord()
 
 	p.logPairMetric = helper.NewAverageMetric("anchor_pairs_per_log")
 	p.context.RegisterCounterMetric(p.metricRecord, p.logPairMetric)

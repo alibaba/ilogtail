@@ -203,11 +203,8 @@ func (p *ProcessorFieldsWithCondition) Init(context pipeline.Context) error {
 			}
 		}
 	}
-	labels := make(map[string]string)
-	labels["project"] = p.context.GetProject()
-	labels["logstore"] = p.context.GetLogstore()
-	labels["configName"] = p.context.GetConfigName()
-	p.metricRecord = p.context.RegisterMetricRecord(labels)
+	
+	p.metricRecord = p.context.GetMetricRecord()
 
 	p.filterMetric = helper.NewCounterMetric(fmt.Sprintf("%v_filtered", PluginName))
 	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)

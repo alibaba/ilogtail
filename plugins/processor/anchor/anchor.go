@@ -95,11 +95,7 @@ func (p *ProcessorAnchor) Init(context pipeline.Context) error {
 		}
 	}
 
-	labels := make(map[string]string)
-	labels["project"] = p.context.GetProject()
-	labels["logstore"] = p.context.GetLogstore()
-	labels["configName"] = p.context.GetConfigName()
-	p.metricRecord = p.context.RegisterMetricRecord(labels)
+	p.metricRecord = p.context.GetMetricRecord()
 
 	p.logPairMetric = helper.NewAverageMetric("anchor_pairs_per_log")
 	p.context.RegisterCounterMetric(p.metricRecord, p.logPairMetric)

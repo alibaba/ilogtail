@@ -38,11 +38,7 @@ type ProcessorDropLastKey struct {
 func (p *ProcessorDropLastKey) Init(context pipeline.Context) error {
 	p.context = context
 
-	labels := make(map[string]string)
-	labels["project"] = p.context.GetProject()
-	labels["logstore"] = p.context.GetLogstore()
-	labels["configName"] = p.context.GetConfigName()
-	p.metricRecord = p.context.RegisterMetricRecord(labels)
+	p.metricRecord = p.context.GetMetricRecord()
 
 	p.filterMetric = helper.NewCounterMetric("drop_key_count")
 	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)
