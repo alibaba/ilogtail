@@ -1114,7 +1114,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
         ]
     })";
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 }
 
@@ -1428,7 +1428,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
         ]
     })";
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 }
 
@@ -1509,7 +1509,7 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
         ]
     })";
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 }
 
