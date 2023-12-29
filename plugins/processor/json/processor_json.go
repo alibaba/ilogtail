@@ -41,7 +41,7 @@ type ProcessorJSON struct {
 
 	context      pipeline.Context
 	metricRecord *pipeline.MetricsRecord
-	addMetric    pipeline.CounterMetric
+	procParseInSizeBytes    pipeline.CounterMetric
 }
 
 const pluginName = "processor_json"
@@ -53,8 +53,8 @@ func (p *ProcessorJSON) Init(context pipeline.Context) error {
 	}
 	p.context = context
 	p.metricRecord = p.context.GetMetricRecord()
-	p.addMetric = helper.NewCounterMetric("add_container")
-	p.context.RegisterCounterMetric(p.metricRecord, p.addMetric)
+	p.procParseInSizeBytes = helper.NewCounterMetric("proc_parse_in_size_bytes")
+	p.context.RegisterCounterMetric(p.metricRecord, p.procParseInSizeBytes)
 	return nil
 }
 
@@ -71,9 +71,9 @@ func (p *ProcessorJSON) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 
 func (p *ProcessorJSON) processLog(log *protocol.Log) {
 	findKey := false
-	p.addMetric.Add(2)
 	for idx := range log.Contents {
 		if log.Contents[idx].Key == p.SourceKey {
+			p.procParseInSizeBytes.Add(int64(len(log.Contents[idx].Key) + len(log.Contents[idx].Value)))
 			objectVal := log.Contents[idx].Value
 			param := ExpandParam{
 				sourceKey:            p.SourceKey,
