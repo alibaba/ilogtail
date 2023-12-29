@@ -15,7 +15,8 @@
         "ms-vscode.cpptools-extension-pack",
         "DavidAnson.vscode-markdownlint",
         "redhat.vscode-yaml",
-        "bmalehorn.shell-syntax"
+        "bmalehorn.shell-syntax",
+        "eamodio.gitlens"
       ]
     }
   }
