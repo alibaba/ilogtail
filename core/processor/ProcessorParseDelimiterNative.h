@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "models/LogEvent.h"
 #include "parser/DelimiterModeFsmParser.h"
 #include "plugin/interface/Processor.h"
@@ -70,7 +72,7 @@ private:
 
     char mSeparatorChar;
     bool mSourceKeyOverwritten = false;
-    std::shared_ptr<DelimiterModeFsmParser> mDelimiterModeFsmParserPtr = nullptr;
+    std::unique_ptr<DelimiterModeFsmParser> mDelimiterModeFsmParserPtr;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;
