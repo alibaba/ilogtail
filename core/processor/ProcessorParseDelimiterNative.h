@@ -15,6 +15,7 @@
  */
 
 #include "plugin/interface/Processor.h"
+#include <memory>
 #include <string>
 #include <boost/regex.hpp>
 #include "parser/DelimiterModeFsmParser.h"
@@ -49,7 +50,7 @@ private:
     bool mRawLogTagOverwritten = false;
     char mQuote;
     char mSeparatorChar;
-    DelimiterModeFsmParser* mDelimiterModeFsmParserPtr;
+    std::unique_ptr<DelimiterModeFsmParser> mDelimiterModeFsmParserPtr;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;
