@@ -58,7 +58,7 @@ bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig)
         }
     }
 
-    mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
+    mDelimiterModeFsmParserPtr.reset(new DelimiterModeFsmParser(mQuote, mSeparatorChar));
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
