@@ -121,6 +121,8 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
         mProcParseErrorTotal->Add(1);
         ++(*mParseFailures);
         if (!mDiscardUnmatch) {
+            sourceEvent.DelContent(mSourceKey);
+            mProcParseOutSizeBytes->Add(-mSourceKey.size() - buffer.size());
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                    buffer,
                    sourceEvent); // legacy behavior, should use sourceKey

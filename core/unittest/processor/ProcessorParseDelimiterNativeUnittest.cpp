@@ -102,7 +102,6 @@ void ProcessorParseDelimiterNativeUnittest::TestAcceptNoEnoughKeys() {
                 {
                     "contents": {
                         "__raw_log__": "123@@45",
-                        "content": "123@@45",
                         "log.file.offset": "0"
                     },
                     "timestamp": 12345678901,
@@ -112,7 +111,6 @@ void ProcessorParseDelimiterNativeUnittest::TestAcceptNoEnoughKeys() {
                 {
                     "contents": {
                         "__raw_log__": "012@@34",
-                        "content": "012@@34",
                         "log.file.offset": "0"
                     },
                     "timestamp": 12345678901,
@@ -554,7 +552,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 {
                     "contents": {
                         "__raw_log__": "123@@456",
-                        "content": "123@@456",
                         "log.file.offset": "0"
                     },
                     "timestamp": 12345678901,
@@ -564,7 +561,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 {
                     "contents": {
                         "__raw_log__": "012@@345",
-                        "content": "012@@345",
                         "log.file.offset": "0"
                     },
                     "timestamp": 12345678901,
@@ -1135,7 +1131,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
                 "contents" :
                 {
                     "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1146,7 +1141,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
                 "contents" :
                 {
                     "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1225,7 +1219,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
                 {
                     "__raw__": "value1",
                     "__raw_log__": "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1304,7 +1297,6 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
                 {
                     "__raw__": "value1",
                     "__raw_log__": "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1413,7 +1405,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1424,7 +1415,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1435,7 +1425,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1446,7 +1435,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1457,7 +1445,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -1475,8 +1462,8 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
     std::string expectValue = "value1";
     APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__value1";
-    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((std::string("__raw_log__").size() - std::string("content").size()) * count,
+                            processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
 

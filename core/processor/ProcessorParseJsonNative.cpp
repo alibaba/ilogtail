@@ -82,6 +82,8 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
     bool res = JsonLogLineParser(sourceEvent, logPath, e, sourceKeyOverwritten, rawLogTagOverwritten);
 
     if (!res && !mDiscardUnmatch) {
+        sourceEvent.DelContent(mSourceKey);
+        mProcParseOutSizeBytes->Add(-mSourceKey.size() - rawContent.size());
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                rawContent,
                sourceEvent); // legacy behavior, should use sourceKey
