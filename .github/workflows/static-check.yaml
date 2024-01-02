@@ -38,7 +38,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        runner: [ self-hosted ]
+        runner: [ arc-runner-set-xuanyang-ack ]
       fail-fast: true
     steps:
       - name: Check disk space
@@ -69,7 +69,7 @@ jobs:
 
 
   result:
-    runs-on: self-hosted
+    runs-on: arc-runner-set-xuanyang-ack
     timeout-minutes: 60
     needs: [ CI ]
     steps:
