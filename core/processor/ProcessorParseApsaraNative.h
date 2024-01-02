@@ -50,6 +50,7 @@ private:
     int32_t ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent);
 
     int32_t mLogTimeZoneOffsetSecond = 0;
+    bool mSourceKeyOverwritten = false;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;

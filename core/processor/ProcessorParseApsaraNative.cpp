@@ -125,7 +125,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    bool sourceKeyOverwritten = false;
+    mSourceKeyOverwritten = false;
     StringView buffer = sourceEvent.GetContent(mSourceKey);
     if (buffer.size() == 0) {
         return true;
@@ -210,7 +210,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
                     StringView data(buffer.data() + colon_index + 1, index - colon_index - 1);
                     AddLog(key, data, sourceEvent);
                     if (key == mSourceKey) {
-                        sourceKeyOverwritten = true;
+                        mSourceKeyOverwritten = true;
                     }
                     colon_index = -1;
                 }
@@ -228,7 +228,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
     AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
-    if (!sourceKeyOverwritten) {
+    if (!mSourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
     }
     if (mCommonParserOptions.ShouldAddSourceContent(true)) {
