@@ -44,6 +44,7 @@ public:
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
     void TestMultipleLines();
+    void TestProcessEventMicrosecondUnmatch();
 
     PipelineContext mContext;
 };
@@ -57,6 +58,7 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 
 void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
@@ -133,7 +135,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             {
                 "contents": {
                     "__raw_log__": "[2023-09-04 13:15",
-                    "content": "[2023-09-04 13:15",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -143,7 +144,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             {
                 "contents": {
                     "__raw_log__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
-                    "content": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -401,16 +401,43 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
     processorInstance.Process(eventGroup);
     // judge result
     std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
+    std::string expectJson = R"({
+        "events": [
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "100",
+                    "AppConfigBase AppConfigBase": "success",
+                    "__LEVEL__": "INFO",
+                    "__THREAD__": "385658",
+                    "log.file.offset":"0",
+                    "microtime": "1693833300000000"
+                },
+                "timestamp": 1693833300,
+                "timestampNanosecond": 0,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "100",
+                    "AppConfigBase AppConfigBase": "success",
+                    "__THREAD__": "385658",
+                    "log.file.offset":"0",
+                    "microtime": "1693833360000000"
+                },
+                "timestamp": 1693833360,
+                "timestampNanosecond": 0,
+                "type": 1
+            }
+        ]
+    })";
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     // check observablity
-    int count = 3;
-    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcInRecordsTotal->GetValue());
-    // discard unmatch, so output is 0
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1, processor.GetContext().GetProcessProfile().parseFailures);
+    APSARA_TEST_EQUAL_FATAL(uint64_t(3), processorInstance.mProcInRecordsTotal->GetValue());
+    // only timestamp failed, so output is 2
+    APSARA_TEST_EQUAL_FATAL(uint64_t(2), processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor.mProcParseErrorTotal->GetValue());
 }
 
 void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
@@ -475,7 +502,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
                 "contents": {
                     "__raw__": "value1",
                     "__raw_log__": "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -551,7 +577,6 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
                 "contents": {
                     "__raw__": "value1",
                     "__raw_log__": "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -661,7 +686,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -672,7 +696,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -683,7 +706,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -694,7 +716,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -705,7 +726,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -723,8 +743,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     std::string expectValue = "value1";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((std::string("__raw_log__").size() - std::string("content").size()) * count,
+                            processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
 
@@ -817,6 +837,119 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcParseErrorTotal->GetValue());
 }
 
+void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
+    // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:15:04,862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:16:04]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:17:04,1]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:18:04"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+    eventGroup.FromJsonString(inJson);
+    // run function
+    std::string pluginId = "testID";
+    ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
+    ProcessorInstance processorInstance(processor, pluginId);
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processorInstance.Process(eventGroup);
+
+    // judge result
+    std::string expectJson = R"({
+        "events": [
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "100",
+                    "AppConfigBase AppConfigBase": "success",
+                    "__LEVEL__": "INFO",
+                    "__THREAD__": "385658",
+                    "microtime": "1693833304862181"
+                },
+                "timestamp": 1693833304,
+                "timestampNanosecond": 862181000,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "100",
+                    "AppConfigBase AppConfigBase": "success",
+                    "__LEVEL__": "INFO",
+                    "__THREAD__": "385658",
+                    "microtime": "1693833364000000"
+                },
+                "timestamp": 1693833364,
+                "timestampNanosecond": 0,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "100",
+                    "AppConfigBase AppConfigBase": "success",
+                    "__LEVEL__": "INFO",
+                    "__THREAD__": "385658",
+                    "microtime": "1693833424100000"
+                },
+                "timestamp": 1693833424,
+                "timestampNanosecond": 100000000,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "__raw_log__": "[2023-09-04 13:18:04"
+                },
+                "timestamp": 12345678901,
+                "timestampNanosecond": 0,
+                "type": 1
+            }
+        ]
+    })";
+    std::string outJson = eventGroup.ToJsonString();
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    // check observablity
+    APSARA_TEST_EQUAL_FATAL(1, processor->GetContext().GetProcessProfile().parseFailures);
+    APSARA_TEST_EQUAL_FATAL(uint64_t(4), processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(4), processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor->mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(1), processor->mProcParseErrorTotal->GetValue());
+}
 } // namespace logtail
 
 UNIT_TEST_MAIN

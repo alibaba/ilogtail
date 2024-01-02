@@ -1223,13 +1223,13 @@ void EventDispatcherBase::UpdateConfig() {
         }
         ConfigManager::GetInstance()->SetConfigRemoveFlag(false);
     }
-    // reset last dump time to prevent check point manager to dump check point and delete check point.
-    // because this may mix check point when init reader and dump check point happen in same time
-    CheckPointManager::Instance()->ResetLastDumpTime();
     // we should add checkpoint events
 
     LogtailPlugin::GetInstance()->Resume();
     LogInput::GetInstance()->Resume(true);
+    // reset last dump time to prevent check point manager to dump check point and delete check point.
+    // because this may mix check point when init reader and dump check point happen in same time
+    CheckPointManager::Instance()->ResetLastDumpTime();
 
 #if defined(__linux__)
     if (mStreamLogManagerPtr != NULL) {

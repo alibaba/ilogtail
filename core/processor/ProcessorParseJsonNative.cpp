@@ -77,19 +77,22 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
 
     auto rawContent = sourceEvent.GetContent(mSourceKey);
 
-    bool res = true;
-    res = JsonLogLineParser(sourceEvent, logPath, e);
+    bool sourceKeyOverwritten = mSourceKeyOverwritten;
+    bool rawLogTagOverwritten = false;
+    bool res = JsonLogLineParser(sourceEvent, logPath, e, sourceKeyOverwritten, rawLogTagOverwritten);
 
     if (!res && !mDiscardUnmatch) {
+        sourceEvent.DelContent(mSourceKey);
+        mProcParseOutSizeBytes->Add(-mSourceKey.size() - rawContent.size());
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                rawContent,
                sourceEvent); // legacy behavior, should use sourceKey
     }
     if (res || !mDiscardUnmatch) {
-        if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
+        if (mUploadRawLog && (!res || !rawLogTagOverwritten)) {
             AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
         }
-        if (res && !mSourceKeyOverwritten) {
+        if (res && !sourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
         }
         return true;
@@ -100,7 +103,9 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
 
 bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
                                                  const StringView& logPath,
-                                                 PipelineEventPtr& e) {
+                                                 PipelineEventPtr& e,
+                                                 bool& sourceKeyOverwritten,
+                                                 bool& rawLogTagOverwritten) {
     StringView buffer = sourceEvent.GetContent(mSourceKey);
 
     if (buffer.empty())
@@ -153,10 +158,10 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
         StringBuffer contentValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(contentValue);
 
         if (contentKey.c_str() == mSourceKey) {
-            mSourceKeyOverwritten = true;
+            sourceKeyOverwritten = true;
         }
         if (contentKey.c_str() == mRawLogTag) {
-            mRawLogTagOverwritten = true;
+            rawLogTagOverwritten = true;
         }
 
         AddLog(StringView(contentKeyBuffer.data, contentKeyBuffer.size),

@@ -1,5 +1,45 @@
 # 发布历史
 
+## 1.8.4
+
+### 发布记录
+
+发版日期：2024 年 1 月 2 日
+
+优化
+
+* goprofile插件上报数据中使用机器的IP地址 [#1281](https://github.com/alibaba/ilogtail/pull/1281)
+
+问题修复
+
+* 修复正则配置time_key没有默认设置为time的兼容性问题 [#1272](https://github.com/alibaba/ilogtail/pull/1272)
+* 修复使用libcurl因没有设置CURLOPT_NOSIGNAL导致偶尔崩溃的问题 [#1286](https://github.com/alibaba/ilogtail/pull/1286)
+* 修复原生分隔符解析插件解析行首有空格的日志时字段错乱的问题 [#1288](https://github.com/alibaba/ilogtail/pull/1288)
+* 修复原生插件丢弃超时日志时区处理错误的问题 [#1293](https://github.com/alibaba/ilogtail/pull/1293)
+* 修复解析任意含有content key的json后，原生JSON插件总是错误保留原始content字段的问题 [#1295](https://github.com/alibaba/ilogtail/pull/1295)
+* 修复原生分隔符插件的内存泄露问题 [#1299](https://github.com/alibaba/ilogtail/pull/1299)
+* 修复因检查点转储早于目录注册导致的日志重复问题 [#1301](https://github.com/alibaba/ilogtail/pull/1301)
+* 修复飞天日志无法解析带逗号时间格式的兼容性问题 [#1302](https://github.com/alibaba/ilogtail/pull/1302)
+* 如果原生解析失败并选择保留原始日志，原始日志将仅保留在__raw_log__而不再保留在content字段以避免数据重复 [#1304](https://github.com/alibaba/ilogtail/pull/1304)
+* 修复K8s集群Pod网络为HostNetwork时获取到的容器IP有时为空的问题 [#1280](https://github.com/alibaba/ilogtail/pull/1280)
+
+[详情和源代码](https://github.com/alibaba/ilogtail/blob/main/changes/v1.8.4.md)
+
+### 下载
+
+| 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
+| [ilogtail-1.8.4.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.8.4/ilogtail-1.8.4.linux-amd64.tar.gz) | Linux | x86-64 | 70d16cac33616e5e374d9da0c5ec1721aa1f9e692069aa5d519bcaf206eb043b |
+| [ilogtail-1.8.4.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.8.4/ilogtail-1.8.4.linux-arm64.tar.gz) | Linux | arm64  | e28021ad408779183cc068986c288916f7534643e7184b12f615b736ec413f53 |
+
+### Docker 镜像
+
+**Docker Pull 命令**&#x20;
+
+``` bash
+docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.8.4
+```
+
 ## 1.8.3
 
 ### 发布记录

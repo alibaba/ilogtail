@@ -58,7 +58,7 @@ bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig)
         }
     }
 
-    mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
+    mDelimiterModeFsmParserPtr.reset(new DelimiterModeFsmParser(mQuote, mSeparatorChar));
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
@@ -217,6 +217,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
             }
         }
     } else if (!mDiscardUnmatch) {
+        sourceEvent.DelContent(mSourceKey);
+        mProcParseOutSizeBytes->Add(-mSourceKey.size() - buffer.size());
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                buffer,
                sourceEvent); // legacy behavior, should use sourceKey

@@ -100,7 +100,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
                     {
                         "__raw__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
                         "__raw_log__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
-                        "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
                         "log.file.offset":"0"
                     },
                     "timestamp" : 12345678901,
@@ -352,6 +351,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     config.mAdvancedConfig.mRawLogTag = "__raw__";
 
     // make events
+    // the first event has key "content" in json key with overwrites sourceKey "content"
+    // the second event doesn't have key "content" in json
+    // after parsing, the first event's content should be the value in json, the original content should be the value of
+    // "__raw__" the second event's content should be dropped, the original content should be the value of "__raw__"
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
@@ -365,6 +368,15 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678902,
                 "type" : 1
             }
         ]
@@ -397,6 +409,21 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
                 "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__raw__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
+                    "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
+                    "age":"25",
+                    "courses":"[\"Math\",\"English\",\"Science\"]",
+                    "is_student":"false",
+                    "name":"Mike",
+                    "scores":"{\"Math\":90,\"English\":85,\"Science\":95}"
+                },
+                "timestamp" : 12345678902,
+                "timestampNanosecond" : 0,
+                "type" : 1
             }
         ]
     })";
@@ -413,6 +440,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     config.mAdvancedConfig.mRawLogTag = "__raw__";
 
     // make events
+    // the first event has key "__raw__" in json key with overwrites rawLogTag "__raw__"
+    // the second event doesn't have key "__raw__" in json
+    // after parsing, the first event's __raw__ should be the value in json, the original content should be discarded
+    // the second event's __raw__ should be the original content
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
@@ -426,6 +457,16 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
+                    "log.file.offset": "0"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678902,
                 "type" : 1
             }
         ]
@@ -455,6 +496,22 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
                     "scores":"{\"Math\":90,\"English\":85,\"Science\":95}"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__raw__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
+                    "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
+                    "age":"25",
+                    "courses":"[\"Math\",\"English\",\"Science\"]",
+                    "is_student":"false",
+                    "log.file.offset":"0",
+                    "name":"Mike",
+                    "scores":"{\"Math\":90,\"English\":85,\"Science\":95}"
+                },
+                "timestamp" : 12345678902,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -509,9 +566,8 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
         = "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": "
-                  "\"07/Jul/2022:10:30:28\"";
-    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((std::string("__raw_log__").size() - std::string("content").size()) * count,
+                            processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
 
@@ -525,7 +581,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
-                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
                     "log.file.offset":"0"
                 },
                 "timestamp" : 12345678901,
