@@ -40,7 +40,7 @@ type MetricWrapper struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *MetricWrapper) Init(name string, pluginNum int) (int, error) {
+func (p *MetricWrapper) Init(name string, pluginNum int, inputInterval int) error {
 	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
@@ -53,7 +53,16 @@ func (p *MetricWrapper) Init(name string, pluginNum int) (int, error) {
 	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
 
 	p.Config.Context.SetMetricRecord(p.MetricRecord)
-	return p.Input.Init(p.Config.Context)
+
+	interval, err := p.Input.Init(p.Config.Context)
+	if err != nil {
+		return err
+	}
+	if interval == 0 {
+		interval = inputInterval
+	}
+	p.Interval = time.Duration(interval) * time.Millisecond
+	return nil
 }
 
 func (p *MetricWrapper) Run(control *pipeline.AsyncControl) {

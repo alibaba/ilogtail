@@ -18,6 +18,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -31,10 +33,42 @@ var errAggAdd = errors.New("loggroup queue is full")
 // passes log groups to associated LogstoreConfig through channel LogGroupsChan.
 // In fact, LogGroupsChan == (associated) LogstoreConfig.LogGroupsChan.
 type AggregatorWrapper struct {
+	pipeline.PluginContext
+
 	Aggregator    pipeline.AggregatorV1
 	Config        *LogstoreConfig
 	LogGroupsChan chan *protocol.LogGroup
 	Interval      time.Duration
+
+	procInRecordsTotal  pipeline.CounterMetric
+	procOutRecordsTotal pipeline.CounterMetric
+	procTimeMS          pipeline.CounterMetric
+}
+
+func (p *AggregatorWrapper) Init(name string, pluginNum int) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
+	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
+
+	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
+	p.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
+	p.procTimeMS = helper.NewCounterMetric("proc_time_ms")
+
+	p.MetricRecord.RegisterCounterMetric(p.procInRecordsTotal)
+	p.MetricRecord.RegisterCounterMetric(p.procOutRecordsTotal)
+	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
+
+	p.Config.Context.SetMetricRecord(p.MetricRecord)
+
+	interval, err := p.Aggregator.Init(p.Config.Context, p)
+	if err != nil {
+		logger.Error(p.Config.Context.GetRuntimeContext(), "AGGREGATOR_INIT_ERROR", "Aggregator failed to initialize", p.Aggregator.Description(), "error", err)
+		return err
+	}
+	if interval == 0 {
+		interval = p.Config.GlobalConfig.AggregatIntervalMs
+	}
+	p.Interval = time.Millisecond * time.Duration(interval)
+	return nil
 }
 
 // Add inserts @loggroup to LogGroupsChan if @loggroup is not empty.
@@ -44,6 +78,7 @@ func (p *AggregatorWrapper) Add(loggroup *protocol.LogGroup) error {
 	if len(loggroup.Logs) == 0 {
 		return nil
 	}
+	p.procInRecordsTotal.Add(int64(len(loggroup.Logs)))
 	select {
 	case p.LogGroupsChan <- loggroup:
 		return nil
@@ -60,6 +95,7 @@ func (p *AggregatorWrapper) AddWithWait(loggroup *protocol.LogGroup, duration ti
 	if len(loggroup.Logs) == 0 {
 		return nil
 	}
+	p.procInRecordsTotal.Add(int64(len(loggroup.Logs)))
 	timer := time.NewTimer(duration)
 	select {
 	case p.LogGroupsChan <- loggroup:
@@ -80,6 +116,7 @@ func (p *AggregatorWrapper) Run(control *pipeline.AsyncControl) {
 			if len(logGroup.Logs) == 0 {
 				continue
 			}
+			p.procInRecordsTotal.Add(int64(len(logGroup.Logs)))
 			p.LogGroupsChan <- logGroup
 		}
 		if exitFlag {

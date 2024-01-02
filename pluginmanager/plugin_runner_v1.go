@@ -98,7 +98,7 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, pluginNum int, category pl
 		}
 	case pluginAggregator:
 		if aggregator, ok := plugin.(pipeline.AggregatorV1); ok {
-			return p.addAggregator(aggregator)
+			return p.addAggregator(pluginName, pluginNum, aggregator)
 		}
 	case pluginFlusher:
 		if flusher, ok := plugin.(pipeline.FlusherV1); ok {
@@ -142,16 +142,8 @@ func (p *pluginv1Runner) addMetricInput(name string, pluginNum int, input pipeli
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
-
-	interval, err := wrapper.Init(name, pluginNum)
-	if err != nil {
-		return err
-	}
-	if interval == 0 {
-		interval = inputInterval
-	}
-	wrapper.Interval = time.Duration(interval) * time.Millisecond
-	return nil
+	
+	return  wrapper.Init(name, pluginNum, inputInterval)
 }
 
 func (p *pluginv1Runner) addServiceInput(name string, pluginNum int, input pipeline.ServiceInputV1) error {
@@ -173,22 +165,13 @@ func (p *pluginv1Runner) addProcessor(name string, pluginNum int, processor pipe
 	return wrapper.Init(name, pluginNum)
 }
 
-func (p *pluginv1Runner) addAggregator(aggregator pipeline.AggregatorV1) error {
+func (p *pluginv1Runner) addAggregator(name string, pluginNum int, aggregator pipeline.AggregatorV1) error {
 	var wrapper AggregatorWrapper
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Aggregator = aggregator
 	wrapper.LogGroupsChan = p.LogGroupsChan
-	interval, err := aggregator.Init(p.LogstoreConfig.Context, &wrapper)
-	if err != nil {
-		logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "AGGREGATOR_INIT_ERROR", "Aggregator failed to initialize", aggregator.Description(), "error", err)
-		return err
-	}
-	if interval == 0 {
-		interval = p.LogstoreConfig.GlobalConfig.AggregatIntervalMs
-	}
-	wrapper.Interval = time.Millisecond * time.Duration(interval)
 	p.AggregatorPlugins = append(p.AggregatorPlugins, &wrapper)
-	return nil
+	return wrapper.Init(name, pluginNum)
 }
 
 func (p *pluginv1Runner) addFlusher(name string, pluginNum int, flusher pipeline.FlusherV1) error {
