@@ -44,7 +44,7 @@ jobs:
       - name: prepare ubuntu environment
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev git make curl
       # Clean up space to prevent action from running out of disk space.
-      - name: clean
+      - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -52,16 +52,18 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
+
       - name: Check disk space
         run: |
           df -hT $PWD
+
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v2
         with:
           submodules: true
       - name: Copy Lib

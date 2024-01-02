@@ -15,30 +15,65 @@
  */
 
 #include "processor/ProcessorParseApsaraNative.h"
-#include "common/Constants.h"
-#include "models/LogEvent.h"
-#include "app_config/AppConfig.h"
-#include "parser/LogParser.h" // for UNMATCH_LOG_KEY
-#include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
-#include <algorithm>
 
+#include "app_config/AppConfig.h"
+#include "common/LogtailCommonFlags.h"
+#include "common/ParamExtractor.h"
+#include "common/TimeUtil.h"
+#include "models/LogEvent.h"
+#include "monitor/MetricConstants.h"
+#include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
+
 const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";
 
-// static const int32_t MAX_BASE_FIELD_NUM = 10;
+const std::string SLS_KEY_LEVEL = "__LEVEL__";
+const std::string SLS_KEY_THREAD = "__THREAD__";
+const std::string SLS_KEY_FILE = "__FILE__";
+const std::string SLS_KEY_LINE = "__LINE__";
+const int32_t MAX_BASE_FIELD_NUM = 10;
 
-bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-    mSourceKey = DEFAULT_CONTENT_KEY;
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mUploadRawLog = config.mUploadRawLog;
-    mRawLogTag = config.mAdvancedConfig.mRawLogTag;
-    mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
-    if (mUploadRawLog && mRawLogTag == mSourceKey) {
-        mSourceKeyOverwritten = true;
+bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+
+    // SourceKey
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
+
+    // Timezone
+    if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+    } else if (!ParseLogTimeZoneOffsetSecond(mTimezone, mLogTimeZoneOffsetSecond)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             "string param Timezone is not valid",
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+    }
+
+    if (!mCommonParserOptions.Init(config, *mContext, sName)) {
+        return false;
+    }
+
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
@@ -48,6 +83,7 @@ bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
+
     return true;
 }
 
@@ -70,7 +106,18 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache) {
+/*
+ * 处理单个日志事件。
+ * @param logPath - 日志文件的路径。
+ * @param e - 指向待处理日志事件的智能指针。
+ * @param lastLogTime - 上一条日志的时间戳（秒）。
+ * @param timeStrCache - 缓存时间字符串，用于比较和更新。
+ * @return 如果事件被处理且保留，则返回true，如果事件被丢弃，则返回false。
+ */
+bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
+                                              PipelineEventPtr& e,
+                                              LogtailTime& lastLogTime,
+                                              StringView& timeStrCache) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -78,7 +125,11 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
+    mSourceKeyOverwritten = false;
     StringView buffer = sourceEvent.GetContent(mSourceKey);
+    if (buffer.size() == 0) {
+        return true;
+    }
     mProcParseInSizeBytes->Add(buffer.size());
     int64_t logTime_in_micro = 0;
     time_t logTime = ApsaraEasyReadLogTimeParser(buffer, timeStrCache, lastLogTime, logTime_in_micro);
@@ -98,39 +149,43 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
         }
 
         GetContext().GetAlarm().SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                               bufOut.to_string() + " $ " + ToString(logTime),
-                                               GetContext().GetProjectName(),
-                                               GetContext().GetLogstoreName(),
-                                               GetContext().GetRegion());
+                                          bufOut.to_string() + " $ " + ToString(logTime),
+                                          GetContext().GetProjectName(),
+                                          GetContext().GetLogstoreName(),
+                                          GetContext().GetRegion());
         mProcParseErrorTotal->Add(1);
         ++(*mParseFailures);
-        if (!mDiscardUnmatch) {
-            AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
-                   buffer,
-                   sourceEvent); // legacy behavior, should use sourceKey
-            if (mUploadRawLog) {
-                AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
-            }
-            return true;
+        sourceEvent.DelContent(mSourceKey);
+        if (mCommonParserOptions.ShouldAddSourceContent(false)) {
+            AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
         }
-        mProcDiscardRecordsTotal->Add(1);
-        return false;
+        if (mCommonParserOptions.ShouldAddLegacyUnmatchedRawLog(false)) {
+            AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, buffer, sourceEvent, false);
+        }
+        if (mCommonParserOptions.ShouldEraseEvent(false, sourceEvent)) {
+            mProcDiscardRecordsTotal->Add(1);
+            return false;
+        }
+        return true;
     }
-    if (BOOL_FLAG(ilogtail_discard_old_data)
-        && (time(NULL) - logTime + mLogTimeZoneOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
+    if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             StringView bufOut(buffer);
             if (buffer.size() > (size_t)(1024)) {
                 bufOut = buffer.substr(0, 1024);
             }
             if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
-                LOG_WARNING(sLogger,
-                            ("discard history data, first 1k",
-                             bufOut)("parsed time", logTime)("project", GetContext().GetProjectName())(
-                                "logstore", GetContext().GetLogstoreName())("file", logPath));
+                LOG_WARNING(
+                    sLogger,
+                    ("drop log event",
+                     "log time falls more than " + ToString(INT32_FLAG(ilogtail_discard_interval))
+                         + " secs behind current time")("log time", logTime)("gap", ToString(time(NULL) - logTime))(
+                        "project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())(
+                        "config", GetContext().GetConfigName())("file", logPath));
             }
             GetContext().GetAlarm().SendAlarm(OUTDATED_LOG_ALARM,
-                                              std::string("logTime: ") + ToString(logTime) + ", log:" + bufOut.to_string(),
+                                              std::string("logTime: ") + ToString(logTime)
+                                                  + ", log:" + bufOut.to_string(),
                                               GetContext().GetProjectName(),
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
@@ -146,20 +201,16 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     int32_t colon_index = -1;
     int32_t index = -1;
     index = ParseApsaraBaseFields(buffer, sourceEvent);
-    bool sourceKeyOverwritten = mSourceKeyOverwritten;
-    bool rawLogTagOverwritten = false;
-    if (buffer.data()[index] != 0) {
-        do {
-            ++index;
-            if (buffer.data()[index] == '\t' || buffer.data()[index] == '\0') {
+    int32_t length = buffer.size();
+    if (index < length) {
+        for (index = index + 1; index <= length; ++index) {
+            if (index == length || buffer.data()[index] == '\t') {
                 if (colon_index >= 0) {
                     StringView key(buffer.data() + beg_index, colon_index - beg_index);
-                    AddLog(key, StringView(buffer.data() + colon_index + 1, index - colon_index - 1), sourceEvent);
+                    StringView data(buffer.data() + colon_index + 1, index - colon_index - 1);
+                    AddLog(key, data, sourceEvent);
                     if (key == mSourceKey) {
-                        sourceKeyOverwritten = true;
-                    }
-                    if (key == mRawLogTag) {
-                        rawLogTagOverwritten = true;
+                        mSourceKeyOverwritten = true;
                     }
                     colon_index = -1;
                 }
@@ -167,12 +218,9 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             } else if (buffer.data()[index] == ':' && colon_index == -1) {
                 colon_index = index;
             }
-        } while (buffer.data()[index]);
+        }
     }
-    // TODO: deprecated
-    if (mAdjustApsaraMicroTimezone) {
-        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
-    }
+    // logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
     StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(20);
 #if defined(__linux__)
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%ld", logTime_in_micro));
@@ -180,26 +228,43 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
     AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
-    if (mUploadRawLog && !rawLogTagOverwritten) {
-        AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
-    }
-    if (!sourceKeyOverwritten) {
+    if (!mSourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
+    }
+    if (mCommonParserOptions.ShouldAddSourceContent(true)) {
+        AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
     }
     return true;
 }
 
-time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime) {
+/*
+ * 解析Apsara格式日志的时间。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param timeStr - 解析后的时间字符串。
+ * @param lastLogTime - 上一条日志的时间戳（秒）。
+ * @param microTime - 解析出的微秒时间戳。
+ * @return 解析出的时间戳（秒），如果解析失败，则返回0。
+ */
+time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer,
+                                                               StringView& timeStr,
+                                                               LogtailTime& lastLogTime,
+                                                               int64_t& microTime) {
     if (buffer[0] != '[') {
         return 0;
     }
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
         int nanosecondLength = 0;
-        auto strptimeResult = Strptime(buffer.data() + 1, "%s", &lastLogTime, nanosecondLength);
+        size_t pos = buffer.find(']', 1);
+        if (pos == std::string::npos) {
+            LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer));
+            return 0;
+        }
+        // strTime is the content between '[' and ']' and ends with '\0'
+        std::string strTime = buffer.substr(1, pos).to_string();
+        auto strptimeResult = Strptime(strTime.c_str(), "%s", &lastLogTime, nanosecondLength);
         if (NULL == strptimeResult || strptimeResult[0] != ']') {
-            LOG_WARNING(sLogger,
-                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
+            LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
             return 0;
         }
         microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
@@ -207,26 +272,49 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     }
     // test other date format case
     {
-        if (IsPrefixString(buffer.data() + 1, timeStr) == true) {
+        size_t pos = buffer.find(']', 1);
+        if (pos == std::string::npos) {
+            LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer));
+            return 0;
+        }
+        // strTime is the content between '[' and ']' and ends with '\0'
+        std::string strTime = buffer.substr(1, pos).to_string();
+        if (IsPrefixString(strTime.c_str(), timeStr) == true) {
             microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
             return lastLogTime.tv_sec;
         }
         struct tm tm;
         memset(&tm, 0, sizeof(tm));
         int nanosecondLength = 0;
-        auto strptimeResult = Strptime(buffer.data() + 1, "%Y-%m-%d %H:%M:%S.%f", &lastLogTime, nanosecondLength);
-        if (NULL == strptimeResult || strptimeResult[0] != ']') {
+        // parse second part
+        auto strptimeResult = Strptime(strTime.c_str(), "%Y-%m-%d %H:%M:%S", &lastLogTime, nanosecondLength);
+        if (NULL == strptimeResult) {
             LOG_WARNING(sLogger,
-                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S.%f"));
+                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S"));
             return 0;
+        }
+        // parse nanosecond part (optional)
+        if (*strptimeResult != '\0') {
+            strptimeResult = Strptime(strptimeResult + 1, "%f", &lastLogTime, nanosecondLength);
+            if (NULL == strptimeResult) {
+                LOG_WARNING(sLogger,
+                            ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S.%f"));
+            }
         }
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         timeStr = StringView(buffer.data() + 1, 19);
+        lastLogTime.tv_sec = lastLogTime.tv_sec - mLogTimeZoneOffsetSecond;
         microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
         return lastLogTime.tv_sec;
     }
 }
 
+/*
+ * 检查字符串是否包含指定的前缀。
+ * @param all - 完整的字符串。
+ * @param prefix - 要检查的前缀。
+ * @return 如果字符串以指定前缀开头，则返回true；否则返回false。
+ */
 bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringView& prefix) {
     if (prefix.size() == 0)
         return false;
@@ -239,17 +327,24 @@ bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringVie
     return true;
 }
 
-static int32_t FindBaseFields(StringView& buffer, int32_t beginIndexArray[], int32_t endIndexArray[]) {
+/*
+ * 查找Apsara格式日志的基础字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndexArray - 字段开始索引的数组。
+ * @param endIndexArray - 字段结束索引的数组。
+ * @return 解析到的基础字段数量。
+ */
+static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[], int32_t endIndexArray[]) {
     int32_t baseFieldNum = 0;
-    for (int32_t i = 0; buffer[i] != 0; i++) {
+    for (size_t i = 0; i < buffer.size(); i++) {
         if (buffer[i] == '[') {
             beginIndexArray[baseFieldNum] = i + 1;
         } else if (buffer[i] == ']') {
-            if (buffer[i + 1] == '\t' || buffer[i + 1] == '\0' || buffer[i + 1] == '\n') {
+            if (buffer[i + 1] == '\t' || buffer[i + 1] == '\n') {
                 endIndexArray[baseFieldNum] = i;
                 baseFieldNum++;
             }
-            if (baseFieldNum >= LogParser::MAX_BASE_FIELD_NUM) {
+            if (baseFieldNum >= MAX_BASE_FIELD_NUM) {
                 break;
             }
             if (buffer[i + 1] == '\t' && buffer[i + 2] != '[') {
@@ -260,7 +355,14 @@ static int32_t FindBaseFields(StringView& buffer, int32_t beginIndexArray[], int
     return baseFieldNum;
 }
 
-static bool IsFieldLevel(StringView& buffer, int32_t beginIndex, int32_t endIndex) {
+/*
+ * 检查是否为日志级别字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 如果字段是日志级别，则返回true；否则返回false。
+ */
+static bool IsFieldLevel(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] > 'Z' || buffer[i] < 'A') {
             return false;
@@ -269,7 +371,14 @@ static bool IsFieldLevel(StringView& buffer, int32_t beginIndex, int32_t endInde
     return true;
 }
 
-static bool IsFieldThread(StringView& buffer, int32_t beginIndex, int32_t endIndex) {
+/*
+ * 检查是否为线程ID字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 如果字段是线程ID，则返回true；否则返回false。
+ */
+static bool IsFieldThread(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] > '9' || buffer[i] < '0') {
             return false;
@@ -278,7 +387,14 @@ static bool IsFieldThread(StringView& buffer, int32_t beginIndex, int32_t endInd
     return true;
 }
 
-static bool IsFieldFileLine(StringView& buffer, int32_t beginIndex, int32_t endIndex) {
+/*
+ * 检查是否为文件和行号字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 如果字段是文件和行号，则返回true；否则返回false。
+ */
+static bool IsFieldFileLine(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] == '/' || buffer[i] == '.') {
             return true;
@@ -287,7 +403,14 @@ static bool IsFieldFileLine(StringView& buffer, int32_t beginIndex, int32_t endI
     return false;
 }
 
-static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t endIndex) {
+/*
+ * 查找冒号字符的索引。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 冒号字符的索引，如果未找到，则返回endIndex。
+ */
+static int32_t FindColonIndex(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] == ':') {
             return i;
@@ -296,9 +419,15 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
     return endIndex;
 }
 
-int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
-    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+/*
+ * 解析Apsara日志的基础字段并添加到日志事件中。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param sourceEvent - 引用到日志事件对象，用于添加解析出的字段。
+ * @return 返回处理完基础字段后的索引位置。
+ */
+int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent) {
+    int32_t beginIndexArray[MAX_BASE_FIELD_NUM] = {0};
+    int32_t endIndexArray[MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
@@ -311,23 +440,30 @@ int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, Lo
         endIndex = endIndexArray[i];
         if ((findFieldBitMap & 0x1) == 0 && IsFieldLevel(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x1;
-            AddLog(LogParser::SLS_KEY_LEVEL, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
+            AddLog(SLS_KEY_LEVEL, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
         } else if ((findFieldBitMap & 0x10) == 0 && IsFieldThread(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x10;
-            AddLog(LogParser::SLS_KEY_THREAD, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
+            AddLog(SLS_KEY_THREAD, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
         } else if ((findFieldBitMap & 0x100) == 0 && IsFieldFileLine(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x100;
             int32_t colonIndex = FindColonIndex(buffer, beginIndex, endIndex);
-            AddLog(LogParser::SLS_KEY_FILE, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
+            AddLog(SLS_KEY_FILE, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
             if (colonIndex < endIndex) {
-                AddLog(LogParser::SLS_KEY_LINE, StringView(buffer.data() + colonIndex + 1, endIndex - colonIndex - 1), sourceEvent);
+                AddLog(
+                    SLS_KEY_LINE, StringView(buffer.data() + colonIndex + 1, endIndex - colonIndex - 1), sourceEvent);
             }
         }
     }
     return endIndexArray[baseFieldNum - 1]; // return ']' position
 }
 
-void ProcessorParseApsaraNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
+void ProcessorParseApsaraNative::AddLog(const StringView& key,
+                                        const StringView& value,
+                                        LogEvent& targetEvent,
+                                        bool overwritten) {
+    if (!overwritten && targetEvent.HasContent(key)) {
+        return;
+    }
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
     mProcParseOutSizeBytes->Add(key.size() + value.size());
