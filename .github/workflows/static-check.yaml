@@ -33,6 +33,8 @@ jobs:
     env:
       RUNNER_ALLOW_RUNASROOT: 1
     runs-on: ${{ matrix.runner }}
+    container: 
+      image: sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux
     timeout-minutes: 60
     strategy:
       matrix:
