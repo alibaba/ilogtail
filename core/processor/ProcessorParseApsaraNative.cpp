@@ -423,7 +423,8 @@ int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(const StringView& buff
         } else if ((findFieldBitMap & 0x100) == 0 && IsFieldFileLine(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x100;
             int32_t colonIndex = FindColonIndex(buffer, beginIndex, endIndex);
-            AddLog(LogParser::SLS_KEY_FILE, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
+            AddLog(
+                LogParser::SLS_KEY_FILE, StringView(buffer.data() + beginIndex, colonIndex - beginIndex), sourceEvent);
             if (colonIndex < endIndex) {
                 AddLog(LogParser::SLS_KEY_LINE,
                        StringView(buffer.data() + colonIndex + 1, endIndex - colonIndex - 1),
