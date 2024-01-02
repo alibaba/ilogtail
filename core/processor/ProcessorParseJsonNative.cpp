@@ -86,7 +86,7 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
 
     auto rawContent = sourceEvent.GetContent(mSourceKey);
 
-    bool sourceKeyOverwritten = mSourceKeyOverwritten;
+    bool sourceKeyOverwritten = false;
     bool parseSuccess = JsonLogLineParser(sourceEvent, logPath, e, sourceKeyOverwritten);
 
     if (!parseSuccess || !sourceKeyOverwritten) {
