@@ -148,16 +148,13 @@ func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 	idf.deleteMetric = helper.NewCounterMetric("remove_container")
 	idf.updateMetric = helper.NewCounterMetric("update_container")
 
-	labels := make(map[string]string)
-	labels["project"] = idf.context.GetProject()
-	labels["logstore"] = idf.context.GetLogstore()
-	labels["configName"] = idf.context.GetConfigName()
+	labels := pipeline.GetCommonLabels(idf.context, "metric_docker_file", -1)
 	idf.metricRecord = idf.context.RegisterMetricRecord(labels)
 
-	idf.context.RegisterCounterMetric(idf.metricRecord, idf.avgInstanceMetric)
-	idf.context.RegisterCounterMetric(idf.metricRecord, idf.addMetric)
-	idf.context.RegisterCounterMetric(idf.metricRecord, idf.deleteMetric)
-	idf.context.RegisterCounterMetric(idf.metricRecord, idf.updateMetric)
+	idf.metricRecord.RegisterCounterMetric(idf.avgInstanceMetric)
+	idf.metricRecord.RegisterCounterMetric(idf.addMetric)
+	idf.metricRecord.RegisterCounterMetric(idf.deleteMetric)
+	idf.metricRecord.RegisterCounterMetric(idf.updateMetric)
 
 	var err error
 	idf.IncludeEnv, idf.IncludeEnvRegex, err = helper.SplitRegexFromMap(idf.IncludeEnv)

@@ -15,7 +15,6 @@
 package pluginmanager
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -47,21 +46,17 @@ type FlusherWrapperV2 struct {
 }
 
 func (wrapper *FlusherWrapperV1) Init(name string, pluginNum int) error {
-	labels := make(map[string]string)
-	labels["project"] = wrapper.Config.Context.GetProject()
-	labels["logstore"] = wrapper.Config.Context.GetLogstore()
-	labels["config_name"] = wrapper.Config.Context.GetConfigName()
-	labels["plugin_id"] = strconv.FormatInt(int64(pluginNum), 10)
-	labels["plugin_name"] = name
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginNum)	
+
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
 	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
 	wrapper.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
 	wrapper.procTimeMS = helper.NewCounterMetric("proc_time_ms")
 
-	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procInRecordsTotal)
-	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procOutRecordsTotal)
-	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procTimeMS)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procInRecordsTotal)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procOutRecordsTotal)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
 
 	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
 	return wrapper.Flusher.Init(wrapper.Config.Context)

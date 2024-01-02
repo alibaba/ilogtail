@@ -72,9 +72,9 @@ func (p *ProcessorRegexFilter) Init(context pipeline.Context) error {
 	p.metricRecord = p.context.GetMetricRecord()
 
 	p.filterMetric = helper.NewCounterMetric(fmt.Sprintf("%v_filtered", pluginName))
-	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)
+	p.metricRecord.RegisterCounterMetric(p.filterMetric)
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.metricRecord, p.processedMetric)
+	p.metricRecord.RegisterCounterMetric(p.processedMetric)
 	return nil
 }
 

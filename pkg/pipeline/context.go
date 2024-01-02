@@ -16,6 +16,7 @@ package pipeline
 
 import (
 	"context"
+	"strconv"
 )
 
 type CommonContext struct {
@@ -30,6 +31,34 @@ type MetricsRecord struct {
 	CounterMetrics []CounterMetric
 	StringMetrics  []StringMetric
 	LatencyMetrics []LatencyMetric
+}
+
+func (m *MetricsRecord) RegisterCounterMetric(metric CounterMetric) {
+	m.CounterMetrics = append(m.CounterMetrics, metric)
+
+}
+
+func (m *MetricsRecord) RegisterStringMetric(metric StringMetric) {
+	m.StringMetrics = append(m.StringMetrics, metric)
+}
+
+func (m *MetricsRecord) RegisterLatencyMetric(metric LatencyMetric) {
+	m.LatencyMetrics = append(m.LatencyMetrics, metric)
+}
+
+func GetCommonLabels(context Context, pluginName string, pluginNum int) map[string]string {
+	labels := make(map[string]string)
+	labels["project"] = context.GetProject()
+	labels["logstore"] = context.GetLogstore()
+	labels["configName"] = context.GetConfigName()
+	if pluginNum > 0 {
+		labels["plugin_id"] = strconv.FormatInt(int64(pluginNum), 10)
+	}
+	if len(pluginName) > 0 {
+		labels["plugin_name"] = pluginName
+	}
+
+	return labels
 }
 
 // Context for plugin

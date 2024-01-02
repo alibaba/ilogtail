@@ -107,19 +107,16 @@ func (m *Mysql) Init(context pipeline.Context) (int, error) {
 		m.StateMent += " limit ?, " + strconv.Itoa(m.PageSize)
 	}
 
-	labels := make(map[string]string)
-	labels["project"] = m.context.GetProject()
-	labels["logstore"] = m.context.GetLogstore()
-	labels["configName"] = m.context.GetConfigName()
+	labels := pipeline.GetCommonLabels(m.context, "service_mysql", -1)
 	m.metricRecord = m.context.RegisterMetricRecord(labels)
 
 	m.collectLatency = helper.NewLatencyMetric("mysql_collect_avg_cost")
 	m.collectTotal = helper.NewCounterMetric("mysql_collect_total")
-	m.context.RegisterCounterMetric(m.metricRecord, m.collectTotal)
-	m.context.RegisterLatencyMetric(m.metricRecord, m.collectLatency)
+	m.metricRecord.RegisterCounterMetric(m.collectTotal)
+	m.metricRecord.RegisterLatencyMetric(m.collectLatency)
 	if m.CheckPoint {
 		m.checkpointMetric = helper.NewStringMetric("mysql_checkpoint")
-		m.context.RegisterStringMetric(m.metricRecord, m.checkpointMetric)
+		m.metricRecord.RegisterStringMetric(m.checkpointMetric)
 	}
 	return 10000, nil
 }

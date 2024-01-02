@@ -87,14 +87,11 @@ func (p *ProcessorEncrypt) Init(context pipeline.Context) error {
 	if err := p.parseIV(); err != nil {
 		return err
 	}
-	labels := make(map[string]string)
-	labels["project"] = p.context.GetProject()
-	labels["logstore"] = p.context.GetLogstore()
-	labels["configName"] = p.context.GetConfigName()
-	p.metricRecord = p.context.RegisterMetricRecord(labels)
 
-	p.encryptedCountMetric = helper.NewCounterMetricAndRegister(p.metricRecord, "encrypted_count", p.context)
-	p.encryptedBytesMetric = helper.NewCounterMetricAndRegister(p.metricRecord, "encrypted_bytes", p.context)
+	p.metricRecord = p.context.GetMetricRecord()
+
+	p.encryptedCountMetric = helper.NewCounterMetricAndRegister(p.metricRecord, "encrypted_count")
+	p.encryptedBytesMetric = helper.NewCounterMetricAndRegister(p.metricRecord, "encrypted_bytes")
 	return nil
 }
 
@@ -107,7 +104,7 @@ func (p *ProcessorEncrypt) ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 		return logArray
 	}
 	for _, log := range logArray {
-		p.processLog(log)
+	p.processLog(log)
 	}
 	return logArray
 }

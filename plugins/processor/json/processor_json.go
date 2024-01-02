@@ -39,9 +39,9 @@ type ProcessorJSON struct {
 	IgnoreFirstConnector   bool // 是否忽略第一个Connector
 	ExpandArray            bool // 是否展开数组类型
 
-	context      pipeline.Context
-	metricRecord *pipeline.MetricsRecord
-	procParseInSizeBytes    pipeline.CounterMetric
+	context              pipeline.Context
+	metricRecord         *pipeline.MetricsRecord
+	procParseInSizeBytes pipeline.CounterMetric
 }
 
 const pluginName = "processor_json"
@@ -54,7 +54,7 @@ func (p *ProcessorJSON) Init(context pipeline.Context) error {
 	p.context = context
 	p.metricRecord = p.context.GetMetricRecord()
 	p.procParseInSizeBytes = helper.NewCounterMetric("proc_parse_in_size_bytes")
-	p.context.RegisterCounterMetric(p.metricRecord, p.procParseInSizeBytes)
+	p.metricRecord.RegisterCounterMetric(p.procParseInSizeBytes)
 	return nil
 }
 

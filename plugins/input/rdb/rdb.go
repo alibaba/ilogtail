@@ -104,20 +104,17 @@ func (m *Rdb) Init(context pipeline.Context, rdbFunc RdbFunc) (int, error) {
 		logger.Warning(m.Context.GetRuntimeContext(), initAlarmName, "init rdbFunc error", err)
 	}
 
-	labels := make(map[string]string)
-	labels["project"] = m.Context.GetProject()
-	labels["logstore"] = m.Context.GetLogstore()
-	labels["configName"] = m.Context.GetConfigName()
+	labels := pipeline.GetCommonLabels(m.Context, "", -1)
 	m.metricRecord = m.Context.RegisterMetricRecord(labels)
 
 	m.collectLatency = helper.NewLatencyMetric(fmt.Sprintf("%s_collect_avg_cost", m.Driver))
 	m.collectTotal = helper.NewCounterMetric(fmt.Sprintf("%s_collect_total", m.Driver))
 
-	m.Context.RegisterCounterMetric(m.metricRecord, m.collectTotal)
-	m.Context.RegisterLatencyMetric(m.metricRecord, m.collectLatency)
+	m.metricRecord.RegisterCounterMetric(m.collectTotal)
+	m.metricRecord.RegisterLatencyMetric(m.collectLatency)
 	if m.CheckPoint {
 		m.checkpointMetric = helper.NewStringMetric(fmt.Sprintf("%s_checkpoint", m.Driver))
-		m.Context.RegisterStringMetric(m.metricRecord, m.checkpointMetric)
+		m.metricRecord.RegisterStringMetric(m.checkpointMetric)
 	}
 	return 10000, nil
 }

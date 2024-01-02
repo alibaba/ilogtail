@@ -203,13 +203,13 @@ func (p *ProcessorFieldsWithCondition) Init(context pipeline.Context) error {
 			}
 		}
 	}
-	
+
 	p.metricRecord = p.context.GetMetricRecord()
 
 	p.filterMetric = helper.NewCounterMetric(fmt.Sprintf("%v_filtered", PluginName))
-	p.context.RegisterCounterMetric(p.metricRecord, p.filterMetric)
+	p.metricRecord.RegisterCounterMetric(p.filterMetric)
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", PluginName))
-	p.context.RegisterCounterMetric(p.metricRecord, p.processedMetric)
+	p.metricRecord.RegisterCounterMetric(p.processedMetric)
 	return nil
 }
 

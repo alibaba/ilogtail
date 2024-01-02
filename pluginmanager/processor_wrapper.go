@@ -16,7 +16,6 @@ package pluginmanager
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -45,12 +44,7 @@ type ProcessorWrapperV2 struct {
 }
 
 func (wrapper *ProcessorWrapperV1) Init(name string, pluginNum int) error {
-	labels := make(map[string]string)
-	labels["project"] = wrapper.Config.Context.GetProject()
-	labels["logstore"] = wrapper.Config.Context.GetLogstore()
-	labels["config_name"] = wrapper.Config.Context.GetConfigName()
-	labels["plugin_id"] = strconv.FormatInt(int64(pluginNum), 10)
-	labels["plugin_name"] = name
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginNum)
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
 	fmt.Println("wrapper :", wrapper.MetricRecord)
@@ -59,9 +53,9 @@ func (wrapper *ProcessorWrapperV1) Init(name string, pluginNum int) error {
 	wrapper.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
 	wrapper.procTimeMS = helper.NewCounterMetric("proc_time_ms")
 
-	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procInRecordsTotal)
-	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procOutRecordsTotal)
-	wrapper.Config.Context.RegisterCounterMetric(wrapper.MetricRecord, wrapper.procTimeMS)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procInRecordsTotal)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procOutRecordsTotal)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
 
 	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
 	return wrapper.Processor.Init(wrapper.Config.Context)

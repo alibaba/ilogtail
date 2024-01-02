@@ -98,7 +98,7 @@ func (p *ProcessorAnchor) Init(context pipeline.Context) error {
 	p.metricRecord = p.context.GetMetricRecord()
 
 	p.logPairMetric = helper.NewAverageMetric("anchor_pairs_per_log")
-	p.context.RegisterCounterMetric(p.metricRecord, p.logPairMetric)
+	p.metricRecord.RegisterCounterMetric(p.logPairMetric)
 	return nil
 }
 
