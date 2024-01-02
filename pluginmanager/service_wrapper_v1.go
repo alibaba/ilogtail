@@ -24,12 +24,34 @@ import (
 )
 
 type ServiceWrapper struct {
+	pipeline.PluginContext
 	Input    pipeline.ServiceInputV1
 	Config   *LogstoreConfig
 	Tags     map[string]string
 	Interval time.Duration
 
 	LogsChan chan *pipeline.LogWithContext
+
+	procInRecordsTotal  pipeline.CounterMetric
+	procOutRecordsTotal pipeline.CounterMetric
+	procTimeMS          pipeline.CounterMetric
+}
+
+func (p *ServiceWrapper) Init(name string, pluginNum int) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
+	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
+
+	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
+	p.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
+	p.procTimeMS = helper.NewCounterMetric("proc_time_ms")
+
+	p.MetricRecord.RegisterCounterMetric(p.procInRecordsTotal)
+	p.MetricRecord.RegisterCounterMetric(p.procOutRecordsTotal)
+	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
+
+	p.Config.Context.SetMetricRecord(p.MetricRecord)
+	_, err := p.Input.Init(p.Config.Context)
+	return err
 }
 
 func (p *ServiceWrapper) Run(cc *pipeline.AsyncControl) {
@@ -77,6 +99,7 @@ func (p *ServiceWrapper) AddDataWithContext(tags map[string]string, fields map[s
 		logTime = t[0]
 	}
 	slsLog, _ := helper.CreateLog(logTime, p.Tags, tags, fields)
+	p.procInRecordsTotal.Add(1)
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
@@ -92,9 +115,11 @@ func (p *ServiceWrapper) AddDataArrayWithContext(tags map[string]string,
 		logTime = t[0]
 	}
 	slsLog, _ := helper.CreateLogByArray(logTime, p.Tags, tags, columns, values)
+	p.procInRecordsTotal.Add(1)
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
 func (p *ServiceWrapper) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
+	p.procInRecordsTotal.Add(1)
 	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}
 }

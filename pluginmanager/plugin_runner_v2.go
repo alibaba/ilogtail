@@ -137,7 +137,14 @@ func (p *pluginv2Runner) RunPlugins(category pluginCategory, control *pipeline.A
 	}
 }
 
-func (p *pluginv2Runner) addMetricInput(input pipeline.MetricInputV2, interval int) error {
+func (p *pluginv2Runner) addMetricInput(input pipeline.MetricInputV2, inputInterval int) error {
+	interval, err := input.Init(p.LogstoreConfig.Context)
+	if err != nil {
+		return err
+	}
+	if interval == 0 {
+		interval = inputInterval
+	}
 	p.MetricPlugins = append(p.MetricPlugins, input)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         input,
@@ -145,12 +152,13 @@ func (p *pluginv2Runner) addMetricInput(input pipeline.MetricInputV2, interval i
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
-	return nil
+	return err
 }
 
 func (p *pluginv2Runner) addServiceInput(input pipeline.ServiceInputV2) error {
 	p.ServicePlugins = append(p.ServicePlugins, input)
-	return nil
+	_, err := input.Init(p.LogstoreConfig.Context)
+	return err
 }
 
 func (p *pluginv2Runner) addProcessor(name string, processor pipeline.ProcessorV2, _ int) error {

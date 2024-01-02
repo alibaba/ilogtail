@@ -86,11 +86,11 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, pluginNum int, category pl
 	switch category {
 	case pluginMetricInput:
 		if metric, ok := plugin.(pipeline.MetricInputV1); ok {
-			return p.addMetricInput(metric, config["interval"].(int))
+			return p.addMetricInput(pluginName, pluginNum, metric, config["interval"].(int))
 		}
 	case pluginServiceInput:
 		if service, ok := plugin.(pipeline.ServiceInputV1); ok {
-			return p.addServiceInput(service)
+			return p.addServiceInput(pluginName, pluginNum, service)
 		}
 	case pluginProcessor:
 		if processor, ok := plugin.(pipeline.ProcessorV1); ok {
@@ -134,24 +134,33 @@ func (p *pluginv1Runner) RunPlugins(category pluginCategory, control *pipeline.A
 	}
 }
 
-func (p *pluginv1Runner) addMetricInput(input pipeline.MetricInputV1, interval int) error {
+func (p *pluginv1Runner) addMetricInput(name string, pluginNum int, input pipeline.MetricInputV1, inputInterval int) error {
 	var wrapper MetricWrapper
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
-	wrapper.Interval = time.Duration(interval) * time.Millisecond
+
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
+
+	interval, err := wrapper.Init(name, pluginNum)
+	if err != nil {
+		return err
+	}
+	if interval == 0 {
+		interval = inputInterval
+	}
+	wrapper.Interval = time.Duration(interval) * time.Millisecond
 	return nil
 }
 
-func (p *pluginv1Runner) addServiceInput(input pipeline.ServiceInputV1) error {
+func (p *pluginv1Runner) addServiceInput(name string, pluginNum int, input pipeline.ServiceInputV1) error {
 	var wrapper ServiceWrapper
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
 	wrapper.LogsChan = p.LogsChan
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
-	return nil
+	return wrapper.Init(name, pluginNum)
 }
 
 func (p *pluginv1Runner) addProcessor(name string, pluginNum int, processor pipeline.ProcessorV1, priority int) error {

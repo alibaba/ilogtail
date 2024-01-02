@@ -25,6 +25,8 @@ import (
 )
 
 type MetricWrapper struct {
+	pipeline.PluginContext
+
 	Input    pipeline.MetricInputV1
 	Config   *LogstoreConfig
 	Tags     map[string]string
@@ -32,6 +34,26 @@ type MetricWrapper struct {
 
 	LogsChan      chan *pipeline.LogWithContext
 	LatencyMetric pipeline.LatencyMetric
+
+	procInRecordsTotal  pipeline.CounterMetric
+	procOutRecordsTotal pipeline.CounterMetric
+	procTimeMS          pipeline.CounterMetric
+}
+
+func (p *MetricWrapper) Init(name string, pluginNum int) (int, error) {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
+	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
+
+	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
+	p.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
+	p.procTimeMS = helper.NewCounterMetric("proc_time_ms")
+
+	p.MetricRecord.RegisterCounterMetric(p.procInRecordsTotal)
+	p.MetricRecord.RegisterCounterMetric(p.procOutRecordsTotal)
+	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
+
+	p.Config.Context.SetMetricRecord(p.MetricRecord)
+	return p.Input.Init(p.Config.Context)
 }
 
 func (p *MetricWrapper) Run(control *pipeline.AsyncControl) {

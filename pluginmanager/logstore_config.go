@@ -720,19 +720,14 @@ func loadMetric(pluginType string, pluginNum int, logstoreConfig *LogstoreConfig
 	if err = applyPluginConfig(metric, configInterface); err != nil {
 		return err
 	}
-	interval, err := metric.Init(logstoreConfig.Context)
-	if err != nil {
-		return err
-	}
-	if interval == 0 {
-		interval = logstoreConfig.GlobalConfig.InputIntervalMs
-		configMapI, convertSuc := configInterface.(map[string]interface{})
-		if convertSuc {
-			valI, keyExist := configMapI["IntervalMs"]
-			if keyExist {
-				if val, convSuc := valI.(float64); convSuc {
-					interval = int(val)
-				}
+
+	interval := logstoreConfig.GlobalConfig.InputIntervalMs
+	configMapI, convertSuc := configInterface.(map[string]interface{})
+	if convertSuc {
+		valI, keyExist := configMapI["IntervalMs"]
+		if keyExist {
+			if val, convSuc := valI.(float64); convSuc {
+				interval = int(val)
 			}
 		}
 	}

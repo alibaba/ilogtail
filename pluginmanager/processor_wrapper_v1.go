@@ -15,39 +15,30 @@
 package pluginmanager
 
 import (
-	"strconv"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"time"
 )
 
-type CommonWrapper struct {
+type ProcessorWrapper struct {
 	pipeline.PluginContext
 	Config              *LogstoreConfig
 	procInRecordsTotal  pipeline.CounterMetric
 	procOutRecordsTotal pipeline.CounterMetric
 	procTimeMS          pipeline.CounterMetric
-	LogGroupsChan       chan *protocol.LogGroup
-	Interval            time.Duration
+	LogsChan            chan *pipeline.LogWithContext
 }
 
-type FlusherWrapperV1 struct {
-	CommonWrapper
-	Flusher pipeline.FlusherV1
+type ProcessorWrapperV1 struct {
+	ProcessorWrapper
+	Processor pipeline.ProcessorV1
 }
 
-type FlusherWrapperV2 struct {
-	CommonWrapper
-	Flusher pipeline.FlusherV2
-}
 
-func (wrapper *FlusherWrapperV1) Init(name string, pluginNum int) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginNum)	
-
+func (wrapper *ProcessorWrapperV1) Init(name string, pluginNum int) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginNum)
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
 	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
@@ -59,26 +50,14 @@ func (wrapper *FlusherWrapperV1) Init(name string, pluginNum int) error {
 	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
 
 	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
-	return wrapper.Flusher.Init(wrapper.Config.Context)
+	return wrapper.Processor.Init(wrapper.Config.Context)
 }
 
-func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	total := 0
-	for _, logGroup := range logGroupList {
-		total += len(logGroup.Logs)
-	}
-
-	wrapper.procInRecordsTotal.Add(int64(total))
+func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol.Log {
+	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
 	startTime := time.Now()
-	err := wrapper.Flusher.Flush(projectName, logstoreName, configName, logGroupList)
+	result := wrapper.Processor.ProcessLogs(logArray)
 	wrapper.procTimeMS.Add(int64(time.Since(startTime)))
-	return err
-}
-
-func (wrapper *FlusherWrapperV2) Init(name string) error {
-	return wrapper.Flusher.Init(wrapper.Config.Context)
-}
-
-func (wrapper *FlusherWrapperV2) Export(pipelineGroupEvents []*models.PipelineGroupEvents, pipelineContext pipeline.PipelineContext) error {
-	return wrapper.Flusher.Export(pipelineGroupEvents, pipelineContext)
+	wrapper.procOutRecordsTotal.Add(int64(len(result)))
+	return result
 }
