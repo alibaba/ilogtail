@@ -100,7 +100,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
                     {
                         "__raw__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
                         "__raw_log__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
-                        "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
                         "log.file.offset":"0"
                     },
                     "timestamp" : 12345678901,
@@ -567,9 +566,8 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
         = "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": "
-                  "\"07/Jul/2022:10:30:28\"";
-    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((std::string("__raw_log__").size() - std::string("content").size()) * count,
+                            processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
 
@@ -583,7 +581,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
-                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
                     "log.file.offset":"0"
                 },
                 "timestamp" : 12345678901,

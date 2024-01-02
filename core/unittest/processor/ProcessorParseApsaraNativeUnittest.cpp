@@ -135,7 +135,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             {
                 "contents": {
                     "__raw_log__": "[2023-09-04 13:15",
-                    "content": "[2023-09-04 13:15",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -145,7 +144,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             {
                 "contents": {
                     "__raw_log__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
-                    "content": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -504,7 +502,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
                 "contents": {
                     "__raw__": "value1",
                     "__raw_log__": "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -580,7 +577,6 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
                 "contents": {
                     "__raw__": "value1",
                     "__raw_log__": "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp": 12345678901,
@@ -690,7 +686,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -701,7 +696,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -712,7 +706,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -723,7 +716,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -734,7 +726,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
-                    "content": "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -752,8 +743,8 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     std::string expectValue = "value1";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((std::string("__raw_log__").size() - std::string("content").size()) * count,
+                            processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
 
@@ -942,8 +933,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
             },
             {
                 "contents": {
-                    "__raw_log__": "[2023-09-04 13:18:04",
-                    "content":"[2023-09-04 13:18:04"
+                    "__raw_log__": "[2023-09-04 13:18:04"
                 },
                 "timestamp": 12345678901,
                 "timestampNanosecond": 0,
