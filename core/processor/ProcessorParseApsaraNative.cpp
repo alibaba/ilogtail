@@ -227,16 +227,13 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
 #elif defined(_MSC_VER)
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
+    AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
     if (!sourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
     }
     if (mCommonParserOptions.ShouldAddSourceContent(true)) {
         AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
     }
-    if (sourceEvent.GetContents().empty()) {
-        return false;
-    }
-    AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
     return true;
 }
 
@@ -341,10 +338,10 @@ bool ProcessorParseApsaraNative::IsPrefixString(const std::string& all, const St
 static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[], int32_t endIndexArray[]) {
     int32_t baseFieldNum = 0;
     for (size_t i = 0; i < buffer.size(); i++) {
-        if (buffer[i] == '[' && i + 1 < buffer.size()) {
+        if (buffer[i] == '[') {
             beginIndexArray[baseFieldNum] = i + 1;
         } else if (buffer[i] == ']') {
-            if (i == buffer.size() - 1 || buffer[i + 1] == '\t' || buffer[i + 1] == '\0' || buffer[i + 1] == '\n') {
+            if (i == buffer.size() - 1 || buffer[i + 1] == '\t' || buffer[i + 1] == '\n') {
                 endIndexArray[baseFieldNum] = i;
                 baseFieldNum++;
             }

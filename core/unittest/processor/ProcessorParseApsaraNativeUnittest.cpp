@@ -199,8 +199,9 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
          APSARA_FIELD_LINE,
          "1753",
          NULL}, // 1
-        {"microtime","1363169109493309",
-            APSARA_FIELD_LEVEL,
+        {"microtime",
+         "1363169109493309",
+         APSARA_FIELD_LEVEL,
          "WARNING",
          APSARA_FIELD_THREAD,
          "13000",
@@ -209,8 +210,9 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
          APSARA_FIELD_LINE,
          "1753",
          NULL}, // 2
-        {"microtime","1363169109493309",
-            APSARA_FIELD_LEVEL,
+        {"microtime",
+         "1363169109493309",
+         APSARA_FIELD_LEVEL,
          "WARNING",
          APSARA_FIELD_THREAD,
          "13000",
@@ -219,8 +221,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
          APSARA_FIELD_LINE,
          "1754",
          NULL}, // 3
-        {
-            APSARA_FIELD_LEVEL,
+        {APSARA_FIELD_LEVEL,
          "WARNING",
          APSARA_FIELD_THREAD,
          "13000",
@@ -334,10 +335,10 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
          "job",
          "ss",
          NULL}, // 23
-        {NULL}, // 24
-        {NULL}, // 25
-        {NULL}, // 26
-        {NULL}, // 27
+        {"microtime", "1363169697365716", NULL}, // 24
+        {"microtime", "1363169697365716", NULL}, // 25
+        {"microtime", "1363169697365716", NULL}, // 26
+        {"microtime", "1363169697365716", NULL}, // 27
         {"content", "", NULL}, // 28
         {APSARA_FIELD_LEVEL,
          "WARNING",
@@ -408,7 +409,8 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
                 APSARA_TEST_TRUE(outJson["events"][0].isObject());
                 APSARA_TEST_TRUE(outJson["events"][0].isMember("contents"));
                 APSARA_TEST_TRUE(outJson["events"][0]["contents"].isMember(logParseResult[i][j]));
-                APSARA_TEST_EQUAL(outJson["events"][0]["contents"][logParseResult[i][j]], std::string(logParseResult[i][j+1]));
+                APSARA_TEST_EQUAL(outJson["events"][0]["contents"][logParseResult[i][j]],
+                                  std::string(logParseResult[i][j + 1]));
             } else {
                 continue;
             }
