@@ -252,7 +252,7 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     if (buffer[0] != '[') {
         return 0;
     }
-    LogtailTime logTime = {0, 0};
+    LogtailTime logTime = {};
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
         int nanosecondLength = 0;
@@ -294,8 +294,6 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
             microTime = (int64_t)cachedLogTime.tv_sec * 1000000 + logTime.tv_nsec / 1000;
             return cachedLogTime.tv_sec;
         }
-        struct tm tm;
-        memset(&tm, 0, sizeof(tm));
         // parse second part
         auto strptimeResult = Strptime(strTime.c_str(), "%Y-%m-%d %H:%M:%S", &logTime, nanosecondLength);
         if (NULL == strptimeResult) {
@@ -317,7 +315,6 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         cachedTimeStr = StringView(buffer.data() + 1, 19);
         cachedLogTime = logTime;
-        microTime = (int64_t)microTime + (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
         return logTime.tv_sec;
     }
 }
