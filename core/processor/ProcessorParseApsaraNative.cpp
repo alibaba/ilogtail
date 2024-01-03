@@ -320,10 +320,10 @@ static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[
                 endIndexArray[baseFieldNum] = i;
                 baseFieldNum++;
             }
-            if (i + 2 >= buffer.size() || baseFieldNum >= LogParser::MAX_BASE_FIELD_NUM) {
+            if (baseFieldNum >= LogParser::MAX_BASE_FIELD_NUM) {
                 break;
             }
-            if (buffer[i + 1] == '\t' && buffer[i + 2] != '[') {
+            if (buffer[i + 1] == '\t' && (i + 2 == buffer.size() || buffer[i + 2] != '[')) {
                 break;
             }
         }
