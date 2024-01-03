@@ -252,10 +252,9 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     if (buffer[0] != '[') {
         return 0;
     }
-    LogtailTime logTime;
+    LogtailTime logTime = {0, 0};
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
-        LogtailTime curTime = {0, 0};
         int nanosecondLength = 0;
         size_t pos = buffer.find(']', 1);
         if (pos == std::string::npos) {
@@ -318,10 +317,7 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         cachedTimeStr = StringView(buffer.data() + 1, 19);
         cachedLogTime = logTime;
-        // TODO: deprecated
-        if (!mAdjustApsaraMicroTimezone) {
-            microTime = (int64_t)microTime + (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
-        }
+        microTime = (int64_t)microTime + (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
         return logTime.tv_sec;
     }
 }
@@ -353,7 +349,7 @@ static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[
                 endIndexArray[baseFieldNum] = i;
                 baseFieldNum++;
             }
-            if (i + 2 >= buffer.size() || baseFieldNum >= LogParser::MAX_BASE_FIELD_NUM) {
+            if (i + 2 >= buffer.size() || baseFieldNum >= MAX_BASE_FIELD_NUM) {
                 break;
             }
             if (buffer[i + 1] == '\t' && buffer[i + 2] != '[') {
