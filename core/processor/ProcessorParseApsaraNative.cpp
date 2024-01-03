@@ -227,13 +227,16 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
 #elif defined(_MSC_VER)
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
-    AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
     if (!sourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
     }
     if (mCommonParserOptions.ShouldAddSourceContent(true)) {
         AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
     }
+    if (sourceEvent.GetContents().empty()) {
+        return false;
+    }
+    AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
     return true;
 }
 
@@ -254,6 +257,7 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     }
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
+        LogtailTime curTime = {0, 0};
         int nanosecondLength = 0;
         size_t pos = buffer.find(']', 1);
         if (pos == std::string::npos) {
@@ -262,13 +266,13 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         }
         // strTime is the content between '[' and ']' and ends with '\0'
         std::string strTime = buffer.substr(1, pos).to_string();
-        auto strptimeResult = Strptime(strTime.c_str(), "%s", &lastLogTime, nanosecondLength);
+        auto strptimeResult = Strptime(strTime.c_str(), "%s", &curTime, nanosecondLength);
         if (NULL == strptimeResult || strptimeResult[0] != ']') {
             LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
             return 0;
         }
-        microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
-        return lastLogTime.tv_sec;
+        microTime = (int64_t)curTime.tv_sec * 1000000 + curTime.tv_nsec / 1000;
+        return curTime.tv_sec;
     }
     // test other date format case
     {
@@ -279,7 +283,7 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         }
         // strTime is the content between '[' and ']' and ends with '\0'
         std::string strTime = buffer.substr(1, pos).to_string();
-        if (IsPrefixString(strTime.c_str(), timeStr) == true) {
+        if (IsPrefixString(strTime, timeStr) == true) {
             microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
             return lastLogTime.tv_sec;
         }
@@ -315,12 +319,12 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
  * @param prefix - 要检查的前缀。
  * @return 如果字符串以指定前缀开头，则返回true；否则返回false。
  */
-bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringView& prefix) {
+bool ProcessorParseApsaraNative::IsPrefixString(const std::string& all, const StringView& prefix) {
+    if (all.size() < prefix.size())
+        return false;
     if (prefix.size() == 0)
         return false;
     for (size_t i = 0; i < prefix.size(); ++i) {
-        if (all[i] == '\0')
-            return false;
         if (all[i] != prefix[i])
             return false;
     }
@@ -337,17 +341,17 @@ bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringVie
 static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[], int32_t endIndexArray[]) {
     int32_t baseFieldNum = 0;
     for (size_t i = 0; i < buffer.size(); i++) {
-        if (buffer[i] == '[') {
+        if (buffer[i] == '[' && i + 1 < buffer.size()) {
             beginIndexArray[baseFieldNum] = i + 1;
         } else if (buffer[i] == ']') {
-            if (buffer[i + 1] == '\t' || buffer[i + 1] == '\n') {
+            if (i == buffer.size() - 1 || buffer[i + 1] == '\t' || buffer[i + 1] == '\0' || buffer[i + 1] == '\n') {
                 endIndexArray[baseFieldNum] = i;
                 baseFieldNum++;
             }
             if (baseFieldNum >= MAX_BASE_FIELD_NUM) {
                 break;
             }
-            if (buffer[i + 1] == '\t' && buffer[i + 2] != '[') {
+            if (i + 2 < buffer.size() && buffer[i + 1] == '\t' && buffer[i + 2] != '[') {
                 break;
             }
         }
