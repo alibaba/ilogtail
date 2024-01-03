@@ -37,7 +37,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.19 ]
-        runner: [ ubuntu-latest ]
+        runner: [ arc-runner-set-xuanyang-ack ]
       fail-fast: true
     steps:
      # prepare ubuntu environment
@@ -81,14 +81,14 @@ jobs:
         run: make lint
 
       - name: UnitTest
-        run: make unittest_plugin
+        run: sudo make unittest_plugin
 
       - name: UnitTest PluginManager
-        run: make unittest_pluginmanager
+        run: sudo make unittest_pluginmanager
 
 
   result:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set-xuanyang-ack
     timeout-minutes: 60
     needs: [ CI ]
     steps:
