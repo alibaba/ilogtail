@@ -154,7 +154,7 @@ private:
     friend class SourceBufferUnittest;
 #endif
 
-private :
+private : 
     BufferAllocator(const BufferAllocator&);
 };
 
