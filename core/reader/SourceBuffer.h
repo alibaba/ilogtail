@@ -82,7 +82,7 @@ public:
     virtual ~SourceBuffer() {}
     StringBuffer AllocateStringBuffer(size_t size) {
         if (!mAllocator.IsInited()) {
-            if (!mAllocator.Init(size * 1.2)) {
+            if (!mAllocator.Init(std::max(4096UL, size_t(size * 1.2)))) {
                 return StringBuffer(nullptr, 0);
             }; // TODO: better allocate strategy
         }

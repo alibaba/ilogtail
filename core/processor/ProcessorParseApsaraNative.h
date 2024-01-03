@@ -34,9 +34,9 @@ protected:
 private:
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
-    int32_t GetApsaraLogMicroTime(StringView& buffer);
-    bool IsPrefixString(const char* all, const StringView& prefix);
+    time_t
+    ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
+    bool IsPrefixString(const std::string& all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent);
 
     std::string mSourceKey;

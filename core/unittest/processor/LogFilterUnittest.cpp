@@ -433,14 +433,15 @@ public:
         file << config;
         file.close();
         APSARA_TEST_TRUE_DESC(filterPtr->InitFilter("logtail_filter.json"), "Can't parse the filter config");
-        APSARA_TEST_EQUAL_DESC(filterPtr->mFilters.size(), 2, "The filter size should be 2");
+        APSARA_TEST_EQUAL_DESC(filterPtr->mFilters.size(), 2UL, "The filter size should be 2");
         APSARA_TEST_TRUE_DESC(filterPtr->mFilters.find("123_proj_test") != filterPtr->mFilters.end(),
                               "The 123_proj_test should be a key of the filter");
         APSARA_TEST_TRUE_DESC(filterPtr->mFilters.find("456_proj_test_1") != filterPtr->mFilters.end(),
                               "The 456_test_1 should be a key of the filter");
         LogFilterRule* filterRulePtr = filterPtr->mFilters["123_proj_test"];
-        APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterKeys.size(), 2, "The filter keys size should be 2");
-        APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterRegs.size(), 2, "The filter regs size should be 2");
+        APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterKeys.size(), 2UL, "The filter keys size should be 2");
+        APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterRegs.size(), 2UL, "The filter regs size should be 2");
+        APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterRegs.size(), 2UL, "The filter regs size should be 2");
         APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterKeys[0], "key1", "The filter key should be key1");
         APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterKeys[1], "key2", "The filter key should be key2");
         APSARA_TEST_EQUAL_DESC(filterRulePtr->FilterRegs[0], regex("value1"), "The filter reg should be value1");
@@ -543,7 +544,7 @@ public:
         logContentPtr->set_value("value2xxxxx");
 
         indexs = filterPtr->Filter("999_proj", "", logGroup);
-        APSARA_TEST_EQUAL_DESC(indexs.size(), 2, "the filtered size should be 2");
+        APSARA_TEST_EQUAL_DESC(indexs.size(), 2UL, "the filtered size should be 2");
         APSARA_TEST_EQUAL_DESC(indexs[0], 0, "the first item should be contained");
         APSARA_TEST_EQUAL_DESC(indexs[1], 1, "the second item should be contained");
         logGroup.Clear();
@@ -652,7 +653,7 @@ public:
             if (log.find("key") != string::npos)
                 lines.push_back(log);
         }
-        APSARA_TEST_EQUAL(lines.size(), 6);
+        APSARA_TEST_EQUAL(lines.size(), 6UL);
         if (lines.size() == 6) {
             for (int i = 0; i < 2; ++i) {
                 APSARA_TEST_TRUE_DESC(lines[i].find("value1") != string::npos, lines[i]);
@@ -1142,7 +1143,7 @@ public:
             static LogFilter* filter = LogFilter::Instance();
             std::vector<int32_t> index = filter->Filter(
                 logGroup, root, LogGroupContext("default_region", "ant-test-project", "test-logstore"));
-            APSARA_TEST_EQUAL_FATAL(index.size(), 1);
+            APSARA_TEST_EQUAL_FATAL(index.size(), 1UL);
             APSARA_TEST_EQUAL(index[0], 1);
         }
 
