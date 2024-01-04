@@ -50,7 +50,7 @@
 #include "common/Flags.h"
 
 
-DEFINE_FLAG_BOOL(logtail_enable_processor_spl, "", false);
+DEFINE_FLAG_BOOL(enable_processor_spl, "", false);
 
 using namespace std;
 
