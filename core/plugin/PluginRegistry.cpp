@@ -235,7 +235,7 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
-    if BOOL_FLAG(logtail_enable_processor_spl) {
+    if (BOOL_FLAG(enable_processor_spl)) {
         RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSPL>());
     }
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
