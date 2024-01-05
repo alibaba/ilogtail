@@ -408,7 +408,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                     
                     
                     }
-                    delete pLogGroup;
                 }
 
                 LogFileProfiler::GetInstance()->AddProfilingData(pipeline->Name(),
@@ -434,6 +433,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                         "parse_failures", profile.parseFailures)("parse_time_failures", profile.parseTimeFailures)(
                         "regex_match_failures", profile.regexMatchFailures)("history_failures", profile.historyFailures));
             }
+            for (auto pLogGroup : logGroupList) {
+                delete pLogGroup;
+            }
+            logGroupList.clear();
         }
     }
     LOG_WARNING(sLogger, ("LogProcessThread", "Exit")("threadNo", threadNo));
@@ -488,6 +491,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         FillLogGroupLogs(eventGroup, *resultGroup, pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond);
         FillLogGroupTags(eventGroup, logFileReader, *resultGroup);
         if (pipeline->IsFlushingThroughGoPipeline()) {
+            // LogGroup will be deleted outside
             LogtailPlugin::GetInstance()->ProcessLogGroup(
                 logFileReader->GetConfigName(), *resultGroup, logFileReader->GetSourceId());
             return 1;
