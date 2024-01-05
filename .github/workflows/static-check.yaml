@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-          
+
       - name: Copy Lib
         run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/
 
@@ -81,10 +81,10 @@ jobs:
         run: make lint
 
       - name: UnitTest
-        run: sudo make unittest_plugin
+        run: make unittest_plugin
 
       - name: UnitTest PluginManager
-        run: sudo make unittest_pluginmanager
+        run: make unittest_pluginmanager
 
 
   result:

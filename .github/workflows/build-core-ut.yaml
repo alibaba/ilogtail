@@ -74,7 +74,7 @@ jobs:
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
-        run: make core
+        run: make -j$(($(nproc) - 1)) core
 
       - name: Unit Test
         run: make unittest_core
