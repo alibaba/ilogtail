@@ -49,7 +49,7 @@ func GetCommonLabels(context Context, pluginName string, pluginID string) map[st
 	labels := make(map[string]string)
 	labels["project"] = context.GetProject()
 	labels["logstore"] = context.GetLogstore()
-	labels["configName"] = context.GetConfigName()
+	labels["config_name"] = context.GetConfigName()
 	if len(pluginID) > 0 {
 		labels["plugin_id"] = pluginID
 	}
