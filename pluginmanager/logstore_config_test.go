@@ -507,6 +507,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 }
 
 func Test_genEmbeddedPluginName(t *testing.T) {
-	result := genEmbeddedPluginName("testPlugin")
+	l := new(LogstoreConfig)
+	result := l.genEmbeddedPluginName("testPlugin")
 	assert.Regexp(t, `testPlugin/_gen_embedded_\d+`, result)
 }

@@ -304,7 +304,6 @@ func GetPipelineMetrics() *C.PluginMetrics {
 	cPluginMetrics := (*C.PluginMetrics)(C.malloc(C.sizeof_PluginMetrics))
 	cPluginMetrics.count = C.int(numMetrics)
 	cPluginMetrics.metrics = C.makePluginMetricArray(cPluginMetrics.count)
-	//cPluginMetrics.count
 	// 填充 PluginMetrics 中的 keyValues
 	for i, metric := range results {
 		metricLen := len(metric)

@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-type MetricWrapper struct {
+type MetricWrapperV1 struct {
 	pipeline.PluginContext
 
 	Input    pipeline.MetricInputV1
@@ -40,8 +40,8 @@ type MetricWrapper struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *MetricWrapper) Init(name string, pluginNum int, inputInterval int) error {
-	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
+func (p *MetricWrapperV1) Init(name string, pluginID string, inputInterval int) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
 	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
@@ -65,7 +65,7 @@ func (p *MetricWrapper) Init(name string, pluginNum int, inputInterval int) erro
 	return nil
 }
 
-func (p *MetricWrapper) Run(control *pipeline.AsyncControl) {
+func (p *MetricWrapperV1) Run(control *pipeline.AsyncControl) {
 	logger.Info(p.Config.Context.GetRuntimeContext(), "start run metric ", p.Input.Description())
 	defer panicRecover(p.Input.Description())
 	for {
@@ -82,22 +82,22 @@ func (p *MetricWrapper) Run(control *pipeline.AsyncControl) {
 	}
 }
 
-func (p *MetricWrapper) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
+func (p *MetricWrapperV1) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
 	p.AddDataWithContext(tags, fields, nil, t...)
 }
 
-func (p *MetricWrapper) AddDataArray(tags map[string]string,
+func (p *MetricWrapperV1) AddDataArray(tags map[string]string,
 	columns []string,
 	values []string,
 	t ...time.Time) {
 	p.AddDataArrayWithContext(tags, columns, values, nil, t...)
 }
 
-func (p *MetricWrapper) AddRawLog(log *protocol.Log) {
+func (p *MetricWrapperV1) AddRawLog(log *protocol.Log) {
 	p.AddRawLogWithContext(log, nil)
 }
 
-func (p *MetricWrapper) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
+func (p *MetricWrapperV1) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
 	var logTime time.Time
 	if len(t) == 0 {
 		logTime = time.Now()
@@ -108,7 +108,7 @@ func (p *MetricWrapper) AddDataWithContext(tags map[string]string, fields map[st
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
-func (p *MetricWrapper) AddDataArrayWithContext(tags map[string]string,
+func (p *MetricWrapperV1) AddDataArrayWithContext(tags map[string]string,
 	columns []string,
 	values []string,
 	ctx map[string]interface{},
@@ -123,6 +123,6 @@ func (p *MetricWrapper) AddDataArrayWithContext(tags map[string]string,
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
 }
 
-func (p *MetricWrapper) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
+func (p *MetricWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
 	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}
 }

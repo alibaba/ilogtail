@@ -53,13 +53,14 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 	}
 
 	// if it's a naming extension, we won't do further create
-	if getPluginType(name) != getPluginTypeWithID(name) {
+	if isPluginTypeWithID(name) {
 		return nil, fmt.Errorf("not found extension: %s", name)
 	}
 
 	// create if not found
-	typeWithID := genEmbeddedPluginName(getPluginType(name))
-	err := loadExtension(typeWithID, 0, p.logstoreC, cfg)
+	typeWithID := p.logstoreC.genEmbeddedPluginName(getPluginType(name))
+	rawType, pluginID := getPluginTypeAndID(typeWithID)
+	err := loadExtension(typeWithID, rawType, pluginID, p.logstoreC, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +125,13 @@ func (p *ContextImp) GetMetricRecords() (results []map[string]string) {
 			oneResult["label."+key] = value
 		}
 		for _, counterMetric := range metricRecord.CounterMetrics {
-			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.Get(), 10)
+			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.GetAndReset(), 10)
+		}
+		for _, stringMetric := range metricRecord.StringMetrics {
+			oneResult["value."+stringMetric.Name()] = stringMetric.GetAndReset()
+		}
+		for _, latencyMetric := range metricRecord.LatencyMetrics {
+			oneResult["value."+latencyMetric.Name()] = strconv.FormatInt(latencyMetric.GetAndReset(), 10)
 		}
 		results = append(results, oneResult)
 	}

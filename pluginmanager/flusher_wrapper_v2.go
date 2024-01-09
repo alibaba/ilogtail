@@ -15,6 +15,9 @@
 package pluginmanager
 
 import (
+	"time"
+
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
@@ -24,10 +27,34 @@ type FlusherWrapperV2 struct {
 	Flusher pipeline.FlusherV2
 }
 
-func (wrapper *FlusherWrapperV2) Init(name string) error {
+func (wrapper *FlusherWrapperV2) Init(name string, pluginID string, context pipeline.PipelineContext) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID)
+
+	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
+
+	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
+	wrapper.procOutRecordsTotal = helper.NewCounterMetric("proc_out_records_total")
+	wrapper.procTimeMS = helper.NewCounterMetric("proc_time_ms")
+
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procInRecordsTotal)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procOutRecordsTotal)
+	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
+
+	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
 	return wrapper.Flusher.Init(wrapper.Config.Context)
 }
 
 func (wrapper *FlusherWrapperV2) Export(pipelineGroupEvents []*models.PipelineGroupEvents, pipelineContext pipeline.PipelineContext) error {
-	return wrapper.Flusher.Export(pipelineGroupEvents, pipelineContext)
+	total := 0
+	for _, groups := range pipelineGroupEvents {
+		total += len(groups.Events)
+	}
+	wrapper.procInRecordsTotal.Add(int64(total))
+	startTime := time.Now()
+	err := wrapper.Flusher.Export(pipelineGroupEvents, pipelineContext)
+	if err == nil {
+		wrapper.procOutRecordsTotal.Add(int64(total))
+	}
+	wrapper.procTimeMS.Add(int64(time.Since(startTime).Microseconds()))
+	return err
 }

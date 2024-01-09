@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-type ServiceWrapper struct {
+type ServiceWrapperV1 struct {
 	pipeline.PluginContext
 	Input    pipeline.ServiceInputV1
 	Config   *LogstoreConfig
@@ -37,8 +37,8 @@ type ServiceWrapper struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *ServiceWrapper) Init(name string, pluginNum int) error {
-	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
+func (p *ServiceWrapperV1) Init(name string, pluginID string) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
 	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
@@ -54,7 +54,7 @@ func (p *ServiceWrapper) Init(name string, pluginNum int) error {
 	return err
 }
 
-func (p *ServiceWrapper) Run(cc *pipeline.AsyncControl) {
+func (p *ServiceWrapperV1) Run(cc *pipeline.AsyncControl) {
 	logger.Info(p.Config.Context.GetRuntimeContext(), "start run service", p.Input)
 
 	go func() {
@@ -68,7 +68,7 @@ func (p *ServiceWrapper) Run(cc *pipeline.AsyncControl) {
 
 }
 
-func (p *ServiceWrapper) Stop() error {
+func (p *ServiceWrapperV1) Stop() error {
 	err := p.Input.Stop()
 	if err != nil {
 		logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "stop service error, err", err)
@@ -76,22 +76,22 @@ func (p *ServiceWrapper) Stop() error {
 	return err
 }
 
-func (p *ServiceWrapper) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
+func (p *ServiceWrapperV1) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
 	p.AddDataWithContext(tags, fields, nil, t...)
 }
 
-func (p *ServiceWrapper) AddDataArray(tags map[string]string,
+func (p *ServiceWrapperV1) AddDataArray(tags map[string]string,
 	columns []string,
 	values []string,
 	t ...time.Time) {
 	p.AddDataArrayWithContext(tags, columns, values, nil, t...)
 }
 
-func (p *ServiceWrapper) AddRawLog(log *protocol.Log) {
+func (p *ServiceWrapperV1) AddRawLog(log *protocol.Log) {
 	p.AddRawLogWithContext(log, nil)
 }
 
-func (p *ServiceWrapper) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
+func (p *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
 	var logTime time.Time
 	if len(t) == 0 {
 		logTime = time.Now()
@@ -101,9 +101,10 @@ func (p *ServiceWrapper) AddDataWithContext(tags map[string]string, fields map[s
 	slsLog, _ := helper.CreateLog(logTime, p.Tags, tags, fields)
 	p.procInRecordsTotal.Add(1)
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
+	p.procOutRecordsTotal.Add(1)
 }
 
-func (p *ServiceWrapper) AddDataArrayWithContext(tags map[string]string,
+func (p *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
 	columns []string,
 	values []string,
 	ctx map[string]interface{},
@@ -117,9 +118,11 @@ func (p *ServiceWrapper) AddDataArrayWithContext(tags map[string]string,
 	slsLog, _ := helper.CreateLogByArray(logTime, p.Tags, tags, columns, values)
 	p.procInRecordsTotal.Add(1)
 	p.LogsChan <- &pipeline.LogWithContext{Log: slsLog, Context: ctx}
+	p.procOutRecordsTotal.Add(1)
 }
 
-func (p *ServiceWrapper) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
+func (p *ServiceWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
 	p.procInRecordsTotal.Add(1)
 	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}
+	p.procOutRecordsTotal.Add(1)
 }

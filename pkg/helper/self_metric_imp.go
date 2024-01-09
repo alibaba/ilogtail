@@ -46,6 +46,14 @@ func (s *StrMetric) Get() string {
 	return v
 }
 
+func (s *StrMetric) GetAndReset() string {
+	mu.Lock()
+	v := s.value
+	s.value = ""
+	mu.Unlock()
+	return v
+}
+
 type NormalMetric struct {
 	name  string
 	value int64
@@ -61,6 +69,10 @@ func (s *NormalMetric) Clear(v int64) {
 
 func (s *NormalMetric) Get() int64 {
 	return atomic.LoadInt64(&s.value)
+}
+
+func (s *NormalMetric) GetAndReset() int64 {
+	return atomic.SwapInt64(&s.value, 0)
 }
 
 func (s *NormalMetric) Name() string {
@@ -91,6 +103,23 @@ func (s *AvgMetric) Clear(v int64) {
 
 func (s *AvgMetric) Get() int64 {
 	return int64(s.GetAvg())
+}
+
+func (s *AvgMetric) GetAndReset() int64 {
+	var avg float64
+	mu.Lock()
+	if s.count > 0 {
+		s.prevAvg, avg = float64(s.value)/float64(s.count), float64(s.value)/float64(s.count)
+		s.value = 0
+		s.count = 0
+	} else {
+		avg = s.prevAvg
+	}
+	s.value = 0
+	s.count = 0
+	s.prevAvg = 0.0
+	mu.Unlock()
+	return int64(avg)
 }
 
 func (s *AvgMetric) GetAvg() float64 {
@@ -150,6 +179,19 @@ func (s *LatMetric) Get() int64 {
 	if s.count != 0 {
 		v = int64(s.latencySum) / int64(s.count)
 	}
+	mu.Unlock()
+	return v
+}
+
+func (s *LatMetric) GetAndReset() int64 {
+	mu.Lock()
+	v := int64(0)
+	if s.count != 0 {
+		v = int64(s.latencySum) / int64(s.count)
+	}
+	s.count = 0
+	s.latencySum = 0
+	s.t = time.Unix(0, 0)
 	mu.Unlock()
 	return v
 }

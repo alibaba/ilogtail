@@ -104,8 +104,7 @@ func (m *Rdb) Init(context pipeline.Context, rdbFunc RdbFunc) (int, error) {
 		logger.Warning(m.Context.GetRuntimeContext(), initAlarmName, "init rdbFunc error", err)
 	}
 
-	labels := pipeline.GetCommonLabels(m.Context, "", -1)
-	m.metricRecord = m.Context.RegisterMetricRecord(labels)
+	m.metricRecord = m.Context.GetMetricRecord()
 
 	m.collectLatency = helper.NewLatencyMetric(fmt.Sprintf("%s_collect_avg_cost", m.Driver))
 	m.collectTotal = helper.NewCounterMetric(fmt.Sprintf("%s_collect_total", m.Driver))

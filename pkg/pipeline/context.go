@@ -16,7 +16,6 @@ package pipeline
 
 import (
 	"context"
-	"strconv"
 )
 
 type CommonContext struct {
@@ -46,13 +45,13 @@ func (m *MetricsRecord) RegisterLatencyMetric(metric LatencyMetric) {
 	m.LatencyMetrics = append(m.LatencyMetrics, metric)
 }
 
-func GetCommonLabels(context Context, pluginName string, pluginNum int) map[string]string {
+func GetCommonLabels(context Context, pluginName string, pluginID string) map[string]string {
 	labels := make(map[string]string)
 	labels["project"] = context.GetProject()
 	labels["logstore"] = context.GetLogstore()
 	labels["configName"] = context.GetConfigName()
-	if pluginNum > 0 {
-		labels["plugin_id"] = strconv.FormatInt(int64(pluginNum), 10)
+	if len(pluginID) > 0 {
+		labels["plugin_id"] = pluginID
 	}
 	if len(pluginName) > 0 {
 		labels["plugin_name"] = pluginName
@@ -76,10 +75,6 @@ type Context interface {
 
 	SetMetricRecord(metricsRecord *MetricsRecord)
 	GetMetricRecord() *MetricsRecord
-
-	RegisterCounterMetric(metricsRecord *MetricsRecord, metric CounterMetric)
-	RegisterStringMetric(metricsRecord *MetricsRecord, metric StringMetric)
-	RegisterLatencyMetric(metricsRecord *MetricsRecord, metric LatencyMetric)
 
 	SaveCheckPoint(key string, value []byte) error
 	GetCheckPoint(key string) (value []byte, exist bool)

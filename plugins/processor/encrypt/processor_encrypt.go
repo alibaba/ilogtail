@@ -104,7 +104,7 @@ func (p *ProcessorEncrypt) ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 		return logArray
 	}
 	for _, log := range logArray {
-	p.processLog(log)
+		p.processLog(log)
 	}
 	return logArray
 }

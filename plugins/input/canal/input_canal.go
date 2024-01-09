@@ -193,8 +193,7 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 
 	sc.lastErrorChan = make(chan error, 1)
 
-	labels := pipeline.GetCommonLabels(sc.context, "service_canal", -1)
-	sc.metricRecord = sc.context.RegisterMetricRecord(labels)
+	sc.metricRecord = sc.context.GetMetricRecord()
 
 	sc.rotateCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_rotate")
 	sc.syncCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_sync")

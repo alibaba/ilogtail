@@ -196,9 +196,7 @@ func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 	}
 	sds.tracker = helper.NewReaderMetricTracker()
 
-	labels := pipeline.GetCommonLabels(sds.context, input.ServiceDockerStdoutPluginName, -1)	
-
-	sds.metricRecord = sds.context.RegisterMetricRecord(labels)
+	sds.metricRecord = sds.context.GetMetricRecord()
 
 	sds.metricRecord.RegisterCounterMetric(sds.tracker.CloseCounter)
 	sds.metricRecord.RegisterCounterMetric(sds.tracker.OpenCounter)

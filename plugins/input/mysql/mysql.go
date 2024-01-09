@@ -107,8 +107,7 @@ func (m *Mysql) Init(context pipeline.Context) (int, error) {
 		m.StateMent += " limit ?, " + strconv.Itoa(m.PageSize)
 	}
 
-	labels := pipeline.GetCommonLabels(m.context, "service_mysql", -1)
-	m.metricRecord = m.context.RegisterMetricRecord(labels)
+	m.metricRecord = m.context.GetMetricRecord()
 
 	m.collectLatency = helper.NewLatencyMetric("mysql_collect_avg_cost")
 	m.collectTotal = helper.NewCounterMetric("mysql_collect_total")

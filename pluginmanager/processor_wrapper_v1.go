@@ -36,9 +36,8 @@ type ProcessorWrapperV1 struct {
 	Processor pipeline.ProcessorV1
 }
 
-
-func (wrapper *ProcessorWrapperV1) Init(name string, pluginNum int) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginNum)
+func (wrapper *ProcessorWrapperV1) Init(name string, pluginID string) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID)
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
 	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
@@ -57,7 +56,7 @@ func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol
 	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
 	startTime := time.Now()
 	result := wrapper.Processor.ProcessLogs(logArray)
-	wrapper.procTimeMS.Add(int64(time.Since(startTime)))
+	wrapper.procTimeMS.Add(int64(time.Since(startTime).Microseconds()))
 	wrapper.procOutRecordsTotal.Add(int64(len(result)))
 	return result
 }

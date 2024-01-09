@@ -37,8 +37,8 @@ type FlusherWrapperV1 struct {
 	Flusher pipeline.FlusherV1
 }
 
-func (wrapper *FlusherWrapperV1) Init(name string, pluginNum int) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginNum)
+func (wrapper *FlusherWrapperV1) Init(name string, pluginID string) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID)
 
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
@@ -63,6 +63,9 @@ func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, 
 	wrapper.procInRecordsTotal.Add(int64(total))
 	startTime := time.Now()
 	err := wrapper.Flusher.Flush(projectName, logstoreName, configName, logGroupList)
-	wrapper.procTimeMS.Add(int64(time.Since(startTime)))
+	if err == nil {
+		wrapper.procOutRecordsTotal.Add(int64(total))
+	}
+	wrapper.procTimeMS.Add(int64(time.Since(startTime).Microseconds()))
 	return err
 }

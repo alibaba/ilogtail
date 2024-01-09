@@ -80,7 +80,7 @@ func (p *LocalContext) RegisterMetricRecord(labels map[string]string) *pipeline.
 	latencyMetric := make([]pipeline.LatencyMetric, 0)
 
 	metricRecord := pipeline.MetricsRecord{
-		Labels: labels,
+		Labels:         labels,
 		CounterMetrics: counterMetrics,
 		StringMetrics:  stringMetrics,
 		LatencyMetrics: latencyMetric,

@@ -29,11 +29,14 @@ import (
 
 func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 	ctx, c := pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
-	return &EmptyContext{
+	emptyContext := EmptyContext{
 		ctx:        ctx,
 		common:     c,
 		checkpoint: make(map[string][]byte),
 	}
+	metricRecord := emptyContext.RegisterMetricRecord(map[string]string{})
+	emptyContext.SetMetricRecord(metricRecord)
+	return &emptyContext
 }
 
 type EmptyContext struct {

@@ -27,12 +27,12 @@ import (
 
 var errAggAdd = errors.New("loggroup queue is full")
 
-// AggregatorWrapper wrappers Aggregator.
+// AggregatorWrapperV1 wrappers Aggregator.
 // It implements LogGroupQueue interface, and is passed to associated Aggregator.
 // Aggregator uses Add function to pass log groups to wrapper, and then wrapper
 // passes log groups to associated LogstoreConfig through channel LogGroupsChan.
 // In fact, LogGroupsChan == (associated) LogstoreConfig.LogGroupsChan.
-type AggregatorWrapper struct {
+type AggregatorWrapperV1 struct {
 	pipeline.PluginContext
 
 	Aggregator    pipeline.AggregatorV1
@@ -45,8 +45,8 @@ type AggregatorWrapper struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *AggregatorWrapper) Init(name string, pluginNum int) error {
-	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginNum)
+func (p *AggregatorWrapperV1) Init(name string, pluginID string) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
 	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
@@ -74,13 +74,14 @@ func (p *AggregatorWrapper) Init(name string, pluginNum int) error {
 // Add inserts @loggroup to LogGroupsChan if @loggroup is not empty.
 // It is called by associated Aggregator.
 // It returns errAggAdd when queue is full.
-func (p *AggregatorWrapper) Add(loggroup *protocol.LogGroup) error {
+func (p *AggregatorWrapperV1) Add(loggroup *protocol.LogGroup) error {
 	if len(loggroup.Logs) == 0 {
 		return nil
 	}
 	p.procInRecordsTotal.Add(int64(len(loggroup.Logs)))
 	select {
 	case p.LogGroupsChan <- loggroup:
+		p.procOutRecordsTotal.Add(int64(len(loggroup.Logs)))
 		return nil
 	default:
 		return errAggAdd
@@ -91,7 +92,7 @@ func (p *AggregatorWrapper) Add(loggroup *protocol.LogGroup) error {
 // It works like Add but adds a timeout policy when log group queue is full.
 // It returns errAggAdd when queue is full and timeout.
 // NOTE: no body calls it now.
-func (p *AggregatorWrapper) AddWithWait(loggroup *protocol.LogGroup, duration time.Duration) error {
+func (p *AggregatorWrapperV1) AddWithWait(loggroup *protocol.LogGroup, duration time.Duration) error {
 	if len(loggroup.Logs) == 0 {
 		return nil
 	}
@@ -99,6 +100,7 @@ func (p *AggregatorWrapper) AddWithWait(loggroup *protocol.LogGroup, duration ti
 	timer := time.NewTimer(duration)
 	select {
 	case p.LogGroupsChan <- loggroup:
+		p.procOutRecordsTotal.Add(int64(len(loggroup.Logs)))
 		return nil
 	case <-timer.C:
 		return errAggAdd
@@ -107,7 +109,7 @@ func (p *AggregatorWrapper) AddWithWait(loggroup *protocol.LogGroup, duration ti
 
 // Run calls periodically Aggregator.Flush to get log groups from associated aggregator and
 // pass them to LogstoreConfig through LogGroupsChan.
-func (p *AggregatorWrapper) Run(control *pipeline.AsyncControl) {
+func (p *AggregatorWrapperV1) Run(control *pipeline.AsyncControl) {
 	defer panicRecover(p.Aggregator.Description())
 	for {
 		exitFlag := util.RandomSleep(p.Interval, 0.1, control.CancelToken())
@@ -118,6 +120,7 @@ func (p *AggregatorWrapper) Run(control *pipeline.AsyncControl) {
 			}
 			p.procInRecordsTotal.Add(int64(len(logGroup.Logs)))
 			p.LogGroupsChan <- logGroup
+			p.procOutRecordsTotal.Add(int64(len(logGroup.Logs)))
 		}
 		if exitFlag {
 			return

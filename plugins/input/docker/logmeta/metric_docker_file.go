@@ -148,9 +148,7 @@ func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 	idf.deleteMetric = helper.NewCounterMetric("remove_container")
 	idf.updateMetric = helper.NewCounterMetric("update_container")
 
-	labels := pipeline.GetCommonLabels(idf.context, "metric_docker_file", -1)
-	idf.metricRecord = idf.context.RegisterMetricRecord(labels)
-
+	idf.metricRecord = idf.context.GetMetricRecord()
 	idf.metricRecord.RegisterCounterMetric(idf.avgInstanceMetric)
 	idf.metricRecord.RegisterCounterMetric(idf.addMetric)
 	idf.metricRecord.RegisterCounterMetric(idf.deleteMetric)

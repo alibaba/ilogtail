@@ -23,6 +23,8 @@ type CounterMetric interface {
 	Clear(v int64)
 
 	Get() int64
+
+	GetAndReset() int64
 }
 
 type StringMetric interface {
@@ -31,6 +33,8 @@ type StringMetric interface {
 	Set(v string)
 
 	Get() string
+
+	GetAndReset() string
 }
 
 type LatencyMetric interface {
@@ -43,4 +47,6 @@ type LatencyMetric interface {
 	End()
 	// nano second
 	Get() int64
+
+	GetAndReset() int64
 }
