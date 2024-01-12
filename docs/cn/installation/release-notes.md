@@ -6,11 +6,13 @@
 
 发版日期：2024 年 1 月 12 日
 
+iLogtail 2.0是一个架构全新升级的版本，与1.x版本的采集配置是不兼容的，升级指南请参考变更说明 [#1294](https://github.com/alibaba/ilogtail/discussions/1294)
+
 新功能
 
-* 新增原生Input和Flusher插件接口，并定义完整原生流水线 [#1184](https://github.com/alibaba/ilogtail/pull/1184)
 * 支持全新设计的V2采集配置 [#1185](https://github.com/alibaba/ilogtail/pull/1185)
 * 支持SPL数据处理语言处理数据 [#1278](https://github.com/alibaba/ilogtail/pull/1278)
+* 新增原生Input和Flusher插件接口，并定义完整原生流水线 [#1184](https://github.com/alibaba/ilogtail/pull/1184)
 * 即使使用Go插件Tag也将被至于Log的Meta中而非内容中，除非选项UsingOldContentTag为true [#1169](https://github.com/alibaba/ilogtail/pull/1169)
 * 输出支持jsonline协议 [#1265](https://github.com/alibaba/ilogtail/pull/1165)
 * Env方式控制配置创建升级使用2.0配置管理接口 [#1282](https://github.com/alibaba/ilogtail/pull/1282)
@@ -43,15 +45,15 @@
 
 | 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
 | -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
-| [ilogtail-2.0.0.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.0/ilogtail-2.0.0.linux-amd64.tar.gz) | Linux | x86-64 | c4b079d01b8dd840f49d4d4387df24c268b4736995c2065a740edd9f2d727356 |
-| [ilogtail-2.0.0.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.0/ilogtail-2.0.0.linux-arm64.tar.gz) | Linux | arm64  | c4c7bb1ccec34cf19424c70f3447121a2dd0285c428bc78308e76ca10348c025 |
+| [ilogtail-2.0.0.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.0/ilogtail-2.0.0.linux-amd64.tar.gz) | Linux | x86-64 | 0bcd191bc82f1e33d0d4a032ff2c9ea9e75de1dee04f11418107dde9d05b4185 |
+| [ilogtail-2.0.0.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.0/ilogtail-2.0.0.linux-arm64.tar.gz) | Linux | arm64  | fc825b4879fd1c00bcba94ed19a4484555ced1f9b778f78786bc3e2bfc9ebad8 |
 
 ### Docker 镜像
 
 **Docker Pull 命令**&#x20;
 
 ``` bash
-docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.8.4
+docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:2.0.0
 ```
 
 ## 1.8.4
