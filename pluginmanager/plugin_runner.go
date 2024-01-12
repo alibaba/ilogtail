@@ -32,13 +32,13 @@ const (
 type PluginRunner interface {
 	Init(inputQueueSize int, aggrQueueSize int) error
 
-	AddDefaultAggregator(pluginID string) error
+	AddDefaultAggregatorIfEmpty() error
 
-	AddDefaultFlusher(pluginID string) error
+	AddDefaultFlusherIfEmpty() error
 
 	ReceiveRawLog(log *pipeline.LogWithContext)
 
-	AddPlugin(pluginName string, pluginID string, category pluginCategory, plugin interface{}, config map[string]interface{}) error
+	AddPlugin(pluginName string, pluginID string, pluginNodeID string, pluginChildNodeID string, category pluginCategory, plugin interface{}, config map[string]interface{}) error
 
 	GetExtension(name string) (pipeline.Extension, bool)
 

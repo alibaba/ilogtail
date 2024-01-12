@@ -27,8 +27,8 @@ type FlusherWrapperV2 struct {
 	Flusher pipeline.FlusherV2
 }
 
-func (wrapper *FlusherWrapperV2) Init(name string, pluginID string, context pipeline.PipelineContext) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID)
+func (wrapper *FlusherWrapperV2) Init(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, context pipeline.PipelineContext) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, pluginNodeID, pluginChildNodeID)
 
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
@@ -55,6 +55,6 @@ func (wrapper *FlusherWrapperV2) Export(pipelineGroupEvents []*models.PipelineGr
 	if err == nil {
 		wrapper.procOutRecordsTotal.Add(int64(total))
 	}
-	wrapper.procTimeMS.Add(int64(time.Since(startTime).Microseconds()))
+	wrapper.procTimeMS.Add(int64(time.Since(startTime).Milliseconds()))
 	return err
 }

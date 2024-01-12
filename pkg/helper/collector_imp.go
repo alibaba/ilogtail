@@ -28,7 +28,6 @@ type observePipeCollector struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-
 func (p *observePipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	if len(events) == 0 {
 		return
@@ -79,7 +78,6 @@ type groupedPipeCollector struct {
 	procOutRecordsTotal pipeline.CounterMetric
 	procTimeMS          pipeline.CounterMetric
 }
-
 
 func (p *groupedPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	if len(events) == 0 {

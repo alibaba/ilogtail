@@ -42,8 +42,8 @@ type AggregatorWrapperV2 struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *AggregatorWrapperV2) Init(name string, pluginID string) error {
-	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID)
+func (p *AggregatorWrapperV2) Init(name string, pluginID string, pluginNodeID string, pluginChildNodeID string) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID, pluginNodeID, pluginChildNodeID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
 	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")

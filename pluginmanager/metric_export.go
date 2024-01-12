@@ -14,20 +14,10 @@
 
 package pluginmanager
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 func GetMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.GetMetricRecords()...)
-	}
-	jsonData, err := json.Marshal(metrics)
-
-	if err == nil {
-		fmt.Println(string(jsonData))
 	}
 	return metrics
 }

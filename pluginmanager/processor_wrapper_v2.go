@@ -27,8 +27,8 @@ type ProcessorWrapperV2 struct {
 	Processor pipeline.ProcessorV2
 }
 
-func (wrapper *ProcessorWrapperV2) Init(name string, pluginID string) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID)
+func (wrapper *ProcessorWrapperV2) Init(name string, pluginID string, pluginNodeID string, pluginChildNodeID string) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, pluginNodeID, pluginChildNodeID)
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
 	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")
@@ -47,6 +47,6 @@ func (wrapper *ProcessorWrapperV2) Process(in *models.PipelineGroupEvents, conte
 	wrapper.procInRecordsTotal.Add(int64(len(in.Events)))
 	startTime := time.Now()
 	wrapper.Processor.Process(in, context)
-	wrapper.procTimeMS.Add(int64(time.Since(startTime).Microseconds()))
+	wrapper.procTimeMS.Add(int64(time.Since(startTime).Milliseconds()))
 	wrapper.procOutRecordsTotal.Add(int64(len(in.Events)))
 }

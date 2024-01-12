@@ -118,10 +118,11 @@ type LogstoreConfig struct {
 	EnvSet                map[string]struct{}
 	CollectContainersFlag bool
 	pluginID              int64
+	nodeID                int64
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
-	labels := pipeline.GetCommonLabels(context, "", "")
+	labels := pipeline.GetCommonLabels(context, "", "", "", "")
 	metricRecord := context.RegisterMetricRecord(labels)
 
 	p.CollecLatencytMetric = helper.NewLatencyMetric("collect_latency")
@@ -519,7 +520,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			logger.Debug(contextImp.GetRuntimeContext(), "add extension", typeName)
 
 			pluginTypeWithID, rawPluginType, pluginID := logstoreC.genPluginTypeAndID(typeName)
-			err = loadExtension(pluginTypeWithID, rawPluginType, pluginID, logstoreC, extension["detail"])
+			err = loadExtension(pluginTypeWithID, rawPluginType, pluginID, "", "", logstoreC, extension["detail"])
 			if err != nil {
 				return nil, err
 			}
@@ -540,11 +541,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 								// Load MetricInput plugin defined in pipeline.MetricInputs
 								// pipeline.MetricInputs will be renamed in a future version
 								_, rawPluginType, pluginID := logstoreC.genPluginTypeAndID(typeNameStr)
-								err = loadMetric(rawPluginType, pluginID, logstoreC, input["detail"])
+								pluginNodeID, pluginChildNodeID := logstoreC.genNodeID(false)
+								err = loadMetric(rawPluginType, pluginID, pluginNodeID, pluginChildNodeID, logstoreC, input["detail"])
 							} else if _, isServiceInput := pipeline.ServiceInputs[typeNameStr]; isServiceInput {
 								// Load ServiceInput plugin defined in pipeline.ServiceInputs
 								_, rawPluginType, pluginID := logstoreC.genPluginTypeAndID(typeNameStr)
-								err = loadService(rawPluginType, pluginID, logstoreC, input["detail"])
+								pluginNodeID, pluginChildNodeID := logstoreC.genNodeID(false)
+								err = loadService(rawPluginType, pluginID, pluginNodeID, pluginChildNodeID, logstoreC, input["detail"])
 							}
 							if err != nil {
 								return nil, err
@@ -573,7 +576,8 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						if typeNameStr, ok := typeName.(string); ok {
 							logger.Debug(contextImp.GetRuntimeContext(), "add processor", typeNameStr)
 							_, rawPluginType, pluginID := logstoreC.genPluginTypeAndID(typeNameStr)
-							err = loadProcessor(rawPluginType, pluginID, i, logstoreC, processor["detail"])
+							pluginNodeID, pluginChildNodeID := logstoreC.genNodeID(false)
+							err = loadProcessor(rawPluginType, pluginID, pluginNodeID, pluginChildNodeID, i, logstoreC, processor["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -600,7 +604,8 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						if typeNameStr, ok := typeName.(string); ok {
 							logger.Debug(contextImp.GetRuntimeContext(), "add aggregator", typeNameStr)
 							_, rawPluginType, pluginID := logstoreC.genPluginTypeAndID(typeNameStr)
-							err = loadAggregator(rawPluginType, pluginID, logstoreC, aggregator["detail"])
+							pluginNodeID, pluginChildNodeID := logstoreC.genNodeID(false)
+							err = loadAggregator(rawPluginType, pluginID, pluginNodeID, pluginChildNodeID, logstoreC, aggregator["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -615,7 +620,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			return nil, fmt.Errorf("invalid aggregator type : %s, not json array", "aggregators")
 		}
 	}
-	if err = logstoreC.PluginRunner.AddDefaultAggregator(logstoreC.genEmbeddedPluginID()); err != nil {
+	if err = logstoreC.PluginRunner.AddDefaultAggregatorIfEmpty(); err != nil {
 		return nil, err
 	}
 
@@ -623,14 +628,22 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	if flushersFound {
 		flushers, ok := pluginConfig.([]interface{})
 		if ok {
-			for _, flusherInterface := range flushers {
+			flushersLen := len(flushers)
+			for num, flusherInterface := range flushers {
 				flusher, ok := flusherInterface.(map[string]interface{})
 				if ok {
 					if typeName, ok := flusher["type"]; ok {
 						if typeNameStr, ok := typeName.(string); ok {
 							logger.Debug(contextImp.GetRuntimeContext(), "add flusher", typeNameStr)
 							_, rawPluginType, pluginID := logstoreC.genPluginTypeAndID(typeNameStr)
-							err = loadFlusher(rawPluginType, pluginID, logstoreC, flusher["detail"])
+
+							lastOne := false
+							if num == flushersLen-1 {
+								lastOne = true
+							}
+							pluginNodeID, pluginChildNodeID := logstoreC.genNodeID(lastOne)
+
+							err = loadFlusher(rawPluginType, pluginID, pluginNodeID, pluginChildNodeID, logstoreC, flusher["detail"])
 							if err != nil {
 								return nil, err
 							}
@@ -645,7 +658,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			return nil, fmt.Errorf("invalid flusher type : %s, not json array", "flushers")
 		}
 	}
-	if err = logstoreC.PluginRunner.AddDefaultFlusher(logstoreC.genEmbeddedPluginID()); err != nil {
+	if err = logstoreC.PluginRunner.AddDefaultFlusherIfEmpty(); err != nil {
 		return nil, err
 	}
 	return logstoreC, nil
@@ -702,7 +715,7 @@ func loadBuiltinConfig(name string, project string, logstore string,
 // @pluginType: the type of metric plugin.
 // @logstoreConfig: where to store the created metric plugin object.
 // It returns any error encountered.
-func loadMetric(pluginType string, pluginID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadMetric(pluginType string, pluginID string, pluginNodeID string, pluginChildNodeID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.MetricInputs[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
@@ -722,14 +735,14 @@ func loadMetric(pluginType string, pluginID string, logstoreConfig *LogstoreConf
 			}
 		}
 	}
-	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginMetricInput, metric, map[string]interface{}{"interval": interval})
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginNodeID, pluginChildNodeID, pluginMetricInput, metric, map[string]interface{}{"interval": interval})
 }
 
 // loadService creates a service plugin object and append to logstoreConfig.ServicePlugins.
 // @pluginType: the type of service plugin.
 // @logstoreConfig: where to store the created service plugin object.
 // It returns any error encountered.
-func loadService(pluginType string, pluginID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadService(pluginType string, pluginID string, pluginNodeID string, pluginChildNodeID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.ServiceInputs[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
@@ -738,10 +751,10 @@ func loadService(pluginType string, pluginID string, logstoreConfig *LogstoreCon
 	if err = applyPluginConfig(service, configInterface); err != nil {
 		return err
 	}
-	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginServiceInput, service, map[string]interface{}{})
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginNodeID, pluginChildNodeID, pluginServiceInput, service, map[string]interface{}{})
 }
 
-func loadProcessor(pluginType string, pluginID string, priority int, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadProcessor(pluginType string, pluginID string, pluginNodeID string, pluginChildNodeID string, priority int, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Processors[pluginType]
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_PROCESSOR_TYPE", "invalid processor type, maybe type is wrong or logtail version is too old", pluginType)
@@ -751,10 +764,10 @@ func loadProcessor(pluginType string, pluginID string, priority int, logstoreCon
 	if err = applyPluginConfig(processor, configInterface); err != nil {
 		return err
 	}
-	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginProcessor, processor, map[string]interface{}{"priority": priority})
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginNodeID, pluginChildNodeID, pluginProcessor, processor, map[string]interface{}{"priority": priority})
 }
 
-func loadAggregator(pluginType string, pluginID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadAggregator(pluginType string, pluginID string, pluginNodeID string, pluginChildNodeID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Aggregators[pluginType]
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_AGGREGATOR_TYPE", "invalid aggregator type, maybe type is wrong or logtail version is too old", pluginType)
@@ -764,10 +777,10 @@ func loadAggregator(pluginType string, pluginID string, logstoreConfig *Logstore
 	if err = applyPluginConfig(aggregator, configInterface); err != nil {
 		return err
 	}
-	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginAggregator, aggregator, map[string]interface{}{})
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginNodeID, pluginChildNodeID, pluginAggregator, aggregator, map[string]interface{}{})
 }
 
-func loadFlusher(pluginType string, pluginID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadFlusher(pluginType string, pluginID string, pluginNodeID string, pluginChildNodeID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Flushers[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
@@ -776,10 +789,10 @@ func loadFlusher(pluginType string, pluginID string, logstoreConfig *LogstoreCon
 	if err = applyPluginConfig(flusher, configInterface); err != nil {
 		return err
 	}
-	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginFlusher, flusher, map[string]interface{}{})
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginID, pluginNodeID, pluginChildNodeID, pluginFlusher, flusher, map[string]interface{}{})
 }
 
-func loadExtension(pluginTypeWithID string, pluginType string, pluginID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadExtension(pluginTypeWithID string, pluginType string, pluginID string, pluginNodeID string, pluginChildNodeID string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Extensions[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
@@ -791,7 +804,7 @@ func loadExtension(pluginTypeWithID string, pluginType string, pluginID string, 
 	if err = extension.Init(logstoreConfig.Context); err != nil {
 		return err
 	}
-	return logstoreConfig.PluginRunner.AddPlugin(pluginTypeWithID, pluginID, pluginExtension, extension, map[string]interface{}{})
+	return logstoreConfig.PluginRunner.AddPlugin(pluginTypeWithID, pluginID, pluginNodeID, pluginChildNodeID, pluginExtension, extension, map[string]interface{}{})
 }
 
 func applyPluginConfig(plugin interface{}, pluginConfig interface{}) error {
@@ -819,6 +832,17 @@ func (lc *LogstoreConfig) genPluginTypeAndID(pluginName string) (string, string,
 	id := lc.genEmbeddedPluginID()
 	pluginTypeWithID := fmt.Sprintf("%s/%s", pluginName, id)
 	return pluginTypeWithID, pluginName, id
+}
+
+func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
+	id := atomic.AddInt64(&lc.nodeID, 1)
+
+	if lastOne {
+		fmt.Println("lastOne", lastOne, "id", fmt.Sprintf("%v", id), "childId", fmt.Sprintf("%v", id))
+		return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id)
+	}
+	fmt.Println("lastOne", lastOne, "id", fmt.Sprintf("%v", id), "childId", fmt.Sprintf("%v", id+1))
+	return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id+1)
 }
 
 func isPluginTypeWithID(pluginName string) bool {

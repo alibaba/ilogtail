@@ -43,9 +43,9 @@ void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
 
     mProcInRecordsTotal->Add(inSize);
 
-    uint64_t startTime = GetCurrentTimeInMicroSeconds();
+    uint64_t startTime = GetCurrentTimeInMilliSeconds();
     mPlugin->Process(logGroup);
-    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    uint64_t durationTime = GetCurrentTimeInMilliSeconds() - startTime;
     
     mProcTimeMS->Add(durationTime);
 
