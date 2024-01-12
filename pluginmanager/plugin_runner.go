@@ -38,7 +38,7 @@ type PluginRunner interface {
 
 	ReceiveRawLog(log *pipeline.LogWithContext)
 
-	AddPlugin(pluginName string, pluginID string, pluginNodeID string, pluginChildNodeID string, category pluginCategory, plugin interface{}, config map[string]interface{}) error
+	AddPlugin(pluginName string, pluginID string, childPluginID string, category pluginCategory, plugin interface{}, config map[string]interface{}) error
 
 	GetExtension(name string) (pipeline.Extension, bool)
 

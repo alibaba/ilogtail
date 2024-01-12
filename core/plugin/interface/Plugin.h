@@ -16,7 +16,7 @@ public:
     PipelineContext& GetContext() { return *mContext; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     MetricsRecordRef& GetMetricsRecordRef() { return mMetricsRecordRef; }
-    void SetMetricsRecordRef(const std::string& name, const std::string& id) {
+    void SetMetricsRecordRef(const std::string& name, const std::string& id, const std::string& childPluginID) {
         std::vector<std::pair<std::string, std::string>> labels;
         WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
                                                                GetContext().GetLogstoreName(),
@@ -24,6 +24,7 @@ public:
                                                                GetContext().GetConfigName(),
                                                                name,
                                                                id,
+                                                               childPluginID,
                                                                labels);
 
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));

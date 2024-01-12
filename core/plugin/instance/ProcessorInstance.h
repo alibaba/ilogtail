@@ -26,7 +26,7 @@ namespace logtail {
 
 class ProcessorInstance : public PluginInstance {
 public:
-    ProcessorInstance(Processor* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
+    ProcessorInstance(Processor* plugin, const PluginMeta& pluginMeta) : PluginInstance(pluginMeta), mPlugin(plugin) {}
 
     const std::string& Name() const override { return mPlugin->Name(); };
     bool Init(const ComponentConfig& config, PipelineContext& context) override;

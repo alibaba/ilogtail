@@ -101,6 +101,7 @@ public:
                                    const std::string& configName,
                                    const std::string& pluginName,
                                    const std::string& pluginID,
+                                   const std::string& childPluginID, 
                                    MetricLabels& labels);
     void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels);
     MetricsRecord* DoSnapshot();

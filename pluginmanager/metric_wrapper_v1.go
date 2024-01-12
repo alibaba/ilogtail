@@ -40,8 +40,8 @@ type MetricWrapperV1 struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *MetricWrapperV1) Init(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, inputInterval int) error {
-	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID, pluginNodeID, pluginChildNodeID)
+func (p *MetricWrapperV1) Init(name string, pluginID string, childPluginID string, inputInterval int) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID, childPluginID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
 	p.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")

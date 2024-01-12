@@ -65,10 +65,9 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 
 func (p *pluginv1Runner) AddDefaultAggregatorIfEmpty() error {
 	if len(p.AggregatorPlugins) == 0 {
-		pluginID := p.LogstoreConfig.genEmbeddedPluginID()
-		pluginNodeID, pluginChildNodeID := p.LogstoreConfig.genNodeID(false)
+		pluginID, childPluginID := p.LogstoreConfig.genEmbeddedPluginID(false)
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
-		if err := loadAggregator("aggregator_default", pluginID, pluginNodeID, pluginChildNodeID, p.LogstoreConfig, nil); err != nil {
+		if err := loadAggregator("aggregator_default", pluginID, childPluginID, p.LogstoreConfig, nil); err != nil {
 			return err
 		}
 	}
@@ -77,38 +76,37 @@ func (p *pluginv1Runner) AddDefaultAggregatorIfEmpty() error {
 
 func (p *pluginv1Runner) AddDefaultFlusherIfEmpty() error {
 	if len(p.FlusherPlugins) == 0 {
-		pluginID := p.LogstoreConfig.genEmbeddedPluginID()
-		pluginNodeID, pluginChildNodeID := p.LogstoreConfig.genNodeID(true)
+		pluginID, childPluginID := p.LogstoreConfig.genEmbeddedPluginID(true)
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
 		category, options := flags.GetFlusherConfiguration()
-		if err := loadFlusher(category, pluginID, pluginNodeID, pluginChildNodeID, p.LogstoreConfig, options); err != nil {
+		if err := loadFlusher(category, pluginID, childPluginID, p.LogstoreConfig, options); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *pluginv1Runner) AddPlugin(pluginName string, pluginID string, pluginNodeID string, pluginChildNodeID string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
+func (p *pluginv1Runner) AddPlugin(pluginName string, pluginID string, childPluginID string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:
 		if metric, ok := plugin.(pipeline.MetricInputV1); ok {
-			return p.addMetricInput(pluginName, pluginID, pluginNodeID, pluginChildNodeID, metric, config["interval"].(int))
+			return p.addMetricInput(pluginName, pluginID, childPluginID, metric, config["interval"].(int))
 		}
 	case pluginServiceInput:
 		if service, ok := plugin.(pipeline.ServiceInputV1); ok {
-			return p.addServiceInput(pluginName, pluginID, pluginNodeID, pluginChildNodeID, service)
+			return p.addServiceInput(pluginName, pluginID, childPluginID, service)
 		}
 	case pluginProcessor:
 		if processor, ok := plugin.(pipeline.ProcessorV1); ok {
-			return p.addProcessor(pluginName, pluginID, pluginNodeID, pluginChildNodeID, processor, config["priority"].(int))
+			return p.addProcessor(pluginName, pluginID, childPluginID, processor, config["priority"].(int))
 		}
 	case pluginAggregator:
 		if aggregator, ok := plugin.(pipeline.AggregatorV1); ok {
-			return p.addAggregator(pluginName, pluginID, pluginNodeID, pluginChildNodeID, aggregator)
+			return p.addAggregator(pluginName, pluginID, childPluginID, aggregator)
 		}
 	case pluginFlusher:
 		if flusher, ok := plugin.(pipeline.FlusherV1); ok {
-			return p.addFlusher(pluginName, pluginID, pluginNodeID, pluginChildNodeID, flusher)
+			return p.addFlusher(pluginName, pluginID, childPluginID, flusher)
 		}
 	case pluginExtension:
 		if extension, ok := plugin.(pipeline.Extension); ok {
@@ -140,7 +138,7 @@ func (p *pluginv1Runner) RunPlugins(category pluginCategory, control *pipeline.A
 	}
 }
 
-func (p *pluginv1Runner) addMetricInput(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, input pipeline.MetricInputV1, inputInterval int) error {
+func (p *pluginv1Runner) addMetricInput(name string, pluginID string, childPluginID string, input pipeline.MetricInputV1, inputInterval int) error {
 	var wrapper MetricWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
@@ -149,45 +147,45 @@ func (p *pluginv1Runner) addMetricInput(name string, pluginID string, pluginNode
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 
-	return wrapper.Init(name, pluginID, pluginNodeID, pluginChildNodeID, inputInterval)
+	return wrapper.Init(name, pluginID, childPluginID, inputInterval)
 }
 
-func (p *pluginv1Runner) addServiceInput(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, input pipeline.ServiceInputV1) error {
+func (p *pluginv1Runner) addServiceInput(name string, pluginID string, childPluginID string, input pipeline.ServiceInputV1) error {
 	var wrapper ServiceWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
 	wrapper.LogsChan = p.LogsChan
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
-	return wrapper.Init(name, pluginID, pluginNodeID, pluginChildNodeID)
+	return wrapper.Init(name, pluginID, childPluginID)
 }
 
-func (p *pluginv1Runner) addProcessor(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, processor pipeline.ProcessorV1, priority int) error {
+func (p *pluginv1Runner) addProcessor(name string, pluginID string, childPluginID string, processor pipeline.ProcessorV1, priority int) error {
 	var wrapper ProcessorWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Processor = processor
 	wrapper.LogsChan = p.LogsChan
 	wrapper.Priority = priority
 	p.ProcessorPlugins = append(p.ProcessorPlugins, &wrapper)
-	return wrapper.Init(name, pluginID, pluginNodeID, pluginChildNodeID)
+	return wrapper.Init(name, pluginID, childPluginID)
 }
 
-func (p *pluginv1Runner) addAggregator(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, aggregator pipeline.AggregatorV1) error {
+func (p *pluginv1Runner) addAggregator(name string, pluginID string, childPluginID string, aggregator pipeline.AggregatorV1) error {
 	var wrapper AggregatorWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Aggregator = aggregator
 	wrapper.LogGroupsChan = p.LogGroupsChan
 	p.AggregatorPlugins = append(p.AggregatorPlugins, &wrapper)
-	return wrapper.Init(name, pluginID, pluginNodeID, pluginChildNodeID)
+	return wrapper.Init(name, pluginID, childPluginID)
 }
 
-func (p *pluginv1Runner) addFlusher(name string, pluginID string, pluginNodeID string, pluginChildNodeID string, flusher pipeline.FlusherV1) error {
+func (p *pluginv1Runner) addFlusher(name string, pluginID string, childPluginID string, flusher pipeline.FlusherV1) error {
 	var wrapper FlusherWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Flusher = flusher
 	wrapper.LogGroupsChan = p.LogGroupsChan
 	wrapper.Interval = time.Millisecond * time.Duration(p.LogstoreConfig.GlobalConfig.FlushIntervalMs)
 	p.FlusherPlugins = append(p.FlusherPlugins, &wrapper)
-	return wrapper.Init(name, pluginID, pluginNodeID, pluginChildNodeID)
+	return wrapper.Init(name, pluginID, childPluginID)
 }
 
 func (p *pluginv1Runner) addExtension(name string, extension pipeline.Extension) error {

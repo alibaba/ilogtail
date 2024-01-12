@@ -27,8 +27,8 @@ type ProcessorWrapperV2 struct {
 	Processor pipeline.ProcessorV2
 }
 
-func (wrapper *ProcessorWrapperV2) Init(name string, pluginID string, pluginNodeID string, pluginChildNodeID string) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, pluginNodeID, pluginChildNodeID)
+func (wrapper *ProcessorWrapperV2) Init(name string, pluginID string, childPluginID string) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, childPluginID)
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 
 	wrapper.procInRecordsTotal = helper.NewCounterMetric("proc_in_records_total")

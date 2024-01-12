@@ -40,7 +40,7 @@ public:
     void UnloadPlugins();
 
     // std::unique_ptr<InputInstance> CreateInput(const std::string& name, const std::string& pluginId);
-    std::unique_ptr<ProcessorInstance> CreateProcessor(const std::string& name, const std::string& pluginId);
+    std::unique_ptr<ProcessorInstance> CreateProcessor(const std::string& name, const PluginInstance::PluginMeta& pluginMeta);
     // std::unique_ptr<FlusherInstance> CreateFlusher(const std::string& name, const std::string& pluginId);
 
 private:
@@ -53,7 +53,7 @@ private:
     // void RegisterFlusherCreator(PluginCreator* creator);
     PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
     void RegisterCreator(PluginCat cat, PluginCreator* creator);
-    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const std::string& pluginId);
+    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const PluginInstance::PluginMeta& pluginMeta);
 
     struct PluginKey {
         PluginCat cat;

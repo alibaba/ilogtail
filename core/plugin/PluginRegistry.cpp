@@ -69,17 +69,17 @@ void PluginRegistry::UnloadPlugins() {
 }
 
 std::unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const std::string& name,
-                                                                   const std::string& pluginId) {
+                                                                   const PluginInstance::PluginMeta& pluginMeta) {
     return std::unique_ptr<ProcessorInstance>(
-        static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId).release()));
+        static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginMeta).release()));
 }
 
 std::unique_ptr<PluginInstance>
-PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
+PluginRegistry::Create(PluginCat cat, const std::string& name, const PluginInstance::PluginMeta& pluginMeta) {
     std::unique_ptr<PluginInstance> ins;
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {
-        ins = creatorEntry->second->Create(pluginId);
+        ins = creatorEntry->second->Create(pluginMeta);
     }
     return ins;
 }

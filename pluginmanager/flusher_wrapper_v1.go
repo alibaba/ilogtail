@@ -37,8 +37,8 @@ type FlusherWrapperV1 struct {
 	Flusher pipeline.FlusherV1
 }
 
-func (wrapper *FlusherWrapperV1) Init(name string, pluginID string, pluginNodeID string, pluginChildNodeID string) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, pluginNodeID, pluginChildNodeID)
+func (wrapper *FlusherWrapperV1) Init(name string, pluginID string, childPluginID string) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, childPluginID)
 
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 

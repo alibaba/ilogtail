@@ -28,16 +28,20 @@ namespace logtail {
 
 class PluginInstance {
 public:
-    PluginInstance(const std::string& pluginId) : mId(pluginId) {}
+    struct PluginMeta {
+        std::string pluginID;
+        std::string childPluginID;
+    };
+    PluginInstance(const PluginMeta& pluginMeta) : mMeta(&pluginMeta) {}
     virtual ~PluginInstance() = default;
 
-    const std::string& Id() const { return mId; }
+    const PluginMeta& Meta() const { return *mMeta; }
 
     virtual const std::string& Name() const = 0;
     virtual bool Init(const ComponentConfig& config, PipelineContext& context) = 0;
 
 protected:
-    const std::string mId;
+    const PluginMeta* mMeta;
 };
 
 } // namespace logtail
