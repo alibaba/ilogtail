@@ -18,12 +18,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap/check"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	"github.com/pingcap/check"
 )
 
 var _ = check.Suite(&processorTestSuite{})

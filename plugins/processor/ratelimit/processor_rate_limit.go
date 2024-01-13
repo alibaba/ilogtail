@@ -17,10 +17,11 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/mitchellh/hashstructure"
+
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/mitchellh/hashstructure"
 )
 
 type ProcessorRateLimit struct {
