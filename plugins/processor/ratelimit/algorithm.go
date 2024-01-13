@@ -44,7 +44,7 @@ func (l *rate) Unpack(str string) error {
 	valueStr := strings.TrimSpace(parts[0])
 	unitStr := strings.TrimSpace(parts[1])
 
-	v, err := strconv.ParseFloat(valueStr, 8)
+	v, err := strconv.ParseFloat(valueStr, 32)
 	if err != nil {
 		return fmt.Errorf(`rate's value component is not numeric: %v`, valueStr)
 	}

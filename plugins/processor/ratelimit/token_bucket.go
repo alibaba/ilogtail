@@ -15,6 +15,7 @@ package ratelimit
 
 import (
 	"context"
+	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -118,7 +119,7 @@ func (b *bucket) replenish(rate rate) {
 	secsSinceLastReplenish := time.Since(b.lastReplenish).Seconds()
 	tokensToReplenish := secsSinceLastReplenish * rate.valuePerSecond()
 
-	b.tokens += tokensToReplenish
+	b.tokens = math.Min(b.tokens+tokensToReplenish, rate.value)
 	b.lastReplenish = time.Now()
 }
 
