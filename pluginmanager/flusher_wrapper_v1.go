@@ -22,6 +22,11 @@ import (
 	"time"
 )
 
+type FlusherWrapper interface {
+	Init(name string, pluginID string, childPluginID string) error
+	IsReady(projectName string, logstoreName string, logstoreKey int64) bool
+}
+
 type CommonWrapper struct {
 	pipeline.PluginContext
 	Config              *LogstoreConfig
@@ -51,6 +56,10 @@ func (wrapper *FlusherWrapperV1) Init(name string, pluginID string, childPluginI
 	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
 
 	return wrapper.Flusher.Init(wrapper.Config.Context)
+}
+
+func (wrapper *FlusherWrapperV1) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
+	return wrapper.Flusher.IsReady(projectName, logstoreName, logstoreKey)
 }
 
 func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {

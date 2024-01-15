@@ -399,7 +399,7 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 			flushers[idx] = flusher.Flusher
 		}
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flushout loggroups, count", p.FlushOutStore.Len())
-		rst := flushOutStoreV1(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, sf *FlusherWrapperV1, store *FlushOutStore[protocol.LogGroup]) error {
+		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, sf *FlusherWrapperV1, store *FlushOutStore[protocol.LogGroup]) error {
 			return sf.Flusher.Flush(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
 		})
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flushout loggroups, result", rst)

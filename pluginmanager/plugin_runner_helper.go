@@ -55,31 +55,9 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 	}
 }
 
-func flushOutStoreV1[T FlushData](lc *LogstoreConfig, store *FlushOutStore[T], flushers []*FlusherWrapperV1, flushFunc func(*LogstoreConfig, *FlusherWrapperV1, *FlushOutStore[T]) error) bool {
+func flushOutStore[T FlushData, F FlusherWrapper](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
 	for _, flusher := range flushers {
-		for waitCount := 0; !flusher.Flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
-			if waitCount > maxFlushOutTime*100 {
-				logger.Error(lc.Context.GetRuntimeContext(), "DROP_DATA_ALARM", "flush out data timeout, drop data", store.Len())
-				return false
-			}
-			lc.Statistics.FlushReadyMetric.Add(0)
-			time.Sleep(time.Duration(10) * time.Millisecond)
-		}
-		lc.Statistics.FlushReadyMetric.Add(1)
-		lc.Statistics.FlushLatencyMetric.Begin()
-		err := flushFunc(lc, flusher, store)
-		if err != nil {
-			logger.Error(lc.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error", lc.ProjectName, lc.LogstoreName, err)
-		}
-		lc.Statistics.FlushLatencyMetric.End()
-	}
-	store.Reset()
-	return true
-}
-
-func flushOutStoreV2[T FlushData](lc *LogstoreConfig, store *FlushOutStore[T], flushers []*FlusherWrapperV2, flushFunc func(*LogstoreConfig, *FlusherWrapperV2, *FlushOutStore[T]) error) bool {
-	for _, flusher := range flushers {
-		for waitCount := 0; !flusher.Flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
+		for waitCount := 0; !flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
 			if waitCount > maxFlushOutTime*100 {
 				logger.Error(lc.Context.GetRuntimeContext(), "DROP_DATA_ALARM", "flush out data timeout, drop data", store.Len())
 				return false

@@ -201,7 +201,7 @@ func (p *pluginv2Runner) addFlusher(name string, pluginID string, childPluginID 
 	wrapper.Flusher = flusher
 	wrapper.Interval = time.Millisecond * time.Duration(p.LogstoreConfig.GlobalConfig.FlushIntervalMs)
 	p.FlusherPlugins = append(p.FlusherPlugins, &wrapper)
-	return wrapper.Init(name, pluginID, childPluginID, p.FlushPipeContext)
+	return wrapper.Init(name, pluginID, childPluginID)
 }
 
 func (p *pluginv2Runner) addExtension(name string, extension pipeline.Extension) error {
@@ -418,7 +418,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 			flushers[idx] = flusher.Flusher
 		}
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flushout group events, count", p.FlushOutStore.Len())
-		rst := flushOutStoreV2(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, pf *FlusherWrapperV2, store *FlushOutStore[models.PipelineGroupEvents]) error {
+		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, pf *FlusherWrapperV2, store *FlushOutStore[models.PipelineGroupEvents]) error {
 			return pf.Export(store.Get(), p.FlushPipeContext)
 		})
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flushout group events, result", rst)
