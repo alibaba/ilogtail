@@ -77,6 +77,12 @@ bool CheckTimeFormatV1(const std::string& timeValue, const std::string& timeForm
     }
 }
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
+    return pluginMeta;
+}
+
+
 void ProcessorParseTimestampNativeUnittest::TestCheckTime() {
     string timeValue;
     string timeFormat;
@@ -302,7 +308,7 @@ void ProcessorParseTimestampNativeUnittest::TestInit() {
 
     ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
@@ -334,7 +340,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessNoFormat() {
     // run function
     ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processor.Process(eventGroup);
@@ -387,7 +393,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
     // run function
     ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -479,7 +485,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     // run function
     ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -539,7 +545,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     // run function
     ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -580,7 +586,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventPreciseTimestampLega
     // run function
     ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     logtail::StringView timeStrCache;
@@ -660,7 +666,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTime() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         LogtailTime outTime = {0, 0};
@@ -700,7 +706,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -731,7 +737,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -761,7 +767,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -791,7 +797,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -821,7 +827,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -874,7 +880,7 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -906,7 +912,7 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 

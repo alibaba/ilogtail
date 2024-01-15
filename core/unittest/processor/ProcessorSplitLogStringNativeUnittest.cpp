@@ -43,6 +43,7 @@ UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestInit);
 UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestProcessJson);
 UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestProcessCommon);
 
+
 void ProcessorSplitLogStringNativeUnittest::TestInit() {
     Config config;
     config.mLogType = REGEX_LOG;

@@ -61,6 +61,13 @@ UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonRaw);
 
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestMultipleLines);
 
+
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
+    return pluginMeta;
+}
+
+
 void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
     // error json
     {
@@ -134,7 +141,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             std::string outJson = eventGroup.ToJsonString();
             // run function ProcessorParseJsonNative
             ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
 
@@ -219,7 +226,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             std::string outJson = eventGroup.ToJsonString();
             // run function ProcessorParseJsonNative
             ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
 
@@ -239,7 +246,7 @@ void ProcessorParseJsonNativeUnittest::TestInit() {
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
@@ -248,7 +255,7 @@ void ProcessorParseJsonNativeUnittest::TestAddLog() {
     Config config;
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -300,7 +307,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -385,7 +392,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -475,7 +482,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -551,7 +558,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -623,7 +630,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);

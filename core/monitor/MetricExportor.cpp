@@ -19,11 +19,12 @@ void MetricExportor::PushGoPluginMetrics() {
     std::vector<std::map<std::string, std::string>> goPluginMetircsList;
     LogtailPlugin::GetInstance()->GetPipelineMetrics(goPluginMetircsList);
     std::map<std::string, sls_logs::LogGroup*> goLogGroupMap;
-    std::map<std::string, std::string> tmpConfigNameToRegion;
+
     for (auto& item :  goPluginMetircsList) {
         std::string configName = "";
         std::string region = METRIC_REGION_DEFAULT;
         {
+            // get the config_name label
             for (const auto& pair : item) {
                 if (pair.first == "label.config_name") {
                     configName = pair.second;
@@ -31,12 +32,10 @@ void MetricExportor::PushGoPluginMetrics() {
                 }
             }
             if (!configName.empty()) {
-                auto search = tmpConfigNameToRegion.find(configName);
-                if (search != tmpConfigNameToRegion.end()) {
-                    region = search->second;
-                } else {
-                    Config* config = ConfigManager::GetInstance()->FindConfigByName(configName);
-                    tmpConfigNameToRegion.insert(std::make_pair(configName, config->mRegion));
+                // get region info by config_name
+                Config* config = ConfigManager::GetInstance()->FindConfigByName(configName);
+                if (config) {
+                    region = config->mRegion;
                 }
             } 
         }

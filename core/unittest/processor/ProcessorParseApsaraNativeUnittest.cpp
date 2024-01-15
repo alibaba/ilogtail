@@ -60,6 +60,12 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatc
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
+    return pluginMeta;
+}
+
+
 void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
     std::string inJson = R"({
@@ -191,7 +197,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         std::string outJson = eventGroup.ToJsonString();
         // run function ProcessorParseApsaraNative
         ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         processor.Process(eventGroup);
 
@@ -223,7 +229,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         processorSplitRegexNative.Process(eventGroup);
         // run function ProcessorParseApsaraNative
         ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         processor.Process(eventGroup);
         // judge result
@@ -244,7 +250,7 @@ void ProcessorParseApsaraNativeUnittest::TestInit() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
@@ -296,7 +302,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -395,7 +401,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -478,7 +484,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -553,7 +559,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -595,7 +601,7 @@ void ProcessorParseApsaraNativeUnittest::TestAddLog() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -674,7 +680,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -817,7 +823,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     // run function
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -887,7 +893,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
     // run function
     std::string pluginId = "testID";
     ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
