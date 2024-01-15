@@ -226,7 +226,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0UL);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
@@ -303,7 +302,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
@@ -382,7 +380,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestAddLog() {

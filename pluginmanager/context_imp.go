@@ -28,12 +28,13 @@ import (
 )
 
 type ContextImp struct {
-	MetricsRecords   []*pipeline.MetricsRecord
-	tmpMetricsRecord *pipeline.MetricsRecord
-	common           *pkg.LogtailContextMeta
-	pluginNames      string
-	ctx              context.Context
-	logstoreC        *LogstoreConfig
+	MetricsRecords             []*pipeline.MetricsRecord
+	logstoreConfigMetricRecord *pipeline.MetricsRecord
+	tmpMetricsRecord           *pipeline.MetricsRecord
+	common                     *pkg.LogtailContextMeta
+	pluginNames                string
+	ctx                        context.Context
+	logstoreC                  *LogstoreConfig
 }
 
 var contextMutex sync.Mutex
@@ -112,6 +113,24 @@ func (p *ContextImp) RegisterMetricRecord(labels map[string]string) *pipeline.Me
 	}
 	p.MetricsRecords = append(p.MetricsRecords, &metricRecord)
 	return &metricRecord
+}
+
+func (p *ContextImp) RegisterLogstoreConfigMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+	counterMetrics := make([]pipeline.CounterMetric, 0)
+	stringMetrics := make([]pipeline.StringMetric, 0)
+	latencyMetric := make([]pipeline.LatencyMetric, 0)
+
+	p.logstoreConfigMetricRecord = &pipeline.MetricsRecord{
+		Labels:         labels,
+		CounterMetrics: counterMetrics,
+		StringMetrics:  stringMetrics,
+		LatencyMetrics: latencyMetric,
+	}
+	return p.logstoreConfigMetricRecord
+}
+
+func (p *ContextImp) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
+	return p.logstoreConfigMetricRecord
 }
 
 func (p *ContextImp) GetMetricRecords() (results []map[string]string) {

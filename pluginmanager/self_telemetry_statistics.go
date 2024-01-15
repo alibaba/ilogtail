@@ -15,7 +15,12 @@
 package pluginmanager
 
 import (
+	"strconv"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type InputStatistics struct {
@@ -32,16 +37,30 @@ func (r *InputStatistics) Description() string {
 }
 
 func (r *InputStatistics) Collect(collector pipeline.Collector) error {
-	/*
-		for _, config := range LogtailConfig {
-			log := &protocol.Log{}
-			config.Context.MetricSerializeToPB(log)
-			if len(log.Contents) > 0 && StatisticsConfig != nil {
-				StatisticsConfig.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log})
-				logger.Debug(r.context.GetRuntimeContext(), "statistics", *log)
-			}
+	for _, config := range LogtailConfig {
+		log := &protocol.Log{}
+		metricRecord := config.Context.GetLogstoreConfigMetricRecord()
+
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: config.Context.GetProject()})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "config_name", Value: config.Context.GetConfigName()})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "category", Value: config.Context.GetLogstore()})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "source_ip", Value: util.GetIPAddress()})
+
+		for _, counterMetric := range metricRecord.CounterMetrics {
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: counterMetric.Name(), Value: strconv.FormatInt(counterMetric.GetAndReset(), 10)})
 		}
-	*/
+		for _, stringMetric := range metricRecord.StringMetrics {
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: stringMetric.Name(), Value: stringMetric.GetAndReset()})
+		}
+		for _, latencyMetric := range metricRecord.LatencyMetrics {
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: latencyMetric.Name(), Value: strconv.FormatInt(latencyMetric.GetAndReset(), 10)})
+		}
+
+		if len(log.Contents) > 0 && StatisticsConfig != nil {
+			StatisticsConfig.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log})
+			logger.Debug(r.context.GetRuntimeContext(), "statistics", *log)
+		}
+	}
 	return nil
 }
 

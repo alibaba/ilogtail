@@ -76,6 +76,9 @@ type Context interface {
 	GetMetricRecords() []map[string]string
 	RegisterMetricRecord(labels map[string]string) *MetricsRecord
 
+	RegisterLogstoreConfigMetricRecord(labels map[string]string) *MetricsRecord
+	GetLogstoreConfigMetricRecord() *MetricsRecord
+
 	SetMetricRecord(metricsRecord *MetricsRecord)
 	GetMetricRecord() *MetricsRecord
 

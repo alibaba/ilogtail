@@ -40,12 +40,13 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 }
 
 type EmptyContext struct {
-	MetricsRecords   []*pipeline.MetricsRecord
-	tmpMetricsRecord *pipeline.MetricsRecord
-	common           *pkg.LogtailContextMeta
-	ctx              context.Context
-	checkpoint       map[string][]byte
-	pluginNames      string
+	MetricsRecords             []*pipeline.MetricsRecord
+	logstoreConfigMetricRecord *pipeline.MetricsRecord
+	tmpMetricsRecord           *pipeline.MetricsRecord
+	common                     *pkg.LogtailContextMeta
+	ctx                        context.Context
+	checkpoint                 map[string][]byte
+	pluginNames                string
 }
 
 var contextMutex sync.Mutex
@@ -88,6 +89,24 @@ func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) *pipeline.
 	}
 	p.MetricsRecords = append(p.MetricsRecords, &metricRecord)
 	return &metricRecord
+}
+
+func (p *EmptyContext) RegisterLogstoreConfigMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+	counterMetrics := make([]pipeline.CounterMetric, 0)
+	stringMetrics := make([]pipeline.StringMetric, 0)
+	latencyMetric := make([]pipeline.LatencyMetric, 0)
+
+	p.logstoreConfigMetricRecord = &pipeline.MetricsRecord{
+		Labels:         labels,
+		CounterMetrics: counterMetrics,
+		StringMetrics:  stringMetrics,
+		LatencyMetrics: latencyMetric,
+	}
+	return p.logstoreConfigMetricRecord
+}
+
+func (p *EmptyContext) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
+	return p.logstoreConfigMetricRecord
 }
 
 func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {
