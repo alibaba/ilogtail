@@ -998,7 +998,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraEasyReadLogTimeParser() {
     // run function
     std::string pluginId = "testID";
     ProcessorParseApsaraNative* processor = new ProcessorParseApsaraNative;
-    ProcessorInstance processorInstance(processor, pluginId);
+    ProcessorInstance processorInstance(processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     for (auto& acase : cases) {
@@ -1237,7 +1237,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
     config.mAdvancedConfig.mAdjustApsaraMicroTimezone = true;
 
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, pluginId);
+    ProcessorInstance processorInstance(new ProcessorParseApsaraNative, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
