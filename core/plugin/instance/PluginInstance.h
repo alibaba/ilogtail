@@ -32,16 +32,16 @@ public:
         std::string pluginID;
         std::string childPluginID;
     };
-    PluginInstance(const PluginMeta& pluginMeta) : mMeta(&pluginMeta) {}
+    PluginInstance(const PluginMeta& pluginMeta) : mMeta(pluginMeta) {}
     virtual ~PluginInstance() = default;
 
-    const PluginMeta& Meta() const { return *mMeta; }
+    const PluginMeta& Meta() const { return mMeta; }
 
     virtual const std::string& Name() const = 0;
     virtual bool Init(const ComponentConfig& config, PipelineContext& context) = 0;
 
 protected:
-    const PluginMeta* mMeta;
+    const PluginMeta mMeta;
 };
 
 } // namespace logtail

@@ -257,7 +257,6 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
     MetricsRecord* tmp = mHead;
     while (tmp) {
         Log* logPtr = nullptr;
-        // for (auto &item: tmp->GetLabels()) {
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
             std::pair<std::string, std::string> pair = *item;
             if (METRIC_FIELD_REGION == pair.first) {
