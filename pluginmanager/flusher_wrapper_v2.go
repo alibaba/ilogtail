@@ -55,6 +55,6 @@ func (wrapper *FlusherWrapperV2) Export(pipelineGroupEvents []*models.PipelineGr
 	if err == nil {
 		wrapper.procOutRecordsTotal.Add(int64(total))
 	}
-	wrapper.procTimeMS.Add(int64(time.Since(startTime).Milliseconds()))
+	wrapper.procTimeMS.Add(time.Since(startTime).Milliseconds())
 	return err
 }

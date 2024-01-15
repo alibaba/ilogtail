@@ -47,6 +47,6 @@ func (wrapper *ProcessorWrapperV2) Process(in *models.PipelineGroupEvents, conte
 	wrapper.procInRecordsTotal.Add(int64(len(in.Events)))
 	startTime := time.Now()
 	wrapper.Processor.Process(in, context)
-	wrapper.procTimeMS.Add(int64(time.Since(startTime).Milliseconds()))
+	wrapper.procTimeMS.Add(time.Since(startTime).Milliseconds())
 	wrapper.procOutRecordsTotal.Add(int64(len(in.Events)))
 }

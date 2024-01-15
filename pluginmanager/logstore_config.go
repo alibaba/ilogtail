@@ -36,7 +36,6 @@ import (
 )
 
 var maxFlushOutTime = 5
-var embeddedNamingCnt = int64(0)
 
 const mixProcessModeFlag = "mix_process_mode"
 
@@ -118,7 +117,6 @@ type LogstoreConfig struct {
 	EnvSet                map[string]struct{}
 	CollectContainersFlag bool
 	pluginID              int64
-	nodeID                int64
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
@@ -826,17 +824,6 @@ func (lc *LogstoreConfig) genPluginTypeAndID(pluginName string, lastOne bool) (s
 	id, childID := lc.genEmbeddedPluginID(lastOne)
 	pluginTypeWithID := fmt.Sprintf("%s/%s", pluginName, id)
 	return pluginTypeWithID, pluginName, id, childID
-}
-
-func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
-	id := atomic.AddInt64(&lc.nodeID, 1)
-
-	if lastOne {
-		fmt.Println("lastOne", lastOne, "id", fmt.Sprintf("%v", id), "childId", fmt.Sprintf("%v", id))
-		return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id)
-	}
-	fmt.Println("lastOne", lastOne, "id", fmt.Sprintf("%v", id), "childId", fmt.Sprintf("%v", id+1))
-	return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id+1)
 }
 
 func isPluginTypeWithID(pluginName string) bool {

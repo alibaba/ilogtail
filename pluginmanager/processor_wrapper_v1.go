@@ -56,7 +56,7 @@ func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol
 	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
 	startTime := time.Now()
 	result := wrapper.Processor.ProcessLogs(logArray)
-	wrapper.procTimeMS.Add(int64(time.Since(startTime).Milliseconds()))
+	wrapper.procTimeMS.Add(time.Since(startTime).Milliseconds())
 	wrapper.procOutRecordsTotal.Add(int64(len(result)))
 	return result
 }
