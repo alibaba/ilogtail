@@ -57,8 +57,7 @@ func newProcessor(sourceKeys []string, key []byte, iv []byte, keyFilePath string
 
 	ctxImpl := &pluginmanager.ContextImp{}
 	ctxImpl.InitContext("test", "test", "test")
-	metricReccord := ctxImpl.RegisterMetricRecord(map[string]string{})
-	ctxImpl.SetMetricRecord(metricReccord)
+	ctxImpl.RegisterMetricRecord(map[string]string{})
 	_ = p.Init(ctxImpl)
 	return p
 }

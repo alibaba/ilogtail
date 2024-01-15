@@ -34,15 +34,13 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 		common:     c,
 		checkpoint: make(map[string][]byte),
 	}
-	metricRecord := emptyContext.RegisterMetricRecord(map[string]string{})
-	emptyContext.SetMetricRecord(metricRecord)
+	emptyContext.RegisterMetricRecord(map[string]string{})
 	return &emptyContext
 }
 
 type EmptyContext struct {
 	MetricsRecords             []*pipeline.MetricsRecord
 	logstoreConfigMetricRecord *pipeline.MetricsRecord
-	tmpMetricsRecord           *pipeline.MetricsRecord
 	common                     *pkg.LogtailContextMeta
 	ctx                        context.Context
 	checkpoint                 map[string][]byte
@@ -109,7 +107,7 @@ func (p *EmptyContext) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
 	return p.logstoreConfigMetricRecord
 }
 
-func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {
+func (p *EmptyContext) ExportMetricRecords() (results []map[string]string) {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
@@ -127,12 +125,11 @@ func (p *EmptyContext) GetMetricRecords() (results []map[string]string) {
 	return results
 }
 
-func (p *EmptyContext) SetMetricRecord(metricsRecord *pipeline.MetricsRecord) {
-	p.tmpMetricsRecord = metricsRecord
-}
-
 func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
-	return p.tmpMetricsRecord
+	if len(p.MetricsRecords) > 0 {
+		return p.MetricsRecords[len(p.MetricsRecords)-1]
+	}
+	return nil
 }
 
 func (p *EmptyContext) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {

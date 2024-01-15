@@ -27,10 +27,8 @@ import (
 )
 
 type LocalContext struct {
-	MetricsRecords []*pipeline.MetricsRecord
-
+	MetricsRecords             []*pipeline.MetricsRecord
 	logstoreConfigMetricRecord *pipeline.MetricsRecord
-	tmpMetricsRecord           *pipeline.MetricsRecord
 
 	AllCheckPoint map[string][]byte
 
@@ -109,7 +107,7 @@ func (p *LocalContext) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
 	return p.logstoreConfigMetricRecord
 }
 
-func (p *LocalContext) GetMetricRecords() (results []map[string]string) {
+func (p *LocalContext) ExportMetricRecords() (results []map[string]string) {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
@@ -127,12 +125,11 @@ func (p *LocalContext) GetMetricRecords() (results []map[string]string) {
 	return results
 }
 
-func (p *LocalContext) SetMetricRecord(metricsRecord *pipeline.MetricsRecord) {
-	p.tmpMetricsRecord = metricsRecord
-}
-
 func (p *LocalContext) GetMetricRecord() *pipeline.MetricsRecord {
-	return p.tmpMetricsRecord
+	if len(p.MetricsRecords) > 0 {
+		return p.MetricsRecords[len(p.MetricsRecords)-1]
+	}
+	return nil
 }
 
 func (p *LocalContext) RegisterCounterMetric(metricsRecord pipeline.MetricsRecord, metric pipeline.CounterMetric) {

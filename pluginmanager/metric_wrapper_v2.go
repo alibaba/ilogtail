@@ -36,8 +36,6 @@ func (p *MetricWrapperV2) Init(name string, pluginID string, childPluginID strin
 	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID, childPluginID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
-	p.Config.Context.SetMetricRecord(p.MetricRecord)
-
 	interval, err := p.Input.Init(p.Config.Context)
 	if err != nil {
 		return err

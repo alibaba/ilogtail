@@ -54,8 +54,6 @@ func (p *AggregatorWrapperV2) Init(name string, pluginID string, childPluginID s
 	p.MetricRecord.RegisterCounterMetric(p.procOutRecordsTotal)
 	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
 
-	p.Config.Context.SetMetricRecord(p.MetricRecord)
-
 	interval, err := p.Aggregator.Init(p.Config.Context, p)
 	if err != nil {
 		logger.Error(p.Config.Context.GetRuntimeContext(), "AGGREGATOR_INIT_ERROR", "Aggregator failed to initialize", p.Aggregator.Description(), "error", err)

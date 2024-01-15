@@ -49,7 +49,6 @@ func (p *ServiceWrapperV1) Init(name string, pluginID string, childPluginID stri
 	p.MetricRecord.RegisterCounterMetric(p.procOutRecordsTotal)
 	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
 
-	p.Config.Context.SetMetricRecord(p.MetricRecord)
 	_, err := p.Input.Init(p.Config.Context)
 	return err
 }

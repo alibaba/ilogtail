@@ -39,7 +39,6 @@ func (wrapper *ProcessorWrapperV2) Init(name string, pluginID string, childPlugi
 	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procOutRecordsTotal)
 	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
 
-	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
 	return wrapper.Processor.Init(wrapper.Config.Context)
 }
 

@@ -73,13 +73,12 @@ type Context interface {
 	GetRuntimeContext() context.Context
 	GetExtension(name string, cfg any) (Extension, error)
 
-	GetMetricRecords() []map[string]string
+	ExportMetricRecords() []map[string]string
 	RegisterMetricRecord(labels map[string]string) *MetricsRecord
 
 	RegisterLogstoreConfigMetricRecord(labels map[string]string) *MetricsRecord
 	GetLogstoreConfigMetricRecord() *MetricsRecord
 
-	SetMetricRecord(metricsRecord *MetricsRecord)
 	GetMetricRecord() *MetricsRecord
 
 	SaveCheckPoint(key string, value []byte) error

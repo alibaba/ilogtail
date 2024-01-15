@@ -52,8 +52,6 @@ func (p *MetricWrapperV1) Init(name string, pluginID string, childPluginID strin
 	p.MetricRecord.RegisterCounterMetric(p.procOutRecordsTotal)
 	p.MetricRecord.RegisterCounterMetric(p.procTimeMS)
 
-	p.Config.Context.SetMetricRecord(p.MetricRecord)
-
 	interval, err := p.Input.Init(p.Config.Context)
 	if err != nil {
 		return err

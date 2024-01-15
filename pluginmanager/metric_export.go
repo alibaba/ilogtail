@@ -17,7 +17,7 @@ package pluginmanager
 func GetMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	for _, config := range LogtailConfig {
-		metrics = append(metrics, config.Context.GetMetricRecords()...)
+		metrics = append(metrics, config.Context.ExportMetricRecords()...)
 	}
 	return metrics
 }

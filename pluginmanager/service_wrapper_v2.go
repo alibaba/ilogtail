@@ -34,7 +34,6 @@ func (p *ServiceWrapperV2) Init(name string, pluginID string, childPluginID stri
 	labels := pipeline.GetCommonLabels(p.Config.Context, name, pluginID, childPluginID)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
-	p.Config.Context.SetMetricRecord(p.MetricRecord)
 	_, err := p.Input.Init(p.Config.Context)
 	return err
 }

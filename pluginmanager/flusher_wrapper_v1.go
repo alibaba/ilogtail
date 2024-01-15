@@ -50,7 +50,6 @@ func (wrapper *FlusherWrapperV1) Init(name string, pluginID string, childPluginI
 	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procOutRecordsTotal)
 	wrapper.MetricRecord.RegisterCounterMetric(wrapper.procTimeMS)
 
-	wrapper.Config.Context.SetMetricRecord(wrapper.MetricRecord)
 	return wrapper.Flusher.Init(wrapper.Config.Context)
 }
 
