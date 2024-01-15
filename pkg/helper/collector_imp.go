@@ -21,23 +21,17 @@ import (
 
 // Observable pipeline data collector, which stores data based on channal and can be subscribed by multiple consumers
 type observePipeCollector struct {
-	groupChan           chan *models.PipelineGroupEvents
-	metricRecord        *pipeline.MetricsRecord
-	procInRecordsTotal  pipeline.CounterMetric
-	procOutRecordsTotal pipeline.CounterMetric
-	procTimeMS          pipeline.CounterMetric
+	groupChan chan *models.PipelineGroupEvents
 }
 
 func (p *observePipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	if len(events) == 0 {
 		return
 	}
-	p.procInRecordsTotal.Add(int64(len(events)))
 	p.groupChan <- &models.PipelineGroupEvents{
 		Group:  group,
 		Events: events,
 	}
-	p.procOutRecordsTotal.Add(int64(len(events)))
 }
 
 func (p *observePipeCollector) CollectList(groups ...*models.PipelineGroupEvents) {
@@ -45,9 +39,7 @@ func (p *observePipeCollector) CollectList(groups ...*models.PipelineGroupEvents
 		return
 	}
 	for _, g := range groups {
-		p.procInRecordsTotal.Add(int64(len(g.Events)))
 		p.groupChan <- g
-		p.procOutRecordsTotal.Add(int64(len(g.Events)))
 	}
 }
 
@@ -72,24 +64,18 @@ func (p *observePipeCollector) Close() {
 // The limitation is that it cannot be subscribed as it always returns an empty chan.
 // so it can only return all the grouped data at one time.
 type groupedPipeCollector struct {
-	groupEvents         map[*models.GroupInfo][]models.PipelineEvent
-	metricRecord        *pipeline.MetricsRecord
-	procInRecordsTotal  pipeline.CounterMetric
-	procOutRecordsTotal pipeline.CounterMetric
-	procTimeMS          pipeline.CounterMetric
+	groupEvents map[*models.GroupInfo][]models.PipelineEvent
 }
 
 func (p *groupedPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	if len(events) == 0 {
 		return
 	}
-	p.procInRecordsTotal.Add(int64(len(events)))
 	store, has := p.groupEvents[group]
 	if !has {
 		store = make([]models.PipelineEvent, 0)
 	}
 	p.groupEvents[group] = append(store, events...)
-	p.procOutRecordsTotal.Add(int64(len(events)))
 }
 
 func (p *groupedPipeCollector) CollectList(groups ...*models.PipelineGroupEvents) {
@@ -97,9 +83,7 @@ func (p *groupedPipeCollector) CollectList(groups ...*models.PipelineGroupEvents
 		return
 	}
 	for _, g := range groups {
-		p.procInRecordsTotal.Add(int64(len(g.Events)))
 		p.Collect(g.Group, g.Events...)
-		p.procOutRecordsTotal.Add(int64(len(g.Events)))
 	}
 }
 
@@ -132,10 +116,6 @@ func (p *groupedPipeCollector) Close() {
 
 // noopPipeCollector is an empty collector implementation.
 type noopPipeCollector struct {
-}
-
-func (p *noopPipeCollector) Prepare(metricRecord *pipeline.MetricsRecord) {
-
 }
 
 func (p *noopPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
