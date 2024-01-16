@@ -242,7 +242,7 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 
 ### 1. 图形界面调试
 
-我相信在有可能的情况下，没人愿意使用gdb进行调试，繁琐，不友好，因此第一步需要解决的就是使用现代图形化的调试界面调试代码。
+我相信在有可能的情况下，没人愿意使用gdb命令界面进行调试，繁琐，不友好，因此第一步需要解决的就是使用现代图形化的调试界面调试代码。
 
 1. 首先使用vscode打开ilogtail的项目目录；
 2. 安装`devcontainer`插件（如果没有的话）；
@@ -312,6 +312,7 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 }
 
 ```
+
 6. `tasks.json`文件：同样在`.vscode`目录下，新建文件`tasks.json`，文件内容如下：
 
 ```
@@ -583,7 +584,6 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
     "--enable-config",
     "--pretty",
     "--clang-tidy",
-    "--query-driver=clang++",
     "--header-insertion-decorators",
     "--fallback-style=Webkit"
   ],
