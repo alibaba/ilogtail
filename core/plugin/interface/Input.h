@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,19 +16,20 @@
 
 #pragma once
 
-#include "plugin/creator/PluginCreator.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "plugin/interface/Plugin.h"
+// #include "table/Table.h"
+#include "json/json.h"
 
 namespace logtail {
-    
-template <typename T>
-class StaticProcessorCreator : public PluginCreator {
+
+class Input : public Plugin {
 public:
-    const char* Name() override { return T::sName.c_str(); }
-    bool IsDynamic() override { return false; }
-    std::unique_ptr<PluginInstance> Create(const PluginInstance::PluginMeta& pluginMeta) override {
-        return std::unique_ptr<ProcessorInstance>(new ProcessorInstance(new T, pluginMeta));
-    }
+    virtual ~Input() = default;
+
+    // virtual bool Init(const Table& config) = 0;
+    virtual bool Init(const Json::Value& config) = 0;
+    virtual bool Start() = 0;
+    virtual bool Stop(bool isPipelineRemoving) = 0;
 };
 
 } // namespace logtail
