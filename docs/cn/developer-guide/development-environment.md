@@ -593,7 +593,7 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 
 #### 2.2 编译指令信息文件
 
-在前面当你执行完`First run`之后，会在`ilogtail项目目录/core/build`目录下生成一个名为`compile_commands.json`的文件，该文件包含了项目中每个文件的编译指令，例如编译器参数、定义的宏、包含的目录等，这些信息是从实际的构建过程中提取的；该文件也是clangd程序提供代码跳转能力的关键。
+当你执行完前面调试选项`First run`之后，会在`ilogtail项目目录/core/build`目录下生成一个名为`compile_commands.json`的文件，该文件包含了项目中每个文件的编译指令，例如编译器参数、定义的宏、包含的目录等，这些信息是从实际的构建过程中提取的；该文件也是clangd程序提供代码跳转能力的关键。
 
 当你有了`clangd`以及`compile_commands.json`文件之后就可以通过鼠标点击来自由的在各个函数及其实现之间跳转了，极大的提升阅读代码的体验。
 
