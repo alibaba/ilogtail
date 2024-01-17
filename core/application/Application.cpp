@@ -15,9 +15,7 @@
 #include "application/Application.h"
 
 #ifndef LOGTAIL_NO_TC_MALLOC
-// #include <gperftools/heap-profiler.h>
 #include <gperftools/malloc_extension.h>
-// #include <gperftools/tcmalloc.h>
 #endif
 
 #include <thread>
@@ -183,12 +181,6 @@ void Application::Init() {
 }
 
 void Application::Start() {
-// #ifndef LOGTAIL_NO_TC_MALLOC
-//     if (BOOL_FLAG(enable_heap_profile)) {
-//         HeapProfilerStart("heap_profile");
-//     }
-// #endif
-
     LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
@@ -331,11 +323,6 @@ void Application::Exit() {
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif
-// #ifndef LOGTAIL_NO_TC_MALLOC
-//     if (BOOL_FLAG(enable_heap_profile)) {
-//         HeapProfilerStop();
-//     }
-// #endif
     LOG_INFO(sLogger, ("exit", "bye!"));
     exit(0);
 }
