@@ -568,6 +568,10 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 
 ![image-20240115003845492.png](https://s2.loli.net/2024/01/18/BGM17Etcyo6puKn.png)
 
+又或者这样：
+
+![PixPin_2024-01-18_23-00-23.png](https://s2.loli.net/2024/01/18/irsLjwBogf6cauI.png)
+
 2. 点开vscode的设置页面，定位到`clangd`插件：
 
 ![image-20240115003340641.png](https://s2.loli.net/2024/01/18/EH5AnYhKO3ZbQ9w.png)
