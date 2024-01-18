@@ -249,9 +249,9 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 3. 使用新的devcontainer配置文件：将项目目录下`.devcontainer`目录下的`devcontainer.json`里面的内容替换成`devcontainer.json.lldb`文件里面的内容。
 4. 在开发容器里打开项目：打开`Command Palette`，输入`Reopen in container` 回车，如下图：
 
-![image-20240114235512368](./development-environment.assets/image-20240114235512368.png)
+![1.png](https://s2.loli.net/2024/01/18/Y3WVivjBhnD1yfL.png)
 
-![image-20240114235607467](./development-environment.assets/image-20240114235607467.png)
+![image-20240115003845492.png](https://s2.loli.net/2024/01/18/BGM17Etcyo6puKn.png)
 
 5. `launch.json` 文件：进入`.vscode`目录下，修改`launch.json`文件输入内容如下：
 
@@ -439,16 +439,17 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 
 7. 打开vscode的调试那一栏，可以看到以下内容：
 
-![image-20240115000234066](./development-environment.assets/image-20240115000234066.png)
+![image-20240115000234066.png](https://s2.loli.net/2024/01/18/bKZNQadM2fTltH8.png)
 
 运行第一个选项`First run`：该选项主要进行第一次C++代码编译，并复制相关文件当指定目录；
 
 8. 运行第二个选项`Debug c++`：打开`logtail.cpp`文件并打上断点
-   ![image-20240115000951727](./development-environment.assets/image-20240115000951727.png)
+
+   ![image-20240115000951727.png](https://s2.loli.net/2024/01/18/SqoIDVCnf8OrTHv.png)
 
 接着运行`Debug c++`选项，可以看到程序将中断在断点处：
 
-![image-20240115001306196](./development-environment.assets/image-20240115001306196.png)
+![image-20240115001306196.png](https://s2.loli.net/2024/01/18/sV9lcoH7bEtiLJm.png)
 
 后续修改相关c++代码之后需要进行调试就只需要执行`Debug c++`选项就可以了。
 
@@ -559,17 +560,17 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 
 1. 当你第一次通过`Command Palette`执行`Reopen in container`完成之后，vscode应该会跳出以下提示：
 
-![image-20240115002642430](./development-environment.assets/image-20240115002642430.png)
+![image-20240115002642430.png](https://s2.loli.net/2024/01/18/BhZapEeMVYG9ygw.png)
 
 这时候点击`Install`安装`clangd`，该程序就是提供代码跳转的；
 
 如果出于某些原因你没有点的话可以通过呼出`Command Palette`执行`Rstart language server`，如果没有安装`clangd`那么它会再次跳出上面的提示框，接着就可以再次点击安装了：
 
-![image-20240115003845492](./development-environment.assets/image-20240115003845492.png)
+![image-20240115003845492.png](https://s2.loli.net/2024/01/18/BGM17Etcyo6puKn.png)
 
 2. 点开vscode的设置页面，定位到`clangd`插件：
 
-![image-20240115003340641](./development-environment.assets/image-20240115003340641.png)
+![image-20240115003340641.png](https://s2.loli.net/2024/01/18/EH5AnYhKO3ZbQ9w.png)
 
 为`clangd` 添加以上截图中的运行参数：
 
@@ -599,11 +600,11 @@ cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
 
 实际上此时你就应该可以通过鼠标随意点击任意函数进行代码跳转了，如果不行的话请呼出`Command Palette`执行`Rstart language server`来重启`clangd`程序。当第一次启动`clangd`的时候会读取`compile_commands.json`文件进行索引：
 
-![image-20240115005943930](./development-environment.assets/image-20240115005943930.png)
+![image-20240115005943930.png](https://s2.loli.net/2024/01/18/QbYCDSvVIAocap6.png)
 
 索引完成之后是下面这个状态：
 
-![image-20240115010037830](./development-environment.assets/image-20240115010037830.png)
+![image-20240115010037830.png](https://s2.loli.net/2024/01/18/4eFKldVtGRzscYM.png)
 
 ## 常见问题
 
