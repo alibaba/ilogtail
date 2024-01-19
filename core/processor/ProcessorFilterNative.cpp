@@ -32,16 +32,8 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
 
     // FilterKey + FilterRegex
     std::vector<std::string> filterKeys, filterRegs;
-    if (!GetOptionalListParam(config, "FilterKey", filterKeys, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                             mContext->GetAlarm(),
-                             errorMsg,
-                             sName,
-                             mContext->GetConfigName(),
-                             mContext->GetProjectName(),
-                             mContext->GetLogstoreName(),
-                             mContext->GetRegion());
-    } else if (!GetOptionalListParam(config, "FilterRegex", filterRegs, errorMsg)) {
+    if (!GetOptionalListParam(config, "FilterKey", filterKeys, errorMsg)
+        || !GetOptionalListParam(config, "FilterRegex", filterRegs, errorMsg)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
                              mContext->GetAlarm(),
                              errorMsg,
