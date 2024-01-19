@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 project(unittest_base)
 
 add_definitions(-DAPSARA_UNIT_TEST_MAIN)
@@ -40,15 +40,18 @@ link_spl(${PROJECT_NAME})
 link_tcmalloc(${PROJECT_NAME})
 
 if (UNIX)
-    target_link_libraries(${PROJECT_NAME} pthread uuid dl)
-    if (ENABLE_COMPATIBLE_MODE)
-        target_link_libraries(${PROJECT_NAME} rt)
-        target_link_libraries(${PROJECT_NAME} -static-libstdc++ -static-libgcc)
+    target_link_libraries(${PROJECT_NAME} uuid dl)
+    if (LINUX)
+        target_link_libraries(${PROJECT_NAME} pthread)
     endif ()
 elseif (MSVC)
     target_link_libraries(${PROJECT_NAME} "ws2_32.lib")
     target_link_libraries(${PROJECT_NAME} "Rpcrt4.lib")
     target_link_libraries(${PROJECT_NAME} "Shlwapi.lib")
+endif ()
+
+if (ENABLE_COMPATIBLE_MODE)
+target_link_libraries(${PROJECT_NAME} rt -static-libstdc++ -static-libgcc)
 endif ()
 
 add_subdirectory(app_config)
@@ -74,8 +77,8 @@ add_subdirectory(processor)
 add_subdirectory(reader)
 add_subdirectory(sdk)
 add_subdirectory(sender)
-add_subdirectory(spl)
 
-if (UNIX)
+if (LINUX)
+    add_subdirectory(spl)
     add_subdirectory(observer)
 endif ()

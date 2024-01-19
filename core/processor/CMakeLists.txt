@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 project(processor)
 
 if (MSVC)
@@ -36,5 +36,7 @@ target_link_libraries(${PROJECT_NAME} reader)
 target_link_libraries(${PROJECT_NAME} config_manager)
 target_link_libraries(${PROJECT_NAME} fuse)
 target_link_libraries(${PROJECT_NAME} plugin_interface)
-target_link_libraries(${PROJECT_NAME} spl)
 link_re2(${PROJECT_NAME})
+if (LINUX)
+    target_link_libraries(${PROJECT_NAME} spl)
+endif ()

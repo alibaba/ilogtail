@@ -58,7 +58,6 @@ set(DEP_NAME_LIST
         unwind                  # google breakpad on Windows
         ssl                     # openssl
         crypto
-        dmiuuid
         leveldb
         )
 

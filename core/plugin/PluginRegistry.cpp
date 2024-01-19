@@ -26,9 +26,11 @@
 #include "app_config/AppConfig.h"
 #include "flusher/FlusherSLS.h"
 #include "input/InputFile.h"
+#ifdef __linux__
 #include "input/InputObserverNetwork.h"
 #ifdef __ENTERPRISE__
 #include "input/InputStream.h"
+#endif
 #endif
 #include "logger/Logger.h"
 #include "plugin/creator/CProcessor.h"
@@ -46,7 +48,9 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
+#ifdef __linux__
 #include "processor/ProcessorSPL.h"
+#endif
 #include "common/Flags.h"
 
 
@@ -220,9 +224,11 @@ bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
 
 void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
+#ifdef __linux__
     RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
 #ifdef __ENTERPRISE__
     RegisterInputCreator(new StaticInputCreator<InputStream>());
+#endif
 #endif
 
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
@@ -235,9 +241,12 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
+#ifdef __linux__
     if (BOOL_FLAG(enable_processor_spl)) {
         RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSPL>());
     }
+#endif
+
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 

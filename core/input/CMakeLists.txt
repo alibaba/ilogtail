@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 project(input)
 
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
@@ -22,7 +22,7 @@ target_link_libraries(${PROJECT_NAME} config)
 target_link_libraries(${PROJECT_NAME} file_server)
 target_link_libraries(${PROJECT_NAME} reader)
 target_link_libraries(${PROJECT_NAME} container_manager)
-if (UNIX)
+if (LINUX)
     target_link_libraries(${PROJECT_NAME} observer)
     if (ENABLE_ENTERPRISE)
         target_link_libraries(${PROJECT_NAME} streamlog)
