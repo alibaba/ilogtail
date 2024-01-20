@@ -61,7 +61,7 @@ set(DEP_NAME_LIST
         leveldb
         )
 
-if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
+if (NOT DEFINED "${LOGTAIL_NO_TC_MALLOC}")
     list(APPEND DEP_NAME_LIST "tcmalloc") # (gperftools)
 endif()
 
@@ -73,7 +73,7 @@ endif ()
 
 # Set link options, add user-defined INCLUDE_DIR and LIBRARY_DIR.
 foreach (DEP_NAME ${DEP_NAME_LIST})
-    logtaiL_define(${DEP_NAME}_${LINK_OPTION_SUFFIX} "Link option for ${DEP_NAME}" "")
+    logtail_define(${DEP_NAME}_${LINK_OPTION_SUFFIX} "Link option for ${DEP_NAME}" "")
 
     if (${DEP_NAME}_${INCLUDE_DIR_SUFFIX})
         include_directories("${${DEP_NAME}_${INCLUDE_DIR_SUFFIX}}")
@@ -119,6 +119,9 @@ macro(link_protobuf target_name)
                 debug "libprotobufd"
                 optimized "libprotobuf")
     endif ()
+    if (ANDROID)
+        target_link_libraries(${target_name} "log")
+    endif ()
 endmacro()
 logtail_define(protobuf_BIN "Absolute path to protoc" "${DEPS_BINARY_ROOT}/protoc")
 set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/log_pb")
@@ -140,7 +143,7 @@ endmacro()
 
 # tcmalloc (gperftools)
 macro(link_tcmalloc target_name)
-    if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+    if(NOT DEFINED "${LOGTAIL_NO_TC_MALLOC}")
         if (tcmalloc_${LINK_OPTION_SUFFIX})
             target_link_libraries(${target_name} "${tcmalloc_${LINK_OPTION_SUFFIX}}")
         elseif (UNIX)
@@ -488,4 +491,3 @@ macro(link_spl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_pthreads.a")
 
 endmacro()
-
