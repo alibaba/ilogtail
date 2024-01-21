@@ -59,9 +59,10 @@ set(DEP_NAME_LIST
         ssl                     # openssl
         crypto
         leveldb
+        uuid
         )
 
-if (NOT DEFINED "${LOGTAIL_NO_TC_MALLOC}")
+if (NOT NO_TCMALLOC)
     list(APPEND DEP_NAME_LIST "tcmalloc") # (gperftools)
 endif()
 
@@ -143,7 +144,7 @@ endmacro()
 
 # tcmalloc (gperftools)
 macro(link_tcmalloc target_name)
-    if(NOT DEFINED "${LOGTAIL_NO_TC_MALLOC}")
+    if(NOT NO_TCMALLOC)
         if (tcmalloc_${LINK_OPTION_SUFFIX})
             target_link_libraries(${target_name} "${tcmalloc_${LINK_OPTION_SUFFIX}}")
         elseif (UNIX)
@@ -361,6 +362,17 @@ macro(link_asan target_name)
         target_compile_options(${target_name} PUBLIC -fsanitize=address)
         target_link_options(${target_name} PUBLIC -fsanitize=address -static-libasan)
     endif()
+endmacro()
+
+# uuid
+macro(link_uuid target_name)
+    if (uuid_${LINK_OPTION_SUFFIX})
+        target_link_libraries(${target_name} "${uuid_${LINK_OPTION_SUFFIX}}")
+    elseif (ANDROID)
+        target_link_libraries(${target_name} "${uuid_${LIBRARY_DIR_SUFFIX}}/libuuid.a")
+    elseif (UNIX)
+        target_link_libraries(${target_name} uuid)
+    endif ()
 endmacro()
 
 macro(link_spl target_name)
