@@ -36,7 +36,7 @@ type ProcessorWrapperV1 struct {
 	Processor pipeline.ProcessorV1
 }
 
-func (wrapper *ProcessorWrapperV1) Init(pluginMeta pipeline.PluginMeta) error {
+func (wrapper *ProcessorWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
 	labels := pipeline.GetCommonLabels(wrapper.Config.Context, pluginMeta)
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 

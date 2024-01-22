@@ -86,7 +86,7 @@ func (p *pluginv1Runner) AddDefaultFlusherIfEmpty() error {
 	return nil
 }
 
-func (p *pluginv1Runner) AddPlugin(pluginMeta pipeline.PluginMeta, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
+func (p *pluginv1Runner) AddPlugin(pluginMeta *pipeline.PluginMeta, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:
 		if metric, ok := plugin.(pipeline.MetricInputV1); ok {
@@ -138,7 +138,7 @@ func (p *pluginv1Runner) RunPlugins(category pluginCategory, control *pipeline.A
 	}
 }
 
-func (p *pluginv1Runner) addMetricInput(pluginMeta pipeline.PluginMeta, input pipeline.MetricInputV1, inputInterval int) error {
+func (p *pluginv1Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input pipeline.MetricInputV1, inputInterval int) error {
 	var wrapper MetricWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
@@ -150,7 +150,7 @@ func (p *pluginv1Runner) addMetricInput(pluginMeta pipeline.PluginMeta, input pi
 	return wrapper.Init(pluginMeta, inputInterval)
 }
 
-func (p *pluginv1Runner) addServiceInput(pluginMeta pipeline.PluginMeta, input pipeline.ServiceInputV1) error {
+func (p *pluginv1Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input pipeline.ServiceInputV1) error {
 	var wrapper ServiceWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
@@ -159,7 +159,7 @@ func (p *pluginv1Runner) addServiceInput(pluginMeta pipeline.PluginMeta, input p
 	return wrapper.Init(pluginMeta)
 }
 
-func (p *pluginv1Runner) addProcessor(pluginMeta pipeline.PluginMeta, processor pipeline.ProcessorV1, priority int) error {
+func (p *pluginv1Runner) addProcessor(pluginMeta *pipeline.PluginMeta, processor pipeline.ProcessorV1, priority int) error {
 	var wrapper ProcessorWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Processor = processor
@@ -169,7 +169,7 @@ func (p *pluginv1Runner) addProcessor(pluginMeta pipeline.PluginMeta, processor 
 	return wrapper.Init(pluginMeta)
 }
 
-func (p *pluginv1Runner) addAggregator(pluginMeta pipeline.PluginMeta, aggregator pipeline.AggregatorV1) error {
+func (p *pluginv1Runner) addAggregator(pluginMeta *pipeline.PluginMeta, aggregator pipeline.AggregatorV1) error {
 	var wrapper AggregatorWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Aggregator = aggregator
@@ -178,7 +178,7 @@ func (p *pluginv1Runner) addAggregator(pluginMeta pipeline.PluginMeta, aggregato
 	return wrapper.Init(pluginMeta)
 }
 
-func (p *pluginv1Runner) addFlusher(pluginMeta pipeline.PluginMeta, flusher pipeline.FlusherV1) error {
+func (p *pluginv1Runner) addFlusher(pluginMeta *pipeline.PluginMeta, flusher pipeline.FlusherV1) error {
 	var wrapper FlusherWrapperV1
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Flusher = flusher

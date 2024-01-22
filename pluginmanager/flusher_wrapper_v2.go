@@ -27,7 +27,7 @@ type FlusherWrapperV2 struct {
 	Flusher pipeline.FlusherV2
 }
 
-func (wrapper *FlusherWrapperV2) Init(pluginMeta pipeline.PluginMeta) error {
+func (wrapper *FlusherWrapperV2) Init(pluginMeta *pipeline.PluginMeta) error {
 	labels := pipeline.GetCommonLabels(wrapper.Config.Context, pluginMeta)
 
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)

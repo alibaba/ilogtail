@@ -121,7 +121,7 @@ type LogstoreConfig struct {
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
-	labels := pipeline.GetCommonLabels(context, pipeline.PluginMeta{})
+	labels := pipeline.GetCommonLabels(context, &pipeline.PluginMeta{})
 	metricRecord := context.RegisterLogstoreConfigMetricRecord(labels)
 
 	p.CollecLatencytMetric = helper.NewLatencyMetric("collect_latency")
@@ -701,7 +701,7 @@ func loadBuiltinConfig(name string, project string, logstore string,
 // @pluginType: the type of metric plugin.
 // @logstoreConfig: where to store the created metric plugin object.
 // It returns any error encountered.
-func loadMetric(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadMetric(pluginMeta *pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.MetricInputs[pluginMeta.PluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginMeta.PluginType)
@@ -728,7 +728,7 @@ func loadMetric(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig, 
 // @pluginType: the type of service plugin.
 // @logstoreConfig: where to store the created service plugin object.
 // It returns any error encountered.
-func loadService(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadService(pluginMeta *pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.ServiceInputs[pluginMeta.PluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginMeta.PluginType)
@@ -740,7 +740,7 @@ func loadService(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig,
 	return logstoreConfig.PluginRunner.AddPlugin(pluginMeta, pluginServiceInput, service, map[string]interface{}{})
 }
 
-func loadProcessor(pluginMeta pipeline.PluginMeta, priority int, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadProcessor(pluginMeta *pipeline.PluginMeta, priority int, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Processors[pluginMeta.PluginType]
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_PROCESSOR_TYPE", "invalid processor type, maybe type is wrong or logtail version is too old", pluginMeta.PluginType)
@@ -753,7 +753,7 @@ func loadProcessor(pluginMeta pipeline.PluginMeta, priority int, logstoreConfig 
 	return logstoreConfig.PluginRunner.AddPlugin(pluginMeta, pluginProcessor, processor, map[string]interface{}{"priority": priority})
 }
 
-func loadAggregator(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadAggregator(pluginMeta *pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Aggregators[pluginMeta.PluginType]
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_AGGREGATOR_TYPE", "invalid aggregator type, maybe type is wrong or logtail version is too old", pluginMeta.PluginType)
@@ -766,7 +766,7 @@ func loadAggregator(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConf
 	return logstoreConfig.PluginRunner.AddPlugin(pluginMeta, pluginAggregator, aggregator, map[string]interface{}{})
 }
 
-func loadFlusher(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadFlusher(pluginMeta *pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Flushers[pluginMeta.PluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginMeta.PluginType)
@@ -778,7 +778,7 @@ func loadFlusher(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig,
 	return logstoreConfig.PluginRunner.AddPlugin(pluginMeta, pluginFlusher, flusher, map[string]interface{}{})
 }
 
-func loadExtension(pluginMeta pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
+func loadExtension(pluginMeta *pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Extensions[pluginMeta.PluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginMeta.PluginType)
@@ -803,7 +803,7 @@ func applyPluginConfig(plugin interface{}, pluginConfig interface{}) error {
 }
 
 // Rule: pluginName=pluginType/pluginID#pluginPriority.
-func (lc *LogstoreConfig) genPluginMeta(pluginName string, genNodeID bool, lastOne bool) pipeline.PluginMeta {
+func (lc *LogstoreConfig) genPluginMeta(pluginName string, genNodeID bool, lastOne bool) *pipeline.PluginMeta {
 	nodeID := ""
 	childNodeID := ""
 	if isPluginTypeWithID(pluginName) {
@@ -815,7 +815,7 @@ func (lc *LogstoreConfig) genPluginMeta(pluginName string, genNodeID bool, lastO
 			if genNodeID {
 				nodeID, childNodeID = lc.genNodeID(lastOne)
 			}
-			return pipeline.PluginMeta{
+			return &pipeline.PluginMeta{
 				PluginTypeWithID: pluginTypeWithID,
 				PluginType:       pluginTypeWithID[:ids],
 				PluginID:         pluginTypeWithID[ids+1:],
@@ -829,7 +829,7 @@ func (lc *LogstoreConfig) genPluginMeta(pluginName string, genNodeID bool, lastO
 		nodeID, childNodeID = lc.genNodeID(lastOne)
 	}
 	pluginTypeWithID := fmt.Sprintf("%s/%s", pluginName, pluginID)
-	return pipeline.PluginMeta{
+	return &pipeline.PluginMeta{
 		PluginTypeWithID: pluginTypeWithID,
 		PluginType:       pluginName,
 		PluginID:         pluginID,

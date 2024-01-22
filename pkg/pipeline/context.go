@@ -50,7 +50,7 @@ func (m *MetricsRecord) RegisterLatencyMetric(metric LatencyMetric) {
 	m.LatencyMetrics = append(m.LatencyMetrics, metric)
 }
 
-func GetCommonLabels(context Context, pluginMeta PluginMeta) []LabelPair {
+func GetCommonLabels(context Context, pluginMeta *PluginMeta) []LabelPair {
 	labels := make([]LabelPair, 0)
 	labels = append(labels, LabelPair{Key: "project", Value: context.GetProject()})
 	labels = append(labels, LabelPair{Key: "logstore", Value: context.GetLogstore()})

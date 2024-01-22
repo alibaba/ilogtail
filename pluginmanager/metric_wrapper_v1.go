@@ -40,7 +40,7 @@ type MetricWrapperV1 struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *MetricWrapperV1) Init(pluginMeta pipeline.PluginMeta, inputInterval int) error {
+func (p *MetricWrapperV1) Init(pluginMeta *pipeline.PluginMeta, inputInterval int) error {
 	labels := pipeline.GetCommonLabels(p.Config.Context, pluginMeta)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 

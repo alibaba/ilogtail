@@ -45,7 +45,7 @@ type AggregatorWrapperV1 struct {
 	procTimeMS          pipeline.CounterMetric
 }
 
-func (p *AggregatorWrapperV1) Init(pluginMeta pipeline.PluginMeta) error {
+func (p *AggregatorWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
 	labels := pipeline.GetCommonLabels(p.Config.Context, pluginMeta)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 

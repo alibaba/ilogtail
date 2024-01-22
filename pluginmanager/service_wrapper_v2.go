@@ -30,7 +30,7 @@ type ServiceWrapperV2 struct {
 	LogsChan chan *pipeline.LogWithContext
 }
 
-func (p *ServiceWrapperV2) Init(pluginMeta pipeline.PluginMeta) error {
+func (p *ServiceWrapperV2) Init(pluginMeta *pipeline.PluginMeta) error {
 	labels := pipeline.GetCommonLabels(p.Config.Context, pluginMeta)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 

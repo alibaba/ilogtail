@@ -32,7 +32,7 @@ type MetricWrapperV2 struct {
 	LatencyMetric pipeline.LatencyMetric
 }
 
-func (p *MetricWrapperV2) Init(pluginMeta pipeline.PluginMeta, inputInterval int) error {
+func (p *MetricWrapperV2) Init(pluginMeta *pipeline.PluginMeta, inputInterval int) error {
 	labels := pipeline.GetCommonLabels(p.Config.Context, pluginMeta)
 	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
 
