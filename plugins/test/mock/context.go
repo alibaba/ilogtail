@@ -34,7 +34,7 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 		common:     c,
 		checkpoint: make(map[string][]byte),
 	}
-	
+
 	emptyContext.RegisterMetricRecord(make([]pipeline.LabelPair, 0))
 	return &emptyContext
 }
