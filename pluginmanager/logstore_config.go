@@ -845,20 +845,6 @@ func isPluginTypeWithID(pluginName string) bool {
 	return false
 }
 
-func getPluginType(pluginName string) string {
-	if idx := strings.IndexByte(pluginName, '/'); idx != -1 {
-		return pluginName[:idx]
-	}
-	return pluginName
-}
-
-func getPluginTypeAndID(pluginNameWithID string) (string, string) {
-	if idx := strings.IndexByte(pluginNameWithID, '/'); idx != -1 {
-		return pluginNameWithID[:idx], pluginNameWithID[idx+1:]
-	}
-	return pluginNameWithID, ""
-}
-
 func GetPluginPriority(pluginName string) int {
 	if idx := strings.IndexByte(pluginName, '#'); idx != -1 {
 		val, err := strconv.Atoi(pluginName[idx+1:])
@@ -880,11 +866,6 @@ func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
 		return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id)
 	}
 	return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id+1)
-}
-
-func (lc *LogstoreConfig) genEmbeddedPluginName(pluginType string) string {
-	id := lc.genEmbeddedPluginID()
-	return fmt.Sprintf("%s/%s", pluginType, id)
 }
 
 func init() {
