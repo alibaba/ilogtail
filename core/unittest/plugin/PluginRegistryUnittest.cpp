@@ -43,7 +43,7 @@ void PluginRegistryUnittest::TestLoadStaticPlugins() {
 void PluginRegistryUnittest::TestCreateProcessor() {
     PluginRegistry::GetInstance()->LoadStaticPlugins();
     auto processorParseRegexNative = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorParseRegexNative::sName, {"0", "1"});
+        ProcessorParseRegexNative::sName, {"0", "0", "1"});
     APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processorParseRegexNative.get());
     APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().pluginID);
     APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().nodeID);
