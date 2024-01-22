@@ -56,9 +56,6 @@ bool Pipeline::Init(const PipelineConfig& config) {
     int pluginIndex = 0;
 
     PluginInstance::PluginMeta pluginMeta;
-    // Input plugin
-    pluginIndex++;
-
     if (config.mLogType == STREAM_LOG || config.mLogType == PLUGIN_LOG) {
         return true;
     }
