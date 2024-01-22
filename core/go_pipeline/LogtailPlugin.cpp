@@ -388,6 +388,7 @@ bool LogtailPlugin::LoadPluginBase() {
                 return mPluginValid;
             }
         }
+        
         mLoadGlobalConfigFun = (LoadGlobalConfigFun)loader.LoadMethod("LoadGlobalConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadGlobalConfig error, Message", error));
@@ -413,6 +414,7 @@ bool LogtailPlugin::LoadPluginBase() {
             LOG_ERROR(sLogger, ("load Resume error, Message", error));
             return mPluginValid;
         }
+        // C++传递原始二进制数据到golang插件，v1和v2的区别:是否传递tag
         mProcessRawLogFun = (ProcessRawLogFun)loader.LoadMethod("ProcessRawLog", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load ProcessRawLog error, Message", error));
@@ -423,23 +425,25 @@ bool LogtailPlugin::LoadPluginBase() {
             LOG_ERROR(sLogger, ("load ProcessRawLogV2 error, Message", error));
             return mPluginValid;
         }
-
+        // C++获取容器信息的
         mGetContainerMetaFun = (GetContainerMetaFun)loader.LoadMethod("GetContainerMeta", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load GetContainerMeta error, Message", error));
             return mPluginValid;
         }
+        // C++传递单条数据到golang插件
         mProcessLogsFun = (ProcessLogsFun)loader.LoadMethod("ProcessLog", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load ProcessLogs error, Message", error));
             return mPluginValid;
         }
+        // C++传递数据到golang插件
         mProcessLogGroupFun = (ProcessLogGroupFun)loader.LoadMethod("ProcessLogGroup", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load ProcessLogGroup error, Message", error));
             return mPluginValid;
         }
-
+        // 获取golang插件部分统计信息
         mGetPipelineMetricsFun = (GetPipelineMetricsFun)loader.LoadMethod("GetPipelineMetrics", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load GetPipelineMetrics error, Message", error));
