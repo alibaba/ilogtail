@@ -197,10 +197,8 @@ func (t *TraceSegmentHandle) parseSpan(span *agent.SpanObject, applicationInstan
 	switch {
 	case span.SpanLayer == agent.SpanLayer_MQ:
 		t.mappingMessageSystemTag(span, otSpan)
-		break
 	case span.SpanType == agent.SpanType_Exit:
 		mappingDatabaseTag(span, otSpan)
-		break
 	}
 
 	return otSpan

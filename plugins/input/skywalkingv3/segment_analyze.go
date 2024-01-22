@@ -158,10 +158,8 @@ func ParseSegment(span *v3.SpanObject, segment *v3.SegmentObject, cache *Resourc
 	switch {
 	case span.SpanLayer == v3.SpanLayer_MQ:
 		mappingMessageSystemTag(span, otSpan, mapping)
-		break
 	case span.SpanType == v3.SpanType_Exit:
 		mappingDatabaseTag(span, otSpan)
-		break
 	}
 
 	return otSpan
