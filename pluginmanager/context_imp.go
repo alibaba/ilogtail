@@ -58,17 +58,16 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 	}
 
 	// create if not found
-	typeWithID := p.logstoreC.genEmbeddedPluginName(getPluginType(name))
-	rawType, pluginID := getPluginTypeAndID(typeWithID)
-	err := loadExtension(typeWithID, rawType, pluginID, "", p.logstoreC, cfg)
+	pluginMeta := p.logstoreC.genPluginMeta(name, false, false)
+	err := loadExtension(pluginMeta, p.logstoreC, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the new created extension
-	exists, ok = p.logstoreC.PluginRunner.GetExtension(typeWithID)
+	exists, ok = p.logstoreC.PluginRunner.GetExtension(pluginMeta.PluginTypeWithID)
 	if !ok {
-		return nil, fmt.Errorf("failed to load extension: %s", typeWithID)
+		return nil, fmt.Errorf("failed to load extension: %s", pluginMeta.PluginTypeWithID)
 	}
 	return exists, nil
 }
@@ -96,7 +95,7 @@ func (p *ContextImp) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMeta(project, logstore, configName)
 }
 
-func (p *ContextImp) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+func (p *ContextImp) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
@@ -114,7 +113,7 @@ func (p *ContextImp) RegisterMetricRecord(labels map[string]string) *pipeline.Me
 	return &metricRecord
 }
 
-func (p *ContextImp) RegisterLogstoreConfigMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+func (p *ContextImp) RegisterLogstoreConfigMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	counterMetrics := make([]pipeline.CounterMetric, 0)
 	stringMetrics := make([]pipeline.StringMetric, 0)
 	latencyMetric := make([]pipeline.LatencyMetric, 0)
@@ -139,8 +138,8 @@ func (p *ContextImp) ExportMetricRecords() (results []map[string]string) {
 	results = make([]map[string]string, 0)
 	for _, metricRecord := range p.MetricsRecords {
 		oneResult := make(map[string]string)
-		for key, value := range metricRecord.Labels {
-			oneResult["label."+key] = value
+		for _, label := range metricRecord.Labels {
+			oneResult["label."+label.Key] = label.Value
 		}
 		for _, counterMetric := range metricRecord.CounterMetrics {
 			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.GetAndReset(), 10)

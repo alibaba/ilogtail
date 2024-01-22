@@ -388,27 +388,31 @@ bool LogtailPlugin::LoadPluginBase() {
                 return mPluginValid;
             }
         }
-        
+        // 加载全局配置，目前应该没有调用点
         mLoadGlobalConfigFun = (LoadGlobalConfigFun)loader.LoadMethod("LoadGlobalConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadGlobalConfig error, Message", error));
             return mPluginValid;
         }
+        // 加载单个配置，目前应该是Resume的时候，全量加载一次
         mLoadConfigFun = (LoadConfigFun)loader.LoadMethod("LoadConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadConfig error, Message", error));
             return mPluginValid;
         }
+        // 更新配置，目前应该没有调用点
         mUnloadConfigFun = (UnloadConfigFun)loader.LoadMethod("UnloadConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load UnloadConfig error, Message", error));
             return mPluginValid;
         }
+        // 插件暂停
         mHoldOnFun = (HoldOnFun)loader.LoadMethod("HoldOn", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load HoldOn error, Message", error));
             return mPluginValid;
         }
+        // 插件恢复
         mResumeFun = (ResumeFun)loader.LoadMethod("Resume", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load Resume error, Message", error));
@@ -538,32 +542,18 @@ void LogtailPlugin::GetPipelineMetrics(std::vector<std::map<std::string, std::st
                     for (int j = 0; j < innerpm->count; ++j) {
                         InnerKeyValue* innerkv = innerpm->keyValues[j];
                         if (innerkv != nullptr) {
-                            item.insert(std::make_pair(std::string(innerkv->key), std::string(innerkv->value)));                       
+                            item.insert(std::make_pair(std::string(innerkv->key), std::string(innerkv->value)));
+                            free(innerkv->key);
+                            free(innerkv->value);
+                            free(innerkv);                   
                         }
                     }
+                    free(innerpm->keyValues);
+                    free(innerpm);
                 }
                 metircsList.emplace_back(item);
             }
-            if (metrics->count > 0) {
-                for (int i = 0; i < metrics->count; ++i) {
-                    InnerPluginMetric* innerpm = metrics->metrics[i];
-                    if (innerpm != nullptr) {
-                        if (innerpm->count > 0) {
-                            for (int j = 0; j < innerpm->count; ++j) {
-                                InnerKeyValue* innerkv = innerpm->keyValues[j];
-                                if (innerkv != nullptr) {
-                                    free(innerkv->key);
-                                    free(innerkv->value);
-                                    free(innerkv);
-                                }
-                            }
-                            free(innerpm->keyValues);
-                        }
-                        free(innerpm);
-                    }
-                }
-                free(metrics->metrics);
-            }
+            free(metrics->metrics);
             free(metrics);
         }
     }

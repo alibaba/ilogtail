@@ -24,8 +24,13 @@ type CommonContext struct {
 	ConfigName string
 }
 
+type LabelPair struct {
+	Key   string
+	Value string
+}
+
 type MetricsRecord struct {
-	Labels map[string]string
+	Labels []LabelPair
 
 	CounterMetrics []CounterMetric
 	StringMetrics  []StringMetric
@@ -45,21 +50,24 @@ func (m *MetricsRecord) RegisterLatencyMetric(metric LatencyMetric) {
 	m.LatencyMetrics = append(m.LatencyMetrics, metric)
 }
 
-func GetCommonLabels(context Context, pluginName string, pluginID string, childPluginID string) map[string]string {
-	labels := make(map[string]string)
-	labels["project"] = context.GetProject()
-	labels["logstore"] = context.GetLogstore()
-	labels["config_name"] = context.GetConfigName()
-	if len(pluginID) > 0 {
-		labels["plugin_id"] = pluginID
-	}
-	if len(childPluginID) > 0 {
-		labels["child_plugin_id"] = childPluginID
-	}
-	if len(pluginName) > 0 {
-		labels["plugin_name"] = pluginName
-	}
+func GetCommonLabels(context Context, pluginMeta PluginMeta) []LabelPair {
+	labels := make([]LabelPair, 0)
+	labels = append(labels, LabelPair{Key: "project", Value: context.GetProject()})
+	labels = append(labels, LabelPair{Key: "logstore", Value: context.GetLogstore()})
+	labels = append(labels, LabelPair{Key: "config_name", Value: context.GetConfigName()})
 
+	if len(pluginMeta.PluginID) > 0 {
+		labels = append(labels, LabelPair{Key: "plugin_id", Value: pluginMeta.PluginID})
+	}
+	if len(pluginMeta.NodeID) > 0 {
+		labels = append(labels, LabelPair{Key: "node_id", Value: pluginMeta.NodeID})
+	}
+	if len(pluginMeta.ChildNodeID) > 0 {
+		labels = append(labels, LabelPair{Key: "child_node_id", Value: pluginMeta.ChildNodeID})
+	}
+	if len(pluginMeta.PluginType) > 0 {
+		labels = append(labels, LabelPair{Key: "plugin_name", Value: pluginMeta.PluginType})
+	}
 	return labels
 }
 
@@ -74,9 +82,9 @@ type Context interface {
 	GetExtension(name string, cfg any) (Extension, error)
 
 	ExportMetricRecords() []map[string]string
-	RegisterMetricRecord(labels map[string]string) *MetricsRecord
+	RegisterMetricRecord(labels []LabelPair) *MetricsRecord
 
-	RegisterLogstoreConfigMetricRecord(labels map[string]string) *MetricsRecord
+	RegisterLogstoreConfigMetricRecord(labels []LabelPair) *MetricsRecord
 	GetLogstoreConfigMetricRecord() *MetricsRecord
 
 	GetMetricRecord() *MetricsRecord

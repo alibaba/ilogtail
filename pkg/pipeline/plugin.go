@@ -29,6 +29,14 @@ type PluginContext struct {
 	MetricRecord *MetricsRecord
 }
 
+type PluginMeta struct {
+	PluginID         string
+	NodeID           string
+	ChildNodeID      string
+	PluginType       string
+	PluginTypeWithID string
+}
+
 type MetricCreator func() MetricInput
 
 var MetricInputs = map[string]MetricCreator{}

@@ -23,7 +23,7 @@ import (
 )
 
 type FlusherWrapper interface {
-	Init(name string, pluginID string, childPluginID string) error
+	Init(pluginMeta pipeline.PluginMeta) error
 	IsReady(projectName string, logstoreName string, logstoreKey int64) bool
 }
 
@@ -42,8 +42,8 @@ type FlusherWrapperV1 struct {
 	Flusher pipeline.FlusherV1
 }
 
-func (wrapper *FlusherWrapperV1) Init(name string, pluginID string, childPluginID string) error {
-	labels := pipeline.GetCommonLabels(wrapper.Config.Context, name, pluginID, childPluginID)
+func (wrapper *FlusherWrapperV1) Init(pluginMeta pipeline.PluginMeta) error {
+	labels := pipeline.GetCommonLabels(wrapper.Config.Context, pluginMeta)
 
 	wrapper.MetricRecord = wrapper.Config.Context.RegisterMetricRecord(labels)
 

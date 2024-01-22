@@ -35,7 +35,7 @@ import (
 /*
 #include <stdlib.h>
 static char**makeCharArray(int size) {
-        return malloc(sizeof(char*)*  size);
+        return malloc(sizeof(char*) * size);
 }
 
 static void setArrayString(char **a, char *s, int n) {
@@ -74,7 +74,7 @@ typedef struct {
 } PluginMetrics;
 
 static KeyValue** makeKeyValueArray(int size) {
-        return malloc(sizeof(KeyValue*)*  size);
+        return malloc(sizeof(KeyValue*) * size);
 }
 
 static void setArrayKeyValue(KeyValue **a, KeyValue *s, int n) {
@@ -82,7 +82,7 @@ static void setArrayKeyValue(KeyValue **a, KeyValue *s, int n) {
 }
 
 static PluginMetric** makePluginMetricArray(int size) {
-        return malloc(sizeof(KeyValue*)*  size);
+        return malloc(sizeof(KeyValue*) * size);
 }
 
 static void setArrayPluginMetric(PluginMetric **a, PluginMetric *s, int n) {

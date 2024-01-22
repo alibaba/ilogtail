@@ -71,7 +71,7 @@ func (p *LocalContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 	return nil, nil
 }
 
-func (p *LocalContext) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+func (p *LocalContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
@@ -89,7 +89,7 @@ func (p *LocalContext) RegisterMetricRecord(labels map[string]string) *pipeline.
 	return &metricRecord
 }
 
-func (p *LocalContext) RegisterLogstoreConfigMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+func (p *LocalContext) RegisterLogstoreConfigMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	counterMetrics := make([]pipeline.CounterMetric, 0)
 	stringMetrics := make([]pipeline.StringMetric, 0)
 	latencyMetric := make([]pipeline.LatencyMetric, 0)
@@ -114,11 +114,17 @@ func (p *LocalContext) ExportMetricRecords() (results []map[string]string) {
 	results = make([]map[string]string, 0)
 	for _, metricRecord := range p.MetricsRecords {
 		oneResult := make(map[string]string)
-		for key, value := range metricRecord.Labels {
-			oneResult[key] = value
+		for _, label := range metricRecord.Labels {
+			oneResult["label."+label.Key] = label.Value
 		}
 		for _, counterMetric := range metricRecord.CounterMetrics {
-			oneResult[counterMetric.Name()] = strconv.FormatInt(counterMetric.Get(), 10)
+			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.GetAndReset(), 10)
+		}
+		for _, stringMetric := range metricRecord.StringMetrics {
+			oneResult["value."+stringMetric.Name()] = stringMetric.GetAndReset()
+		}
+		for _, latencyMetric := range metricRecord.LatencyMetrics {
+			oneResult["value."+latencyMetric.Name()] = strconv.FormatInt(latencyMetric.GetAndReset(), 10)
 		}
 		results = append(results, oneResult)
 	}

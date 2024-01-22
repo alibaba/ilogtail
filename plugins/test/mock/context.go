@@ -34,7 +34,8 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 		common:     c,
 		checkpoint: make(map[string][]byte),
 	}
-	emptyContext.RegisterMetricRecord(map[string]string{})
+	
+	emptyContext.RegisterMetricRecord(make([]pipeline.LabelPair, 0))
 	return &emptyContext
 }
 
@@ -71,7 +72,7 @@ func (p *EmptyContext) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
 }
 
-func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
@@ -89,7 +90,7 @@ func (p *EmptyContext) RegisterMetricRecord(labels map[string]string) *pipeline.
 	return &metricRecord
 }
 
-func (p *EmptyContext) RegisterLogstoreConfigMetricRecord(labels map[string]string) *pipeline.MetricsRecord {
+func (p *EmptyContext) RegisterLogstoreConfigMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	counterMetrics := make([]pipeline.CounterMetric, 0)
 	stringMetrics := make([]pipeline.StringMetric, 0)
 	latencyMetric := make([]pipeline.LatencyMetric, 0)
@@ -114,11 +115,17 @@ func (p *EmptyContext) ExportMetricRecords() (results []map[string]string) {
 	results = make([]map[string]string, 0)
 	for _, metricRecord := range p.MetricsRecords {
 		oneResult := make(map[string]string)
-		for key, value := range metricRecord.Labels {
-			oneResult[key] = value
+		for _, label := range metricRecord.Labels {
+			oneResult["label."+label.Key] = label.Value
 		}
 		for _, counterMetric := range metricRecord.CounterMetrics {
-			oneResult[counterMetric.Name()] = strconv.FormatInt(counterMetric.Get(), 10)
+			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.GetAndReset(), 10)
+		}
+		for _, stringMetric := range metricRecord.StringMetrics {
+			oneResult["value."+stringMetric.Name()] = stringMetric.GetAndReset()
+		}
+		for _, latencyMetric := range metricRecord.LatencyMetrics {
+			oneResult["value."+latencyMetric.Name()] = strconv.FormatInt(latencyMetric.GetAndReset(), 10)
 		}
 		results = append(results, oneResult)
 	}
