@@ -30,7 +30,8 @@ class PluginInstance {
 public:
     struct PluginMeta {
         std::string pluginID;
-        std::string childPluginID;
+        std::string nodeID;
+        std::string childNodeID;
     };
     PluginInstance(const PluginMeta& pluginMeta) : mMeta(pluginMeta) {}
     virtual ~PluginInstance() = default;

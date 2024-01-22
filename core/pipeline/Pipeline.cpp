@@ -35,12 +35,13 @@ namespace logtail {
 
 void genPluginAndNodeID(int& pluginIndex, bool lastOne, PluginInstance::PluginMeta& pluginMeta) {
     pluginIndex ++;
-    int childPluginID = pluginIndex;
+    int childNodeID = pluginIndex;
     if (!lastOne) {
-        childPluginID = pluginIndex + 1;
+        childNodeID = pluginIndex + 1;
     }
     pluginMeta.pluginID = std::to_string(pluginIndex);
-    pluginMeta.childPluginID = std::to_string(childPluginID);
+    pluginMeta.nodeID = std::to_string(pluginIndex);
+    pluginMeta.childNodeID = std::to_string(childNodeID);
 }
 
 bool Pipeline::Init(const PipelineConfig& config) {

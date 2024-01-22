@@ -18,7 +18,7 @@ namespace logtail {
 bool InputInstance::Init(const Json::Value& config, PipelineContext& context) {
     mPlugin->SetContext(context);
     auto meta = Meta();
-    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.childPluginID);
+    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.nodeID, meta.childNodeID);
     if (mPlugin->Init(config)) {
         return false;
     }

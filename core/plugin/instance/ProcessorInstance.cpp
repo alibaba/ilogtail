@@ -26,7 +26,7 @@ namespace logtail {
 bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
     mPlugin->SetContext(context);
     auto meta = Meta();
-    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.childPluginID);
+    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.nodeID, meta.childNodeID);
     bool inited = mPlugin->Init(config);
     if (!inited) {
         return inited;

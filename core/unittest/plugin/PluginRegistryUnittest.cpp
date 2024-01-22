@@ -46,7 +46,8 @@ void PluginRegistryUnittest::TestCreateProcessor() {
         ProcessorParseRegexNative::sName, {"0", "1"});
     APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processorParseRegexNative.get());
     APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().pluginID);
-    APSARA_TEST_EQUAL_FATAL("1", processorParseRegexNative->Meta().childPluginID);
+    APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", processorParseRegexNative->Meta().childNodeID);
 }
 
 } // namespace logtail
