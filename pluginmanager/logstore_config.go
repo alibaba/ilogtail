@@ -116,8 +116,8 @@ type LogstoreConfig struct {
 	ContainerLabelSet     map[string]struct{}
 	EnvSet                map[string]struct{}
 	CollectContainersFlag bool
-	pluginID              int64
-	nodeID                int64
+	pluginID              int32
+	nodeID                int32
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
@@ -824,7 +824,7 @@ func (lc *LogstoreConfig) genPluginMeta(pluginName string, genNodeID bool, lastO
 			}
 		}
 	}
-	pluginID := lc.genEmbeddedPluginID()
+	pluginID := lc.genPluginID()
 	if genNodeID {
 		nodeID, childNodeID = lc.genNodeID(lastOne)
 	}
@@ -856,14 +856,14 @@ func GetPluginPriority(pluginName string) int {
 	return 0
 }
 
-func (lc *LogstoreConfig) genEmbeddedPluginID() string {
-	return fmt.Sprintf("_gen_embedded_%v", atomic.AddInt64(&lc.pluginID, 1))
+func (lc *LogstoreConfig) genPluginID() string {
+	return fmt.Sprintf("%v", atomic.AddInt32(&lc.pluginID, 1))
 }
 
 func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
-	id := atomic.AddInt64(&lc.nodeID, 1)
+	id := atomic.AddInt32(&lc.nodeID, 1)
 	if lastOne {
-		return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id)
+		return fmt.Sprintf("%v", id), fmt.Sprintf("%v", -1)
 	}
 	return fmt.Sprintf("%v", id), fmt.Sprintf("%v", id+1)
 }

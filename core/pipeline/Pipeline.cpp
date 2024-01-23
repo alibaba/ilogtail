@@ -36,9 +36,11 @@ namespace logtail {
 void genPluginAndNodeID(int& pluginIndex, bool lastOne, PluginInstance::PluginMeta& pluginMeta) {
     pluginIndex ++;
     int childNodeID = pluginIndex;
-    if (!lastOne) {
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
         childNodeID = pluginIndex + 1;
-    }
+    } 
     pluginMeta.pluginID = std::to_string(pluginIndex);
     pluginMeta.nodeID = std::to_string(pluginIndex);
     pluginMeta.childNodeID = std::to_string(childNodeID);
