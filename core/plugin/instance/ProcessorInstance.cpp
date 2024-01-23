@@ -25,7 +25,8 @@ namespace logtail {
 
 bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
     mPlugin->SetContext(context);
-    mPlugin->SetMetricsRecordRef(Name(), Id());
+    auto meta = Meta();
+    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.nodeID, meta.childNodeID);
     bool inited = mPlugin->Init(config);
     if (!inited) {
         return inited;
@@ -43,15 +44,15 @@ void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
 
     mProcInRecordsTotal->Add(inSize);
 
-    uint64_t startTime = GetCurrentTimeInMicroSeconds();
+    uint64_t startTime = GetCurrentTimeInMilliSeconds();
     mPlugin->Process(logGroup);
-    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    uint64_t durationTime = GetCurrentTimeInMilliSeconds() - startTime;
     
     mProcTimeMS->Add(durationTime);
 
     size_t outSize = logGroup.GetEvents().size();
     mProcOutRecordsTotal->Add(outSize);
-    LOG_DEBUG(mPlugin->GetContext().GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
+    LOG_DEBUG(mPlugin->GetContext().GetLogger(), ("Processor", Meta().pluginID)("InSize", inSize)("OutSize", outSize));
 }
 
 } // namespace logtail

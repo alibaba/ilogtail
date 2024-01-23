@@ -53,9 +53,11 @@ void StaticProcessorCreatorUnittest::TestIsDynamic() {
 
 void StaticProcessorCreatorUnittest::TestCreate() {
     StaticProcessorCreator<ProcessorMock> creator;
-    auto processorMock = creator.Create("0");
+    auto processorMock = creator.Create({"0", "0", "1"});
     APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processorMock.get());
-    APSARA_TEST_EQUAL_FATAL("0", processorMock->Id());
+    APSARA_TEST_EQUAL_FATAL("0", processorMock->Meta().pluginID);
+    APSARA_TEST_EQUAL_FATAL("0", processorMock->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", processorMock->Meta().childNodeID);
 }
 
 } // namespace logtail

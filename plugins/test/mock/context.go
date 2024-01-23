@@ -18,36 +18,34 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 	ctx, c := pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
-	return &EmptyContext{
-		ctx:            ctx,
-		common:         c,
-		StringMetrics:  make(map[string]pipeline.StringMetric),
-		CounterMetrics: make(map[string]pipeline.CounterMetric),
-		LatencyMetrics: make(map[string]pipeline.LatencyMetric),
-		checkpoint:     make(map[string][]byte),
+	emptyContext := EmptyContext{
+		ctx:        ctx,
+		common:     c,
+		checkpoint: make(map[string][]byte),
 	}
+
+	emptyContext.RegisterMetricRecord(make([]pipeline.LabelPair, 0))
+	return &emptyContext
 }
 
 type EmptyContext struct {
-	StringMetrics  map[string]pipeline.StringMetric
-	CounterMetrics map[string]pipeline.CounterMetric
-	LatencyMetrics map[string]pipeline.LatencyMetric
-
-	common      *pkg.LogtailContextMeta
-	ctx         context.Context
-	checkpoint  map[string][]byte
-	pluginNames string
+	MetricsRecords             []*pipeline.MetricsRecord
+	logstoreConfigMetricRecord *pipeline.MetricsRecord
+	common                     *pkg.LogtailContextMeta
+	ctx                        context.Context
+	checkpoint                 map[string][]byte
+	pluginNames                string
 }
 
 var contextMutex sync.Mutex
@@ -74,61 +72,83 @@ func (p *EmptyContext) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
 }
 
-func (p *EmptyContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
+func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
-	if p.CounterMetrics == nil {
-		p.CounterMetrics = make(map[string]pipeline.CounterMetric)
+
+	counterMetrics := make([]pipeline.CounterMetric, 0)
+	stringMetrics := make([]pipeline.StringMetric, 0)
+	latencyMetric := make([]pipeline.LatencyMetric, 0)
+
+	metricRecord := pipeline.MetricsRecord{
+		Labels:         labels,
+		CounterMetrics: counterMetrics,
+		StringMetrics:  stringMetrics,
+		LatencyMetrics: latencyMetric,
 	}
-	p.CounterMetrics[metric.Name()] = metric
+	p.MetricsRecords = append(p.MetricsRecords, &metricRecord)
+	return &metricRecord
 }
 
-func (p *EmptyContext) RegisterStringMetric(metric pipeline.StringMetric) {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	if p.StringMetrics == nil {
-		p.StringMetrics = make(map[string]pipeline.StringMetric)
+func (p *EmptyContext) RegisterLogstoreConfigMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
+	counterMetrics := make([]pipeline.CounterMetric, 0)
+	stringMetrics := make([]pipeline.StringMetric, 0)
+	latencyMetric := make([]pipeline.LatencyMetric, 0)
+
+	p.logstoreConfigMetricRecord = &pipeline.MetricsRecord{
+		Labels:         labels,
+		CounterMetrics: counterMetrics,
+		StringMetrics:  stringMetrics,
+		LatencyMetrics: latencyMetric,
 	}
-	p.StringMetrics[metric.Name()] = metric
+	return p.logstoreConfigMetricRecord
 }
 
-func (p *EmptyContext) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	if p.LatencyMetrics == nil {
-		p.LatencyMetrics = make(map[string]pipeline.LatencyMetric)
-	}
-	p.LatencyMetrics[metric.Name()] = metric
+func (p *EmptyContext) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
+	return p.logstoreConfigMetricRecord
 }
 
-func (p *EmptyContext) MetricSerializeToPB(log *protocol.Log) {
-	if log == nil {
-		return
-	}
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: p.GetProject()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "logstore", Value: p.GetLogstore()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "config", Value: p.GetConfigName()})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "plugins", Value: p.pluginNames})
+func (p *EmptyContext) ExportMetricRecords() (results []map[string]string) {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
-	if p.CounterMetrics != nil {
-		for _, value := range p.CounterMetrics {
-			value.Serialize(log)
-			value.Clear(0)
+
+	results = make([]map[string]string, 0)
+	for _, metricRecord := range p.MetricsRecords {
+		oneResult := make(map[string]string)
+		for _, label := range metricRecord.Labels {
+			oneResult["label."+label.Key] = label.Value
 		}
-	}
-	if p.StringMetrics != nil {
-		for _, value := range p.StringMetrics {
-			value.Serialize(log)
-			value.Set("")
+		for _, counterMetric := range metricRecord.CounterMetrics {
+			oneResult["value."+counterMetric.Name()] = strconv.FormatInt(counterMetric.GetAndReset(), 10)
 		}
-	}
-	if p.LatencyMetrics != nil {
-		for _, value := range p.LatencyMetrics {
-			value.Serialize(log)
-			value.Clear()
+		for _, stringMetric := range metricRecord.StringMetrics {
+			oneResult["value."+stringMetric.Name()] = stringMetric.GetAndReset()
 		}
+		for _, latencyMetric := range metricRecord.LatencyMetrics {
+			oneResult["value."+latencyMetric.Name()] = strconv.FormatInt(latencyMetric.GetAndReset(), 10)
+		}
+		results = append(results, oneResult)
 	}
+	return results
+}
+
+func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
+	if len(p.MetricsRecords) > 0 {
+		return p.MetricsRecords[len(p.MetricsRecords)-1]
+	}
+	return nil
+}
+
+func (p *EmptyContext) RegisterCounterMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.CounterMetric) {
+	metricsRecord.CounterMetrics = append(metricsRecord.CounterMetrics, metric)
+}
+
+func (p *EmptyContext) RegisterStringMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.StringMetric) {
+	metricsRecord.StringMetrics = append(metricsRecord.StringMetrics, metric)
+}
+
+func (p *EmptyContext) RegisterLatencyMetric(metricsRecord *pipeline.MetricsRecord, metric pipeline.LatencyMetric) {
+	metricsRecord.LatencyMetrics = append(metricsRecord.LatencyMetrics, metric)
 }
 
 func (p *EmptyContext) SaveCheckPoint(key string, value []byte) error {

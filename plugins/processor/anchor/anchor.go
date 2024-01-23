@@ -17,13 +17,13 @@ package anchor
 import (
 	"strings"
 
+	"github.com/buger/jsonparser"
+
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/buger/jsonparser"
 )
 
 const (
@@ -66,7 +66,9 @@ type ProcessorAnchor struct {
 	SourceKey     string
 	KeepSource    bool
 
-	context       pipeline.Context
+	context pipeline.Context
+
+	metricRecord  *pipeline.MetricsRecord
 	logPairMetric pipeline.CounterMetric
 }
 
@@ -92,8 +94,11 @@ func (p *ProcessorAnchor) Init(context pipeline.Context) error {
 			p.Anchors[i].innerType = StringType
 		}
 	}
+
+	p.metricRecord = p.context.GetMetricRecord()
+
 	p.logPairMetric = helper.NewAverageMetric("anchor_pairs_per_log")
-	p.context.RegisterCounterMetric(p.logPairMetric)
+	p.metricRecord.RegisterCounterMetric(p.logPairMetric)
 	return nil
 }
 

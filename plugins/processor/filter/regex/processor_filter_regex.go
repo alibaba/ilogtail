@@ -35,8 +35,10 @@ type ProcessorRegexFilter struct {
 	Include map[string]string
 	Exclude map[string]string
 
-	includeRegex    map[string]*regexp.Regexp
-	excludeRegex    map[string]*regexp.Regexp
+	includeRegex map[string]*regexp.Regexp
+	excludeRegex map[string]*regexp.Regexp
+
+	metricRecord    *pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
@@ -67,10 +69,12 @@ func (p *ProcessorRegexFilter) Init(context pipeline.Context) error {
 			p.excludeRegex[key] = reg
 		}
 	}
+	p.metricRecord = p.context.GetMetricRecord()
+
 	p.filterMetric = helper.NewCounterMetric(fmt.Sprintf("%v_filtered", pluginName))
-	p.context.RegisterCounterMetric(p.filterMetric)
+	p.metricRecord.RegisterCounterMetric(p.filterMetric)
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+	p.metricRecord.RegisterCounterMetric(p.processedMetric)
 	return nil
 }
 

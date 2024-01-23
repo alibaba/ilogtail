@@ -15,13 +15,11 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 var mu sync.Mutex
@@ -48,8 +46,12 @@ func (s *StrMetric) Get() string {
 	return v
 }
 
-func (s *StrMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: s.Get()})
+func (s *StrMetric) GetAndReset() string {
+	mu.Lock()
+	v := s.value
+	s.value = ""
+	mu.Unlock()
+	return v
 }
 
 type NormalMetric struct {
@@ -69,12 +71,12 @@ func (s *NormalMetric) Get() int64 {
 	return atomic.LoadInt64(&s.value)
 }
 
-func (s *NormalMetric) Name() string {
-	return s.name
+func (s *NormalMetric) GetAndReset() int64 {
+	return atomic.SwapInt64(&s.value, 0)
 }
 
-func (s *NormalMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: strconv.FormatInt(s.Get(), 10)})
+func (s *NormalMetric) Name() string {
+	return s.name
 }
 
 type AvgMetric struct {
@@ -103,6 +105,23 @@ func (s *AvgMetric) Get() int64 {
 	return int64(s.GetAvg())
 }
 
+func (s *AvgMetric) GetAndReset() int64 {
+	var avg float64
+	mu.Lock()
+	if s.count > 0 {
+		s.prevAvg, avg = float64(s.value)/float64(s.count), float64(s.value)/float64(s.count)
+		s.value = 0
+		s.count = 0
+	} else {
+		avg = s.prevAvg
+	}
+	s.value = 0
+	s.count = 0
+	s.prevAvg = 0.0
+	mu.Unlock()
+	return int64(avg)
+}
+
 func (s *AvgMetric) GetAvg() float64 {
 	var avg float64
 	mu.Lock()
@@ -119,10 +138,6 @@ func (s *AvgMetric) GetAvg() float64 {
 
 func (s *AvgMetric) Name() string {
 	return s.name
-}
-
-func (s *AvgMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: strconv.FormatFloat(s.GetAvg(), 'f', 4, 64)})
 }
 
 type LatMetric struct {
@@ -168,8 +183,17 @@ func (s *LatMetric) Get() int64 {
 	return v
 }
 
-func (s *LatMetric) Serialize(log *protocol.Log) {
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: s.name, Value: strconv.FormatFloat(float64(s.Get())/1000, 'f', 4, 64)})
+func (s *LatMetric) GetAndReset() int64 {
+	mu.Lock()
+	v := int64(0)
+	if s.count != 0 {
+		v = int64(s.latencySum) / int64(s.count)
+	}
+	s.count = 0
+	s.latencySum = 0
+	s.t = time.Unix(0, 0)
+	mu.Unlock()
+	return v
 }
 
 func NewCounterMetric(n string) pipeline.CounterMetric {
@@ -188,26 +212,26 @@ func NewLatencyMetric(n string) pipeline.LatencyMetric {
 	return &LatMetric{name: n}
 }
 
-func NewCounterMetricAndRegister(n string, c pipeline.Context) pipeline.CounterMetric {
+func NewCounterMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string) pipeline.CounterMetric {
 	metric := &NormalMetric{name: n}
-	c.RegisterCounterMetric(metric)
+	metricsRecord.RegisterCounterMetric(metric)
 	return metric
 }
 
-func NewAverageMetricAndRegister(n string, c pipeline.Context) pipeline.CounterMetric {
+func NewAverageMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string) pipeline.CounterMetric {
 	metric := &AvgMetric{name: n}
-	c.RegisterCounterMetric(metric)
+	metricsRecord.RegisterCounterMetric(metric)
 	return metric
 }
 
-func NewStringMetricAndRegister(n string, c pipeline.Context) pipeline.StringMetric {
+func NewStringMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string) pipeline.StringMetric {
 	metric := &StrMetric{name: n}
-	c.RegisterStringMetric(metric)
+	metricsRecord.RegisterStringMetric(metric)
 	return metric
 }
 
-func NewLatencyMetricAndRegister(n string, c pipeline.Context) pipeline.LatencyMetric {
+func NewLatencyMetricAndRegister(metricsRecord *pipeline.MetricsRecord, n string) pipeline.LatencyMetric {
 	metric := &LatMetric{name: n}
-	c.RegisterLatencyMetric(metric)
+	metricsRecord.RegisterLatencyMetric(metric)
 	return metric
 }

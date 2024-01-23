@@ -14,10 +14,6 @@
 
 package pipeline
 
-import (
-	"github.com/alibaba/ilogtail/pkg/protocol"
-)
-
 type CounterMetric interface {
 	Name() string
 
@@ -28,7 +24,7 @@ type CounterMetric interface {
 
 	Get() int64
 
-	Serialize(log *protocol.Log)
+	GetAndReset() int64
 }
 
 type StringMetric interface {
@@ -38,7 +34,7 @@ type StringMetric interface {
 
 	Get() string
 
-	Serialize(log *protocol.Log)
+	GetAndReset() string
 }
 
 type LatencyMetric interface {
@@ -52,5 +48,5 @@ type LatencyMetric interface {
 	// nano second
 	Get() int64
 
-	Serialize(log *protocol.Log)
+	GetAndReset() int64
 }

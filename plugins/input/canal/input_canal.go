@@ -23,16 +23,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/helper"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/go-mysql-org/go-mysql/replication"
 	"github.com/go-mysql-org/go-mysql/schema"
 	canalLog "github.com/sirupsen/logrus"
+
+	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 func mysqlValueToString(value mysql.FieldValue) (string, error) {
@@ -157,6 +157,7 @@ type ServiceCanal struct {
 	lastErrorCount     int
 	lastErrorChan      chan error
 
+	metricRecord      *pipeline.MetricsRecord
 	rotateCounter     pipeline.CounterMetric
 	syncCounter       pipeline.CounterMetric
 	ddlCounter        pipeline.CounterMetric
@@ -192,14 +193,16 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 
 	sc.lastErrorChan = make(chan error, 1)
 
-	sc.rotateCounter = helper.NewCounterMetricAndRegister("binlog_rotate", context)
-	sc.syncCounter = helper.NewCounterMetricAndRegister("binlog_sync", context)
-	sc.ddlCounter = helper.NewCounterMetricAndRegister("binlog_ddl", context)
-	sc.rowCounter = helper.NewCounterMetricAndRegister("binlog_row", context)
-	sc.xgidCounter = helper.NewCounterMetricAndRegister("binlog_xgid", context)
-	sc.checkpointCounter = helper.NewCounterMetricAndRegister("binlog_checkpoint", context)
-	sc.lastBinLogMetric = helper.NewStringMetricAndRegister("binlog_filename", context)
-	sc.lastGTIDMetric = helper.NewStringMetricAndRegister("binlog_gtid", context)
+	sc.metricRecord = sc.context.GetMetricRecord()
+
+	sc.rotateCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_rotate")
+	sc.syncCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_sync")
+	sc.ddlCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_ddl")
+	sc.rowCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_row")
+	sc.xgidCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_xgid")
+	sc.checkpointCounter = helper.NewCounterMetricAndRegister(sc.metricRecord, "binlog_checkpoint")
+	sc.lastBinLogMetric = helper.NewStringMetricAndRegister(sc.metricRecord, "binlog_filename")
+	sc.lastGTIDMetric = helper.NewStringMetricAndRegister(sc.metricRecord, "binlog_gtid")
 
 	return 0, nil
 }

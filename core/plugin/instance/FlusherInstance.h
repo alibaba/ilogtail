@@ -26,7 +26,7 @@ namespace logtail {
 
 class FlusherInstance: public PluginInstance {
 public:
-    FlusherInstance(Flusher* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
+    FlusherInstance(Flusher* plugin, const PluginInstance::PluginMeta& pluginMeta) : PluginInstance(pluginMeta), mPlugin(plugin) {}
 
     const std::string& Name() const override { return mPlugin->Name(); };
     // bool Init(const Table& config, PipelineContext& context);

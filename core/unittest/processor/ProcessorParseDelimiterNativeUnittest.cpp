@@ -62,6 +62,12 @@ UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessEventDiscardUnm
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAutoExtend);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAcceptNoEnoughKeys);
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
+    return pluginMeta;
+}
+
+
 void ProcessorParseDelimiterNativeUnittest::TestInit() {
     Config config;
     config.mSeparator = ",";
@@ -73,7 +79,7 @@ void ProcessorParseDelimiterNativeUnittest::TestInit() {
 
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
@@ -145,7 +151,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAcceptNoEnoughKeys() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -178,7 +184,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAcceptNoEnoughKeys() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -254,7 +260,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAcceptNoEnoughKeys() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -287,7 +293,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAcceptNoEnoughKeys() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -370,7 +376,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAutoExtend() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -403,7 +409,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAutoExtend() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -485,7 +491,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAutoExtend() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -518,7 +524,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAutoExtend() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -594,7 +600,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -626,7 +632,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -704,7 +710,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -736,7 +742,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -817,7 +823,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitLogStringNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -849,7 +855,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitRegexNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, pluginId);
+            ProcessorInstance processorInstance(&processor, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
             processor.Process(eventGroup);
             // judge result
@@ -897,7 +903,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
     // run function
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processor.Process(eventGroup);
@@ -1052,7 +1058,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
         processorSplitRegexNative.Process(eventGroup);
         // run function ProcessorParseDelimiterNative
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         processor.Process(eventGroup);
         // judge result
@@ -1107,7 +1113,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         ComponentConfig componentConfig(pluginId, config);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         processor.Process(eventGroup);
@@ -1194,7 +1200,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
     // run function
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processor.Process(eventGroup);
@@ -1271,7 +1277,7 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
     // run function
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processor.Process(eventGroup);
@@ -1314,7 +1320,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAddLog() {
     Config config;
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
@@ -1393,7 +1399,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
     // run function
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
@@ -1536,7 +1542,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
     // run function
     ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);

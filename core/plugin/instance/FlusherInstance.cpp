@@ -17,7 +17,8 @@
 namespace logtail {
 bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context) {
     mPlugin->SetContext(context);
-    mPlugin->SetMetricsRecordRef(Name(), Id());
+    auto meta = Meta();
+    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.nodeID, meta.childNodeID);
     if (mPlugin->Init(config)) {
         return false;
     }

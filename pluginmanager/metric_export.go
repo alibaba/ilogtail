@@ -1,4 +1,4 @@
-// Copyright 2021 iLogtail Authors
+// Copyright 2022 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,10 @@
 
 package pluginmanager
 
-import (
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-)
-
-type ProcessorWrapper struct {
-	Processor pipeline.ProcessorV1
-	Config    *LogstoreConfig
-	LogsChan  chan *pipeline.LogWithContext
-	Priority  int
-}
-
-type ProcessorWrapperArray []*ProcessorWrapper
-
-func (c ProcessorWrapperArray) Len() int {
-	return len(c)
-}
-func (c ProcessorWrapperArray) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
-}
-func (c ProcessorWrapperArray) Less(i, j int) bool {
-	return c[i].Priority < c[j].Priority
+func GetMetrics() []map[string]string {
+	metrics := make([]map[string]string, 0)
+	for _, config := range LogtailConfig {
+		metrics = append(metrics, config.Context.ExportMetricRecords()...)
+	}
+	return metrics
 }
