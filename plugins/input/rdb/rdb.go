@@ -78,9 +78,11 @@ type Rdb struct {
 	Shutdown              chan struct{}
 	waitGroup             sync.WaitGroup
 	Context               pipeline.Context
-	collectLatency        pipeline.LatencyMetric
-	collectTotal          pipeline.CounterMetric
-	checkpointMetric      pipeline.StringMetric
+
+	metricRecord     *pipeline.MetricsRecord
+	collectLatency   pipeline.LatencyMetric
+	collectTotal     pipeline.CounterMetric
+	checkpointMetric pipeline.StringMetric
 }
 
 func (m *Rdb) Init(context pipeline.Context, rdbFunc RdbFunc) (int, error) {
@@ -102,13 +104,16 @@ func (m *Rdb) Init(context pipeline.Context, rdbFunc RdbFunc) (int, error) {
 		logger.Warning(m.Context.GetRuntimeContext(), initAlarmName, "init rdbFunc error", err)
 	}
 
+	m.metricRecord = m.Context.GetMetricRecord()
+
 	m.collectLatency = helper.NewLatencyMetric(fmt.Sprintf("%s_collect_avg_cost", m.Driver))
 	m.collectTotal = helper.NewCounterMetric(fmt.Sprintf("%s_collect_total", m.Driver))
-	m.Context.RegisterCounterMetric(m.collectTotal)
-	m.Context.RegisterLatencyMetric(m.collectLatency)
+
+	m.metricRecord.RegisterCounterMetric(m.collectTotal)
+	m.metricRecord.RegisterLatencyMetric(m.collectLatency)
 	if m.CheckPoint {
 		m.checkpointMetric = helper.NewStringMetric(fmt.Sprintf("%s_checkpoint", m.Driver))
-		m.Context.RegisterStringMetric(m.checkpointMetric)
+		m.metricRecord.RegisterStringMetric(m.checkpointMetric)
 	}
 	return 10000, nil
 }

@@ -49,9 +49,12 @@ void PluginRegistryUnittest::TestCreateInput() const {
 }
 
 void PluginRegistryUnittest::TestCreateProcessor() const {
-    unique_ptr<ProcessorInstance> processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, "0");
-    APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processor);
-    APSARA_TEST_EQUAL("0", processor->Id());
+    auto processorParseRegexNative = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorParseRegexNative::sName, {"0", "0", "1"});
+    APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processorParseRegexNative.get());
+    APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().pluginID);
+    APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", processorParseRegexNative->Meta().childNodeID);
 }
 
 void PluginRegistryUnittest::TestCreateFlusher() const {

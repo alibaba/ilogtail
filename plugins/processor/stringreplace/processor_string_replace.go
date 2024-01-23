@@ -36,6 +36,7 @@ type ProcessorStringReplace struct {
 
 	re            *regexp2.Regexp
 	context       pipeline.Context
+	metricRecord  *pipeline.MetricsRecord
 	logPairMetric pipeline.CounterMetric
 }
 
@@ -73,9 +74,10 @@ func (p *ProcessorStringReplace) Init(context pipeline.Context) error {
 	default:
 		return errNoMethod
 	}
+	p.metricRecord = p.context.GetMetricRecord()
 
 	p.logPairMetric = helper.NewAverageMetric("regex_replace_pairs_per_log")
-	p.context.RegisterCounterMetric(p.logPairMetric)
+	p.metricRecord.RegisterCounterMetric(p.logPairMetric)
 	return nil
 }
 

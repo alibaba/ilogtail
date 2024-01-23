@@ -34,6 +34,7 @@ type ProcessorPickKey struct {
 	includeLen int
 	excludeLen int
 
+	metricRecord    *pipeline.MetricsRecord
 	filterMetric    pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
@@ -43,10 +44,12 @@ type ProcessorPickKey struct {
 func (p *ProcessorPickKey) Init(context pipeline.Context) error {
 	p.context = context
 
+	p.metricRecord = p.context.GetMetricRecord()
+
 	p.filterMetric = helper.NewCounterMetric("pick_key_lost")
-	p.context.RegisterCounterMetric(p.filterMetric)
+	p.metricRecord.RegisterCounterMetric(p.filterMetric)
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+	p.metricRecord.RegisterCounterMetric(p.processedMetric)
 
 	if len(p.Include) > 0 {
 		p.includeMap = make(map[string]struct{})

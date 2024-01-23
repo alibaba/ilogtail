@@ -28,6 +28,8 @@ public:
         return ptr;
     }
     void PushMetrics(bool forceSend);
+    void PushGoPluginMetrics();
+    void SendMetrics(std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
 
 private:
     MetricExportor();

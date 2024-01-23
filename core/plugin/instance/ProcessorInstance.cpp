@@ -26,9 +26,11 @@ namespace logtail {
 
 bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context) {
     mPlugin->SetContext(context);
-    mPlugin->SetMetricsRecordRef(Name(), Id());
-    if (!mPlugin->Init(config)) {
-        return false;
+    auto meta = Meta();
+    mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.nodeID, meta.childNodeID);
+    bool inited = mPlugin->Init(config);
+    if (!inited) {
+        return inited;
     }
 
     // should init plugin first， then could GetMetricsRecordRef from plugin

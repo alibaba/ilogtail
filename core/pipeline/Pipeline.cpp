@@ -40,6 +40,19 @@ using namespace std;
 
 namespace logtail {
 
+void genPluginAndNodeID(int& pluginIndex, bool lastOne, PluginInstance::PluginMeta& pluginMeta) {
+    pluginIndex ++;
+    int childNodeID = pluginIndex;
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
+        childNodeID = pluginIndex + 1;
+    } 
+    pluginMeta.pluginID = std::to_string(pluginIndex);
+    pluginMeta.nodeID = std::to_string(pluginIndex);
+    pluginMeta.childNodeID = std::to_string(childNodeID);
+}
+
 void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json::Value& pipeline) {
     if (!pipeline.isNull()) {
         Json::Value& global = pipeline["global"];
@@ -69,9 +82,11 @@ bool Pipeline::Init(Config&& config) {
 #endif
 
     int16_t pluginIndex = 0;
+
+    genPluginAndNodeID(pluginIndex, false, pluginMeta);
     for (auto detail : config.mInputs) {
         string name = (*detail)["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
+        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, pluginMeta);
         if (input) {
             Json::Value optionalGoPipeline;
             if (!input->Init(*detail, mContext, optionalGoPipeline)) {
@@ -93,8 +108,9 @@ bool Pipeline::Init(Config&& config) {
 
     if (config.IsProcessRunnerInvolved()) {
         Json::Value detail;
+        genPluginAndNodeID(pluginIndex, false, pluginMeta);
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, pluginMeta);
         if (!processor->Init(detail, mContext)) {
             // should not happen
             return false;
@@ -106,15 +122,16 @@ bool Pipeline::Init(Config&& config) {
     if (inputFile) {
         unique_ptr<ProcessorInstance> processor;
         Json::Value detail;
+        genPluginAndNodeID(pluginIndex, false, pluginMeta);
         if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
             mContext.SetRequiringJsonReaderFlag(true);
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       pluginMeta);
             detail["SplitChar"] = Json::Value('\0');
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         } else if (inputFile->mMultiline.IsMultiline()) {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       pluginMeta);
             detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
@@ -129,7 +146,7 @@ bool Pipeline::Init(Config&& config) {
             }
         } else {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       pluginMeta);
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, mContext)) {
@@ -141,8 +158,9 @@ bool Pipeline::Init(Config&& config) {
 
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
         string name = (*config.mProcessors[i])["Type"].asString();
+        genPluginAndNodeID(pluginIndex, false, pluginMeta);
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(name, pluginMeta);
         if (processor) {
             if (!processor->Init(*config.mProcessors[i], mContext)) {
                 return false;
@@ -173,8 +191,9 @@ bool Pipeline::Init(Config&& config) {
 
     for (auto detail : config.mFlushers) {
         string name = (*detail)["Type"].asString();
+        genPluginAndNodeID(pluginIndex, false, pluginMeta);
         unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateFlusher(name, pluginMeta);
         if (flusher) {
             Json::Value optionalGoPipeline;
             if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {

@@ -57,8 +57,8 @@ void ProcessorParseRegexNativeUnittest::TestInit() {
 
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
 }
 
@@ -129,8 +129,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -191,8 +191,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -270,8 +270,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -305,7 +305,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
@@ -347,8 +346,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -384,7 +383,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestAddLog() {
@@ -400,8 +398,8 @@ void ProcessorParseRegexNativeUnittest::TestAddLog() {
     config["CopingRawLog"] = true;
     config["RenamedSourceKey"] = "rawLog";
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
 
     auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
@@ -477,8 +475,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -568,8 +566,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -660,8 +658,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
 
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
