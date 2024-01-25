@@ -868,19 +868,21 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config->SetTailLimit(tailLimit);
             }
 
-            UserLogConfigParser::ParseAdvancedConfig(value, *config);
-            if (pluginConfigJson.isMember("global")) {
-                SetNotFoundJsonMember(pluginConfigJson["global"],
-                                      "EnableTimestampNanosecond",
-                                      config->mAdvancedConfig.mEnableTimestampNanosecond);
-            } else {
-                Json::Value pluginGlobalConfigJson;
-                SetNotFoundJsonMember(pluginGlobalConfigJson,
-                                      "EnableTimestampNanosecond",
-                                      config->mAdvancedConfig.mEnableTimestampNanosecond);
-                pluginConfigJson["global"] = pluginGlobalConfigJson;
+            if (config->mPluginProcessFlag) {
+                UserLogConfigParser::ParseAdvancedConfig(value, *config);
+                if (pluginConfigJson.isMember("global")) {
+                    SetNotFoundJsonMember(pluginConfigJson["global"],
+                                        "EnableTimestampNanosecond",
+                                        config->mAdvancedConfig.mEnableTimestampNanosecond);
+                } else {
+                    Json::Value pluginGlobalConfigJson;
+                    SetNotFoundJsonMember(pluginGlobalConfigJson,
+                                        "EnableTimestampNanosecond",
+                                        config->mAdvancedConfig.mEnableTimestampNanosecond);
+                    pluginConfigJson["global"] = pluginGlobalConfigJson;
+                }
+                config->mPluginConfig = pluginConfigJson.toStyledString();
             }
-            config->mPluginConfig = pluginConfigJson.toStyledString();
 
             if (logType == DELIMITER_LOG) {
                 config->mTimeFormat = GetStringValue(value, "timeformat", "");
