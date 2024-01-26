@@ -86,7 +86,7 @@ PluginRegistry::PluginRegistry() {
                   "metric_container",
                   "metric_statistics",
                   "metric_debug_file",
-                  "metric_docker_file",
+                  "metric_container_meta",
                   "metric_checkpoint_example",
                   "metric_input_example",
                   "metric_meta_host",
