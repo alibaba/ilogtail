@@ -868,8 +868,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config->SetTailLimit(tailLimit);
             }
 
+            UserLogConfigParser::ParseAdvancedConfig(value, *config);
             if (config->mPluginProcessFlag) {
-                UserLogConfigParser::ParseAdvancedConfig(value, *config);
                 if (pluginConfigJson.isMember("global")) {
                     SetNotFoundJsonMember(pluginConfigJson["global"],
                                         "EnableTimestampNanosecond",
