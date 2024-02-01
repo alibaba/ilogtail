@@ -237,7 +237,8 @@ func innerReadStatisContainerInfo(file string, lastContainerInfo []types.Contain
 
 func isStaticContainerInfoEnabled() bool {
 	envPath := os.Getenv(staticContainerInfoPathEnvKey)
-	return len(envPath) != 0
+	acsFlag := os.Getenv(acsFlag)
+	return (len(envPath) != 0 || len(acsFlag) != 0)
 }
 
 func tryReadStaticContainerInfo() ([]types.ContainerJSON, []string, bool, error) {

@@ -29,6 +29,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
+const acsFlag = "ALIYUN_LOG_ACS"
 const acsStaticContainerInfoMountPathEnvKey = "ALIYUN_LOG_ACS_STATIC_CONTAINER_INFO_MOUNT_PATH"
 const acsPodInfoMountPathEnvKey = "ALIYUN_LOG_ACS_POD_INFO_MOUNT_PATH"
 
