@@ -43,7 +43,8 @@ const namespaceLabelKey = "io.kubernetes.pod.namespace"
 const defaultAcsStaticContainerInfoMountPath = "/logtail_host/bundle"
 const defaultAcsPodInfoMountPath = "/etc/podinfo"
 
-const defaultStdoutMountPath = "../stdlog"
+// adhoc
+const defaultStdoutMountPath = "/../stdlog"
 
 var acsStaticContainerInfoMountPath string
 var acsPodInfoMountPath string
@@ -86,7 +87,9 @@ func staticACSContainerInfoToStandard(staticInfo *OCIContainerInfo, stat fs.File
 	fillPodLabels(namespace, podName, containerName, podLabels)
 
 	mockUpperDir := make(map[string]string)
-	mockUpperDir["UpperDir"] = acsStaticContainerInfoMountPath + "/" + containerID + "/rootfs"
+
+	// todo
+	mockUpperDir["UpperDir"] = "/bundle/" + containerID + "/rootfs"
 
 	dockerContainer := types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
@@ -96,7 +99,8 @@ func staticACSContainerInfoToStandard(staticInfo *OCIContainerInfo, stat fs.File
 			LogPath: defaultStdoutMountPath + "/" + containerName + "/0.log",
 
 			State: &types.ContainerState{
-				Status: status,
+				// todo
+				Status: "running",
 				Pid:    staticInfo.State.Pid,
 			},
 			GraphDriver: types.GraphDriverData{
