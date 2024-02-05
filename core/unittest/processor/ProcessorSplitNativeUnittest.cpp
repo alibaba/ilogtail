@@ -35,6 +35,7 @@ public:
 };
 
 UNIT_TEST_CASE(ProcessorSplitNativeUnittest, TestInit);
+UNIT_TEST_CASE(ProcessorSplitNativeUnittest, TestAppendingLogPositionMeta);
 
 void ProcessorSplitNativeUnittest::TestInit() {
     // make config
