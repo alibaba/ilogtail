@@ -330,7 +330,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                     break;
                 }
 
-                // EndPatternReg不存在，StartPattern不存在，ContinuePatternReg没匹配上
+                // EndPatternReg不存在，StartPattern不存在，ContinuePatternReg没匹配上(理论上不支持这种正则配置)
                 // 把multiBeginIndex到i-1的日志合并到multiBeginIndex中
                 splitSuccess = true;
                 MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex);
@@ -356,7 +356,20 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
             }
         }
     }
-
+    // We should clear the log from `multiBeginIndex` to `size`.
+    if (multiBeginIndex < events.size()) {
+        if (mMultiline.GetStartPatternReg() != NULL && mMultiline.GetEndPatternReg() == NULL) {
+            splitSuccess = true;
+            // If logs is unmatched, they have been handled immediately. So logs must be matched here.
+            MergeEvents(events, multiBeginIndex, events.size() - 1, logEventIndex);
+        } else if (mMultiline.GetStartPatternReg() == NULL && mMultiline.GetContinuePatternReg() == NULL
+                    && mMultiline.GetEndPatternReg() != NULL) {
+            // If there is still logs in cache, it means that there is no end line. We can handle them as unmatched.
+            HandleUnmatchLogs(events, multiBeginIndex, events.size() - 1, logEventIndex, discardLogEventIndex);
+        } else {
+            HandleUnmatchLogs(events, multiBeginIndex, events.size() - 1, logEventIndex, discardLogEventIndex);
+        }
+    }
     return splitSuccess;
 }
 
@@ -364,7 +377,7 @@ void ProcessorMergeMultilineLogNative::MergeEvents(logtail::EventsContainer& eve
                                                    long unsigned int beginIndex,
                                                    long unsigned int endIndex,
                                                    std::vector<PipelineEventPtr>& logEventIndex,
-                                                   bool update) {
+                                                   bool updateLast) {
     // 把 beginIndex 到 endIndex 的日志合并到 beginIndex 中
     auto& beginEvent = events[beginIndex].Cast<LogEvent>();
     StringView beginValue = beginEvent.GetContent(mSourceKey);
@@ -380,7 +393,7 @@ void ProcessorMergeMultilineLogNative::MergeEvents(logtail::EventsContainer& eve
         beginValue = StringView(beginValue.data(), beginValue.size() + curValue.size());
     }
     beginEvent.SetContentNoCopy(mSourceKey, beginValue);
-    if (update) {
+    if (updateLast) {
         logEventIndex[logEventIndex.size()-1] = events[beginIndex];
     } else {
         logEventIndex.emplace_back(events[beginIndex]);
