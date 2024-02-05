@@ -18,7 +18,6 @@
 #include "common/JsonUtil.h"
 #include "config/Config.h"
 #include "models/LogEvent.h"
-#include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorSplitNative.h"
 #include "unittest/Unittest.h"
 
@@ -30,6 +29,7 @@ public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
 
     void TestInit();
+    void TestAppendingLogPositionMeta();
 
     PipelineContext mContext;
 };
@@ -39,13 +39,76 @@ UNIT_TEST_CASE(ProcessorSplitNativeUnittest, TestInit);
 void ProcessorSplitNativeUnittest::TestInit() {
     // make config
     Json::Value config;
-    config["StartPattern"] = ".*";
-    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
-    ProcessorMergeMultilineLogNative processor;
+    ProcessorSplitNative processor;
     processor.SetContext(mContext);
 
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
+}
+
+void ProcessorSplitNativeUnittest::TestAppendingLogPositionMeta() {
+    // make config
+    Json::Value config;
+    config["AppendingLogPositionMeta"] = true;
+    // make processor
+    // ProcessorSplitNative
+    ProcessorSplitNative processorSplitNative;
+    processorSplitNative.SetContext(mContext);
+    APSARA_TEST_TRUE_FATAL(processorSplitNative.Init(config));
+    // make eventGroup
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "__file_offset__": "0",
+                    "content" : "line1\ncontinue\nline2\ncontinue"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+    eventGroup.FromJsonString(inJson);
+    std::string logPath("/var/log/message");
+    // run test function
+    processorSplitNative.Process(eventGroup);
+    std::stringstream expectJson;
+    expectJson << R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "__file_offset__": "0",
+                    "content" : "line1\ncontinue"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__file_offset__": ")"
+               << strlen(R"(line1ncontinuen)") << R"(",
+                    "content" : "line2\ncontinue"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+    std::string outJson = eventGroup.ToJsonString();
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    // check observability
+    APSARA_TEST_EQUAL_FATAL(4, processorSplitNative.GetContext().GetProcessProfile().feedLines);
+    APSARA_TEST_EQUAL_FATAL(2, processorSplitNative.GetContext().GetProcessProfile().splitLines);
 }
 
 } // namespace logtail

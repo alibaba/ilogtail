@@ -54,9 +54,10 @@ private:
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorSplitRegexNativeUnittest;
+    friend class ProcessorMergeMultilineLogNativeUnittest;
     friend class ProcessorSplitRegexDisacardUnmatchUnittest;
     friend class ProcessorSplitRegexKeepUnmatchUnittest;
+    friend class ProcessorSplitNativeUnittest;
 #endif
 };
 

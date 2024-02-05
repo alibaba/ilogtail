@@ -246,10 +246,10 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
 
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
@@ -374,10 +374,10 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
             ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
@@ -531,10 +531,10 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
             ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
@@ -663,10 +663,10 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
             ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
@@ -793,10 +793,10 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
             ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
@@ -920,10 +920,10 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
             ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
@@ -1052,10 +1052,10 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
             ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
@@ -1275,10 +1275,10 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             processorSplitNative.Process(eventGroup);
 
             // run function ProcessorMergeMultilineLogNative
-            ProcessorMergeMultilineLogNative processorSplitRegexNative;
-            processorSplitRegexNative.SetContext(mContext);
-            APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-            processorSplitRegexNative.Process(eventGroup);
+            ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+            processorMergeMultilineLogNative.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+            processorMergeMultilineLogNative.Process(eventGroup);
 
             // run function ProcessorParseDelimiterNative
             ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);

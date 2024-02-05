@@ -162,10 +162,10 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         processorSplitNative.Process(eventGroup);
 
         // run function ProcessorMergeMultilineLogNative
-        ProcessorMergeMultilineLogNative processorSplitRegexNative;
-        processorSplitRegexNative.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
-        processorSplitRegexNative.Process(eventGroup);
+        ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+        processorMergeMultilineLogNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+        processorMergeMultilineLogNative.Process(eventGroup);
 
         // run function ProcessorDesensitizeNative
         ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
