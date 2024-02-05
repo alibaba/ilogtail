@@ -107,7 +107,7 @@ void ProcessorSplitNativeUnittest::TestAppendingLogPositionMeta() {
                 "contents" :
                 {
                     "__file_offset__": ")"
-               << strlen(R"(line1ncontinue)") << R"(",
+               << strlen(R"(line1ncontinuen)") << R"(",
                     "content" : "line2"
                 },
                 "timestamp" : 12345678901,
@@ -118,7 +118,7 @@ void ProcessorSplitNativeUnittest::TestAppendingLogPositionMeta() {
                 "contents" :
                 {
                     "__file_offset__": ")"
-               << strlen(R"(line1ncontinuenline2)") << R"(",
+               << strlen(R"(line1ncontinuenline2n)") << R"(",
                     "content" : "continue"
                 },
                 "timestamp" : 12345678901,
@@ -131,7 +131,7 @@ void ProcessorSplitNativeUnittest::TestAppendingLogPositionMeta() {
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     // check observability
     APSARA_TEST_EQUAL_FATAL(4, processorSplitNative.GetContext().GetProcessProfile().feedLines);
-    APSARA_TEST_EQUAL_FATAL(2, processorSplitNative.GetContext().GetProcessProfile().splitLines);
+    APSARA_TEST_EQUAL_FATAL(4, processorSplitNative.GetContext().GetProcessProfile().splitLines);
 }
 
 } // namespace logtail
