@@ -85,7 +85,7 @@ bool LogEvent::FromJson(const Json::Value& root) {
     if (root.isMember("contents")) {
         Json::Value contents = root["contents"];
         for (const auto& key : contents.getMemberNames()) {
-            SetContent(key, contents[key].asString());
+            SetContent(GetSourceBuffer()->CopyString(key), contents[key].asString());
         }
     }
     return true;

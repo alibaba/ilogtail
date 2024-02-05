@@ -40,13 +40,13 @@
 #include "plugin/creator/StaticProcessorCreator.h"
 #include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorFilterNative.h"
+#include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "processor/ProcessorSPL.h"
@@ -232,7 +232,7 @@ void PluginRegistry::LoadStaticPlugins() {
 #endif
 
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
-    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitRegexNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMergeMultilineLogNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseApsaraNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseDelimiterNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorDesensitizeNative>());
