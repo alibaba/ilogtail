@@ -85,7 +85,7 @@ void ProcessorSplitNativeUnittest::TestAppendingLogPositionMeta() {
                 "contents" :
                 {
                     "__file_offset__": "0",
-                    "content" : "line1\ncontinue"
+                    "content" : "line1"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -95,8 +95,30 @@ void ProcessorSplitNativeUnittest::TestAppendingLogPositionMeta() {
                 "contents" :
                 {
                     "__file_offset__": ")"
-               << strlen(R"(line1ncontinuen)") << R"(",
-                    "content" : "line2\ncontinue"
+               << strlen(R"(line1n)") << R"(",
+                    "content" : "continue"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__file_offset__": ")"
+               << strlen(R"(line1ncontinue)") << R"(",
+                    "content" : "line2"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__file_offset__": ")"
+               << strlen(R"(line1ncontinuenline2)") << R"(",
+                    "content" : "continue"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
