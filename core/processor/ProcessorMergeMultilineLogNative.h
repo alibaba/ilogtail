@@ -50,7 +50,8 @@ private:
                            long unsigned int& multiBeginIndex,
                            long unsigned int endIndex,
                            std::vector<PipelineEventPtr>& logEventIndex,
-                           std::vector<PipelineEventPtr>& discardLogEventIndex);
+                           std::vector<PipelineEventPtr>& discardLogEventIndex,
+                           bool mustHandleLogs = false);
     void MergeEvents(logtail::EventsContainer& events,
                      long unsigned int beginIndex,
                      long unsigned int endIndex,

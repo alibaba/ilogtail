@@ -61,7 +61,7 @@ void ProcessorSplitRegexNativeUnittest::TestInit() {
     // make config
     Json::Value config;
     config["StartPattern"] = ".*";
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     ProcessorMergeMultilineLogNative processor;
     processor.SetContext(mContext);
@@ -73,7 +73,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
     // make config
     Json::Value config;
     config["StartPattern"] = ".*";
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -143,7 +143,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -221,7 +221,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -378,7 +378,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -514,7 +514,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
     // make config
     Json::Value config;
     config["StartPattern"] = "line.*";
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = true;
     // make processor
     // ProcessorSplitNative
@@ -1316,7 +1316,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -1522,7 +1522,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -1786,7 +1786,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -1912,7 +1912,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
     Json::Value config;
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
     // ProcessorSplitNative
@@ -2097,7 +2097,7 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
     // make config
     Json::Value config;
     config["EndPattern"] = LOG_END_REGEX;
-    config["UnmatchedContentTreatment"] = "split";
+    config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
     // make processor
 
