@@ -290,9 +290,6 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
                              const std::string& projectName,
                              const std::string& category,
                              const std::string& region) {
-    #ifdef APSARA_UNIT_TEST_MAIN
-        return;
-    #endif
     if (alarmType < 0 || alarmType >= ALL_LOGTAIL_ALARM_NUM) {
         return;
     }
