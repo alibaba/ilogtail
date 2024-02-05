@@ -26,13 +26,12 @@
 
 namespace logtail {
 
-class ProcessorSplitRegexNative : public Processor {
+class ProcessorMergeMultilineLogNative : public Processor {
 public:
     static const std::string sName;
 
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MultilineOptions mMultiline;
-    bool mAppendingLogPositionMeta = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -42,21 +41,21 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvent(PipelineEventGroup& logGroup,
-                      const StringView& logPath,
-                      const PipelineEventPtr& e,
-                      EventsContainer& newEvents);
-    bool LogSplit(const char* buffer,
-                  int32_t size,
-                  int32_t& lineFeed,
-                  std::vector<StringView>& logIndex,
-                  std::vector<StringView>& discardIndex,
+    void ProcessEvents(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
+    bool LogSplit(PipelineEventGroup& logGroup,
+                  std::vector<PipelineEventPtr>& logEventIndex,
+                  std::vector<PipelineEventPtr>& discardLogEventIndex,
                   const StringView& logPath);
-    void HandleUnmatchLogs(const char* buffer,
-                           int& multiBeginIndex,
-                           int endIndex,
-                           std::vector<StringView>& logIndex,
-                           std::vector<StringView>& discardIndex);
+    void HandleUnmatchLogs(const logtail::EventsContainer& events,
+                           long unsigned int& multiBeginIndex,
+                           long unsigned int endIndex,
+                           std::vector<PipelineEventPtr>& logEventIndex,
+                           std::vector<PipelineEventPtr>& discardLogEventIndex);
+    void MergeEvents(logtail::EventsContainer& events,
+                     long unsigned int beginIndex,
+                     long unsigned int endIndex,
+                     std::vector<PipelineEventPtr>& logEventIndex,
+                     bool update = false);
 
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;

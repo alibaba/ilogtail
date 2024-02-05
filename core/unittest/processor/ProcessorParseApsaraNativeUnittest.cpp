@@ -20,8 +20,9 @@
 #include "models/StringView.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitRegexNative.h"
+#include "processor/ProcessorSplitNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -550,7 +551,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
-    // ProcessorSplitRegexNative
+    // ProcessorMergeMultilineLogNative
     {
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -571,8 +572,14 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
 
         std::string pluginId = "testID";
 
-        // run function ProcessorSplitRegexNative
-        ProcessorSplitRegexNative processorSplitRegexNative;
+        // run function ProcessorSplitNative
+        ProcessorSplitNative processorSplitNative;
+        processorSplitNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitNative.Init(config));
+        processorSplitNative.Process(eventGroup);
+
+        // run function ProcessorMergeMultilineLogNative
+        ProcessorMergeMultilineLogNative processorSplitRegexNative;
         processorSplitRegexNative.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
         processorSplitRegexNative.Process(eventGroup);
