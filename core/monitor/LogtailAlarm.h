@@ -135,7 +135,7 @@ public:
     bool IsLowLevelAlarmValid();
 
 private:
-    typedef std::vector<std::map<std::string, LogtailAlarmMessage*> > LogtailAlarmVector;
+    typedef std::vector<std::map<std::string, std::unique_ptr<LogtailAlarmMessage>>> LogtailAlarmVector;
 
     LogtailAlarm();
     ~LogtailAlarm() = default;
