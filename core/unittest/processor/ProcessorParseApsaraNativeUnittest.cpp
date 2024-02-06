@@ -569,7 +569,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["StartPattern"] = ".*";
         config["UnmatchedContentTreatment"] = "split";
         config["AppendingLogPositionMeta"] = false;
-
+        config["MergeBehavior"] = "regex";
         std::string pluginId = "testID";
 
         // run function ProcessorSplitNative

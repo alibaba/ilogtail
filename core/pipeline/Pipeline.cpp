@@ -126,6 +126,7 @@ bool Pipeline::Init(Config&& config) {
             // ProcessorMergeMultilineLogNative
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
                                                                        to_string(++pluginIndex));
+            detail["MergeBehavior"] = Json::Value("regex");
             detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);

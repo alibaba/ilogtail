@@ -30,6 +30,9 @@ class ProcessorMergeMultilineLogNative : public Processor {
 public:
     static const std::string sName;
 
+    enum class MergeBehavior { REGEX, PART_LOG };
+    MergeBehavior mMergeBehavior = MergeBehavior::REGEX;
+
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MultilineOptions mMultiline;
 
@@ -41,7 +44,8 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvents(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
+    void ProcessEventsWithPartLog(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
+    void ProcessEventsWithRegex(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
     bool LogSplit(PipelineEventGroup& logGroup,
                   std::vector<PipelineEventPtr>& logEventIndex,
                   std::vector<PipelineEventPtr>& discardLogEventIndex,
@@ -56,15 +60,18 @@ private:
                      long unsigned int beginIndex,
                      long unsigned int endIndex,
                      std::vector<PipelineEventPtr>& logEventIndex,
-                     bool update = false);
+                     bool update = false,
+                     bool insertLineBreak = true);
+
+    std::string partLogFlag = "PartLogFlag";
 
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorMergeMultilineLogNativeUnittest;
-    friend class ProcessorSplitRegexDisacardUnmatchUnittest;
-    friend class ProcessorSplitRegexKeepUnmatchUnittest;
+    friend class ProcessorMergeMultilineLogDisacardUnmatchUnittest;
+    friend class ProcessorMergeMultilineLogKeepUnmatchUnittest;
 #endif
 };
 

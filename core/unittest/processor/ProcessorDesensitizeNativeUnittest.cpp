@@ -154,7 +154,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         config["StartPattern"] = ".*";
         config["UnmatchedContentTreatment"] = "split";
         config["AppendingLogPositionMeta"] = false;
-
+        config["MergeBehavior"] = "regex";
         // run function ProcessorSplitNative
         ProcessorSplitNative processorSplitNative;
         processorSplitNative.SetContext(mContext);
