@@ -120,12 +120,12 @@ void ProcessorMergeMultilineLogNative::ProcessEventsWithPartLog(PipelineEventGro
         if(sourceEvent.GetContents().empty()) {
             continue;
         }
-        if (!sourceEvent.HasContent(partLogFlag)){
+        if (!sourceEvent.HasContent(PARTLOGFLAG)){
             logEventIndex.emplace_back(events[curIndex]);
             continue;
         }
         auto& contents = sourceEvent.MutableContents();
-        contents.erase(partLogFlag);
+        contents.erase(PARTLOGFLAG);
         long unsigned int finalIndex = curIndex + 1;
         for (; finalIndex < events.size(); ++finalIndex) {
             const PipelineEventPtr& nextE = events[finalIndex];
@@ -133,7 +133,7 @@ void ProcessorMergeMultilineLogNative::ProcessEventsWithPartLog(PipelineEventGro
             if (nextSourceEvent.GetContents().empty()) {
                 continue;
             }
-            if (!nextSourceEvent.HasContent(partLogFlag)){
+            if (!nextSourceEvent.HasContent(PARTLOGFLAG)){
                 break;
             }
         }

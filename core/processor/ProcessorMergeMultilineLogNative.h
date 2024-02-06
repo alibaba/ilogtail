@@ -63,8 +63,6 @@ private:
                      bool update = false,
                      bool insertLineBreak = true);
 
-    std::string partLogFlag = "PartLogFlag";
-
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
