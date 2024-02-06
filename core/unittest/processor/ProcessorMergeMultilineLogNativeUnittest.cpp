@@ -594,7 +594,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
                     "PartLogFlag": "true",
                     "content": " in thread"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 12345678902,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -604,7 +604,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
                     "PartLogFlag": "true",
                     "content": "  'main'"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 12345678903,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -613,7 +613,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
                 {
                     "content": " java.lang.NullPoinntterException"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 12345678904,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
