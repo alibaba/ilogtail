@@ -65,7 +65,6 @@ void SenderQueueUnittest::TestExactlyOnceQueue() {
         senderQueue.OnLoggroupSendDone(data, LogstoreSenderInfo::SendResult_OK);
         EXPECT_TRUE(senderQueue.IsValidToPush(kFbKey));
         EXPECT_TRUE(senderQueue.IsEmpty(kFbKey));
-        delete data;
     }
 
     {
@@ -102,7 +101,6 @@ void SenderQueueUnittest::TestExactlyOnceQueue() {
         EXPECT_TRUE(senderQueue.IsValidToPush(kFbKey));
         EXPECT_FALSE(senderQueue.IsEmpty(kFbKey));
         delete data2;
-        delete data;
     }
 }
 
