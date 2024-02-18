@@ -48,9 +48,14 @@ private:
     std::string containerSourceKey = "_source_"; // 容器来源字段
     std::string containerLogKey = "content"; // 容器日志字段
 
-    bool ProcessEvent(const StringView& containerType, PipelineEventPtr& e, PipelineEventGroup& logGroup);
+    std::string dockerJsonLogContent = "log"; // docker json 日志字段
+    std::string dockerJsonTime = "time"; // docker json 时间字段
+    std::string dockerJsonStreamType = "stream"; // docker json 流字段
+
+    bool ProcessEvent(const StringView& containerType, PipelineEventPtr& e);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
-    bool ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e, PipelineEventGroup& logGroup);
+    bool ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
+    bool DockerJsonLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseContainerLogNativeUnittest;
 #endif

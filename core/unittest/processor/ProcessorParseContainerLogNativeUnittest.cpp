@@ -41,6 +41,7 @@ public:
     void TestContainerdLog();
     void TestIgnoringStdoutStderr();
     void TestContainerdLogWithSplit();
+    void TestDockerJsonLogLineParserWithSplit();
 
     PipelineContext mContext;
 };
@@ -49,6 +50,7 @@ UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestInit);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLog);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestIgnoringStdoutStderr);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLogWithSplit);
+UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestDockerJsonLogLineParserWithSplit);
 
 void ProcessorParseContainerLogNativeUnittest::TestInit() {
     // make config
@@ -904,6 +906,8 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
+    std::string containerType = "containerd";
+    eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
     inJson << R"({
         "events" :
         [
@@ -1003,7 +1007,123 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
+        ],
+        "metadata":{
+            "container.type":"containerd"
+        }
+    })";
+    std::string outJson = eventGroup.ToJsonString();
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+}
+
+void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSplit() {
+    // make eventGroup
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::stringstream inJson;
+    std::string containerType = "docker-json";
+    eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+    inJson << R"({
+        "events": [
+            {
+                "contents": {
+                    "content": "{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"Exception in thread  'main' java.lang.NullPoinntterException\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"    ...23 more\"}\n{\"time\":\"2024-01-05T23:31:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"Exception in thread  'main' java.lang.NullPoinntterException\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"    ...23 more\"}"
+                },
+                "timestamp": 12345678901,
+                "timestampNanosecond": 0,
+                "type": 1
+            }
         ]
+    })";
+    eventGroup.FromJsonString(inJson.str());
+
+    // ProcessorSplitNative
+    {
+        // make config
+        Json::Value config;
+        config["AppendingLogPositionMeta"] = true;
+        // make ProcessorSplitNative
+        ProcessorSplitNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        // run test function
+        processor.Process(eventGroup);
+    }
+    // ProcessorParseContainerLogNative
+    {
+        // make config
+        Json::Value config;
+        config["IgnoringStdout"] = false;
+        config["IgnoringStderr"] = true;
+        // make ProcessorParseContainerLogNative
+        ProcessorParseContainerLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        // run test function
+        processor.Process(eventGroup);
+    }
+    // ProcessorMergeMultilineLogNative
+    {
+        // make config
+        Json::Value config;
+        config["MergeBehavior"] = "part_log";
+        config["UnmatchedContentTreatment"] = "single_line";
+        // make ProcessorMergeMultilineLogNative
+        ProcessorMergeMultilineLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        // run test function
+        processor.Process(eventGroup);
+    }
+    // ProcessorMergeMultilineLogNative
+    {
+        // make config
+        Json::Value config;
+        config["StartPattern"] = LOG_BEGIN_REGEX;
+        config["MergeBehavior"] = "regex";
+        config["UnmatchedContentTreatment"] = "single_line";
+        // make ProcessorMergeMultilineLogNative
+        ProcessorMergeMultilineLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        // run test function
+        processor.Process(eventGroup);
+    }
+
+    // judge result
+    std::stringstream expectJson;
+    expectJson << R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "__file_offset__": "0",
+                    "_source_": "stdout",
+                    "_time_": "2024-01-05T23:28:06.818486411+08:00",
+                    "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__file_offset__": ")"
+               << strlen(R"({"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"Exception in thread  'main' java.lang.NullPoinntterException"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"     at com.example.myproject.Book.getTitle"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"     at com.example.myproject.Book.getTitle"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"     at com.example.myproject.Book.getTitle"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"    ...23 more"}n)") << R"(",
+                    "_source_": "stdout",
+                    "_time_": "2024-01-05T23:31:06.818486411+08:00",
+                    "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ],
+        "metadata":{
+            "container.type":"docker-json"
+        }
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
