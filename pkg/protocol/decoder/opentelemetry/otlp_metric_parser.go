@@ -79,8 +79,8 @@ func exponentialHistogram2Logs(name string, histogram *v1.ExponentialHistogram, 
 	for _, dataPoint := range histogram.GetDataPoints() {
 		labels := defaultLabels.Clone()
 		attrsToLabels(labels, dataPoint.GetAttributes())
-		//labels.Append(otlp.TagKeyMetricAggregationTemporality, string(histogram.GetAggregationTemporality().Number()))
-		//labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeExponentialHistogram.String())
+		// labels.Append(otlp.TagKeyMetricAggregationTemporality, string(histogram.GetAggregationTemporality().Number()))
+		// labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeExponentialHistogram.String())
 
 		if dataPoint.GetSum() != 0 {
 			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixSum, labels, int64(dataPoint.GetTimeUnixNano()), dataPoint.GetSum()))
@@ -164,8 +164,8 @@ func sum2Logs(name string, sum *v1.Sum, defaultLabels *helper.MetricLabels) (log
 		labels := defaultLabels.Clone()
 		attrsToLabels(labels, dataPoint.GetAttributes())
 
-		//labels.Append(otlp.TagKeyMetricIsMonotonic, strconv.FormatBool(sum.GetIsMonotonic()))
-		//labels.Append(otlp.TagKeyMetricAggregationTemporality, string(sum.GetAggregationTemporality().Number()))
+		// labels.Append(otlp.TagKeyMetricIsMonotonic, strconv.FormatBool(sum.GetIsMonotonic()))
+		// labels.Append(otlp.TagKeyMetricAggregationTemporality, string(sum.GetAggregationTemporality().Number()))
 
 		for _, exemplar := range dataPoint.GetExemplars() {
 			logs = append(logs, exemplarMetricToLogs(name, exemplar, labels.Clone()))
@@ -183,8 +183,8 @@ func histogram2Logs(name string, histogram *v1.Histogram, defaultLabels *helper.
 		labels := defaultLabels.Clone()
 
 		attrsToLabels(labels, dataPoint.GetAttributes())
-		//labels.Append(otlp.TagKeyMetricAggregationTemporality, string(histogram.GetAggregationTemporality().Number()))
-		//labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeHistogram.String())
+		// labels.Append(otlp.TagKeyMetricAggregationTemporality, string(histogram.GetAggregationTemporality().Number()))
+		// labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeHistogram.String())
 
 		if dataPoint.GetSum() != 0 {
 			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixSum, labels, int64(dataPoint.GetTimeUnixNano()), dataPoint.GetSum()))
