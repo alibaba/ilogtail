@@ -16,48 +16,42 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
-#include "common/Constants.h"
-#include "file_server/MultilineOptions.h"
+#include "common/TimeUtil.h"
+#include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
 #include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
-class ProcessorSplitNative : public Processor {
+class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
-
-    std::string mSourceKey = DEFAULT_CONTENT_KEY;
-    bool mAppendingLogPositionMeta = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
+    // Source field name.
+    std::string mSourceKey = DEFAULT_CONTENT_KEY;
+    bool mIgnoringStdout = false;
+    bool mIgnoringStderr = false;
+
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvent(PipelineEventGroup& logGroup,
-                      const StringView& logPath,
-                      const PipelineEventPtr& e,
-                      EventsContainer& newEvents);
-    void LogSplit(const char* buffer,
-                  int32_t size,
-                  int32_t& lineFeed,
-                  std::vector<StringView>& logIndex,
-                  const StringView& logPath);
+    std::string contianerdDelimiter = " "; // 分隔符
+    char contianerdFullTag = 'F'; // 容器全标签
+    char contianerdPartTag = 'P'; // 容器部分标签
 
-    int* mFeedLines = nullptr;
-    int* mSplitLines = nullptr;
+    std::string containerTimeKey = "_time_"; // 容器时间字段
+    std::string containerSourceKey = "_source_"; // 容器来源字段
+    std::string containerLogKey = "content"; // 容器日志字段
+
+    bool ProcessEvent(const StringView& containerType, PipelineEventPtr& e, PipelineEventGroup& logGroup);
+    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
+    bool ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e, PipelineEventGroup& logGroup);
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorMergeMultilineLogNativeUnittest;
-    friend class ProcessorMergeMultilineLogDisacardUnmatchUnittest;
-    friend class ProcessorMergeMultilineLogKeepUnmatchUnittest;
-    friend class ProcessorSplitNativeUnittest;
     friend class ProcessorParseContainerLogNativeUnittest;
 #endif
 };

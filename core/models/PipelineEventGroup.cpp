@@ -112,6 +112,7 @@ const std::string EVENT_GROUP_META_LOG_FILE_PATH_RESOLVED = "log.file.path_resol
 const std::string EVENT_GROUP_META_LOG_FILE_INODE = "log.file.inode";
 const std::string EVENT_GROUP_META_LOG_FILE_OFFSET = "log.file.offset";
 const std::string EVENT_GROUP_META_LOG_FILE_LENGTH = "log.file.length";
+const std::string EVENT_GROUP_META_CONTAINER_TYPE = "container.type";
 
 const std::string EVENT_GROUP_META_K8S_CLUSTER_ID = "k8s.cluster.id";
 const std::string EVENT_GROUP_META_K8S_NODE_NAME = "k8s.node.name";
@@ -144,6 +145,8 @@ const std::string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
             return EVENT_GROUP_META_LOG_FILE_OFFSET;
         case EventGroupMetaKey::LOG_READ_LENGTH:
             return EVENT_GROUP_META_LOG_FILE_LENGTH;
+        case EventGroupMetaKey::CONTAINER_TYPE:
+            return EVENT_GROUP_META_CONTAINER_TYPE;
         default:
             static std::string sEmpty = "unknown";
             return sEmpty;
