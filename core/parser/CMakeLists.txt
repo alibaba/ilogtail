@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 project(parser)
 
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} common)
-target_link_libraries(${PROJECT_NAME} logger)
-target_link_libraries(${PROJECT_NAME} log_pb)
-target_link_libraries(${PROJECT_NAME} monitor)
-target_link_libraries(${PROJECT_NAME} app_config)
+target_link_libraries(${PROJECT_NAME} models)

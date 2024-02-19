@@ -82,7 +82,7 @@ bool ProcessorSPL::Init(const Json::Value& config) {
     // spl pipeline语句的最大长度
     splOptions.queryMaxSize = INT32_FLAG(logtail_spl_query_max_size);
     // sampling for error
-    splOptions.errorSampling = false;
+    splOptions.errorSampling = true;
 
     // this function is void and has no return
     initSPL(&splOptions);
@@ -136,7 +136,6 @@ void ProcessorSPL::Process(std::vector<PipelineEventGroup>& logGroupList) {
     PipelineEventGroup logGroup = std::move(logGroupList[0]);
     std::vector<PipelineEventGroup>().swap(logGroupList);
 
-    size_t inSize = logGroup.GetEvents().size();
     std::vector<std::string> colNames{FIELD_CONTENT};
     // 根据spip->getInputSearches()，设置input数组
     std::vector<Input*> inputs;

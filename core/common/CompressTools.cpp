@@ -13,9 +13,15 @@
 // limitations under the License.
 
 #include "CompressTools.h"
-#include <zlib/zlib.h>
+
 #include <lz4/lz4.h>
+#ifdef __ANDROID__
+#include <zlib.h>
+#else
+#include <zlib/zlib.h>
+#endif
 #include <zstd/zstd.h>
+
 #include <cstring>
 
 #include "log_pb/sls_logs.pb.h"
@@ -81,10 +87,10 @@ bool RawCompress(std::string& data) {
     char* compressed = new char[length];
     if (compress((Bytef*)(compressed), (uLongf*)&length, (const Bytef*)(data.c_str()), data.length()) == Z_OK) {
         data.assign(compressed, length);
-        delete compressed;
+        delete[] compressed;
         return true;
     } else {
-        delete compressed;
+        delete[] compressed;
         return false;
     }
 }
@@ -97,10 +103,10 @@ bool Compress(std::string& data) {
     if (compress((Bytef*)(compressed + offset), (uLongf*)&length, (const Bytef*)(data.c_str()), data.length())
         == Z_OK) {
         data.assign(compressed, length + offset);
-        delete compressed;
+        delete[] compressed;
         return true;
     } else {
-        delete compressed;
+        delete[] compressed;
         return false;
     }
 }
@@ -129,7 +135,7 @@ char* Compress(const char* data, int64_t srcLen, int64_t& dstLen) {
         dstLen += offset;
         return compressed;
     } else {
-        delete compressed;
+        delete[] compressed;
         return NULL;
     }
 }
@@ -163,7 +169,7 @@ char* Uncompress(const char* src, int64_t srcLen, int64_t& dstLen) {
     if ((errorCode
          = uncompress((Bytef*)(dst), (uLongf*)&dstLen, (const Bytef*)(src + sizeof(dstLen)), srcLen - sizeof(dstLen)))
         != Z_OK) {
-        delete dst;
+        delete[] dst;
         return NULL;
     }
     return dst;

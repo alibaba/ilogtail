@@ -28,7 +28,6 @@
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineManager.h"
 #include "monitor/Monitor.h"
-#include "parser/LogParser.h"
 #include "sdk/Client.h"
 #include "sender/Sender.h"
 #include "log_pb/sls_logs.pb.h"
@@ -307,7 +306,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 continue;
             }
 
-            std::vector<sls_logs::LogGroup*> logGroupList;
+            std::vector<std::unique_ptr<sls_logs::LogGroup>> logGroupList;
             ProcessProfile profile;
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
@@ -322,9 +321,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             int32_t parseEndTime = (int32_t)time(NULL);
 
             int logSize = 0;
-            for (auto pLogGroup : logGroupList) {
-                sls_logs::LogGroup logGroup = *pLogGroup;
-                logSize +=logGroup.logs_size();
+            for (auto& pLogGroup : logGroupList) {
+                logSize += pLogGroup->logs_size();
             }
             // add lines count
             s_processLines += profile.splitLines;
@@ -376,7 +374,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 }
                 sls_logs::SlsCompressType compressType = sdk::Client::GetCompressType(compressStr);
 
-                for (auto pLogGroup : logGroupList) {
+                for (auto& pLogGroup : logGroupList) {
                     LogGroupContext context(flusherSLS->mRegion,
                                             projectName,
                                             flusherSLS->mLogstore,
@@ -390,7 +388,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                             logBuffer->exactlyOnceCheckpoint);
                     if (!Sender::Instance()->Send(projectName,
                                                 logFileReader->GetSourceId(),
-                                                *pLogGroup,
+                                                *(pLogGroup.get()),
                                                 logFileReader->GetLogGroupKey(),
                                                 flusherSLS,
                                                 flusherSLS->mBatch.mMergeType,
@@ -404,12 +402,11 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                             category,
                                                             pipeline->GetContext().GetRegion());
                         LOG_ERROR(sLogger,
-                                ("push file data into batch map fail, discard logs", (*pLogGroup).logs_size())(
+                                ("push file data into batch map fail, discard logs", pLogGroup->logs_size())(
                                     "project", projectName)("logstore", category)("filename", convertedPath));
                     
                     
                     }
-                    delete pLogGroup;
                 }
 
                 LogFileProfiler::GetInstance()->AddProfilingData(pipeline->Name(),
@@ -435,6 +432,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                         "parse_failures", profile.parseFailures)("parse_time_failures", profile.parseTimeFailures)(
                         "regex_match_failures", profile.regexMatchFailures)("history_failures", profile.historyFailures));
             }
+            logGroupList.clear();
         }
     }
     LOG_WARNING(sLogger, ("LogProcessThread", "Exit")("threadNo", threadNo));
@@ -443,7 +441,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 
 int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                               LogFileReaderPtr& logFileReader,
-                              std::vector<sls_logs::LogGroup*>& resultGroupList,
+                              std::vector<std::unique_ptr<sls_logs::LogGroup>>& resultGroupList,
                               ProcessProfile& profile) {
     auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(
         logFileReader->GetConfigName()); // pipeline should be set in the loggroup by input
@@ -484,11 +482,12 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
 
     for (auto& eventGroup : eventGroupList) {
         // fill protobuf
-        sls_logs::LogGroup* resultGroup = new sls_logs::LogGroup();
-        resultGroupList.emplace_back(resultGroup);
+        resultGroupList.emplace_back(new sls_logs::LogGroup());
+        auto& resultGroup = resultGroupList.back();
         FillLogGroupLogs(eventGroup, *resultGroup, pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond);
         FillLogGroupTags(eventGroup, logFileReader, *resultGroup);
         if (pipeline->IsFlushingThroughGoPipeline()) {
+            // LogGroup will be deleted outside
             LogtailPlugin::GetInstance()->ProcessLogGroup(
                 logFileReader->GetConfigName(), *resultGroup, logFileReader->GetSourceId());
             return 1;

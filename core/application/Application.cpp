@@ -16,7 +16,6 @@
 
 #ifndef LOGTAIL_NO_TC_MALLOC
 #include <gperftools/malloc_extension.h>
-#include <gperftools/tcmalloc.h>
 #endif
 
 #include <thread>
@@ -49,7 +48,7 @@
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #include "config/provider/LegacyConfigProvider.h"
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
@@ -213,7 +212,7 @@ void Application::Start() {
 
     PluginRegistry::GetInstance()->LoadPlugins();
 
-#if defined(__ENTERPRISE__) && defined(__linux__)
+#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
         ShennongManager::GetInstance()->Init();
     }
@@ -279,6 +278,9 @@ void Application::Start() {
             FileServer::GetInstance()->Resume();
         }
 
+        // destruct event handlers here so that it will not block file reading task
+        ConfigManager::GetInstance()->DeleteHandlers();
+
         this_thread::sleep_for(chrono::seconds(1));
     }
 }
@@ -296,7 +298,7 @@ bool Application::TryGetUUID() {
 }
 
 void Application::Exit() {
-#if defined(__ENTERPRISE__) && defined(__linux__)
+#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
         ShennongManager::GetInstance()->Stop();
     }
@@ -309,14 +311,14 @@ void Application::Exit() {
     LogtailMonitor::GetInstance()->Stop();
     LogtailAlarm::GetInstance()->Stop();
     // from now on, alarm should not be used.
-    
+
     if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
         LOG_WARNING(sLogger, ("flush SLS sender data", "failed"));
     } else {
         LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
     }
 
-    
+
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif
