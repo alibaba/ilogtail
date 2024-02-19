@@ -75,8 +75,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -160,7 +160,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
             std::stringstream expectJson;
             expectJson << R"({
                 "metadata": {
-                    "container.type": "containerd-text"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -181,8 +181,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -298,7 +298,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd-text"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -319,8 +319,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -459,7 +459,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd-text"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -480,8 +480,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -650,7 +650,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd-text"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -675,8 +675,8 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
         // case4: 第二个空格不存在
         // case5: 第一个空格不存在
         PipelineEventGroup eventGroup(sourceBuffer);
-        std::string containerType = "containerd-text";
-        eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+        std::string containerType = "containerd_text";
+        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
         std::string inJson = R"({
             "events" :
             [
@@ -786,7 +786,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd-text"
+                "container.type": "containerd_text"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -794,8 +794,8 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
     }
     {
         PipelineEventGroup eventGroup(sourceBuffer);
-        std::string containerType = "containerd-text";
-        eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+        std::string containerType = "containerd_text";
+        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
         std::string inJson = R"({
             "events" :
             [
@@ -893,7 +893,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd-text"
+                "container.type": "containerd_text"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -906,8 +906,8 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
-    std::string containerType = "containerd-text";
-    eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+    std::string containerType = "containerd_text";
+    eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
     inJson << R"({
         "events" :
         [
@@ -1009,7 +1009,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
             }
         ],
         "metadata":{
-            "container.type":"containerd-text"
+            "container.type":"containerd_text"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
@@ -1021,8 +1021,8 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
-    std::string containerType = "docker-json";
-    eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+    std::string containerType = "docker_json-file";
+    eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
     inJson << R"({
         "events": [
             {
@@ -1122,7 +1122,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
             }
         ],
         "metadata":{
-            "container.type":"docker-json"
+            "container.type":"docker_json-file"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();

@@ -79,7 +79,7 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    const StringView& containerType = logGroup.GetMetadata(EventGroupMetaKey::CONTAINER_TYPE);
+    const StringView& containerType = logGroup.GetMetadata(EventGroupMetaKey::FILE_ENCODING);
     EventsContainer& events = logGroup.MutableEvents();
 
     for (auto it = events.begin(); it != events.end();) {
@@ -99,9 +99,9 @@ bool ProcessorParseContainerLogNative::ProcessEvent(const StringView& containerT
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    if (containerType == "containerd-text") {
+    if (containerType == "containerd_text") {
         return ContainerdLogLineParser(sourceEvent, e);
-    } else if (containerType == "docker-json") {
+    } else if (containerType == "docker_json-file") {
         return DockerJsonLogLineParser(sourceEvent, e);
     }
     return true;
