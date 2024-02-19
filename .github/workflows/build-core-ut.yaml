@@ -73,7 +73,7 @@ jobs:
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
-          MAKE_JOBS: 8
+          MAKE_JOBS: 4
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
         run: make core
 
@@ -82,7 +82,7 @@ jobs:
 
   result:
     runs-on: arc-runner-set-xuanyang-ack
-    timeout-minutes: 120
+    timeout-minutes: 90
     needs: [CI]
     steps:
       - name: Build Result

@@ -72,6 +72,7 @@ jobs:
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
+          MAKE_JOBS: 16
         run: make core
 
       - name: Check compatibility
