@@ -99,7 +99,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(const StringView& containerT
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    if (containerType == "containerd") {
+    if (containerType == "containerd-text") {
         return ContainerdLogLineParser(sourceEvent, e);
     } else if (containerType == "docker-json") {
         return DockerJsonLogLineParser(sourceEvent, e);
