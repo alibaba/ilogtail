@@ -131,7 +131,6 @@ bool Pipeline::Init(Config&& config) {
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
             detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
             if (inputFile->mMultiline.mUnmatchedContentTreatment
                 == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
                 detail["UnmatchedContentTreatment"] = Json::Value("discard");
