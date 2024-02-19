@@ -249,18 +249,31 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
     StringView content(doc[dockerJsonLogContent.c_str()].GetString());
     StringView timeValue(doc[dockerJsonTime.c_str()].GetString());
 
-    StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
-    StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
-    StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
+    // StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
+    // StringBuffer containerTimeValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(timeValue);
 
-    StringBuffer containerTimeValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(timeValue);
-    StringBuffer containerSourceValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(sourceValue);
-    StringBuffer containerLogValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(content);
+    char* data = const_cast<char*>(buffer.data());
 
-    AddLog(StringView(containerTimeKeyBuffer.data, containerTimeKeyBuffer.size), StringView(containerTimeValueBuffer.data,containerTimeValueBuffer.size), sourceEvent);
-    AddLog(StringView(containerSourceKeyBuffer.data, containerSourceKeyBuffer.size), StringView(containerSourceValueBuffer.data,containerSourceValueBuffer.size), sourceEvent);
-    AddLog(StringView(containerLogKeyBuffer.data, containerLogKeyBuffer.size), StringView(containerLogValueBuffer.data,containerLogValueBuffer.size), sourceEvent);
+    // time
+    AddDockerJsonLog(&data, containerTimeKey, timeValue, sourceEvent);
+
+    // source
+    AddDockerJsonLog(&data, containerSourceKey, sourceValue, sourceEvent);
+
+    // content
+    AddDockerJsonLog(&data, containerLogKey, content, sourceEvent);
+
     return true;
+}
+
+void ProcessorParseContainerLogNative::AddDockerJsonLog(char ** data ,const StringView& key, const StringView& value, LogEvent& targetEvent) {
+    memmove(*data, key.data(), key.size());
+    StringView keyBuffer = StringView(*data, key.size());
+    *data += key.size();
+    memmove(*data, value.data(), value.size());
+    StringView valueBuffer = StringView(*data, value.size());
+    *data += value.size();
+    AddLog(keyBuffer, valueBuffer, targetEvent);
 }
 
 void ProcessorParseContainerLogNative::AddLog(const StringView& key,

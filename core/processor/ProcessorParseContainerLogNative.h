@@ -53,6 +53,7 @@ private:
     std::string dockerJsonStreamType = "stream"; // docker json 流字段
 
     bool ProcessEvent(const StringView& containerType, PipelineEventPtr& e);
+    void AddDockerJsonLog(char ** data ,const StringView& key, const StringView& value, LogEvent& targetEvent);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
     bool ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
     bool DockerJsonLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
