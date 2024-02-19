@@ -160,7 +160,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
             std::stringstream expectJson;
             expectJson << R"({
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd-text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -298,7 +298,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd-text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -459,7 +459,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd-text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -650,7 +650,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd-text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -786,7 +786,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd"
+                "container.type": "containerd-text"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -893,7 +893,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd"
+                "container.type": "containerd-text"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
