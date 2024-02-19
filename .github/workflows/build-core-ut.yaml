@@ -68,7 +68,7 @@ jobs:
 
       - name: Build Unit Test
         env:
-          # BUILD_LOGTAIL: OFF
+          BUILD_LOGTAIL: OFF
           BUILD_LOGTAIL_UT: ON
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
