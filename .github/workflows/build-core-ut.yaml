@@ -73,10 +73,9 @@ jobs:
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
+          MAKE_JOBS: 8
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
-        run: |
-          ulimit -v 16777216
-          make -j8 core
+        run: make core
 
       - name: Unit Test
         run: make unittest_core
