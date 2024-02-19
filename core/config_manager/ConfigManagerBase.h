@@ -143,6 +143,7 @@ protected:
     int32_t mLogtailSysConfUpdateTime;
     std::string mUUID;
     std::string mInstanceId;
+    std::string mAgentId;
     int32_t mProcessStartTime;
     std::atomic_int mConfigUpdateTotal{0};
     std::atomic_int mConfigUpdateItemTotal{0};
@@ -286,6 +287,7 @@ public:
     }
 
     std::string GetInstanceId() { return mInstanceId; }
+    std::string GetAgentId() { return mAgentId; }
 
     void InsertAliuidSet(const std::string& aliuid);
     void SetAliuidSet(const std::vector<std::string>& aliuidList);

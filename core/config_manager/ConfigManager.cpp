@@ -274,7 +274,7 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     configserver::proto::AgentAttributes attributes;
     std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
     heartBeatReq.set_request_id(requestID);
-    heartBeatReq.set_agent_id(GetInstanceId());
+    heartBeatReq.set_agent_id(GetAgentId());
     heartBeatReq.set_agent_type("iLogtail");
     attributes.set_version(ILOGTAIL_VERSION);
     attributes.set_ip(LogFileProfiler::mIpAddr);
@@ -345,7 +345,7 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigMana
     configserver::proto::FetchPipelineConfigRequest fetchConfigReq;
     string requestID = sdk::Base64Enconde(GetInstanceId().append("_").append(to_string(time(NULL))));
     fetchConfigReq.set_request_id(requestID);
-    fetchConfigReq.set_agent_id(GetInstanceId());
+    fetchConfigReq.set_agent_id(GetAgentId());
 
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> configInfos;
     for (int i = 0; i < requestConfigs.size(); i++) {
