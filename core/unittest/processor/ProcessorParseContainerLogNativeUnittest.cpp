@@ -1027,7 +1027,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
         "events": [
             {
                 "contents": {
-                    "content": "{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"Exception in thread  'main' java.lang.NullPoinntterException\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"    ...23 more\"}\n{\"time\":\"2024-01-05T23:31:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"Exception in thread  'main' java.lang.NullPoinntterException\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"     at com.example.myproject.Book.getTitle\"}\n{\"time\":\"2024-01-05T23:28:06.818486411+08:00\", \"stream\":\"stdout\", \"log\":\"    ...23 more\"}"
+                    "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793563414Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793566551Z\"}\n{\"log\":\"    ...23 more\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793569514Z\"}\n{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514807564Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514841003Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514853553Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514856538Z\"}\n{\"log\":\"    ...23 more\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514858843Z\"}"
                 },
                 "timestamp": 12345678901,
                 "timestampNanosecond": 0,
@@ -1100,8 +1100,8 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
                 {
                     "__file_offset__": "0",
                     "_source_": "stdout",
-                    "_time_": "2024-01-05T23:28:06.818486411+08:00",
-                    "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
+                    "_time_": "2024-02-19T03:49:37.793533014Z",
+                    "content" : "Exception in thread  \"main\" java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -1111,10 +1111,10 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
                 "contents" :
                 {
                     "__file_offset__": ")"
-               << strlen(R"({"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"Exception in thread  'main' java.lang.NullPoinntterException"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"     at com.example.myproject.Book.getTitle"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"     at com.example.myproject.Book.getTitle"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"     at com.example.myproject.Book.getTitle"}n{"time":"2024-01-05T23:28:06.818486411+08:00", "stream":"stdout", "log":"    ...23 more"}n)") << R"(",
+               << strlen(R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"}n{"log":"     at com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-02-19T03:49:37.793559367Z"}n{"log":"     at com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-02-19T03:49:37.793563414Z"}n{"log":"     at com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-02-19T03:49:37.793566551Z"}n{"log":"    ...23 more\n","stream":"stdout","time":"2024-02-19T03:49:37.793569514Z"}n)") << R"(",
                     "_source_": "stdout",
-                    "_time_": "2024-01-05T23:31:06.818486411+08:00",
-                    "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
+                    "_time_": "2024-02-19T03:55:17.514807564Z",
+                    "content" : "Exception in thread  \"main\" java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
