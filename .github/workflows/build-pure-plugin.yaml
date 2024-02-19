@@ -36,7 +36,7 @@ jobs:
       matrix:
         go-version: [ 1.19 ]
         # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idruns-on
-        runner: [ arc-runner-set-xuanyang-ack, windows-2019 ]
+        runner: [ arc-runner-set-xuanyang-ack ]
       fail-fast: true
     steps:
 
