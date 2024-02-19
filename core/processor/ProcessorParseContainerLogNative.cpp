@@ -261,6 +261,9 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
     AddDockerJsonLog(&data, containerSourceKey, sourceValue, sourceEvent);
 
     // content
+    if(content.size() > 0 && content[content.size()-1] == '\n') {
+        content = StringView(content.data(), content.size()-1);
+    }
     AddDockerJsonLog(&data, containerLogKey, content, sourceEvent);
 
     return true;
