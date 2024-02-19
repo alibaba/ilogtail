@@ -40,6 +40,8 @@ jobs:
         runner: [arc-runner-set-xuanyang-ack]
       fail-fast: true
     steps:
+      - name: prepare ubuntu environment
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev build-essential git curl bc
       # Clean up space to prevent action from running out of disk space.
       - name: Free disk space
         run: |
