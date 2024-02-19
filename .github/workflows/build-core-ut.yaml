@@ -74,14 +74,16 @@ jobs:
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
-        run: make -j$(($(nproc) - 1)) core
+        run: |
+          ulimit -v 16777216
+          make -j8 core
 
       - name: Unit Test
         run: make unittest_core
 
   result:
     runs-on: arc-runner-set-xuanyang-ack
-    timeout-minutes: 30
+    timeout-minutes: 120
     needs: [CI]
     steps:
       - name: Build Result
