@@ -1009,7 +1009,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
             }
         ],
         "metadata":{
-            "container.type":"containerd"
+            "container.type":"containerd-text"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
