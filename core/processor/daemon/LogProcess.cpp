@@ -503,6 +503,10 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
 }
 
 void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const {
+    std::string fileEncoding = logBuffer.logFileReader->GetFileEncoding();
+    if (!fileEncoding.empty()) {
+        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, fileEncoding);
+    }
     eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
     eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
     eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
