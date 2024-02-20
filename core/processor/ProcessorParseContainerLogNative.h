@@ -40,17 +40,9 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::string contianerdDelimiter = " "; // 分隔符
-    char contianerdFullTag = 'F'; // 容器全标签
-    char contianerdPartTag = 'P'; // 容器部分标签
-
     std::string containerTimeKey = "_time_"; // 容器时间字段
     std::string containerSourceKey = "_source_"; // 容器来源字段
     std::string containerLogKey = "content"; // 容器日志字段
-
-    std::string dockerJsonLogContent = "log"; // docker json 日志字段
-    std::string dockerJsonTime = "time"; // docker json 时间字段
-    std::string dockerJsonStreamType = "stream"; // docker json 流字段
 
     bool ProcessEvent(const StringView& containerType, PipelineEventPtr& e);
     void AddDockerJsonLog(char ** data ,const StringView& key, const StringView& value, LogEvent& targetEvent);

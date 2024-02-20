@@ -116,7 +116,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     // 寻找第一个分隔符位置 时间 _time_
     StringView timeValue;
     const char* pch1
-        = std::search(contentValue.begin(), contentValue.end(), contianerdDelimiter.begin(), contianerdDelimiter.end());
+        = std::search(contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
     if (pch1 >= contentValue.end() - 1) {
         // 没有找到分隔符
         return true;
@@ -126,7 +126,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     // 寻找第二个分隔符位置 容器标签 _source_
     StringView sourceValue;
     const char* pch2
-        = std::search(pch1 + 1, contentValue.end(), contianerdDelimiter.begin(), contianerdDelimiter.end());
+        = std::search(pch1 + 1, contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
     if (pch2 == contentValue.end()) {
         // 没有找到分隔符
         return true;
@@ -140,8 +140,8 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     if (sourceValue == "stderr" && mIgnoringStderr)
         return false;
 
-    // 如果既不以 contianerdPartTag 开头，也不以 contianerdFullTag 开头
-    if (*(pch2 + 1) != contianerdPartTag && *(pch2 + 1) != contianerdFullTag) {
+    // 如果既不以 CONTIANERD_PART_TAG 开头，也不以 CONTIANERD_FULL_TAG 开头
+    if (*(pch2 + 1) != CONTIANERD_PART_TAG && *(pch2 + 1) != CONTIANERD_FULL_TAG) {
         StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
         StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
         StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
@@ -155,12 +155,12 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
 
     // 寻找第三个分隔符位置
     const char* pch3
-        = std::search(pch2 + 1, contentValue.end(), contianerdDelimiter.begin(), contianerdDelimiter.end());
+        = std::search(pch2 + 1, contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
     if (pch3 == contentValue.end() || pch3 != pch2 + 2) {
         return true;
     }
     // F
-    if (*(pch2 + 1) == contianerdFullTag) {
+    if (*(pch2 + 1) == CONTIANERD_FULL_TAG) {
         StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
         StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
         StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
@@ -172,7 +172,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
         return true;
     }
     // P
-    if (*(pch2 + 1) == contianerdPartTag) {
+    if (*(pch2 + 1) == CONTIANERD_PART_TAG) {
         StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
         StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
         StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
@@ -226,8 +226,8 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
     if (!parseSuccess) {
         return true;
     }
-    if (!doc.HasMember(dockerJsonLogContent.c_str()) || !doc.HasMember(dockerJsonTime.c_str())
-        || !doc.HasMember(dockerJsonStreamType.c_str())) {
+    if (!doc.HasMember(DOCKER_JSON_LOG.c_str()) || !doc.HasMember(DOCKER_JSON_TIME.c_str())
+        || !doc.HasMember(DOCKER_JSON_STREAM_TYPE.c_str())) {
         if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             LOG_WARNING(sLogger,
                         ("invalid docker stdout json log, log",
@@ -240,14 +240,14 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
         }
         return true;
     }
-    StringView sourceValue(doc[dockerJsonStreamType.c_str()].GetString());
+    StringView sourceValue(doc[DOCKER_JSON_STREAM_TYPE.c_str()].GetString());
     if (sourceValue == "stdout" && mIgnoringStdout)
         return false;
     if (sourceValue == "stderr" && mIgnoringStderr)
         return false;
 
-    StringView content(doc[dockerJsonLogContent.c_str()].GetString());
-    StringView timeValue(doc[dockerJsonTime.c_str()].GetString());
+    StringView content(doc[DOCKER_JSON_LOG.c_str()].GetString());
+    StringView timeValue(doc[DOCKER_JSON_TIME.c_str()].GetString());
 
     // StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
     // StringBuffer containerTimeValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(timeValue);
