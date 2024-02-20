@@ -68,15 +68,14 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     } else if (mergeBehavior == "part_log") {
         mMergeBehavior = MergeBehavior::PART_LOG;
     } else {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              "MergeMethod must be 'regex' or 'part_log_flag'",
-                              mergeBehavior,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           "MergeMethod must be 'regex' or 'part_log_flag'",
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
