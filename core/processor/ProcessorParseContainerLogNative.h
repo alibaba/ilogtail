@@ -35,6 +35,7 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
+    std::string mContainerType;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;

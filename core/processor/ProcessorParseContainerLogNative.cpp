@@ -71,6 +71,8 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
+    GetOptionalStringParam(config, "ContainerType", mContainerType, errorMsg);
+
     return true;
 }
 
@@ -99,6 +101,13 @@ bool ProcessorParseContainerLogNative::ProcessEvent(const StringView& containerT
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
+
+    if (mContainerType == "containerd_text") {
+        return ContainerdLogLineParser(sourceEvent, e);
+    } else if (mContainerType == "docker_json-file") {
+        return DockerJsonLogLineParser(sourceEvent, e);
+    }
+
     if (containerType == "containerd_text") {
         return ContainerdLogLineParser(sourceEvent, e);
     } else if (containerType == "docker_json-file") {

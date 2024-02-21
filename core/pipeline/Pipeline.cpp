@@ -26,6 +26,7 @@
 #include "plugin/PluginRegistry.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorParseContainerLogNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorTagNative.h"
 #include "processor/daemon/LogProcess.h"
@@ -123,6 +124,16 @@ bool Pipeline::Init(Config&& config) {
                 return false;
             }
             mProcessorLine.emplace_back(std::move(processor));
+
+            // ProcessorParseContainerLogNative
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseContainerLogNative::sName,
+                                                                       to_string(++pluginIndex));
+            if (!processor->Init(detail, mContext)) {
+                // should not happen
+                return false;
+            }
+            mProcessorLine.emplace_back(std::move(processor));
+
             // ProcessorMergeMultilineLogNative
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
                                                                        to_string(++pluginIndex));

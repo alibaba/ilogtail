@@ -35,6 +35,7 @@
 #include "file_server/MultilineOptions.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
+#include "rapidjson/allocators.h"
 #include "reader/FileReaderOptions.h"
 #include "reader/SourceBuffer.h"
 
@@ -79,6 +80,12 @@ enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
  * "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\n" -> "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\0"
  * "SingleLineLog_1\nSingleLineLog_2\nxxx" -> "SingleLineLog_1\nSingleLineLog_2\0"
  */
+struct LineInfo {
+    StringView data;
+    int lineBegin;
+    int32_t lineFeedCount;
+};
+
 class LogFileReader {
 public:
     enum FileCompareResult {
@@ -356,7 +363,14 @@ public:
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
+    const std::string GetFileEncoding() const;
+
 protected:
+    static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
+    static std::shared_ptr<SourceBuffer> mSourceBuffer;
+    static StringBuffer mStringBuffer;
+    static StringBuffer GetStringBuffer();
+    LineInfo GetLastLineData(char* buffer, int& begPs, int& endPs);
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
     void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
     void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
