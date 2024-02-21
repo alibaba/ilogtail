@@ -48,29 +48,29 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    std::string mergeBehavior = "regex";
-    if (!GetOptionalStringParam(config, "MergeBehavior", mergeBehavior, errorMsg)) {
+    std::string mergeType = "regex";
+    if (!GetOptionalStringParam(config, "MergeType", mergeType, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
-                              mergeBehavior,
+                              mergeType,
                               sName,
                               mContext->GetConfigName(),
                               mContext->GetProjectName(),
                               mContext->GetLogstoreName(),
                               mContext->GetRegion());
-    }
-    if (mergeBehavior == "regex") {
-        mMergeBehavior = MergeBehavior::REGEX;
+    } else if (mergeType == "flag") {
+        mMergeType = MergeType::BY_FLAG;
+    } else if (mergeType == "JSON") {
+        mMergeType = MergeType::BY_JSON;
+    } else if (mergeType == "regex") {
         if (!mMultiline.Init(config, *mContext, sName)) {
             return false;
         }
-    } else if (mergeBehavior == "part_log") {
-        mMergeBehavior = MergeBehavior::PART_LOG;
     } else {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
-                           "MergeMethod must be 'regex' or 'part_log_flag'",
+                           "string param MergeType is not valid",
                            sName,
                            mContext->GetConfigName(),
                            mContext->GetProjectName(),
@@ -90,12 +90,12 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
     }
     EventsContainer newEvents;
     const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
-    if (mMergeBehavior == MergeBehavior::REGEX) {
+    if (mMergeType == MergeType::BY_REGEX) {
         if (!mMultiline.IsMultiline()) {
             return;
         }
         ProcessEventsWithRegex(logGroup, logPath, newEvents);
-    } else if (mMergeBehavior == MergeBehavior::PART_LOG) {
+    } else if (mMergeType == MergeType::BY_FLAG) {
         ProcessEventsWithPartLog(logGroup, logPath, newEvents);
     }
     *mSplitLines = newEvents.size();

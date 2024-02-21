@@ -30,8 +30,8 @@ class ProcessorMergeMultilineLogNative : public Processor {
 public:
     static const std::string sName;
 
-    enum class MergeBehavior { REGEX, PART_LOG };
-    MergeBehavior mMergeBehavior = MergeBehavior::REGEX;
+    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
+    MergeType mMergeType = MergeType::BY_REGEX;
 
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MultilineOptions mMultiline;

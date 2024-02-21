@@ -953,7 +953,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
     {
         // make config
         Json::Value config;
-        config["MergeBehavior"] = "part_log";
+        config["MergeType"] = "flag";
         config["UnmatchedContentTreatment"] = "single_line";
         // make ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processor;
@@ -1066,7 +1066,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     {
         // make config
         Json::Value config;
-        config["MergeBehavior"] = "part_log";
+        config["MergeType"] = "flag";
         config["UnmatchedContentTreatment"] = "single_line";
         // make ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processor;
