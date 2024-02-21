@@ -22,7 +22,7 @@
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -572,11 +572,11 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["MergeBehavior"] = "regex";
         std::string pluginId = "testID";
 
-        // run function ProcessorSplitNative
-        ProcessorSplitNative processorSplitNative;
-        processorSplitNative.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processorSplitNative.Init(config));
-        processorSplitNative.Process(eventGroup);
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
 
         // run function ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;

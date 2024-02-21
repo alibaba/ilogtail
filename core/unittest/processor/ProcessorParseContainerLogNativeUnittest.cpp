@@ -20,7 +20,7 @@
 #include "models/LogEvent.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseContainerLogNative.h"
-#include "processor/ProcessorSplitNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -924,13 +924,13 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
     })";
     eventGroup.FromJsonString(inJson.str());
 
-    // ProcessorSplitNative
+    // ProcessorSplitLogStringNative
     {
         // make config
         Json::Value config;
         config["AppendingLogPositionMeta"] = true;
-        // make ProcessorSplitNative
-        ProcessorSplitNative processor;
+        // make ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         // run test function
@@ -1037,13 +1037,13 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     })";
     eventGroup.FromJsonString(inJson.str());
 
-    // ProcessorSplitNative
+    // ProcessorSplitLogStringNative
     {
         // make config
         Json::Value config;
         config["AppendingLogPositionMeta"] = true;
-        // make ProcessorSplitNative
-        ProcessorSplitNative processor;
+        // make ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         // run test function
