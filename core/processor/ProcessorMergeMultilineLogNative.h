@@ -44,22 +44,24 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEventsWithPartLog(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
-    void ProcessEventsWithRegex(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
+    void MergeLogsByRegex(PipelineEventGroup& logGroup);
+    void MergeLogsByFlag(PipelineEventGroup& logGroup);
+    void MergeLogsByJSON(PipelineEventGroup& logGroup);
+
     bool LogSplit(PipelineEventGroup& logGroup,
-                  std::vector<PipelineEventPtr>& logEventIndex,
-                  std::vector<PipelineEventPtr>& discardLogEventIndex,
-                  const StringView& logPath);
+                  std::vector<LogEvent*>& logEvents,
+                  std::vector<size_t>& logEventIndex,
+                  std::vector<size_t>& discardLogEventIndex);
     void HandleUnmatchLogs(const logtail::EventsContainer& events,
-                           long unsigned int& multiBeginIndex,
-                           long unsigned int endIndex,
-                           std::vector<PipelineEventPtr>& logEventIndex,
-                           std::vector<PipelineEventPtr>& discardLogEventIndex,
+                           size_t& multiBeginIndex,
+                           size_t endIndex,
+                           std::vector<size_t>& logEventIndex,
+                           std::vector<size_t>& discardLogEventIndex,
                            bool mustHandleLogs = false);
-    void MergeEvents(logtail::EventsContainer& events,
-                     long unsigned int beginIndex,
-                     long unsigned int endIndex,
-                     std::vector<PipelineEventPtr>& logEventIndex,
+    void MergeEvents(std::vector<LogEvent*> &logEvents,
+                     size_t beginIndex,
+                     size_t endIndex,
+                     std::vector<size_t>& logEventIndex,
                      bool update = false,
                      bool insertLineBreak = true);
 
