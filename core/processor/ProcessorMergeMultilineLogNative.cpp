@@ -48,12 +48,12 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    std::string mergeType;
+    std::string mergeType = "regex";
     if (!GetOptionalStringParam(config, "MergeType", mergeType, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
-                              "regex",
+                              mergeType,
                               sName,
                               mContext->GetConfigName(),
                               mContext->GetProjectName(),

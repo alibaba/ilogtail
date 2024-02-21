@@ -1271,6 +1271,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
+    config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1408,6 +1409,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
+    config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1961,6 +1963,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
+    config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -2079,6 +2082,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
+    config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -2252,6 +2256,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
     config["AppendingLogPositionMeta"] = false;
+    config["MergeType"] = "regex";
     // make processor
 
     // ProcessorSplitLogStringNative
