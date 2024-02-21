@@ -17,7 +17,7 @@
 #include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -155,11 +155,11 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         config["UnmatchedContentTreatment"] = "split";
         config["AppendingLogPositionMeta"] = false;
         config["MergeBehavior"] = "regex";
-        // run function ProcessorSplitNative
-        ProcessorSplitNative processorSplitNative;
-        processorSplitNative.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processorSplitNative.Init(config));
-        processorSplitNative.Process(eventGroup);
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
 
         // run function ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;

@@ -27,7 +27,6 @@
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitNative.h"
 #include "processor/ProcessorTagNative.h"
 #include "processor/daemon/LogProcess.h"
 
@@ -114,10 +113,11 @@ bool Pipeline::Init(Config&& config) {
             detail["SplitChar"] = Json::Value('\0');
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         } else if (inputFile->mMultiline.IsMultiline()) {
-            // ProcessorSplitNative
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitNative::sName,
+            // ProcessorSplitLogStringNative
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
                                                                        to_string(++pluginIndex));
+            detail["SplitChar"] = Json::Value('\n');
+            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
             if (!processor->Init(detail, mContext)) {
                 // should not happen
                 return false;
