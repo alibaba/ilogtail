@@ -235,7 +235,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -364,7 +364,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = true;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -522,7 +522,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -655,7 +655,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -786,7 +786,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -914,7 +914,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -1047,7 +1047,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -1271,7 +1271,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = true;
             config["StartPattern"] = ".*";
-            config["MergeBehavior"] = "regex";
+            config["MergeType"] = "regex";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
