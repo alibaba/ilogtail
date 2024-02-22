@@ -31,7 +31,7 @@
 namespace logtail {
 
 const std::string ProcessorMergeMultilineLogNative::sName = "processor_merge_multiline_log_native";
-const std::string ProcessorMergeMultilineLogNative::PartLogFlag = "PartLogFlag";
+const std::string ProcessorMergeMultilineLogNative::PartLogFlag = "P";
 
 bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     std::string errorMsg;
