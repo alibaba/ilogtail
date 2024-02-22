@@ -31,6 +31,7 @@
 namespace logtail {
 
 const std::string ProcessorMergeMultilineLogNative::sName = "processor_merge_multiline_log_native";
+const std::string ProcessorMergeMultilineLogNative::PartLogFlag = "PartLogFlag";
 
 bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -115,7 +116,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
             continue;
         }
 
-        if (!sourceEvent->HasContent(PARTLOGFLAG)) {
+        if (!sourceEvent->HasContent(PartLogFlag)) {
             if (lastLogIsPart) {
                 MergeEvents(logEvents, beginPartIndex, curIndex, logEventIndex, false, false);
                 lastLogIsPart = false;
@@ -126,7 +127,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
             lastLogIsPart = true;
             beginPartIndex = curIndex;
             auto& contents = sourceEvent->MutableContents();
-            contents.erase(PARTLOGFLAG);
+            contents.erase(PartLogFlag);
         }
     }
     if (lastLogIsPart) {
