@@ -89,9 +89,6 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     if (mMergeType == MergeType::BY_REGEX) {
-        if (!mMultiline.IsMultiline()) {
-            return;
-        }
         MergeLogsByRegex(logGroup);
     } else if (mMergeType == MergeType::BY_FLAG) {
         MergeLogsByFlag(logGroup);
