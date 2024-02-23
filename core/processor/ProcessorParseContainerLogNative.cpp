@@ -226,8 +226,14 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
     if (!parseSuccess) {
         return true;
     }
-    if (!doc.HasMember(DOCKER_JSON_LOG.c_str()) || !doc.HasMember(DOCKER_JSON_TIME.c_str())
-        || !doc.HasMember(DOCKER_JSON_STREAM_TYPE.c_str())) {
+
+    auto findMemberAndGetString = [&](const std::string& memberName) {
+        auto it = doc.FindMember(memberName.c_str());
+        return it != doc.MemberEnd() ? StringView(it->value.GetString()) : StringView();
+    };
+
+    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
+    if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
         if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             LOG_WARNING(sLogger,
                         ("invalid docker stdout json log, log",
@@ -240,14 +246,37 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
         }
         return true;
     }
-    StringView sourceValue(doc[DOCKER_JSON_STREAM_TYPE.c_str()].GetString());
-    if (sourceValue == "stdout" && mIgnoringStdout)
+    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
         return false;
-    if (sourceValue == "stderr" && mIgnoringStderr)
-        return false;
-
-    StringView content(doc[DOCKER_JSON_LOG.c_str()].GetString());
-    StringView timeValue(doc[DOCKER_JSON_TIME.c_str()].GetString());
+    }
+    StringView timeValue = findMemberAndGetString(DOCKER_JSON_TIME);
+    if (sourceValue.empty()) {
+        if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+            LOG_WARNING(sLogger,
+                        ("invalid docker stdout json log, log",
+                         buffer)("project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName()));
+            LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
+                                                   std::string("invalid docker stdout json log:") + buffer.to_string(),
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
+        }
+        return true;
+    }
+    StringView content = findMemberAndGetString(DOCKER_JSON_LOG);
+    if (content.empty()) {
+        if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+            LOG_WARNING(sLogger,
+                        ("invalid docker stdout json log, log",
+                         buffer)("project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName()));
+            LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
+                                                   std::string("invalid docker stdout json log:") + buffer.to_string(),
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
+        }
+        return true;
+    }
 
     // StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
     // StringBuffer containerTimeValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(timeValue);
