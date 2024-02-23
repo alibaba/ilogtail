@@ -54,7 +54,7 @@ void PipelineEventGroupOutput::addRow(const std::vector<SplStringPiece>& row,
                                       const uint32_t timeNsPart,
                                       const ErrorKV& errorKV,
                                       std::string& error) {
-    std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(mLogGroup->GetSourceBuffer());
+    std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(mLogGroup);
 
     size_t tagStrHash = 0;
     for (const auto& idxTag : mTagsIdxs) {

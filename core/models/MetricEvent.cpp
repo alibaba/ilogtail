@@ -18,19 +18,22 @@
 
 namespace logtail {
 
-std::unique_ptr<MetricEvent> MetricEvent::CreateEvent(std::shared_ptr<SourceBuffer>& sb) {
-    auto p = std::unique_ptr<MetricEvent>(new MetricEvent);
-    p->SetSourceBuffer(sb);
-    return p;
+std::unique_ptr<MetricEvent> MetricEvent::CreateEvent(PipelineEventGroup* ptr) {
+    return std::unique_ptr<MetricEvent>(new MetricEvent(Type::METRIC, ptr));
 }
 
-MetricEvent::MetricEvent() {
-    mType = METRIC_EVENT_TYPE;
+MetricEvent::MetricEvent(Type type, PipelineEventGroup* ptr) : PipelineEvent(type, ptr) {
 }
 
+uint64_t MetricEvent::EventsSizeBytes() {
+    // TODO
+    return 0;
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
 Json::Value MetricEvent::ToJson() const {
     Json::Value root;
-    root["type"] = GetType();
+    root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
     root["timestampNanosecond"] = GetTimestampNanosecond();
     return root;
@@ -44,10 +47,6 @@ bool MetricEvent::FromJson(const Json::Value& root) {
     }
     return true;
 }
-
-uint64_t MetricEvent::EventsSizeBytes() {
-    // TODO
-    return 0;
-}
+#endif
 
 } // namespace logtail

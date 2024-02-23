@@ -15,20 +15,24 @@
  */
 
 #pragma once
+
 #include "models/PipelineEvent.h"
 
 namespace logtail {
 
 class SpanEvent : public PipelineEvent {
 public:
-    static std::unique_ptr<SpanEvent> CreateEvent(std::shared_ptr<SourceBuffer>& sb);
+    static std::unique_ptr<SpanEvent> CreateEvent(PipelineEventGroup* ptr);
 
-    // for debug and test
+    uint64_t EventsSizeBytes() override;
+
+#ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson() const override;
     bool FromJson(const Json::Value&) override;
-    uint64_t EventsSizeBytes() override;
+#endif
+    
 private:
-    SpanEvent();
+    SpanEvent(Type type, PipelineEventGroup* ptr);
 };
 
 } // namespace logtail

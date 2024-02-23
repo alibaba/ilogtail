@@ -460,7 +460,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         // TODO: metadata should be set in reader
         FillEventGroupMetadata(*logBuffer, eventGroup);
 
-        std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
+        std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(&eventGroup);
         time_t logtime = time(NULL);
         if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
             logtime += GetTimeDelta();

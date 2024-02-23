@@ -79,8 +79,8 @@ void ProcessorSplitLogStringNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     EventsContainer newEvents;
-    for (const PipelineEventPtr& e : logGroup.GetEvents()) {
-        ProcessEvent(logGroup, e, newEvents);
+    for (PipelineEventPtr& e : logGroup.MutableEvents()) {
+        ProcessEvent(logGroup, std::move(e), newEvents);
     }
     *mSplitLines = newEvents.size();
     logGroup.SwapEvents(newEvents);
@@ -93,15 +93,15 @@ bool ProcessorSplitLogStringNative::IsSupportedEvent(const PipelineEventPtr& e) 
 }
 
 void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
-                                                 const PipelineEventPtr& e,
+                                                 PipelineEventPtr&& e,
                                                  EventsContainer& newEvents) {
     if (!IsSupportedEvent(e)) {
-        newEvents.emplace_back(e);
+        newEvents.emplace_back(std::move(e));
         return;
     }
     const LogEvent& sourceEvent = e.Cast<LogEvent>();
     if (!sourceEvent.HasContent(mSourceKey)) {
-        newEvents.emplace_back(e);
+        newEvents.emplace_back(std::move(e));
         return;
     }
     StringView sourceVal = sourceEvent.GetContent(mSourceKey);
@@ -116,7 +116,7 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
     }
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
     for (auto& content : logIndex) {
-        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
+        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(&logGroup);
         targetEvent->SetTimestamp(
             sourceEvent.GetTimestamp(),
             sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?

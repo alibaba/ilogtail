@@ -22,8 +22,8 @@
 
 namespace logtail {
 
-void PipelineEventGroup::AddEvent(const PipelineEventPtr& event) {
-    mEvents.emplace_back(event);
+void PipelineEventGroup::AddEvent(PipelineEventPtr&& event) {
+    mEvents.emplace_back(std::move(event));
 }
 
 void PipelineEventGroup::AddEvent(std::unique_ptr<PipelineEvent>&& event) {
@@ -211,15 +211,15 @@ bool PipelineEventGroup::FromJson(const Json::Value& root) {
         Json::Value events = root["events"];
         for (const auto& event : events) {
             PipelineEventPtr eventPtr;
-            if (event["type"].asInt() == LOG_EVENT_TYPE) {
-                eventPtr = LogEvent::CreateEvent(GetSourceBuffer());
-            } else if (event["type"].asInt() == METRIC_EVENT_TYPE) {
-                eventPtr = MetricEvent::CreateEvent(GetSourceBuffer());
+            if (event["type"].asInt() == static_cast<int>(PipelineEvent::Type::LOG)) {
+                eventPtr = LogEvent::CreateEvent(this);
+            } else if (event["type"].asInt() == static_cast<int>(PipelineEvent::Type::METRIC)) {
+                eventPtr = MetricEvent::CreateEvent(this);
             } else {
-                eventPtr = SpanEvent::CreateEvent(GetSourceBuffer());
+                eventPtr = SpanEvent::CreateEvent(this);
             }
             eventPtr->FromJson(event);
-            AddEvent(eventPtr);
+            AddEvent(std::move(eventPtr));
         }
     }
     return true;
