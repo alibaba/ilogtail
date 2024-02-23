@@ -23,7 +23,6 @@ std::unique_ptr<LogEvent> LogEvent::CreateEvent(PipelineEventGroup* ptr) {
 }
 
 LogEvent::LogEvent(Type type, PipelineEventGroup* ptr) : PipelineEvent(type, ptr) {
-    mType = Type::LOG;
 }
 
 void LogEvent::SetContent(const StringView& key, const StringView& val) {
