@@ -161,7 +161,7 @@ PluginRegistry::PluginRegistry() {
                   "aggregator_context",
                   "aggregator_logstore_router",
                   "aggregator_metadata_group",
-                  //   "aggregator_opentelemetry",
+                  "aggregator_opentelemetry",
                   "aggregator_shardhash",
                   "aggregator_skywalking",
 #ifdef __ENTERPRISE__
