@@ -129,7 +129,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
             continue;
         }
 
-        // case: p(curIndex)
+        // case: F(lastIndex) p(curIndex)
         if (!isPartialLog) {
             isPartialLog = true;
             beginPartIndex = curIndex;
