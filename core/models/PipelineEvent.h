@@ -33,7 +33,7 @@ class PipelineEventGroup;
 
 class PipelineEvent {
 public:
-    enum class Type { LOG, METRIC, SPAN };
+    enum class Type { NONE, LOG, METRIC, SPAN };
 
     PipelineEvent(Type type, PipelineEventGroup* ptr);
     virtual ~PipelineEvent() = default;

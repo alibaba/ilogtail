@@ -41,9 +41,8 @@ protected:
 
 private:
     void ProcessEvent(PipelineEventGroup& logGroup, PipelineEventPtr&& e, EventsContainer& newEvents);
-    void LogSplit(const char* buffer, int32_t size, int32_t& lineFeed, std::vector<StringView>& logIndex);
+    StringView GetNextLine(StringView log, size_t begin);
 
-    int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN

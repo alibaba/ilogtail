@@ -68,7 +68,6 @@ bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 
     return true;
@@ -99,30 +98,30 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
         newEvents.emplace_back(std::move(e));
         return;
     }
-    const LogEvent& sourceEvent = e.Cast<LogEvent>();
+
+    LogEvent& sourceEvent = e.Cast<LogEvent>();
     if (!sourceEvent.HasContent(mSourceKey)) {
         newEvents.emplace_back(std::move(e));
         return;
     }
-    StringView sourceVal = sourceEvent.GetContent(mSourceKey);
-    std::vector<StringView> logIndex; // all splitted logs
-    int feedLines = 0;
-    LogSplit(sourceVal.data(), sourceVal.size(), feedLines, logIndex);
-    *mFeedLines += feedLines;
 
-    long sourceoffset = 0L;
+    StringView sourceVal = sourceEvent.GetContent(mSourceKey);
+    StringBuffer sourceKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
+    long sourceOffset = 0L;
     if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
-        sourceoffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
+        sourceOffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
     }
-    StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
-    for (auto& content : logIndex) {
+
+    size_t begin = 0;
+    while (begin < sourceVal.size()) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(&logGroup);
+        StringView content = GetNextLine(sourceVal, begin);
+        targetEvent->SetContentNoCopy(StringView(sourceKey.data, sourceKey.size), content);
         targetEvent->SetTimestamp(
             sourceEvent.GetTimestamp(),
             sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
-        targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
         if (mAppendingLogPositionMeta) {
-            auto const offset = sourceoffset + (content.data() - sourceVal.data());
+            auto const offset = sourceOffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
             targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
@@ -134,26 +133,21 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
             }
         }
         newEvents.emplace_back(std::move(targetEvent));
+        begin += content.size() + 1;
     }
 }
 
-void ProcessorSplitLogStringNative::LogSplit(const char* buffer,
-                                             int32_t size,
-                                             int32_t& lineFeed,
-                                             std::vector<StringView>& logIndex) {
-    int line_beg = 0;
-    for (int i = 0; i < size; ++i) {
-        if (buffer[i] == mSplitChar || buffer[i] == '\n' || i == size - 1) {
-            ++lineFeed;
-        }
-        if (buffer[i] == mSplitChar) {
-            logIndex.emplace_back(buffer + line_beg, i - line_beg);
-            line_beg = i + 1;
+StringView ProcessorSplitLogStringNative::GetNextLine(StringView log, size_t begin) {
+    if (begin >= log.size()) {
+        return StringView();
+    }
+
+    for (size_t end = begin; end < log.size(); ++end) {
+        if (log[end] == mSplitChar) {
+            return StringView(log.data() + begin, end - begin);
         }
     }
-    if (line_beg < size) {
-        logIndex.emplace_back(buffer + line_beg, size - line_beg);
-    }
+    return StringView(log.data() + begin, log.size() - begin);
 }
 
 } // namespace logtail
