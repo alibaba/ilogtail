@@ -22,6 +22,29 @@
 
 namespace logtail {
 
+PipelineEventGroup::PipelineEventGroup(PipelineEventGroup&& rhs) noexcept
+    : mMetadata(std::move(rhs.mMetadata)),
+      mTags(std::move(rhs.mTags)),
+      mEvents(std::move(rhs.mEvents)),
+      mSourceBuffer(std::move(rhs.mSourceBuffer)) {
+    for (auto& item : mEvents) {
+        item->ResetPipelineEventGroup(this);
+    }
+}
+
+PipelineEventGroup& PipelineEventGroup::operator=(PipelineEventGroup&& rhs) noexcept {
+    if (this != &rhs) {
+        mMetadata = std::move(rhs.mMetadata);
+        mTags = std::move(rhs.mTags);
+        mEvents = std::move(rhs.mEvents);
+        mSourceBuffer = std::move(rhs.mSourceBuffer);
+        for (auto& item : mEvents) {
+            item->ResetPipelineEventGroup(this);
+        }
+    }
+    return *this;
+}
+
 void PipelineEventGroup::AddEvent(PipelineEventPtr&& event) {
     mEvents.emplace_back(std::move(event));
 }

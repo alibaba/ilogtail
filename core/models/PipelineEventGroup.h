@@ -67,8 +67,8 @@ public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
-    PipelineEventGroup(PipelineEventGroup&&) noexcept = default;
-    PipelineEventGroup& operator=(PipelineEventGroup&&) noexcept = default;
+    PipelineEventGroup(PipelineEventGroup&&) noexcept;
+    PipelineEventGroup& operator=(PipelineEventGroup&&) noexcept;
 
 
     const EventsContainer& GetEvents() const { return mEvents; }

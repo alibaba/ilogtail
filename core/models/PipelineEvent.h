@@ -46,6 +46,7 @@ public:
         timestamp = t;
         timestampNanosecond = ns; // Only nanosecond part
     }
+    void ResetPipelineEventGroup(PipelineEventGroup* ptr) { mPipelineEventGroupPtr = ptr; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
     virtual uint64_t EventsSizeBytes() = 0;
