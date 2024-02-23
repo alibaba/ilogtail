@@ -79,7 +79,7 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    const StringView& containerType = logGroup.GetMetadata(EventGroupMetaKey::FILE_ENCODING);
+    const StringView containerType = logGroup.GetMetadata(EventGroupMetaKey::FILE_ENCODING);
     EventsContainer& events = logGroup.MutableEvents();
 
     for (auto it = events.begin(); it != events.end();) {
@@ -91,7 +91,7 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool ProcessorParseContainerLogNative::ProcessEvent(const StringView& containerType, PipelineEventPtr& e) {
+bool ProcessorParseContainerLogNative::ProcessEvent(const StringView containerType, PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -117,7 +117,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     StringView timeValue;
     const char* pch1
         = std::search(contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
-    if (pch1 >= contentValue.end() - 1) {
+    if (pch1 >= contentValue.end()) {
         // 没有找到分隔符
         return true;
     }
@@ -269,7 +269,7 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
     return true;
 }
 
-void ProcessorParseContainerLogNative::AddDockerJsonLog(char ** data ,const StringView& key, const StringView& value, LogEvent& targetEvent) {
+void ProcessorParseContainerLogNative::AddDockerJsonLog(char ** data ,const StringView key, const StringView value, LogEvent& targetEvent) {
     memmove(*data, key.data(), key.size());
     StringView keyBuffer = StringView(*data, key.size());
     *data += key.size();
@@ -279,8 +279,8 @@ void ProcessorParseContainerLogNative::AddDockerJsonLog(char ** data ,const Stri
     AddLog(keyBuffer, valueBuffer, targetEvent);
 }
 
-void ProcessorParseContainerLogNative::AddLog(const StringView& key,
-                                              const StringView& value,
+void ProcessorParseContainerLogNative::AddLog(const StringView key,
+                                              const StringView value,
                                               LogEvent& targetEvent,
                                               bool overwritten) {
     targetEvent.SetContentNoCopy(key, value);
