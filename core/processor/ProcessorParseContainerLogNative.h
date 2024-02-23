@@ -23,11 +23,18 @@
 
 namespace logtail {
 
+struct ContainerStdoutKeyStringBuffer {
+    StringBuffer timeKeyBuffer;
+    StringBuffer sourceKeyBuffer;
+    StringBuffer logKeyBuffer;
+    StringBuffer flagBuffer;
+};
+
 class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
 
-    static const std::string CONTIANERD_DELIMITER; // 分隔符
+    static const char CONTIANERD_DELIMITER; // 分隔符
     static const char CONTIANERD_FULL_TAG; // 容器全标签
     static const char CONTIANERD_PART_TAG; // 容器部分标签
 
@@ -52,11 +59,21 @@ private:
     std::string containerSourceKey = "_source_"; // 容器来源字段
     std::string containerLogKey = "content"; // 容器日志字段
 
-    bool ProcessEvent(const StringView containerType, PipelineEventPtr& e);
-    void AddDockerJsonLog(char** data, const StringView key, const StringView value, LogEvent& targetEvent);
-    void AddLog(const StringView key, const StringView value, LogEvent& targetEvent, bool overwritten = true);
-    bool ContainerdLogLineParser(LogEvent& sourceEvent);
-    bool DockerJsonLogLineParser(LogEvent& sourceEvent);
+    bool ProcessEvent(PipelineEventGroup& logGroup,
+                      const StringView containerType,
+                      PipelineEventPtr& e,
+                      ContainerStdoutKeyStringBuffer* containerStdoutKeyStringBuffer);
+    void AddDockerJsonLog(char** data, const StringBuffer key, const StringView value, LogEvent& targetEvent);
+    void AddContainerdTextLog(ContainerStdoutKeyStringBuffer* keyBuffer,
+                 StringView timeValue,
+                 StringView sourceValue,
+                 StringView content,
+                 StringView partTag,
+                 LogEvent& sourceEvent);
+    bool ContainerdLogLineParser(LogEvent& sourceEvent, ContainerStdoutKeyStringBuffer* containerStdoutKeyStringBuffer);
+    bool DockerJsonLogLineParser(PipelineEventGroup& logGroup,
+                                 LogEvent& sourceEvent,
+                                 ContainerStdoutKeyStringBuffer* containerStdoutKeyStringBuffer);
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseContainerLogNativeUnittest;
 #endif

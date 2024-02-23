@@ -29,7 +29,7 @@
 namespace logtail {
 
 const std::string ProcessorParseContainerLogNative::sName = "processor_parse_container_log_native";
-const std::string ProcessorParseContainerLogNative::CONTIANERD_DELIMITER = " "; // 分隔符
+const char ProcessorParseContainerLogNative::CONTIANERD_DELIMITER = ' '; // 分隔符
 const char ProcessorParseContainerLogNative::CONTIANERD_FULL_TAG = 'F'; // 容器全标签
 const char ProcessorParseContainerLogNative::CONTIANERD_PART_TAG = 'P'; // 容器部分标签
 
@@ -90,8 +90,15 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
     const StringView containerType = logGroup.GetMetadata(EventGroupMetaKey::FILE_ENCODING);
     EventsContainer& events = logGroup.MutableEvents();
 
+    ContainerStdoutKeyStringBuffer keyBuffer = {
+        timeKeyBuffer : logGroup.GetSourceBuffer()->CopyString(containerTimeKey),
+        sourceKeyBuffer : logGroup.GetSourceBuffer()->CopyString(containerSourceKey),
+        logKeyBuffer : logGroup.GetSourceBuffer()->CopyString(containerLogKey),
+        flagBuffer : logGroup.GetSourceBuffer()->CopyString(ProcessorMergeMultilineLogNative::PartLogFlag)
+    };
+
     for (auto it = events.begin(); it != events.end();) {
-        if (ProcessEvent(containerType, *it)) {
+        if (ProcessEvent(logGroup, containerType, *it, &keyBuffer)) {
             ++it;
         } else {
             it = events.erase(it);
@@ -99,7 +106,10 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool ProcessorParseContainerLogNative::ProcessEvent(const StringView containerType, PipelineEventPtr& e) {
+bool ProcessorParseContainerLogNative::ProcessEvent(PipelineEventGroup& logGroup,
+                                                    const StringView containerType,
+                                                    PipelineEventPtr& e,
+                                                    ContainerStdoutKeyStringBuffer* keyBuffer) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -108,14 +118,15 @@ bool ProcessorParseContainerLogNative::ProcessEvent(const StringView containerTy
         return true;
     }
     if (containerType == "containerd_text") {
-        return ContainerdLogLineParser(sourceEvent);
+        return ContainerdLogLineParser(sourceEvent, keyBuffer);
     } else if (containerType == "docker_json-file") {
-        return DockerJsonLogLineParser(sourceEvent);
+        return DockerJsonLogLineParser(logGroup, sourceEvent, keyBuffer);
     }
     return true;
 }
 
-bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceEvent) {
+bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceEvent,
+                                                               ContainerStdoutKeyStringBuffer* keyBuffer) {
     StringView contentValue = sourceEvent.GetContent(mSourceKey);
 
     if (contentValue.empty())
@@ -148,14 +159,9 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
 
     // 如果既不以 CONTIANERD_PART_TAG 开头，也不以 CONTIANERD_FULL_TAG 开头
     if (*(pch2 + 1) != CONTIANERD_PART_TAG && *(pch2 + 1) != CONTIANERD_FULL_TAG) {
-        StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
-        StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
-        StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
         // content
         StringView content = StringView(pch2 + 1, contentValue.end() - pch2 - 1);
-        AddLog(StringView(containerTimeKeyBuffer.data, containerTimeKeyBuffer.size), timeValue, sourceEvent);
-        AddLog(StringView(containerSourceKeyBuffer.data, containerSourceKeyBuffer.size), sourceValue, sourceEvent);
-        AddLog(StringView(containerLogKeyBuffer.data, containerLogKeyBuffer.size), content, sourceEvent);
+        AddContainerdTextLog(keyBuffer, timeValue, sourceValue, content, StringView(), sourceEvent);
         return true;
     }
 
@@ -166,35 +172,24 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     }
     // F
     if (*(pch2 + 1) == CONTIANERD_FULL_TAG) {
-        StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
-        StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
-        StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
         // content
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
-        AddLog(StringView(containerTimeKeyBuffer.data, containerTimeKeyBuffer.size), timeValue, sourceEvent);
-        AddLog(StringView(containerSourceKeyBuffer.data, containerSourceKeyBuffer.size), sourceValue, sourceEvent);
-        AddLog(StringView(containerLogKeyBuffer.data, containerLogKeyBuffer.size), content, sourceEvent);
+        AddContainerdTextLog(keyBuffer, timeValue, sourceValue, content, StringView(), sourceEvent);
         return true;
     }
     // P
     if (*(pch2 + 1) == CONTIANERD_PART_TAG) {
-        StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
-        StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
-        StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
-        StringBuffer partTagBuffer
-            = sourceEvent.GetSourceBuffer()->CopyString(ProcessorMergeMultilineLogNative::PartLogFlag);
         // content
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
         StringView partTag = StringView(pch2 + 1, 1);
-        AddLog(StringView(containerTimeKeyBuffer.data, containerTimeKeyBuffer.size), timeValue, sourceEvent);
-        AddLog(StringView(containerSourceKeyBuffer.data, containerSourceKeyBuffer.size), sourceValue, sourceEvent);
-        AddLog(StringView(partTagBuffer.data, partTagBuffer.size), partTag, sourceEvent);
-        AddLog(StringView(containerLogKeyBuffer.data, containerLogKeyBuffer.size), content, sourceEvent);
+        AddContainerdTextLog(keyBuffer, timeValue, sourceValue, content, partTag, sourceEvent);
         return true;
     }
 }
 
-bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceEvent) {
+bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(PipelineEventGroup& logGroup,
+                                                               LogEvent& sourceEvent,
+                                                               ContainerStdoutKeyStringBuffer* keyBuffer) {
     StringView buffer = sourceEvent.GetContent(mSourceKey);
 
     if (buffer.empty())
@@ -284,45 +279,52 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
         return true;
     }
 
-    // StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
-    // StringBuffer containerTimeValueBuffer = sourceEvent.GetSourceBuffer()->CopyString(timeValue);
+    char* data;
 
-    char* data = const_cast<char*>(buffer.data());
+    if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
+        StringBuffer stringBuffer = logGroup.GetSourceBuffer()->AllocateStringBuffer(content.size() + timeValue.size()
+                                                                                     + sourceValue.size() + 1);
+        data = const_cast<char*>(stringBuffer.data);
+    } else {
+        data = const_cast<char*>(buffer.data());
+    }
 
     // time
-    AddDockerJsonLog(&data, containerTimeKey, timeValue, sourceEvent);
-
+    AddDockerJsonLog(&data, keyBuffer->timeKeyBuffer, timeValue, sourceEvent);
     // source
-    AddDockerJsonLog(&data, containerSourceKey, sourceValue, sourceEvent);
-
+    AddDockerJsonLog(&data, keyBuffer->sourceKeyBuffer, sourceValue, sourceEvent);
     // content
     if (content.size() > 0 && content[content.size() - 1] == '\n') {
         content = StringView(content.data(), content.size() - 1);
     }
-    AddDockerJsonLog(&data, containerLogKey, content, sourceEvent);
+    AddDockerJsonLog(&data, keyBuffer->logKeyBuffer, content, sourceEvent);
 
     return true;
 }
 
 void ProcessorParseContainerLogNative::AddDockerJsonLog(char** data,
-                                                        const StringView key,
+                                                        const StringBuffer keyBuffer,
                                                         const StringView value,
                                                         LogEvent& targetEvent) {
-    memmove(*data, key.data(), key.size());
-    StringView keyBuffer = StringView(*data, key.size());
-    *data += key.size();
     memmove(*data, value.data(), value.size());
     StringView valueBuffer = StringView(*data, value.size());
     *data += value.size();
-    AddLog(keyBuffer, valueBuffer, targetEvent);
-    targetEvent.SetContentNoCopy(keyBuffer, valueBuffer);
+    targetEvent.SetContentNoCopy(StringView(keyBuffer.data, keyBuffer.size), valueBuffer);
 }
 
-void ProcessorParseContainerLogNative::AddLog(const StringView key,
-                                              const StringView value,
-                                              LogEvent& targetEvent,
-                                              bool overwritten) {
-    targetEvent.SetContentNoCopy(key, value);
+void ProcessorParseContainerLogNative::AddContainerdTextLog(ContainerStdoutKeyStringBuffer* keyBuffer,
+                                                            StringView timeValue,
+                                                            StringView sourceValue,
+                                                            StringView content,
+                                                            StringView partTag,
+                                                            LogEvent& sourceEvent) {
+    sourceEvent.SetContentNoCopy(StringView(keyBuffer->timeKeyBuffer.data, keyBuffer->timeKeyBuffer.size), timeValue);
+    sourceEvent.SetContentNoCopy(StringView(keyBuffer->sourceKeyBuffer.data, keyBuffer->sourceKeyBuffer.size),
+                                 sourceValue);
+    if (!partTag.empty()) {
+        sourceEvent.SetContentNoCopy(StringView(keyBuffer->flagBuffer.data, keyBuffer->flagBuffer.size), partTag);
+    }
+    sourceEvent.SetContentNoCopy(StringView(keyBuffer->logKeyBuffer.data, keyBuffer->logKeyBuffer.size), content);
 }
 
 bool ProcessorParseContainerLogNative::IsSupportedEvent(const PipelineEventPtr& e) const {
