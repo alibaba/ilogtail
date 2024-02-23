@@ -64,4 +64,5 @@ const std::string EXPIRE_DAY = "expire_day";
 
 const std::string DEFAULT_CONTENT_KEY = "content";
 const std::string DEFAULT_REG = "(.*)";
+
 } // namespace logtail

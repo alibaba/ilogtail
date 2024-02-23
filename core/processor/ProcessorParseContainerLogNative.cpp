@@ -318,6 +318,7 @@ void ProcessorParseContainerLogNative::AddDockerJsonLog(char** data,
     StringView valueBuffer = StringView(*data, value.size());
     *data += value.size();
     AddLog(keyBuffer, valueBuffer, targetEvent);
+    targetEvent.SetContentNoCopy(keyBuffer, valueBuffer);
 }
 
 void ProcessorParseContainerLogNative::AddLog(const StringView key,
