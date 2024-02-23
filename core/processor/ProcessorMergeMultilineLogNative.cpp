@@ -108,7 +108,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
     auto& events = logGroup.MutableEvents();
     std::vector<LogEvent*> logEvents;
     bool isPartialLog = false;
-    size_t beginPartIndex = 0;
+    size_t beginIndex = 0;
     for (size_t curIndex = 0; curIndex < events.size(); ++curIndex) {
         logEvents.emplace_back(&events[curIndex].Cast<LogEvent>());
         LogEvent* sourceEvent = logEvents[logEvents.size() - 1];
@@ -118,7 +118,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
 
         // case: p p p ... p(lastIndex) notP(curIndex)
         if (isPartialLog && !sourceEvent->HasContent(PartLogFlag)) {
-            MergeEvents(logEvents, beginPartIndex, curIndex, logEventIndex, false, false);
+            MergeEvents(logEvents, beginIndex, curIndex, logEventIndex, false, false);
             isPartialLog = false;
             continue;
         }
@@ -132,13 +132,13 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
         // case: F(lastIndex) p(curIndex)
         if (!isPartialLog) {
             isPartialLog = true;
-            beginPartIndex = curIndex;
+            beginIndex = curIndex;
             auto& contents = sourceEvent->MutableContents();
             contents.erase(PartLogFlag);
         }
     }
     if (isPartialLog) {
-        MergeEvents(logEvents, beginPartIndex, events.size() - 1, logEventIndex, false, false);
+        MergeEvents(logEvents, beginIndex, events.size() - 1, logEventIndex, false, false);
     }
 
     int begin = 0;
