@@ -28,13 +28,13 @@ namespace logtail {
 
 class ProcessorMergeMultilineLogNative : public Processor {
 public:
+    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
+
     static const std::string PartLogFlag;
     static const std::string sName;
 
-    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
-    MergeType mMergeType = MergeType::BY_REGEX;
-
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
+    MergeType mMergeType = MergeType::BY_REGEX;
     MultilineOptions mMultiline;
 
     const std::string& Name() const override { return sName; }
