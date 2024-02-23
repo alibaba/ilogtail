@@ -406,7 +406,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 "events": [
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:06.818486411+08:00",
                             "content": "Exception"
@@ -417,7 +417,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:07.818486411+08:00",
                             "content": " in thread"
@@ -428,7 +428,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:08.818486411+08:00",
                             "content": "  'main'"
@@ -567,7 +567,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 "events": [
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:06.818486411+08:00",
                             "content": "Exception"
@@ -578,7 +578,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:07.818486411+08:00",
                             "content": " in thread"
@@ -589,7 +589,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:08.818486411+08:00",
                             "content": "  'main'"
@@ -737,7 +737,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_": "2024-01-05T23:28:06.818486411+08:00",
                         "content": ""
@@ -847,7 +847,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:06.818486411+08:00",
                         "content" : "Exception"
@@ -859,7 +859,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:07.818486411+08:00",
                         "content" : " in thread"
@@ -871,7 +871,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:08.818486411+08:00",
                         "content" : "  'main'"

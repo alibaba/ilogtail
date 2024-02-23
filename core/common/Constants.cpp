@@ -64,14 +64,4 @@ const std::string EXPIRE_DAY = "expire_day";
 
 const std::string DEFAULT_CONTENT_KEY = "content";
 const std::string DEFAULT_REG = "(.*)";
-
-const std::string PARTLOGFLAG = "PartLogFlag";
-
-const std::string CONTIANERD_DELIMITER = " "; // 分隔符
-const char CONTIANERD_FULL_TAG = 'F'; // 容器全标签
-const char CONTIANERD_PART_TAG = 'P'; // 容器部分标签
-
-const std::string DOCKER_JSON_LOG = "log"; // docker json 日志字段
-const std::string DOCKER_JSON_TIME = "time"; // docker json 时间字段
-const std::string DOCKER_JSON_STREAM_TYPE = "stream"; // docker json 流字段
 } // namespace logtail

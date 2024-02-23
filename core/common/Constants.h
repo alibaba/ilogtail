@@ -66,13 +66,4 @@ extern const std::string EXPIRE_DAY;
 extern const std::string DEFAULT_CONTENT_KEY; //"content"
 extern const std::string DEFAULT_REG; //"(.*)"
 
-extern const std::string PARTLOGFLAG; //"PartLogFlag"
-
-extern const std::string CONTIANERD_DELIMITER;
-extern const char CONTIANERD_FULL_TAG;
-extern const char CONTIANERD_PART_TAG;
-
-extern const std::string DOCKER_JSON_LOG;
-extern const std::string DOCKER_JSON_TIME;
-extern const std::string DOCKER_JSON_STREAM_TYPE;
 } // namespace logtail

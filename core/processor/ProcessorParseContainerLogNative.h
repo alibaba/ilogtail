@@ -27,6 +27,14 @@ class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
 
+    static const std::string CONTIANERD_DELIMITER; // 分隔符
+    static const char CONTIANERD_FULL_TAG; // 容器全标签
+    static const char CONTIANERD_PART_TAG; // 容器部分标签
+
+    static const std::string DOCKER_JSON_LOG; // docker json 日志字段
+    static const std::string DOCKER_JSON_TIME; // docker json 时间字段
+    static const std::string DOCKER_JSON_STREAM_TYPE; // docker json 流字段
+
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
@@ -45,7 +53,7 @@ private:
     std::string containerLogKey = "content"; // 容器日志字段
 
     bool ProcessEvent(const StringView containerType, PipelineEventPtr& e);
-    void AddDockerJsonLog(char ** data ,const StringView key, const StringView value, LogEvent& targetEvent);
+    void AddDockerJsonLog(char** data, const StringView key, const StringView value, LogEvent& targetEvent);
     void AddLog(const StringView key, const StringView value, LogEvent& targetEvent, bool overwritten = true);
     bool ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
     bool DockerJsonLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);

@@ -31,6 +31,7 @@
 namespace logtail {
 
 const std::string ProcessorMergeMultilineLogNative::sName = "processor_merge_multiline_log_native";
+const std::string ProcessorMergeMultilineLogNative::PartLogFlag = "P";
 
 bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -88,18 +89,12 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
-    EventsContainer newEvents;
-    const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     if (mMergeType == MergeType::BY_REGEX) {
-        if (!mMultiline.IsMultiline()) {
-            return;
-        }
-        ProcessEventsWithRegex(logGroup, logPath, newEvents);
+        MergeLogsByRegex(logGroup);
     } else if (mMergeType == MergeType::BY_FLAG) {
-        ProcessEventsWithPartLog(logGroup, logPath, newEvents);
+        MergeLogsByFlag(logGroup);
     }
-    *mSplitLines = newEvents.size();
-    logGroup.SwapEvents(newEvents);
+    *mSplitLines = logGroup.GetEvents().size();
     return;
 }
 
@@ -107,74 +102,61 @@ bool ProcessorMergeMultilineLogNative::IsSupportedEvent(const PipelineEventPtr& 
     return e.Is<LogEvent>();
 }
 
-void ProcessorMergeMultilineLogNative::ProcessEventsWithPartLog(PipelineEventGroup& logGroup,
-                                                              const StringView& logPath,
-                                                              EventsContainer& newEvents) {
-    std::vector<PipelineEventPtr> logEventIndex;
+void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGroup) {
+    std::vector<size_t> logEventIndex;
     // 遍历event，对每个event进行合并
     auto& events = logGroup.MutableEvents();
-    for (long unsigned int curIndex = 0; curIndex < events.size(); ++curIndex) {
-        PipelineEventPtr& e = events[curIndex];
-        LogEvent& sourceEvent = e.Cast<LogEvent>();
-        if(sourceEvent.GetContents().empty()) {
+    std::vector<LogEvent*> logEvents;
+    bool isPartialLog = false;
+    size_t beginPartIndex = 0;
+    for (size_t curIndex = 0; curIndex < events.size(); ++curIndex) {
+        logEvents.emplace_back(&events[curIndex].Cast<LogEvent>());
+        LogEvent* sourceEvent = logEvents[logEvents.size() - 1];
+        if (sourceEvent->GetContents().empty()) {
             continue;
         }
-        if (!sourceEvent.HasContent(PARTLOGFLAG)){
-            logEventIndex.emplace_back(events[curIndex]);
+
+        // case: p p p ... p(lastIndex) notP(curIndex)
+        if (isPartialLog && !sourceEvent->HasContent(PartLogFlag)) {
+            MergeEvents(logEvents, beginPartIndex, curIndex, logEventIndex, false, false);
+            isPartialLog = false;
             continue;
         }
-        auto& contents = sourceEvent.MutableContents();
-        contents.erase(PARTLOGFLAG);
-        long unsigned int finalIndex = curIndex + 1;
-        for (; finalIndex < events.size(); ++finalIndex) {
-            const PipelineEventPtr& nextE = events[finalIndex];
-            const LogEvent& nextSourceEvent = nextE.Cast<LogEvent>();
-            if (nextSourceEvent.GetContents().empty()) {
-                continue;
-            }
-            if (!nextSourceEvent.HasContent(PARTLOGFLAG)){
-                break;
-            }
+
+        // case: notP(lastIndex) notP(curIndex)
+        if (!isPartialLog && !sourceEvent->HasContent(PartLogFlag)) {
+            MergeEvents(logEvents, curIndex, curIndex, logEventIndex, false, false);
+            continue;
         }
-        if (finalIndex == events.size()) {
-            --finalIndex;
+
+        // case: p(curIndex)
+        if (!isPartialLog) {
+            isPartialLog = true;
+            beginPartIndex = curIndex;
+            auto& contents = sourceEvent->MutableContents();
+            contents.erase(PartLogFlag);
         }
-        MergeEvents(events, curIndex, finalIndex, logEventIndex, false, false);
-        curIndex = finalIndex;
+    }
+    if (isPartialLog) {
+        MergeEvents(logEvents, beginPartIndex, events.size() - 1, logEventIndex, false, false);
     }
 
-    if (logEventIndex.size() == 0) {
-        return;
+    int begin = 0;
+    for (size_t i = 0; i < logEventIndex.size(); ++i) {
+        events[begin++] = events[logEventIndex[i]];
     }
-
-    StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
-    for (const PipelineEventPtr& e : logEventIndex) {
-        const LogEvent& logEvent = e.Cast<LogEvent>();
-
-        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond());
-        targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), logEvent.GetContent(mSourceKey));
-        if (logEvent.GetContents().size() > 1) {
-            for (auto& kv : logEvent.GetContents()) {
-                if (kv.first != mSourceKey) {
-                    targetEvent->SetContentNoCopy(kv.first, kv.second);
-                }
-            }
-        }
-        newEvents.emplace_back(std::move(targetEvent));
-    }
+    events.resize(begin);
 }
 
-void ProcessorMergeMultilineLogNative::ProcessEventsWithRegex(PipelineEventGroup& logGroup,
-                                                     const StringView& logPath,
-                                                     EventsContainer& newEvents) {
-    std::vector<PipelineEventPtr> logEventIndex;
-    std::vector<PipelineEventPtr> discardLogEventIndex;
+void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logGroup) {
+    std::vector<size_t> logEventIndex;
+    std::vector<size_t> discardLogEventIndex;
 
-
-    bool splitSuccess = LogSplit(logGroup, logEventIndex, discardLogEventIndex, logPath);
+    std::vector<LogEvent*> logEvents;
+    bool splitSuccess = LogSplit(logGroup, logEvents, logEventIndex, discardLogEventIndex);
 
     if (AppConfig::GetInstance()->IsLogParseAlarmValid() && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
         if (!splitSuccess) { // warning if unsplittable
             // 获取1024k的日志内容
             int logSize = 0;
@@ -206,9 +188,9 @@ void ProcessorMergeMultilineLogNative::ProcessEventsWithRegex(PipelineEventGroup
                         "log bytes", dataValue.size() + 1)("first 1KB log", dataValue.substr(0, 1024).to_string()));
             }
         }
-        for (const PipelineEventPtr& discardData : discardLogEventIndex) { // warning if data loss
-            const LogEvent& logEvent = discardData.Cast<LogEvent>();
-            auto& sourceVal = logEvent.GetContent(mSourceKey);
+        for (const auto& discardData : discardLogEventIndex) { // warning if data loss
+            const LogEvent* logEvent = logEvents[discardData];
+            auto& sourceVal = logEvent->GetContent(mSourceKey);
 
             GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
                                               "split log lines discard data, file:" + logPath.to_string()
@@ -223,32 +205,18 @@ void ProcessorMergeMultilineLogNative::ProcessEventsWithRegex(PipelineEventGroup
     }
 
 
-    if (logEventIndex.size() == 0) {
-        return;
+    int begin = 0;
+    auto& events = logGroup.MutableEvents();
+    for (size_t i = 0; i < logEventIndex.size(); ++i) {
+        events[begin++] = events[logEventIndex[i]];
     }
-
-    StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
-    for (const PipelineEventPtr& e : logEventIndex) {
-        const LogEvent& logEvent = e.Cast<LogEvent>();
-
-        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond());
-        targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), logEvent.GetContent(mSourceKey));
-        if (logEvent.GetContents().size() > 1) {
-            for (auto& kv : logEvent.GetContents()) {
-                if (kv.first != mSourceKey) {
-                    targetEvent->SetContentNoCopy(kv.first, kv.second);
-                }
-            }
-        }
-        newEvents.emplace_back(std::move(targetEvent));
-    }
+    events.resize(begin);
 }
 
 bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
-                                                std::vector<PipelineEventPtr>& logEventIndex,
-                                                std::vector<PipelineEventPtr>& discardLogEventIndex,
-                                                const StringView& logPath) {
+                                                std::vector<LogEvent*>& logEvents,
+                                                std::vector<size_t>& logEventIndex,
+                                                std::vector<size_t>& discardLogEventIndex) {
     /*
                | -------------- | -------- \n
         multiBeginIndex        curIndex
@@ -263,21 +231,21 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
         4. continue + end
         5. end
     */
-    long unsigned int multiBeginIndex = 0;
+    size_t multiBeginIndex = 0;
     bool splitSuccess = false;
     std::string exception;
     SplitState state = SPLIT_UNMATCH;
 
     // 遍历event，对每个event进行合并
     auto& events = logGroup.MutableEvents();
-    for (long unsigned int curIndex = 0; curIndex < events.size(); ++curIndex) {
-        const PipelineEventPtr& e = events[curIndex];
-        const LogEvent& sourceEvent = e.Cast<LogEvent>();
-        if(sourceEvent.GetContents().empty()) {
+    for (size_t curIndex = 0; curIndex < events.size(); ++curIndex) {
+        logEvents.emplace_back(&events[curIndex].Cast<LogEvent>());
+        const LogEvent* sourceEvent = logEvents[logEvents.size() - 1];
+        if (sourceEvent->GetContents().empty()) {
             continue;
         }
         exception.clear();
-        StringView sourceVal = sourceEvent.GetContent(mSourceKey);
+        StringView sourceVal = sourceEvent->GetContent(mSourceKey);
 
         switch (state) {
             case SPLIT_UNMATCH:
@@ -290,7 +258,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                         if (curIndex != multiBeginIndex) {
                             splitSuccess = true;
                             // 把 multiBeginIndex 到 curIndex-1 的日志合并到multiBeginIndex中
-                            MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex, true);
+                            MergeEvents(logEvents, multiBeginIndex, curIndex - 1, logEventIndex, true);
 
                             multiBeginIndex = curIndex;
                         }
@@ -313,7 +281,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                     && BoostRegexMatch(sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                     // EndPatternReg存在，且当前行匹配上
                     // 把 multiBeginIndex 到 curIndex 的日志合并到multiBeginIndex中
-                    MergeEvents(events, multiBeginIndex, curIndex, logEventIndex);
+                    MergeEvents(logEvents, multiBeginIndex, curIndex, logEventIndex);
                     splitSuccess = true;
                     multiBeginIndex = curIndex + 1;
                     break;
@@ -337,7 +305,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                 if (mMultiline.GetEndPatternReg() != nullptr) {
                     if (BoostRegexMatch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
-                        MergeEvents(events, multiBeginIndex, curIndex, logEventIndex);
+                        MergeEvents(logEvents, multiBeginIndex, curIndex, logEventIndex);
                         splitSuccess = true;
                         multiBeginIndex = curIndex + 1;
                         state = SPLIT_UNMATCH;
@@ -355,14 +323,14 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                     if (BoostRegexMatch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetStartPatternReg(), exception)) {
                         if (multiBeginIndex != curIndex) {
-                            MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex);
+                            MergeEvents(logEvents, multiBeginIndex, curIndex - 1, logEventIndex);
                             multiBeginIndex = curIndex;
                         }
                     } else if (mMultiline.GetContinuePatternReg() != nullptr) {
                         // case: begin+continue, but we meet unmatch log here
                         // 当前行ContinuePatternReg和EndPatternReg都匹配不上
                         // 把multiBeginIndex到curIndex-1的日志合并到multiBeginIndex中
-                        MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex);
+                        MergeEvents(logEvents, multiBeginIndex, curIndex - 1, logEventIndex);
                         multiBeginIndex = curIndex;
                         HandleUnmatchLogs(events, multiBeginIndex, curIndex, logEventIndex, discardLogEventIndex);
                         state = SPLIT_UNMATCH;
@@ -388,7 +356,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                         //  **** CONTINUE + END ****
                         // 把multiBeginIndex到curIndex的日志合并到multiBeginIndex中
                         splitSuccess = true;
-                        MergeEvents(events, multiBeginIndex, curIndex, logEventIndex);
+                        MergeEvents(logEvents, multiBeginIndex, curIndex, logEventIndex);
                         multiBeginIndex = curIndex + 1;
                         state = SPLIT_UNMATCH;
                     } else {
@@ -405,14 +373,14 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                         // 当前行为START
                         // 把multiBeginIndex到curIndex-1的日志合并到multiBeginIndex中
                         splitSuccess = true;
-                        MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex);
+                        MergeEvents(logEvents, multiBeginIndex, curIndex - 1, logEventIndex);
                         multiBeginIndex = curIndex;
                         state = SPLIT_BEGIN;
                     } else {
                         // 当前行为START
                         // 把multiBeginIndex到curIndex-1的日志合并到multiBeginIndex中
                         splitSuccess = true;
-                        MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex);
+                        MergeEvents(logEvents, multiBeginIndex, curIndex - 1, logEventIndex);
                         multiBeginIndex = curIndex;
                         HandleUnmatchLogs(events, multiBeginIndex, curIndex, logEventIndex, discardLogEventIndex);
                         state = SPLIT_UNMATCH;
@@ -423,7 +391,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
                 // EndPatternReg不存在，StartPattern不存在，ContinuePatternReg没匹配上(理论上不支持这种正则配置)
                 // 把multiBeginIndex到curIndex-1的日志合并到multiBeginIndex中
                 splitSuccess = true;
-                MergeEvents(events, multiBeginIndex, curIndex - 1, logEventIndex);
+                MergeEvents(logEvents, multiBeginIndex, curIndex - 1, logEventIndex);
                 multiBeginIndex = curIndex;
                 HandleUnmatchLogs(events, multiBeginIndex, curIndex, logEventIndex, discardLogEventIndex);
                 state = SPLIT_UNMATCH;
@@ -431,6 +399,7 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
         }
         if (!exception.empty()) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
+                const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
                 if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
                     LOG_ERROR(GetContext().GetLogger(),
                               ("regex_match in LogSplit fail, exception", exception)("project",
@@ -451,9 +420,9 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
         if (mMultiline.GetStartPatternReg() != NULL && mMultiline.GetEndPatternReg() == NULL) {
             splitSuccess = true;
             // If logs is unmatched, they have been handled immediately. So logs must be matched here.
-            MergeEvents(events, multiBeginIndex, events.size() - 1, logEventIndex);
+            MergeEvents(logEvents, multiBeginIndex, events.size() - 1, logEventIndex);
         } else if (mMultiline.GetStartPatternReg() == NULL && mMultiline.GetContinuePatternReg() == NULL
-                    && mMultiline.GetEndPatternReg() != NULL) {
+                   && mMultiline.GetEndPatternReg() != NULL) {
             // If there is still logs in cache, it means that there is no end line. We can handle them as unmatched.
             HandleUnmatchLogs(events, multiBeginIndex, events.size() - 1, logEventIndex, discardLogEventIndex, true);
         } else {
@@ -463,39 +432,42 @@ bool ProcessorMergeMultilineLogNative::LogSplit(PipelineEventGroup& logGroup,
     return splitSuccess;
 }
 
-void ProcessorMergeMultilineLogNative::MergeEvents(logtail::EventsContainer& events,
-                                                   long unsigned int beginIndex,
-                                                   long unsigned int endIndex,
-                                                   std::vector<PipelineEventPtr>& logEventIndex,
+void ProcessorMergeMultilineLogNative::MergeEvents(std::vector<LogEvent*>& logEvents,
+                                                   size_t beginIndex,
+                                                   size_t endIndex,
+                                                   std::vector<size_t>& logEventIndex,
                                                    bool updateLast,
                                                    bool insertLineBreak) {
     // 把 beginIndex 到 endIndex 的日志合并到 beginIndex 中
-    auto& beginEvent = events[beginIndex].Cast<LogEvent>();
-    StringView beginValue = beginEvent.GetContent(mSourceKey);
+    auto& beginEvent = logEvents[beginIndex];
+    StringView beginValue = beginEvent->GetContent(mSourceKey);
+    char* data = const_cast<char*>(beginValue.data());
 
-    for (long unsigned int index = beginIndex + 1; index <= endIndex; ++index) {
-        char* data = const_cast<char*>(beginValue.data());
-        if (insertLineBreak){
+    for (size_t index = beginIndex + 1; index <= endIndex; ++index) {
+        if (insertLineBreak) {
             data[beginValue.size()] = '\n';
         }
-        const auto& curLogEvent = events[index].Cast<LogEvent>();
-        StringView curValue = curLogEvent.GetContent(mSourceKey);
-        memmove(insertLineBreak ? data + beginValue.size() + 1 : data + beginValue.size(), curValue.data(), curValue.size());
-        beginValue = StringView(data, insertLineBreak ? beginValue.size() + 1 + curValue.size() : beginValue.size() + curValue.size());
+        const auto curLogEvent = logEvents[index];
+        StringView curValue = curLogEvent->GetContent(mSourceKey);
+        memmove(insertLineBreak ? data + beginValue.size() + 1 : data + beginValue.size(),
+                curValue.data(),
+                curValue.size());
+        beginValue = StringView(
+            data, insertLineBreak ? beginValue.size() + 1 + curValue.size() : beginValue.size() + curValue.size());
     }
-    beginEvent.SetContentNoCopy(mSourceKey, beginValue);
+    beginEvent->SetContentNoCopy(mSourceKey, beginValue);
     if (updateLast) {
-        logEventIndex[logEventIndex.size()-1] = events[beginIndex];
+        logEventIndex[logEventIndex.size() - 1] = beginIndex;
     } else {
-        logEventIndex.emplace_back(events[beginIndex]);
+        logEventIndex.emplace_back(beginIndex);
     }
 }
 
 void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(const logtail::EventsContainer& events,
-                                                         long unsigned int& multiBeginIndex,
-                                                         long unsigned int endIndex,
-                                                         std::vector<PipelineEventPtr>& logEventIndex,
-                                                         std::vector<PipelineEventPtr>& discardLogEventIndex,
+                                                         size_t& multiBeginIndex,
+                                                         size_t endIndex,
+                                                         std::vector<size_t>& logEventIndex,
+                                                         std::vector<size_t>& discardLogEventIndex,
                                                          bool mustHandleLogs) {
     // Cannot determine where log is unmatched here where there is only EndPatternReg
     if (!mustHandleLogs && mMultiline.GetStartPatternReg() == nullptr && mMultiline.GetContinuePatternReg() == nullptr
@@ -503,12 +475,12 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(const logtail::EventsCo
         return;
     }
     if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
-        for (long unsigned int i = multiBeginIndex; i <= endIndex; i++) {
-            discardLogEventIndex.emplace_back(events[i]);
+        for (size_t i = multiBeginIndex; i <= endIndex; i++) {
+            discardLogEventIndex.emplace_back(i);
         }
     } else if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
-        for (long unsigned int i = multiBeginIndex; i <= endIndex; i++) {
-            logEventIndex.emplace_back(events[i]);
+        for (size_t i = multiBeginIndex; i <= endIndex; i++) {
+            logEventIndex.emplace_back(i);
         }
     }
     multiBeginIndex = endIndex + 1;

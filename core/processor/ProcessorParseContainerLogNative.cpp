@@ -24,10 +24,18 @@
 #include "models/LogEvent.h"
 #include "monitor/MetricConstants.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "processor/ProcessorMergeMultilineLogNative.h"
 
 namespace logtail {
 
 const std::string ProcessorParseContainerLogNative::sName = "processor_parse_container_log_native";
+const std::string ProcessorParseContainerLogNative::CONTIANERD_DELIMITER = " "; // 分隔符
+const char ProcessorParseContainerLogNative::CONTIANERD_FULL_TAG = 'F'; // 容器全标签
+const char ProcessorParseContainerLogNative::CONTIANERD_PART_TAG = 'P'; // 容器部分标签
+
+const std::string ProcessorParseContainerLogNative::DOCKER_JSON_LOG = "log"; // docker json 日志字段
+const std::string ProcessorParseContainerLogNative::DOCKER_JSON_TIME = "time"; // docker json 时间字段
+const std::string ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE = "stream"; // docker json 流字段
 
 bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -115,8 +123,8 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
 
     // 寻找第一个分隔符位置 时间 _time_
     StringView timeValue;
-    const char* pch1
-        = std::search(contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+    const char* pch1 = std::search(
+        contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
     if (pch1 >= contentValue.end()) {
         // 没有找到分隔符
         return true;
@@ -176,7 +184,8 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
         StringBuffer containerTimeKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerTimeKey);
         StringBuffer containerSourceKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerSourceKey);
         StringBuffer containerLogKeyBuffer = sourceEvent.GetSourceBuffer()->CopyString(containerLogKey);
-        StringBuffer partTagBuffer = sourceEvent.GetSourceBuffer()->CopyString(PARTLOGFLAG);
+        StringBuffer partTagBuffer
+            = sourceEvent.GetSourceBuffer()->CopyString(ProcessorMergeMultilineLogNative::PartLogFlag);
         // content
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
         StringView partTag = StringView(pch2 + 1, 1);
@@ -290,15 +299,18 @@ bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceE
     AddDockerJsonLog(&data, containerSourceKey, sourceValue, sourceEvent);
 
     // content
-    if(content.size() > 0 && content[content.size()-1] == '\n') {
-        content = StringView(content.data(), content.size()-1);
+    if (content.size() > 0 && content[content.size() - 1] == '\n') {
+        content = StringView(content.data(), content.size() - 1);
     }
     AddDockerJsonLog(&data, containerLogKey, content, sourceEvent);
 
     return true;
 }
 
-void ProcessorParseContainerLogNative::AddDockerJsonLog(char ** data ,const StringView key, const StringView value, LogEvent& targetEvent) {
+void ProcessorParseContainerLogNative::AddDockerJsonLog(char** data,
+                                                        const StringView key,
+                                                        const StringView value,
+                                                        LogEvent& targetEvent) {
     memmove(*data, key.data(), key.size());
     StringView keyBuffer = StringView(*data, key.size());
     *data += key.size();

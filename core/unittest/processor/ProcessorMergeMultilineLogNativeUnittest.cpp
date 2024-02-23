@@ -581,7 +581,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": "Exception"
                 },
                 "timestamp" : 12345678901,
@@ -591,7 +591,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": " in thread"
                 },
                 "timestamp" : 12345678902,
@@ -601,7 +601,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": "  'main'"
                 },
                 "timestamp" : 12345678903,
@@ -620,7 +620,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": "Exception"
                 },
                 "timestamp" : 12345678901,
@@ -630,7 +630,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": " in thread"
                 },
                 "timestamp" : 12345678901,
@@ -640,7 +640,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": "  'main'"
                 },
                 "timestamp" : 12345678901,
@@ -659,7 +659,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": "Exception"
                 },
                 "timestamp" : 12345678901,
@@ -669,7 +669,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": " in thread"
                 },
                 "timestamp" : 12345678901,
@@ -679,7 +679,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "PartLogFlag": "true",
+                    "P": "true",
                     "content": "  'main'"
                 },
                 "timestamp" : 12345678901,
