@@ -108,23 +108,22 @@ bool ProcessorParseContainerLogNative::ProcessEvent(const StringView containerTy
         return true;
     }
     if (containerType == "containerd_text") {
-        return ContainerdLogLineParser(sourceEvent, e);
+        return ContainerdLogLineParser(sourceEvent);
     } else if (containerType == "docker_json-file") {
-        return DockerJsonLogLineParser(sourceEvent, e);
+        return DockerJsonLogLineParser(sourceEvent);
     }
     return true;
 }
 
-bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e) {
+bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceEvent) {
     StringView contentValue = sourceEvent.GetContent(mSourceKey);
 
-    if (contentValue.empty() || contentValue.length() < 5)
+    if (contentValue.empty())
         return true;
 
     // 寻找第一个分隔符位置 时间 _time_
     StringView timeValue;
-    const char* pch1 = std::search(
-        contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+    const char* pch1 = std::find(contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER);
     if (pch1 >= contentValue.end()) {
         // 没有找到分隔符
         return true;
@@ -133,8 +132,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
 
     // 寻找第二个分隔符位置 容器标签 _source_
     StringView sourceValue;
-    const char* pch2
-        = std::search(pch1 + 1, contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+    const char* pch2 = std::find(pch1 + 1, contentValue.end(), CONTIANERD_DELIMITER);
     if (pch2 == contentValue.end()) {
         // 没有找到分隔符
         return true;
@@ -162,8 +160,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     }
 
     // 寻找第三个分隔符位置
-    const char* pch3
-        = std::search(pch2 + 1, contentValue.end(), CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+    const char* pch3 = std::find(pch2 + 1, contentValue.end(), CONTIANERD_DELIMITER);
     if (pch3 == contentValue.end() || pch3 != pch2 + 2) {
         return true;
     }
@@ -197,7 +194,7 @@ bool ProcessorParseContainerLogNative::ContainerdLogLineParser(LogEvent& sourceE
     }
 }
 
-bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e) {
+bool ProcessorParseContainerLogNative::DockerJsonLogLineParser(LogEvent& sourceEvent) {
     StringView buffer = sourceEvent.GetContent(mSourceKey);
 
     if (buffer.empty())

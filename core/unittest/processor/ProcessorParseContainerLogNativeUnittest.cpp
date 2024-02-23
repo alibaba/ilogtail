@@ -12,8 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <chrono>
 #include <cstdlib>
+#include <iostream>
+#include <random>
+#include <string>
+#include <vector>
 
+#include "boost/utility/string_view.hpp"
 #include "common/Constants.h"
 #include "common/JsonUtil.h"
 #include "config/Config.h"
@@ -22,7 +29,6 @@
 #include "processor/ProcessorParseContainerLogNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
-
 namespace logtail {
 
 const std::string LOG_BEGIN_STRING = "Exception in thread 'main' java.lang.NullPointerException";
@@ -42,6 +48,7 @@ public:
     void TestIgnoringStdoutStderr();
     void TestContainerdLogWithSplit();
     void TestDockerJsonLogLineParserWithSplit();
+    void TestFindAndSearchPerformance();
 
     PipelineContext mContext;
 };
@@ -51,6 +58,72 @@ UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLog);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestIgnoringStdoutStderr);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLogWithSplit);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestDockerJsonLogLineParserWithSplit);
+// UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestFindAndSearchPerformance);
+
+// 生成一个随机字符串
+std::string generate_random_string(size_t length) {
+    std::string str(length, '\0');
+    static const char alphabet[] = "0123456789"
+                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                   "abcdefghijklmnopqrstuvwxyz";
+
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<> distribution(0, sizeof(alphabet) - 2);
+
+    std::generate_n(str.begin(), length, [&]() { return alphabet[distribution(generator)]; });
+    return str;
+}
+
+void ProcessorParseContainerLogNativeUnittest::TestFindAndSearchPerformance() {
+    const size_t string_length = 1'0000;
+    const char char_to_find = 'X'; // 这是我们要搜索的字符
+    const std::string substring_to_search = "X"; // 这是我们要搜索的子字符串
+    const int num_trials = 100000000;
+    std::string random_string = generate_random_string(string_length);
+
+    // Benchmark string_view.find
+    std::chrono::duration<double, std::milli> boost_find_duration_total;
+    for (int i = 0; i < num_trials; ++i) {
+        boost::string_view string_view(random_string); // 创建 boost::string_view
+
+        auto start = std::chrono::high_resolution_clock::now();
+        string_view.find(char_to_find);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        boost_find_duration_total += end - start;
+    }
+    double boost_find_avg_duration = boost_find_duration_total.count();
+    std::cout << "Total string_view.find took " << boost_find_avg_duration << " milliseconds." << std::endl;
+
+    // Benchmark std::find
+    std::chrono::duration<double, std::milli> find_duration_total;
+    for (int i = 0; i < num_trials; ++i) {
+        boost::string_view string_view(random_string); // 创建 boost::string_view
+
+        auto start = std::chrono::high_resolution_clock::now();
+        std::find(string_view.begin(), string_view.end(), char_to_find);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        find_duration_total += end - start;
+    }
+    double find_avg_duration = find_duration_total.count();
+    std::cout << "Total std::find took " << find_avg_duration << " milliseconds." << std::endl;
+
+    // Benchmark std::search
+    std::chrono::duration<double, std::milli> search_duration_total;
+    for (int i = 0; i < num_trials; ++i) {
+        boost::string_view string_view(random_string); // 创建 boost::string_view
+
+        auto start = std::chrono::high_resolution_clock::now();
+        std::search(string_view.begin(), string_view.end(), substring_to_search.begin(), substring_to_search.end());
+        auto end = std::chrono::high_resolution_clock::now();
+
+        search_duration_total += end - start;
+    }
+    double search_avg_duration = search_duration_total.count();
+    std::cout << "Total std::search took " << search_avg_duration << " milliseconds." << std::endl;
+}
 
 void ProcessorParseContainerLogNativeUnittest::TestInit() {
     // make config
@@ -305,7 +378,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
-    
+
     {
         // make config
         Json::Value config;
@@ -901,7 +974,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
     }
 }
 
-void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
+void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
