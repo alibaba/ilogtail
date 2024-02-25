@@ -55,14 +55,12 @@ func (*ProcessorRateLimit) Description() string {
 	return "rate limit processor for logtail"
 }
 
+// V1
 func (p *ProcessorRateLimit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	totalLen := len(logArray)
 	nextIdx := 0
 	for idx := 0; idx < totalLen; idx++ {
-		key, err := p.makeKey(logArray[idx])
-		if err != nil {
-			continue
-		}
+		key := p.makeKey(logArray[idx])
 		if p.Algorithm.IsAllowed(key) {
 			if idx != nextIdx {
 				logArray[nextIdx] = logArray[idx]
@@ -77,9 +75,9 @@ func (p *ProcessorRateLimit) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 	return logArray
 }
 
-func (p *ProcessorRateLimit) makeKey(log *protocol.Log) (string, error) {
+func (p *ProcessorRateLimit) makeKey(log *protocol.Log) string {
 	if len(p.Fields) == 0 {
-		return "", nil
+		return ""
 	}
 
 	sort.Strings(p.Fields)
@@ -98,7 +96,7 @@ func (p *ProcessorRateLimit) makeKey(log *protocol.Log) (string, error) {
 		}
 	}
 
-	return strings.Join(values, "_"), nil
+	return strings.Join(values, "_")
 }
 
 func init() {

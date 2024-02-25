@@ -17,10 +17,10 @@ import (
 	"context"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"go.uber.org/atomic"
 )
 
 type bucket struct {
@@ -144,10 +144,10 @@ func (t *tokenBucket) runGC() {
 
 		// Add tokens to all buckets according to the rate limit
 		// and flag full buckets for deletion.
-		toDelete := make([]uint64, 0)
+		toDelete := make([]string, 0)
 		numBucketsBefore := 0
 		t.buckets.Range(func(k, v interface{}) bool {
-			key := k.(uint64)
+			key := k.(string)
 			b := v.(*bucket)
 
 			bucketFull := b.replenish(t.limit)
