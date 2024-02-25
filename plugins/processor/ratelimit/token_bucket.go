@@ -17,29 +17,32 @@ import (
 	"context"
 	"math"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"go.uber.org/atomic"
 )
 
 type bucket struct {
+	mu            sync.Mutex // Avoid bucket racing
 	tokens        float64
 	lastReplenish time.Time
 }
 
 type tokenBucket struct {
-	mu sync.Mutex
+	mu sync.Mutex // Avoid conflict GC
 
 	limit   rate
 	buckets sync.Map
 
-	// GC thresholds and metrics
-	gc struct {
-		thresholds tokenBucketGCConfig
-		metrics    struct {
-			numCalls atomic.Int32
-		}
+	gc gcConfig
+}
+
+// GC thresholds and metrics
+type gcConfig struct {
+	thresholds tokenBucketGCConfig
+	metrics    struct {
+		numCalls atomic.Int32
 	}
 }
 
@@ -50,7 +53,6 @@ type tokenBucketGCConfig struct {
 }
 
 type tokenBucketConfig struct {
-
 	// GC governs when completely filled token buckets must be deleted
 	// to free up memory. GC is performed when _any_ of the GC conditions
 	// below are met. After each GC, counters corresponding to _each_ of
@@ -68,12 +70,7 @@ func newTokenBucket(rate rate) algorithm {
 	return &tokenBucket{
 		limit:   rate,
 		buckets: sync.Map{},
-		gc: struct {
-			thresholds tokenBucketGCConfig
-			metrics    struct {
-				numCalls atomic.Int32
-			}
-		}{
+		gc: gcConfig{
 			thresholds: tokenBucketGCConfig{
 				NumCalls: cfg.GC.NumCalls,
 			},
@@ -82,7 +79,7 @@ func newTokenBucket(rate rate) algorithm {
 	}
 }
 
-func (t *tokenBucket) IsAllowed(key uint64) bool {
+func (t *tokenBucket) IsAllowed(key string) bool {
 	t.runGC()
 
 	b := t.getBucket(key)
@@ -92,7 +89,7 @@ func (t *tokenBucket) IsAllowed(key uint64) bool {
 	return allowed
 }
 
-func (t *tokenBucket) getBucket(key uint64) *bucket {
+func (t *tokenBucket) getBucket(key string) *bucket {
 	v, exists := t.buckets.LoadOrStore(key, &bucket{
 		tokens:        t.limit.value,
 		lastReplenish: time.Now(),
@@ -108,6 +105,8 @@ func (t *tokenBucket) getBucket(key uint64) *bucket {
 }
 
 func (b *bucket) withdraw() bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	if b.tokens < 1 {
 		return false
 	}
@@ -115,12 +114,18 @@ func (b *bucket) withdraw() bool {
 	return true
 }
 
-func (b *bucket) replenish(rate rate) {
+// Replenish token to the bucket
+// Return true if the bucket is full.
+func (b *bucket) replenish(rate rate) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	secsSinceLastReplenish := time.Since(b.lastReplenish).Seconds()
-	tokensToReplenish := secsSinceLastReplenish * rate.valuePerSecond()
+	tokensToReplenish := secsSinceLastReplenish * rate.valuePerSecond
 
 	b.tokens = math.Min(b.tokens+tokensToReplenish, rate.value)
 	b.lastReplenish = time.Now()
+
+	return b.tokens >= rate.value
 }
 
 func (t *tokenBucket) runGC() {
@@ -145,9 +150,9 @@ func (t *tokenBucket) runGC() {
 			key := k.(uint64)
 			b := v.(*bucket)
 
-			b.replenish(t.limit)
+			bucketFull := b.replenish(t.limit)
 
-			if b.tokens >= t.limit.value {
+			if bucketFull {
 				toDelete = append(toDelete, key)
 			}
 

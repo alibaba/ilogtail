@@ -16,8 +16,7 @@ package ratelimit
 import (
 	"fmt"
 	"sort"
-
-	"github.com/mitchellh/hashstructure"
+	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -78,9 +77,9 @@ func (p *ProcessorRateLimit) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 	return logArray
 }
 
-func (p *ProcessorRateLimit) makeKey(log *protocol.Log) (uint64, error) {
+func (p *ProcessorRateLimit) makeKey(log *protocol.Log) (string, error) {
 	if len(p.Fields) == 0 {
-		return 0, nil
+		return "", nil
 	}
 
 	sort.Strings(p.Fields)
@@ -99,7 +98,7 @@ func (p *ProcessorRateLimit) makeKey(log *protocol.Log) (uint64, error) {
 		}
 	}
 
-	return hashstructure.Hash(values, nil)
+	return strings.Join(values, "_"), nil
 }
 
 func init() {

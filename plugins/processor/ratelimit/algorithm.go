@@ -26,16 +26,17 @@ const (
 )
 
 type algorithm interface {
-	IsAllowed(uint64) bool
+	IsAllowed(string) bool
 }
 
 type rate struct {
-	value float64
-	unit  string
+	value          float64
+	unit           string
+	valuePerSecond float64
 }
 
 // Unpack creates a rate from the given string
-func (l *rate) Unpack(str string) error {
+func (r *rate) Unpack(str string) error {
 	parts := strings.Split(str, "/")
 	if len(parts) != 2 {
 		return fmt.Errorf(`rate in invalid format: %v. Must be specified as "number/unit"`, str)
@@ -53,20 +54,21 @@ func (l *rate) Unpack(str string) error {
 		return fmt.Errorf(`rate's unit component is not valid: %v`, unitStr)
 	}
 
-	l.value = v
-	l.unit = unitStr
+	r.value = v
+	r.unit = unitStr
+	r.valuePerSecond = r.getValuePerSecond()
 
 	return nil
 }
 
-func (l *rate) valuePerSecond() float64 {
-	switch l.unit {
+func (r *rate) getValuePerSecond() float64 {
+	switch r.unit {
 	case unitPerSecond:
-		return l.value
+		return r.value
 	case unitPerMinute:
-		return l.value / 60
+		return r.value / 60
 	case unitPerHour:
-		return l.value / (60 * 60)
+		return r.value / (60 * 60)
 	}
 
 	return 0
