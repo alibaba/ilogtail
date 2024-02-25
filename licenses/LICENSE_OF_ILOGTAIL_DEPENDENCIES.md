@@ -245,7 +245,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/stretchr/testify](https://pkg.go.dev/github.com/stretchr/testify?tab=licenses)
 - [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak?tab=licenses)
 - [github.com/influxdata/telegraf](https://pkg.go.dev/github.com/influxdata/telegraf?tab=licenses)
-- [github.com/mitchellh/hashstructure](https://pkg.go.dev/github.com/mitchellh/hashstructure?tab=licenses)
 
 ## ISC licenses
 
