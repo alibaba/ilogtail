@@ -36,18 +36,18 @@ jobs:
       matrix:
         go-version: [ 1.19 ]
         # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idruns-on
-        runner: [ arc-runner-set-xuanyang-ack ]
+        runner: [ arc-runner-set-xuanyang ]
       fail-fast: true
     steps:
 
       # prepare ubuntu environment
       - name: prepare ubuntu environment
-        if: matrix.runner == 'arc-runner-set-xuanyang-ack'
+        if: matrix.runner == 'arc-runner-set-xuanyang'
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev build-essential git curl bc
         
       # Clean up space to prevent action from running out of disk space.
       - name: Free disk space
-        if: matrix.runner == 'arc-runner-set-xuanyang-ack'
+        if: matrix.runner == 'arc-runner-set-xuanyang'
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -82,7 +82,7 @@ jobs:
         run: make plugin_main
 
   result:
-    runs-on: arc-runner-set-xuanyang-ack
+    runs-on: arc-runner-set-xuanyang
     timeout-minutes: 60
     needs: [ CI ]
     steps:

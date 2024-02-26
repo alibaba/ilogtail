@@ -37,7 +37,7 @@ jobs:
       matrix:
         go-version: [1.19]
         # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idruns-on
-        runner: [ arc-runner-set-xuanyang-ack ]
+        runner: [ arc-runner-set-xuanyang ]
       fail-fast: true
     steps:
       - name: prepare ubuntu environment
@@ -79,7 +79,7 @@ jobs:
         run: make docker
 
   result:
-    runs-on: arc-runner-set-xuanyang-ack
+    runs-on: arc-runner-set-xuanyang
     timeout-minutes: 60
     needs: [CI]
     steps:
