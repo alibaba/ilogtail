@@ -822,7 +822,9 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "content": "2024-01-05T23:28:06.818486411+08:00 stdout P"
+                        "_source_": "stdout",
+                        "_time_": "2024-01-05T23:28:06.818486411+08:00",
+                        "content": "P"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,

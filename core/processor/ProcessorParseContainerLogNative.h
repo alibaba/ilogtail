@@ -23,13 +23,6 @@
 
 namespace logtail {
 
-struct ContainerStdoutKeyStringBuffer {
-    StringBuffer timeKeyBuffer;
-    StringBuffer sourceKeyBuffer;
-    StringBuffer logKeyBuffer;
-    StringBuffer flagBuffer;
-};
-
 class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
@@ -55,25 +48,16 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::string containerTimeKey = "_time_"; // 容器时间字段
-    std::string containerSourceKey = "_source_"; // 容器来源字段
-    std::string containerLogKey = "content"; // 容器日志字段
+    static const std::string containerTimeKey; // 容器时间字段
+    static const std::string containerSourceKey; // 容器来源字段
+    static const std::string containerLogKey; // 容器日志字段
 
-    bool ProcessEvent(PipelineEventGroup& logGroup,
-                      const StringView containerType,
-                      PipelineEventPtr& e,
-                      ContainerStdoutKeyStringBuffer* containerStdoutKeyStringBuffer);
-    void AddDockerJsonLog(char** data, const StringBuffer key, const StringView value, LogEvent& targetEvent);
-    void AddContainerdTextLog(ContainerStdoutKeyStringBuffer* keyBuffer,
-                 StringView timeValue,
-                 StringView sourceValue,
-                 StringView content,
-                 StringView partTag,
-                 LogEvent& sourceEvent);
-    bool ContainerdLogLineParser(LogEvent& sourceEvent, ContainerStdoutKeyStringBuffer* containerStdoutKeyStringBuffer);
-    bool DockerJsonLogLineParser(PipelineEventGroup& logGroup,
-                                 LogEvent& sourceEvent,
-                                 ContainerStdoutKeyStringBuffer* containerStdoutKeyStringBuffer);
+    bool ProcessEvent(StringView containerType, PipelineEventPtr& e);
+    void AddDockerJsonLog(char* data, StringView key, StringView value, LogEvent& targetEvent);
+    void AddContainerdTextLog(
+        StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent);
+    bool ParseContainerdLogLine(LogEvent& sourceEvent, std::string& errorMsg);
+    bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseContainerLogNativeUnittest;
 #endif
