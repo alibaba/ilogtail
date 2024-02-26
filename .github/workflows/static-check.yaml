@@ -32,16 +32,22 @@ jobs:
   CI:
     env:
       RUNNER_ALLOW_RUNASROOT: 1
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}-latest
     timeout-minutes: 60
     strategy:
       matrix:
         go-version: [ 1.19 ]
-        runner: [ ubuntu-latest ]
+        runner: [ ubuntu ]
       fail-fast: true
     steps:
+      # prepare ubuntu environment
+      - name: prepare ubuntu environment
+        if: matrix.runner == 'ubuntu'
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
+
       # Clean up space to prevent action from running out of disk space.
       - name: Free disk space
+        if: matrix.runner == 'ubuntu-latest'
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -49,8 +55,6 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
-          sudo -E apt-get update
-          sudo -E apt-get install -y libsystemd-dev
 
       - name: Check disk space
         run: |
@@ -67,25 +71,25 @@ jobs:
           submodules: true
 
       - name: Copy Lib
+        if: matrix.runner == 'ubuntu'
         run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/
 
-      - name: Add GOPATH to PATH
-        run: echo "PATH=$GOPATH/bin:$PATH" >> $GITHUB_ENV
-
       - name: Check License Header
+        if: matrix.runner == 'ubuntu'
         run: make check-license
 
       - name: Check Dependencies Licences
+        if: matrix.runner == 'ubuntu'
         run: make check-dependency-licenses
 
       - name: Lint
         run: make lint
 
       - name: UnitTest
-        run: sudo -E make unittest_plugin
+        run: sudo make unittest_plugin
 
       - name: UnitTest PluginManager
-        run: sudo -E make unittest_pluginmanager
+        run: sudo make unittest_pluginmanager
 
 
   result:
