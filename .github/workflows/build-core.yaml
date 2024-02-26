@@ -37,7 +37,7 @@ jobs:
       matrix:
         go-version: [1.19]
         # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idruns-on
-        runner: [ arc-runner-set-xuanyang ]
+        runner: [ arc-runner-set-ilogtail ]
       fail-fast: true
     steps:
       - name: prepare ubuntu environment
@@ -84,7 +84,7 @@ jobs:
         run: make dist && scripts/check_glibc.sh
 
   result:
-    runs-on: arc-runner-set-xuanyang
+    runs-on: arc-runner-set-ilogtail
     timeout-minutes: 60
     needs: [CI]
     steps:
