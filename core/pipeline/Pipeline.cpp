@@ -24,10 +24,9 @@
 #include "flusher/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
 #include "processor/daemon/LogProcess.h"
 
@@ -114,23 +113,13 @@ bool Pipeline::Init(Config&& config) {
             detail["SplitChar"] = Json::Value('\0');
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         } else if (inputFile->mMultiline.IsMultiline()) {
-            // ProcessorSplitNative
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitNative::sName,
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
                                                                        to_string(++pluginIndex));
-            if (!processor->Init(detail, mContext)) {
-                // should not happen
-                return false;
-            }
-            mProcessorLine.emplace_back(std::move(processor));
-            // ProcessorMergeMultilineLogNative
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["MergeBehavior"] = Json::Value("regex");
             detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
             detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
+            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
             if (inputFile->mMultiline.mUnmatchedContentTreatment
                 == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
                 detail["UnmatchedContentTreatment"] = Json::Value("discard");

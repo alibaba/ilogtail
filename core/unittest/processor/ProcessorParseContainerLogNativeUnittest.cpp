@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <chrono>
 #include <cstdlib>
+#include <iostream>
+#include <random>
+#include <string>
+#include <vector>
 
+#include "boost/utility/string_view.hpp"
 #include "common/Constants.h"
 #include "common/JsonUtil.h"
 #include "config/Config.h"
 #include "models/LogEvent.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseContainerLogNative.h"
-#include "processor/ProcessorSplitNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
-
 namespace logtail {
 
 const std::string LOG_BEGIN_STRING = "Exception in thread 'main' java.lang.NullPointerException";
@@ -42,6 +48,7 @@ public:
     void TestIgnoringStdoutStderr();
     void TestContainerdLogWithSplit();
     void TestDockerJsonLogLineParserWithSplit();
+    void TestFindAndSearchPerformance();
 
     PipelineContext mContext;
 };
@@ -51,6 +58,72 @@ UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLog);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestIgnoringStdoutStderr);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLogWithSplit);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestDockerJsonLogLineParserWithSplit);
+// UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestFindAndSearchPerformance);
+
+// 生成一个随机字符串
+std::string generate_random_string(size_t length) {
+    std::string str(length, '\0');
+    static const char alphabet[] = "0123456789"
+                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                   "abcdefghijklmnopqrstuvwxyz";
+
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<> distribution(0, sizeof(alphabet) - 2);
+
+    std::generate_n(str.begin(), length, [&]() { return alphabet[distribution(generator)]; });
+    return str;
+}
+
+void ProcessorParseContainerLogNativeUnittest::TestFindAndSearchPerformance() {
+    const size_t string_length = 1'0000;
+    const char char_to_find = 'X'; // 这是我们要搜索的字符
+    const std::string substring_to_search = "X"; // 这是我们要搜索的子字符串
+    const int num_trials = 100000000;
+    std::string random_string = generate_random_string(string_length);
+
+    // Benchmark string_view.find
+    std::chrono::duration<double, std::milli> boost_find_duration_total;
+    for (int i = 0; i < num_trials; ++i) {
+        boost::string_view string_view(random_string); // 创建 boost::string_view
+
+        auto start = std::chrono::high_resolution_clock::now();
+        string_view.find(char_to_find);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        boost_find_duration_total += end - start;
+    }
+    double boost_find_avg_duration = boost_find_duration_total.count();
+    std::cout << "Total string_view.find took " << boost_find_avg_duration << " milliseconds." << std::endl;
+
+    // Benchmark std::find
+    std::chrono::duration<double, std::milli> find_duration_total;
+    for (int i = 0; i < num_trials; ++i) {
+        boost::string_view string_view(random_string); // 创建 boost::string_view
+
+        auto start = std::chrono::high_resolution_clock::now();
+        std::find(string_view.begin(), string_view.end(), char_to_find);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        find_duration_total += end - start;
+    }
+    double find_avg_duration = find_duration_total.count();
+    std::cout << "Total std::find took " << find_avg_duration << " milliseconds." << std::endl;
+
+    // Benchmark std::search
+    std::chrono::duration<double, std::milli> search_duration_total;
+    for (int i = 0; i < num_trials; ++i) {
+        boost::string_view string_view(random_string); // 创建 boost::string_view
+
+        auto start = std::chrono::high_resolution_clock::now();
+        std::search(string_view.begin(), string_view.end(), substring_to_search.begin(), substring_to_search.end());
+        auto end = std::chrono::high_resolution_clock::now();
+
+        search_duration_total += end - start;
+    }
+    double search_avg_duration = search_duration_total.count();
+    std::cout << "Total std::search took " << search_avg_duration << " milliseconds." << std::endl;
+}
 
 void ProcessorParseContainerLogNativeUnittest::TestInit() {
     // make config
@@ -75,8 +148,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -160,7 +233,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
             std::stringstream expectJson;
             expectJson << R"({
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -181,8 +254,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -298,14 +371,14 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
-    
+
     {
         // make config
         Json::Value config;
@@ -319,8 +392,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -406,7 +479,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 "events": [
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:06.818486411+08:00",
                             "content": "Exception"
@@ -417,7 +490,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:07.818486411+08:00",
                             "content": " in thread"
@@ -428,7 +501,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:08.818486411+08:00",
                             "content": "  'main'"
@@ -459,7 +532,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -480,8 +553,8 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         {
             PipelineEventGroup eventGroup(sourceBuffer);
-            std::string containerType = "containerd-text";
-            eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+            std::string containerType = "containerd_text";
+            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -567,7 +640,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 "events": [
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:06.818486411+08:00",
                             "content": "Exception"
@@ -578,7 +651,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:07.818486411+08:00",
                             "content": " in thread"
@@ -589,7 +662,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "PartLogFlag": "P",
+                            "P": "P",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:08.818486411+08:00",
                             "content": "  'main'"
@@ -650,7 +723,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd"
+                    "container.type": "containerd_text"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -675,8 +748,8 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
         // case4: 第二个空格不存在
         // case5: 第一个空格不存在
         PipelineEventGroup eventGroup(sourceBuffer);
-        std::string containerType = "containerd-text";
-        eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+        std::string containerType = "containerd_text";
+        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
         std::string inJson = R"({
             "events" :
             [
@@ -737,7 +810,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_": "2024-01-05T23:28:06.818486411+08:00",
                         "content": ""
@@ -749,7 +822,9 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "content": "2024-01-05T23:28:06.818486411+08:00 stdout P"
+                        "_source_": "stdout",
+                        "_time_": "2024-01-05T23:28:06.818486411+08:00",
+                        "content": "P"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -786,7 +861,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd"
+                "container.type": "containerd_text"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -794,8 +869,8 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
     }
     {
         PipelineEventGroup eventGroup(sourceBuffer);
-        std::string containerType = "containerd-text";
-        eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+        std::string containerType = "containerd_text";
+        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
         std::string inJson = R"({
             "events" :
             [
@@ -847,7 +922,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:06.818486411+08:00",
                         "content" : "Exception"
@@ -859,7 +934,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:07.818486411+08:00",
                         "content" : " in thread"
@@ -871,7 +946,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "PartLogFlag": "P",
+                        "P": "P",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:08.818486411+08:00",
                         "content" : "  'main'"
@@ -893,7 +968,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd"
+                "container.type": "containerd_text"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -901,13 +976,13 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
     }
 }
 
-void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
+void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
-    std::string containerType = "containerd-text";
-    eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+    std::string containerType = "containerd_text";
+    eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
     inJson << R"({
         "events" :
         [
@@ -924,13 +999,13 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
     })";
     eventGroup.FromJsonString(inJson.str());
 
-    // ProcessorSplitNative
+    // ProcessorSplitLogStringNative
     {
         // make config
         Json::Value config;
         config["AppendingLogPositionMeta"] = true;
-        // make ProcessorSplitNative
-        ProcessorSplitNative processor;
+        // make ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         // run test function
@@ -953,7 +1028,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
     {
         // make config
         Json::Value config;
-        config["MergeBehavior"] = "part_log";
+        config["MergeType"] = "flag";
         config["UnmatchedContentTreatment"] = "single_line";
         // make ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processor;
@@ -1009,7 +1084,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit(){
             }
         ],
         "metadata":{
-            "container.type":"containerd"
+            "container.type":"containerd_text"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
@@ -1021,8 +1096,8 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
-    std::string containerType = "docker-json";
-    eventGroup.SetMetadata(EventGroupMetaKey::CONTAINER_TYPE, containerType);
+    std::string containerType = "docker_json-file";
+    eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
     inJson << R"({
         "events": [
             {
@@ -1037,13 +1112,13 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     })";
     eventGroup.FromJsonString(inJson.str());
 
-    // ProcessorSplitNative
+    // ProcessorSplitLogStringNative
     {
         // make config
         Json::Value config;
         config["AppendingLogPositionMeta"] = true;
-        // make ProcessorSplitNative
-        ProcessorSplitNative processor;
+        // make ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         // run test function
@@ -1066,7 +1141,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     {
         // make config
         Json::Value config;
-        config["MergeBehavior"] = "part_log";
+        config["MergeType"] = "flag";
         config["UnmatchedContentTreatment"] = "single_line";
         // make ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processor;
@@ -1122,7 +1197,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
             }
         ],
         "metadata":{
-            "container.type":"docker-json"
+            "container.type":"docker_json-file"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();

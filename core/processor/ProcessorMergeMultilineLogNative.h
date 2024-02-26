@@ -28,12 +28,13 @@ namespace logtail {
 
 class ProcessorMergeMultilineLogNative : public Processor {
 public:
+    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
+
+    static const std::string PartLogFlag;
     static const std::string sName;
 
-    enum class MergeBehavior { REGEX, PART_LOG };
-    MergeBehavior mMergeBehavior = MergeBehavior::REGEX;
-
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
+    MergeType mMergeType = MergeType::BY_REGEX;
     MultilineOptions mMultiline;
 
     const std::string& Name() const override { return sName; }
@@ -44,23 +45,26 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEventsWithPartLog(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
-    void ProcessEventsWithRegex(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
+    void MergeLogsByRegex(PipelineEventGroup& logGroup);
+    void MergeLogsByFlag(PipelineEventGroup& logGroup);
+    void MergeLogsByJSON(PipelineEventGroup& logGroup);
+
     bool LogSplit(PipelineEventGroup& logGroup,
-                  std::vector<PipelineEventPtr>& logEventIndex,
-                  std::vector<PipelineEventPtr>& discardLogEventIndex,
-                  const StringView& logPath);
-    void HandleUnmatchLogs(const logtail::EventsContainer& events,
-                           long unsigned int& multiBeginIndex,
-                           long unsigned int endIndex,
-                           std::vector<PipelineEventPtr>& logEventIndex,
-                           std::vector<PipelineEventPtr>& discardLogEventIndex,
+                  std::vector<LogEvent*>& logEvents);
+    void HandleUnmatchLogs(std::vector<PipelineEventPtr>& logEvents,
+                           size_t& multiBeginIndex,
+                           size_t endIndex,
+                           size_t& newEventsSize,
+                           const StringView logPath,
                            bool mustHandleLogs = false);
-    void MergeEvents(logtail::EventsContainer& events,
-                     long unsigned int beginIndex,
-                     long unsigned int endIndex,
-                     std::vector<PipelineEventPtr>& logEventIndex,
+    void MergeEvents(std::vector<LogEvent*>& logEvents,
+                     size_t beginIndex,
+                     size_t endIndex,
+                     std::vector<size_t>& logEventIndex,
                      bool update = false,
+                     bool insertLineBreak = true);
+
+    void MergeEvents(std::vector<LogEvent*> &logEvents,
                      bool insertLineBreak = true);
 
     int* mFeedLines = nullptr;

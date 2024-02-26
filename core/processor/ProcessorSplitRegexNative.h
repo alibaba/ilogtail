@@ -26,11 +26,12 @@
 
 namespace logtail {
 
-class ProcessorSplitNative : public Processor {
+class ProcessorSplitRegexNative : public Processor {
 public:
     static const std::string sName;
 
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
+    MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
 
     const std::string& Name() const override { return sName; }
@@ -45,20 +46,25 @@ private:
                       const StringView& logPath,
                       const PipelineEventPtr& e,
                       EventsContainer& newEvents);
-    void LogSplit(const char* buffer,
+    bool LogSplit(const char* buffer,
                   int32_t size,
                   int32_t& lineFeed,
                   std::vector<StringView>& logIndex,
+                  std::vector<StringView>& discardIndex,
                   const StringView& logPath);
+    void HandleUnmatchLogs(const char* buffer,
+                           int& multiBeginIndex,
+                           int endIndex,
+                           std::vector<StringView>& logIndex,
+                           std::vector<StringView>& discardIndex);
 
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
+
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorMergeMultilineLogNativeUnittest;
-    friend class ProcessorMergeMultilineLogDisacardUnmatchUnittest;
-    friend class ProcessorMergeMultilineLogKeepUnmatchUnittest;
-    friend class ProcessorSplitNativeUnittest;
-    friend class ProcessorParseContainerLogNativeUnittest;
+    friend class ProcessorSplitRegexNativeUnittest;
+    friend class ProcessorSplitRegexDisacardUnmatchUnittest;
+    friend class ProcessorSplitRegexKeepUnmatchUnittest;
 #endif
 };
 

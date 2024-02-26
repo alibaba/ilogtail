@@ -19,10 +19,10 @@
 #include "models/LogEvent.h"
 #include "models/StringView.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
+#include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -42,7 +42,8 @@ public:
     void TestAddLog();
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
-    void TestMultipleLines();
+    void TestMultipleLinesWithProcessorMergeMultilineLogNative();
+    void TestMultipleLinesWithProcessorSplitRegexNative();
     void TestProcessEventMicrosecondUnmatch();
     void TestApsaraEasyReadLogTimeParser();
     void TestApsaraLogLineParser();
@@ -58,7 +59,8 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestUploadRawLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
-UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLinesWithProcessorMergeMultilineLogNative);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraEasyReadLogTimeParser);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraLogLineParser);
@@ -419,7 +421,179 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
     }
 }
 
-void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
+void ProcessorParseApsaraNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
+    // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:15:50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1
+[2023-09-04 13:15:33.2]\t[INFO]\t[2]\t/ilogtail/AppConfigBase.cpp:2\t\tAppConfigBase AppConfigBase:2
+[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "[2023-09-04 13:15
+:50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1
+[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+
+
+    std::string expectJson = R"({
+        "events": [
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "1",
+                    "AppConfigBase AppConfigBase": "1",
+                    "__LEVEL__": "ERROR",
+                    "__THREAD__": "1",
+                    "microtime": "1693833350100000"
+                },
+                "timestamp": 1693833350,
+                "timestampNanosecond": 100000000,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "2",
+                    "AppConfigBase AppConfigBase": "2",
+                    "__LEVEL__": "INFO",
+                    "__THREAD__": "2",
+                    "microtime": "1693833333200000"
+                },
+                "timestamp": 1693833333,
+                "timestampNanosecond": 200000000,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "3",
+                    "AppConfigBase AppConfigBase": "3",
+                    "__LEVEL__": "WARNING",
+                    "__THREAD__": "3",
+                    "microtime": "1693833322300000"
+                },
+                "timestamp": 1693833322,
+                "timestampNanosecond": 300000000,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "__raw__": "[2023-09-04 13:15"
+                },
+                "timestamp": 12345678901,
+                "timestampNanosecond": 0,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "__raw__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1"
+                },
+                "timestamp": 12345678901,
+                "timestampNanosecond": 0,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "/ilogtail/AppConfigBase.cpp": "3",
+                    "AppConfigBase AppConfigBase": "3",
+                    "__LEVEL__": "WARNING",
+                    "__THREAD__": "3",
+                    "microtime": "1693833322300000"
+                },
+                "timestamp": 1693833322,
+                "timestampNanosecond": 300000000,
+                "type": 1
+            }
+        ]
+    })";
+
+    // ProcessorSplitLogStringNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config;
+        config["SourceKey"] = "content";
+        config["Timezone"] = "GMT+00:00";
+        config["KeepingSourceWhenParseFail"] = true;
+        config["KeepingSourceWhenParseSucceed"] = false;
+        config["CopingRawLog"] = false;
+        config["RenamedSourceKey"] = "__raw__";
+        config["AppendingLogPositionMeta"] = false;
+
+        std::string pluginId = "testID";
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
+
+        // run function ProcessorParseApsaraNative
+        ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+    // ProcessorSplitRegexNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config;
+        config["SourceKey"] = "content";
+        config["Timezone"] = "GMT+00:00";
+        config["KeepingSourceWhenParseFail"] = true;
+        config["KeepingSourceWhenParseSucceed"] = false;
+        config["CopingRawLog"] = false;
+        config["RenamedSourceKey"] = "__raw__";
+        config["StartPattern"] = ".*";
+        config["UnmatchedContentTreatment"] = "split";
+        config["AppendingLogPositionMeta"] = false;
+
+        std::string pluginId = "testID";
+
+        // run function ProcessorSplitRegexNative
+        ProcessorSplitRegexNative processorSplitRegexNative;
+        processorSplitRegexNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
+        processorSplitRegexNative.Process(eventGroup);
+
+        // run function ProcessorParseApsaraNative
+        ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+}
+
+void ProcessorParseApsaraNativeUnittest::TestMultipleLinesWithProcessorMergeMultilineLogNative() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
     std::string inJson = R"({
         "events" :
@@ -569,14 +743,14 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["StartPattern"] = ".*";
         config["UnmatchedContentTreatment"] = "split";
         config["AppendingLogPositionMeta"] = false;
-        config["MergeBehavior"] = "regex";
+        config["MergeType"] = "regex";
         std::string pluginId = "testID";
 
-        // run function ProcessorSplitNative
-        ProcessorSplitNative processorSplitNative;
-        processorSplitNative.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processorSplitNative.Init(config));
-        processorSplitNative.Process(eventGroup);
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
 
         // run function ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;

@@ -66,5 +66,4 @@ extern const std::string EXPIRE_DAY;
 extern const std::string DEFAULT_CONTENT_KEY; //"content"
 extern const std::string DEFAULT_REG; //"(.*)"
 
-extern const std::string PARTLOGFLAG; //"PartLogFlag"
 } // namespace logtail

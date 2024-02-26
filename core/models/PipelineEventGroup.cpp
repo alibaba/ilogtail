@@ -145,7 +145,7 @@ const std::string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
             return EVENT_GROUP_META_LOG_FILE_OFFSET;
         case EventGroupMetaKey::LOG_READ_LENGTH:
             return EVENT_GROUP_META_LOG_FILE_LENGTH;
-        case EventGroupMetaKey::CONTAINER_TYPE:
+        case EventGroupMetaKey::FILE_ENCODING:
             return EVENT_GROUP_META_CONTAINER_TYPE;
         default:
             static std::string sEmpty = "unknown";
