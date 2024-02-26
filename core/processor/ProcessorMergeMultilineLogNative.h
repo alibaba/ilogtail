@@ -50,20 +50,21 @@ private:
     void MergeLogsByJSON(PipelineEventGroup& logGroup);
 
     bool LogSplit(PipelineEventGroup& logGroup,
-                  std::vector<LogEvent*>& logEvents,
-                  std::vector<size_t>& logEventIndex,
-                  std::vector<size_t>& discardLogEventIndex);
-    void HandleUnmatchLogs(const logtail::EventsContainer& events,
+                  std::vector<LogEvent*>& logEvents);
+    void HandleUnmatchLogs(std::vector<PipelineEventPtr>& logEvents,
                            size_t& multiBeginIndex,
                            size_t endIndex,
-                           std::vector<size_t>& logEventIndex,
-                           std::vector<size_t>& discardLogEventIndex,
+                           size_t& newEventsSize,
+                           const StringView logPath,
                            bool mustHandleLogs = false);
-    void MergeEvents(std::vector<LogEvent*> &logEvents,
+    void MergeEvents(std::vector<LogEvent*>& logEvents,
                      size_t beginIndex,
                      size_t endIndex,
                      std::vector<size_t>& logEventIndex,
                      bool update = false,
+                     bool insertLineBreak = true);
+
+    void MergeEvents(std::vector<LogEvent*> &logEvents,
                      bool insertLineBreak = true);
 
     int* mFeedLines = nullptr;
