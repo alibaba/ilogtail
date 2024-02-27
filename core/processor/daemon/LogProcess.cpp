@@ -250,7 +250,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 double processBytes = 1.0 * s_processBytes / (curTime - lastUpdateMetricTime);
                 out << std::to_string(processBytes) + "\n";
                 out.close();
-                std::cout << std::to_string(processBytes / 1024.0 / 1024.0) << "B/s" << std::endl;
+                std::cout << std::to_string(processBytes / 1024.0 / 1024.0) << "MB/s" << std::endl;
             }
             lastUpdateMetricTime = curTime;
             s_processCount = 0;
