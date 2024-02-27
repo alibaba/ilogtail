@@ -17,15 +17,16 @@ import (
 	"context"
 	"math"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+
+	"go.uber.org/atomic"
 )
 
 type bucket struct {
-	mu            sync.Mutex // Avoid bucket racing
-	tokens        float64
+	mu            sync.Mutex // Avoid replenish racing
+	tokens        atomic.Float64
 	lastReplenish time.Time
 }
 
@@ -91,7 +92,7 @@ func (t *tokenBucket) IsAllowed(key string) bool {
 
 func (t *tokenBucket) getBucket(key string) *bucket {
 	v, exists := t.buckets.LoadOrStore(key, &bucket{
-		tokens:        t.limit.value,
+		tokens:        *atomic.NewFloat64(t.limit.value),
 		lastReplenish: time.Now(),
 	})
 	b := v.(*bucket)
@@ -105,12 +106,10 @@ func (t *tokenBucket) getBucket(key string) *bucket {
 }
 
 func (b *bucket) withdraw() bool {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.tokens < 1 {
+	if b.tokens.Load() < 1 {
 		return false
 	}
-	b.tokens--
+	b.tokens.Add(-1)
 	return true
 }
 
@@ -122,10 +121,10 @@ func (b *bucket) replenish(rate rate) bool {
 	secsSinceLastReplenish := time.Since(b.lastReplenish).Seconds()
 	tokensToReplenish := secsSinceLastReplenish * rate.valuePerSecond
 
-	b.tokens = math.Min(b.tokens+tokensToReplenish, rate.value)
+	b.tokens.Store(math.Min(b.tokens.Load()+tokensToReplenish, rate.value))
 	b.lastReplenish = time.Now()
 
-	return b.tokens >= rate.value
+	return b.tokens.Load() >= rate.value
 }
 
 func (t *tokenBucket) runGC() {
