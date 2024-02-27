@@ -44,7 +44,7 @@ struct ContainerDiscoveryOptions {
     ContainerFilters mContainerFilters;
     std::unordered_map<std::string, std::string> mExternalK8sLabelTag;
     std::unordered_map<std::string, std::string> mExternalEnvTag;
-    bool mCollectingContainersMeta = false;
+    bool mCollectingContainersMeta = false; // 启用容器元信息预览
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
 };
