@@ -182,7 +182,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
             },
             "inputs": [
                 {                
-                    "type": "metric_docker_file",
+                    "type": "metric_container_meta",
                     "detail": {
                         "LogPath": "",
                         "MaxDepth": 0,

@@ -142,7 +142,7 @@ void InputContainerStdout::GenerateContainerMetaFetchingGoPipeline(Json::Value& 
         }
     };
 
-    // 传递给 metric_docker_file 的配置
+    // 传递给 metric_container_meta 的配置
     // 容器过滤
     if (!mContainerDiscovery.mContainerFilters.mK8sNamespaceRegex.empty()) {
         detail["K8sNamespaceRegex"] = Json::Value(mContainerDiscovery.mContainerFilters.mK8sNamespaceRegex);
@@ -166,7 +166,7 @@ void InputContainerStdout::GenerateContainerMetaFetchingGoPipeline(Json::Value& 
     if (mContainerDiscovery.mCollectingContainersMeta) {
         detail["CollectingContainersMeta"] = Json::Value(true);
     }
-    plugin["type"] = Json::Value("metric_docker_file");
+    plugin["type"] = Json::Value("metric_container_meta");
     plugin["detail"] = detail;
 
     res["inputs"].append(plugin);
