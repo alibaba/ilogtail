@@ -73,6 +73,7 @@ jobs:
         env:
           BUILD_LOGTAIL_UT: OFF
           WITHOUTGDB: ON
+          MAKE_JOBS: 24
         run: make e2e-core
 
       # Framework Test will provide local image that Unit Test required

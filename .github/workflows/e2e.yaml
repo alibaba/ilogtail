@@ -80,6 +80,7 @@ jobs:
         env:
           BUILD_LOGTAIL_UT: OFF
           WITHOUTGDB: ON
+          MAKE_JOBS: 24
         run: make e2e
 
   result:
