@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        go-version: [ 1.19.10 ]
+        go-version: [ 1.19 ]
         runner: [ arc-runner-set-ilogtail ]
       fail-fast: true
     steps:
@@ -68,6 +68,12 @@ jobs:
         run: |
           sudo curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: System environment
+        run: |
+          uname -r
+          docker --version
+          go version
 
       - name: E2E Plugin Framework Test
         env:
