@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.19.10 ]
-        runner: [ ubuntu-latest ]
+        runner: [ arc-runner-set-ilogtail ]
       fail-fast: true
     steps:
       # Clean up space to prevent action from running out of disk space.
@@ -79,7 +79,7 @@ jobs:
           make unittest_e2e_engine
 
   result:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set-ilogtail
     timeout-minutes: 60
     needs: [ CI ]
     steps:

@@ -35,12 +35,12 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.19.10 ]
-        runner: [ ubuntu-latest ]
+        runner: [ arc-runner-set-ilogtail ]
       fail-fast: true
     steps:
       # Clean up space to prevent action from running out of disk space.
       - name: clean
-        if: matrix.runner == 'ubuntu-latest'
+        if: matrix.runner == 'arc-runner-set-ilogtail'
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -81,7 +81,7 @@ jobs:
         run: make e2e
 
   result:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set-ilogtail
     timeout-minutes: 60
     needs: [ CI ]
     steps:

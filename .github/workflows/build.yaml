@@ -72,7 +72,7 @@ jobs:
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
-          MAKE_JOBS: 16
+          MAKE_JOBS: 32
         run: make dist
 
       - name: Build Docker
