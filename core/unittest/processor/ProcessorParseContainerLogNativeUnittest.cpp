@@ -149,7 +149,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         {
             PipelineEventGroup eventGroup(sourceBuffer);
             std::string containerType = "containerd_text";
-            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -255,7 +255,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         {
             PipelineEventGroup eventGroup(sourceBuffer);
             std::string containerType = "containerd_text";
-            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -393,7 +393,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         {
             PipelineEventGroup eventGroup(sourceBuffer);
             std::string containerType = "containerd_text";
-            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -554,7 +554,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
         {
             PipelineEventGroup eventGroup(sourceBuffer);
             std::string containerType = "containerd_text";
-            eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
             std::string inJson = R"({
                 "events" :
                 [
@@ -749,7 +749,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
         // case5: 第一个空格不存在
         PipelineEventGroup eventGroup(sourceBuffer);
         std::string containerType = "containerd_text";
-        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+        eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
         std::string inJson = R"({
             "events" :
             [
@@ -870,7 +870,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
     {
         PipelineEventGroup eventGroup(sourceBuffer);
         std::string containerType = "containerd_text";
-        eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+        eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
         std::string inJson = R"({
             "events" :
             [
@@ -982,7 +982,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
     std::string containerType = "containerd_text";
-    eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+    eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
     inJson << R"({
         "events" :
         [
@@ -1097,7 +1097,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     PipelineEventGroup eventGroup(sourceBuffer);
     std::stringstream inJson;
     std::string containerType = "docker_json-file";
-    eventGroup.SetMetadata(EventGroupMetaKey::FILE_ENCODING, containerType);
+    eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, containerType);
     inJson << R"({
         "events": [
             {
