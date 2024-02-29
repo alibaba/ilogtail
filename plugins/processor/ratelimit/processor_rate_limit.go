@@ -30,7 +30,9 @@ type ProcessorRateLimit struct {
 	Algorithm       algorithm
 	limitMetric     pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
-	context         pipeline.Context
+
+	metricRecord *pipeline.MetricsRecord
+	context      pipeline.Context
 }
 
 const pluginName = "processor_rate_limit"
@@ -44,10 +46,14 @@ func (p *ProcessorRateLimit) Init(context pipeline.Context) error {
 		return err
 	}
 	p.Algorithm = newTokenBucket(limit)
+
+	p.metricRecord = p.context.GetMetricRecord()
+
 	p.limitMetric = helper.NewCounterMetric(fmt.Sprintf("%v_limited", pluginName))
-	p.context.RegisterCounterMetric(p.limitMetric)
+	p.metricRecord.RegisterCounterMetric(p.limitMetric)
+
 	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+	p.metricRecord.RegisterCounterMetric(p.processedMetric)
 	return nil
 }
 
