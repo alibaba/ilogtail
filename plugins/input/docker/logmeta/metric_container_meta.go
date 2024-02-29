@@ -287,7 +287,7 @@ func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, sourceP
 }
 
 func (idf *InputDockerFile) updateStdoutMapping(info *helper.DockerInfoDetail, allCmd *DockerFileUpdateCmdAll) {
-	stdoutPath := helper.GetMountedFilePathWithBasePath(idf.MountPath, info.StdoutPath)
+	stdoutPath := helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(info.StdoutPath))
 	stdoutLogType := info.StdoutLogType
 	id := info.ContainerInfo.ID
 	changed := false
