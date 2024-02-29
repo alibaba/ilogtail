@@ -50,10 +50,10 @@ flushers:
 ```json
 {
     "__tag__:__path__": "/home/test-log/test.log",
-	"message": "this is a msg",
-	"level": "INFO",
-	"time": "2024-01-05T12:07:00.123456",
-	"stack": "java.lang.Exception: exception",
+    "message": "this is a msg",
+    "level": "INFO",
+    "time": "2024-01-05T12:07:00.123456",
+    "stack": "java.lang.Exception: exception",
     "__time__": "1657161028"
 }
 ```
