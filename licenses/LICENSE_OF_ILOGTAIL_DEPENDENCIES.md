@@ -100,6 +100,14 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [gopkg.in/ini.v1](https://pkg.go.dev/gopkg.in/ini.v1?tab=licenses)
 - [go.opentelemetry.io/proto/otlp](https://pkg.go.dev/go.opentelemetry.io/proto/otlp?tab=licenses)
+- [github.com/alibabacloud-go/debug](https://pkg.go.dev/github.com/alibabacloud-go/debug?tab=licenses)
+- [github.com/alibabacloud-go/openapi-util](https://pkg.go.dev/github.com/alibabacloud-go/openapi-util?tab=licenses)
+- [github.com/alibabacloud-go/sls-20201230](https://pkg.go.dev/github.com/alibabacloud-go/sls-20201230?tab=licenses)
+- [github.com/alibabacloud-go/tea](https://pkg.go.dev/github.com/alibabacloud-go/tea?tab=licenses)
+- [github.com/alibabacloud-go/tea-utils](https://pkg.go.dev/github.com/alibabacloud-go/tea-utils?tab=licenses)
+- [github.com/alibabacloud-go/tea-xml](https://pkg.go.dev/github.com/alibabacloud-go/tea-xml?tab=licenses)
+- [github.com/aliyun/credentials-go](https://pkg.go.dev/github.com/aliyun/credentials-go?tab=licenses)
+- [github.com/tjfoc/gmsm](https://pkg.go.dev/github.com/tjfoc/gmsm?tab=licenses)
 
 ## BSD licenses
 - [github.com/klauspost/compress](https://pkg.go.dev/github.com/klauspost/compress?tab=licenses)
@@ -147,6 +155,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
 - [github.com/pmezard/go-difflib](https://pkg.go.dev/github.com/pmezard/go-difflib?tab=licenses)
 - [github.com/gorilla/websocket](github.com/gorilla/websocket)
+- [github.com/clbanning/mxj](https://pkg.go.dev/github.com/clbanning/mxj?tab=licenses)
 
 ## MIT licenses
 

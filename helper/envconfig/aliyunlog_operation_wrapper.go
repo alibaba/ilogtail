@@ -21,6 +21,7 @@ import (
 	"sync"
 	"time"
 
+	sls20201230 "github.com/alibabacloud-go/sls-20201230/v5/client"
 	aliyunlog "github.com/aliyun/aliyun-log-go-sdk"
 
 	"github.com/alibaba/ilogtail/pkg/config"
@@ -364,6 +365,40 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 	return nil
 }
 
+func (o *operationWrapper) createProject(configObj *AliyunLogConfigSpec, project string) (err error) {
+	tag := "k8s log project, created by logtail"
+	if len(*flags.SlsResourceGroupID) > 0 {
+		var client *sls20201230.Client
+		client, err = CreateNormalInterface(configObj)
+		if err != nil {
+			return err
+		}
+		request := &sls20201230.CreateProjectRequest{
+			ProjectName:     &project,
+			ResourceGroupId: flags.SlsResourceGroupID,
+			Description:     &tag,
+		}
+		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+			_, err = client.CreateProject(request)
+			if err != nil {
+				time.Sleep(time.Millisecond * 1000)
+			} else {
+				break
+			}
+		}
+	} else {
+		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+			_, err = o.logClient.CreateProject(project, tag)
+			if err != nil {
+				time.Sleep(time.Millisecond * 1000)
+			} else {
+				break
+			}
+		}
+	}
+	return err
+}
+
 func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, project string) error {
 	ok := false
 	var err error
@@ -378,14 +413,9 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 	if ok {
 		return nil
 	}
-	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		_, err = o.logClient.CreateProject(project, "k8s log project, created by alibaba cloud log controller")
-		if err != nil {
-			time.Sleep(time.Millisecond * 1000)
-		} else {
-			break
-		}
-	}
+
+	err = o.createProject(config, project)
+
 	configName := ""
 	logstore := ""
 	if config != nil {

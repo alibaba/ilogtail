@@ -72,6 +72,8 @@ var ProductAPIDomain = flag.String("ALICLOUD_LOG_PRODUCT_DOMAIN", "sls.aliyuncs.
 // DefaultRegion default log region"
 var DefaultRegion = flag.String("ALICLOUD_LOG_REGION", "", "default log region")
 
+var SlsResourceGroupID = flag.String("sls-resource-group-id", "", "sls resource group id")
+
 var SelfEnvConfigFlag bool
 
 func init() {
@@ -89,6 +91,7 @@ func init() {
 	_ = util.InitFromEnvString("ALICLOUD_LOG_PRODUCT_DOMAIN", ProductAPIDomain, *ProductAPIDomain)
 	_ = util.InitFromEnvString("ALICLOUD_LOG_REGION", DefaultRegion, *DefaultRegion)
 	_ = util.InitFromEnvBool("ALICLOUD_LOG_PLUGIN_ENV_CONFIG", DockerConfigPluginInitFlag, *DockerConfigPluginInitFlag)
+	_ = util.InitFromEnvString("ALICLOUD_SLS_RESOURCE_GROUP_ID", SlsResourceGroupID, *SlsResourceGroupID)
 
 	if len(*DefaultRegion) == 0 {
 		*DefaultRegion = util.GuessRegionByEndpoint(*LogServiceEndpoint, "cn-hangzhou")
