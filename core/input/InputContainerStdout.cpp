@@ -166,6 +166,7 @@ void InputContainerStdout::GenerateContainerMetaFetchingGoPipeline(Json::Value& 
     if (mContainerDiscovery.mCollectingContainersMeta) {
         detail["CollectingContainersMeta"] = Json::Value(true);
     }
+    detail["InputType"] = Json::Value("stdout");
     plugin["type"] = Json::Value("metric_container_meta");
     plugin["detail"] = detail;
 

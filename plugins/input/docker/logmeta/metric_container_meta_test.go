@@ -27,7 +27,7 @@ import (
 )
 
 func TestServiceDockerStdout_Init(t *testing.T) {
-	sds := &InputContainerFile{
+	sds := &InputDockerFile{
 		IncludeLabel: map[string]string{
 			"inlabel":    "label",
 			"inlabelreg": "^label$",

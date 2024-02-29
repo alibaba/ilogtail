@@ -309,7 +309,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 				VolumeDriver: ci.Snapshotter,
 				Runtime:      cw.runtimeVersion.RuntimeName,
 				LogConfig: container.LogConfig{
-					Type: "containerd",
+					Type: "containerd_text",
 				},
 			},
 		},

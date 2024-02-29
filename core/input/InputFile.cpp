@@ -208,6 +208,7 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const 
     if (mContainerDiscovery.mCollectingContainersMeta) {
         detail["CollectingContainersMeta"] = Json::Value(true);
     }
+    detail["InputType"] = Json::Value("file");
     plugin["type"] = Json::Value("metric_container_meta");
     plugin["detail"] = detail;
 

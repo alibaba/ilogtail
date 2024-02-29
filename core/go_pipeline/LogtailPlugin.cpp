@@ -276,6 +276,7 @@ int LogtailPlugin::ExecPluginCmd(
     string paramsStr(params, paramsLen);
     PluginCmdType cmdType = (PluginCmdType)cmdId;
     LOG_DEBUG(sLogger, ("exec cmd", cmdType)("config", configNameStr)("detail", paramsStr));
+    // cmd
     switch (cmdType) {
         case PLUGIN_DOCKER_UPDATE_FILE: {
             DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configNameStr, false, paramsStr, false);
