@@ -16,19 +16,16 @@
 
 #pragma once
 
-#include <cstdint>
 #include <vector>
 
-#include "common/Constants.h"
 #include "file_server/MultilineOptions.h"
 #include "plugin/interface/Processor.h"
-#include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
 class ProcessorMergeMultilineLogNative : public Processor {
 public:
-    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
+    enum class MergeType { BY_REGEX, BY_FLAG };
 
     static const std::string PartLogFlag;
     static const std::string sName;
@@ -47,10 +44,8 @@ protected:
 private:
     void MergeLogsByRegex(PipelineEventGroup& logGroup);
     void MergeLogsByFlag(PipelineEventGroup& logGroup);
-    void MergeLogsByJSON(PipelineEventGroup& logGroup);
 
-    bool LogSplit(PipelineEventGroup& logGroup,
-                  std::vector<LogEvent*>& logEvents);
+    bool LogSplit(PipelineEventGroup& logGroup);
     void HandleUnmatchLogs(std::vector<PipelineEventPtr>& logEvents,
                            size_t& multiBeginIndex,
                            size_t endIndex,
@@ -67,7 +62,6 @@ private:
     void MergeEvents(std::vector<LogEvent*> &logEvents,
                      bool insertLineBreak = true);
 
-    int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
