@@ -180,7 +180,7 @@ bool Pipeline::Init(Config&& config) {
             }
             mProcessorLine.emplace_back(std::move(processor));
         }
-        {
+        if (inputFile->mMultiline.IsMultiline()) {
             Json::Value detail;
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
                                                                        to_string(++pluginIndex));
