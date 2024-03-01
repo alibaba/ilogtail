@@ -19,10 +19,10 @@
 namespace logtail {
 
 std::unique_ptr<LogEvent> LogEvent::CreateEvent(PipelineEventGroup* ptr) {
-    return std::unique_ptr<LogEvent>(new LogEvent(Type::LOG, ptr));
+    return std::unique_ptr<LogEvent>(new LogEvent(ptr));
 }
 
-LogEvent::LogEvent(Type type, PipelineEventGroup* ptr) : PipelineEvent(type, ptr) {
+LogEvent::LogEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::LOG, ptr) {
 }
 
 void LogEvent::SetContent(const StringView& key, const StringView& val) {

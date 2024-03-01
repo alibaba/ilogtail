@@ -19,10 +19,10 @@
 namespace logtail {
 
 std::unique_ptr<MetricEvent> MetricEvent::CreateEvent(PipelineEventGroup* ptr) {
-    return std::unique_ptr<MetricEvent>(new MetricEvent(Type::METRIC, ptr));
+    return std::unique_ptr<MetricEvent>(new MetricEvent(ptr));
 }
 
-MetricEvent::MetricEvent(Type type, PipelineEventGroup* ptr) : PipelineEvent(type, ptr) {
+MetricEvent::MetricEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::METRIC, ptr) {
 }
 
 uint64_t MetricEvent::EventsSizeBytes() {

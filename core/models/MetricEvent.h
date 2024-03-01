@@ -32,7 +32,7 @@ public:
 #endif
 
 private:
-    MetricEvent(Type type, PipelineEventGroup* ptr);
+    MetricEvent(PipelineEventGroup* ptr);
 };
 
 } // namespace logtail

@@ -32,7 +32,7 @@ public:
 #endif
     
 private:
-    SpanEvent(Type type, PipelineEventGroup* ptr);
+    SpanEvent(PipelineEventGroup* ptr);
 };
 
 } // namespace logtail

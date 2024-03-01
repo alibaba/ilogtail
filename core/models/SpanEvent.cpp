@@ -19,10 +19,10 @@
 namespace logtail {
 
 std::unique_ptr<SpanEvent> SpanEvent::CreateEvent(PipelineEventGroup* ptr) {
-    return std::unique_ptr<SpanEvent>(new SpanEvent(Type::SPAN, ptr));
+    return std::unique_ptr<SpanEvent>(new SpanEvent(ptr));
 }
 
-SpanEvent::SpanEvent(Type type, PipelineEventGroup* ptr) : PipelineEvent(type, ptr) {
+SpanEvent::SpanEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::SPAN, ptr) {
 }
 
 uint64_t SpanEvent::EventsSizeBytes() {

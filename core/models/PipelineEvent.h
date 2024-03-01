@@ -59,7 +59,7 @@ public:
 #endif
 
 protected:
-    Type mType;
+    Type mType = Type::NONE;
     time_t timestamp = 0;
     long timestampNanosecond = 0;
     PipelineEventGroup* mPipelineEventGroupPtr = nullptr;

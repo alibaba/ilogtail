@@ -46,7 +46,7 @@ public:
 #endif
 
 private:
-    LogEvent(Type type, PipelineEventGroup* ptr);
+    LogEvent(PipelineEventGroup* ptr);
 
     LogContents contents;
 };
