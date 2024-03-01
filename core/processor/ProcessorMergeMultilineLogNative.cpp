@@ -111,6 +111,11 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
     size_t begin = 0;
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
+            for (size_t i = begin; i < sourceEvents.size(); ++i) {
+                sourceEvents[size++] = std::move(sourceEvents[i]);
+            }
+            sourceEvents.resize(size);
+            return;
         }
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
         if (sourceEvent->GetContents().empty()) {
@@ -170,6 +175,11 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
     auto& sourceEvents = logGroup.MutableEvents();
     for (size_t curIndex = 0; curIndex < sourceEvents.size(); ++curIndex) {
         if (!IsSupportedEvent(sourceEvents[curIndex])) {
+            for (size_t i = multiBeginIndex; i < sourceEvents.size(); ++i) {
+                sourceEvents[newEventsSize++] = std::move(sourceEvents[i]);
+            }
+            sourceEvents.resize(newEventsSize);
+            return;
         }
         LogEvent* sourceEvent = &sourceEvents[curIndex].Cast<LogEvent>();
         // 这个evnet没有内容 不需要处理
