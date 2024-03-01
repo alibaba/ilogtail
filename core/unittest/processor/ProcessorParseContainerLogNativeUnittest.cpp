@@ -479,7 +479,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 "events": [
                     {
                         "contents": {
-                            "P": "P",
+                            "P": "",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:06.818486411+08:00",
                             "content": "Exception"
@@ -490,7 +490,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "P": "P",
+                            "P": "",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:07.818486411+08:00",
                             "content": " in thread"
@@ -501,7 +501,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "P": "P",
+                            "P": "",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:08.818486411+08:00",
                             "content": "  'main'"
@@ -640,7 +640,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 "events": [
                     {
                         "contents": {
-                            "P": "P",
+                            "P": "",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:06.818486411+08:00",
                             "content": "Exception"
@@ -651,7 +651,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "P": "P",
+                            "P": "",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:07.818486411+08:00",
                             "content": " in thread"
@@ -662,7 +662,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     },
                     {
                         "contents": {
-                            "P": "P",
+                            "P": "",
                             "_source_": "stdout",
                             "_time_": "2024-01-05T23:28:08.818486411+08:00",
                             "content": "  'main'"
@@ -810,7 +810,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "P": "P",
+                        "P": "",
                         "_source_": "stdout",
                         "_time_": "2024-01-05T23:28:06.818486411+08:00",
                         "content": ""
@@ -922,7 +922,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "P": "P",
+                        "P": "",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:06.818486411+08:00",
                         "content" : "Exception"
@@ -934,7 +934,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "P": "P",
+                        "P": "",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:07.818486411+08:00",
                         "content" : " in thread"
@@ -946,7 +946,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 {
                     "contents" :
                     {
-                        "P": "P",
+                        "P": "",
                         "_source_": "stdout",
                         "_time_" : "2024-01-05T23:28:08.818486411+08:00",
                         "content" : "  'main'"
@@ -1003,7 +1003,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
     {
         // make config
         Json::Value config;
-        config["AppendingLogPositionMeta"] = true;
         // make ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processor;
         processor.SetContext(mContext);
@@ -1042,7 +1041,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
         // make config
         Json::Value config;
         config["StartPattern"] = LOG_BEGIN_REGEX;
-        config["MergeBehavior"] = "regex";
+        config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "single_line";
         // make ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processor;
@@ -1060,7 +1059,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "_source_": "stdout",
                     "_time_": "2024-01-05T23:28:06.818486411+08:00",
                     "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
@@ -1072,8 +1070,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
             {
                 "contents" :
                 {
-                    "__file_offset__": ")"
-               << strlen(R"(2024-01-05T23:28:06.818486411+08:00 stdout P Exception in2024-01-05T23:28:06.818486411+08:00 stdout P n thread  'main' java.lang.Nulln2024-01-05T23:28:06.818486411+08:00 stdout P PoinntterExceptn2024-01-05T23:28:06.818486411+08:00 stdout P ionn2024-01-05T23:28:06.818486411+08:00 stdout F      at com.example.myproject.Book.getTitlen2024-01-05T23:28:06.818486411+08:00 stdout F      at com.example.myproject.Book.getTitlen2024-01-05T23:28:06.818486411+08:00 stdout P      at com.exan2024-01-05T23:28:06.818486411+08:00 stdout P mple.myproject.Book.gn2024-01-05T23:28:06.818486411+08:00 stdout P etTitn2024-01-05T23:28:06.818486411+08:00 stdout F len2024-01-05T23:28:06.818486411+08:00 stdout F     ...23 moren)") << R"(",
                     "_source_": "stdout",
                     "_time_": "2024-01-05T23:31:06.818486411+08:00",
                     "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
@@ -1116,7 +1112,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
     {
         // make config
         Json::Value config;
-        config["AppendingLogPositionMeta"] = true;
+        
         // make ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processor;
         processor.SetContext(mContext);
@@ -1155,7 +1151,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
         // make config
         Json::Value config;
         config["StartPattern"] = LOG_BEGIN_REGEX;
-        config["MergeBehavior"] = "regex";
+        config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "single_line";
         // make ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processor;
@@ -1173,7 +1169,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "_source_": "stdout",
                     "_time_": "2024-02-19T03:49:37.793533014Z",
                     "content" : "Exception in thread  \"main\" java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
@@ -1185,8 +1180,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
             {
                 "contents" :
                 {
-                    "__file_offset__": ")"
-               << strlen(R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"}n{"log":"     at com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-02-19T03:49:37.793559367Z"}n{"log":"     at com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-02-19T03:49:37.793563414Z"}n{"log":"     at com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-02-19T03:49:37.793566551Z"}n{"log":"    ...23 more\n","stream":"stdout","time":"2024-02-19T03:49:37.793569514Z"}n)") << R"(",
                     "_source_": "stdout",
                     "_time_": "2024-02-19T03:55:17.514807564Z",
                     "content" : "Exception in thread  \"main\" java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"

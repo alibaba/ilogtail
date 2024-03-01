@@ -310,7 +310,7 @@ void ProcessorParseContainerLogNative::ResetContainerdTextLog(
     sourceEvent.SetContentNoCopy(containerSourceKey, source);
     if (isPartialLog) {
         sourceEvent.SetContentNoCopy(ProcessorMergeMultilineLogNative::PartLogFlag,
-                                     ProcessorMergeMultilineLogNative::PartLogFlag);
+                                     StringView());
     }
     sourceEvent.SetContentNoCopy(containerLogKey, content);
 }
