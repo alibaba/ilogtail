@@ -45,12 +45,34 @@ PipelineEventGroup& PipelineEventGroup::operator=(PipelineEventGroup&& rhs) noex
     return *this;
 }
 
-void PipelineEventGroup::AddEvent(PipelineEventPtr&& event) {
-    mEvents.emplace_back(std::move(event));
+std::unique_ptr<LogEvent> PipelineEventGroup::CreateLogEvent() {
+    return std::unique_ptr<LogEvent>(new LogEvent(this));
 }
 
-void PipelineEventGroup::AddEvent(std::unique_ptr<PipelineEvent>&& event) {
-    mEvents.emplace_back(std::move(event));
+std::unique_ptr<MetricEvent> PipelineEventGroup::CreateMetricEvent() {
+    return std::unique_ptr<MetricEvent>(new MetricEvent(this));
+}
+
+std::unique_ptr<SpanEvent> PipelineEventGroup::CreateSpanEvent() {
+    return std::unique_ptr<SpanEvent>(new SpanEvent(this));
+}
+
+LogEvent* PipelineEventGroup::AddLogEvent() {
+    LogEvent* e = new LogEvent(this);
+    mEvents.emplace_back(e);
+    return e;
+}
+
+MetricEvent* PipelineEventGroup::AddMetricEvent() {
+    MetricEvent* e = new MetricEvent(this);
+    mEvents.emplace_back(e);
+    return e;
+}
+
+SpanEvent* PipelineEventGroup::AddSpanEvent() {
+    SpanEvent* e = new SpanEvent(this);
+    mEvents.emplace_back(e);
+    return e;
 }
 
 void PipelineEventGroup::SetMetadata(EventGroupMetaKey key, const StringView& val) {
@@ -233,16 +255,13 @@ bool PipelineEventGroup::FromJson(const Json::Value& root) {
     if (root.isMember("events")) {
         Json::Value events = root["events"];
         for (const auto& event : events) {
-            PipelineEventPtr eventPtr;
             if (event["type"].asInt() == static_cast<int>(PipelineEvent::Type::LOG)) {
-                eventPtr = LogEvent::CreateEvent(this);
+                AddLogEvent()->FromJson(event);
             } else if (event["type"].asInt() == static_cast<int>(PipelineEvent::Type::METRIC)) {
-                eventPtr = MetricEvent::CreateEvent(this);
+                AddMetricEvent()->FromJson(event);
             } else {
-                eventPtr = SpanEvent::CreateEvent(this);
+                AddSpanEvent()->FromJson(event);
             }
-            eventPtr->FromJson(event);
-            AddEvent(std::move(eventPtr));
         }
     }
     return true;

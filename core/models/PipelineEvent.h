@@ -34,8 +34,7 @@ class PipelineEventGroup;
 class PipelineEvent {
 public:
     enum class Type { NONE, LOG, METRIC, SPAN };
-
-    PipelineEvent(Type type, PipelineEventGroup* ptr);
+    
     virtual ~PipelineEvent() = default;
 
     Type GetType() const { return mType; }
@@ -59,6 +58,8 @@ public:
 #endif
 
 protected:
+    PipelineEvent(Type type, PipelineEventGroup* ptr);
+
     Type mType = Type::NONE;
     time_t timestamp = 0;
     long timestampNanosecond = 0;

@@ -21,16 +21,16 @@
 namespace logtail {
 
 class SpanEvent : public PipelineEvent {
-public:
-    static std::unique_ptr<SpanEvent> CreateEvent(PipelineEventGroup* ptr);
+    friend class PipelineEventGroup;
 
+public:
     uint64_t EventsSizeBytes() override;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson() const override;
     bool FromJson(const Json::Value&) override;
 #endif
-    
+
 private:
     SpanEvent(PipelineEventGroup* ptr);
 };

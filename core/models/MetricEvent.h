@@ -21,9 +21,9 @@
 namespace logtail {
 
 class MetricEvent : public PipelineEvent {
-public:
-    static std::unique_ptr<MetricEvent> CreateEvent(PipelineEventGroup* ptr);
+    friend class PipelineEventGroup;
 
+public:
     uint64_t EventsSizeBytes() override;
 
 #ifdef APSARA_UNIT_TEST_MAIN

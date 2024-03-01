@@ -37,9 +37,9 @@ private:
 };
 
 void PipelineEventPtrUnittest::TestIs() {
-    PipelineEventPtr logEventPtr(LogEvent::CreateEvent(mEventGroup.get()));
-    PipelineEventPtr metricEventPtr(MetricEvent::CreateEvent(mEventGroup.get()));
-    PipelineEventPtr spanEventPtr(SpanEvent::CreateEvent(mEventGroup.get()));
+    PipelineEventPtr logEventPtr(mEventGroup->CreateLogEvent());
+    PipelineEventPtr metricEventPtr(mEventGroup->CreateMetricEvent());
+    PipelineEventPtr spanEventPtr(mEventGroup->CreateSpanEvent());
     APSARA_TEST_TRUE_FATAL(logEventPtr.Is<LogEvent>());
     APSARA_TEST_FALSE_FATAL(logEventPtr.Is<MetricEvent>());
     APSARA_TEST_FALSE_FATAL(logEventPtr.Is<SpanEvent>());
@@ -52,17 +52,17 @@ void PipelineEventPtrUnittest::TestIs() {
 }
 
 void PipelineEventPtrUnittest::TestGet() {
-    auto logUPtr = LogEvent::CreateEvent(mEventGroup.get());
+    auto logUPtr = mEventGroup->CreateLogEvent();
     auto logAddr = logUPtr.get();
-    PipelineEventPtr logEventPtr(LogEvent::CreateEvent(mEventGroup.get()));
+    PipelineEventPtr logEventPtr(mEventGroup->CreateLogEvent());
     LogEvent* log = logEventPtr.Get<LogEvent>();
     APSARA_TEST_EQUAL_FATAL(logAddr, log);
 }
 
 void PipelineEventPtrUnittest::TestCast() {
-    auto logUPtr = LogEvent::CreateEvent(mEventGroup.get());
+    auto logUPtr = mEventGroup->CreateLogEvent();
     auto logAddr = logUPtr.get();
-    PipelineEventPtr logEventPtr(LogEvent::CreateEvent(mEventGroup.get()));
+    PipelineEventPtr logEventPtr(mEventGroup->CreateLogEvent());
     LogEvent& log = logEventPtr.Cast<LogEvent>();
     APSARA_TEST_EQUAL_FATAL(logAddr, &log);
 }

@@ -23,9 +23,9 @@ namespace logtail {
 using LogContents = std::map<StringView, StringView>;
 
 class LogEvent : public PipelineEvent {
-public:
-    static std::unique_ptr<LogEvent> CreateEvent(PipelineEventGroup* ptr);
+    friend class PipelineEventGroup;
 
+public:
     const LogContents& GetContents() const { return contents; }
     LogContents& MutableContents() { return contents; }
     void SetContent(const StringView& key, const StringView& val);

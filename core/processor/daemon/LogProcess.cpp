@@ -460,7 +460,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         // TODO: metadata should be set in reader
         FillEventGroupMetadata(*logBuffer, eventGroup);
 
-        std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(&eventGroup);
+        LogEvent* event = eventGroup.AddLogEvent();
         time_t logtime = time(NULL);
         if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
             logtime += GetTimeDelta();
@@ -469,7 +469,6 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
         auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
         event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-        eventGroup.AddEvent(std::move(event));
         eventGroupList.emplace_back(std::move(eventGroup));
         // process logGroup
         pipeline->Process(eventGroupList);

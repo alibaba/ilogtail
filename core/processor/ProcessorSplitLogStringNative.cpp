@@ -114,7 +114,7 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
 
     size_t begin = 0;
     while (begin < sourceVal.size()) {
-        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(&logGroup);
+        std::unique_ptr<LogEvent> targetEvent = logGroup.CreateLogEvent();
         StringView content = GetNextLine(sourceVal, begin);
         targetEvent->SetContentNoCopy(StringView(sourceKey.data, sourceKey.size), content);
         targetEvent->SetTimestamp(

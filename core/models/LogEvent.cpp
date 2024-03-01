@@ -18,10 +18,6 @@
 
 namespace logtail {
 
-std::unique_ptr<LogEvent> LogEvent::CreateEvent(PipelineEventGroup* ptr) {
-    return std::unique_ptr<LogEvent>(new LogEvent(ptr));
-}
-
 LogEvent::LogEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::LOG, ptr) {
 }
 

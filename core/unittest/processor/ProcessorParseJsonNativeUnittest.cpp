@@ -249,7 +249,7 @@ void ProcessorParseJsonNativeUnittest::TestAddLog() {
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
-    auto logEvent = LogEvent::CreateEvent(&eventGroup);
+    auto logEvent = eventGroup.CreateLogEvent();
     char key[] = "key";
     char value[] = "value";
     processor.AddLog(key, value, *logEvent);

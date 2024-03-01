@@ -38,9 +38,9 @@ private:
 };
 
 void PipelineEventUnittest::TestGetType() {
-    std::unique_ptr<LogEvent> logEvent = LogEvent::CreateEvent(mEventGroup.get());
-    std::unique_ptr<MetricEvent> metricEvent = MetricEvent::CreateEvent(mEventGroup.get());
-    std::unique_ptr<SpanEvent> spanEvent = SpanEvent::CreateEvent(mEventGroup.get());
+    std::unique_ptr<LogEvent> logEvent = mEventGroup->CreateLogEvent();
+    std::unique_ptr<MetricEvent> metricEvent = mEventGroup->CreateMetricEvent();
+    std::unique_ptr<SpanEvent> spanEvent = mEventGroup->CreateSpanEvent();
     APSARA_TEST_STREQ_FATAL("Log", PipelineEventTypeToString(logEvent->GetType()).c_str());
     APSARA_TEST_STREQ_FATAL("Metric", PipelineEventTypeToString(metricEvent->GetType()).c_str());
     APSARA_TEST_STREQ_FATAL("Span", PipelineEventTypeToString(spanEvent->GetType()).c_str());

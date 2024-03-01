@@ -70,11 +70,15 @@ public:
     PipelineEventGroup(PipelineEventGroup&&) noexcept;
     PipelineEventGroup& operator=(PipelineEventGroup&&) noexcept;
 
+    std::unique_ptr<LogEvent> CreateLogEvent();
+    std::unique_ptr<MetricEvent> CreateMetricEvent();
+    std::unique_ptr<SpanEvent> CreateSpanEvent();
 
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
-    void AddEvent(PipelineEventPtr&& event);
-    void AddEvent(std::unique_ptr<PipelineEvent>&& event);
+    LogEvent* AddLogEvent();
+    MetricEvent* AddMetricEvent();
+    SpanEvent* AddSpanEvent();
     void SwapEvents(EventsContainer& other) { mEvents.swap(other); }
     // void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer() { return mSourceBuffer; }

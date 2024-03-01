@@ -39,12 +39,9 @@ private:
 };
 
 void PipelineEventGroupUnittest::TestSwapEvents() {
-    PipelineEventPtr logEventPtr(LogEvent::CreateEvent(mEventGroup.get()));
-    PipelineEventPtr metricEventPtr(MetricEvent::CreateEvent(mEventGroup.get()));
-    PipelineEventPtr spanEventPtr(SpanEvent::CreateEvent(mEventGroup.get()));
-    mEventGroup->AddEvent(std::move(logEventPtr));
-    mEventGroup->AddEvent(std::move(metricEventPtr));
-    mEventGroup->AddEvent(std::move(spanEventPtr));
+    mEventGroup->AddLogEvent();
+    mEventGroup->AddMetricEvent();
+    mEventGroup->AddSpanEvent();
     EventsContainer eventContainer;
     mEventGroup->SwapEvents(eventContainer);
     APSARA_TEST_EQUAL_FATAL(3L, eventContainer.size());

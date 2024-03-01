@@ -145,7 +145,7 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     }
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
     for (auto& content : logIndex) {
-        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(&logGroup);
+        std::unique_ptr<LogEvent> targetEvent = logGroup.CreateLogEvent();
         targetEvent->SetTimestamp(
             sourceEvent.GetTimestamp(),
             sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?

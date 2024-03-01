@@ -32,7 +32,7 @@ protected:
     void SetUp() override {
         mSourceBuffer.reset(new SourceBuffer);
         mEventGroup.reset(new PipelineEventGroup(mSourceBuffer));
-        mLogEvent = LogEvent::CreateEvent(mEventGroup.get());
+        mLogEvent = mEventGroup->CreateLogEvent();
     }
 
 private:
