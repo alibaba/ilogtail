@@ -98,7 +98,7 @@ bool ProcessorMergeMultilineLogNative::IsSupportedEvent(const PipelineEventPtr& 
         return true;
     }
     LOG_ERROR(GetContext().GetLogger(),
-              ("current event not support",
+              ("Some events are not supported.",
                "")("project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName()));
     return false;
 }
