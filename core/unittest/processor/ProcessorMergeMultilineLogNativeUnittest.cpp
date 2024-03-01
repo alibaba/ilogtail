@@ -390,7 +390,8 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineDiscardU
                     {
                         "content" : ")"
                << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
-               << LOG_CONTINUE_STRING << R"(first.\nmultiline1\nmultiline2\n)"
+               << LOG_CONTINUE_STRING << R"(\n)"
+               << R"(first.\nmultiline1\nmultiline2\n)"
                << R"(first.\nmultiline1\nmultiline2\n)"
                << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"

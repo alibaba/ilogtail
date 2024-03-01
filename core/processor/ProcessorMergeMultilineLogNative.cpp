@@ -216,6 +216,12 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                     multiBeginIndex = curIndex + 1;
                     break;
                 }
+                // Cannot determine where log is unmatched here where there is only EndPatternReg
+                if (mMultiline.GetStartPatternReg() == nullptr && mMultiline.GetContinuePatternReg() == nullptr
+                    && mMultiline.GetEndPatternReg() != nullptr) {
+                    break;
+                }
+
                 // 当前行没有匹配到任何正则
                 multiBeginIndex = curIndex;
                 HandleUnmatchLogs(sourceEvents, multiBeginIndex, curIndex, newEventsSize, logPath);
