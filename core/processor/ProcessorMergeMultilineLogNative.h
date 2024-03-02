@@ -52,15 +52,8 @@ private:
                            size_t& newEventsSize,
                            const StringView logPath,
                            bool mustHandleLogs = false);
-    void MergeEvents(std::vector<LogEvent*>& logEvents,
-                     size_t beginIndex,
-                     size_t endIndex,
-                     std::vector<size_t>& logEventIndex,
-                     bool update = false,
-                     bool insertLineBreak = true);
 
-    void MergeEvents(std::vector<LogEvent*> &logEvents,
-                     bool insertLineBreak = true);
+    void MergeEvents(std::vector<LogEvent*>& logEvents, bool insertLineBreak = true);
 
     int* mSplitLines = nullptr;
 
