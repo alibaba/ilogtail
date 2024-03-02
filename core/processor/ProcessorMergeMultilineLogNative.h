@@ -45,7 +45,6 @@ private:
     void MergeLogsByRegex(PipelineEventGroup& logGroup);
     void MergeLogsByFlag(PipelineEventGroup& logGroup);
 
-    bool LogSplit(PipelineEventGroup& logGroup);
     void HandleUnmatchLogs(std::vector<PipelineEventPtr>& logEvents,
                            size_t& multiBeginIndex,
                            size_t endIndex,
