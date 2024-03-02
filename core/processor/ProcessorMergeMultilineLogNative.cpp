@@ -94,13 +94,7 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
 }
 
 bool ProcessorMergeMultilineLogNative::IsSupportedEvent(const PipelineEventPtr& e) const {
-    if (e.Is<LogEvent>()) {
-        return true;
-    }
-    LOG_ERROR(GetContext().GetLogger(),
-              ("Some events are not supported.",
-               "")("project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName()));
-    return false;
+    return e.Is<LogEvent>();
 }
 
 void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGroup) {
@@ -115,6 +109,16 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
                 sourceEvents[size++] = std::move(sourceEvents[i]);
             }
             sourceEvents.resize(size);
+            StringView filePath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
+            LOG_ERROR(mContext->GetLogger(),
+                      ("Some events are not supported, filePath",
+                       filePath)(" processor ", sName)("config", mContext->GetConfigName()));
+            mContext->GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                           "Some events are not supported.\tfilePath: " + filePath.to_string()
+                                               + "\tprocessor: " + sName + "\tconfig: " + mContext->GetConfigName(),
+                                           mContext->GetProjectName(),
+                                           mContext->GetLogstoreName(),
+                                           mContext->GetRegion());
             return;
         }
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
@@ -179,6 +183,16 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 sourceEvents[newEventsSize++] = std::move(sourceEvents[i]);
             }
             sourceEvents.resize(newEventsSize);
+            StringView filePath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
+            LOG_ERROR(mContext->GetLogger(),
+                      ("Some events are not supported, filePath",
+                       filePath)(" processor ", sName)("config", mContext->GetConfigName()));
+            mContext->GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                           "Some events are not supported.\tfilePath: " + filePath.to_string()
+                                               + "\tprocessor: " + sName + "\tconfig: " + mContext->GetConfigName(),
+                                           mContext->GetProjectName(),
+                                           mContext->GetLogstoreName(),
+                                           mContext->GetRegion());
             return;
         }
         LogEvent* sourceEvent = &sourceEvents[curIndex].Cast<LogEvent>();
