@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <cstdlib>
+
 #include "common/Constants.h"
 #include "common/JsonUtil.h"
 #include "config/Config.h"
@@ -237,8 +238,8 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineKeepUnma
                     "contents" :
                     {
                         "content" : ")"
-                << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
-                << R"("
+               << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
+               << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -287,8 +288,8 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineKeepUnma
                     "contents" :
                     {
                         "content" : ")"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
-                    << R"("
+                   << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
+                   << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -498,14 +499,14 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineDiscardU
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
         std::stringstream inJson;
-            inJson << R"({
+        inJson << R"({
             "events" :
             [
                 {
                     "contents" :
                     {
                         "content" : ")"
-                << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
+               << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -527,7 +528,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineDiscardU
                     "contents" :
                     {
                         "content" : ")"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
+                   << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1065,7 +1066,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
         // make config
         Json::Value config;
         config["StartPattern"] = LOG_BEGIN_REGEX;
-        config["ContinuePattern"] = LOG_CONTINUE_REGEX;
         config["EndPattern"] = LOG_END_REGEX;
         config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "discard";
@@ -1094,7 +1094,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-
 }
 
 class ProcessorMergeMultilineLogDisacardUnmatchUnittest : public ::testing::Test {

@@ -122,7 +122,8 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
             mEndPattern = pattern;
         }
 
-        if (!mStartPatternRegPtr && !mEndPatternRegPtr && mContinuePatternRegPtr) {
+        if ((!mStartPatternRegPtr && !mEndPatternRegPtr && mContinuePatternRegPtr)
+            || (mStartPatternRegPtr && mContinuePatternRegPtr && mEndPatternRegPtr)) {
             mContinuePatternRegPtr.reset();
             LOG_WARNING(ctx.GetLogger(),
                         ("problem encountered in config parsing",
