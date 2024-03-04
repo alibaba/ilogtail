@@ -155,7 +155,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         Json::Value config = GetCastSensWordConfig("content");
         std::string pluginId = "testID";
         config["StartPattern"] = ".*";
-        config["UnmatchedContentTreatment"] = "split";
+        config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
 
         // run function ProcessorSplitRegexNative
@@ -257,8 +257,8 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         // make config
         Json::Value config = GetCastSensWordConfig("content");
         std::string pluginId = "testID";
-        config["StartPattern"] = ".*";
-        config["UnmatchedContentTreatment"] = "split";
+        config["StartPattern"] = "[asf|dbf].*";
+        config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
         config["MergeType"] = "regex";
         // run function ProcessorSplitLogStringNative

@@ -122,8 +122,7 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
             mEndPattern = pattern;
         }
 
-        if ((!mStartPatternRegPtr && !mEndPatternRegPtr && mContinuePatternRegPtr)
-            || (mStartPatternRegPtr && mContinuePatternRegPtr && mEndPatternRegPtr)) {
+        if (!mStartPatternRegPtr && !mEndPatternRegPtr && mContinuePatternRegPtr) {
             mContinuePatternRegPtr.reset();
             LOG_WARNING(ctx.GetLogger(),
                         ("problem encountered in config parsing",
@@ -132,6 +131,22 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
             ctx.GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
                                      "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is "
                                      "not: ignore multiline config, module: "
+                                         + pluginName + ", config: " + ctx.GetConfigName(),
+                                     ctx.GetProjectName(),
+                                     ctx.GetLogstoreName(),
+                                     ctx.GetRegion());
+        } else if (mStartPatternRegPtr && mContinuePatternRegPtr && mEndPatternRegPtr) {
+            mStartPatternRegPtr.reset();
+            mContinuePatternRegPtr.reset();
+            mEndPatternRegPtr.reset();
+            LOG_WARNING(ctx.GetLogger(),
+                        ("problem encountered in config parsing",
+                         "param Multiline.StartPattern 、ContinuePattern and EndPattern are not empty. This kind of "
+                         "multiline config is not supported.")("action", "ignore multiline config")(
+                            "module", pluginName)("config", ctx.GetConfigName()));
+            ctx.GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
+                                     "param Multiline.StartPattern 、ContinuePattern and EndPattern are not empty: "
+                                     "ignore multiline config, module: "
                                          + pluginName + ", config: " + ctx.GetConfigName(),
                                      ctx.GetProjectName(),
                                      ctx.GetLogstoreName(),

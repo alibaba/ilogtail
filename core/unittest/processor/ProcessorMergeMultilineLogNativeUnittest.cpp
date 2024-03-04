@@ -35,7 +35,6 @@ class ProcessorMergeMultilineLogNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
     void TestInit();
-    void TestProcessEventSingleLine();
     void TestProcessEventMultiline();
     void TestProcessEventMultilineKeepUnmatch();
     void TestProcessEventMultilineDiscardUnmatch();
@@ -47,7 +46,6 @@ public:
 };
 
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestInit);
-UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcessEventSingleLine);
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcessEventMultiline);
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcessEventMultilineKeepUnmatch);
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcessEventMultilineDiscardUnmatch);
@@ -66,73 +64,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestInit() {
     ProcessorMergeMultilineLogNative processor;
     processor.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
-}
-
-void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventSingleLine() {
-    // make config
-    Json::Value config;
-    config["StartPattern"] = ".*";
-    config["MergeType"] = "regex";
-    config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
-    // make processor
-    // ProcessorSplitLogStringNative
-    ProcessorSplitLogStringNative processorSplitLogStringNative;
-    processorSplitLogStringNative.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
-    // ProcessorMergeMultilineLogNative
-    ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
-    processorMergeMultilineLogNative.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    // make eventGroup
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
-    std::string inJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
-                {
-                    "__file_offset__": "0",
-                    "content" : "line1\nline2"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            }
-        ]
-    })";
-    eventGroup.FromJsonString(inJson);
-    std::string logPath("/var/log/message");
-    // run test function
-    processorSplitLogStringNative.Process(eventGroup);
-    processorMergeMultilineLogNative.Process(eventGroup);
-    // judge result
-    std::string expectJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
-                {
-                    "content" : "line1"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            },
-            {
-                "contents" :
-                {
-                    "content" : "line2"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            }
-        ]
-    })";
-    std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 }
 
 void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultiline() {

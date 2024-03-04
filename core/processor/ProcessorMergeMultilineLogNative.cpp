@@ -84,7 +84,7 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
-    if (mMergeType == MergeType::BY_REGEX && mMultiline.IsMultiline()) {
+    if (mMergeType == MergeType::BY_REGEX) {
         MergeLogsByRegex(logGroup);
     } else if (mMergeType == MergeType::BY_FLAG) {
         MergeLogsByFlag(logGroup);
@@ -206,8 +206,6 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 // continue pattern is given, but current line is not matched against the continue pattern
                 // end pattern is given, and current line is matched against the continue pattern
                 begin = cur;
-                events.emplace_back(sourceEvent);
-                MergeEvents(events, true);
                 sourceEvents[newSize++] = std::move(sourceEvents[begin]);
             } else {
                 HandleUnmatchLogs(sourceEvents, newSize, cur, cur, logPath);
