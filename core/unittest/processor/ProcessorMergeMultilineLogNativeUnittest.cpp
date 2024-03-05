@@ -372,6 +372,15 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
                     "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "line1\ncontinue\nline2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
                 }
             ]
         })";
@@ -405,6 +414,42 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                     "contents" :
                     {
                         "aaa" : "line1\ncontinue\nline2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "line1"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "continue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "line2"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "continue"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
