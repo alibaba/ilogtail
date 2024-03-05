@@ -48,7 +48,7 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     }
 
     // Ignore Warning
-    if (!GetOptionalBoolParam(config, "IgnoreWarning", mIgnoreUnmatchWarning, errorMsg)) {
+    if (!GetOptionalBoolParam(config, "IgnoreUnmatchWarning", mIgnoreUnmatchWarning, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
@@ -62,15 +62,14 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
 
     std::string mergeType;
     if (!GetMandatoryStringParam(config, "MergeType", mergeType, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              mergeType,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     } else if (mergeType == "flag") {
         mMergeType = MergeType::BY_FLAG;
     } else if (mergeType == "regex") {
@@ -199,6 +198,23 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
         if (sourceEvent->GetContents().empty()) {
             continue;
+        }
+        if (!sourceEvent->HasContent(mSourceKey)) {
+            for (size_t i = begin; i < sourceEvents.size(); ++i) {
+                sourceEvents[newSize++] = std::move(sourceEvents[i]);
+            }
+            sourceEvents.resize(newSize);
+            LOG_ERROR(mContext->GetLogger(),
+                      ("unexpected error", "Some events do not have the SourceKey.")("processor", sName)(
+                          "SourceKey", mSourceKey)("config", mContext->GetConfigName()));
+            mContext->GetAlarm().SendAlarm(PARSE_LOG_FAIL_ALARM,
+                                           "unexpected error: some events do not have the sourceKey.\tSourceKey: "
+                                               + mSourceKey + "\tprocessor: " + sName
+                                               + "\tconfig: " + mContext->GetConfigName(),
+                                           mContext->GetProjectName(),
+                                           mContext->GetLogstoreName(),
+                                           mContext->GetRegion());
+            return;
         }
         StringView sourceVal = sourceEvent->GetContent(mSourceKey);
         if (!isPartialLog) {
@@ -343,23 +359,22 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     for (size_t i = begin; i <= end; i++) {
         if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
             logEvents[newSize++] = std::move(logEvents[i]);
-            continue;
-        } else if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
-                   && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        }
+        if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
+            LOG_WARNING(
+                GetContext().GetLogger(),
+                ("unmatched log line", "please check regex")("action", mMultiline.UnmatchedContentTreatmentToString())(
+                    "first 1KB", sourceVal.substr(0, 1024).to_string())("filepath", logPath.to_string())(
+                    "processor", sName)("config", GetContext().GetConfigName())("log bytes", sourceVal.size() + 1));
             GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
                                               "unmatched log line, first 1KB:" + sourceVal.substr(0, 1024).to_string()
-                                                  + "\taction: discard\tfilepath:" + logPath.to_string()
-                                                  + "\tprocessor: " + sName
+                                                  + "\taction: " + mMultiline.UnmatchedContentTreatmentToString()
+                                                  + "\tfilepath: " + logPath.to_string() + "\tprocessor: " + sName
                                                   + "\tconfig: " + GetContext().GetConfigName(),
                                               GetContext().GetProjectName(),
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
-            LOG_WARNING(
-                GetContext().GetLogger(),
-                ("unmatched log line, discard data", "please check regex")(
-                    "first 1KB", sourceVal.substr(0, 1024).to_string())("filepath", logPath.to_string())(
-                    "processor", sName)("config", GetContext().GetConfigName())("log bytes", sourceVal.size() + 1));
         }
     }
 }
