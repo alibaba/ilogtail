@@ -47,6 +47,19 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
+    // Ignore Warning
+    if (!GetOptionalBoolParam(config, "IgnoreWarning", mIgnoreWarning, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mIgnoreWarning,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
+    }
+
     std::string mergeType;
     if (!GetMandatoryStringParam(config, "MergeType", mergeType, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
@@ -322,7 +335,8 @@ void ProcessorMergeMultilineLogNative::MergeEvents(std::vector<LogEvent*>& logEv
 
 void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath) {
-    if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
+    if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
+        && !mIgnoreWarning) {
         for (size_t i = begin; i <= end; i++ && AppConfig::GetInstance()->IsLogParseAlarmValid()
              && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);

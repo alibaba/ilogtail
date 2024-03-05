@@ -33,6 +33,7 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MergeType mMergeType = MergeType::BY_REGEX;
     MultilineOptions mMultiline;
+    bool mIgnoreWarning = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
