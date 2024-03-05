@@ -404,7 +404,16 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                 {
                     "contents" :
                     {
-                        "content" : "line2\ncontinue"
+                        "content" : "line2"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "continue"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,

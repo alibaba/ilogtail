@@ -129,11 +129,6 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
     size_t begin = 0;
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
-            if (!events.empty()) {
-                MergeEvents(events, true);
-                sourceEvents[size++] = std::move(sourceEvents[begin]);
-                begin = cur;
-            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[size++] = std::move(sourceEvents[i]);
             }
@@ -194,11 +189,6 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
     }
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
-            if (!events.empty()) {
-                MergeEvents(events, true);
-                sourceEvents[newSize++] = std::move(sourceEvents[begin]);
-                begin = cur;
-            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[newSize++] = std::move(sourceEvents[i]);
             }
@@ -210,11 +200,6 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             continue;
         }
         if (!sourceEvent->HasContent(mSourceKey)) {
-            if (!events.empty()) {
-                MergeEvents(events, true);
-                sourceEvents[newSize++] = std::move(sourceEvents[begin]);
-                begin = cur;
-            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[newSize++] = std::move(sourceEvents[i]);
             }
