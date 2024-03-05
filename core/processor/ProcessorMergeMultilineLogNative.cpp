@@ -23,8 +23,6 @@
 #include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "reader/LogFileReader.h" //SplitState
 
 namespace logtail {
 
