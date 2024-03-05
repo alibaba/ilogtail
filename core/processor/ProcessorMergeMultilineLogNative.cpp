@@ -48,7 +48,7 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     }
 
     // Ignore Warning
-    if (!GetOptionalBoolParam(config, "IgnoreWarning", mIgnoreUnmatchWarning, errorMsg)) {
+    if (!GetOptionalBoolParam(config, "IgnoreUnmatchWarning", mIgnoreUnmatchWarning, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
