@@ -136,22 +136,23 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
                                      ctx.GetLogstoreName(),
                                      ctx.GetRegion());
         } else if (mStartPatternRegPtr && mContinuePatternRegPtr && mEndPatternRegPtr) {
-            mStartPatternRegPtr.reset();
             mContinuePatternRegPtr.reset();
-            mEndPatternRegPtr.reset();
-            LOG_WARNING(ctx.GetLogger(),
-                        ("problem encountered in config parsing",
-                         "param Multiline.StartPattern 、ContinuePattern and EndPattern are not empty. This kind of "
-                         "multiline config is not supported.")("action", "ignore multiline config")(
-                            "module", pluginName)("config", ctx.GetConfigName()));
-            ctx.GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
-                                     "param Multiline.StartPattern 、ContinuePattern and EndPattern are not empty: "
-                                     "ignore multiline config, module: "
-                                         + pluginName + ", config: " + ctx.GetConfigName(),
-                                     ctx.GetProjectName(),
-                                     ctx.GetLogstoreName(),
-                                     ctx.GetRegion());
-        } else if (mStartPatternRegPtr || mEndPatternRegPtr) {
+            LOG_WARNING(
+                ctx.GetLogger(),
+                ("problem encountered in config parsing",
+                 "none of param Multiline.StartPattern, Multiline.ContinuePattern and Multiline.EndPattern are empty")(
+                    "action", "ignore param Multiline.ContinuePattern")("module", pluginName)("config",
+                                                                                              ctx.GetConfigName()));
+            ctx.GetAlarm().SendAlarm(
+                CATEGORY_CONFIG_ALARM,
+                "none of param Multiline.StartPattern, Multiline.ContinuePattern and Multiline.EndPattern are empty: "
+                "ignore param Multiline.ContinuePattern, module: "
+                    + pluginName + ", config: " + ctx.GetConfigName(),
+                ctx.GetProjectName(),
+                ctx.GetLogstoreName(),
+                ctx.GetRegion());
+        }
+        if (mStartPatternRegPtr || mEndPatternRegPtr) {
             mIsMultiline = true;
         }
     }

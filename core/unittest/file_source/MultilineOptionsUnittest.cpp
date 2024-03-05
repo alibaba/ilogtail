@@ -69,10 +69,10 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("aaa", config->mContinuePattern);
     APSARA_TEST_EQUAL("\\S+", config->mEndPattern);
     APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
-    APSARA_TEST_EQUAL(nullptr, config->GetStartPatternReg());
+    APSARA_TEST_NOT_EQUAL(nullptr, config->GetStartPatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetContinuePatternReg());
-    APSARA_TEST_EQUAL(nullptr, config->GetEndPatternReg());
-    APSARA_TEST_FALSE(config->IsMultiline());
+    APSARA_TEST_NOT_EQUAL(nullptr, config->GetEndPatternReg());
+    APSARA_TEST_TRUE(config->IsMultiline());
 
     // invalid optional param
     configStr = R"(
@@ -130,7 +130,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("\\d+:\\d+:\\d", config->mStartPattern);
     APSARA_TEST_EQUAL("aaa", config->mContinuePattern);
     APSARA_TEST_EQUAL("\\S+", config->mEndPattern);
-    APSARA_TEST_FALSE(config->IsMultiline());
+    APSARA_TEST_TRUE(config->IsMultiline());
 
     // custom mode
     configStr = R"(
