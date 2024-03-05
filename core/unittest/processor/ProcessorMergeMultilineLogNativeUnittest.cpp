@@ -36,13 +36,11 @@ public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
     void TestInit();
     void TestProcess();
-    void TestProcessEventsWithPartLog();
     PipelineContext mContext;
 };
 
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestInit);
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcess);
-UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcessEventsWithPartLog);
 
 void ProcessorMergeMultilineLogNativeUnittest::TestInit() {
     // 测试合法的正则配置
@@ -419,7 +417,16 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
     }
 }
 
-void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
+class ProcessEventsWithPartLogUnittest : public ::testing::Test {
+public:
+    void SetUp() override { mContext.SetConfigName("project##config_0"); }
+    void TestProcessEventsWithPartLog();
+    PipelineContext mContext;
+};
+
+UNIT_TEST_CASE(ProcessEventsWithPartLogUnittest, TestProcessEventsWithPartLog);
+
+void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
     // case: P
     {
         // make config
