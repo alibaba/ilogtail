@@ -198,4 +198,17 @@ bool MultilineOptions::ParseRegex(const string& pattern, shared_ptr<boost::regex
     return true;
 }
 
+const std::string& MultilineOptions::UnmatchedContentTreatmentToString() {
+    switch (mUnmatchedContentTreatment) {
+        case UnmatchedContentTreatment::DISCARD:
+            static std::string discardStr = "discard";
+            return discardStr;
+        case UnmatchedContentTreatment::SINGLE_LINE:
+            static std::string singleLine = "single line";
+            return singleLine;
+        default:
+            static std::string unkonwn = "";
+            return unkonwn;
+    }
+}
 } // namespace logtail
