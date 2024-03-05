@@ -55,15 +55,45 @@ UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcess);
 UNIT_TEST_CASE(ProcessorMergeMultilineLogNativeUnittest, TestProcessEventsWithPartLog);
 
 void ProcessorMergeMultilineLogNativeUnittest::TestInit() {
-    // make config
-    Json::Value config;
-    config["StartPattern"] = ".*";
-    config["MergeType"] = "regex";
-    config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
-    ProcessorMergeMultilineLogNative processor;
-    processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    {
+        Json::Value config;
+        config["StartPattern"] = ".*";
+        config["MergeType"] = "regex";
+        config["UnmatchedContentTreatment"] = "single_line";
+        ProcessorMergeMultilineLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    }
+    {
+        Json::Value config;
+        config["StartPattern"] = ".*";
+        config["ContinuePattern"] = ".*";
+        config["MergeType"] = "regex";
+        config["UnmatchedContentTreatment"] = "single_line";
+        ProcessorMergeMultilineLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    }
+    {
+        Json::Value config;
+        config["StartPattern"] = ".*";
+        config["ContinuePattern"] = ".*";
+        config["MergeType"] = "flag";
+        config["UnmatchedContentTreatment"] = "single_line";
+        ProcessorMergeMultilineLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    }
+    {
+        Json::Value config;
+        config["StartPattern"] = ".*";
+        config["ContinuePattern"] = ".*";
+        config["MergeType"] = "flag1";
+        config["UnmatchedContentTreatment"] = "single_line";
+        ProcessorMergeMultilineLogNative processor;
+        processor.SetContext(mContext);
+        APSARA_TEST_FALSE_FATAL(processor.Init(config));
+    }
 }
 
 void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultiline() {
@@ -72,7 +102,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultiline() {
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["MergeType"] = "regex";
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -148,7 +178,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineKeepUnma
         config["StartPattern"] = LOG_BEGIN_REGEX;
         config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "single_line";
-        config["AppendingLogPositionMeta"] = false;
+
         // make processor
         // ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -239,7 +269,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineKeepUnma
         config["ContinuePattern"] = LOG_CONTINUE_REGEX;
         config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "single_line";
-        config["AppendingLogPositionMeta"] = false;
+
         // make processor
         // ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -416,7 +446,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineDiscardU
         config["StartPattern"] = LOG_BEGIN_REGEX;
         config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "discard";
-        config["AppendingLogPositionMeta"] = false;
+
         // make processor
         // ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -478,7 +508,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineDiscardU
         config["ContinuePattern"] = LOG_CONTINUE_REGEX;
         config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "discard";
-        config["AppendingLogPositionMeta"] = false;
+
         // make processor
         // ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -558,7 +588,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineAllNotMa
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["MergeType"] = "regex";
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -644,7 +674,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventMultilineAllNotMa
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["MergeType"] = "regex";
     config["UnmatchedContentTreatment"] = "discard";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -757,7 +787,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
 void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
     // make config
     Json::Value config;
-    config["AppendingLogPositionMeta"] = false;
     config["MergeType"] = "flag";
     // make processor
     // ProcessorMergeMultilineLogNative
@@ -772,7 +801,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": "Exception"
                 },
                 "timestamp" : 12345678901,
@@ -782,7 +811,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": " in thread"
                 },
                 "timestamp" : 12345678902,
@@ -792,7 +821,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": "  'main'"
                 },
                 "timestamp" : 12345678903,
@@ -811,7 +840,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": "Exception"
                 },
                 "timestamp" : 12345678901,
@@ -821,7 +850,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": " in thread"
                 },
                 "timestamp" : 12345678901,
@@ -831,7 +860,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": "  'main'"
                 },
                 "timestamp" : 12345678901,
@@ -850,7 +879,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": "Exception"
                 },
                 "timestamp" : 12345678901,
@@ -860,7 +889,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": " in thread"
                 },
                 "timestamp" : 12345678901,
@@ -870,7 +899,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             {
                 "contents" :
                 {
-                    "P": "true",
+                    "P": "",
                     "content": "  'main'"
                 },
                 "timestamp" : 12345678901,
@@ -1000,7 +1029,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
         config["EndPattern"] = LOG_END_REGEX;
         config["MergeType"] = "regex";
         config["UnmatchedContentTreatment"] = "discard";
-        config["AppendingLogPositionMeta"] = false;
+
         // make processor
         // ProcessorMergeMultilineLogNative
         ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
@@ -1051,7 +1080,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
     config["MergeType"] = "regex";
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1061,7 +1090,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + begin + continue + continue
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1074,7 +1103,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                     {
                         "content" : ")"
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
-               << LOG_CONTINUE_STRING << R"("
+               << LOG_CONTINUE_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1107,7 +1136,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: complete log (only begin)
+    { // case: unmatch + begin + begin
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1119,7 +1148,8 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                     "contents" :
                     {
                         "content" : ")"
-               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH
+               << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1162,7 +1192,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch + unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1200,7 +1230,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
     config["MergeType"] = "regex";
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1210,7 +1240,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch+Begin+End+unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1222,7 +1252,8 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                     "contents" :
                     {
                         "content" : ")"
-               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH
+               << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1255,7 +1286,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: complete log
+    { // case: unmatch+Begin+unmatch+End+unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1268,7 +1299,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                     {
                         "content" : ")"
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING
-               << R"("
+               << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1301,7 +1332,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: incomplete log (begin)
+    { // case: unmatch+Begin+unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1330,7 +1361,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch + unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1359,6 +1390,52 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
+    { // case: unmatch + end + unmatch + begin + unmatch + end + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING
+               << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() {
@@ -1367,7 +1444,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["MergeType"] = "regex";
     config["UnmatchedContentTreatment"] = "discard";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1377,7 +1454,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + begin
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1422,7 +1499,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1451,6 +1528,62 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
+    { // case: unmatch + begin + unmatch + begin
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING
+               << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
@@ -1459,7 +1592,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
-    config["AppendingLogPositionMeta"] = false;
     config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
@@ -1470,7 +1602,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + Continue + Continue + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1516,7 +1648,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: complete log (only end)
+    { // case: unmatch + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1561,7 +1693,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1590,6 +1722,52 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
+    { // case: unmatch + Continue + Continue + end + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
+               << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
@@ -1597,7 +1775,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     Json::Value config;
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
-    config["AppendingLogPositionMeta"] = false;
     config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
@@ -1608,7 +1785,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1653,7 +1830,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1682,6 +1859,51 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
+    { // case: unmatch + end + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 class ProcessorMergeMultilineLogKeepUnmatchUnittest : public ::testing::Test {
@@ -1708,7 +1930,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
     config["MergeType"] = "regex";
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1718,7 +1940,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + begin + Continue + Continue
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1774,7 +1996,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: complete log (only begin)
+    { // case: unmatch + begin + begin
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1839,7 +2061,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch + unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1903,7 +2125,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     config["MergeType"] = "regex";
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
+
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -1913,7 +2135,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + begin + end + unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1925,7 +2147,8 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH
+               << R"("
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1962,13 +2185,23 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
                     "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
                 }
             ]
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: complete log
+    { // case: unmatch + begin + unmatch + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2024,7 +2257,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: incomplete log (begin)
+    { // case: unmatch + begin + unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2089,7 +2322,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch + unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2144,6 +2377,92 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+    { // case: unmatch + end + unmatch + begin + unmatch + end + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING
+               << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
@@ -2151,7 +2470,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
     config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
@@ -2162,7 +2480,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + begin
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2217,7 +2535,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2262,6 +2580,61 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+    { // case: unmatch + begin + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
@@ -2270,7 +2643,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
     config["ContinuePattern"] = LOG_CONTINUE_REGEX;
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
     config["MergeType"] = "regex";
     // make processor
     // ProcessorSplitLogStringNative
@@ -2281,7 +2653,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + Continue + Continue + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2337,7 +2709,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: complete log (only end)
+    { // case: unmatch + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2392,7 +2764,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2437,6 +2809,72 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+    { // case: unmatch + Continue + Continue + end + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
+               << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
@@ -2444,7 +2882,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
     Json::Value config;
     config["EndPattern"] = LOG_END_REGEX;
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = false;
     config["MergeType"] = "regex";
     // make processor
 
@@ -2456,7 +2893,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    { // case: complete log
+    { // case: unmatch + end
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2501,7 +2938,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-    { // case: no match log
+    { // case: unmatch
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2531,6 +2968,61 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
         expectJson << R"({
             "events" :
             [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
+    { // case: unmatch + end + unmatch
+        // make eventGroup
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+        std::string logPath("/var/log/message");
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
                 {
                     "contents" :
                     {
