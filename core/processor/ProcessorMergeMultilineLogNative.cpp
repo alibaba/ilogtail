@@ -129,6 +129,11 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
     size_t begin = 0;
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
+            if (!events.empty()) {
+                MergeEvents(events, true);
+                sourceEvents[size++] = std::move(sourceEvents[begin]);
+                begin = cur;
+            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[size++] = std::move(sourceEvents[i]);
             }
@@ -189,6 +194,11 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
     }
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
+            if (!events.empty()) {
+                MergeEvents(events, true);
+                sourceEvents[newSize++] = std::move(sourceEvents[begin]);
+                begin = cur;
+            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[newSize++] = std::move(sourceEvents[i]);
             }
@@ -198,6 +208,28 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
         if (sourceEvent->GetContents().empty()) {
             continue;
+        }
+        if (!sourceEvent->HasContent(mSourceKey)) {
+            if (!events.empty()) {
+                MergeEvents(events, true);
+                sourceEvents[newSize++] = std::move(sourceEvents[begin]);
+                begin = cur;
+            }
+            for (size_t i = begin; i < sourceEvents.size(); ++i) {
+                sourceEvents[newSize++] = std::move(sourceEvents[i]);
+            }
+            sourceEvents.resize(newSize);
+            LOG_ERROR(mContext->GetLogger(),
+                      ("unexpected error", "Some events do not have the SourceKey.")("processor", sName)(
+                          "SourceKey", mSourceKey)("config", mContext->GetConfigName()));
+            mContext->GetAlarm().SendAlarm(PARSE_LOG_FAIL_ALARM,
+                                           "unexpected error: some events do not have the sourceKey.\tSourceKey: "
+                                               + mSourceKey + "\tprocessor: " + sName
+                                               + "\tconfig: " + mContext->GetConfigName(),
+                                           mContext->GetProjectName(),
+                                           mContext->GetLogstoreName(),
+                                           mContext->GetRegion());
+            return;
         }
         StringView sourceVal = sourceEvent->GetContent(mSourceKey);
         if (!isPartialLog) {

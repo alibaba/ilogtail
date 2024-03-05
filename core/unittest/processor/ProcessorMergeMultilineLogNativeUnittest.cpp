@@ -262,7 +262,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
     config["StartPattern"] = "line.*";
     config["MergeType"] = "regex";
     config["UnmatchedContentTreatment"] = "single_line";
-    config["AppendingLogPositionMeta"] = true;
     // make processor
     // ProcessorSplitLogStringNative
     ProcessorSplitLogStringNative processorSplitLogStringNative;
@@ -272,60 +271,152 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
     ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
     processorMergeMultilineLogNative.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-    // make eventGroup
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
-    std::string inJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
+    // group为空
+    {
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        std::stringstream expectJson;
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
+    }
+    // 存在不支持的event类型
+    {
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string inJson = R"({
+            "events" :
+            [
                 {
-                    "__file_offset__": "0",
-                    "content" : "line1\ncontinue\nline2\ncontinue"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            }
-        ]
-    })";
-    eventGroup.FromJsonString(inJson);
-    std::string logPath("/var/log/message");
-    // run test function
-    processorSplitLogStringNative.Process(eventGroup);
-    processorMergeMultilineLogNative.Process(eventGroup);
-    std::stringstream expectJson;
-    expectJson << R"({
-        "events" :
-        [
-            {
-                "contents" :
+                    "contents" :
+                    {
+                        "content" : "line1\ncontinue\nline2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+        eventGroup.FromJsonString(inJson);
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events": [
                 {
-                    "__file_offset__": "0",
-                    "content" : "line1\ncontinue"
+                    "timestamp": 0,
+                    "timestampNanosecond": 0,
+                    "type": 2
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "__file_offset__": ")"
-               << strlen(R"(line1ncontinuen)") << R"(",
-                    "content" : "line2\ncontinue"
+                    "contents": {
+                        "content": "line1"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            }
-        ]
-    })";
-    std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
-    // check observability
-    APSARA_TEST_EQUAL_FATAL(2, processorMergeMultilineLogNative.GetContext().GetProcessProfile().splitLines);
+                {
+                    "contents": {
+                        "content": "continue"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "content": "line2"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "content": "continue"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
+    // event group中某条event没有mSourceKey
+    {
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::string inJson = R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : "line1\ncontinue\nline2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "aaa" : "line1\ncontinue\nline2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson);
+        // run test function
+        processorSplitLogStringNative.Process(eventGroup);
+        processorMergeMultilineLogNative.Process(eventGroup);
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : "line1\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "content" : "line2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "aaa" : "line1\ncontinue\nline2\ncontinue"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
@@ -357,7 +448,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -404,7 +495,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -462,7 +553,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -519,7 +610,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -576,7 +667,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -652,7 +743,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -729,7 +820,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -931,7 +1022,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcessEventsWithPartLog() {
             ]
         })";
         eventGroup.FromJsonString(inJson);
-        std::string logPath("/var/log/message");
+
         // run test function
         processorMergeMultilineLogNative.Process(eventGroup);
         // judge result
@@ -1089,7 +1180,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1118,7 +1209,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1164,7 +1255,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1209,7 +1300,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1265,7 +1356,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1329,7 +1420,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1358,7 +1449,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1388,7 +1479,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1434,7 +1525,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1463,7 +1554,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1509,7 +1600,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1572,7 +1663,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1617,7 +1708,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1647,7 +1738,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1702,7 +1793,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1765,7 +1856,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1794,7 +1885,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1823,7 +1914,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1868,7 +1959,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1897,7 +1988,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -1959,7 +2050,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2004,7 +2095,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2034,7 +2125,7 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2115,7 +2206,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2170,7 +2261,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2226,7 +2317,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2291,7 +2382,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2357,7 +2448,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2431,7 +2522,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2486,7 +2577,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2552,7 +2643,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2618,7 +2709,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2673,7 +2764,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2729,7 +2820,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2801,7 +2892,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2856,7 +2947,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2901,7 +2992,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -2956,7 +3047,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3019,7 +3110,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3064,7 +3155,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3119,7 +3210,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3164,7 +3255,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3209,7 +3300,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3272,7 +3363,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3317,7 +3408,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
@@ -3362,7 +3453,7 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
             ]
         })";
         eventGroup.FromJsonString(inJson.str());
-        std::string logPath("/var/log/message");
+
         // run test function
         processorSplitLogStringNative.Process(eventGroup);
         processorMergeMultilineLogNative.Process(eventGroup);
