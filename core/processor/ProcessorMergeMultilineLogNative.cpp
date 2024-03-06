@@ -110,7 +110,7 @@ bool ProcessorMergeMultilineLogNative::IsSupportedEvent(const PipelineEventPtr& 
     LOG_ERROR(
         mContext->GetLogger(),
         ("unexpected error", "some events are not supported")("processor", sName)("config", mContext->GetConfigName()));
-    mContext->GetAlarm().SendAlarm(PARSE_LOG_FAIL_ALARM,
+    mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
                                    "unexpected error: some events are not supported.\tprocessor: " + sName
                                        + "\tconfig: " + mContext->GetConfigName(),
                                    mContext->GetProjectName(),
@@ -127,6 +127,9 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
     size_t begin = 0;
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
+            if (events.empty()) {
+                begin = cur;
+            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[size++] = std::move(sourceEvents[i]);
             }
@@ -187,6 +190,9 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
     }
     for (size_t cur = 0; cur < sourceEvents.size(); ++cur) {
         if (!IsSupportedEvent(sourceEvents[cur])) {
+            if (events.empty()) {
+                begin = cur;
+            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[newSize++] = std::move(sourceEvents[i]);
             }
@@ -198,6 +204,9 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             continue;
         }
         if (!sourceEvent->HasContent(mSourceKey)) {
+            if (events.empty()) {
+                begin = cur;
+            }
             for (size_t i = begin; i < sourceEvents.size(); ++i) {
                 sourceEvents[newSize++] = std::move(sourceEvents[i]);
             }
@@ -205,7 +214,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             LOG_ERROR(mContext->GetLogger(),
                       ("unexpected error", "Some events do not have the SourceKey.")("processor", sName)(
                           "SourceKey", mSourceKey)("config", mContext->GetConfigName()));
-            mContext->GetAlarm().SendAlarm(PARSE_LOG_FAIL_ALARM,
+            mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
                                            "unexpected error: some events do not have the sourceKey.\tSourceKey: "
                                                + mSourceKey + "\tprocessor: " + sName
                                                + "\tconfig: " + mContext->GetConfigName(),
@@ -355,9 +364,6 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     }
 
     for (size_t i = begin; i <= end; i++) {
-        if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
-            logEvents[newSize++] = std::move(logEvents[i]);
-        }
         if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
             LOG_WARNING(
@@ -373,6 +379,9 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
                                               GetContext().GetProjectName(),
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
+        }
+        if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
+            logEvents[newSize++] = std::move(logEvents[i]);
         }
     }
 }
