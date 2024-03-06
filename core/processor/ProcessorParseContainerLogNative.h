@@ -42,6 +42,7 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
+    bool mIgnoreParseWarning = false;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
