@@ -25,8 +25,8 @@
 
 #include "app_config/AppConfig.h"
 #include "flusher/FlusherSLS.h"
-#include "input/InputFile.h"
 #include "input/InputContainerStdout.h"
+#include "input/InputFile.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "input/InputObserverNetwork.h"
 #ifdef __ENTERPRISE__
@@ -86,7 +86,7 @@ PluginRegistry::PluginRegistry() {
                   "service_syslog",
                   "service_udp_server",
                   "metric_debug_file",
-                  "metric_container_meta",
+                  "metric_container_info",
                   "metric_checkpoint_example",
                   "metric_input_example",
                   "metric_meta_host",

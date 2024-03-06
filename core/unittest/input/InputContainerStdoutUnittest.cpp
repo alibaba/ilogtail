@@ -144,7 +144,7 @@ void InputContainerStdoutUnittest::OnEnableContainerDiscovery() {
             },
             "inputs": [
                 {                
-                    "type": "metric_container_meta",
+                    "type": "metric_container_info",
                     "detail": {
                         "K8sNamespaceRegex": "default"
                     }
