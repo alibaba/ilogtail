@@ -37,16 +37,18 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    FileDiscoveryOptions mFileDiscovery;
-    bool mEnableContainerDiscovery = false;
-    ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
     bool mIgnoringStdout;
     bool mIgnoringStderr;
 
 private:
-    void GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const;
+    FileDiscoveryOptions mFileDiscovery;
+    ContainerDiscoveryOptions mContainerDiscovery;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class InputContainerStdoutUnittest;
+#endif
 };
 
 } // namespace logtail

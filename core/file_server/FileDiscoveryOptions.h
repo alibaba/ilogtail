@@ -37,7 +37,6 @@ public:
                                             std::pair<const FileDiscoveryOptions*, const PipelineContext*> right);
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
-    bool InitStdout(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
     const std::string& GetBasePath() const { return mBasePath; }
     const std::string& GetFilePattern() const { return mFilePattern; }
     const std::vector<std::string>& GetWildcardPaths() const { return mWildcardPaths; }

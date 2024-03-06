@@ -341,37 +341,6 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
     return true;
 }
 
-bool FileDiscoveryOptions::InitStdout(const Json::Value& config,
-                                      const PipelineContext& ctx,
-                                      const std::string& pluginName) {
-    std::string errorMsg;
-
-    mBasePath = "/";
-    mFilePattern = "*";
-#if defined(_MSC_VER)
-    mBasePath = EncodingConverter::GetInstance()->FromUTF8ToACP(mBasePath);
-    mFilePattern = EncodingConverter::GetInstance()->FromUTF8ToACP(mFilePattern);
-#endif
-    size_t len = mBasePath.size();
-    mMaxDirSearchDepth = 1000;
-    mAllowingCollectingFilesInRootDir = true;
-    mAllowingIncludedByMultiConfigs = true;
-    // AllowingIncludedByMultiConfigs
-    // 是否允许当前配置采集其它配置已匹配的容器输出。默认为true。
-    if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", mAllowingIncludedByMultiConfigs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
-                              ctx.GetAlarm(),
-                              errorMsg,
-                              mAllowingIncludedByMultiConfigs,
-                              pluginName,
-                              ctx.GetConfigName(),
-                              ctx.GetProjectName(),
-                              ctx.GetLogstoreName(),
-                              ctx.GetRegion());
-    }
-    return true;
-}
-
 pair<string, string> FileDiscoveryOptions::GetDirAndFileNameFromPath(const string& filePath) {
     filesystem::path path(filePath);
     if (path.is_relative()) {

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <json/json.h>
+
 #include <filesystem>
 #include <memory>
 #include <string>
-
-#include <json/json.h>
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
@@ -41,7 +41,6 @@ public:
 protected:
     static void SetUpTestCase() { AppConfig::GetInstance()->mPurageContainerMode = true; }
     void SetUp() override {
-        p.mName = "test_config";
         ctx.SetConfigName("test_config");
         ctx.SetPipeline(p);
     }
@@ -69,7 +68,6 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
 
     // valid optional param
     configStr = R"(
@@ -85,7 +83,6 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
 
     // invalid optional param
     configStr = R"(
@@ -99,7 +96,6 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
 
     // TailingAllMatchedFiles
     configStr = R"(
@@ -114,7 +110,6 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mFileReader.mTailingAllMatchedFiles);
-    APSARA_TEST_TRUE(input->mFileDiscovery.IsTailingAllMatchedFiles());
 
     configStr = R"(
         {
@@ -164,7 +159,6 @@ void InputContainerStdoutUnittest::OnEnableContainerDiscovery() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
     APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
     APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }

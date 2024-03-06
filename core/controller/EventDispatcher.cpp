@@ -65,8 +65,8 @@
 #include "LogtailInsightDispatcher.h"
 #endif
 #include "file_server/FileServer.h"
-#include "input/InputFile.h"
 #include "input/InputContainerStdout.h"
+#include "input/InputFile.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -451,8 +451,9 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
     // now we can be sure that input is file
     string name = config->GetInputs()[0]->GetPlugin()->Name();
     const InputFile* inputFile = nullptr;
-    if (name == InputFile::sName)
+    if (name == InputFile::sName) {
         inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
+    }
 
     // delete checkpoint if file path is not exist
     MapType<string, int>::Type::iterator pathIter = mPathWdMap.find(path);
@@ -562,35 +563,37 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
                 + filePath + ", real file path: " + realFilePath);
         return ValidateCheckpointResult::kCacheFull;
     }
+    uint16_t searchDepth = 0;
     if (inputFile) {
-        auto const searchResult = SearchFilePathByDevInodeInDirectory(
-            path, inputFile->mMaxCheckpointDirSearchDepth, checkpoint->mDevInode, &cachePathDevInodeMap);
-        if (searchResult) {
-            const auto& newRealPath = searchResult.value();
-            if (CheckFileSignature(newRealPath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, false)) {
-                checkpoint->mRealFileName = newRealPath;
-                LOG_INFO(sLogger,
-                         ("generate MODIFY event for file with checkpoint",
-                          "file has been renamed, but still in the same dir")("config", checkpoint->mConfigName)(
-                             "log reader queue name", filePath)("original real file path", realFilePath)(
-                             "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
-                             "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
-                             "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                        ToString(checkpoint->mFileOpenFlag))(
-                             "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
-                eventVec.push_back(new Event(
-                    path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
-                eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
-                return ValidateCheckpointResult::kRotate;
-            }
-
+        searchDepth = inputFile->mMaxCheckpointDirSearchDepth;
+    }
+    auto const searchResult
+        = SearchFilePathByDevInodeInDirectory(path, searchDepth, checkpoint->mDevInode, &cachePathDevInodeMap);
+    if (searchResult) {
+        const auto& newRealPath = searchResult.value();
+        if (CheckFileSignature(newRealPath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, false)) {
+            checkpoint->mRealFileName = newRealPath;
             LOG_INFO(sLogger,
-                     ("delete checkpoint", "file has been renamed but signature has changed")(
-                         "config", checkpoint->mConfigName)("log reader queue name", checkpoint->mFileName)(
-                         "original real file path", realFilePath)("new real file path", newRealPath)(
-                         "file device", checkpoint->mDevInode.inode)("file inode", checkpoint->mDevInode.inode));
-            return ValidateCheckpointResult::kSigChanged;
+                     ("generate MODIFY event for file with checkpoint",
+                      "file has been renamed, but still in the same dir")("config", checkpoint->mConfigName)(
+                         "log reader queue name", filePath)("original real file path", realFilePath)(
+                         "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
+                         "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
+                         "last file position", checkpoint->mOffset)("is file open when dumped",
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
+            eventVec.push_back(
+                new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
+            eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
+            return ValidateCheckpointResult::kRotate;
         }
+
+        LOG_INFO(sLogger,
+                 ("delete checkpoint", "file has been renamed but signature has changed")(
+                     "config", checkpoint->mConfigName)("log reader queue name", checkpoint->mFileName)(
+                     "original real file path", realFilePath)("new real file path", newRealPath)(
+                     "file device", checkpoint->mDevInode.inode)("file inode", checkpoint->mDevInode.inode));
+        return ValidateCheckpointResult::kSigChanged;
     }
 
     // Can not find dev inode, delete this checkpoint.

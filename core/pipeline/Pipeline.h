@@ -72,7 +72,6 @@ private:
     friend class PipelineMock;
     friend class PipelineUnittest;
     friend class InputFileUnittest;
-    friend class InputContainerStdoutUnittest;
     friend class ProcessorTagNativeUnittest;
 #endif
 };
