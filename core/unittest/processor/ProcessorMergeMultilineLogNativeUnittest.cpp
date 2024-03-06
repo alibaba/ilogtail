@@ -302,7 +302,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                 ]
             })";
             eventGroup.FromJsonString(inJson1);
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             std::string inJson2 = R"({
                 "events" :
                 [
@@ -402,7 +402,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                 ]
             })";
             eventGroup.FromJsonString(inJson);
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             inJson = R"({
                 "events" :
                 [
@@ -485,7 +485,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                     }
                 ]
             })";
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             eventGroup.FromJsonString(inJson);
             // run test function
             processorSplitLogStringNative.Process(eventGroup);
@@ -1287,7 +1287,7 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
         {
             auto sourceBuffer = std::make_shared<SourceBuffer>();
             PipelineEventGroup eventGroup(sourceBuffer);
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             std::string inJson = R"({
                 "events": [
                     {
@@ -1422,7 +1422,7 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                 ]
             })";
             eventGroup.FromJsonString(inJson);
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             inJson = R"({
                 "events": [
                     {
@@ -1556,7 +1556,7 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                 ]
             })";
             eventGroup.FromJsonString(inJson);
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             inJson = R"({
                 "events": [
                     {
@@ -1698,7 +1698,7 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                 ]
             })";
             eventGroup.FromJsonString(inJson);
-            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.AddMetricEvent();
             inJson = R"({
                 "events": [
                     {
