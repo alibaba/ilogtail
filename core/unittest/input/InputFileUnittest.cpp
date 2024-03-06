@@ -72,8 +72,8 @@ void InputFileUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputFile::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_FALSE(input->mEnableContainerDiscovery);
-    APSARA_TEST_EQUAL(0, input->mMaxCheckpointDirSearchDepth);
-    APSARA_TEST_EQUAL(0, input->mExactlyOnceConcurrency);
+    APSARA_TEST_EQUAL(0, int(input->mMaxCheckpointDirSearchDepth));
+    APSARA_TEST_EQUAL(0, int(input->mExactlyOnceConcurrency));
 
     // valid optional param
     configStr = R"(
@@ -92,8 +92,8 @@ void InputFileUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputFile::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
-    APSARA_TEST_EQUAL(1, input->mMaxCheckpointDirSearchDepth);
-    APSARA_TEST_EQUAL(1, input->mExactlyOnceConcurrency);
+    APSARA_TEST_EQUAL(1, int(input->mMaxCheckpointDirSearchDepth));
+    APSARA_TEST_EQUAL(1, int(input->mExactlyOnceConcurrency));
 
     // invalid optional param
     configStr = R"(
@@ -187,10 +187,11 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
                     {                
                         "type": "metric_container_info",
                         "detail": {
-                            "LogPath": "",
-                            "MaxDepth": 0,
+                            "CollectContainersFlag": true,
                             "FilePattern": "*.log",
-                            "K8sNamespaceRegex": "default"
+                            "K8sNamespaceRegex": "default",
+                            "MaxDepth": 0,
+                            "LogPath": ""
                         }
                     }
                 ]
@@ -247,7 +248,6 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
         configJson["FilePaths"].append(Json::Value(filePath.string()));
         optionalGoPipelineJson["global"]["DefaultLogQueueSize"]
             = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-        optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
         input.reset(new InputFile());
         input->SetContext(ctx);
         input->SetMetricsRecordRef(InputFile::sName, "1");
