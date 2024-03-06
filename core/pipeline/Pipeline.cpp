@@ -142,7 +142,8 @@ bool Pipeline::Init(Config&& config) {
             return false;
         }
         mProcessorLine.emplace_back(std::move(processor));
-    } else if (inputContainerStdout) {
+    }
+    if (inputContainerStdout) {
         unique_ptr<ProcessorInstance> processor;
         // ProcessorSplitLogStringNative
         {
@@ -150,8 +151,6 @@ bool Pipeline::Init(Config&& config) {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
                                                                        to_string(++pluginIndex));
             detail["SplitChar"] = Json::Value('\n');
-            detail["AppendingLogPositionMeta"]
-                = Json::Value(inputContainerStdout->mFileReader.mAppendingLogPositionMeta);
             if (!processor->Init(detail, mContext)) {
                 return false;
             }
@@ -180,11 +179,11 @@ bool Pipeline::Init(Config&& config) {
             }
             mProcessorLine.emplace_back(std::move(processor));
         }
-        {
+        if (inputContainerStdout->mMultiline.IsMultiline()
+            && inputContainerStdout->mMultiline.mMode == MultilineOptions::Mode::CUSTOM) {
             Json::Value detail;
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
                                                                        to_string(++pluginIndex));
-            detail["MergeType"] = Json::Value("regex");
             detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(inputContainerStdout->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputContainerStdout->mMultiline.mContinuePattern);
@@ -289,11 +288,7 @@ bool Pipeline::Init(Config&& config) {
     CopyNativeGlobalParamToGoPipeline(mGoPipelineWithoutInput);
 
     // mandatory override global.DefaultLogQueueSize in Go pipeline when input_file and Go processing coexist.
-    if (inputFile != nullptr && IsFlushingThroughGoPipeline()) {
-        mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"]
-            = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-    }
-    if (inputContainerStdout != nullptr && IsFlushingThroughGoPipeline()) {
+    if ((inputFile != nullptr || inputContainerStdout != nullptr) && IsFlushingThroughGoPipeline()) {
         mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"]
             = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     }

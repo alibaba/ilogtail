@@ -16,19 +16,16 @@
 
 #pragma once
 
-#include <cstdint>
 #include <vector>
 
-#include "common/Constants.h"
 #include "file_server/MultilineOptions.h"
 #include "plugin/interface/Processor.h"
-#include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
 class ProcessorMergeMultilineLogNative : public Processor {
 public:
-    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
+    enum class MergeType { BY_REGEX, BY_FLAG };
 
     static const std::string PartLogFlag;
     static const std::string sName;
@@ -36,6 +33,7 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MergeType mMergeType = MergeType::BY_REGEX;
     MultilineOptions mMultiline;
+    bool mIgnoreUnmatchWarning = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -47,27 +45,12 @@ protected:
 private:
     void MergeLogsByRegex(PipelineEventGroup& logGroup);
     void MergeLogsByFlag(PipelineEventGroup& logGroup);
-    void MergeLogsByJSON(PipelineEventGroup& logGroup);
 
-    bool LogSplit(PipelineEventGroup& logGroup,
-                  std::vector<LogEvent*>& logEvents);
-    void HandleUnmatchLogs(std::vector<PipelineEventPtr>& logEvents,
-                           size_t& multiBeginIndex,
-                           size_t endIndex,
-                           size_t& newEventsSize,
-                           const StringView logPath,
-                           bool mustHandleLogs = false);
-    void MergeEvents(std::vector<LogEvent*>& logEvents,
-                     size_t beginIndex,
-                     size_t endIndex,
-                     std::vector<size_t>& logEventIndex,
-                     bool update = false,
-                     bool insertLineBreak = true);
+    void HandleUnmatchLogs(
+        std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath);
 
-    void MergeEvents(std::vector<LogEvent*> &logEvents,
-                     bool insertLineBreak = true);
+    void MergeEvents(std::vector<LogEvent*>& logEvents, bool insertLineBreak = true);
 
-    int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN

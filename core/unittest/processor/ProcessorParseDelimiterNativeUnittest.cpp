@@ -237,7 +237,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -359,7 +359,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = true;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -510,7 +510,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -636,7 +636,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -760,7 +760,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorSplitR
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -881,7 +881,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorSplitR
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -1007,7 +1007,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorSplitR
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -1130,9 +1130,9 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[123|012].*";
             config["MergeType"] = "regex";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -1258,9 +1258,9 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[123|012].*";
             config["MergeType"] = "regex";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -1391,9 +1391,9 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[123|012].*";
             config["MergeType"] = "regex";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -1616,7 +1616,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = true;
             config["StartPattern"] = ".*";
-            config["UnmatchedContentTreatment"] = "split";
+            config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
@@ -1907,8 +1907,8 @@ void ProcessorParseDelimiterNativeUnittest::TestAddLog() {
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto logEvent = LogEvent::CreateEvent(sourceBuffer);
+    auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+    auto logEvent = eventGroup.CreateLogEvent();
     char key[] = "key";
     char value[] = "value";
     processor.AddLog(key, value, *logEvent);
