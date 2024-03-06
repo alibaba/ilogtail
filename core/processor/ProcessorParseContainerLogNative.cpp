@@ -283,8 +283,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         return true;
     }
 
-    char* data;
-    data = const_cast<char*>(buffer.data());
+    char* data = const_cast<char*>(buffer.data());
     // time
     ResetDockerJsonLogField(data, containerTimeKey, timeValue, sourceEvent);
     data += timeValue.size();
