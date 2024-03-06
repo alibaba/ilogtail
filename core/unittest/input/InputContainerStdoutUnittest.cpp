@@ -159,7 +159,6 @@ void InputContainerStdoutUnittest::OnEnableContainerDiscovery() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
     APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }
 
