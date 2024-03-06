@@ -218,8 +218,8 @@ func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, m
 	}
 	cmd.Mounts = make([]string, 0, len(mounts)*2)
 	for _, mount := range mounts {
-		cmd.Mounts = append(cmd.Mounts, mount.Source)
-		cmd.Mounts = append(cmd.Mounts, mount.Destination)
+		cmd.Mounts = append(cmd.Mounts, helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(mount.Source)))
+		cmd.Mounts = append(cmd.Mounts, helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(mount.Destination)))
 	}
 	cmdBuf, _ := json.Marshal(&cmd)
 	configName := idf.context.GetConfigName()
