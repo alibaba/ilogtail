@@ -281,6 +281,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
+
     // 存在不支持的event类型
     {
         // 某个unmatch 后出现了一个不支持
