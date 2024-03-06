@@ -258,6 +258,7 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
     // make config
     Json::Value config;
     config["StartPattern"] = "line.*";
+    config["EndPattern"] = "endLine.*";
     config["MergeType"] = "regex";
     config["UnmatchedContentTreatment"] = "single_line";
     // make processor
@@ -282,192 +283,548 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
     }
     // 存在不支持的event类型
     {
-        auto sourceBuffer = std::make_shared<SourceBuffer>();
-        PipelineEventGroup eventGroup(sourceBuffer);
-        std::string inJson = R"({
-            "events" :
-            [
-                {
-                    "contents" :
+        // 某个unmatch 后出现了一个不支持
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson1 = R"({
+                "events" :
+                [
                     {
-                        "content" : "line1\ncontinue\nline2\ncontinue"
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson1);
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            std::string inJson2 = R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson2);
+            // run test function
+            processorSplitLogStringNative.Process(eventGroup);
+            processorMergeMultilineLogNative.Process(eventGroup);
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "contents": {
+                            "content": "line\ncontinue\nendLine"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                }
-            ]
-        })";
-        eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
-        eventGroup.FromJsonString(inJson);
-        // run test function
-        processorSplitLogStringNative.Process(eventGroup);
-        processorMergeMultilineLogNative.Process(eventGroup);
-        std::stringstream expectJson;
-        expectJson << R"({
-            "events": [
-                {
-                    "timestamp": 0,
-                    "timestampNanosecond": 0,
-                    "type": 2
-                },
-                {
-                    "contents": {
-                        "content": "line1"
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                },
-                {
-                    "contents": {
-                        "content": "continue"
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                },
-                {
-                    "contents": {
-                        "content": "line2"
+                    {
+                        "contents": {
+                            "content": "line"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                },
-                {
-                    "contents": {
-                        "content": "continue"
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                }
-            ]
-        })";
-        std::string outJson = eventGroup.ToJsonString();
-        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                    {
+                        "contents": {
+                            "content": "endLine"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+
+        // 正在匹配过程中 出现了一个不支持
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            inJson = R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "content" : "endLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorSplitLogStringNative.Process(eventGroup);
+            processorMergeMultilineLogNative.Process(eventGroup);
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "contents": {
+                            "content": "line"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
+                    },
+                    {
+                        "contents": {
+                            "content": "endLine"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+
+        // 第一个event就是不支持
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "content" : "line1\ncontinue\nline2\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorSplitLogStringNative.Process(eventGroup);
+            processorMergeMultilineLogNative.Process(eventGroup);
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
+                    },
+                    {
+                        "contents": {
+                            "content": "line1"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "contents": {
+                            "content": "line2"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    },
+                    {
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
     }
     // event group中某条event没有mSourceKey
     {
-        auto sourceBuffer = std::make_shared<SourceBuffer>();
-        PipelineEventGroup eventGroup(sourceBuffer);
-        std::string inJson = R"({
-            "events" :
-            [
-                {
-                    "contents" :
+        // 某个unmatch 后出现一个没有mSourceKey的event
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events" :
+                [
                     {
-                        "content" : "line1\ncontinue\nline2\ncontinue"
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "aaa" : "line1\ncontinue\nline2\ncontinue"
+                        "contents" :
+                        {
+                            "aaa" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "content" : "line1\ncontinue\nline2\ncontinue"
-                    },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                }
-            ]
-        })";
-        eventGroup.FromJsonString(inJson);
-        // run test function
-        processorSplitLogStringNative.Process(eventGroup);
-        processorMergeMultilineLogNative.Process(eventGroup);
-        std::stringstream expectJson;
-        expectJson << R"({
-            "events" :
-            [
-                {
-                    "contents" :
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorSplitLogStringNative.Process(eventGroup);
+            processorMergeMultilineLogNative.Process(eventGroup);
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events" :
+                [
                     {
-                        "content" : "line1\ncontinue"
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue\nendLine"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "content" : "line2"
+                        "contents" :
+                        {
+                            "content" : "continue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "content" : "continue"
+                        "contents" :
+                        {
+                            "aaa" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "aaa" : "line1\ncontinue\nline2\ncontinue"
+                        "contents": {
+                            "content": "line"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "content" : "line1"
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "content" : "continue"
+                        "contents": {
+                            "content": "endLine"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
                     {
-                        "content" : "line2"
-                    },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                },
-                {
-                    "contents" :
+                        "contents": {
+                            "content": "continue"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+        // 正在匹配过程中出现没有mSourceKey的event
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events" :
+                [
                     {
-                        "content" : "continue"
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
                     },
-                    "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
-                    "type" : 1
-                }
-            ]
-        })";
-        std::string outJson = eventGroup.ToJsonString();
-        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                    {
+                        "contents" :
+                        {
+                            "aaa" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "endLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorSplitLogStringNative.Process(eventGroup);
+            processorMergeMultilineLogNative.Process(eventGroup);
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "content" : "line"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "continue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "aaa" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "endLine"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "continue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+        // 第一个就出现没有mSourceKey的event
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "aaa" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorSplitLogStringNative.Process(eventGroup);
+            processorMergeMultilineLogNative.Process(eventGroup);
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events" :
+                [
+                    {
+                        "contents" :
+                        {
+                            "aaa" : "line\ncontinue\nendLine\ncontinue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "line"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "continue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "endLine"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content" : "continue"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
     }
 }
 
@@ -475,10 +832,13 @@ class ProcessEventsWithPartLogUnittest : public ::testing::Test {
 public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
     void TestProcessEventsWithPartLog();
+    void TestProcess();
     PipelineContext mContext;
 };
 
 UNIT_TEST_CASE(ProcessEventsWithPartLogUnittest, TestProcessEventsWithPartLog);
+UNIT_TEST_CASE(ProcessEventsWithPartLogUnittest, TestProcess);
+
 
 void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
     // case: P
@@ -910,6 +1270,492 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
+}
+
+void ProcessEventsWithPartLogUnittest::TestProcess() {
+    // make config
+    Json::Value config;
+    config["MergeType"] = "flag";
+    // make ProcessorMergeMultilineLogNative
+    ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+    processorMergeMultilineLogNative.SetContext(mContext);
+    APSARA_TEST_TRUE(processorMergeMultilineLogNative.Init(config));
+    // event 不支持
+    {
+        // 第一个event就不支持 不支持PPFFF
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            std::string inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorMergeMultilineLogNative.Process(eventGroup);
+            // judge result
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+        // P匹配过程中不支持 P不支持PFFF
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorMergeMultilineLogNative.Process(eventGroup);
+            // judge result
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+        // PF匹配过程中不支持 PP不支持FFF
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorMergeMultilineLogNative.Process(eventGroup);
+            // judge result
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
+        // FF中不支持 PPFF不支持F
+        {
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            std::string inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "Ex"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "P": "",
+                            "content": "ce"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "ption"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            eventGroup.AddEvent(MetricEvent::CreateEvent(eventGroup.GetSourceBuffer()));
+            inJson = R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            eventGroup.FromJsonString(inJson);
+            // run test function
+            processorMergeMultilineLogNative.Process(eventGroup);
+            // judge result
+            std::stringstream expectJson;
+            expectJson << R"({
+                "events": [
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    },
+                    {
+                        "timestamp": 0,
+                        "timestampNanosecond": 0,
+                        "type": 2
+                    },
+                    {
+                        "contents" :
+                        {
+                            "content": "Exception"
+                        },
+                        "timestamp" : 12345678901,
+                        "timestampNanosecond" : 0,
+                        "type" : 1
+                    }
+                ]
+            })";
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        }
     }
 }
 
