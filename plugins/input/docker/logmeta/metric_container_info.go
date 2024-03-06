@@ -27,12 +27,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types"
+
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/logtail"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/docker/docker/api/types"
 )
 
 const (
