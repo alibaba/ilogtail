@@ -835,6 +835,20 @@ bool ConfigManager::UpdateContainerPath(DockerContainerPathCmd* cmd) {
     return true;
 }
 
+/**
+ * @brief 更新 Docker 容器的路径。
+ * 
+ * 该函数锁定 mDockerContainerPathCmdLock 互斥锁，将 mDockerContainerPathCmdVec 的内容复制到一个临时向量，
+ * 清空 mDockerContainerPathCmdVec，然后解锁互斥锁。然后，它遍历临时向量，对于每个元素，
+ * 它获取与 mConfigName 对应的 FileDiscoveryConfig。如果获取的 FileDiscoveryConfig 无效，它会记录一个错误日志并跳过当前迭代。
+ * 如果 mDeleteFlag 为 true，它会尝试删除 Docker 容器路径，如果成功，它会记录一个调试消息，如果不成功，它会记录一个错误消息。
+ * 如果 mDeleteFlag 为 false，它会尝试更新 Docker 容器路径，如果成功，它会记录一个调试消息，如果不成功，它会记录一个错误消息。
+ * 在处理每个 DockerContainerPathCmd 后，它会删除该对象。函数最后返回 true。
+ * 
+ * @note 该函数假设 mDockerContainerPathCmdVec 中的所有 DockerContainerPathCmd 对象都是有效的，并且在函数结束时可以安全删除。
+ * 
+ * @return true 总是返回 true。
+ */
 bool ConfigManager::DoUpdateContainerPaths() {
     mDockerContainerPathCmdLock.lock();
     std::vector<DockerContainerPathCmd*> tmpPathCmdVec = mDockerContainerPathCmdVec;
@@ -875,6 +889,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
     return true;
 }
 
+// 
 bool ConfigManager::IsUpdateContainerPaths() {
     mDockerContainerPathCmdLock.lock();
     bool rst = false;
@@ -1045,6 +1060,7 @@ void ConfigManager::LoadDockerConfig() {
         localPaths.push_back(cmd);
     }
     mDockerContainerPathCmdLock.lock();
+    // 
     localPaths.insert(localPaths.end(), mDockerContainerPathCmdVec.begin(), mDockerContainerPathCmdVec.end());
     mDockerContainerPathCmdVec = localPaths;
     mDockerContainerPathCmdLock.unlock();

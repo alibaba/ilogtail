@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -30,6 +32,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logtail"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/docker/docker/api/types"
 )
 
 const (
@@ -39,18 +42,13 @@ const (
 	PluginDockerStopFile      = 4
 )
 
-const (
-	InputFile   = "file"
-	InputStdout = "stdout"
-)
-
 type DockerFileUpdateCmd struct {
-	ID   string
-	Path string
-	Tags []string // 容器信息Tag
-
-	StdoutPath    string // 标准输出路径
-	StdoutLogType string // 标准输出类型 container_json-file、containerd
+	ID              string
+	Tags            []string // 容器信息Tag
+	Mounts          []string // 容器挂载路径 先加入 Source 后加入 Destination
+	DefaultRootPath string   // 容器默认路径
+	StdoutPath      string   // 标准输出路径
+	StdoutLogType   string   // 标准输出类型 container_json-file、containerd
 }
 
 type DockerFileUpdateCmdAll struct {
@@ -68,7 +66,6 @@ type InputDockerFile struct {
 	ExcludeK8sLabel       map[string]string
 	ExternalEnvTag        map[string]string
 	ExternalK8sLabelTag   map[string]string
-	InputType             string
 	LogPath               string
 	FilePattern           string
 	MountPath             string
@@ -84,18 +81,20 @@ type InputDockerFile struct {
 	ExcludeEnvRegex   map[string]*regexp.Regexp
 	K8sFilter         *helper.K8SFilter
 
-	FlushIntervalMs      int `comment:"the interval of container discovery, and the timeunit is millisecond. Default value is 3000."`
-	lastPathMappingCache map[string]string
-	lastStdoutPathCache  map[string]string
-	lastStdoutTypeCache  map[string]string
-	context              pipeline.Context
-	lastClearTime        time.Time
-	updateEmptyFlag      bool
-	avgInstanceMetric    pipeline.CounterMetric
-	addMetric            pipeline.CounterMetric
-	updateMetric         pipeline.CounterMetric
-	deleteMetric         pipeline.CounterMetric
-	lastUpdateTime       int64
+	lastMountsCache          map[string][]types.MountPoint // key: id value: MountPoint
+	lastDefaultRootPathCache map[string]string             // key: id value: DefaultRootPath
+	lastStdoutPathCache      map[string]string             // key: id value: LogPath
+	lastStdoutLogTypeCache   map[string]string             // key: id value: HostConfig.LogConfig.Type
+
+	FlushIntervalMs   int `comment:"the interval of container discovery, and the timeunit is millisecond. Default value is 3000."`
+	context           pipeline.Context
+	lastClearTime     time.Time
+	updateEmptyFlag   bool
+	avgInstanceMetric pipeline.CounterMetric
+	addMetric         pipeline.CounterMetric
+	updateMetric      pipeline.CounterMetric
+	deleteMetric      pipeline.CounterMetric
+	lastUpdateTime    int64
 
 	// Last return of GetAllAcceptedInfoV2
 	fullList              map[string]bool
@@ -123,10 +122,11 @@ func (idf *InputDockerFile) Name() string {
 
 func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 	idf.context = context
-	idf.lastPathMappingCache = make(map[string]string)
 
+	idf.lastMountsCache = make(map[string][]types.MountPoint)
+	idf.lastDefaultRootPathCache = make(map[string]string)
 	idf.lastStdoutPathCache = make(map[string]string)
-	idf.lastStdoutTypeCache = make(map[string]string)
+	idf.lastStdoutLogTypeCache = make(map[string]string)
 
 	idf.firstStart = true
 	idf.fullList = make(map[string]bool)
@@ -139,9 +139,6 @@ func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 		idf.LogPath = strings.ToLower(idf.LogPath)
 	}
 	idf.lastClearTime = time.Now()
-	if idf.InputType == InputFile && len(idf.LogPath) <= 1 {
-		return 0, fmt.Errorf("empty log path")
-	}
 	helper.ContainerCenterInit()
 
 	if idf.HostFlag {
@@ -207,18 +204,23 @@ func (idf *InputDockerFile) Description() string {
 }
 
 // addMappingToLogtail  添加容器信息到allCmd里面，allCmd不为nil时，只添加不执行，allCmd为nil时，添加并执行
-func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, destPath, stdoutPath, stdoutLogType string, allCmd *DockerFileUpdateCmdAll) {
+func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, mounts []types.MountPoint, defaultRootPath, stdoutPath, stdoutLogType string, allCmd *DockerFileUpdateCmdAll) {
 	var cmd DockerFileUpdateCmd
 	cmd.ID = info.ContainerInfo.ID
-	cmd.Path = destPath
+	cmd.DefaultRootPath = defaultRootPath
+	cmd.StdoutPath = stdoutPath
+	cmd.StdoutLogType = stdoutLogType
 	tags := info.GetExternalTags(idf.ExternalEnvTag, idf.ExternalK8sLabelTag)
 	cmd.Tags = make([]string, 0, len(tags)*2)
 	for key, val := range tags {
 		cmd.Tags = append(cmd.Tags, key)
 		cmd.Tags = append(cmd.Tags, val)
 	}
-	cmd.StdoutPath = stdoutPath
-	cmd.StdoutLogType = stdoutLogType
+	cmd.Mounts = make([]string, 0, len(mounts)*2)
+	for _, mount := range mounts {
+		cmd.Mounts = append(cmd.Mounts, mount.Source)
+		cmd.Mounts = append(cmd.Mounts, mount.Destination)
+	}
 	cmdBuf, _ := json.Marshal(&cmd)
 	configName := idf.context.GetConfigName()
 	logger.Info(idf.context.GetRuntimeContext(), "addMappingToLogtail cmd", cmd)
@@ -265,83 +267,83 @@ func (idf *InputDockerFile) updateAll(allCmd *DockerFileUpdateCmdAll) {
 	}
 }
 
-func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, sourcePath, containerPath string, allCmd *DockerFileUpdateCmdAll) {
-	sourcePath = formatPath(sourcePath)
-	containerPath = formatPath(containerPath)
-	destPath := helper.GetMountedFilePathWithBasePath(idf.MountPath, sourcePath) + idf.LogPath[len(containerPath):]
-
-	if val, ok := idf.lastPathMappingCache[info.ContainerInfo.ID]; ok && val != sourcePath {
-		// send delete first and then add this info
-		idf.updateMetric.Add(1)
-		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "changed", "last", val, "source host path", sourcePath, "destination container path", containerPath, "destination log path", destPath,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-		idf.lastPathMappingCache[info.ContainerInfo.ID] = sourcePath
-		idf.addMappingToLogtail(info, destPath, "", "", allCmd)
-	} else if !ok {
-		idf.addMetric.Add(1)
-		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "added", "source host path", sourcePath, "destination container path", containerPath, "destination log path", destPath,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-		idf.lastPathMappingCache[info.ContainerInfo.ID] = sourcePath
-		idf.addMappingToLogtail(info, destPath, "", "", allCmd)
-	}
-}
-
-func (idf *InputDockerFile) updateStdoutMapping(info *helper.DockerInfoDetail, allCmd *DockerFileUpdateCmdAll) {
+func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, allCmd *DockerFileUpdateCmdAll) {
 	stdoutPath := helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(info.StdoutPath))
 	stdoutLogType := info.StdoutLogType
 	id := info.ContainerInfo.ID
+	mounts := info.ContainerInfo.Mounts
+	defaultRootPath := info.DefaultRootPath
 	changed := false
-	if val, ok := idf.lastStdoutPathCache[id]; ok && val != stdoutPath {
-		// send delete first and then add this info
-		idf.updateMetric.Add(1)
-		logger.Info(idf.context.GetRuntimeContext(), "container stdoutPath", "changed", "last", val, "stdoutPath", stdoutPath,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-		changed = true
-	} else if !ok {
-		idf.addMetric.Add(1)
-		logger.Info(idf.context.GetRuntimeContext(), "container stdoutPath", "added", "stdoutPath", stdoutPath,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-		changed = true
-	} else if val, ok := idf.lastStdoutTypeCache[id]; ok && val != stdoutLogType {
-		// send delete first and then add this info
-		idf.updateMetric.Add(1)
-		logger.Info(idf.context.GetRuntimeContext(), "container stdoutLogType", "changed", "last", val, "stdoutLogType", stdoutLogType,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-		changed = true
-	} else if !ok {
-		idf.addMetric.Add(1)
-		logger.Info(idf.context.GetRuntimeContext(), "container stdoutLogType", "added", "stdoutLogType", stdoutLogType,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-		changed = true
+
+	checkAndUpdate := func(cache map[string]string, newValue string, valueType string) {
+		if val, ok := cache[id]; ok && val != newValue {
+			// send delete first and then add this info
+			logger.Info(idf.context.GetRuntimeContext(), "container "+valueType, "changed", "last", val, valueType, newValue,
+				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
+			changed = true
+		} else if !ok {
+			logger.Info(idf.context.GetRuntimeContext(), "container "+valueType, "added", "last", val, valueType, newValue,
+				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
+			changed = true
+		}
 	}
+
+	checkAndUpdate(idf.lastStdoutPathCache, stdoutPath, "stdoutPath")
+	checkAndUpdate(idf.lastStdoutLogTypeCache, stdoutLogType, "stdoutLogType")
+	checkAndUpdate(idf.lastDefaultRootPathCache, defaultRootPath, "defaultRootPath")
+
+	sortMounts := func(mounts []types.MountPoint) {
+		sort.Slice(mounts, func(i, j int) bool {
+			return mounts[i].Source < mounts[j].Source
+		})
+	}
+	sortMounts(mounts)
+	// 判断mounts
+	if !changed {
+		if val, ok := idf.lastMountsCache[id]; ok && !reflect.DeepEqual(val, mounts) {
+			// send delete first and then add this info
+			logger.Info(idf.context.GetRuntimeContext(), "container mounts", "changed", "last", val, "mounts", mounts,
+				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
+			changed = true
+		} else if !ok {
+			logger.Info(idf.context.GetRuntimeContext(), "container mounts", "added", "last", val, "mounts", mounts,
+				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
+			changed = true
+		}
+	}
+
 	if changed {
-		idf.lastPathMappingCache[id] = stdoutPath
-		idf.lastStdoutTypeCache[id] = stdoutLogType
-		idf.addMappingToLogtail(info, "", stdoutPath, stdoutLogType, allCmd)
+		idf.updateMetric.Add(1)
+		idf.lastStdoutPathCache[id] = stdoutPath
+		idf.lastStdoutLogTypeCache[id] = stdoutLogType
+		idf.lastDefaultRootPathCache[id] = defaultRootPath
+		idf.lastMountsCache[id] = mounts
+		idf.addMappingToLogtail(info, mounts, defaultRootPath, stdoutPath, stdoutLogType, allCmd)
 	}
 }
 
 // deleteMapping  删除容器信息
 func (idf *InputDockerFile) deleteMapping(id string) {
 	idf.deleteMappingFromLogtail(id)
-	if idf.InputType == InputFile {
-		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "deleted", "source path", idf.lastPathMappingCache[id], "id", helper.GetShortID(id))
-		delete(idf.lastPathMappingCache, id)
-	} else if idf.InputType == InputStdout {
-		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "deleted", "stdout path", idf.lastStdoutPathCache[id], "stdout type", idf.lastStdoutTypeCache[id], "id", helper.GetShortID(id))
-		delete(idf.lastStdoutPathCache, id)
-		delete(idf.lastStdoutTypeCache, id)
-	}
+	delete(idf.lastStdoutPathCache, id)
+	delete(idf.lastStdoutLogTypeCache, id)
+	delete(idf.lastDefaultRootPathCache, id)
+	delete(idf.lastMountsCache, id)
+	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "deleted", "id", helper.GetShortID(id),
+		"stdoutPath", idf.lastStdoutPathCache[id],
+		"stdoutLogType", idf.lastStdoutLogTypeCache[id],
+		"defaultRootPath", idf.lastDefaultRootPathCache[id],
+		"mounts", idf.lastMountsCache[id])
 }
 
 // notifyStop 通知容器停止
 func (idf *InputDockerFile) notifyStop(id string) {
 	idf.notifyStopToLogtail(id)
-	if idf.InputType == InputFile {
-		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "source path", idf.lastPathMappingCache[id], "id", helper.GetShortID(id))
-	} else if idf.InputType == InputStdout {
-		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "stdout path", idf.lastStdoutPathCache[id], "stdout type", idf.lastStdoutTypeCache[id], "id", helper.GetShortID(id))
-	}
+	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "id", helper.GetShortID(id),
+		"stdoutPath", idf.lastStdoutPathCache[id],
+		"stdoutLogType", idf.lastStdoutLogTypeCache[id],
+		"defaultRootPath", idf.lastDefaultRootPathCache[id],
+		"mounts", idf.lastMountsCache[id])
 }
 
 func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
@@ -356,9 +358,10 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	var allCmd *DockerFileUpdateCmdAll
 	allCmd = nil
 	// if cache is empty, use update all cmd
-	if idf.InputType == InputFile && len(idf.lastPathMappingCache) == 0 {
-		allCmd = new(DockerFileUpdateCmdAll)
-	} else if idf.InputType == InputStdout && len(idf.lastStdoutPathCache) == 0 && len(idf.lastStdoutTypeCache) == 0 {
+	if len(idf.lastStdoutPathCache) == 0 &&
+		len(idf.lastStdoutLogTypeCache) == 0 &&
+		len(idf.lastDefaultRootPathCache) == 0 &&
+		len(idf.lastMountsCache) == 0 {
 		allCmd = new(DockerFileUpdateCmdAll)
 	}
 	newCount, delCount, addResultList, deleteResultList := helper.GetContainerByAcceptedInfoV2(
@@ -386,42 +389,31 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	idf.avgInstanceMetric.Add(int64(len(dockerInfoDetails)))
 
 	for k, info := range dockerInfoDetails {
-		if idf.InputType == InputStdout {
-			if info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
-				idf.updateStdoutMapping(info, allCmd)
-			}
-			continue
+		if info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
+			idf.updateMapping(info, allCmd)
 		}
-		sourcePath, containerPath := info.FindBestMatchedPath(idf.LogPath)
+		// 容器元信息预览使用
+		if idf.CollectContainersFlag && len(idf.LogPath) > 1 {
+			sourcePath, containerPath := info.FindBestMatchedPath(idf.LogPath)
 
-		formatSourcePath := formatPath(sourcePath)
-		formateContainerPath := formatPath(containerPath)
-		destPath := helper.GetMountedFilePathWithBasePath(idf.MountPath, formatSourcePath) + idf.LogPath[len(formateContainerPath):]
+			formatSourcePath := formatPath(sourcePath)
+			formateContainerPath := formatPath(containerPath)
+			destPath := helper.GetMountedFilePathWithBasePath(idf.MountPath, formatSourcePath) + idf.LogPath[len(formateContainerPath):]
 
-		if ok, err := util.PathExists(destPath); err == nil {
-			if !ok {
-				nothavingPathkeys = append(nothavingPathkeys, helper.GetShortID(k))
+			if ok, err := util.PathExists(destPath); err == nil {
+				if !ok {
+					nothavingPathkeys = append(nothavingPathkeys, helper.GetShortID(k))
+				} else {
+					havingPathkeys = append(havingPathkeys, helper.GetShortID(k))
+				}
 			} else {
-				havingPathkeys = append(havingPathkeys, helper.GetShortID(k))
+				nothavingPathkeys = append(nothavingPathkeys, helper.GetShortID(k))
 			}
-		} else {
-			nothavingPathkeys = append(nothavingPathkeys, helper.GetShortID(k))
-			logger.Warning(idf.context.GetRuntimeContext(), "check docker mount path error", err.Error())
-		}
-
-		logger.Debugf(idf.context.GetRuntimeContext(), "bestMatchedPath for logPath:%v container id:%v name:%v created:%v status:%v sourcePath:%v containerPath:%v",
-			idf.LogPath, info.ContainerInfo.ID, info.ContainerInfo.Name, info.ContainerInfo.Created, info.ContainerInfo.State.Status, sourcePath, containerPath)
-		if len(sourcePath) > 0 {
-			if info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
-				idf.updateMapping(info, sourcePath, containerPath, allCmd)
-			}
-		} else {
-			logger.Warning(idf.context.GetRuntimeContext(), "DOCKER_FILE_MATCH_ALARM", "unknow error", "can't find path from this container", "path", idf.LogPath, "container", info.ContainerInfo.Name)
 		}
 	}
 	if idf.CollectContainersFlag {
 		var configResult *helper.ContainerConfigResult
-		if idf.InputType == InputStdout {
+		if len(idf.LogPath) == 0 {
 			keys := make([]string, 0, len(idf.matchList))
 			for k := range idf.matchList {
 				if len(k) > 0 {
@@ -462,35 +454,40 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v", addResultList, deleteResultList)
 	}
 
-	if idf.InputType == InputFile {
-		for id := range idf.lastPathMappingCache {
-			if c, ok := dockerInfoDetails[id]; !ok {
-				idf.deleteMetric.Add(1)
-				idf.notifyStop(id)
-				idf.deleteMapping(id)
-			} else if c.Status() != helper.ContainerStatusRunning {
-				idf.notifyStop(id)
-			}
+	for id := range idf.lastStdoutPathCache {
+		if c, ok := dockerInfoDetails[id]; !ok {
+			idf.deleteMetric.Add(1)
+			idf.notifyStop(id)
+			idf.deleteMapping(id)
+		} else if c.Status() != helper.ContainerStatusRunning {
+			idf.notifyStop(id)
 		}
 	}
-	if idf.InputType == InputStdout {
-		for id := range idf.lastStdoutPathCache {
-			if c, ok := dockerInfoDetails[id]; !ok {
-				idf.deleteMetric.Add(1)
-				idf.notifyStop(id)
-				idf.deleteMapping(id)
-			} else if c.Status() != helper.ContainerStatusRunning {
-				idf.notifyStop(id)
-			}
+	for id := range idf.lastStdoutLogTypeCache {
+		if c, ok := dockerInfoDetails[id]; !ok {
+			idf.deleteMetric.Add(1)
+			idf.notifyStop(id)
+			idf.deleteMapping(id)
+		} else if c.Status() != helper.ContainerStatusRunning {
+			idf.notifyStop(id)
 		}
-		for id := range idf.lastStdoutTypeCache {
-			if c, ok := dockerInfoDetails[id]; !ok {
-				idf.deleteMetric.Add(1)
-				idf.notifyStop(id)
-				idf.deleteMapping(id)
-			} else if c.Status() != helper.ContainerStatusRunning {
-				idf.notifyStop(id)
-			}
+	}
+	for id := range idf.lastDefaultRootPathCache {
+		if c, ok := dockerInfoDetails[id]; !ok {
+			idf.deleteMetric.Add(1)
+			idf.notifyStop(id)
+			idf.deleteMapping(id)
+		} else if c.Status() != helper.ContainerStatusRunning {
+			idf.notifyStop(id)
+		}
+	}
+	for id := range idf.lastMountsCache {
+		if c, ok := dockerInfoDetails[id]; !ok {
+			idf.deleteMetric.Add(1)
+			idf.notifyStop(id)
+			idf.deleteMapping(id)
+		} else if c.Status() != helper.ContainerStatusRunning {
+			idf.notifyStop(id)
 		}
 	}
 	if allCmd != nil {
@@ -508,9 +505,10 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	}
 
 	if time.Since(idf.lastClearTime) > time.Hour {
-		idf.lastPathMappingCache = make(map[string]string)
 		idf.lastStdoutPathCache = make(map[string]string)
-		idf.lastStdoutTypeCache = make(map[string]string)
+		idf.lastStdoutLogTypeCache = make(map[string]string)
+		idf.lastDefaultRootPathCache = make(map[string]string)
+		idf.lastMountsCache = make(map[string][]types.MountPoint)
 		idf.lastClearTime = time.Now()
 	}
 
@@ -518,7 +516,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 }
 
 func init() {
-	pipeline.MetricInputs["metric_container_meta"] = func() pipeline.MetricInput {
+	pipeline.MetricInputs["metric_container_info"] = func() pipeline.MetricInput {
 		return &InputDockerFile{
 			FlushIntervalMs: 3000,
 		}

@@ -212,8 +212,8 @@ void ContainerDiscoveryOptions::GenerateContainerMetaFetchingGoPipeline(
             detail[key] = object;
         }
     };
-
-    if (fileDiscovery) {
+    // 容器元信息预览需要
+    if (mCollectingContainersMeta && fileDiscovery) {
         if (!fileDiscovery->GetWildcardPaths().empty()) {
             detail["LogPath"] = Json::Value(fileDiscovery->GetWildcardPaths()[0]);
             detail["MaxDepth"] = Json::Value(static_cast<int32_t>(fileDiscovery->GetWildcardPaths().size())
