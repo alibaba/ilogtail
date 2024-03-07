@@ -55,8 +55,6 @@ private:
     CounterPtr mProcMergedEventsBytes; // 成功合并了多少字节的日志
     CounterPtr mProcUnmatchedEventsCnt; // 未成功合并的日志条数
     CounterPtr mProcUnmatchedEventsBytes; // 未成功合并的日志字节数
-    CounterPtr mProcDiscardRecordsTotal; // 丢弃条数
-    CounterPtr mProcSingleLineRecordsTotal; // 单行条数
 
     int* mSplitLines = nullptr;
 
