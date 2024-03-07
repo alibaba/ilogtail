@@ -58,7 +58,10 @@ private:
         StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent);
     bool ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg);
     bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
-    
+    CounterPtr mProcParseInSizeBytes;
+    CounterPtr mProcParseOutSizeBytes;
+    CounterPtr mProcParseErrorTotal;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseContainerLogNativeUnittest;
 #endif
