@@ -52,7 +52,7 @@ private:
     void MergeEvents(std::vector<LogEvent*>& logEvents, bool insertLineBreak = true);
 
     CounterPtr mProcMergedEventsCnt; // 成功合并了多少条日志
-    CounterPtr mProcMergedEventsBytes; // 成功合并了多少字节的日志
+    // CounterPtr mProcMergedEventsBytes; // 成功合并了多少字节的日志
     CounterPtr mProcUnmatchedEventsCnt; // 未成功合并的日志条数
     // CounterPtr mProcUnmatchedEventsBytes; // 未成功合并的日志字节数
 
