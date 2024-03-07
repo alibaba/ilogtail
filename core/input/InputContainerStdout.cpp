@@ -47,10 +47,12 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
         fileDiscoveryConfig["AllowingIncludedByMultiConfigs"] = true;
     }
 
-    string key = "AllowingIncludedByMultiConfigs";
-    const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
-    if (itr != nullptr) {
-        fileDiscoveryConfig[key] = *itr;
+    {
+        string key = "AllowingIncludedByMultiConfigs";
+        const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
+        if (itr != nullptr) {
+            fileDiscoveryConfig[key] = *itr;
+        }
     }
 
     if (!mFileDiscovery.Init(fileDiscoveryConfig, *mContext, sName)) {
@@ -67,20 +69,22 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
     }
 
     // Multiline
-    const char* key = "Multiline";
-    const Json::Value* itr = config.find(key, key + strlen(key));
-    if (itr) {
-        if (!itr->isObject()) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 "param Multiline is not of type object",
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        } else if (!mMultiline.Init(*itr, *mContext, sName)) {
-            return false;
+    {
+        string key = "Multiline";
+        const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
+        if (itr != nullptr) {
+            if (!itr->isObject()) {
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     "param Multiline is not of type object",
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
+            } else if (!mMultiline.Init(*itr, *mContext, sName)) {
+                return false;
+            }
         }
     }
 
