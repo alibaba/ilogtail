@@ -90,11 +90,11 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
 
     mProcMergedEventsCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL);
     // mProcMergedEventsBytes
-        = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_SIZE_BYTES);
+    = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_SIZE_BYTES);
     mProcUnmatchedEventsCnt
         = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL);
     // mProcUnmatchedEventsBytes
-        = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_SIZE_BYTES);
+    = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_SIZE_BYTES);
 
     return true;
 }
@@ -253,7 +253,6 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 // current line is matched against the end pattern rather than the continue pattern
                 begin = cur;
                 mProcMergedEventsCnt->Add(1);
-                mProcMergedEventsBytes->Add(mSourceKey.size() + sourceVal.size());
                 sourceEvents[newSize++] = std::move(sourceEvents[begin]);
             } else {
                 HandleUnmatchLogs(sourceEvents, newSize, cur, cur, logPath);
@@ -348,7 +347,6 @@ void ProcessorMergeMultilineLogNative::MergeEvents(std::vector<LogEvent*>& logEv
     }
     mProcMergedEventsCnt->Add(logEvents.size());
     if (logEvents.size() == 1) {
-        mProcMergedEventsBytes->Add(mSourceKey.size() + logEvents[0]->GetContent(mSourceKey).size());
         logEvents.clear();
         return;
     }
@@ -367,22 +365,19 @@ void ProcessorMergeMultilineLogNative::MergeEvents(std::vector<LogEvent*>& logEv
         end += curValue.size();
     }
     targetEvent->SetContentNoCopy(mSourceKey, StringView(begin, end - begin));
-    mProcMergedEventsBytes->Add(mSourceKey.size() + end - begin);
     logEvents.clear();
 }
 
 void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath) {
+    mProcUnmatchedEventsCnt->Add(end - begin + 1);
     if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
         && mIgnoreUnmatchWarning) {
-        mProcDiscardRecordsTotal->Add(end - begin + 1);
         return;
     }
     for (size_t i = begin; i <= end; i++) {
-        StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
-        mProcUnmatchedEventsBytes->Add(mSourceKey.size() + sourceVal.size());
-        mProcUnmatchedEventsCnt->Add(1);
         if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+            StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
             LOG_WARNING(
                 GetContext().GetLogger(),
                 ("unmatched log line", "please check regex")("action", mMultiline.UnmatchedContentTreatmentToString())(
@@ -399,9 +394,6 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
         }
         if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
             logEvents[newSize++] = std::move(logEvents[i]);
-            mProcSingleLineRecordsTotal->Add(1);
-        } else {
-            mProcDiscardRecordsTotal->Add(1);
         }
     }
 }
