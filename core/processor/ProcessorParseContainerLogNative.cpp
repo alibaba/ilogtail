@@ -99,7 +99,6 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcParseSuccessTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_SUCCESS_TOTAL);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
 
     return true;
 }
@@ -195,7 +194,6 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
     }
     mProcParseSuccessTotal->Add(1);
     if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        mProcDiscardRecordsTotal->Add(1);
         return false;
     }
 
@@ -286,7 +284,6 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     }
     mProcParseSuccessTotal->Add(1);
     if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        mProcDiscardRecordsTotal->Add(1);
         return false;
     }
 
