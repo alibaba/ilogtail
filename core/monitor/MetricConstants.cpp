@@ -59,11 +59,7 @@ const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL = "proc_desensitize_reco
 // processor merge multiline log metrics
 const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL
     = "proc_merge_multiline_log_merged_records_total";
-const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_SIZE_BYTES
-    = "proc_merge_multiline_log_merged_records_size_bytes";
 const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
     = "proc_merge_multiline_log_unmatched_records_total";
-const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_SIZE_BYTES
-    = "proc_merge_multiline_log_unmatched_records_size_bytes";
 
 } // namespace logtail
