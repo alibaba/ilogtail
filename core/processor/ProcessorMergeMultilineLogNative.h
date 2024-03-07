@@ -16,25 +16,24 @@
 
 #pragma once
 
-#include <cstdint>
 #include <vector>
 
-#include "common/Constants.h"
 #include "file_server/MultilineOptions.h"
 #include "plugin/interface/Processor.h"
-#include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
 class ProcessorMergeMultilineLogNative : public Processor {
 public:
+    enum class MergeType { BY_REGEX, BY_FLAG };
+
+    static const std::string PartLogFlag;
     static const std::string sName;
 
-    enum class MergeType { BY_REGEX, BY_FLAG, BY_JSON };
-    MergeType mMergeType = MergeType::BY_REGEX;
-
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
+    MergeType mMergeType = MergeType::BY_REGEX;
     MultilineOptions mMultiline;
+    bool mIgnoreUnmatchWarning = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -44,26 +43,19 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEventsWithPartLog(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
-    void ProcessEventsWithRegex(PipelineEventGroup& logGroup, const StringView& logPath, EventsContainer& newEvents);
-    bool LogSplit(PipelineEventGroup& logGroup,
-                  std::vector<PipelineEventPtr>& logEventIndex,
-                  std::vector<PipelineEventPtr>& discardLogEventIndex,
-                  const StringView& logPath);
-    void HandleUnmatchLogs(const logtail::EventsContainer& events,
-                           long unsigned int& multiBeginIndex,
-                           long unsigned int endIndex,
-                           std::vector<PipelineEventPtr>& logEventIndex,
-                           std::vector<PipelineEventPtr>& discardLogEventIndex,
-                           bool mustHandleLogs = false);
-    void MergeEvents(logtail::EventsContainer& events,
-                     long unsigned int beginIndex,
-                     long unsigned int endIndex,
-                     std::vector<PipelineEventPtr>& logEventIndex,
-                     bool update = false,
-                     bool insertLineBreak = true);
+    void MergeLogsByRegex(PipelineEventGroup& logGroup);
+    void MergeLogsByFlag(PipelineEventGroup& logGroup);
 
-    int* mFeedLines = nullptr;
+    void HandleUnmatchLogs(
+        std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath);
+
+    void MergeEvents(std::vector<LogEvent*>& logEvents, bool insertLineBreak = true);
+
+    CounterPtr mProcMergedEventsCnt; // 成功合并了多少条日志
+    // CounterPtr mProcMergedEventsBytes; // 成功合并了多少字节的日志
+    CounterPtr mProcUnmatchedEventsCnt; // 未成功合并的日志条数
+    // CounterPtr mProcUnmatchedEventsBytes; // 未成功合并的日志字节数
+
     int* mSplitLines = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN

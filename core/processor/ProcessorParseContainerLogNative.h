@@ -16,16 +16,23 @@
 
 #pragma once
 
-#include "common/TimeUtil.h"
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
-#include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
 class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
+
+    // needed by LastMatchedLine
+    static const char CONTIANERD_DELIMITER; // 分隔符
+    static const char CONTIANERD_FULL_TAG; // 容器全标签
+    static const char CONTIANERD_PART_TAG; // 容器部分标签
+    // needed by LastMatchedLine
+    static const std::string DOCKER_JSON_LOG; // docker json 日志字段
+    static const std::string DOCKER_JSON_TIME; // docker json 时间字段
+    static const std::string DOCKER_JSON_STREAM_TYPE; // docker json 流字段
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -35,20 +42,31 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
+    bool mIgnoreParseWarning = false;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::string containerTimeKey = "_time_"; // 容器时间字段
-    std::string containerSourceKey = "_source_"; // 容器来源字段
-    std::string containerLogKey = "content"; // 容器日志字段
+    static const std::string containerTimeKey; // 容器时间字段
+    static const std::string containerSourceKey; // 容器来源字段
+    static const std::string containerLogKey; // 容器日志字段
 
-    bool ProcessEvent(const StringView& containerType, PipelineEventPtr& e);
-    void AddDockerJsonLog(char ** data ,const StringView& key, const StringView& value, LogEvent& targetEvent);
-    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
-    bool ContainerdLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
-    bool DockerJsonLogLineParser(LogEvent& sourceEvent, PipelineEventPtr& e);
+    bool ProcessEvent(StringView containerType, PipelineEventPtr& e);
+    void ResetDockerJsonLogField(char* data, StringView key, StringView value, LogEvent& targetEvent);
+    void ResetContainerdTextLog(
+        StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent);
+    bool ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg);
+    bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
+
+    CounterPtr mProcParseInSizeBytes; // 成功且保留的日志中，解析字段的INBYTES
+    CounterPtr mProcParseOutSizeBytes; // 成功且保留的日志中，解析出来字段的OUTBYTES和
+    CounterPtr mProcParseErrorTotal; // 解析失败条数
+    CounterPtr mProcParseSuccessTotal; // 成功解析条数
+    // CounterPtr mProcParseSuccessSizeBytes; // 成功bytes
+    // CounterPtr mProcParseErrorSizeBytes; // 失败bytes
+
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseContainerLogNativeUnittest;
 #endif

@@ -19,10 +19,10 @@
 #include "models/LogEvent.h"
 #include "models/StringView.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
+#include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitLogStringNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -42,7 +42,7 @@ public:
     void TestAddLog();
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
-    void TestMultipleLines();
+    void TestMultipleLinesWithProcessorSplitRegexNative();
     void TestProcessEventMicrosecondUnmatch();
     void TestApsaraEasyReadLogTimeParser();
     void TestApsaraLogLineParser();
@@ -58,7 +58,7 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestUploadRawLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
-UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraEasyReadLogTimeParser);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraLogLineParser);
@@ -419,7 +419,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
     }
 }
 
-void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
+void ProcessorParseApsaraNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
     std::string inJson = R"({
         "events" :
@@ -551,7 +551,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
-    // ProcessorMergeMultilineLogNative
+    // ProcessorSplitRegexNative
     {
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -567,22 +567,16 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["CopingRawLog"] = false;
         config["RenamedSourceKey"] = "__raw__";
         config["StartPattern"] = ".*";
-        config["UnmatchedContentTreatment"] = "split";
+        config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
-        config["MergeType"] = "regex";
+
         std::string pluginId = "testID";
 
-        // run function ProcessorSplitLogStringNative
-        ProcessorSplitLogStringNative processorSplitLogStringNative;
-        processorSplitLogStringNative.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
-        processorSplitLogStringNative.Process(eventGroup);
-
-        // run function ProcessorMergeMultilineLogNative
-        ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
-        processorMergeMultilineLogNative.SetContext(mContext);
-        APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
-        processorMergeMultilineLogNative.Process(eventGroup);
+        // run function ProcessorSplitRegexNative
+        ProcessorSplitRegexNative processorSplitRegexNative;
+        processorSplitRegexNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
+        processorSplitRegexNative.Process(eventGroup);
 
         // run function ProcessorParseApsaraNative
         ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
@@ -969,8 +963,8 @@ void ProcessorParseApsaraNativeUnittest::TestAddLog() {
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto logEvent = LogEvent::CreateEvent(sourceBuffer);
+    auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
+    auto logEvent = eventGroup.CreateLogEvent();
     char key[] = "key";
     char value[] = "value";
     processor.AddLog(key, value, *logEvent);

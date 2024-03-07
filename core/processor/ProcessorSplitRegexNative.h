@@ -20,16 +20,18 @@
 #include <vector>
 
 #include "common/Constants.h"
+#include "file_server/MultilineOptions.h"
 #include "plugin/interface/Processor.h"
+#include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
-class ProcessorSplitLogStringNative : public Processor {
+class ProcessorSplitRegexNative : public Processor {
 public:
     static const std::string sName;
 
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
-    char mSplitChar = '\n';
+    MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
 
     const std::string& Name() const override { return sName; }
@@ -40,14 +42,29 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvent(PipelineEventGroup& logGroup, PipelineEventPtr&& e, EventsContainer& newEvents);
-    StringView GetNextLine(StringView log, size_t begin);
+    void ProcessEvent(PipelineEventGroup& logGroup,
+                      const StringView& logPath,
+                      PipelineEventPtr&& e,
+                      EventsContainer& newEvents);
+    bool LogSplit(const char* buffer,
+                  int32_t size,
+                  int32_t& lineFeed,
+                  std::vector<StringView>& logIndex,
+                  std::vector<StringView>& discardIndex,
+                  const StringView& logPath);
+    void HandleUnmatchLogs(const char* buffer,
+                           int& multiBeginIndex,
+                           int endIndex,
+                           std::vector<StringView>& logIndex,
+                           std::vector<StringView>& discardIndex);
 
+    int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorRegexStringNativeUnittest;
-    friend class ProcessorParseDelimiterNativeUnittest;
+    friend class ProcessorSplitRegexNativeUnittest;
+    friend class ProcessorSplitRegexDisacardUnmatchUnittest;
+    friend class ProcessorSplitRegexKeepUnmatchUnittest;
 #endif
 };
 

@@ -26,27 +26,27 @@
 
 namespace logtail {
 
-class InputFile : public Input {
+class InputContainerStdout : public Input {
 public:
     static const std::string sName;
-
-    InputFile();
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    FileDiscoveryOptions mFileDiscovery;
-    bool mEnableContainerDiscovery = false;
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
-    // others
-    uint32_t mMaxCheckpointDirSearchDepth = 0;
-    uint32_t mExactlyOnceConcurrency = 0;
+    bool mIgnoringStdout;
+    bool mIgnoringStderr;
 
 private:
+    FileDiscoveryOptions mFileDiscovery;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class InputContainerStdoutUnittest;
+#endif
 };
 
 } // namespace logtail
