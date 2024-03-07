@@ -58,9 +58,15 @@ private:
         StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent);
     bool ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg);
     bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
-    CounterPtr mProcParseInSizeBytes;
-    CounterPtr mProcParseOutSizeBytes;
-    CounterPtr mProcParseErrorTotal;
+
+    CounterPtr mProcParseInSizeBytes; // 成功且保留的日志中，解析字段的INBYTES
+    CounterPtr mProcParseOutSizeBytes; // 成功且保留的日志中，解析出来字段的OUTBYTES和
+    CounterPtr mProcParseErrorTotal; // 解析失败条数
+    CounterPtr mProcParseSuccessTotal; // 成功解析条数
+    CounterPtr mProcDiscardRecordsTotal; // 丢弃条数
+    // CounterPtr mProcParseSuccessSizeBytes; // 成功bytes
+    // CounterPtr mProcParseErrorSizeBytes; // 失败bytes
+
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseContainerLogNativeUnittest;

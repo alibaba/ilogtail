@@ -98,6 +98,8 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcParseSuccessTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_SUCCESS_TOTAL);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
 
     return true;
 }
@@ -128,7 +130,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    mProcParseInSizeBytes->Add(sourceEvent.GetContent(mSourceKey).size());
+    mProcParseInSizeBytes->Add(mSourceKey.size() + sourceEvent.GetContent(mSourceKey).size());
 
     std::string errorMsg;
     bool shouldKeepEvent = true;
@@ -191,10 +193,9 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsg = errorMsgStream.str();
         return true;
     }
-    if (sourceValue == "stdout" && mIgnoringStdout) {
-        return false;
-    }
-    if (sourceValue == "stderr" && mIgnoringStderr) {
+    mProcParseSuccessTotal->Add(1);
+    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
+        mProcDiscardRecordsTotal->Add(1);
         return false;
     }
 
@@ -256,17 +257,6 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         return it != doc.MemberEnd() ? StringView(it->value.GetString()) : StringView();
     };
 
-    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
-    if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
-        std::ostringstream errorMsgStream;
-        errorMsgStream << "source field cannot be found in log line."
-                       << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
-        errorMsg = errorMsgStream.str();
-        return true;
-    }
-    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        return false;
-    }
     StringView timeValue = findMemberAndGetString(DOCKER_JSON_TIME);
     if (timeValue.empty()) {
         std::ostringstream errorMsgStream;
@@ -285,6 +275,20 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         return true;
     }
     StringView content = StringView(it->value.GetString());
+
+    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
+    if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
+        std::ostringstream errorMsgStream;
+        errorMsgStream << "source field cannot be found in log line."
+                       << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+        errorMsg = errorMsgStream.str();
+        return true;
+    }
+    mProcParseSuccessTotal->Add(1);
+    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
+        mProcDiscardRecordsTotal->Add(1);
+        return false;
+    }
 
     if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
         std::ostringstream errorMsgStream;
