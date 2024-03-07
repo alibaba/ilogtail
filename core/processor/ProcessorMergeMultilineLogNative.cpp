@@ -95,8 +95,6 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
         = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL);
     mProcUnmatchedEventsBytes
         = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcSingleLineRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SINGLE_LINE_RECORDS_TOTAL);
 
     return true;
 }
