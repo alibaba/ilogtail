@@ -33,7 +33,6 @@ const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES = "proc_in_records_size_byte
 const std::string METRIC_PROC_OUT_RECORDS_TOTAL = "proc_out_records_total";
 const std::string METRIC_PROC_OUT_RECORDS_SIZE_BYTES = "proc_out_records_size_bytes";
 const std::string METRIC_PROC_DISCARD_RECORDS_TOTAL = "proc_discard_records_total";
-const std::string METRIC_PROC_SINGLE_LINE_RECORDS_TOTAL = "proc_single_line_records_total";
 const std::string METRIC_PROC_TIME_MS = "proc_time_ms";
 
 // processor cunstom metrics
