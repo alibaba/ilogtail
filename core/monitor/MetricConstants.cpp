@@ -33,6 +33,7 @@ const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES = "proc_in_records_size_byte
 const std::string METRIC_PROC_OUT_RECORDS_TOTAL = "proc_out_records_total";
 const std::string METRIC_PROC_OUT_RECORDS_SIZE_BYTES = "proc_out_records_size_bytes";
 const std::string METRIC_PROC_DISCARD_RECORDS_TOTAL = "proc_discard_records_total";
+const std::string METRIC_PROC_SINGLE_LINE_RECORDS_TOTAL = "proc_single_line_records_total";
 const std::string METRIC_PROC_TIME_MS = "proc_time_ms";
 
 // processor cunstom metrics
@@ -56,4 +57,14 @@ const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_n
 // processor desensitize metrics
 const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL = "proc_desensitize_records_total";
 
-}
+// processor merge multiline log metrics
+const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL
+    = "proc_merge_multiline_log_merged_records_total";
+const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_SIZE_BYTES
+    = "proc_merge_multiline_log_merged_records_size_bytes";
+const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
+    = "proc_merge_multiline_log_unmatched_records_total";
+const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_SIZE_BYTES
+    = "proc_merge_multiline_log_unmatched_records_size_bytes";
+
+} // namespace logtail
