@@ -21,13 +21,9 @@
 
 using namespace std;
 
-
 namespace logtail {
 
 const string InputContainerStdout::sName = "input_container_stdout";
-
-InputContainerStdout::InputContainerStdout() {
-}
 
 bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
@@ -43,28 +39,19 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
                            mContext->GetRegion());
     }
 
-    static Json::Value fileDiscoveryConfig;
+    static Json::Value fileDiscoveryConfig(Json::objectValue);
     if (fileDiscoveryConfig.empty()) {
         fileDiscoveryConfig["FilePaths"] = Json::Value(Json::arrayValue);
         fileDiscoveryConfig["FilePaths"].append("/**/*");
-        fileDiscoveryConfig["MaxDirSearchDepth"] = 0;
-        fileDiscoveryConfig["PreservedDirDepth"] = 0;
         fileDiscoveryConfig["AllowingCollectingFilesInRootDir"] = true;
         fileDiscoveryConfig["AllowingIncludedByMultiConfigs"] = true;
     }
-    bool allowingIncludedByMultiConfigs = true;
-    if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", allowingIncludedByMultiConfigs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              allowingIncludedByMultiConfigs,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
+
+    string key = "AllowingIncludedByMultiConfigs";
+    const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
+    if (itr != nullptr) {
+        fileDiscoveryConfig[key] = *itr;
     }
-    fileDiscoveryConfig["AllowingIncludedByMultiConfigs"] = allowingIncludedByMultiConfigs;
 
     if (!mFileDiscovery.Init(fileDiscoveryConfig, *mContext, sName)) {
         return false;
@@ -73,7 +60,7 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
     }
-    mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline, nullptr);
+    mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
 
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;

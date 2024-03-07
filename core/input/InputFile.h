@@ -37,6 +37,7 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
+    FileDiscoveryOptions mFileDiscovery;
     bool mEnableContainerDiscovery = false;
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
@@ -46,11 +47,6 @@ public:
     uint32_t mExactlyOnceConcurrency = 0;
 
 private:
-    FileDiscoveryOptions mFileDiscovery;
-
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class InputFileUnittest;
-#endif
 };
 
 } // namespace logtail

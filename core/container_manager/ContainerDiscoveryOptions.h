@@ -49,7 +49,8 @@ struct ContainerDiscoveryOptions {
     bool mCollectingContainersMeta = false;
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
-    void GenerateContainerMetaFetchingGoPipeline(Json::Value& res, const FileDiscoveryOptions* fileDiscovery) const;
+    void GenerateContainerMetaFetchingGoPipeline(Json::Value& res,
+                                                 const FileDiscoveryOptions* fileDiscovery = nullptr) const;
 };
 
 using ContainerDiscoveryConfig = std::pair<const ContainerDiscoveryOptions*, const PipelineContext*>;
