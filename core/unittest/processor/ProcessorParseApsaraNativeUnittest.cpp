@@ -19,6 +19,7 @@
 #include "models/LogEvent.h"
 #include "models/StringView.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
@@ -41,7 +42,7 @@ public:
     void TestAddLog();
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
-    void TestMultipleLines();
+    void TestMultipleLinesWithProcessorSplitRegexNative();
     void TestProcessEventMicrosecondUnmatch();
     void TestApsaraEasyReadLogTimeParser();
     void TestApsaraLogLineParser();
@@ -57,7 +58,7 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestUploadRawLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
-UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraEasyReadLogTimeParser);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraLogLineParser);
@@ -418,7 +419,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
     }
 }
 
-void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
+void ProcessorParseApsaraNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
     std::string inJson = R"({
         "events" :
@@ -566,7 +567,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["CopingRawLog"] = false;
         config["RenamedSourceKey"] = "__raw__";
         config["StartPattern"] = ".*";
-        config["UnmatchedContentTreatment"] = "split";
+        config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
 
         std::string pluginId = "testID";

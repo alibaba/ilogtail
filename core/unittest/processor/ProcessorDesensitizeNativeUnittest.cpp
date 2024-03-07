@@ -15,6 +15,7 @@
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorDesensitizeNative.h"
+#include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
@@ -31,7 +32,8 @@ public:
     void TestCastSensWordFail();
     void TestCastSensWordLoggroup();
     void TestCastSensWordMulti();
-    void TestMultipleLines();
+    void TestMultipleLinesWithProcessorMergeMultilineLogNative();
+    void TestMultipleLinesWithProcessorSplitRegexNative();
 
     PipelineContext mContext;
 };
@@ -48,7 +50,9 @@ UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordLoggroup);
 
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMulti);
 
-UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLines);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLinesWithProcessorMergeMultilineLogNative);
+
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
 
 Json::Value
 ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey = std::string("cast1"),
@@ -69,7 +73,7 @@ ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey 
     return config;
 }
 
-void ProcessorDesensitizeNativeUnittest::TestMultipleLines() {
+void ProcessorDesensitizeNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
     std::string inJson = R"({
         "events" :
         [
@@ -151,7 +155,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         Json::Value config = GetCastSensWordConfig("content");
         std::string pluginId = "testID";
         config["StartPattern"] = ".*";
-        config["UnmatchedContentTreatment"] = "split";
+        config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
 
         // run function ProcessorSplitRegexNative
@@ -159,6 +163,116 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         processorSplitRegexNative.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
         processorSplitRegexNative.Process(eventGroup);
+
+        // run function ProcessorDesensitizeNative
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+}
+
+void ProcessorDesensitizeNativeUnittest::TestMultipleLinesWithProcessorMergeMultilineLogNative() {
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,
+dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+
+
+    std::string expectJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "asf@@@324 FS2$%pwd,pwd=********,,"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "dbf@@@324 FS2$%pwd,pwd=********,,"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+
+    // ProcessorSplitLogStringNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config = GetCastSensWordConfig("content");
+        std::string pluginId = "testID";
+        config["SplitChar"] = "\n";
+        config["AppendingLogPositionMeta"] = false;
+
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
+
+        // run function ProcessorDesensitizeNative
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+    // ProcessorMergeMultilineLogNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config = GetCastSensWordConfig("content");
+        std::string pluginId = "testID";
+        config["StartPattern"] = "[asf|dbf].*";
+        config["UnmatchedContentTreatment"] = "single_line";
+        config["AppendingLogPositionMeta"] = false;
+        config["MergeType"] = "regex";
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
+
+        // run function ProcessorMergeMultilineLogNative
+        ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
+        processorMergeMultilineLogNative.SetContext(mContext);
+        processorMergeMultilineLogNative.SetMetricsRecordRef(ProcessorMergeMultilineLogNative::sName, "1");
+        APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
+        processorMergeMultilineLogNative.Process(eventGroup);
 
         // run function ProcessorDesensitizeNative
         ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
