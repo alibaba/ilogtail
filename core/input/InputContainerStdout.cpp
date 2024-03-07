@@ -31,7 +31,7 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
     if (!AppConfig::GetInstance()->IsPurageContainerMode()) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
-                           "iLogtail is not in container, but container stdout collection is required",
+                           "iLogtail is not in container, but container stdout collection is required.",
                            sName,
                            mContext->GetConfigName(),
                            mContext->GetProjectName(),
