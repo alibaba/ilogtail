@@ -44,7 +44,6 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
         fileDiscoveryConfig["FilePaths"] = Json::Value(Json::arrayValue);
         fileDiscoveryConfig["FilePaths"].append("/**/*");
         fileDiscoveryConfig["AllowingCollectingFilesInRootDir"] = true;
-        fileDiscoveryConfig["AllowingIncludedByMultiConfigs"] = true;
     }
 
     {
