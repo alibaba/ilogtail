@@ -23,6 +23,7 @@
 #include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "models/LogEvent.h"
+#include "monitor/MetricConstants.h"
 
 namespace logtail {
 
@@ -86,6 +87,10 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     }
 
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
+
+    mProcMergedEventsCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL);
+    mProcUnmatchedEventsCnt
+        = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL);
 
     return true;
 }
@@ -243,6 +248,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 // case: continue + end
                 // current line is matched against the end pattern rather than the continue pattern
                 begin = cur;
+                mProcMergedEventsCnt->Add(1);
                 sourceEvents[newSize++] = std::move(sourceEvents[begin]);
             } else {
                 HandleUnmatchLogs(sourceEvents, newSize, cur, cur, logPath);
@@ -259,8 +265,8 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 // case: start + end or continue + end or end
                 events.emplace_back(sourceEvent);
                 if (mMultiline.GetContinuePatternReg() != nullptr) {
-                    // current line is not matched against the continue pattern, so the end pattern will decide if the
-                    // current log is a match or not
+                    // current line is not matched against the continue pattern, so the end pattern will decide if
+                    // the current log is a match or not
                     if (BoostRegexMatch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                         MergeEvents(events, true);
@@ -283,8 +289,8 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                             begin = cur + 1;
                         }
                     }
-                    // no continue pattern given, and the current line in not matched against the end pattern, so wait
-                    // for the next line
+                    // no continue pattern given, and the current line in not matched against the end pattern, so
+                    // wait for the next line
                 }
             } else {
                 if (mMultiline.GetContinuePatternReg() == nullptr) {
@@ -305,8 +311,9 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                     sourceEvents[newSize++] = std::move(sourceEvents[begin]);
                     if (!BoostRegexMatch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetStartPatternReg(), exception)) {
-                        // when no end pattern is given, the only chance to enter unmatched state is when both start and
-                        // continue pattern are given, and the current line is not matched against the start pattern
+                        // when no end pattern is given, the only chance to enter unmatched state is when both start
+                        // and continue pattern are given, and the current line is not matched against the start
+                        // pattern
                         HandleUnmatchLogs(sourceEvents, newSize, cur, cur, logPath);
                         isPartialLog = false;
                     } else {
@@ -334,6 +341,7 @@ void ProcessorMergeMultilineLogNative::MergeEvents(std::vector<LogEvent*>& logEv
     if (logEvents.size() == 0) {
         return;
     }
+    mProcMergedEventsCnt->Add(logEvents.size());
     if (logEvents.size() == 1) {
         logEvents.clear();
         return;
@@ -358,11 +366,11 @@ void ProcessorMergeMultilineLogNative::MergeEvents(std::vector<LogEvent*>& logEv
 
 void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath) {
+    mProcUnmatchedEventsCnt->Add(end - begin + 1);
     if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
         && mIgnoreUnmatchWarning) {
         return;
     }
-
     for (size_t i = begin; i <= end; i++) {
         if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);

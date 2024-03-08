@@ -30,13 +30,12 @@ class InputContainerStdout : public Input {
 public:
     static const std::string sName;
 
-    InputContainerStdout();
-
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
+    ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
     bool mIgnoringStdout;
@@ -44,7 +43,6 @@ public:
 
 private:
     FileDiscoveryOptions mFileDiscovery;
-    ContainerDiscoveryOptions mContainerDiscovery;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputContainerStdoutUnittest;
