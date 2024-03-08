@@ -31,9 +31,9 @@ const std::string ProcessorParseContainerLogNative::CONTAINERD_TEXT = "1";
 const std::string ProcessorParseContainerLogNative::DOCKER_JSON_FILE = "2";
 
 const std::string ProcessorParseContainerLogNative::sName = "processor_parse_container_log_native";
-const char ProcessorParseContainerLogNative::CONTIANERD_DELIMITER = ' '; // 分隔符
-const char ProcessorParseContainerLogNative::CONTIANERD_FULL_TAG = 'F'; // 容器全标签
-const char ProcessorParseContainerLogNative::CONTIANERD_PART_TAG = 'P'; // 容器部分标签
+const char ProcessorParseContainerLogNative::CONTAINERD_DELIMITER = ' '; // 分隔符
+const char ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG = 'F'; // 容器全标签
+const char ProcessorParseContainerLogNative::CONTAINERD_PART_TAG = 'P'; // 容器部分标签
 
 const std::string ProcessorParseContainerLogNative::DOCKER_JSON_LOG = "log"; // docker json 日志字段
 const std::string ProcessorParseContainerLogNative::DOCKER_JSON_TIME = "time"; // docker json 时间字段
@@ -101,7 +101,8 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcParseSuccessTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_SUCCESS_TOTAL);
+    mProcParseStdoutTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_STDOUT_TOTAL);
+    mProcParseStderrTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_STDERR_TOTAL);
 
     return true;
 }
@@ -165,7 +166,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
 
     // 寻找第一个分隔符位置 时间 _time_
     StringView timeValue;
-    const char* pch1 = std::find(contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER);
+    const char* pch1 = std::find(contentValue.begin(), contentValue.end(), CONTAINERD_DELIMITER);
     if (pch1 == contentValue.end()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "time field cannot be found in log line."
@@ -177,7 +178,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
 
     // 寻找第二个分隔符位置 容器标签 _source_
     StringView sourceValue;
-    const char* pch2 = std::find(pch1 + 1, contentValue.end(), CONTIANERD_DELIMITER);
+    const char* pch2 = std::find(pch1 + 1, contentValue.end(), CONTAINERD_DELIMITER);
     if (pch2 == contentValue.end()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "source field cannot be found in log line."
@@ -195,13 +196,21 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsg = errorMsgStream.str();
         return true;
     }
-    mProcParseSuccessTotal->Add(1);
-    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        return false;
+
+    if (sourceValue == "stdout") {
+        mProcParseStdoutTotal->Add(1);
+        if (mIgnoringStdout) {
+            return false;
+        }
+    } else {
+        mProcParseStderrTotal->Add(1);
+        if (mIgnoringStderr) {
+            return false;
+        }
     }
 
-    // 如果既不以 CONTIANERD_PART_TAG 开头，也不以 CONTIANERD_FULL_TAG 开头
-    if (*(pch2 + 1) != CONTIANERD_PART_TAG && *(pch2 + 1) != CONTIANERD_FULL_TAG) {
+    // 如果既不以 CONTAINERD_PART_TAG 开头，也不以 CONTAINERD_FULL_TAG 开头
+    if (*(pch2 + 1) != CONTAINERD_PART_TAG && *(pch2 + 1) != CONTAINERD_FULL_TAG) {
         // content
         StringView content = StringView(pch2 + 1, contentValue.end() - pch2 - 1);
         ResetContainerdTextLog(timeValue, sourceValue, content, false, sourceEvent);
@@ -209,7 +218,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
     }
 
     // 寻找第三个分隔符位置
-    const char* pch3 = std::find(pch2 + 1, contentValue.end(), CONTIANERD_DELIMITER);
+    const char* pch3 = std::find(pch2 + 1, contentValue.end(), CONTAINERD_DELIMITER);
     if (pch3 == contentValue.end() || pch3 != pch2 + 2) {
         // case: 2021-08-25T07:00:00.000000000Z stdout P
         // case: 2021-08-25T07:00:00.000000000Z stdout PP 1
@@ -217,7 +226,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         ResetContainerdTextLog(timeValue, sourceValue, content, false, sourceEvent);
         return true;
     }
-    if (*(pch2 + 1) == CONTIANERD_FULL_TAG) {
+    if (*(pch2 + 1) == CONTAINERD_FULL_TAG) {
         // F
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
         ResetContainerdTextLog(timeValue, sourceValue, content, false, sourceEvent);
@@ -290,9 +299,17 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsg = errorMsgStream.str();
         return true;
     }
-    mProcParseSuccessTotal->Add(1);
-    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        return false;
+
+    if (sourceValue == "stdout") {
+        mProcParseStdoutTotal->Add(1);
+        if (mIgnoringStdout) {
+            return false;
+        }
+    } else {
+        mProcParseStderrTotal->Add(1);
+        if (mIgnoringStderr) {
+            return false;
+        }
     }
 
     if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
