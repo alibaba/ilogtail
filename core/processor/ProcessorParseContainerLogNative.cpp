@@ -27,6 +27,9 @@
 
 namespace logtail {
 
+const std::string ProcessorParseContainerLogNative::CONTAINERD_TEXT = "1";
+const std::string ProcessorParseContainerLogNative::DOCKER_JSON_FILE = "2";
+
 const std::string ProcessorParseContainerLogNative::sName = "processor_parse_container_log_native";
 const char ProcessorParseContainerLogNative::CONTIANERD_DELIMITER = ' '; // 分隔符
 const char ProcessorParseContainerLogNative::CONTIANERD_FULL_TAG = 'F'; // 容器全标签
@@ -133,9 +136,9 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
 
     std::string errorMsg;
     bool shouldKeepEvent = true;
-    if (containerType == "containerd_text") {
+    if (containerType == CONTAINERD_TEXT) {
         shouldKeepEvent = ParseContainerdTextLogLine(sourceEvent, errorMsg);
-    } else if (containerType == "docker_json-file") {
+    } else if (containerType == DOCKER_JSON_FILE) {
         shouldKeepEvent = ParseDockerJsonLogLine(sourceEvent, errorMsg);
     }
     if (!errorMsg.empty()) {
@@ -250,22 +253,20 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         return true;
     }
 
-    auto findMemberAndGetString = [&](const std::string& memberName) {
-        auto it = doc.FindMember(memberName.c_str());
-        return it != doc.MemberEnd() ? StringView(it->value.GetString()) : StringView();
-    };
-
-    StringView timeValue = findMemberAndGetString(DOCKER_JSON_TIME);
-    if (timeValue.empty()) {
+    // time
+    auto it = doc.FindMember(DOCKER_JSON_TIME.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
         return true;
     }
+    StringView timeValue = StringView(it->value.GetString());
 
-    auto it = doc.FindMember(DOCKER_JSON_LOG.c_str());
-    if (it == doc.MemberEnd()) {
+    // content
+    it = doc.FindMember(DOCKER_JSON_LOG.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "content field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
@@ -274,7 +275,14 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     }
     StringView content = StringView(it->value.GetString());
 
-    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
+    // source
+    it = doc.FindMember(DOCKER_JSON_STREAM_TYPE.c_str());
+    StringView sourceValue;
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
+        sourceValue = StringView();
+    } else {
+        sourceValue = StringView(it->value.GetString());
+    }
     if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "source field cannot be found in log line."

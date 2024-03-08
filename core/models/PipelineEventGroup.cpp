@@ -16,6 +16,8 @@
 
 #include "models/PipelineEventGroup.h"
 
+#include <processor/ProcessorParseContainerLogNative.h>
+
 #include <sstream>
 
 #include "logger/Logger.h"
@@ -170,6 +172,9 @@ const std::string EVENT_GROUP_META_CONTAINER_IP = "container.ip";
 const std::string EVENT_GROUP_META_CONTAINER_IMAGE_NAME = "container.image.name";
 const std::string EVENT_GROUP_META_CONTAINER_IMAGE_ID = "container.image.id";
 
+const std::string EVENT_GROUP_META_CONTAINERD_TEXT = "containerd_text";
+const std::string EVENT_GROUP_META_DOCKER_JSON_FILE = "docker_json-file";
+
 const std::string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
     switch (key) {
         case EventGroupMetaKey::AGENT_TAG:
@@ -198,6 +203,15 @@ const std::string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
     }
 }
 
+const std::string EventGroupMetaValueToString(std::string value) {
+    if (value == ProcessorParseContainerLogNative::CONTAINERD_TEXT) {
+        return EVENT_GROUP_META_CONTAINERD_TEXT;
+    } else if (value == ProcessorParseContainerLogNative::DOCKER_JSON_FILE) {
+        return EVENT_GROUP_META_DOCKER_JSON_FILE;
+    }
+    return value;
+}
+
 EventGroupMetaKey StringToEventGroupMetaKey(const std::string& key) {
     static std::unordered_map<std::string, EventGroupMetaKey> sStringToEnum
         = {{EVENT_GROUP_META_AGENT_TAG, EventGroupMetaKey::AGENT_TAG},
@@ -221,7 +235,7 @@ Json::Value PipelineEventGroup::ToJson() const {
     if (!mMetadata.empty()) {
         Json::Value metadata;
         for (const auto& meta : mMetadata) {
-            metadata[EventGroupMetaKeyToString(meta.first)] = meta.second.to_string();
+            metadata[EventGroupMetaKeyToString(meta.first)] = EventGroupMetaValueToString(meta.second.to_string());
         }
         root["metadata"] = metadata;
     }
