@@ -21,7 +21,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "file_server/FileServer.h"
-#include "input/InputContainerStdout.h"
+#include "input/InputContainerStreamLog.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -32,7 +32,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputContainerStdoutUnittest : public testing::Test {
+class InputContainerStreamLogUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnEnableContainerDiscovery();
@@ -50,8 +50,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputContainerStdoutUnittest::OnSuccessfulInit() {
-    unique_ptr<InputContainerStdout> input;
+void InputContainerStreamLogUnittest::OnSuccessfulInit() {
+    unique_ptr<InputContainerStreamLog> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -64,9 +64,9 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerStdout());
+    input.reset(new InputContainerStreamLog());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStreamLog::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // valid optional param
@@ -79,9 +79,9 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerStdout());
+    input.reset(new InputContainerStreamLog());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStreamLog::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // invalid optional param
@@ -92,9 +92,9 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerStdout());
+    input.reset(new InputContainerStreamLog());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStreamLog::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // TailingAllMatchedFiles
@@ -105,9 +105,9 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerStdout());
+    input.reset(new InputContainerStreamLog());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStreamLog::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mFileReader.mTailingAllMatchedFiles);
 
@@ -117,14 +117,14 @@ void InputContainerStdoutUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerStdout());
+    input.reset(new InputContainerStreamLog());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStreamLog::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 }
 
-void InputContainerStdoutUnittest::OnEnableContainerDiscovery() {
-    unique_ptr<InputContainerStdout> input;
+void InputContainerStreamLogUnittest::OnEnableContainerDiscovery() {
+    unique_ptr<InputContainerStreamLog> input;
     Json::Value configJson, optionalGoPipelineJson, optionalGoPipeline;
     string configStr, optionalGoPipelineStr, errorMsg;
 
@@ -155,16 +155,16 @@ void InputContainerStdoutUnittest::OnEnableContainerDiscovery() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
     optionalGoPipelineJson["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-    input.reset(new InputContainerStdout());
+    input.reset(new InputContainerStreamLog());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdout::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStreamLog::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }
 
-void InputContainerStdoutUnittest::OnPipelineUpdate() {
+void InputContainerStreamLogUnittest::OnPipelineUpdate() {
     Json::Value configJson, optionalGoPipeline;
-    InputContainerStdout input;
+    InputContainerStreamLog input;
     string configStr, errorMsg;
 
     configStr = R"(
@@ -185,9 +185,9 @@ void InputContainerStdoutUnittest::OnPipelineUpdate() {
     APSARA_TEST_EQUAL(nullptr, FileServer::GetInstance()->GetMultilineConfig("test_config").first);
 }
 
-UNIT_TEST_CASE(InputContainerStdoutUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputContainerStdoutUnittest, OnEnableContainerDiscovery)
-UNIT_TEST_CASE(InputContainerStdoutUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputContainerStreamLogUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputContainerStreamLogUnittest, OnEnableContainerDiscovery)
+UNIT_TEST_CASE(InputContainerStreamLogUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 
