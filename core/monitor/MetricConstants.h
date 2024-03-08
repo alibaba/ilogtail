@@ -40,6 +40,7 @@ extern const std::string METRIC_PROC_TIME_MS;
 extern const std::string METRIC_PROC_PARSE_IN_SIZE_BYTES;
 extern const std::string METRIC_PROC_PARSE_OUT_SIZE_BYTES;
 extern const std::string METRIC_PROC_PARSE_ERROR_TOTAL;
+extern const std::string METRIC_PROC_PARSE_SUCCESS_TOTAL;
 extern const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL;
 extern const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL;
 
@@ -51,5 +52,9 @@ extern const std::string METRIC_PROC_FILTER_RECORDS_TOTAL;
 
 // processor desensitize metrics
 extern const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL;
+
+// processor merge multiline log metrics
+extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL;
+extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL;
 
 } // namespace logtail

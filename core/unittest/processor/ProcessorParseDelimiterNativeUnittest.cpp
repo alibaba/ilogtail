@@ -1145,6 +1145,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             // run function ProcessorMergeMultilineLogNative
             ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
             processorMergeMultilineLogNative.SetContext(mContext);
+            processorMergeMultilineLogNative.SetMetricsRecordRef(ProcessorMergeMultilineLogNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
             processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -1273,6 +1274,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             // run function ProcessorMergeMultilineLogNative
             ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
             processorMergeMultilineLogNative.SetContext(mContext);
+            processorMergeMultilineLogNative.SetMetricsRecordRef(ProcessorMergeMultilineLogNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
             processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -1406,6 +1408,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             // run function ProcessorMergeMultilineLogNative
             ProcessorMergeMultilineLogNative processorMergeMultilineLogNative;
             processorMergeMultilineLogNative.SetContext(mContext);
+            processorMergeMultilineLogNative.SetMetricsRecordRef(ProcessorMergeMultilineLogNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processorMergeMultilineLogNative.Init(config));
             processorMergeMultilineLogNative.Process(eventGroup);
             // run function ProcessorParseDelimiterNative

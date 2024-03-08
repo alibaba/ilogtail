@@ -22,6 +22,7 @@
 
 #include "common/ParamExtractor.h"
 #include "models/LogEvent.h"
+#include "monitor/MetricConstants.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 
 namespace logtail {
@@ -94,6 +95,11 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcParseSuccessTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_SUCCESS_TOTAL);
+
     return true;
 }
 
@@ -123,6 +129,8 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
+    mProcParseInSizeBytes->Add(mSourceKey.size() + sourceEvent.GetContent(mSourceKey).size());
+
     std::string errorMsg;
     bool shouldKeepEvent = true;
     if (containerType == "containerd_text") {
@@ -130,6 +138,10 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
     } else if (containerType == "docker_json-file") {
         shouldKeepEvent = ParseDockerJsonLogLine(sourceEvent, errorMsg);
     }
+    if (!errorMsg.empty()) {
+        mProcParseErrorTotal->Add(1);
+    }
+
     if (!mIgnoreParseWarning && !errorMsg.empty() && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
         LOG_WARNING(sLogger,
                     ("failed to parse log line, errorMsg", errorMsg)("container runtime", containerType)(
@@ -180,10 +192,8 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsg = errorMsgStream.str();
         return true;
     }
-    if (sourceValue == "stdout" && mIgnoringStdout) {
-        return false;
-    }
-    if (sourceValue == "stderr" && mIgnoringStderr) {
+    mProcParseSuccessTotal->Add(1);
+    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
         return false;
     }
 
@@ -245,17 +255,6 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         return it != doc.MemberEnd() ? StringView(it->value.GetString()) : StringView();
     };
 
-    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
-    if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
-        std::ostringstream errorMsgStream;
-        errorMsgStream << "source field cannot be found in log line."
-                       << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
-        errorMsg = errorMsgStream.str();
-        return true;
-    }
-    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        return false;
-    }
     StringView timeValue = findMemberAndGetString(DOCKER_JSON_TIME);
     if (timeValue.empty()) {
         std::ostringstream errorMsgStream;
@@ -275,6 +274,19 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     }
     StringView content = StringView(it->value.GetString());
 
+    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
+    if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
+        std::ostringstream errorMsgStream;
+        errorMsgStream << "source field cannot be found in log line."
+                       << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+        errorMsg = errorMsgStream.str();
+        return true;
+    }
+    mProcParseSuccessTotal->Add(1);
+    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
+        return false;
+    }
+
     if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "unexpected error: the original log line length is smaller than the sum of parsed fields."
@@ -283,8 +295,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         return true;
     }
 
-    char* data;
-    data = const_cast<char*>(buffer.data());
+    char* data = const_cast<char*>(buffer.data());
     // time
     ResetDockerJsonLogField(data, containerTimeKey, timeValue, sourceEvent);
     data += timeValue.size();
@@ -307,16 +318,21 @@ void ProcessorParseContainerLogNative::ResetDockerJsonLogField(char* data,
     memmove(data, value.data(), value.size());
     StringView valueBuffer = StringView(data, value.size());
     targetEvent.SetContentNoCopy(key, valueBuffer);
+    mProcParseOutSizeBytes->Add(key.size() + valueBuffer.size());
 }
 
 void ProcessorParseContainerLogNative::ResetContainerdTextLog(
     StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent) {
     sourceEvent.SetContentNoCopy(containerTimeKey, time);
+    mProcParseOutSizeBytes->Add(containerTimeKey.size() + time.size());
     sourceEvent.SetContentNoCopy(containerSourceKey, source);
+    mProcParseOutSizeBytes->Add(containerSourceKey.size() + source.size());
     if (isPartialLog) {
         sourceEvent.SetContentNoCopy(ProcessorMergeMultilineLogNative::PartLogFlag, StringView());
+        mProcParseOutSizeBytes->Add(ProcessorMergeMultilineLogNative::PartLogFlag.size());
     }
     sourceEvent.SetContentNoCopy(containerLogKey, content);
+    mProcParseOutSizeBytes->Add(containerLogKey.size() + content.size());
 }
 
 bool ProcessorParseContainerLogNative::IsSupportedEvent(const PipelineEventPtr& e) const {
