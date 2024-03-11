@@ -147,9 +147,8 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
             } else {
                 dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
                 LOG_DEBUG(sLogger,
-                          ("docker container path",
-                           dockerContainerPath.mContainerPath)("defaultRootPath", dockerContainerPath.mDefaultRootPath),
-                          ("logPath", logPath));
+                          ("docker container path", dockerContainerPath.mContainerPath)(
+                              "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath));
             }
         }
     }
