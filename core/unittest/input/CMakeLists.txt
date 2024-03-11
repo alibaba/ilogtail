@@ -23,4 +23,4 @@ target_link_libraries(input_container_log_unittest unittest_base)
 
 include(GoogleTest)
 gtest_discover_tests(input_file_unittest)
-gtest_discover_tests(input_container_stream_log_unittest)
+gtest_discover_tests(input_container_log_unittest)
