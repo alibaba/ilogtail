@@ -63,4 +63,8 @@ const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL
 const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
     = "proc_merge_multiline_log_unmatched_records_total";
 
+// processor parse container log native metrics
+const std::string METRIC_PROC_PARSE_STDOUT_TOTAL = "proc_parse_stdout_total";
+const std::string METRIC_PROC_PARSE_STDERR_TOTAL = "proc_parse_stderr_total";
+
 } // namespace logtail
