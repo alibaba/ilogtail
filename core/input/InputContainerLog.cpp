@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "input/InputContainerLog.h"
+
 #include "app_config/AppConfig.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
-#include "input/InputContainerStreamLog.h"
 #include "pipeline/Pipeline.h"
 
 using namespace std;
 
 namespace logtail {
 
-const string InputContainerStreamLog::sName = "input_container_stdout";
+const string InputContainerLog::sName = "input_container_log";
 
-bool InputContainerStreamLog::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
     // EnableContainerDiscovery
     if (!AppConfig::GetInstance()->IsPurageContainerMode()) {
@@ -111,10 +112,37 @@ bool InputContainerStreamLog::Init(const Json::Value& config, Json::Value& optio
                               mContext->GetLogstoreName(),
                               mContext->GetRegion());
     }
+
+    // IgnoreParseWarning
+    if (!GetOptionalBoolParam(config, "IgnoreParseWarning", mIgnoreParseWarning, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mIgnoreParseWarning,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
+    }
+
+    // KeepingSourceWhenParseFail
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mKeepingSourceWhenParseFail,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
+    }
+
     return true;
 }
 
-bool InputContainerStreamLog::Start() {
+bool InputContainerLog::Start() {
     mFileDiscovery.SetContainerInfo(
         FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
@@ -123,7 +151,7 @@ bool InputContainerStreamLog::Start() {
     return true;
 }
 
-bool InputContainerStreamLog::Stop(bool isPipelineRemoving) {
+bool InputContainerLog::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         FileServer::GetInstance()->SaveContainerInfo(mContext->GetPipeline().Name(), mFileDiscovery.GetContainerInfo());
     }

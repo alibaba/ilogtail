@@ -407,7 +407,7 @@ public:
     friend class AppConfigUnittest;
     friend class PipelineUnittest;
     friend class InputFileUnittest;
-    friend class InputContainerStreamLogUnittest;
+    friend class InputContainerLogUnittest;
     friend class AggregatorUnittest;
 #endif
 };
