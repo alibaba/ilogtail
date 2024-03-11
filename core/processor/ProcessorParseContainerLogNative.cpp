@@ -98,6 +98,19 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
+    // KeepingSourceWhenParseFail
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mKeepingSourceWhenParseFail,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
+    }
+
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
@@ -158,7 +171,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
                                                GetContext().GetLogstoreName(),
                                                GetContext().GetRegion());
     }
-    return shouldKeepEvent;
+    return shouldKeepEvent || (!errorMsg.empty() && mKeepingSourceWhenParseFail);
 }
 
 bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
@@ -172,7 +185,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
     timeValue = StringView(contentValue.data(), pch1 - contentValue.data());
 
@@ -184,7 +197,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsgStream << "source field cannot be found in log line."
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
     sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
 
@@ -194,7 +207,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
                        << "\tsource:" << sourceValue.to_string()
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
 
     if (sourceValue == "stdout") {
@@ -259,7 +272,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         parseSuccess = false;
     }
     if (!parseSuccess) {
-        return true;
+        return false;
     }
 
     // time
@@ -269,7 +282,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
     StringView timeValue = StringView(it->value.GetString());
 
@@ -280,7 +293,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "content field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
     StringView content = StringView(it->value.GetString());
 
@@ -297,7 +310,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "source field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
 
     if (sourceValue == "stdout") {
@@ -317,7 +330,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "unexpected error: the original log line length is smaller than the sum of parsed fields."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return false;
     }
 
     char* data = const_cast<char*>(buffer.data());

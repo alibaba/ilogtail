@@ -46,6 +46,7 @@ public:
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
     bool mIgnoreParseWarning = false;
+    bool mKeepingSourceWhenParseFail = true;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
