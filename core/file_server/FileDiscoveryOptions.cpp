@@ -503,16 +503,16 @@ bool FileDiscoveryOptions::IsMatch(const string& path, const string& name) const
             // convert Logtail's real path to config path. eg /host_all/var/lib/xxx/home/admin/logs -> /home/admin/logs
             if (mWildcardPaths[0].size() == (size_t)1) {
                 // if mWildcardPaths[0] is root path, do not add mWildcardPaths[0]
-                return IsWildcardPathMatch(path.substr(containerPath->mContainerFilePath.size()), name);
+                return IsWildcardPathMatch(path.substr(containerPath->mContainerPath.size()), name);
             } else {
-                string convertPath = mWildcardPaths[0] + path.substr(containerPath->mContainerFilePath.size());
+                string convertPath = mWildcardPaths[0] + path.substr(containerPath->mContainerPath.size());
                 return IsWildcardPathMatch(convertPath, name);
             }
         }
 
         // Normal base path.
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-            const string& containerBasePath = (*mContainerInfos)[i].mContainerFilePath;
+            const string& containerBasePath = (*mContainerInfos)[i].mContainerPath;
             if (_IsPathMatched(containerBasePath, path, mMaxDirSearchDepth)) {
                 if (!mHasBlacklist) {
                     return true;
@@ -646,7 +646,7 @@ DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const strin
         return NULL;
     }
     for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-        if (_IsSubPath((*mContainerInfos)[i].mContainerFilePath, logPath)) {
+        if (_IsSubPath((*mContainerInfos)[i].mContainerPath, logPath)) {
             return &(*mContainerInfos)[i];
         }
     }

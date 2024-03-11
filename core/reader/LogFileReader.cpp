@@ -112,7 +112,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                 reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
                                           : discoveryConfig.first->GetBasePath(),
-                                      containerPath->mContainerFilePath.size());
+                                      containerPath->mContainerPath.size());
                 reader->AddExtraTags(containerPath->mContainerTags);
             }
         }

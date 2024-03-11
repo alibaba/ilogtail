@@ -37,7 +37,7 @@ struct DockerContainerPath {
     std::string mContainerID; // id of this container
     // container path for this config's path. eg, config path '/home/admin', container path
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
-    std::string mContainerFilePath;
+    std::string mContainerPath;
 
     std::string mStreamLogPath;
     std::string mStreamLogType;
@@ -54,7 +54,7 @@ struct DockerContainerPath {
         if (mContainerID != rhs.mContainerID) {
             return false;
         }
-        if (mContainerFilePath != rhs.mContainerFilePath) {
+        if (mContainerPath != rhs.mContainerPath) {
             return false;
         }
         if (mStreamLogPath != rhs.mStreamLogPath) {

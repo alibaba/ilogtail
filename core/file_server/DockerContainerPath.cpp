@@ -138,24 +138,24 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
                 bestMatchedMounts = dockerContainerPath.mMounts[i];
             }
             if (bestMatchedMounts.Source.size() > 0) {
-                dockerContainerPath.mContainerFilePath
+                dockerContainerPath.mContainerPath
                     = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
-                LOG_DEBUG(sLogger,
-                          ("docker container path", dockerContainerPath.mContainerFilePath)("source",
-                                                                                            bestMatchedMounts.Source)(
-                              "destination", bestMatchedMounts.Destination)("logPath", logPath)("dst", dst));
+                LOG_DEBUG(
+                    sLogger,
+                    ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
+                        "destination", bestMatchedMounts.Destination)("logPath", logPath)("dst", dst));
             } else {
-                dockerContainerPath.mContainerFilePath = dockerContainerPath.mDefaultRootPath + logPath;
+                dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
                 LOG_DEBUG(sLogger,
-                          ("docker container path", dockerContainerPath.mContainerFilePath)(
-                              "defaultRootPath", dockerContainerPath.mDefaultRootPath),
+                          ("docker container path",
+                           dockerContainerPath.mContainerPath)("defaultRootPath", dockerContainerPath.mDefaultRootPath),
                           ("logPath", logPath));
             }
         }
     }
 
     if (name == InputContainerStreamLog::sName) {
-        dockerContainerPath.mContainerFilePath = dockerContainerPath.mStreamLogPath;
+        dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath;
     }
 
     // only check containerID (others are null when parse delete cmd)

@@ -180,7 +180,7 @@ void PollingDirFile::Polling() {
                     CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
                 } else {
                     for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                        const string& basePath = (*config->GetContainerInfo())[i].mContainerFilePath;
+                        const string& basePath = (*config->GetContainerInfo())[i].mContainerPath;
                         fsutil::PathStat baseDirStat;
                         if (!fsutil::PathStat::stat(basePath.c_str(), baseDirStat)) {
                             LOG_DEBUG(sLogger,
@@ -218,7 +218,7 @@ void PollingDirFile::Polling() {
                     CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
                 } else {
                     for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                        const string& baseWildcardPath = (*config->GetContainerInfo())[i].mContainerFilePath;
+                        const string& baseWildcardPath = (*config->GetContainerInfo())[i].mContainerPath;
                         int32_t lastConfigStatCount = mStatCount;
                         if (!PollingWildcardConfigPath(*itr, baseWildcardPath, 0)) {
                             LOG_DEBUG(sLogger,
