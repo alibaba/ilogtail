@@ -18,9 +18,9 @@ project(input_unittest)
 add_executable(input_file_unittest InputFileUnittest.cpp)
 target_link_libraries(input_file_unittest unittest_base)
 
-add_executable(input_container_stdout_unittest InputContainerStdoutUnittest.cpp)
-target_link_libraries(input_container_stdout_unittest unittest_base)
+add_executable(input_container_stream_log_unittest InputContainerStreamLogUnittest.cpp)
+target_link_libraries(input_container_stream_log_unittest unittest_base)
 
 include(GoogleTest)
 gtest_discover_tests(input_file_unittest)
-gtest_discover_tests(input_container_stdout_unittest)
+gtest_discover_tests(input_container_stream_log_unittest)

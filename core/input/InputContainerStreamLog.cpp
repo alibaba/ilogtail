@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "input/InputContainerStdout.h"
-
 #include "app_config/AppConfig.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
+#include "input/InputContainerStreamLog.h"
 #include "pipeline/Pipeline.h"
 
 using namespace std;
 
 namespace logtail {
 
-const string InputContainerStdout::sName = "input_container_stdout";
+const string InputContainerStreamLog::sName = "input_container_stdout";
 
-bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputContainerStreamLog::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
     // EnableContainerDiscovery
     if (!AppConfig::GetInstance()->IsPurageContainerMode()) {
@@ -115,7 +114,7 @@ bool InputContainerStdout::Init(const Json::Value& config, Json::Value& optional
     return true;
 }
 
-bool InputContainerStdout::Start() {
+bool InputContainerStreamLog::Start() {
     mFileDiscovery.SetContainerInfo(
         FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
@@ -124,7 +123,7 @@ bool InputContainerStdout::Start() {
     return true;
 }
 
-bool InputContainerStdout::Stop(bool isPipelineRemoving) {
+bool InputContainerStreamLog::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         FileServer::GetInstance()->SaveContainerInfo(mContext->GetPipeline().Name(), mFileDiscovery.GetContainerInfo());
     }

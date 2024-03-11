@@ -65,7 +65,6 @@
 #include "LogtailInsightDispatcher.h"
 #endif
 #include "file_server/FileServer.h"
-#include "input/InputContainerStdout.h"
 #include "input/InputFile.h"
 
 using namespace std;
