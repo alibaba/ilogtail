@@ -25,10 +25,13 @@ class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
 
+    static const std::string CONTAINERD_TEXT;
+    static const std::string DOCKER_JSON_FILE;
+
     // needed by LastMatchedLine
-    static const char CONTIANERD_DELIMITER; // 分隔符
-    static const char CONTIANERD_FULL_TAG; // 容器全标签
-    static const char CONTIANERD_PART_TAG; // 容器部分标签
+    static const char CONTAINERD_DELIMITER; // 分隔符
+    static const char CONTAINERD_FULL_TAG; // 容器全标签
+    static const char CONTAINERD_PART_TAG; // 容器部分标签
     // needed by LastMatchedLine
     static const std::string DOCKER_JSON_LOG; // docker json 日志字段
     static const std::string DOCKER_JSON_TIME; // docker json 时间字段
@@ -43,6 +46,7 @@ public:
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
     bool mIgnoreParseWarning = false;
+    bool mKeepingSourceWhenParseFail = true;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
@@ -60,9 +64,10 @@ private:
     bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
 
     CounterPtr mProcParseInSizeBytes; // 成功且保留的日志中，解析字段的INBYTES
-    CounterPtr mProcParseOutSizeBytes; // 成功且保留的日志中，解析出来字段的OUTBYTES和
+    CounterPtr mProcParseOutSizeBytes; // 成功且保留的日志中，解析出来字段的OUTBYTES
     CounterPtr mProcParseErrorTotal; // 解析失败条数
-    CounterPtr mProcParseSuccessTotal; // 成功解析条数
+    CounterPtr mProcParseStdoutTotal;
+    CounterPtr mProcParseStderrTotal;
     // CounterPtr mProcParseSuccessSizeBytes; // 成功bytes
     // CounterPtr mProcParseErrorSizeBytes; // 失败bytes
 

@@ -26,7 +26,7 @@
 
 namespace logtail {
 
-class InputContainerStreamLog : public Input {
+class InputContainerLog : public Input {
 public:
     static const std::string sName;
 
@@ -38,14 +38,16 @@ public:
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
-    bool mIgnoringStdout;
-    bool mIgnoringStderr;
+    bool mIgnoringStdout = false;
+    bool mIgnoringStderr = false;
+    bool mIgnoreParseWarning = false;
+    bool mKeepingSourceWhenParseFail = true;
 
 private:
     FileDiscoveryOptions mFileDiscovery;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class InputContainerStreamLogUnittest;
+    friend class InputContainerLogUnittest;
 #endif
 };
 
