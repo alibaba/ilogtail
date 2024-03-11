@@ -26,7 +26,7 @@ ilogtail:
               IgnoringStderr: true
               IgnoringStdout: false
               Multiline:
-                StartPattern: "Exception.*"
+                StartPattern: "today"
   close_wait: 5s
 verify:
   log_rules:
