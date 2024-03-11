@@ -42,6 +42,7 @@
 #include "processor/ProcessorFilterNative.h"
 #include "processor/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorParseContainerLogNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
@@ -261,6 +262,7 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMergeMultilineLogNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseContainerLogNative>());
 #if defined(__linux__) && !defined(__ANDROID__)
     if (BOOL_FLAG(enable_processor_spl)) {
         RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSPL>());

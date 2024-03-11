@@ -62,6 +62,7 @@ private:
     friend class ProcessorMergeMultilineLogNativeUnittest;
     friend class ProcessorMergeMultilineLogDisacardUnmatchUnittest;
     friend class ProcessorMergeMultilineLogKeepUnmatchUnittest;
+    friend class ProcessorParseContainerLogNativeUnittest;
 #endif
 };
 
