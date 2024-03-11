@@ -16,35 +16,65 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <json/json.h>
-
+#include "container_manager/DockerContainerPathCmd.h"
 #include "log_pb/sls_logs.pb.h"
 
 namespace logtail {
+
+struct Mount {
+    std::string Source;
+    std::string Destination;
+};
 
 struct DockerContainerPath {
     std::string mContainerID; // id of this container
     // container path for this config's path. eg, config path '/home/admin', container path
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
-    std::string mContainerPath;
+    std::string mContainerFilePath;
+
+    std::string mStreamLogPath;
+    std::string mStreamLogType;
+    std::string mDefaultRootPath;
+    std::vector<Mount> mMounts; // mounts of this container
     std::vector<sls_logs::LogTag> mContainerTags; // tags extracted from this container
     std::string mJsonStr; // this obj's json string, for saving to local file
 
-    static bool ParseByJSONStr(const std::string& jsonStr, DockerContainerPath& dockerContainerPath);
-    static bool ParseAllByJSONStr(const std::string& jsonStr,
+    static bool ParseByJSONStr(const DockerContainerPathCmd* pCmd, DockerContainerPath& dockerContainerPath);
+    static bool ParseAllByJSONStr(const DockerContainerPathCmd* pCmd,
                                   std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap);
 
     bool operator==(const DockerContainerPath& rhs) const {
         if (mContainerID != rhs.mContainerID) {
             return false;
         }
-        if (mContainerPath != rhs.mContainerPath) {
+        if (mContainerFilePath != rhs.mContainerFilePath) {
             return false;
+        }
+        if (mStreamLogPath != rhs.mStreamLogPath) {
+            return false;
+        }
+        if (mStreamLogType != rhs.mStreamLogType) {
+            return false;
+        }
+        if (mDefaultRootPath != rhs.mDefaultRootPath) {
+            return false;
+        }
+        if (mMounts.size() != rhs.mMounts.size()) {
+            return false;
+        }
+        for (size_t idx = 0; idx < mMounts.size(); ++idx) {
+            const auto& lhsMount = mMounts[idx];
+            const auto& rhsMount = rhs.mMounts[idx];
+            if (lhsMount.Source != rhsMount.Source || lhsMount.Destination != rhsMount.Destination) {
+                return false;
+            }
         }
         if (mContainerTags.size() != rhs.mContainerTags.size()) {
             return false;
@@ -61,7 +91,9 @@ struct DockerContainerPath {
     bool operator!=(const DockerContainerPath& rhs) const { return !(*this == rhs); }
 
 private:
-    static bool ParseByJSONObj(const Json::Value& jsonObj, DockerContainerPath& dockerContainerPath);
+    static bool ParseByJSONObj(const Json::Value& jsonObj,
+                               const DockerContainerPathCmd* pCmd,
+                               DockerContainerPath& dockerContainerPath);
 };
 
 } // namespace logtail

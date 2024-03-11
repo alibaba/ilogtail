@@ -13,46 +13,50 @@
 // limitations under the License.
 
 #include "ConfigManager.h"
+
 #include <curl/curl.h>
-#include <cctype>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <cctype>
 #if defined(__linux__)
-#include <unistd.h>
 #include <fnmatch.h>
+#include <unistd.h>
 #endif
 #include <limits.h>
+#include <re2/re2.h>
+
+#include <fstream>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
-#include <re2/re2.h>
-#include <set>
 #include <vector>
-#include <fstream>
-#include "common/JsonUtil.h"
-#include "common/HashUtil.h"
-#include "common/RuntimeUtil.h"
-#include "common/FileSystemUtil.h"
-#include "common/Constants.h"
-#include "common/ExceptionBase.h"
+
+#include "app_config/AppConfig.h"
+#include "checkpoint/CheckPointManager.h"
 #include "common/CompressTools.h"
+#include "common/Constants.h"
 #include "common/ErrorUtil.h"
-#include "common/TimeUtil.h"
+#include "common/ExceptionBase.h"
+#include "common/FileSystemUtil.h"
+#include "common/HashUtil.h"
+#include "common/JsonUtil.h"
+#include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "common/version.h"
-#include "monitor/LogtailAlarm.h"
+#include "controller/EventDispatcher.h"
+#include "event_handler/EventHandler.h"
+#include "file_server/FileServer.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
-#include "app_config/AppConfig.h"
-#include "checkpoint/CheckPointManager.h"
-#include "event_handler/EventHandler.h"
-#include "controller/EventDispatcher.h"
-#include "sender/Sender.h"
-#include "processor/daemon/LogProcess.h"
-#include "file_server/FileServer.h"
+#include "monitor/LogtailAlarm.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
+#include "processor/daemon/LogProcess.h"
+#include "sender/Sender.h"
 
 using namespace std;
 
@@ -64,8 +68,8 @@ using namespace std;
 // DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "cacert.pem");
 // #endif
 // DEFINE_FLAG_INT32(request_access_key_interval, "control the frenquency of GetAccessKey, seconds", 60);
-// DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds", 60);
-// DEFINE_FLAG_BOOL(logtail_config_update_enable, "", true);
+// DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds",
+// 60); DEFINE_FLAG_BOOL(logtail_config_update_enable, "", true);
 
 // 废弃
 // DEFINE_FLAG_STRING(default_global_topic, "default is empty string", "");
@@ -133,8 +137,8 @@ ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot
 // if checkTimeout, will not register the dir which is timeout
 // if not checkTimeout, will register the dir which is timeout and add it to the timeout list
 bool ConfigManager::RegisterHandlersRecursively(const std::string& path,
-                                                    const FileDiscoveryConfig& config,
-                                                    bool checkTimeout) {
+                                                const FileDiscoveryConfig& config,
+                                                bool checkTimeout) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
@@ -256,7 +260,7 @@ bool ConfigManager::RegisterHandlers() {
             result &= RegisterHandlers(config->GetBasePath(), *itr);
         } else {
             for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                result &= RegisterHandlers((*config->GetContainerInfo())[i].mContainerPath, *itr);
+                result &= RegisterHandlers((*config->GetContainerInfo())[i].mContainerFilePath, *itr);
             }
         }
     }
@@ -266,16 +270,14 @@ bool ConfigManager::RegisterHandlers() {
             RegisterWildcardPath(*itr, config->GetWildcardPaths()[0], 0);
         } else {
             for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                RegisterWildcardPath(*itr, (*config->GetContainerInfo())[i].mContainerPath, 0);
+                RegisterWildcardPath(*itr, (*config->GetContainerInfo())[i].mContainerFilePath, 0);
             }
         }
     }
     return result;
 }
 
-void ConfigManager::RegisterWildcardPath(const FileDiscoveryConfig& config,
-                                             const std::string& path,
-                                             int32_t depth) {
+void ConfigManager::RegisterWildcardPath(const FileDiscoveryConfig& config, const std::string& path, int32_t depth) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return;
@@ -443,9 +445,7 @@ bool ConfigManager::RegisterDirectory(const std::string& source, const std::stri
     return false;
 }
 
-bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
-                                                    const FileDiscoveryConfig& config,
-                                                    int depth) {
+bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path, const FileDiscoveryConfig& config, int depth) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
@@ -632,8 +632,8 @@ FileDiscoveryConfig ConfigManager::FindBestMatch(const string& path, const strin
 
 
 int32_t ConfigManager::FindAllMatch(vector<FileDiscoveryConfig>& allConfig,
-                                        const std::string& path,
-                                        const std::string& name /*= ""*/) {
+                                    const std::string& path,
+                                    const std::string& name /*= ""*/) {
     static AppConfig* appConfig = AppConfig::GetInstance();
     string cachedFileKey(path);
     cachedFileKey.push_back('<');
@@ -682,8 +682,8 @@ int32_t ConfigManager::FindAllMatch(vector<FileDiscoveryConfig>& allConfig,
 }
 
 int32_t ConfigManager::FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& allConfig,
-                                                  const string& path,
-                                                  const string& name) {
+                                              const string& path,
+                                              const string& name) {
     const bool acceptMultiConfig = AppConfig::GetInstance()->IsAcceptMultiConfig();
     string cachedFileKey(path);
     cachedFileKey.push_back('<');
@@ -777,9 +777,9 @@ int32_t ConfigManager::FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& 
 }
 
 void ConfigManager::SendAllMatchAlarm(const string& path,
-                                          const string& name,
-                                          vector<FileDiscoveryConfig>& allConfig,
-                                          int32_t maxMultiConfigSize) {
+                                      const string& name,
+                                      vector<FileDiscoveryConfig>& allConfig,
+                                      int32_t maxMultiConfigSize) {
     string allConfigNames;
     for (auto iter = allConfig.begin(); iter != allConfig.end(); ++iter) {
         allConfigNames.append("[")
@@ -837,16 +837,18 @@ bool ConfigManager::UpdateContainerPath(DockerContainerPathCmd* cmd) {
 
 /**
  * @brief 更新 Docker 容器的路径。
- * 
+ *
  * 该函数锁定 mDockerContainerPathCmdLock 互斥锁，将 mDockerContainerPathCmdVec 的内容复制到一个临时向量，
  * 清空 mDockerContainerPathCmdVec，然后解锁互斥锁。然后，它遍历临时向量，对于每个元素，
- * 它获取与 mConfigName 对应的 FileDiscoveryConfig。如果获取的 FileDiscoveryConfig 无效，它会记录一个错误日志并跳过当前迭代。
- * 如果 mDeleteFlag 为 true，它会尝试删除 Docker 容器路径，如果成功，它会记录一个调试消息，如果不成功，它会记录一个错误消息。
- * 如果 mDeleteFlag 为 false，它会尝试更新 Docker 容器路径，如果成功，它会记录一个调试消息，如果不成功，它会记录一个错误消息。
- * 在处理每个 DockerContainerPathCmd 后，它会删除该对象。函数最后返回 true。
- * 
- * @note 该函数假设 mDockerContainerPathCmdVec 中的所有 DockerContainerPathCmd 对象都是有效的，并且在函数结束时可以安全删除。
- * 
+ * 它获取与 mConfigName 对应的 FileDiscoveryConfig。如果获取的 FileDiscoveryConfig
+ * 无效，它会记录一个错误日志并跳过当前迭代。 如果 mDeleteFlag 为 true，它会尝试删除 Docker
+ * 容器路径，如果成功，它会记录一个调试消息，如果不成功，它会记录一个错误消息。 如果 mDeleteFlag 为 false，它会尝试更新
+ * Docker 容器路径，如果成功，它会记录一个调试消息，如果不成功，它会记录一个错误消息。 在处理每个 DockerContainerPathCmd
+ * 后，它会删除该对象。函数最后返回 true。
+ *
+ * @note 该函数假设 mDockerContainerPathCmdVec 中的所有 DockerContainerPathCmd
+ * 对象都是有效的，并且在函数结束时可以安全删除。
+ *
  * @return true 总是返回 true。
  */
 bool ConfigManager::DoUpdateContainerPaths() {
@@ -864,7 +866,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
             continue;
         }
         if (tmpPathCmdVec[i]->mDeleteFlag) {
-            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i]->mParams)) {
+            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i])) {
                 LOG_DEBUG(sLogger,
                           ("container path delete cmd success",
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mParams));
@@ -874,7 +876,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
                                                                                             tmpPathCmdVec[i]->mParams));
             }
         } else {
-            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i]->mParams, tmpPathCmdVec[i]->mUpdateAllFlag)) {
+            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i])) {
                 LOG_DEBUG(sLogger,
                           ("container path update cmd success", tmpPathCmdVec[i]->mConfigName)(
                               "params", tmpPathCmdVec[i]->mParams)("all", tmpPathCmdVec[i]->mUpdateAllFlag));
@@ -889,7 +891,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
     return true;
 }
 
-// 
+//
 bool ConfigManager::IsUpdateContainerPaths() {
     mDockerContainerPathCmdLock.lock();
     bool rst = false;
@@ -899,11 +901,13 @@ bool ConfigManager::IsUpdateContainerPaths() {
             rst = true;
             break;
         }
+        shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(pCmd->mConfigName);
+        string name = config->GetInputs()[0]->GetPlugin()->Name();
         FileDiscoveryConfig pConfig = FileServer::GetInstance()->GetFileDiscoveryConfig(pCmd->mConfigName);
         if (!pConfig.first) {
             continue;
         }
-        if (!pConfig.first->IsSameDockerContainerPath(pCmd->mParams, pCmd->mUpdateAllFlag)) {
+        if (!pConfig.first->IsSameDockerContainerPath(pCmd)) {
             rst = true;
             break;
         }
@@ -967,7 +971,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
             continue;
         }
         DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONStr(cmd->mParams, dockerContainerPath)) {
+        if (!DockerContainerPath::ParseByJSONStr(cmd, dockerContainerPath)) {
             continue;
         }
         std::vector<DockerContainerPath>::iterator iter = config.first->GetContainerInfo()->begin();
@@ -980,7 +984,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
         if (iter == iend) {
             continue;
         }
-        Event* pStoppedEvent = new Event(iter->mContainerPath, "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
+        Event* pStoppedEvent = new Event(iter->mContainerFilePath, "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
         LOG_DEBUG(
             sLogger,
             ("GetContainerStoppedEvent Type", pStoppedEvent->GetType())("Source", pStoppedEvent->GetSource())(
@@ -1023,6 +1027,7 @@ void ConfigManager::SaveDockerConfig() {
 }
 
 void ConfigManager::LoadDockerConfig() {
+    LOG_DEBUG(sLogger, ("load docker path info", ""));
     string dockerPathConfigName = AppConfig::GetInstance()->GetDockerFilePathConfig();
     Json::Value dockerPathValueRoot;
     ParseConfResult rst = ParseConfig(dockerPathConfigName, dockerPathValueRoot);
@@ -1060,7 +1065,7 @@ void ConfigManager::LoadDockerConfig() {
         localPaths.push_back(cmd);
     }
     mDockerContainerPathCmdLock.lock();
-    // 
+    //
     localPaths.insert(localPaths.end(), mDockerContainerPathCmdVec.begin(), mDockerContainerPathCmdVec.end());
     mDockerContainerPathCmdVec = localPaths;
     mDockerContainerPathCmdLock.unlock();
