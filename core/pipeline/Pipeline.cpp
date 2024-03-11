@@ -181,21 +181,7 @@ bool Pipeline::Init(Config&& config) {
             }
             mProcessorLine.emplace_back(std::move(processor));
         }
-        if (inputContainerLog->mMultiline.IsMultiline()
-            && inputContainerLog->mMultiline.mMode == MultilineOptions::Mode::CUSTOM) {
-            if (!inputContainerLog->mIgnoringStdout && !inputContainerLog->mIgnoringStderr) {
-                string warningMsg
-                    = "This logtail config has multiple lines of configuration, and when collecting stdout and "
-                      "stderr logs at the same time, there may be issues with merging multiple lines";
-                LOG_WARNING(sLogger, ("warning", warningMsg)("config", mContext.GetConfigName()));
-                warningMsg = "warning msg: " + warningMsg + "\tconfig: " + mContext.GetConfigName();
-                LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
-                                                       warningMsg,
-                                                       GetContext().GetProjectName(),
-                                                       GetContext().GetLogstoreName(),
-                                                       GetContext().GetRegion());
-            }
-
+        if (inputContainerLog->mMultiline.IsMultiline()) {
             Json::Value detail;
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
                                                                        to_string(++pluginIndex));
