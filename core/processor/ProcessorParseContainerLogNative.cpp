@@ -171,7 +171,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
                                                GetContext().GetLogstoreName(),
                                                GetContext().GetRegion());
     }
-    return shouldKeepEvent || (!errorMsg.empty() && mKeepingSourceWhenParseFail);
+    return shouldKeepEvent;
 }
 
 bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
@@ -185,7 +185,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
     timeValue = StringView(contentValue.data(), pch1 - contentValue.data());
 
@@ -197,7 +197,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         errorMsgStream << "source field cannot be found in log line."
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
     sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
 
@@ -207,7 +207,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
                        << "\tsource:" << sourceValue.to_string()
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
 
     if (sourceValue == "stdout") {
@@ -272,7 +272,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         parseSuccess = false;
     }
     if (!parseSuccess) {
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
 
     // time
@@ -282,7 +282,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
     StringView timeValue = StringView(it->value.GetString());
 
@@ -293,7 +293,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "content field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
     StringView content = StringView(it->value.GetString());
 
@@ -310,7 +310,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "source field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
 
     if (sourceValue == "stdout") {
@@ -330,7 +330,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "unexpected error: the original log line length is smaller than the sum of parsed fields."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
 
     char* data = const_cast<char*>(buffer.data());
