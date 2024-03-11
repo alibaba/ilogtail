@@ -43,13 +43,18 @@ const (
 	PluginDockerStopFile      = 4
 )
 
+type Mount struct {
+	Source      string
+	Destination string
+}
+
 type DockerFileUpdateCmd struct {
 	ID              string
 	Tags            []string // 容器信息Tag
-	Mounts          []string // 容器挂载路径 先加入 Source 后加入 Destination
+	Mounts          []Mount  // 容器挂载路径
 	DefaultRootPath string   // 容器默认路径
 	StdoutPath      string   // 标准输出路径
-	StdoutLogType   string   // 标准输出类型 container_json-file、containerd
+	StdoutLogType   string   // 标准输出类型 docker_json-file、containerd_text
 }
 
 type DockerFileUpdateCmdAll struct {
@@ -217,10 +222,12 @@ func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, m
 		cmd.Tags = append(cmd.Tags, key)
 		cmd.Tags = append(cmd.Tags, val)
 	}
-	cmd.Mounts = make([]string, 0, len(mounts)*2)
+	cmd.Mounts = make([]Mount, 0, len(mounts))
 	for _, mount := range mounts {
-		cmd.Mounts = append(cmd.Mounts, helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(mount.Source)))
-		cmd.Mounts = append(cmd.Mounts, helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(mount.Destination)))
+		cmd.Mounts = append(cmd.Mounts, Mount{
+			Source:      helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(mount.Source)),
+			Destination: mount.Destination,
+		})
 	}
 	cmdBuf, _ := json.Marshal(&cmd)
 	configName := idf.context.GetConfigName()

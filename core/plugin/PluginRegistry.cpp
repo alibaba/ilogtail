@@ -25,7 +25,6 @@
 
 #include "app_config/AppConfig.h"
 #include "flusher/FlusherSLS.h"
-#include "input/InputContainerStdout.h"
 #include "input/InputContainerStreamLog.h"
 #include "input/InputFile.h"
 #if defined(__linux__) && !defined(__ANDROID__)

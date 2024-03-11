@@ -602,7 +602,7 @@ func (dc *DockerCenter) CreateInfoDetail(info types.ContainerJSON, envConfigPref
 
 	did := &DockerInfoDetail{
 		StdoutPath:       info.LogPath,
-		StdoutLogType:    info.HostConfig.LogConfig.Type,
+		StdoutLogType:    "docker_" + info.HostConfig.LogConfig.Type,
 		ContainerInfo:    info,
 		ContainerNameTag: containerNameTag,
 		K8SInfo:          &k8sInfo,

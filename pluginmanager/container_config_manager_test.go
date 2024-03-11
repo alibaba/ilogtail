@@ -118,7 +118,7 @@ func mockDockerInfoDetail(containerName string, envList []string) *helper.Docker
 			LogPath: "/var/lib/docker/containers/test/test-json.log",
 			HostConfig: &container.HostConfig{
 				LogConfig: container.LogConfig{
-					Type: "json-file",
+					Type: "docker_json-file",
 				},
 			},
 		},
