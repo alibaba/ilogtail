@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "file_server/FileServer.h"
-#include "input/InputContainerStreamLog.h"
+#include "input/InputContainerLog.h"
 #include "input/InputFile.h"
 #include "logger/Logger.h"
 #include "pipeline/Pipeline.h"
@@ -154,7 +154,7 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
         }
     }
 
-    if (name == InputContainerStreamLog::sName) {
+    if (name == InputContainerLog::sName) {
         dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath;
     }
 
