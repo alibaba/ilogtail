@@ -183,18 +183,25 @@ bool Pipeline::Init(Config&& config) {
         }
         if (inputContainerLog->mMultiline.IsMultiline()) {
             Json::Value detail;
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["Mode"] = Json::Value("custom");
-            detail["StartPattern"] = Json::Value(inputContainerLog->mMultiline.mStartPattern);
-            detail["ContinuePattern"] = Json::Value(inputContainerLog->mMultiline.mContinuePattern);
-            detail["EndPattern"] = Json::Value(inputContainerLog->mMultiline.mEndPattern);
-            if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
-                == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
-                detail["UnmatchedContentTreatment"] = Json::Value("discard");
-            } else if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
-                       == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
-                detail["UnmatchedContentTreatment"] = Json::Value("single_line");
+            if (config.mIsFirstProcessorJson || inputContainerLog->mMultiline.mMode == MultilineOptions::Mode::JSON) {
+                mContext.SetRequiringJsonReaderFlag(true);
+                processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                           to_string(++pluginIndex));
+                detail["SplitChar"] = Json::Value('\0');
+            } else if (inputContainerLog->mMultiline.IsMultiline()) {
+                processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
+                                                                           to_string(++pluginIndex));
+                detail["Mode"] = Json::Value("custom");
+                detail["StartPattern"] = Json::Value(inputContainerLog->mMultiline.mStartPattern);
+                detail["ContinuePattern"] = Json::Value(inputContainerLog->mMultiline.mContinuePattern);
+                detail["EndPattern"] = Json::Value(inputContainerLog->mMultiline.mEndPattern);
+                if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
+                    == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
+                    detail["UnmatchedContentTreatment"] = Json::Value("discard");
+                } else if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
+                           == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
+                    detail["UnmatchedContentTreatment"] = Json::Value("single_line");
+                }
             }
             if (!processor->Init(detail, mContext)) {
                 return false;
