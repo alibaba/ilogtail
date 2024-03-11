@@ -137,19 +137,18 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
                 && bestMatchedMounts.Destination.size() < dstSize) {
                 bestMatchedMounts = dockerContainerPath.mMounts[i];
             }
-            if (bestMatchedMounts.Source.size() > 0) {
-                dockerContainerPath.mContainerPath
-                    = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
-                LOG_DEBUG(
-                    sLogger,
-                    ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
-                        "destination", bestMatchedMounts.Destination)("logPath", logPath)("dst", dst));
-            } else {
-                dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
-                LOG_DEBUG(sLogger,
-                          ("docker container path", dockerContainerPath.mContainerPath)(
-                              "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath));
-            }
+        }
+        if (bestMatchedMounts.Source.size() > 0) {
+            dockerContainerPath.mContainerPath
+                = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
+            LOG_DEBUG(sLogger,
+                     ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
+                         "destination", bestMatchedMounts.Destination)("logPath", logPath));
+        } else {
+            dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
+            LOG_DEBUG(sLogger,
+                     ("docker container path", dockerContainerPath.mContainerPath)(
+                         "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath));
         }
     }
 

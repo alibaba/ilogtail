@@ -214,7 +214,7 @@ func (idf *InputDockerFile) Description() string {
 func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, mounts []types.MountPoint, defaultRootPath, streamLogPath, streamLogType string, allCmd *DockerFileUpdateCmdAll) {
 	var cmd DockerFileUpdateCmd
 	cmd.ID = info.ContainerInfo.ID
-	cmd.DefaultRootPath = defaultRootPath
+	cmd.DefaultRootPath = path.Clean(helper.GetMountedFilePathWithBasePath(idf.MountPath, path.Clean(defaultRootPath)))
 	cmd.StreamLogPath = streamLogPath
 	cmd.StreamLogType = streamLogType
 	tags := info.GetExternalTags(idf.ExternalEnvTag, idf.ExternalK8sLabelTag)
@@ -226,8 +226,8 @@ func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, m
 	cmd.Mounts = make([]Mount, 0, len(mounts))
 	for _, mount := range mounts {
 		cmd.Mounts = append(cmd.Mounts, Mount{
-			Source:      helper.GetMountedFilePathWithBasePath(idf.MountPath, formatPath(mount.Source)),
-			Destination: path.Clean(mount.Destination),
+			Source:      path.Clean(helper.GetMountedFilePathWithBasePath(idf.MountPath, path.Clean(formatPath(mount.Source)))),
+			Destination: path.Clean(helper.GetMountedFilePathWithBasePath(idf.MountPath, path.Clean(mount.Destination))),
 		})
 	}
 	cmdBuf, _ := json.Marshal(&cmd)
