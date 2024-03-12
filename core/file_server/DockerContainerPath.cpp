@@ -67,6 +67,13 @@ bool DockerContainerPath::ParseAllByJSONStr(
     return true;
 }
 
+bool hasPrefix(const std::string& fullString, const std::string& prefix) {
+    if (fullString.length() < prefix.length()) {
+        return false;
+    }
+    return fullString.compare(0, prefix.length(), prefix) == 0;
+}
+
 bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
                                          const DockerContainerPathCmd* pCmd,
                                          DockerContainerPath& dockerContainerPath) {
@@ -133,9 +140,10 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
             std::string dst = dockerContainerPath.mMounts[i].Destination;
             int dstSize = dst.size();
 
-            if (logPath.find(dst) == 0 && (pthSize == dstSize || (pthSize > dstSize && logPath[dstSize] == '/'))
-                && bestMatchedMounts.Destination.size() < dstSize) {
-                bestMatchedMounts = dockerContainerPath.mMounts[i];
+            if (hasPrefix(logPath, dst) &&
+                (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\'))) &&
+                bestMatchedMounts.Destination.size() < dstSize) {
+                    bestMatchedMounts = dockerContainerPath.mMounts[i];
             }
         }
         if (bestMatchedMounts.Source.size() > 0) {
