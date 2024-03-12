@@ -53,7 +53,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
             fileDiscoveryConfig[key] = *itr;
         }
     }
-
+    mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
     if (!mFileDiscovery.Init(fileDiscoveryConfig, *mContext, sName)) {
         return false;
     }
