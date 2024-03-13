@@ -16,14 +16,16 @@ package mqtt
 
 import (
 	"errors"
+	"strconv"
+	"time"
+
+	MQTT "github.com/eclipse/paho.mqtt.golang"
+	jsoniter "github.com/json-iterator/go"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	MQTT "github.com/eclipse/paho.mqtt.golang"
-	jsoniter "github.com/json-iterator/go"
-	"strconv"
-	"time"
 )
 
 type FlusherMqtt struct {
