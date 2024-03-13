@@ -27,7 +27,6 @@ const string InputContainerLog::sName = "input_container_log";
 
 bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
-    // EnableContainerDiscovery
     if (!AppConfig::GetInstance()->IsPurageContainerMode()) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
@@ -53,10 +52,10 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
             fileDiscoveryConfig[key] = *itr;
         }
     }
-    mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
     if (!mFileDiscovery.Init(fileDiscoveryConfig, *mContext, sName)) {
         return false;
     }
+    mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
 
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
