@@ -68,9 +68,9 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
 
     // Multiline
     {
-        string key = "Multiline";
-        const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
-        if (itr != nullptr) {
+        const char* key = "Multiline";
+        const Json::Value* itr = config.find(key, key + strlen(key));
+        if (itr) {
             if (!itr->isObject()) {
                 PARAM_WARNING_IGNORE(mContext->GetLogger(),
                                      mContext->GetAlarm(),
