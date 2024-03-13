@@ -458,7 +458,9 @@ void* LogInput::ProcessLoop() {
     mInteruptFlag = true;
     mStopCV.notify_one();
 
-    LOG_INFO(sLogger, ("LogInputThread", "Exit"));
+    if (!BOOL_FLAG(sidecar_mode)) {
+        LOG_WARNING(sLogger, ("LogInputThread", "Exit"));
+    }
     return NULL;
 }
 
