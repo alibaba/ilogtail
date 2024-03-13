@@ -957,7 +957,9 @@ bool ModifyHandler::IsAllFileRead() {
         if (it->second.size() > 1 || (!it->second.empty() && !it->second[0]->IsReadToEnd())) {
             return false;
         }
-        ForceReadLogAndPush(it->second[0]);
+        if (!it->second.empty()) {
+            ForceReadLogAndPush(it->second[0]);
+        }
     }
     return true;
 }
