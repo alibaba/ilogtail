@@ -192,7 +192,7 @@ bool CreateModifyHandler::DumpReaderMeta(bool isRotatorReader, bool checkConfigF
 
 bool CreateModifyHandler::IsAllFileRead() {
     for (ModifyHandlerMap::iterator iter = mModifyHandlerPtrMap.begin(); iter != mModifyHandlerPtrMap.end(); ++iter) {
-        if (iter->second->IsAllFileRead()) {
+        if (!iter->second->IsAllFileRead()) {
             return false;
         }
     }
@@ -954,9 +954,10 @@ bool ModifyHandler::DumpReaderMeta(bool isRotatorReader, bool checkConfigFlag) {
 
 bool ModifyHandler::IsAllFileRead() {
     for (auto it = mNameReaderMap.begin(); it != mNameReaderMap.end(); ++it) {
-        if (it->second.size() > 1 || !it->second.empty() && !it->second[0]->IsReadToEnd()) {
+        if (it->second.size() > 1 || (!it->second.empty() && !it->second[0]->IsReadToEnd())) {
             return false;
         }
+        ForceReadLogAndPush(it->second[0]);
     }
     return true;
 }
