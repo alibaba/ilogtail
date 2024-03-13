@@ -88,16 +88,7 @@ func (m *FlusherMqtt) Init(context pipeline.Context) error {
 	client := MQTT.NewClient(connOpts)
 
 	waitTime := time.Duration(m.RetryMin) * time.Second
-	SIGTERM := make(chan struct{})
-	go func(SIGTERM chan struct{}) {
-		for {
-			select {
-			case <-SIGTERM:
-				return
-			}
-		}
-	}(SIGTERM)
-	m.isTerminal = SIGTERM
+	m.isTerminal = make(chan struct{})
 
 	var err error
 	connSuccess := false
