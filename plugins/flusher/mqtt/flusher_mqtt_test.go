@@ -31,7 +31,7 @@ func TestConnectAndWrite(t *testing.T) {
 	}
 
 	m := &FlusherMqtt{
-		Server: "tcp://127.0.0.1:1883",
+		Server: "tcp://broker.emqx.io:1883",
 		Topic:  "test",
 	}
 
