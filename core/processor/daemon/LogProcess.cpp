@@ -43,6 +43,7 @@
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
+#include "processor/ProcessorParseContainerLogNative.h"
 #include "sdk/Client.h"
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
@@ -458,6 +459,17 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         // construct a logGroup, it should be moved into input later
         PipelineEventGroup eventGroup(logBuffer);
         // TODO: metadata should be set in reader
+        switch (logFileReader.get()->GetReaderConfig().first->mFileEncoding) {
+            case FileReaderOptions::Encoding::DOCKER_JSON_FILE:
+                eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
+                                       ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
+            case FileReaderOptions::Encoding::CONTAINERD_TEXT:
+                eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
+                                       ProcessorParseContainerLogNative::CONTAINERD_TEXT);
+                break;
+            default:
+                break;
+        }
         FillEventGroupMetadata(*logBuffer, eventGroup);
 
         LogEvent* event = eventGroup.AddLogEvent();
@@ -502,10 +514,13 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
 }
 
 void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const {
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
-    eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
-                           std::to_string(logBuffer.logFileReader->GetDevInode().inode));
+    if (!eventGroup.HasMetadata(EventGroupMetaKey::LOG_FORMAT)) {
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED,
+                                     logBuffer.logFileReader->GetHostLogPath());
+        eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
+                               std::to_string(logBuffer.logFileReader->GetDevInode().inode));
+    }
 #ifdef __ENTERPRISE__
     std::string agentTag = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     if (!agentTag.empty()) {

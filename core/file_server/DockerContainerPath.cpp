@@ -151,12 +151,21 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
                 = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
             LOG_DEBUG(sLogger,
                       ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
-                          "destination", bestMatchedMounts.Destination)("logPath", logPath));
+                          "destination", bestMatchedMounts.Destination)("logPath", logPath)("input", name));
         } else {
+            FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
+            logtail::FileReaderOptions* ops = const_cast<logtail::FileReaderOptions*>(readerConfig.first);
+            if (dockerContainerPath.mStreamLogType == "docker_json-file") {
+                ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
+            } else if (dockerContainerPath.mStreamLogType == "containerd_text") {
+                ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
+            } else {
+                ops->mFileEncoding = FileReaderOptions::Encoding::UTF8;
+            }
             dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
             LOG_DEBUG(sLogger,
                       ("docker container path", dockerContainerPath.mContainerPath)(
-                          "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath));
+                          "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath)("input", name));
         }
     }
 
@@ -168,7 +177,7 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
         if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
             dockerContainerPath.mContainerPath.pop_back();
         }
-        LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath));
+        LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath)("input", name));
     }
 
     // only check containerID (others are null when parse delete cmd)
