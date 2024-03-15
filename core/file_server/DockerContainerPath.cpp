@@ -140,28 +140,35 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
             std::string dst = dockerContainerPath.mMounts[i].Destination;
             int dstSize = dst.size();
 
-            if (hasPrefix(logPath, dst) &&
-                (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\'))) &&
-                bestMatchedMounts.Destination.size() < dstSize) {
-                    bestMatchedMounts = dockerContainerPath.mMounts[i];
+            if (hasPrefix(logPath, dst)
+                && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
+                && bestMatchedMounts.Destination.size() < dstSize) {
+                bestMatchedMounts = dockerContainerPath.mMounts[i];
             }
         }
         if (bestMatchedMounts.Source.size() > 0) {
             dockerContainerPath.mContainerPath
                 = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
             LOG_DEBUG(sLogger,
-                     ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
-                         "destination", bestMatchedMounts.Destination)("logPath", logPath));
+                      ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
+                          "destination", bestMatchedMounts.Destination)("logPath", logPath));
         } else {
             dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
             LOG_DEBUG(sLogger,
-                     ("docker container path", dockerContainerPath.mContainerPath)(
-                         "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath));
+                      ("docker container path", dockerContainerPath.mContainerPath)(
+                          "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath));
         }
     }
 
     if (name == InputContainerLog::sName) {
-        dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath;
+        size_t pos = dockerContainerPath.mStreamLogPath.find_last_of('/');
+        if (pos != std::string::npos) {
+            dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath.substr(0, pos);
+        }
+        if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
+            dockerContainerPath.mContainerPath.pop_back();
+        }
+        LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath));
     }
 
     // only check containerID (others are null when parse delete cmd)

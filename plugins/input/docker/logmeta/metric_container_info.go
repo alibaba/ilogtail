@@ -436,7 +436,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 				ConfigName:                 idf.context.GetConfigName(),
 				PathExistInputContainerIDs: helper.GetStringFromList(keys),
 				SourceAddress:              "stdout",
-				InputType:                  "input_container_stdout",
+				InputType:                  "input_container_log",
 				FlusherType:                "flusher_sls",
 				FlusherTargetAddress:       fmt.Sprintf("%s/%s", idf.context.GetProject(), idf.context.GetLogstore()),
 			}
