@@ -14,27 +14,26 @@
 
 #include "PollingDirFile.h"
 #if defined(__linux__)
-#include <fnmatch.h>
 #include <sys/file.h>
+#include <fnmatch.h>
 #elif defined(_MSC_VER)
 #include <Shlwapi.h>
 #endif
 #include <sys/stat.h>
-
-#include "PollingEventQueue.h"
-#include "PollingModify.h"
 #include "app_config/AppConfig.h"
-#include "common/ErrorUtil.h"
-#include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/StringTools.h"
+#include "common/ErrorUtil.h"
+#include "common/FileSystemUtil.h"
 #include "common/TimeUtil.h"
-#include "config_manager/ConfigManager.h"
 #include "event/Event.h"
-#include "file_server/FileServer.h"
 #include "logger/Logger.h"
+#include "config_manager/ConfigManager.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
+#include "PollingModify.h"
+#include "PollingEventQueue.h"
+#include "file_server/FileServer.h"
 
 // Control the check frequency to call ClearUnavailableFileAndDir.
 DEFINE_FLAG_INT32(check_not_exist_file_dir_round, "clear not exist file dir cache, round", 20);
