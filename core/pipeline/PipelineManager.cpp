@@ -37,19 +37,30 @@ namespace logtail {
 void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
-    static bool isInputFileStarted = false, isInputObserverStarted = false, isInputStreamStarted = false;
-    bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false;
+    static bool isInputFileStarted = false, isInputObserverStarted = false, isInputStreamStarted = false,
+                isInputContainerLogStarted = false;
+    bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
+         isInputContainerLogChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,
                             isInputFileChanged,
-                            isInputStreamChanged);
+                            isInputStreamChanged,
+                            isInputContainerLogChanged);
     }
     for (const auto& config : diff.mModified) {
-        CheckIfInputUpdated(*config.mInputs[0], isInputObserverChanged, isInputFileChanged, isInputStreamChanged);
+        CheckIfInputUpdated(*config.mInputs[0],
+                            isInputObserverChanged,
+                            isInputFileChanged,
+                            isInputStreamChanged,
+                            isInputContainerLogChanged);
     }
     for (const auto& config : diff.mAdded) {
-        CheckIfInputUpdated(*config.mInputs[0], isInputObserverChanged, isInputFileChanged, isInputStreamChanged);
+        CheckIfInputUpdated(*config.mInputs[0],
+                            isInputObserverChanged,
+                            isInputFileChanged,
+                            isInputStreamChanged,
+                            isInputContainerLogChanged);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -63,6 +74,9 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverStarted && isInputObserverChanged) {
         ObserverManager::GetInstance()->HoldOn(false);
+    }
+    if (isInputContainerLogStarted && isInputContainerLogChanged) {
+        FileServer::GetInstance()->Pause();
     }
 #endif
     if (isInputFileStarted && isInputFileChanged) {
@@ -141,6 +155,14 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         }
     }
 #if defined(__linux__) && !defined(__ANDROID__)
+    if (isInputContainerLogChanged) {
+        if (isInputContainerLogStarted) {
+            FileServer::GetInstance()->Resume();
+        } else {
+            FileServer::GetInstance()->Start();
+            isInputContainerLogStarted = true;
+        }
+    }
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {
             ObserverManager::GetInstance()->Resume();
@@ -257,7 +279,8 @@ void PipelineManager::DecreasePluginUsageCnt(const unordered_map<string, unorder
 void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
-                                          bool& isInputStreamChanged) {
+                                          bool& isInputStreamChanged,
+                                          bool& isInputContainerLogChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -265,6 +288,8 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputFileChanged = true;
     } else if (inputType == "input_stream") {
         isInputStreamChanged = true;
+    } else if (inputType == "input_container_log") {
+        isInputContainerLogChanged = true;
     }
 }
 
