@@ -37,8 +37,7 @@ namespace logtail {
 void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
-    static bool isInputFileStarted = false, isInputObserverStarted = false, isInputStreamStarted = false,
-                isInputContainerLogStarted = false;
+    static bool isFileServerStarted = false, isInputObserverStarted = false, isInputStreamStarted = false;
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
          isInputContainerLogChanged = false;
     for (const auto& name : diff.mRemoved) {
@@ -75,11 +74,8 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     if (isInputObserverStarted && isInputObserverChanged) {
         ObserverManager::GetInstance()->HoldOn(false);
     }
-    if (isInputContainerLogStarted && isInputContainerLogChanged) {
-        FileServer::GetInstance()->Pause();
-    }
 #endif
-    if (isInputFileStarted && isInputFileChanged) {
+    if (isFileServerStarted && (isInputFileChanged || isInputContainerLogChanged)) {
         FileServer::GetInstance()->Pause();
     }
     LogProcess::GetInstance()->HoldOn();
@@ -146,23 +142,15 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     // 过渡使用
     LogtailPlugin::GetInstance()->Resume();
     LogProcess::GetInstance()->Resume();
-    if (isInputFileChanged) {
-        if (isInputFileStarted) {
+    if (isInputFileChanged || isInputContainerLogChanged) {
+        if (isFileServerStarted) {
             FileServer::GetInstance()->Resume();
         } else {
             FileServer::GetInstance()->Start();
-            isInputFileStarted = true;
+            isFileServerStarted = true;
         }
     }
 #if defined(__linux__) && !defined(__ANDROID__)
-    if (isInputContainerLogChanged) {
-        if (isInputContainerLogStarted) {
-            FileServer::GetInstance()->Resume();
-        } else {
-            FileServer::GetInstance()->Start();
-            isInputContainerLogStarted = true;
-        }
-    }
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {
             ObserverManager::GetInstance()->Resume();
