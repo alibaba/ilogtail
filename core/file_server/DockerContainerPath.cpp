@@ -178,7 +178,6 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
             containerdLogType = "unknown";
         }
 
-        readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
         size_t pos = dockerContainerPath.mStreamLogPath.find_last_of('/');
         if (pos != std::string::npos) {
             dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath.substr(0, pos);
