@@ -884,8 +884,6 @@ bool ConfigManager::IsUpdateContainerPaths() {
             rst = true;
             break;
         }
-        shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(pCmd->mConfigName);
-        string name = config->GetInputs()[0]->GetPlugin()->Name();
         FileDiscoveryConfig pConfig = FileServer::GetInstance()->GetFileDiscoveryConfig(pCmd->mConfigName);
         if (!pConfig.first) {
             continue;
