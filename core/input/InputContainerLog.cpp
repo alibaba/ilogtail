@@ -158,12 +158,10 @@ bool InputContainerLog::Start() {
         FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
 
-
     if (FileServer::GetInstance()->GetFileReaderConfig(mContext->GetConfigName()).first != nullptr) {
         mFileReader.mFileEncoding
             = FileServer::GetInstance()->GetFileReaderConfig(mContext->GetConfigName()).first->mFileEncoding;
     };
-
 
     FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
     FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
