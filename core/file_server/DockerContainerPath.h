@@ -34,6 +34,10 @@ struct Mount {
 };
 
 struct DockerContainerPath {
+    enum class InputType {
+        InputFile = 0,
+        InputContainerLog = 1,
+    };
     std::string mContainerID; // id of this container
     // container path for this config's path. eg, config path '/home/admin', container path
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
@@ -45,6 +49,8 @@ struct DockerContainerPath {
     std::vector<Mount> mMounts; // mounts of this container
     std::vector<sls_logs::LogTag> mContainerTags; // tags extracted from this container
     std::string mJsonStr; // this obj's json string, for saving to local file
+
+    InputType mInputType;
 
     static bool ParseByJSONStr(const DockerContainerPathCmd* pCmd, DockerContainerPath& dockerContainerPath);
     static bool ParseAllByJSONStr(const DockerContainerPathCmd* pCmd,

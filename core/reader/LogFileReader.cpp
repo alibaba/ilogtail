@@ -18,16 +18,15 @@
 #include <fcntl.h>
 #include <io.h>
 #endif
+#include <cityhash/city.h>
 #include <time.h>
 
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <limits>
 #include <numeric>
 #include <random>
-
-#include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
-#include <cityhash/city.h>
 
 #include "GloablFileDescriptorManager.h"
 #include "app_config/AppConfig.h"
@@ -109,6 +108,15 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                           ("can not get container path by log path, base path",
                            discoveryConfig.first->GetBasePath())("host path", hostLogPathDir + "/" + hostLogPathFile));
             } else {
+                if (containerPath->mInputType == DockerContainerPath::InputType::InputContainerLog) {
+                    logtail::FileReaderOptions* ops
+                        = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
+                    if (containerPath->mStreamLogType == "docker_json-file") {
+                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
+                    } else if (containerPath->mStreamLogType == "containerd_text") {
+                        ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
+                    }
+                }
                 // if config have wildcard path, use mWildcardPaths[0] as base path
                 reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
                                           ? discoveryConfig.first->GetWildcardPaths()[0]

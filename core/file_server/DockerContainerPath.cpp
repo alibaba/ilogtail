@@ -125,6 +125,7 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
     std::string name = config->GetInputs()[0]->GetPlugin()->Name();
 
     if (name == InputFile::sName) {
+        dockerContainerPath.mInputType = InputType::InputFile;
         const InputFile* inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
         std::string logPath;
         if (!inputFile->mFileDiscovery.GetWildcardPaths().empty()) {
@@ -161,23 +162,7 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
     }
 
     if (name == InputContainerLog::sName) {
-        FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
-        logtail::FileReaderOptions* ops = const_cast<logtail::FileReaderOptions*>(readerConfig.first);
-        if (dockerContainerPath.mStreamLogType == "docker_json-file") {
-            ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
-        } else if (dockerContainerPath.mStreamLogType == "containerd_text") {
-            ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
-        }
-        readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
-        std::string containerdLogType;
-        if (readerConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
-            containerdLogType = "docker_json-file";
-        } else if (readerConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
-            containerdLogType = "containerd_text";
-        } else {
-            containerdLogType = "unknown";
-        }
-
+        dockerContainerPath.mInputType = InputType::InputContainerLog;
         size_t pos = dockerContainerPath.mStreamLogPath.find_last_of('/');
         if (pos != std::string::npos) {
             dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath.substr(0, pos);
@@ -185,9 +170,7 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
         if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
             dockerContainerPath.mContainerPath.pop_back();
         }
-        LOG_DEBUG(sLogger,
-                  ("docker container path", dockerContainerPath.mContainerPath)("input", name)("containerd log type",
-                                                                                               containerdLogType));
+        LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath)("input", name));
     }
 
     // only check containerID (others are null when parse delete cmd)
