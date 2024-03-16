@@ -153,15 +153,6 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
                       ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
                           "destination", bestMatchedMounts.Destination)("logPath", logPath)("input", name));
         } else {
-            FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
-            logtail::FileReaderOptions* ops = const_cast<logtail::FileReaderOptions*>(readerConfig.first);
-            if (dockerContainerPath.mStreamLogType == "docker_json-file") {
-                ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
-            } else if (dockerContainerPath.mStreamLogType == "containerd_text") {
-                ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
-            } else {
-                ops->mFileEncoding = FileReaderOptions::Encoding::UTF8;
-            }
             dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
             LOG_DEBUG(sLogger,
                       ("docker container path", dockerContainerPath.mContainerPath)(
@@ -170,6 +161,24 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
     }
 
     if (name == InputContainerLog::sName) {
+        FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
+        logtail::FileReaderOptions* ops = const_cast<logtail::FileReaderOptions*>(readerConfig.first);
+        if (dockerContainerPath.mStreamLogType == "docker_json-file") {
+            ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
+        } else if (dockerContainerPath.mStreamLogType == "containerd_text") {
+            ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
+        }
+        readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
+        std::string containerdLogType;
+        if (readerConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
+            containerdLogType = "docker_json-file";
+        } else if (readerConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
+            containerdLogType = "containerd_text";
+        } else {
+            containerdLogType = "unknown";
+        }
+
+        readerConfig = FileServer::GetInstance()->GetFileReaderConfig(pCmd->mConfigName);
         size_t pos = dockerContainerPath.mStreamLogPath.find_last_of('/');
         if (pos != std::string::npos) {
             dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath.substr(0, pos);
@@ -177,7 +186,9 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
         if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
             dockerContainerPath.mContainerPath.pop_back();
         }
-        LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath)("input", name));
+        LOG_DEBUG(sLogger,
+                  ("docker container path", dockerContainerPath.mContainerPath)("input", name)("containerd log type",
+                                                                                               containerdLogType));
     }
 
     // only check containerID (others are null when parse delete cmd)

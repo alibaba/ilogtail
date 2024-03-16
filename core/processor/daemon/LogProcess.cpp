@@ -463,6 +463,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
             case FileReaderOptions::Encoding::DOCKER_JSON_FILE:
                 eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
                                        ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
+                break;
             case FileReaderOptions::Encoding::CONTAINERD_TEXT:
                 eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
                                        ProcessorParseContainerLogNative::CONTAINERD_TEXT);
