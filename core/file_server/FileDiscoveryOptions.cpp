@@ -653,14 +653,14 @@ DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const strin
     return NULL;
 }
 
-bool FileDiscoveryOptions::IsSameDockerContainerPath(const string& paramsJSONStr, bool allFlag) const {
+bool FileDiscoveryOptions::IsSameDockerContainerPath(const DockerContainerPathCmd* pCmd) const {
     if (!mEnableContainerDiscovery)
         return true;
 
-    if (!allFlag) {
+    if (!pCmd->mUpdateAllFlag) {
         DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
-            LOG_ERROR(sLogger, ("invalid docker container params", "skip this path")("params", paramsJSONStr));
+        if (!DockerContainerPath::ParseByJSONStr(pCmd, dockerContainerPath)) {
+            LOG_ERROR(sLogger, ("invalid docker container params", "skip this path")("params", pCmd->mParams));
             return true;
         }
         // try update
@@ -674,8 +674,8 @@ bool FileDiscoveryOptions::IsSameDockerContainerPath(const string& paramsJSONStr
 
     // check all
     unordered_map<string, DockerContainerPath> allPathMap;
-    if (!DockerContainerPath::ParseAllByJSONStr(paramsJSONStr, allPathMap)) {
-        LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", paramsJSONStr));
+    if (!DockerContainerPath::ParseAllByJSONStr(pCmd, allPathMap)) {
+        LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", pCmd->mParams));
         return true;
     }
 
@@ -699,14 +699,14 @@ bool FileDiscoveryOptions::IsSameDockerContainerPath(const string& paramsJSONStr
     return true;
 }
 
-bool FileDiscoveryOptions::UpdateDockerContainerPath(const string& paramsJSONStr, bool allFlag) {
+bool FileDiscoveryOptions::UpdateDockerContainerPath(const DockerContainerPathCmd* pCmd) {
     if (!mContainerInfos)
         return false;
 
-    if (!allFlag) {
+    if (!pCmd->mUpdateAllFlag) {
         DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
-            LOG_ERROR(sLogger, ("invalid docker container params", "skip this path")("params", paramsJSONStr));
+        if (!DockerContainerPath::ParseByJSONStr(pCmd, dockerContainerPath)) {
+            LOG_ERROR(sLogger, ("invalid docker container params", "skip this path")("params", pCmd->mParams));
             return false;
         }
         // try update
@@ -723,8 +723,8 @@ bool FileDiscoveryOptions::UpdateDockerContainerPath(const string& paramsJSONStr
     }
 
     unordered_map<string, DockerContainerPath> allPathMap;
-    if (!DockerContainerPath::ParseAllByJSONStr(paramsJSONStr, allPathMap)) {
-        LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", paramsJSONStr));
+    if (!DockerContainerPath::ParseAllByJSONStr(pCmd, allPathMap)) {
+        LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", pCmd->mParams));
         return false;
     }
     // if update all, clear and reset
@@ -736,12 +736,12 @@ bool FileDiscoveryOptions::UpdateDockerContainerPath(const string& paramsJSONStr
     return true;
 }
 
-bool FileDiscoveryOptions::DeleteDockerContainerPath(const string& paramsJSONStr) {
+bool FileDiscoveryOptions::DeleteDockerContainerPath(const DockerContainerPathCmd* pCmd) {
     if (!mContainerInfos)
         return false;
 
     DockerContainerPath dockerContainerPath;
-    if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
+    if (!DockerContainerPath::ParseByJSONStr(pCmd, dockerContainerPath)) {
         return false;
     }
     for (vector<DockerContainerPath>::iterator iter = mContainerInfos->begin(); iter != mContainerInfos->end();

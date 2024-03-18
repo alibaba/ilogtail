@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <json/json.h>
+
 #include <filesystem>
 #include <memory>
 #include <string>
-
-#include <json/json.h>
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
@@ -72,8 +72,8 @@ void InputFileUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputFile::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_FALSE(input->mEnableContainerDiscovery);
-    APSARA_TEST_EQUAL(0, input->mMaxCheckpointDirSearchDepth);
-    APSARA_TEST_EQUAL(0, input->mExactlyOnceConcurrency);
+    APSARA_TEST_EQUAL(0, int(input->mMaxCheckpointDirSearchDepth));
+    APSARA_TEST_EQUAL(0, int(input->mExactlyOnceConcurrency));
 
     // valid optional param
     configStr = R"(
@@ -92,8 +92,8 @@ void InputFileUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputFile::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
-    APSARA_TEST_EQUAL(1, input->mMaxCheckpointDirSearchDepth);
-    APSARA_TEST_EQUAL(1, input->mExactlyOnceConcurrency);
+    APSARA_TEST_EQUAL(1, int(input->mMaxCheckpointDirSearchDepth));
+    APSARA_TEST_EQUAL(1, int(input->mExactlyOnceConcurrency));
 
     // invalid optional param
     configStr = R"(
@@ -160,51 +160,102 @@ void InputFileUnittest::OnFailedInit() {
 }
 
 void InputFileUnittest::OnEnableContainerDiscovery() {
-    unique_ptr<InputFile> input;
-    Json::Value configJson, optionalGoPipelineJson, optionalGoPipeline;
-    string configStr, optionalGoPipelineStr, errorMsg;
-    filesystem::path filePath = filesystem::absolute("*.log");
+    // 启用容器元信息预览
+    {
+        unique_ptr<InputFile> input;
+        Json::Value configJson, optionalGoPipelineJson, optionalGoPipeline;
+        string configStr, optionalGoPipelineStr, errorMsg;
+        filesystem::path filePath = filesystem::absolute("*.log");
 
-    configStr = R"(
-        {
-            "Type": "input_file",
-            "FilePaths": [],
-            "EnableContainerDiscovery": true,
-            "ContainerFilters": {
-                "K8sNamespaceRegex": "default"
+        configStr = R"(
+            {
+                "Type": "input_file",
+                "FilePaths": [],
+                "EnableContainerDiscovery": true,
+                "ContainerFilters": {
+                    "K8sNamespaceRegex": "default"
+                },
+                "CollectingContainersMeta": true
             }
-        }
-    )";
-    optionalGoPipelineStr = R"(
-        {
-            "global": {
-                "AlwaysOnline": true
-            },
-            "inputs": [
-                {                
-                    "type": "metric_docker_file",
-                    "detail": {
-                        "LogPath": "",
-                        "MaxDepth": 0,
-                        "FilePattern": "*.log",
-                        "K8sNamespaceRegex": "default"
+        )";
+        optionalGoPipelineStr = R"(
+            {
+                "global": {
+                    "AlwaysOnline": true
+                },
+                "inputs": [
+                    {                
+                        "type": "metric_container_info",
+                        "detail": {
+                            "CollectContainersFlag": true,
+                            "FilePattern": "*.log",
+                            "K8sNamespaceRegex": "default",
+                            "MaxDepth": 0,
+                            "LogPath": ""
+                        }
                     }
+                ]
+            }
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
+        configJson["FilePaths"].append(Json::Value(filePath.string()));
+        optionalGoPipelineJson["global"]["DefaultLogQueueSize"]
+            = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
+        optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
+        input.reset(new InputFile());
+        input->SetContext(ctx);
+        input->SetMetricsRecordRef(InputFile::sName, "1");
+        APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+        APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
+        APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
+        APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
+    }
+    // 不启用容器元信息预览
+    {
+        unique_ptr<InputFile> input;
+        Json::Value configJson, optionalGoPipelineJson, optionalGoPipeline;
+        string configStr, optionalGoPipelineStr, errorMsg;
+        filesystem::path filePath = filesystem::absolute("*.log");
+
+        configStr = R"(
+            {
+                "Type": "input_file",
+                "FilePaths": [],
+                "EnableContainerDiscovery": true,
+                "ContainerFilters": {
+                    "K8sNamespaceRegex": "default"
                 }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
-    configJson["FilePaths"].append(Json::Value(filePath.string()));
-    optionalGoPipelineJson["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-    optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
-    input.reset(new InputFile());
-    input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
-    APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
-    APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
+            }
+        )";
+        optionalGoPipelineStr = R"(
+            {
+                "global": {
+                    "AlwaysOnline": true
+                },
+                "inputs": [
+                    {                
+                        "type": "metric_container_info",
+                        "detail": {
+                            "K8sNamespaceRegex": "default"
+                        }
+                    }
+                ]
+            }
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
+        configJson["FilePaths"].append(Json::Value(filePath.string()));
+        optionalGoPipelineJson["global"]["DefaultLogQueueSize"]
+            = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
+        input.reset(new InputFile());
+        input->SetContext(ctx);
+        input->SetMetricsRecordRef(InputFile::sName, "1");
+        APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+        APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
+        APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
+        APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
+    }
 }
 
 void InputFileUnittest::OnPipelineUpdate() {

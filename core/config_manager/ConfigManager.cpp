@@ -13,46 +13,50 @@
 // limitations under the License.
 
 #include "ConfigManager.h"
+
 #include <curl/curl.h>
-#include <cctype>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <cctype>
 #if defined(__linux__)
-#include <unistd.h>
 #include <fnmatch.h>
+#include <unistd.h>
 #endif
 #include <limits.h>
+#include <re2/re2.h>
+
+#include <fstream>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
-#include <re2/re2.h>
-#include <set>
 #include <vector>
-#include <fstream>
-#include "common/JsonUtil.h"
-#include "common/HashUtil.h"
-#include "common/RuntimeUtil.h"
-#include "common/FileSystemUtil.h"
-#include "common/Constants.h"
-#include "common/ExceptionBase.h"
+
+#include "app_config/AppConfig.h"
+#include "checkpoint/CheckPointManager.h"
 #include "common/CompressTools.h"
+#include "common/Constants.h"
 #include "common/ErrorUtil.h"
-#include "common/TimeUtil.h"
+#include "common/ExceptionBase.h"
+#include "common/FileSystemUtil.h"
+#include "common/HashUtil.h"
+#include "common/JsonUtil.h"
+#include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "common/version.h"
-#include "monitor/LogtailAlarm.h"
+#include "controller/EventDispatcher.h"
+#include "event_handler/EventHandler.h"
+#include "file_server/FileServer.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
-#include "app_config/AppConfig.h"
-#include "checkpoint/CheckPointManager.h"
-#include "event_handler/EventHandler.h"
-#include "controller/EventDispatcher.h"
-#include "sender/Sender.h"
-#include "processor/daemon/LogProcess.h"
-#include "file_server/FileServer.h"
+#include "monitor/LogtailAlarm.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
+#include "processor/daemon/LogProcess.h"
+#include "sender/Sender.h"
 
 using namespace std;
 
@@ -64,8 +68,8 @@ using namespace std;
 // DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "cacert.pem");
 // #endif
 // DEFINE_FLAG_INT32(request_access_key_interval, "control the frenquency of GetAccessKey, seconds", 60);
-// DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds", 60);
-// DEFINE_FLAG_BOOL(logtail_config_update_enable, "", true);
+// DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds",
+// 60); DEFINE_FLAG_BOOL(logtail_config_update_enable, "", true);
 
 // 废弃
 // DEFINE_FLAG_STRING(default_global_topic, "default is empty string", "");
@@ -133,8 +137,8 @@ ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot
 // if checkTimeout, will not register the dir which is timeout
 // if not checkTimeout, will register the dir which is timeout and add it to the timeout list
 bool ConfigManager::RegisterHandlersRecursively(const std::string& path,
-                                                    const FileDiscoveryConfig& config,
-                                                    bool checkTimeout) {
+                                                const FileDiscoveryConfig& config,
+                                                bool checkTimeout) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
@@ -273,9 +277,7 @@ bool ConfigManager::RegisterHandlers() {
     return result;
 }
 
-void ConfigManager::RegisterWildcardPath(const FileDiscoveryConfig& config,
-                                             const std::string& path,
-                                             int32_t depth) {
+void ConfigManager::RegisterWildcardPath(const FileDiscoveryConfig& config, const std::string& path, int32_t depth) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return;
@@ -443,9 +445,7 @@ bool ConfigManager::RegisterDirectory(const std::string& source, const std::stri
     return false;
 }
 
-bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path,
-                                                    const FileDiscoveryConfig& config,
-                                                    int depth) {
+bool ConfigManager::RegisterHandlersWithinDepth(const std::string& path, const FileDiscoveryConfig& config, int depth) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
@@ -632,8 +632,8 @@ FileDiscoveryConfig ConfigManager::FindBestMatch(const string& path, const strin
 
 
 int32_t ConfigManager::FindAllMatch(vector<FileDiscoveryConfig>& allConfig,
-                                        const std::string& path,
-                                        const std::string& name /*= ""*/) {
+                                    const std::string& path,
+                                    const std::string& name /*= ""*/) {
     static AppConfig* appConfig = AppConfig::GetInstance();
     string cachedFileKey(path);
     cachedFileKey.push_back('<');
@@ -682,8 +682,8 @@ int32_t ConfigManager::FindAllMatch(vector<FileDiscoveryConfig>& allConfig,
 }
 
 int32_t ConfigManager::FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& allConfig,
-                                                  const string& path,
-                                                  const string& name) {
+                                              const string& path,
+                                              const string& name) {
     const bool acceptMultiConfig = AppConfig::GetInstance()->IsAcceptMultiConfig();
     string cachedFileKey(path);
     cachedFileKey.push_back('<');
@@ -777,9 +777,9 @@ int32_t ConfigManager::FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& 
 }
 
 void ConfigManager::SendAllMatchAlarm(const string& path,
-                                          const string& name,
-                                          vector<FileDiscoveryConfig>& allConfig,
-                                          int32_t maxMultiConfigSize) {
+                                      const string& name,
+                                      vector<FileDiscoveryConfig>& allConfig,
+                                      int32_t maxMultiConfigSize) {
     string allConfigNames;
     for (auto iter = allConfig.begin(); iter != allConfig.end(); ++iter) {
         allConfigNames.append("[")
@@ -850,7 +850,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
             continue;
         }
         if (tmpPathCmdVec[i]->mDeleteFlag) {
-            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i]->mParams)) {
+            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i])) {
                 LOG_DEBUG(sLogger,
                           ("container path delete cmd success",
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mParams));
@@ -860,7 +860,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
                                                                                             tmpPathCmdVec[i]->mParams));
             }
         } else {
-            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i]->mParams, tmpPathCmdVec[i]->mUpdateAllFlag)) {
+            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i])) {
                 LOG_DEBUG(sLogger,
                           ("container path update cmd success", tmpPathCmdVec[i]->mConfigName)(
                               "params", tmpPathCmdVec[i]->mParams)("all", tmpPathCmdVec[i]->mUpdateAllFlag));
@@ -888,7 +888,7 @@ bool ConfigManager::IsUpdateContainerPaths() {
         if (!pConfig.first) {
             continue;
         }
-        if (!pConfig.first->IsSameDockerContainerPath(pCmd->mParams, pCmd->mUpdateAllFlag)) {
+        if (!pConfig.first->IsSameDockerContainerPath(pCmd)) {
             rst = true;
             break;
         }
@@ -952,7 +952,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
             continue;
         }
         DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONStr(cmd->mParams, dockerContainerPath)) {
+        if (!DockerContainerPath::ParseByJSONStr(cmd, dockerContainerPath)) {
             continue;
         }
         std::vector<DockerContainerPath>::iterator iter = config.first->GetContainerInfo()->begin();

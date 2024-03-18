@@ -16,13 +16,13 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <json/json.h>
 
 #include "file_server/DockerContainerPath.h"
 #include "pipeline/PipelineContext.h"
@@ -52,9 +52,9 @@ public:
     bool IsMatch(const std::string& path, const std::string& name) const;
     bool IsTimeout(const std::string& path) const;
     bool WithinMaxDepth(const std::string& path) const;
-    bool IsSameDockerContainerPath(const std::string& paramsJSONStr, bool allFlag) const;
-    bool UpdateDockerContainerPath(const std::string& paramsJSONStr, bool allFlag);
-    bool DeleteDockerContainerPath(const std::string& paramsJSONStr);
+    bool IsSameDockerContainerPath(const DockerContainerPathCmd* pCmd) const;
+    bool UpdateDockerContainerPath(const DockerContainerPathCmd* pCmd);
+    bool DeleteDockerContainerPath(const DockerContainerPathCmd* pCmd);
     DockerContainerPath* GetContainerPathByLogPath(const std::string& logPath) const;
     // 过渡使用
     bool IsTailingAllMatchedFiles() const { return mTailingAllMatchedFiles; }
@@ -105,7 +105,8 @@ private:
     std::vector<std::string> mFileNameBlacklist;
 
     bool mEnableContainerDiscovery = false;
-    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos; // must not be null if container discovery is enabled
+    std::shared_ptr<std::vector<DockerContainerPath>>
+        mContainerInfos; // must not be null if container discovery is enabled
     bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
     bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
 

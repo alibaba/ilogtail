@@ -27,10 +27,13 @@
 
 namespace logtail {
 
+const std::string ProcessorParseContainerLogNative::CONTAINERD_TEXT = "1";
+const std::string ProcessorParseContainerLogNative::DOCKER_JSON_FILE = "2";
+
 const std::string ProcessorParseContainerLogNative::sName = "processor_parse_container_log_native";
-const char ProcessorParseContainerLogNative::CONTIANERD_DELIMITER = ' '; // 分隔符
-const char ProcessorParseContainerLogNative::CONTIANERD_FULL_TAG = 'F'; // 容器全标签
-const char ProcessorParseContainerLogNative::CONTIANERD_PART_TAG = 'P'; // 容器部分标签
+const char ProcessorParseContainerLogNative::CONTAINERD_DELIMITER = ' '; // 分隔符
+const char ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG = 'F'; // 容器全标签
+const char ProcessorParseContainerLogNative::CONTAINERD_PART_TAG = 'P'; // 容器部分标签
 
 const std::string ProcessorParseContainerLogNative::DOCKER_JSON_LOG = "log"; // docker json 日志字段
 const std::string ProcessorParseContainerLogNative::DOCKER_JSON_TIME = "time"; // docker json 时间字段
@@ -95,10 +98,24 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
+    // KeepingSourceWhenParseFail
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mKeepingSourceWhenParseFail,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
+    }
+
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcParseSuccessTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_SUCCESS_TOTAL);
+    mProcParseStdoutTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_STDOUT_TOTAL);
+    mProcParseStderrTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_STDERR_TOTAL);
 
     return true;
 }
@@ -133,9 +150,9 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
 
     std::string errorMsg;
     bool shouldKeepEvent = true;
-    if (containerType == "containerd_text") {
+    if (containerType == CONTAINERD_TEXT) {
         shouldKeepEvent = ParseContainerdTextLogLine(sourceEvent, errorMsg);
-    } else if (containerType == "docker_json-file") {
+    } else if (containerType == DOCKER_JSON_FILE) {
         shouldKeepEvent = ParseDockerJsonLogLine(sourceEvent, errorMsg);
     }
     if (!errorMsg.empty()) {
@@ -162,25 +179,25 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
 
     // 寻找第一个分隔符位置 时间 _time_
     StringView timeValue;
-    const char* pch1 = std::find(contentValue.begin(), contentValue.end(), CONTIANERD_DELIMITER);
+    const char* pch1 = std::find(contentValue.begin(), contentValue.end(), CONTAINERD_DELIMITER);
     if (pch1 == contentValue.end()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
     timeValue = StringView(contentValue.data(), pch1 - contentValue.data());
 
     // 寻找第二个分隔符位置 容器标签 _source_
     StringView sourceValue;
-    const char* pch2 = std::find(pch1 + 1, contentValue.end(), CONTIANERD_DELIMITER);
+    const char* pch2 = std::find(pch1 + 1, contentValue.end(), CONTAINERD_DELIMITER);
     if (pch2 == contentValue.end()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "source field cannot be found in log line."
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
     sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
 
@@ -190,15 +207,23 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
                        << "\tsource:" << sourceValue.to_string()
                        << "\tfirst 1KB log:" << contentValue.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
-    }
-    mProcParseSuccessTotal->Add(1);
-    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        return false;
+        return mKeepingSourceWhenParseFail;
     }
 
-    // 如果既不以 CONTIANERD_PART_TAG 开头，也不以 CONTIANERD_FULL_TAG 开头
-    if (*(pch2 + 1) != CONTIANERD_PART_TAG && *(pch2 + 1) != CONTIANERD_FULL_TAG) {
+    if (sourceValue == "stdout") {
+        mProcParseStdoutTotal->Add(1);
+        if (mIgnoringStdout) {
+            return false;
+        }
+    } else {
+        mProcParseStderrTotal->Add(1);
+        if (mIgnoringStderr) {
+            return false;
+        }
+    }
+
+    // 如果既不以 CONTAINERD_PART_TAG 开头，也不以 CONTAINERD_FULL_TAG 开头
+    if (*(pch2 + 1) != CONTAINERD_PART_TAG && *(pch2 + 1) != CONTAINERD_FULL_TAG) {
         // content
         StringView content = StringView(pch2 + 1, contentValue.end() - pch2 - 1);
         ResetContainerdTextLog(timeValue, sourceValue, content, false, sourceEvent);
@@ -206,7 +231,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
     }
 
     // 寻找第三个分隔符位置
-    const char* pch3 = std::find(pch2 + 1, contentValue.end(), CONTIANERD_DELIMITER);
+    const char* pch3 = std::find(pch2 + 1, contentValue.end(), CONTAINERD_DELIMITER);
     if (pch3 == contentValue.end() || pch3 != pch2 + 2) {
         // case: 2021-08-25T07:00:00.000000000Z stdout P
         // case: 2021-08-25T07:00:00.000000000Z stdout PP 1
@@ -214,7 +239,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         ResetContainerdTextLog(timeValue, sourceValue, content, false, sourceEvent);
         return true;
     }
-    if (*(pch2 + 1) == CONTIANERD_FULL_TAG) {
+    if (*(pch2 + 1) == CONTAINERD_FULL_TAG) {
         // F
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
         ResetContainerdTextLog(timeValue, sourceValue, content, false, sourceEvent);
@@ -247,44 +272,57 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         parseSuccess = false;
     }
     if (!parseSuccess) {
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
 
-    auto findMemberAndGetString = [&](const std::string& memberName) {
-        auto it = doc.FindMember(memberName.c_str());
-        return it != doc.MemberEnd() ? StringView(it->value.GetString()) : StringView();
-    };
-
-    StringView timeValue = findMemberAndGetString(DOCKER_JSON_TIME);
-    if (timeValue.empty()) {
+    // time
+    auto it = doc.FindMember(DOCKER_JSON_TIME.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "time field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
+    StringView timeValue = StringView(it->value.GetString());
 
-    auto it = doc.FindMember(DOCKER_JSON_LOG.c_str());
-    if (it == doc.MemberEnd()) {
+    // content
+    it = doc.FindMember(DOCKER_JSON_LOG.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "content field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
     StringView content = StringView(it->value.GetString());
 
-    StringView sourceValue = findMemberAndGetString(DOCKER_JSON_STREAM_TYPE);
+    // source
+    it = doc.FindMember(DOCKER_JSON_STREAM_TYPE.c_str());
+    StringView sourceValue;
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
+        sourceValue = StringView();
+    } else {
+        sourceValue = StringView(it->value.GetString());
+    }
     if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "source field cannot be found in log line."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
-    mProcParseSuccessTotal->Add(1);
-    if ((sourceValue == "stdout" && mIgnoringStdout) || (sourceValue == "stderr" && mIgnoringStderr)) {
-        return false;
+
+    if (sourceValue == "stdout") {
+        mProcParseStdoutTotal->Add(1);
+        if (mIgnoringStdout) {
+            return false;
+        }
+    } else {
+        mProcParseStderrTotal->Add(1);
+        if (mIgnoringStderr) {
+            return false;
+        }
     }
 
     if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
@@ -292,7 +330,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         errorMsgStream << "unexpected error: the original log line length is smaller than the sum of parsed fields."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
-        return true;
+        return mKeepingSourceWhenParseFail;
     }
 
     char* data = const_cast<char*>(buffer.data());

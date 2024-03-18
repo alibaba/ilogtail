@@ -1,4 +1,4 @@
-# Copyright 2023 iLogtail Authors
+# Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.22)
-project(input_unittest)
+FROM busybox
 
-add_executable(input_file_unittest InputFileUnittest.cpp)
-target_link_libraries(input_file_unittest unittest_base)
-
-add_executable(input_container_log_unittest InputContainerLogUnittest.cpp)
-target_link_libraries(input_container_log_unittest unittest_base)
-
-include(GoogleTest)
-gtest_discover_tests(input_file_unittest)
-gtest_discover_tests(input_container_log_unittest)
+CMD ["sh", "-c","echo \"today\nhello\" && sleep 90"]

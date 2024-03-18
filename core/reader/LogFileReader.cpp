@@ -19,7 +19,6 @@
 #include <io.h>
 #endif
 #include <cityhash/city.h>
-#include <rapidjson/document.h>
 #include <time.h>
 
 #include <algorithm>
@@ -109,6 +108,15 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                           ("can not get container path by log path, base path",
                            discoveryConfig.first->GetBasePath())("host path", hostLogPathDir + "/" + hostLogPathFile));
             } else {
+                if (containerPath->mInputType == DockerContainerPath::InputType::InputContainerLog) {
+                    logtail::FileReaderOptions* ops
+                        = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
+                    if (containerPath->mStreamLogType == "docker_json-file") {
+                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
+                    } else if (containerPath->mStreamLogType == "containerd_text") {
+                        ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
+                    }
+                }
                 // if config have wildcard path, use mWildcardPaths[0] as base path
                 reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
@@ -2014,7 +2022,7 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
             rollbackLineFeedCount += line.lineFeedCount;
             // Keep all the buffer if rollback all
-                return line.lineBegin;
+            return line.lineBegin;
         } else if (mMultilineConfig.first->GetContinuePatternReg()) {
             // We can confirm the logs before are complete if continue is configured but no regex pattern can match.
             if (buffer[endPs] == '\n') {
@@ -2045,7 +2053,7 @@ StringBuffer LogFileReader::GetStringBuffer() {
 }
 
 LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
-    char * data = LogFileReader::GetStringBuffer().data;
+    char* data = LogFileReader::GetStringBuffer().data;
     char* end = data + LogFileReader::GetStringBuffer().capacity;
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {

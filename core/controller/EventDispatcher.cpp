@@ -65,7 +65,7 @@
 #include "LogtailInsightDispatcher.h"
 #endif
 #include "file_server/FileServer.h"
-#include "input/InputContainerStdout.h"
+#include "input/InputContainerLog.h"
 #include "input/InputFile.h"
 
 using namespace std;
@@ -451,8 +451,12 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
     // now we can be sure that input is file
     string name = config->GetInputs()[0]->GetPlugin()->Name();
     const InputFile* inputFile = nullptr;
+    const InputContainerLog* inputContainerLog = nullptr;
     if (name == InputFile::sName) {
         inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
+    }
+    if (name == InputContainerLog::sName) {
+        inputContainerLog = static_cast<const InputContainerLog*>(config->GetInputs()[0]->GetPlugin());
     }
 
     // delete checkpoint if file path is not exist
@@ -538,7 +542,7 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
             return ValidateCheckpointResult::kRotate;
         }
 
-        if (inputFile && 0 == inputFile->mExactlyOnceConcurrency) {
+        if ((inputFile && 0 == inputFile->mExactlyOnceConcurrency) || inputContainerLog) {
             LOG_INFO(sLogger,
                      ("ignore check point, file signature has changed", filePath)("old real path", realFilePath)(
                          findIter->second.mFileDir, findIter->second.mFileName)("inode", checkpoint->mDevInode.inode));

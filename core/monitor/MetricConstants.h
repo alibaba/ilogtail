@@ -57,4 +57,9 @@ extern const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL;
 
+
+// processor parse container log native metrics
+extern const std::string METRIC_PROC_PARSE_STDOUT_TOTAL;
+extern const std::string METRIC_PROC_PARSE_STDERR_TOTAL;
+
 } // namespace logtail
