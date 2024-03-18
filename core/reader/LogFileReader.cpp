@@ -49,6 +49,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
+#include "processor/ProcessorParseContainerLogNative.h"
 #include "reader/JsonLogFileReader.h"
 #include "sdk/Common.h"
 #include "sender/Sender.h"
@@ -111,9 +112,9 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                 if (containerPath->mInputType == DockerContainerPath::InputType::InputContainerLog) {
                     logtail::FileReaderOptions* ops
                         = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
-                    if (containerPath->mStreamLogType == "docker_json-file") {
-                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
-                    } else if (containerPath->mStreamLogType == "containerd_text") {
+                    if (containerPath->mStreamLogType == "DOCKER_JSON_FILE-file") {
+                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE_FILE;
+                    } else if (containerPath->mStreamLogType == "CONTAINERD_TEXT") {
                         ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
                     }
                 }
@@ -2048,7 +2049,7 @@ LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
     char* end = data + LogFileReader::GetStringBuffer().capacity;
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
-            if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON) {
+            if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
                 if (buffer[begPs] == '\n' || begPs == 0) {
                     int lineBegin = begPs == 0 ? 0 : begPs + 1;
                     StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
@@ -2060,11 +2061,12 @@ LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
                         return res;
                     } else if (!doc.IsObject()) {
                         return res;
-                    } else if (!doc.HasMember(DOCKER_JSON_LOG.c_str()) || !doc.HasMember(DOCKER_JSON_TIME.c_str())
-                               || !doc.HasMember(DOCKER_JSON_STREAM_TYPE.c_str())) {
+                    } else if (!doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str())
+                               || !doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.c_str())
+                               || !doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.c_str())) {
                         return res;
                     } else {
-                        StringView content(doc[DOCKER_JSON_LOG.c_str()].GetString());
+                        StringView content(doc[ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str()].GetString());
                         res.data = content;
                     }
                     return res;
@@ -2077,15 +2079,14 @@ LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
 
                 // 寻找第一个分隔符位置
                 StringView timeValue;
-                const char* pch1 = std::search(
-                    buffer + lineBegin, buffer + endPs, CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+                const char* pch1 = std::find(
+                    buffer + lineBegin, buffer + endPs, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
                 if (pch1 == buffer + endPs) {
                     return res;
                 }
 
                 // 寻找第二个分隔符位置
-                const char* pch2
-                    = std::search(pch1 + 1, lineEnd, CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+                const char* pch2 = std::find(pch1 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
                 if (pch2 == lineEnd) {
                     return res;
                 }
@@ -2093,26 +2094,26 @@ LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
                 if (sourceValue != "stdout" && sourceValue != "stderr")
                     return res;
 
-
-                // 如果既不以 CONTIANERD_PART_TAG 开头，也不以 CONTIANERD_FULL_TAG 开头
-                if (*(pch2 + 1) != CONTIANERD_PART_TAG && *(pch2 + 1) != CONTIANERD_FULL_TAG) {
+                // 如果既不以 ProcessorParseContainerLogNative::CONTAINERD_PART_TAG 开头，也不以
+                // ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG 开头
+                if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
+                    && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
                     res.data = StringView(pch2 + 1, lineEnd - pch2 - 1);
                     return res;
                 }
 
                 // 寻找第三个分隔符位置
-                const char* pch3
-                    = std::search(pch2 + 1, lineEnd, CONTIANERD_DELIMITER.begin(), CONTIANERD_DELIMITER.end());
+                const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
                 if (pch3 == lineEnd || pch3 != pch2 + 2) {
                     return res;
                 }
                 // F 继续往前找 有没有P
-                if (*(pch2 + 1) == CONTIANERD_FULL_TAG) {
+                if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
                     // 继续往前找P，直到找到第一个F
                     return res;
                 }
                 // P
-                if (*(pch2 + 1) == CONTIANERD_PART_TAG) {
+                if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_PART_TAG) {
                     // 继续往前找P，直到找到第一个P
                     return res;
                 }
