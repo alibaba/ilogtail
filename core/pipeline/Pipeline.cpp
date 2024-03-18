@@ -188,7 +188,7 @@ bool Pipeline::Init(Config&& config) {
                 processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
                                                                            to_string(++pluginIndex));
                 detail["SplitChar"] = Json::Value('\0');
-            } else if (inputContainerLog->mMultiline.IsMultiline()) {
+            } else {
                 processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
                                                                            to_string(++pluginIndex));
                 detail["Mode"] = Json::Value("custom");
