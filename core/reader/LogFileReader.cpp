@@ -1640,15 +1640,6 @@ void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
     cpt.set_read_length(readSize);
 }
 
-const std::string LogFileReader::GetFileEncoding() const {
-    if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON)
-        return "docker_json-file";
-    else if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT)
-        return "containerd_text";
-    else
-        return "";
-}
-
 void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
     logBuffer.readOffset = mLastFilePos;
     bool fromCpt = false;
