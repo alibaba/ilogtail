@@ -113,9 +113,9 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                 if (containerPath->mInputType == DockerContainerPath::InputType::InputContainerLog) {
                     logtail::FileReaderOptions* ops
                         = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
-                    if (containerPath->mStreamLogType == "DOCKER_JSON_FILE-file") {
+                    if (containerPath->mStreamLogType == "docker_json-file") {
                         ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
-                    } else if (containerPath->mStreamLogType == "CONTAINERD_TEXT") {
+                    } else if (containerPath->mStreamLogType == "containerd_text") {
                         ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
                     }
                 }
@@ -1891,6 +1891,29 @@ LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& of
     }
 
     int nbytes = 0;
+    // if (mIsFuseMode) {
+    //     int64_t oriOffset = offset;
+    //     nbytes = op.SkipHoleRead(buf, 1, size, &offset);
+    //     if (nbytes < 0) {
+    //         LOG_ERROR(sLogger,
+    //                   ("SkipHoleRead fail to read log file",
+    //                    mHostLogPath)("mLastFilePos", mLastFilePos)("size", size)("offset", offset));
+    //         return 0;
+    //     }
+    //     if (oriOffset != offset && truncateInfo != NULL) {
+    //         *truncateInfo = new TruncateInfo(oriOffset, offset);
+    //         LOG_INFO(sLogger,
+    //                  ("read fuse file with a hole, size",
+    //                   offset - oriOffset)("filename", mHostLogPath)("dev", mDevInode.dev)("inode", mDevInode.inode));
+    //         LogtailAlarm::GetInstance()->SendAlarm(
+    //             FUSE_FILE_TRUNCATE_ALARM,
+    //             string("read fuse file with a hole, size: ") + ToString(offset - oriOffset) + " filename: "
+    //                 + mHostLogPath + " dev: " + ToString(mDevInode.dev) + " inode: " + ToString(mDevInode.inode),
+    //             GetProject(),
+    //             GetLogstore(),
+    //             GetRegion());
+    //     }
+    // } else {
     nbytes = op.Pread(buf, 1, size, offset);
     if (nbytes < 0) {
         LOG_ERROR(sLogger,
