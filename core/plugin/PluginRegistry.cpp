@@ -25,6 +25,7 @@
 
 #include "app_config/AppConfig.h"
 #include "flusher/FlusherSLS.h"
+#include "input/InputContainerLog.h"
 #include "input/InputFile.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "input/InputObserverNetwork.h"
@@ -245,6 +246,7 @@ bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
 void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
 #if defined(__linux__) && !defined(__ANDROID__)
+    RegisterInputCreator(new StaticInputCreator<InputContainerLog>());
     RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
 #ifdef __ENTERPRISE__
     RegisterInputCreator(new StaticInputCreator<InputStream>());

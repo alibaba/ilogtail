@@ -28,7 +28,6 @@ using namespace std;
 
 DEFINE_FLAG_INT32(search_checkpoint_default_dir_depth, "0 means only search current directory", 0);
 DEFINE_FLAG_INT32(max_exactly_once_concurrency, "", 512);
-DEFINE_FLAG_INT32(default_plugin_log_queue_size, "", 10);
 
 namespace logtail {
 
@@ -72,7 +71,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         if (!mContainerDiscovery.Init(config, *mContext, sName)) {
             return false;
         }
-        GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
+        mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline, &mFileDiscovery);
     }
 
     if (!mFileReader.Init(config, *mContext, sName)) {
@@ -165,57 +164,6 @@ bool InputFile::Stop(bool isPipelineRemoving) {
     FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveExactlyOnceConcurrency(mContext->GetConfigName());
     return true;
-}
-
-void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const {
-    Json::Value plugin(Json::objectValue), detail(Json::objectValue), object(Json::objectValue);
-    auto ConvertMapToJsonObj = [&](const char* key, const unordered_map<string, string>& map) {
-        if (!map.empty()) {
-            object.clear();
-            for (const auto& item : map) {
-                object[item.first] = Json::Value(item.second);
-            }
-            detail[key] = object;
-        }
-    };
-
-    if (!mFileDiscovery.GetWildcardPaths().empty()) {
-        detail["LogPath"] = Json::Value(mFileDiscovery.GetWildcardPaths()[0]);
-        detail["MaxDepth"] = Json::Value(static_cast<int32_t>(mFileDiscovery.GetWildcardPaths().size())
-                                         + mFileDiscovery.mMaxDirSearchDepth - 1);
-    } else {
-        detail["LogPath"] = Json::Value(mFileDiscovery.GetBasePath());
-        detail["MaxDepth"] = Json::Value(mFileDiscovery.mMaxDirSearchDepth);
-    }
-    detail["FilePattern"] = Json::Value(mFileDiscovery.GetFilePattern());
-    if (!mContainerDiscovery.mContainerFilters.mK8sNamespaceRegex.empty()) {
-        detail["K8sNamespaceRegex"] = Json::Value(mContainerDiscovery.mContainerFilters.mK8sNamespaceRegex);
-    }
-    if (!mContainerDiscovery.mContainerFilters.mK8sPodRegex.empty()) {
-        detail["K8sPodRegex"] = Json::Value(mContainerDiscovery.mContainerFilters.mK8sPodRegex);
-    }
-    if (!mContainerDiscovery.mContainerFilters.mK8sContainerRegex.empty()) {
-        detail["K8sContainerRegex"] = Json::Value(mContainerDiscovery.mContainerFilters.mK8sContainerRegex);
-    }
-    ConvertMapToJsonObj("IncludeK8sLabel", mContainerDiscovery.mContainerFilters.mIncludeK8sLabel);
-    ConvertMapToJsonObj("ExcludeK8sLabel", mContainerDiscovery.mContainerFilters.mExcludeK8sLabel);
-    ConvertMapToJsonObj("IncludeEnv", mContainerDiscovery.mContainerFilters.mIncludeEnv);
-    ConvertMapToJsonObj("ExcludeEnv", mContainerDiscovery.mContainerFilters.mExcludeEnv);
-    ConvertMapToJsonObj("IncludeContainerLabel", mContainerDiscovery.mContainerFilters.mIncludeContainerLabel);
-    ConvertMapToJsonObj("ExcludeContainerLabel", mContainerDiscovery.mContainerFilters.mExcludeContainerLabel);
-    ConvertMapToJsonObj("ExternalK8sLabelTag", mContainerDiscovery.mExternalK8sLabelTag);
-    ConvertMapToJsonObj("ExternalEnvTag", mContainerDiscovery.mExternalEnvTag);
-    if (mContainerDiscovery.mCollectingContainersMeta) {
-        detail["CollectingContainersMeta"] = Json::Value(true);
-    }
-    plugin["type"] = Json::Value("metric_docker_file");
-    plugin["detail"] = detail;
-
-    res["inputs"].append(plugin);
-    // these param will be overriden if the same param appears in the global module of config, which will be parsed
-    // later.
-    res["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-    res["global"]["AlwaysOnline"] = Json::Value(true);
 }
 
 } // namespace logtail
