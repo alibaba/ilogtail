@@ -448,14 +448,13 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
                 "file device", checkpoint->mDevInode.inode)("file inode", checkpoint->mDevInode.inode));
         return ValidateCheckpointResult::kConfigNotMatched;
     }
+    // Determine the type of input plugin.
     string name = config->GetInputs()[0]->GetPlugin()->Name();
     const InputFile* inputFile = nullptr;
     const InputContainerLog* inputContainerLog = nullptr;
     if (name == InputFile::sName) {
-        // now we can be sure that input is file
         inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
-    }
-    if (name == InputContainerLog::sName) {
+    } else if (name == InputContainerLog::sName) {
         inputContainerLog = static_cast<const InputContainerLog*>(config->GetInputs()[0]->GetPlugin());
     }
 
