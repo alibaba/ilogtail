@@ -168,10 +168,12 @@ bool BoostRegexMatch(const char* buffer,
 
 bool BoostRegexMatch(const char* buffer, size_t size, const boost::regex& reg, string& exception) {
     try {
-        if (boost::regex_match(buffer, buffer + size, reg))
+        boost::match_results<const char*> what;
+        if (boost::regex_search(buffer, buffer + size, what, reg, boost::match_continuous)) {
             return true;
-        else
+        } else {
             return false;
+        }
     } catch (boost::regex_error& e) {
         exception.append("regex_error: ");
         exception.append(ToString(e.what()));
@@ -193,10 +195,12 @@ bool BoostRegexMatch(const char* buffer, size_t size, const boost::regex& reg, s
 
 bool BoostRegexMatch(const char* buffer, const boost::regex& reg, string& exception) {
     try {
-        if (boost::regex_match(buffer, reg))
+        boost::match_results<const char*> what;
+        if (boost::regex_search(buffer, what, reg, boost::match_continuous)) {
             return true;
-        else
+        } else {
             return false;
+        }
     } catch (boost::regex_error& e) {
         exception.append("regex_error: ");
         exception.append(ToString(e.what()));
