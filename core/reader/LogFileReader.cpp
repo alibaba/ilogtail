@@ -50,6 +50,7 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "processor/ProcessorParseContainerLogNative.h"
+#include "rapidjson/document.h"
 #include "reader/JsonLogFileReader.h"
 #include "sdk/Common.h"
 #include "sender/Sender.h"
@@ -113,7 +114,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                     logtail::FileReaderOptions* ops
                         = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
                     if (containerPath->mStreamLogType == "DOCKER_JSON_FILE-file") {
-                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE_FILE;
+                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
                     } else if (containerPath->mStreamLogType == "CONTAINERD_TEXT") {
                         ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
                     }
@@ -1975,13 +1976,15 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
         return size;
     }
     int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
+    int begPs = size - 2;
     rollbackLineFeedCount = 0;
     // Single line rollback
     if (!mMultilineConfig.first->IsMultiline()) {
         while (endPs >= 0) {
+            LineInfo line = LogFileReader::GetLastLineData(buffer, begPs, endPs);
             if (buffer[endPs] == '\n') {
                 if (endPs != size - 1) { // if last line dose not end with '\n', rollback
-                    ++rollbackLineFeedCount;
+                    rollbackLineFeedCount += line.lineFeedCount;
                 }
                 return endPs + 1;
             }
@@ -1990,7 +1993,6 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
         return 0;
     }
     // Multiline rollback
-    int begPs = size - 2;
     std::string exception;
     while (begPs >= 0) {
         LineInfo line = LogFileReader::GetLastLineData(buffer, begPs, endPs);
@@ -2045,8 +2047,6 @@ StringBuffer LogFileReader::GetStringBuffer() {
 }
 
 LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
-    char* data = LogFileReader::GetStringBuffer().data;
-    char* end = data + LogFileReader::GetStringBuffer().capacity;
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
             if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
@@ -2094,8 +2094,8 @@ LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
                 if (sourceValue != "stdout" && sourceValue != "stderr")
                     return res;
 
-                // 如果既不以 ProcessorParseContainerLogNative::CONTAINERD_PART_TAG 开头，也不以
-                // ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG 开头
+                // 如果既不以 CONTAINERD_PART_TAG 开头，也不以
+                // CONTAINERD_FULL_TAG 开头
                 if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
                     && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
                     res.data = StringView(pch2 + 1, lineEnd - pch2 - 1);

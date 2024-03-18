@@ -56,11 +56,11 @@ private:
     static const std::string containerSourceKey; // 容器来源字段
     static const std::string containerLogKey; // 容器日志字段
 
-    bool ProcessEvent(StringView containerType, PipelineEventPtr& e);
+    bool ProcessEvent(StringView containerType, PipelineEventPtr& e, PipelineEventGroup& logGroup);
     void ResetDockerJsonLogField(char* data, StringView key, StringView value, LogEvent& targetEvent);
     void ResetContainerdTextLog(
         StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent);
-    bool ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg);
+    bool ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg, PipelineEventGroup& logGroup);
     bool ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg);
 
     CounterPtr mProcParseInSizeBytes; // 成功且保留的日志中，解析字段的INBYTES

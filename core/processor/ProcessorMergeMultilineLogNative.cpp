@@ -101,7 +101,7 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
     }
     if (mMergeType == MergeType::BY_REGEX) {
         MergeLogsByRegex(logGroup);
-    } else if (mMergeType == MergeType::BY_FLAG) {
+    } else if (mMergeType == MergeType::BY_FLAG && logGroup.HasMetadata(EventGroupMetaKey::LOG_PART_LOG)) {
         MergeLogsByFlag(logGroup);
     }
     *mSplitLines = logGroup.GetEvents().size();

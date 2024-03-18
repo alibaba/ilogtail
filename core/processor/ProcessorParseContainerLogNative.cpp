@@ -130,7 +130,7 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
     EventsContainer& events = logGroup.MutableEvents();
 
     for (auto it = events.begin(); it != events.end();) {
-        if (ProcessEvent(containerType, *it)) {
+        if (ProcessEvent(containerType, *it, logGroup)) {
             ++it;
         } else {
             it = events.erase(it);
@@ -138,7 +138,9 @@ void ProcessorParseContainerLogNative::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, PipelineEventPtr& e) {
+bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType,
+                                                    PipelineEventPtr& e,
+                                                    PipelineEventGroup& logGroup) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -151,7 +153,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
     std::string errorMsg;
     bool shouldKeepEvent = true;
     if (containerType == CONTAINERD_TEXT) {
-        shouldKeepEvent = ParseContainerdTextLogLine(sourceEvent, errorMsg);
+        shouldKeepEvent = ParseContainerdTextLogLine(sourceEvent, errorMsg, logGroup);
     } else if (containerType == DOCKER_JSON_FILE) {
         shouldKeepEvent = ParseDockerJsonLogLine(sourceEvent, errorMsg);
     }
@@ -174,7 +176,9 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
     return shouldKeepEvent;
 }
 
-bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
+bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sourceEvent,
+                                                                  std::string& errorMsg,
+                                                                  PipelineEventGroup& logGroup) {
     StringView contentValue = sourceEvent.GetContent(mSourceKey);
 
     // 寻找第一个分隔符位置 时间 _time_
@@ -248,6 +252,7 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         // P
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
         ResetContainerdTextLog(timeValue, sourceValue, content, true, sourceEvent);
+        logGroup.SetMetadata(EventGroupMetaKey::LOG_PART_LOG, ProcessorMergeMultilineLogNative::PartLogFlag);
         return true;
     }
 }
