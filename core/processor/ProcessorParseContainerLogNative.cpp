@@ -283,6 +283,7 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
             while (buffer[idx] != '\"') {
                 ++idx;
             }
+            ++idx;
             // skip ' ' and ':'
             while (buffer[idx] == ':' || buffer[idx] == ' ') {
                 ++idx;
@@ -383,7 +384,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "source field cannot be found in log line."
-                       << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+                       << "sourceValue:\t" << sourceValue << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
         errorMsg = errorMsgStream.str();
         return mKeepingSourceWhenParseFail;
     }
