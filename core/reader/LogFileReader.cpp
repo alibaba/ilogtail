@@ -111,9 +111,9 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                 if (containerPath->mInputType == DockerContainerPath::InputType::InputContainerLog) {
                     logtail::FileReaderOptions* ops
                         = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
-                    if (containerPath->mStreamLogType == "json-file") {
+                    if (containerPath->mStdoutLogType == "json-file") {
                         ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
-                    } else if (containerPath->mStreamLogType == "containerd_text") {
+                    } else if (containerPath->mStdoutLogType == "containerd_text") {
                         ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
                     }
                 }

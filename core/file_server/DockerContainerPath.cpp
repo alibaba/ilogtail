@@ -96,14 +96,14 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
             }
         }
     }
-    if (params.isMember("DefaultRootPath") && params["DefaultRootPath"].isString()) {
-        dockerContainerPath.mDefaultRootPath = params["DefaultRootPath"].asString();
+    if (params.isMember("UpperDir") && params["UpperDir"].isString()) {
+        dockerContainerPath.mUpperDir = params["UpperDir"].asString();
     }
-    if (params.isMember("StreamLogPath") && params["StreamLogPath"].isString()) {
-        dockerContainerPath.mStreamLogPath = params["StreamLogPath"].asString();
+    if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
+        dockerContainerPath.mStdoutPath = params["StdoutPath"].asString();
     }
-    if (params.isMember("StreamLogType") && params["StreamLogType"].isString()) {
-        dockerContainerPath.mStreamLogType = params["StreamLogType"].asString();
+    if (params.isMember("StdoutLogType") && params["StdoutLogType"].isString()) {
+        dockerContainerPath.mStdoutLogType = params["StdoutLogType"].asString();
     }
     if (params.isMember("Tags") && params["Tags"].isArray()) {
         const Json::Value& tags = params["Tags"];
@@ -154,18 +154,18 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
                       ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
                           "destination", bestMatchedMounts.Destination)("logPath", logPath)("input", name));
         } else {
-            dockerContainerPath.mContainerPath = dockerContainerPath.mDefaultRootPath + logPath;
+            dockerContainerPath.mContainerPath = dockerContainerPath.mUpperDir + logPath;
             LOG_DEBUG(sLogger,
                       ("docker container path", dockerContainerPath.mContainerPath)(
-                          "defaultRootPath", dockerContainerPath.mDefaultRootPath)("logPath", logPath)("input", name));
+                          "upperDir", dockerContainerPath.mUpperDir)("logPath", logPath)("input", name));
         }
     }
 
     if (name == InputContainerLog::sName) {
         dockerContainerPath.mInputType = InputType::InputContainerLog;
-        size_t pos = dockerContainerPath.mStreamLogPath.find_last_of('/');
+        size_t pos = dockerContainerPath.mStdoutPath.find_last_of('/');
         if (pos != std::string::npos) {
-            dockerContainerPath.mContainerPath = dockerContainerPath.mStreamLogPath.substr(0, pos);
+            dockerContainerPath.mContainerPath = dockerContainerPath.mStdoutPath.substr(0, pos);
         }
         if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
             dockerContainerPath.mContainerPath.pop_back();

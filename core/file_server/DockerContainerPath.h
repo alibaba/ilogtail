@@ -43,9 +43,9 @@ struct DockerContainerPath {
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
     std::string mContainerPath;
 
-    std::string mStreamLogPath;
-    std::string mStreamLogType;
-    std::string mDefaultRootPath;
+    std::string mStdoutPath;
+    std::string mStdoutLogType;
+    std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
     std::vector<sls_logs::LogTag> mContainerTags; // tags extracted from this container
     std::string mJsonStr; // this obj's json string, for saving to local file
@@ -63,13 +63,13 @@ struct DockerContainerPath {
         if (mContainerPath != rhs.mContainerPath) {
             return false;
         }
-        if (mStreamLogPath != rhs.mStreamLogPath) {
+        if (mStdoutPath != rhs.mStdoutPath) {
             return false;
         }
-        if (mStreamLogType != rhs.mStreamLogType) {
+        if (mStdoutLogType != rhs.mStdoutLogType) {
             return false;
         }
-        if (mDefaultRootPath != rhs.mDefaultRootPath) {
+        if (mUpperDir != rhs.mUpperDir) {
             return false;
         }
         if (mMounts.size() != rhs.mMounts.size()) {
