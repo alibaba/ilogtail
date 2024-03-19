@@ -61,6 +61,9 @@ private:
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
+    CounterPtr mProcSplittedEventsCnt;
+    CounterPtr mProcUnmatchedEventsCnt;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitRegexNativeUnittest;
     friend class ProcessorSplitRegexDisacardUnmatchUnittest;

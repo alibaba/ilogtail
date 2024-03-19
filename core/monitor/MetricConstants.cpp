@@ -43,6 +43,11 @@ const std::string METRIC_PROC_PARSE_ERROR_TOTAL = "proc_parse_error_total";
 const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL = "proc_key_count_not_match_error_total";
 const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL = "proc_history_failure_total";
 
+const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_SPLITTED_RECORDS_TOTAL
+    = "proc_split_multiline_log_splitted_records_total";
+const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
+    = "proc_split_multiline_log_unmatched_records_total";
+
 // processor filter metrics
 const std::string METRIC_PROC_FILTER_IN_SIZE_BYTES = "proc_filter_in_size_bytes";
 const std::string METRIC_PROC_FILTER_OUT_SIZE_BYTES = "proc_filter_out_size_bytes";
@@ -56,4 +61,4 @@ const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_n
 // processor desensitize metrics
 const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL = "proc_desensitize_records_total";
 
-}
+} // namespace logtail
