@@ -101,7 +101,7 @@ void LogInput::Resume() {
 
 void LogInput::HoldOn() {
     LOG_INFO(sLogger, ("event handle daemon pause", "starts"));
-    if (BOOL_FLAG(sidecar_mode)) {
+    if (BOOL_FLAG(enable_full_drain_mode)) {
         unique_lock<mutex> lock(mThreadRunningMux);
         mStopCV.wait(lock, [this]() { return mInteruptFlag; });
     } else {
@@ -449,7 +449,7 @@ void* LogInput::ProcessLoop() {
             lastClearConfigCache = curTime;
         }
 
-        if (BOOL_FLAG(sidecar_mode) && Application::GetInstance()->IsExiting()
+        if (BOOL_FLAG(enable_full_drain_mode) && Application::GetInstance()->IsExiting()
             && EventDispatcher::GetInstance()->IsAllFileRead()) {
             break;
         }
@@ -458,7 +458,7 @@ void* LogInput::ProcessLoop() {
     mInteruptFlag = true;
     mStopCV.notify_one();
 
-    if (!BOOL_FLAG(sidecar_mode)) {
+    if (!BOOL_FLAG(enable_full_drain_mode)) {
         LOG_WARNING(sLogger, ("LogInputThread", "Exit"));
     }
     return NULL;

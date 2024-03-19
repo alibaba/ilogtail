@@ -1515,7 +1515,8 @@ void Sender::DaemonSender() {
                 }
 
                 int32_t beforeSleepTime = time(NULL);
-                while (!Application::GetInstance()->IsExiting() && GetSendingBufferCount() >= AppConfig::GetInstance()->GetSendRequestConcurrency()) {
+                while (!Application::GetInstance()->IsExiting()
+                       && GetSendingBufferCount() >= AppConfig::GetInstance()->GetSendRequestConcurrency()) {
                     usleep(10 * 1000);
                 }
                 int32_t afterSleepTime = time(NULL);
@@ -1568,7 +1569,8 @@ void Sender::PutIntoSecondaryBuffer(LoggroupTimeValue* dataPtr, int32_t retryTim
         ++retry;
         {
             PTScopedLock lock(mSecondaryMutexLock);
-            if (Application::GetInstance()->IsExiting() || (mSecondaryBuffer.size() < (uint32_t)INT32_FLAG(secondary_buffer_count_limit))) {
+            if (Application::GetInstance()->IsExiting()
+                || (mSecondaryBuffer.size() < (uint32_t)INT32_FLAG(secondary_buffer_count_limit))) {
                 mSecondaryBuffer.push_back(dataPtr);
                 writeDone = true;
                 break;
@@ -2073,7 +2075,8 @@ SendResult Sender::SendToNetSync(sdk::Client* sendClient,
 void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
     auto& exactlyOnceCpt = dataPtr->mLogGroupContext.mExactlyOnceCheckpoint;
 
-    if (!BOOL_FLAG(sidecar_mode) && Application::GetInstance()->IsExiting()) // write local file avoid binary update fail
+    if (!BOOL_FLAG(enable_full_drain_mode)
+        && Application::GetInstance()->IsExiting()) // write local file avoid binary update fail
     {
         SubSendingBufferCount();
         if (!exactlyOnceCpt) {
@@ -2539,8 +2542,8 @@ void Sender::ResetRegionConcurrency(const std::string& region) {
 
 bool Sender::FlushOut(int32_t time_interval_in_mili_seconds) {
     static Aggregator* aggregator = Aggregator::GetInstance();
-    SetFlush();
     aggregator->FlushReadyBuffer();
+    SetFlush();
     for (int i = 0; i < time_interval_in_mili_seconds / 100; ++i) {
         mSenderQueue.Signal();
         {
@@ -2548,9 +2551,18 @@ bool Sender::FlushOut(int32_t time_interval_in_mili_seconds) {
             mWriteSecondaryWait.signal();
         }
         if (!IsFlush()) {
-            return true;
+            // double check, fix bug #13758589
+            // TODO: this is not necessary, the task of checking whether all data has been flushed should be done in
+            // this func, not in Sender thread
+            aggregator->FlushReadyBuffer();
+            if (aggregator->IsMergeMapEmpty() && IsBatchMapEmpty() && GetSendingCount() == 0
+                && IsSecondaryBufferEmpty()) {
+                return true;
+            } else {
+                SetFlush();
+                continue;
+            }
         }
-        aggregator->FlushReadyBuffer();
         usleep(100 * 1000);
     }
     ResetFlush();

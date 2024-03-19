@@ -958,6 +958,7 @@ bool ModifyHandler::IsAllFileRead() {
             return false;
         }
         if (!it->second.empty()) {
+            // force flushing the last line immediately instead of waiting for timeout
             ForceReadLogAndPush(it->second[0]);
         }
     }
