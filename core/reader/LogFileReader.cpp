@@ -2057,17 +2057,7 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     return 0;
 }
 
-std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer(new SourceBuffer);
-StringBuffer LogFileReader::mStringBuffer;
 rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
-
-StringBuffer LogFileReader::GetStringBuffer() {
-    if (mStringBuffer.capacity == 0) {
-        LogFileReader::mStringBuffer = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
-    }
-    mStringBuffer.size = 0;
-    return mStringBuffer;
-}
 
 LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
     while (begPs >= 0) {

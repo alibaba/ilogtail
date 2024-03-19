@@ -26,12 +26,9 @@ class SourceBuffer;
 
 struct StringBuffer {
     bool IsValid() { return data != nullptr; }
-    char* data;
+    char* const data;
     size_t size;
-    size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
-public:
-    StringBuffer() : data(nullptr), size(0), capacity(0) {}
-
+    const size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
 private:
     StringBuffer(char* data, size_t capacity) : data(data), size(0), capacity(capacity) { data[0] = '\0'; }
     friend class SourceBuffer;

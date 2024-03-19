@@ -364,13 +364,8 @@ public:
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
-    const std::string GetFileEncoding() const;
-
 protected:
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-    static std::shared_ptr<SourceBuffer> mSourceBuffer;
-    static StringBuffer mStringBuffer;
-    static StringBuffer GetStringBuffer();
     LineInfo GetLastLineData(char* buffer, int& begPs, int& endPs);
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
     void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
