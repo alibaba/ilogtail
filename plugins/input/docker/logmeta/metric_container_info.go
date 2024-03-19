@@ -55,7 +55,7 @@ type DockerFileUpdateCmd struct {
 	Mounts          []Mount  // 容器挂载路径
 	DefaultRootPath string   // 容器默认路径
 	StreamLogPath   string   // 标准输出路径
-	StreamLogType   string   // 标准输出类型 docker_json-file、containerd_text
+	StreamLogType   string   // 标准输出类型 json-file、containerd_text
 }
 
 type DockerFileUpdateCmdAll struct {
