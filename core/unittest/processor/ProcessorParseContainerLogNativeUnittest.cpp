@@ -1203,7 +1203,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
             }
         ],
         "metadata":{
-            "container.type":"docker_json-file"
+            "container.type":"json-file"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
@@ -1257,7 +1257,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1302,7 +1302,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1345,7 +1345,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1393,7 +1393,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1438,7 +1438,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1483,7 +1483,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1531,7 +1531,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1576,7 +1576,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1621,7 +1621,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     }
                 ],
                 "metadata":{
-                    "container.type":"docker_json-file"
+                    "container.type":"json-file"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -1787,7 +1787,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -1832,7 +1832,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         }
                     ],
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -1864,7 +1864,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -1901,7 +1901,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -1935,7 +1935,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -1969,7 +1969,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -2006,7 +2006,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -2040,7 +2040,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
@@ -2074,7 +2074,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 std::stringstream expectJson;
                 expectJson << R"({
                     "metadata":{
-                        "container.type":"docker_json-file"
+                        "container.type":"json-file"
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();

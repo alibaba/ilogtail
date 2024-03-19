@@ -173,7 +173,7 @@ const std::string EVENT_GROUP_META_CONTAINER_IMAGE_NAME = "container.image.name"
 const std::string EVENT_GROUP_META_CONTAINER_IMAGE_ID = "container.image.id";
 
 const std::string EVENT_GROUP_META_CONTAINERD_TEXT = "containerd_text";
-const std::string EVENT_GROUP_META_DOCKER_JSON_FILE = "docker_json-file";
+const std::string EVENT_GROUP_META_DOCKER_JSON_FILE = "json-file";
 
 const std::string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
     switch (key) {
