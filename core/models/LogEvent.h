@@ -53,7 +53,7 @@ public:
 private:
     explicit BaseContentIterator(const T& p, const ContentsContainer& c) : ptr(p), container(c) {}
     void Advance() {
-        while (ptr != container.end() && !((++ptr)->second))
+        while ((++ptr != container.end()) && !(ptr->second))
             ;
     }
 
@@ -104,7 +104,8 @@ private:
     friend class ProcessorParseApsaraNative;
     void AppendContent(StringView key, StringView val);
 
-    // since log reduce in SLS server requires the original order of log contents, we have to maintain this sequential information for backward compatability.
+    // since log reduce in SLS server requires the original order of log contents, we have to maintain this sequential
+    // information for backward compatability.
     ContentsContainer mContents;
     std::map<StringView, size_t> mIndex;
 };

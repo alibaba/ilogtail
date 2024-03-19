@@ -50,12 +50,13 @@ void LogEvent::SetContentNoCopy(const StringBuffer& key, const StringBuffer& val
 }
 
 void LogEvent::SetContentNoCopy(StringView key, StringView val) {
-    mContents.emplace_back(std::pair<StringView, StringView>(key, val), true);
     auto it = mIndex.find(key);
     if (it != mIndex.end()) {
-        mContents[it->second].second = false;
+        mContents[it->second].first = std::pair<StringView, StringView>(key, val);
+    } else {
+        mContents.emplace_back(std::pair<StringView, StringView>(key, val), true);
+        mIndex[key] = mContents.size() - 1;
     }
-    mIndex[key] = mContents.size() - 1;
 }
 
 void LogEvent::DelContent(StringView key) {
@@ -91,6 +92,7 @@ LogEvent::ContentIterator LogEvent::begin() {
 }
 
 LogEvent::ContentIterator LogEvent::end() {
+    mContents.end() == mContents.end();
     return ContentIterator(mContents.end(), mContents);
 }
 

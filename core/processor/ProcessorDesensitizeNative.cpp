@@ -162,20 +162,21 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
     auto& sourceEvent = e.Cast<LogEvent>();
 
     // Traverse all fields and desensitize sensitive fields.
-    for (auto & item : sourceEvent) {
+    auto end = sourceEvent.end();
+    for (auto it = sourceEvent.begin(); it != end; ++it) {
         // Only perform desensitization processing on specified fields.
-        if (item.first != mSourceKey) {
+        if (it->first != mSourceKey) {
             continue;
         }
         // Only perform desensitization processing on non-empty fields.
-        if (item.second.empty()) {
+        if (it->second.empty()) {
             continue;
         }
-        std::string value = item.second.to_string();
+        std::string value = it->second.to_string();
         CastOneSensitiveWord(&value);
         mProcDesensitizeRecodesTotal->Add(1);
         StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
-        sourceEvent.SetContentNoCopy(item.first, StringView(valueBuffer.data, valueBuffer.size));
+        sourceEvent.SetContentNoCopy(it->first, StringView(valueBuffer.data, valueBuffer.size));
     }
 }
 
