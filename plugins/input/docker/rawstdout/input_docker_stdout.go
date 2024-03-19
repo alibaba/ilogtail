@@ -39,7 +39,7 @@ func logDriverSupported(container types.ContainerJSON) bool {
 		return true
 	}
 	switch container.HostConfig.LogConfig.Type {
-	case "json-file", "journald":
+	case "json-file", "journald", "containerd_text":
 		return true
 	default:
 		return false
