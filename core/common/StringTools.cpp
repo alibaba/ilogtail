@@ -13,12 +13,9 @@
 // limitations under the License.
 
 #include "StringTools.h"
-
 #include <string.h>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/all.hpp>
-
 #include "logger/Logger.h"
 #if defined(_MSC_VER)
 #include <Shlwapi.h>
@@ -171,12 +168,10 @@ bool BoostRegexMatch(const char* buffer,
 
 bool BoostRegexMatch(const char* buffer, size_t size, const boost::regex& reg, string& exception) {
     try {
-        boost::match_results<const char*> what;
-        if (boost::regex_search(buffer, buffer + size, what, reg, boost::match_continuous)) {
+        if (boost::regex_match(buffer, buffer + size, reg))
             return true;
-        } else {
+        else
             return false;
-        }
     } catch (boost::regex_error& e) {
         exception.append("regex_error: ");
         exception.append(ToString(e.what()));
@@ -198,12 +193,10 @@ bool BoostRegexMatch(const char* buffer, size_t size, const boost::regex& reg, s
 
 bool BoostRegexMatch(const char* buffer, const boost::regex& reg, string& exception) {
     try {
-        boost::match_results<const char*> what;
-        if (boost::regex_search(buffer, what, reg, boost::match_continuous)) {
+        if (boost::regex_match(buffer, reg))
             return true;
-        } else {
+        else
             return false;
-        }
     } catch (boost::regex_error& e) {
         exception.append("regex_error: ");
         exception.append(ToString(e.what()));
