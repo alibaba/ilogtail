@@ -112,9 +112,9 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                     logtail::FileReaderOptions* ops
                         = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
                     if (containerPath->mStdoutLogType == "json-file") {
-                        ops->mFileEncoding = FileReaderOptions::Encoding::DOCKER_JSON_FILE;
+                        ops->mFileLogFormat = FileReaderOptions::LogFormat::DOCKER_JSON_FILE;
                     } else if (containerPath->mStdoutLogType == "containerd_text") {
-                        ops->mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
+                        ops->mFileLogFormat = FileReaderOptions::LogFormat::CONTAINERD_TEXT;
                     }
                 }
                 // if config have wildcard path, use mWildcardPaths[0] as base path

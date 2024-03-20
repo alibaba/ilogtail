@@ -16,29 +16,13 @@
 
 #include <memory>
 
-#include "file_server/FileServer.h"
-#include "input/InputContainerLog.h"
-#include "input/InputFile.h"
 #include "logger/Logger.h"
-#include "pipeline/Pipeline.h"
-#include "pipeline/PipelineManager.h"
 
 namespace logtail {
 
-bool DockerContainerPath::ParseAllByJSONStr(
-    const DockerContainerPathCmd* pCmd, std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap) {
+bool DockerContainerPath::ParseAllByJSONObj(
+    const Json::Value& paramsAll, std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap) {
     dockerContainerPathMap.clear();
-    Json::Value paramsAll;
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
-    std::string jsonParseErrs;
-    if (pCmd->mParams.size() < 5UL
-        || !jsonReader->parse(
-            pCmd->mParams.data(), pCmd->mParams.data() + pCmd->mParams.size(), &paramsAll, &jsonParseErrs)) {
-        LOG_ERROR(sLogger, ("invalid docker container params error", pCmd->mParams));
-        return false;
-    }
     if (!paramsAll.isMember("AllCmd")) {
         return false;
     }
@@ -58,7 +42,7 @@ bool DockerContainerPath::ParseAllByJSONStr(
         Json::Value params = *iter;
         DockerContainerPath nowDCP;
         nowDCP.mJsonStr = params.toStyledString();
-        if (!ParseByJSONObj(params, pCmd, nowDCP)) {
+        if (!ParseByJSONObj(params, nowDCP)) {
             LOG_ERROR(sLogger, ("parse sub docker container params error", nowDCP.mJsonStr));
             return false;
         }
@@ -67,16 +51,7 @@ bool DockerContainerPath::ParseAllByJSONStr(
     return true;
 }
 
-bool hasPrefix(const std::string& fullString, const std::string& prefix) {
-    if (fullString.length() < prefix.length()) {
-        return false;
-    }
-    return fullString.compare(0, prefix.length(), prefix) == 0;
-}
-
-bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
-                                         const DockerContainerPathCmd* pCmd,
-                                         DockerContainerPath& dockerContainerPath) {
+bool DockerContainerPath::ParseByJSONObj(const Json::Value& params, DockerContainerPath& dockerContainerPath) {
     if (params.isMember("ID") && params["ID"].isString()) {
         dockerContainerPath.mContainerID = params["ID"].asString();
     }
@@ -116,84 +91,11 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params,
             }
         }
     }
-    // 找config
-    std::shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(pCmd->mConfigName);
-    if (config->GetInputs().size() == 0) {
-        LOG_ERROR(sLogger, ("config has no input", pCmd->mConfigName));
-        return false;
-    }
-    std::string name = config->GetInputs()[0]->GetPlugin()->Name();
-
-    if (name == InputFile::sName) {
-        dockerContainerPath.mInputType = InputType::InputFile;
-        const InputFile* inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
-        std::string logPath;
-        if (!inputFile->mFileDiscovery.GetWildcardPaths().empty()) {
-            logPath = inputFile->mFileDiscovery.GetWildcardPaths()[0];
-        } else {
-            logPath = inputFile->mFileDiscovery.GetBasePath();
-        }
-        int pthSize = logPath.size();
-
-        Mount bestMatchedMounts;
-
-        for (size_t i = 0; i < dockerContainerPath.mMounts.size(); i++) {
-            std::string dst = dockerContainerPath.mMounts[i].Destination;
-            int dstSize = dst.size();
-
-            if (hasPrefix(logPath, dst)
-                && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
-                && bestMatchedMounts.Destination.size() < dstSize) {
-                bestMatchedMounts = dockerContainerPath.mMounts[i];
-            }
-        }
-        if (bestMatchedMounts.Source.size() > 0) {
-            dockerContainerPath.mContainerPath
-                = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
-            LOG_DEBUG(sLogger,
-                      ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
-                          "destination", bestMatchedMounts.Destination)("logPath", logPath)("input", name));
-        } else {
-            dockerContainerPath.mContainerPath = dockerContainerPath.mUpperDir + logPath;
-            LOG_DEBUG(sLogger,
-                      ("docker container path", dockerContainerPath.mContainerPath)(
-                          "upperDir", dockerContainerPath.mUpperDir)("logPath", logPath)("input", name));
-        }
-    }
-
-    if (name == InputContainerLog::sName) {
-        dockerContainerPath.mInputType = InputType::InputContainerLog;
-        size_t pos = dockerContainerPath.mStdoutPath.find_last_of('/');
-        if (pos != std::string::npos) {
-            dockerContainerPath.mContainerPath = dockerContainerPath.mStdoutPath.substr(0, pos);
-        }
-        if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
-            dockerContainerPath.mContainerPath.pop_back();
-        }
-        LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath)("input", name));
-    }
-
     // only check containerID (others are null when parse delete cmd)
     if (dockerContainerPath.mContainerID.size() > 0) {
         return true;
     }
     return false;
-}
-
-bool DockerContainerPath::ParseByJSONStr(const DockerContainerPathCmd* pCmd, DockerContainerPath& dockerContainerPath) {
-    dockerContainerPath.mJsonStr = pCmd->mParams;
-    Json::Value params;
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
-    std::string jsonParseErrs;
-    if (pCmd->mParams.size() < 5UL
-        || !jsonReader->parse(
-            pCmd->mParams.data(), pCmd->mParams.data() + pCmd->mParams.size(), &params, &jsonParseErrs)) {
-        LOG_ERROR(sLogger, ("invalid docker container params", pCmd->mParams));
-        return false;
-    }
-    return ParseByJSONObj(params, pCmd, dockerContainerPath);
 }
 
 } // namespace logtail

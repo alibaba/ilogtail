@@ -45,16 +45,21 @@ public:
     void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
     const std::shared_ptr<std::vector<DockerContainerPath>>& GetContainerInfo() const { return mContainerInfos; }
     void SetContainerInfo(const std::shared_ptr<std::vector<DockerContainerPath>>& info) { mContainerInfos = info; }
-    void SetUpdateContainerInfoFunc(bool (*f)(const std::string&, bool)) { mUpdateContainerInfo = f; }
-    void SetDeleteContainerInfoFunc(bool (*f)(const std::string&)) { mDeleteContainerInfo = f; }
+    void SetUpdateContainerInfoFunc(bool (*f)(const Json::Value&, bool, FileDiscoveryOptions*)) {
+        mUpdateContainerInfo = f;
+    }
+    void SetIsSameDockerContainerPathFunc(bool (*f)(const Json::Value&, bool, FileDiscoveryOptions*)) {
+        mIsSameDockerContainerPath = f;
+    }
+    void SetDeleteContainerInfoFunc(bool (*f)(const Json::Value&, FileDiscoveryOptions*)) { mDeleteContainerInfo = f; }
 
     bool IsDirectoryInBlacklist(const std::string& dirPath) const;
     bool IsMatch(const std::string& path, const std::string& name) const;
     bool IsTimeout(const std::string& path) const;
     bool WithinMaxDepth(const std::string& path) const;
-    bool IsSameDockerContainerPath(const DockerContainerPathCmd* pCmd) const;
-    bool UpdateDockerContainerPath(const DockerContainerPathCmd* pCmd);
-    bool DeleteDockerContainerPath(const DockerContainerPathCmd* pCmd);
+    bool IsSameDockerContainerPath(const Json::Value& paramsJSON, bool allFlag);
+    bool UpdateDockerContainerPath(const Json::Value& paramsJSON, bool allFlag);
+    bool DeleteDockerContainerPath(const Json::Value& paramsJSON);
     DockerContainerPath* GetContainerPathByLogPath(const std::string& logPath) const;
     // 过渡使用
     bool IsTailingAllMatchedFiles() const { return mTailingAllMatchedFiles; }
@@ -107,8 +112,9 @@ private:
     bool mEnableContainerDiscovery = false;
     std::shared_ptr<std::vector<DockerContainerPath>>
         mContainerInfos; // must not be null if container discovery is enabled
-    bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
-    bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
+    bool (*mUpdateContainerInfo)(const Json::Value&, bool, FileDiscoveryOptions*) = nullptr;
+    bool (*mDeleteContainerInfo)(const Json::Value&, FileDiscoveryOptions*) = nullptr;
+    bool (*mIsSameDockerContainerPath)(const Json::Value&, bool, FileDiscoveryOptions*) = nullptr;
 
     // 过渡使用
     bool mTailingAllMatchedFiles = false;

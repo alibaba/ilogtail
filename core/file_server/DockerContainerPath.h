@@ -52,8 +52,8 @@ struct DockerContainerPath {
 
     InputType mInputType;
 
-    static bool ParseByJSONStr(const DockerContainerPathCmd* pCmd, DockerContainerPath& dockerContainerPath);
-    static bool ParseAllByJSONStr(const DockerContainerPathCmd* pCmd,
+    static bool ParseByJSONObj(const Json::Value& jsonObj, DockerContainerPath& dockerContainerPath);
+    static bool ParseAllByJSONObj(const Json::Value& jsonObj,
                                   std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap);
 
     bool operator==(const DockerContainerPath& rhs) const {
@@ -97,9 +97,6 @@ struct DockerContainerPath {
     bool operator!=(const DockerContainerPath& rhs) const { return !(*this == rhs); }
 
 private:
-    static bool ParseByJSONObj(const Json::Value& jsonObj,
-                               const DockerContainerPathCmd* pCmd,
-                               DockerContainerPath& dockerContainerPath);
 };
 
 } // namespace logtail

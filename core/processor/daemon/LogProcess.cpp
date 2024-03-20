@@ -459,12 +459,12 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         // construct a logGroup, it should be moved into input later
         PipelineEventGroup eventGroup(logBuffer);
         // TODO: metadata should be set in reader
-        switch (logFileReader.get()->GetReaderConfig().first->mFileEncoding) {
-            case FileReaderOptions::Encoding::DOCKER_JSON_FILE:
+        switch (logFileReader.get()->GetReaderConfig().first->mFileLogFormat) {
+            case FileReaderOptions::LogFormat::DOCKER_JSON_FILE:
                 eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
                                        ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
                 break;
-            case FileReaderOptions::Encoding::CONTAINERD_TEXT:
+            case FileReaderOptions::LogFormat::CONTAINERD_TEXT:
                 eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
                                        ProcessorParseContainerLogNative::CONTAINERD_TEXT);
                 break;

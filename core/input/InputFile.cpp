@@ -23,6 +23,7 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
+#include "pipeline/PipelineManager.h"
 
 using namespace std;
 
@@ -80,6 +81,9 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // 过渡使用
     mFileDiscovery.SetTailingAllMatchedFiles(mFileReader.mTailingAllMatchedFiles);
+    mFileDiscovery.SetUpdateContainerInfoFunc(UpdateContainerInfoFunc);
+    mFileDiscovery.SetDeleteContainerInfoFunc(DeleteContainerInfo);
+    mFileDiscovery.SetIsSameDockerContainerPathFunc(IsSameDockerContainerPath);
 
     // Multiline
     const char* key = "Multiline";
@@ -143,6 +147,153 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     return true;
 }
 
+bool InputFile::DeleteContainerInfo(const Json::Value& paramsJSON, FileDiscoveryOptions* fileDiscovery) {
+    DockerContainerPath dockerContainerPath;
+    if (!DockerContainerPath::ParseByJSONObj(paramsJSON, dockerContainerPath)) {
+        return false;
+    }
+    for (vector<DockerContainerPath>::iterator iter = fileDiscovery->GetContainerInfo()->begin();
+         iter != fileDiscovery->GetContainerInfo()->end();
+         ++iter) {
+        if (iter->mContainerID == dockerContainerPath.mContainerID) {
+            fileDiscovery->GetContainerInfo()->erase(iter);
+            break;
+        }
+    }
+    return true;
+}
+
+bool hasPrefix(const std::string& fullString, const std::string& prefix) {
+    if (fullString.length() < prefix.length()) {
+        return false;
+    }
+    return fullString.compare(0, prefix.length(), prefix) == 0;
+}
+
+void SetContainerPath(DockerContainerPath& dockerContainerPath, const FileDiscoveryOptions* fileDiscovery) {
+    std::string logPath;
+    if (!fileDiscovery->GetWildcardPaths().empty()) {
+        logPath = fileDiscovery->GetWildcardPaths()[0];
+    } else {
+        logPath = fileDiscovery->GetBasePath();
+    }
+    int pthSize = logPath.size();
+
+    Mount bestMatchedMounts;
+
+    for (size_t i = 0; i < dockerContainerPath.mMounts.size(); i++) {
+        std::string dst = dockerContainerPath.mMounts[i].Destination;
+        int dstSize = dst.size();
+
+        if (hasPrefix(logPath, dst)
+            && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
+            && bestMatchedMounts.Destination.size() < dstSize) {
+            bestMatchedMounts = dockerContainerPath.mMounts[i];
+        }
+    }
+    if (bestMatchedMounts.Source.size() > 0) {
+        dockerContainerPath.mContainerPath
+            = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
+        LOG_DEBUG(sLogger,
+                  ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
+                      "destination", bestMatchedMounts.Destination)("logPath", logPath));
+    } else {
+        dockerContainerPath.mContainerPath = dockerContainerPath.mUpperDir + logPath;
+        LOG_DEBUG(sLogger,
+                  ("docker container path",
+                   dockerContainerPath.mContainerPath)("upperDir", dockerContainerPath.mUpperDir)("logPath", logPath));
+    }
+}
+
+bool InputFile::UpdateContainerInfoFunc(const Json::Value& paramsJSON,
+                                        bool allFlag,
+                                        FileDiscoveryOptions* fileDiscovery) {
+    if (!allFlag) {
+        DockerContainerPath dockerContainerPath;
+        if (!DockerContainerPath::ParseByJSONObj(paramsJSON, dockerContainerPath)) {
+            LOG_ERROR(sLogger,
+                      ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+            return false;
+        }
+        SetContainerPath(dockerContainerPath, fileDiscovery);
+        // try update
+        for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
+            if ((*fileDiscovery->GetContainerInfo())[i].mContainerID == dockerContainerPath.mContainerID) {
+                // update
+                (*fileDiscovery->GetContainerInfo())[i] = dockerContainerPath;
+                return true;
+            }
+        }
+        // add
+        fileDiscovery->GetContainerInfo()->push_back(dockerContainerPath);
+        return true;
+    }
+
+    unordered_map<string, DockerContainerPath> allPathMap;
+    if (!DockerContainerPath::ParseAllByJSONObj(paramsJSON, allPathMap)) {
+        LOG_ERROR(sLogger,
+                  ("invalid all docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+        return false;
+    }
+    // if update all, clear and reset
+    fileDiscovery->GetContainerInfo()->clear();
+    for (unordered_map<string, DockerContainerPath>::iterator iter = allPathMap.begin(); iter != allPathMap.end();
+         ++iter) {
+        SetContainerPath(iter->second, fileDiscovery);
+        fileDiscovery->GetContainerInfo()->push_back(iter->second);
+    }
+    return true;
+}
+
+bool InputFile::IsSameDockerContainerPath(const Json::Value& paramsJSON,
+                                          bool allFlag,
+                                          FileDiscoveryOptions* fileDiscovery) {
+    if (!allFlag) {
+        DockerContainerPath dockerContainerPath;
+        if (!DockerContainerPath::ParseByJSONObj(paramsJSON, dockerContainerPath)) {
+            LOG_ERROR(sLogger,
+                      ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+            return true;
+        }
+        SetContainerPath(dockerContainerPath, fileDiscovery);
+        // try update
+        for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
+            if ((*fileDiscovery->GetContainerInfo())[i] == dockerContainerPath) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // check all
+    unordered_map<string, DockerContainerPath> allPathMap;
+    if (!DockerContainerPath::ParseAllByJSONObj(paramsJSON, allPathMap)) {
+        LOG_ERROR(sLogger,
+                  ("invalid all docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+        return true;
+    }
+
+    // need add
+    if (fileDiscovery->GetContainerInfo()->size() != allPathMap.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
+        unordered_map<string, DockerContainerPath>::iterator iter
+            = allPathMap.find((*fileDiscovery->GetContainerInfo())[i].mContainerID);
+        // need delete
+        if (iter == allPathMap.end()) {
+            return false;
+        }
+        SetContainerPath(iter->second, fileDiscovery);
+        // need update
+        if ((*fileDiscovery->GetContainerInfo())[i] != iter->second) {
+            return false;
+        }
+    }
+    // same
+    return true;
+}
 bool InputFile::Start() {
     if (mEnableContainerDiscovery) {
         mFileDiscovery.SetContainerInfo(

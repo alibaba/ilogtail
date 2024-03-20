@@ -26,9 +26,11 @@
 
 namespace logtail {
 struct FileReaderOptions {
-    enum class Encoding { UTF8, UTF16, GBK, CONTAINERD_TEXT, DOCKER_JSON_FILE };
+    enum class Encoding { UTF8, UTF16, GBK };
+    enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
 
     Encoding mFileEncoding = Encoding::UTF8;
+    LogFormat mFileLogFormat = LogFormat::TEXT;
     bool mTailingAllMatchedFiles = false;
     uint32_t mTailSizeKB;
     uint32_t mFlushTimeoutSecs;

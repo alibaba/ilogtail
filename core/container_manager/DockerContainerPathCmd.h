@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <string>
 
 namespace logtail {
@@ -25,11 +27,10 @@ struct DockerContainerPathCmd {
     bool mDeleteFlag; // if this flag is true, delete the container from this config's DockerContainerPath array
     bool mUpdateAllFlag; // if this flag is true, clear this config's DockerContainerPath array and load all
                          // DockerContainerPaths
-    std::string mParams; // params, json string. this has 2 types : 1 one DockerContainerPath, 2 multi
-                         // DockerContainerPaths, just when mUpdateAllFlag is true
+    Json::Value mJsonParams; // jsonParams, json string.
 
-    DockerContainerPathCmd(const std::string& configName, bool delFlag, const std::string& params, bool allFlag)
-        : mConfigName(configName), mDeleteFlag(delFlag), mUpdateAllFlag(allFlag), mParams(params) {}
+    DockerContainerPathCmd(const std::string& configName, bool delFlag, const Json::Value& jsonParams, bool allFlag)
+        : mConfigName(configName), mDeleteFlag(delFlag), mJsonParams(jsonParams), mUpdateAllFlag(allFlag) {}
 };
 
 } // namespace logtail

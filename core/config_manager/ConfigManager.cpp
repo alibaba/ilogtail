@@ -845,29 +845,32 @@ bool ConfigManager::DoUpdateContainerPaths() {
         FileDiscoveryConfig config = FileServer::GetInstance()->GetFileDiscoveryConfig(tmpPathCmdVec[i]->mConfigName);
         if (!config.first) {
             LOG_ERROR(sLogger,
-                      ("invalid container path update cmd", tmpPathCmdVec[i]->mConfigName)("params",
-                                                                                           tmpPathCmdVec[i]->mParams));
+                      ("invalid container path update cmd",
+                       tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             continue;
         }
         if (tmpPathCmdVec[i]->mDeleteFlag) {
-            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i])) {
+            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i]->mJsonParams)) {
                 LOG_DEBUG(sLogger,
                           ("container path delete cmd success",
-                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mParams));
+                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             } else {
                 LOG_ERROR(sLogger,
-                          ("container path delete cmd fail", tmpPathCmdVec[i]->mConfigName)("params",
-                                                                                            tmpPathCmdVec[i]->mParams));
+                          ("container path delete cmd fail",
+                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             }
         } else {
-            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i])) {
+            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i]->mJsonParams,
+                                                        tmpPathCmdVec[i]->mUpdateAllFlag)) {
                 LOG_DEBUG(sLogger,
-                          ("container path update cmd success", tmpPathCmdVec[i]->mConfigName)(
-                              "params", tmpPathCmdVec[i]->mParams)("all", tmpPathCmdVec[i]->mUpdateAllFlag));
+                          ("container path update cmd success",
+                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString())(
+                              "all", tmpPathCmdVec[i]->mUpdateAllFlag));
             } else {
                 LOG_ERROR(sLogger,
-                          ("container path update cmd fail", tmpPathCmdVec[i]->mConfigName)(
-                              "params", tmpPathCmdVec[i]->mParams)("all", tmpPathCmdVec[i]->mUpdateAllFlag));
+                          ("container path update cmd fail",
+                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString())(
+                              "all", tmpPathCmdVec[i]->mUpdateAllFlag));
             }
         }
         delete tmpPathCmdVec[i];
@@ -888,7 +891,7 @@ bool ConfigManager::IsUpdateContainerPaths() {
         if (!pConfig.first) {
             continue;
         }
-        if (!pConfig.first->IsSameDockerContainerPath(pCmd)) {
+        if (!pConfig.first->IsSameDockerContainerPath(pCmd->mJsonParams, pCmd->mUpdateAllFlag)) {
             rst = true;
             break;
         }
@@ -952,7 +955,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
             continue;
         }
         DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONStr(cmd, dockerContainerPath)) {
+        if (!DockerContainerPath::ParseByJSONObj(cmd->mJsonParams, dockerContainerPath)) {
             continue;
         }
         std::vector<DockerContainerPath>::iterator iter = config.first->GetContainerInfo()->begin();
@@ -1041,7 +1044,18 @@ void ConfigManager::LoadDockerConfig() {
             continue;
         }
 
-        DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configName, false, params, false);
+        // cmd 解析json
+        Json::Value jsonParams;
+        Json::CharReaderBuilder builder;
+        builder["collectComments"] = false;
+        std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
+        std::string jsonParseErrs;
+        if (params.size() < 5UL
+            || !jsonReader->parse(params.data(), params.data() + params.size(), &jsonParams, &jsonParseErrs)) {
+            LOG_ERROR(sLogger, ("invalid docker container params", params));
+            continue;
+        }
+        DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configName, false, jsonParams, false);
         localPaths.push_back(cmd);
     }
     mDockerContainerPathCmdLock.lock();

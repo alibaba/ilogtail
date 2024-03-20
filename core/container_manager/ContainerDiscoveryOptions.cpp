@@ -212,6 +212,7 @@ void ContainerDiscoveryOptions::GenerateContainerMetaFetchingGoPipeline(
             detail[key] = object;
         }
     };
+
     if (fileDiscovery) {
         if (!fileDiscovery->GetWildcardPaths().empty()) {
             detail["LogPath"] = Json::Value(fileDiscovery->GetWildcardPaths()[0]);
