@@ -31,8 +31,10 @@ public:
     static const std::string sName;
 
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
+    char mSplitChar = '\n';
     MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
+    bool mIgnoreUnmatchWarning = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -46,19 +48,23 @@ private:
                       const StringView& logPath,
                       PipelineEventPtr&& e,
                       EventsContainer& newEvents);
-    bool LogSplit(const char* buffer,
-                  int32_t size,
-                  int32_t& lineFeed,
-                  std::vector<StringView>& logIndex,
-                  std::vector<StringView>& discardIndex,
-                  const StringView& logPath);
-    void HandleUnmatchLogs(const char* buffer,
-                           int& multiBeginIndex,
-                           int endIndex,
-                           std::vector<StringView>& logIndex,
-                           std::vector<StringView>& discardIndex);
+    void SplitLogByRegex(PipelineEventGroup& logGroup);
+    void HandleSplittedLogs(const StringView& content,
+                            long sourceoffset,
+                            StringBuffer& sourceKey,
+                            const LogEvent& sourceEvent,
+                            PipelineEventGroup& logGroup,
+                            EventsContainer& newEvents);
+    void HandleUnmatchLogs(const StringView& sourceVal,
+                           long sourceoffset,
+                           StringBuffer& sourceKey,
+                           const LogEvent& sourceEvent,
+                           PipelineEventGroup& logGroup,
+                           EventsContainer& newEvents,
+                           StringView logPath);
 
-    int* mFeedLines = nullptr;
+    StringView GetNextLine(StringView log, size_t begin);
+
     int* mSplitLines = nullptr;
 
     CounterPtr mProcSplittedEventsCnt;
