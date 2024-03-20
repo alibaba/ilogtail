@@ -29,6 +29,7 @@ using namespace std;
 
 DEFINE_FLAG_INT32(search_checkpoint_default_dir_depth, "0 means only search current directory", 0);
 DEFINE_FLAG_INT32(max_exactly_once_concurrency, "", 512);
+DECLARE_FLAG_STRING(default_container_host_path);
 
 namespace logtail {
 
@@ -192,13 +193,14 @@ void SetContainerPath(DockerContainerPath& dockerContainerPath, const FileDiscov
         }
     }
     if (bestMatchedMounts.Source.size() > 0) {
-        dockerContainerPath.mContainerPath
-            = bestMatchedMounts.Source + logPath.substr(bestMatchedMounts.Destination.size());
+        dockerContainerPath.mContainerPath = STRING_FLAG(default_container_host_path).c_str() + bestMatchedMounts.Source
+            + logPath.substr(bestMatchedMounts.Destination.size());
         LOG_DEBUG(sLogger,
                   ("docker container path", dockerContainerPath.mContainerPath)("source", bestMatchedMounts.Source)(
                       "destination", bestMatchedMounts.Destination)("logPath", logPath));
     } else {
-        dockerContainerPath.mContainerPath = dockerContainerPath.mUpperDir + logPath;
+        dockerContainerPath.mContainerPath
+            = STRING_FLAG(default_container_host_path).c_str() + dockerContainerPath.mUpperDir + logPath;
         LOG_DEBUG(sLogger,
                   ("docker container path",
                    dockerContainerPath.mContainerPath)("upperDir", dockerContainerPath.mUpperDir)("logPath", logPath));

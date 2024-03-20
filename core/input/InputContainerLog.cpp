@@ -15,11 +15,14 @@
 #include "input/InputContainerLog.h"
 
 #include "app_config/AppConfig.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
 
 using namespace std;
+
+DECLARE_FLAG_STRING(default_container_host_path);
 
 namespace logtail {
 
@@ -181,6 +184,8 @@ void SetContainerPath(DockerContainerPath& dockerContainerPath) {
     if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
         dockerContainerPath.mContainerPath.pop_back();
     }
+    dockerContainerPath.mContainerPath
+        = STRING_FLAG(default_container_host_path).c_str() + dockerContainerPath.mContainerPath;
     LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath));
 }
 
