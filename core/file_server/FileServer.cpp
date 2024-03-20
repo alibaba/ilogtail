@@ -165,24 +165,24 @@ void FileServer::RemoveMultilineConfig(const string& name) {
 }
 
 // 保存容器信息
-void FileServer::SaveContainerInfo(const string& pipeline, const shared_ptr<vector<DockerContainerPath>>& info) {
-    mAllDockerContainerPathMap[pipeline] = info;
+void FileServer::SaveContainerInfo(const string& pipeline, const shared_ptr<vector<ContainerInfo>>& info) {
+    mAllContainerInfoMap[pipeline] = info;
 }
 
 // 获取并移除给定管道的容器信息
-shared_ptr<vector<DockerContainerPath>> FileServer::GetAndRemoveContainerInfo(const string& pipeline) {
-    auto iter = mAllDockerContainerPathMap.find(pipeline);
-    if (iter == mAllDockerContainerPathMap.end()) {
-        return make_shared<vector<DockerContainerPath>>();
+shared_ptr<vector<ContainerInfo>> FileServer::GetAndRemoveContainerInfo(const string& pipeline) {
+    auto iter = mAllContainerInfoMap.find(pipeline);
+    if (iter == mAllContainerInfoMap.end()) {
+        return make_shared<vector<ContainerInfo>>();
     }
     auto res = iter->second;
-    mAllDockerContainerPathMap.erase(iter);
+    mAllContainerInfoMap.erase(iter);
     return res;
 }
 
 // 清除所有容器信息
 void FileServer::ClearContainerInfo() {
-    mAllDockerContainerPathMap.clear();
+    mAllContainerInfoMap.clear();
 }
 
 // 获取给定名称的“ExactlyOnce”并发级别

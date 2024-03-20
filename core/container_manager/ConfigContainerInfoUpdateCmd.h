@@ -22,15 +22,13 @@
 
 namespace logtail {
 
-struct DockerContainerPathCmd {
+struct ConfigContainerInfoUpdateCmd {
     std::string mConfigName; // config name
-    bool mDeleteFlag; // if this flag is true, delete the container from this config's DockerContainerPath array
-    bool mUpdateAllFlag; // if this flag is true, clear this config's DockerContainerPath array and load all
-                         // DockerContainerPaths
+    bool mDeleteFlag = false; // if this flag is true, delete the container from this config's ContainerInfo array
     Json::Value mJsonParams; // jsonParams, json string.
 
-    DockerContainerPathCmd(const std::string& configName, bool delFlag, const Json::Value& jsonParams, bool allFlag)
-        : mConfigName(configName), mDeleteFlag(delFlag), mJsonParams(jsonParams), mUpdateAllFlag(allFlag) {}
+    ConfigContainerInfoUpdateCmd(const std::string& configName, bool delFlag, const Json::Value& jsonParams)
+        : mConfigName(configName), mDeleteFlag(delFlag), mJsonParams(jsonParams) {}
 };
 
 } // namespace logtail

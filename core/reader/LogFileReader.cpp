@@ -102,19 +102,19 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
             reader->SetReadFromBeginning();
         }
         if (discoveryConfig.first->IsContainerDiscoveryEnabled()) {
-            DockerContainerPath* containerPath = discoveryConfig.first->GetContainerPathByLogPath(hostLogPathDir);
+            ContainerInfo* containerPath = discoveryConfig.first->GetContainerPathByLogPath(hostLogPathDir);
             if (containerPath == NULL) {
                 LOG_ERROR(sLogger,
                           ("can not get container path by log path, base path",
                            discoveryConfig.first->GetBasePath())("host path", hostLogPathDir + "/" + hostLogPathFile));
             } else {
-                if (containerPath->mInputType == DockerContainerPath::InputType::InputContainerLog) {
+                if (containerPath->mInputType == ContainerInfo::InputType::InputContainerLog) {
                     logtail::FileReaderOptions* ops
                         = const_cast<logtail::FileReaderOptions*>(reader->mReaderConfig.first);
                     if (containerPath->mStdoutLogType == "json-file") {
-                        ops->mFileLogFormat = FileReaderOptions::LogFormat::DOCKER_JSON_FILE;
+                        reader->mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
                     } else if (containerPath->mStdoutLogType == "containerd_text") {
-                        ops->mFileLogFormat = FileReaderOptions::LogFormat::CONTAINERD_TEXT;
+                        reader->mFileLogFormat = LogFormat::CONTAINERD_TEXT;
                     }
                 }
                 // if config have wildcard path, use mWildcardPaths[0] as base path

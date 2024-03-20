@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "file_server/DockerContainerPath.h"
-
 #include <memory>
 
+#include "file_server/ContainerInfo.h"
 #include "logger/Logger.h"
 
 namespace logtail {
 
-bool DockerContainerPath::ParseAllByJSONObj(
-    const Json::Value& paramsAll, std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap) {
-    dockerContainerPathMap.clear();
+bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
+                                      std::unordered_map<std::string, ContainerInfo>& containerInfoMap) {
+    containerInfoMap.clear();
     if (!paramsAll.isMember("AllCmd")) {
         return false;
     }
@@ -40,20 +39,20 @@ bool DockerContainerPath::ParseAllByJSONObj(
     }
     for (Json::Value::iterator iter = paramsArray.begin(); iter != paramsArray.end(); ++iter) {
         Json::Value params = *iter;
-        DockerContainerPath nowDCP;
+        ContainerInfo nowDCP;
         nowDCP.mJsonStr = params.toStyledString();
         if (!ParseByJSONObj(params, nowDCP)) {
             LOG_ERROR(sLogger, ("parse sub docker container params error", nowDCP.mJsonStr));
             return false;
         }
-        dockerContainerPathMap[nowDCP.mContainerID] = nowDCP;
+        containerInfoMap[nowDCP.mContainerID] = nowDCP;
     }
     return true;
 }
 
-bool DockerContainerPath::ParseByJSONObj(const Json::Value& params, DockerContainerPath& dockerContainerPath) {
+bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo) {
     if (params.isMember("ID") && params["ID"].isString()) {
-        dockerContainerPath.mContainerID = params["ID"].asString();
+        containerInfo.mContainerID = params["ID"].asString();
     }
 
     if (params.isMember("Mounts") && params["Mounts"].isArray()) {
@@ -67,18 +66,18 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params, DockerContai
                 Mount mount;
                 mount.Source = src;
                 mount.Destination = dst;
-                dockerContainerPath.mMounts.push_back(mount);
+                containerInfo.mMounts.push_back(mount);
             }
         }
     }
     if (params.isMember("UpperDir") && params["UpperDir"].isString()) {
-        dockerContainerPath.mUpperDir = params["UpperDir"].asString();
+        containerInfo.mUpperDir = params["UpperDir"].asString();
     }
     if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
-        dockerContainerPath.mStdoutPath = params["StdoutPath"].asString();
+        containerInfo.mStdoutPath = params["StdoutPath"].asString();
     }
     if (params.isMember("StdoutLogType") && params["StdoutLogType"].isString()) {
-        dockerContainerPath.mStdoutLogType = params["StdoutLogType"].asString();
+        containerInfo.mStdoutLogType = params["StdoutLogType"].asString();
     }
     if (params.isMember("Tags") && params["Tags"].isArray()) {
         const Json::Value& tags = params["Tags"];
@@ -87,12 +86,12 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params, DockerContai
                 sls_logs::LogTag tag;
                 tag.set_key(tags[i - 1].asString());
                 tag.set_value(tags[i].asString());
-                dockerContainerPath.mContainerTags.push_back(tag);
+                containerInfo.mContainerTags.push_back(tag);
             }
         }
     }
     // only check containerID (others are null when parse delete cmd)
-    if (dockerContainerPath.mContainerID.size() > 0) {
+    if (containerInfo.mContainerID.size() > 0) {
         return true;
     }
     return false;

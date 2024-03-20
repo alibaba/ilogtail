@@ -81,6 +81,8 @@ enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
  */
 class LogFileReader {
 public:
+    enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
+    LogFormat mFileLogFormat = LogFormat::TEXT;
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
         FileCompareResult_SigChange,

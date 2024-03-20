@@ -22,7 +22,7 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 #include "config_manager/ConfigManager.h"
-#include "container_manager/DockerContainerPathCmd.h"
+#include "container_manager/ConfigContainerInfoUpdateCmd.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
@@ -289,19 +289,19 @@ int LogtailPlugin::ExecPluginCmd(
 
     switch (cmdType) {
         case PLUGIN_DOCKER_UPDATE_FILE: {
-            DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configNameStr, false, jsonParams, false);
+            ConfigContainerInfoUpdateCmd* cmd = new ConfigContainerInfoUpdateCmd(configNameStr, false, jsonParams);
             ConfigManager::GetInstance()->UpdateContainerPath(cmd);
         } break;
         case PLUGIN_DOCKER_STOP_FILE: {
-            DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configNameStr, true, jsonParams, false);
+            ConfigContainerInfoUpdateCmd* cmd = new ConfigContainerInfoUpdateCmd(configNameStr, true, jsonParams);
             ConfigManager::GetInstance()->UpdateContainerStopped(cmd);
         } break;
         case PLUGIN_DOCKER_REMOVE_FILE: {
-            DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configNameStr, true, jsonParams, false);
+            ConfigContainerInfoUpdateCmd* cmd = new ConfigContainerInfoUpdateCmd(configNameStr, true, jsonParams);
             ConfigManager::GetInstance()->UpdateContainerPath(cmd);
         } break;
         case PLUGIN_DOCKER_UPDATE_FILE_ALL: {
-            DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configNameStr, false, jsonParams, true);
+            ConfigContainerInfoUpdateCmd* cmd = new ConfigContainerInfoUpdateCmd(configNameStr, false, jsonParams);
             ConfigManager::GetInstance()->UpdateContainerPath(cmd);
         } break;
         default:

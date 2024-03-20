@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "container_manager/DockerContainerPathCmd.h"
+#include "container_manager/ConfigContainerInfoUpdateCmd.h"
 #include "log_pb/sls_logs.pb.h"
 
 namespace logtail {
@@ -33,7 +33,7 @@ struct Mount {
     std::string Destination;
 };
 
-struct DockerContainerPath {
+struct ContainerInfo {
     enum class InputType {
         InputFile = 0,
         InputContainerLog = 1,
@@ -52,11 +52,10 @@ struct DockerContainerPath {
 
     InputType mInputType;
 
-    static bool ParseByJSONObj(const Json::Value& jsonObj, DockerContainerPath& dockerContainerPath);
-    static bool ParseAllByJSONObj(const Json::Value& jsonObj,
-                                  std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap);
+    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&);
+    static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&);
 
-    bool operator==(const DockerContainerPath& rhs) const {
+    bool operator==(const ContainerInfo& rhs) const {
         if (mContainerID != rhs.mContainerID) {
             return false;
         }
@@ -94,7 +93,7 @@ struct DockerContainerPath {
         }
         return true;
     }
-    bool operator!=(const DockerContainerPath& rhs) const { return !(*this == rhs); }
+    bool operator!=(const ContainerInfo& rhs) const { return !(*this == rhs); }
 
 private:
 };

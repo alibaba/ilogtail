@@ -496,7 +496,7 @@ bool FileDiscoveryOptions::IsMatch(const string& path, const string& name) const
     // File in docker.
     if (mEnableContainerDiscovery) {
         if (mWildcardPaths.size() > (size_t)0) {
-            DockerContainerPath* containerPath = GetContainerPathByLogPath(path);
+            ContainerInfo* containerPath = GetContainerPathByLogPath(path);
             if (containerPath == NULL) {
                 return false;
             }
@@ -641,7 +641,7 @@ bool FileDiscoveryOptions::WithinMaxDepth(const string& path) const {
     return true;
 }
 
-DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const string& logPath) const {
+ContainerInfo* FileDiscoveryOptions::GetContainerPathByLogPath(const string& logPath) const {
     if (!mContainerInfos) {
         return NULL;
     }
@@ -653,25 +653,29 @@ DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const strin
     return NULL;
 }
 
-bool FileDiscoveryOptions::IsSameDockerContainerPath(const Json::Value& paramsJSON, bool allFlag) {
-    if (!mEnableContainerDiscovery)
-        return true;
-    return mIsSameDockerContainerPath(paramsJSON, allFlag, this);
+bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
+    return mIsSameContainerInfo(this, paramsJSON);
 }
 
-bool FileDiscoveryOptions::UpdateDockerContainerPath(const Json::Value& paramsJSON, bool allFlag) {
+bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON) {
+    return mUpdateContainerInfo(this, paramsJSON);
+}
+
+bool FileDiscoveryOptions::DeleteContainerInfo(const Json::Value& paramsJSON) {
     if (!mContainerInfos)
         return false;
 
-    return mUpdateContainerInfo(paramsJSON, allFlag, this);
-}
-
-bool FileDiscoveryOptions::DeleteDockerContainerPath(const Json::Value& paramsJSON) {
-    if (!mContainerInfos)
+    ContainerInfo containerInfo;
+    if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo)) {
         return false;
-
-    return mDeleteContainerInfo(paramsJSON, this);
+    }
+    for (vector<ContainerInfo>::iterator iter = mContainerInfos->begin(); iter != mContainerInfos->end(); ++iter) {
+        if (iter->mContainerID == containerInfo.mContainerID) {
+            mContainerInfos->erase(iter);
+            break;
+        }
+    }
+    return true;
 }
-
 
 } // namespace logtail

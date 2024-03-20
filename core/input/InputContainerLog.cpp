@@ -60,8 +60,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     }
     mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
     mFileDiscovery.SetUpdateContainerInfoFunc(UpdateContainerInfoFunc);
-    mFileDiscovery.SetDeleteContainerInfoFunc(DeleteContainerInfo);
-    mFileDiscovery.SetIsSameDockerContainerPathFunc(IsSameDockerContainerPath);
+    mFileDiscovery.SetIsSameContainerInfoFunc(IsSameContainerInfo);
 
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
@@ -159,90 +158,76 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     return true;
 }
 
-bool InputContainerLog::DeleteContainerInfo(const Json::Value& paramsJSON, FileDiscoveryOptions* fileDiscovery) {
-    DockerContainerPath dockerContainerPath;
-    if (!DockerContainerPath::ParseByJSONObj(paramsJSON, dockerContainerPath)) {
-        return false;
-    }
-    for (vector<DockerContainerPath>::iterator iter = fileDiscovery->GetContainerInfo()->begin();
-         iter != fileDiscovery->GetContainerInfo()->end();
-         ++iter) {
-        if (iter->mContainerID == dockerContainerPath.mContainerID) {
-            fileDiscovery->GetContainerInfo()->erase(iter);
-            break;
-        }
-    }
-    return true;
-}
-
-void SetContainerPath(DockerContainerPath& dockerContainerPath) {
-    dockerContainerPath.mInputType = DockerContainerPath::InputType::InputContainerLog;
-    size_t pos = dockerContainerPath.mStdoutPath.find_last_of('/');
+static void SetContainerPath(ContainerInfo& containerInfo) {
+    containerInfo.mInputType = ContainerInfo::InputType::InputContainerLog;
+    size_t pos = containerInfo.mStdoutPath.find_last_of('/');
     if (pos != std::string::npos) {
-        dockerContainerPath.mContainerPath = dockerContainerPath.mStdoutPath.substr(0, pos);
+        containerInfo.mContainerPath = containerInfo.mStdoutPath.substr(0, pos);
     }
-    if (dockerContainerPath.mContainerPath.length() > 1 && dockerContainerPath.mContainerPath.back() == '/') {
-        dockerContainerPath.mContainerPath.pop_back();
+    if (containerInfo.mContainerPath.length() > 1 && containerInfo.mContainerPath.back() == '/') {
+        containerInfo.mContainerPath.pop_back();
     }
-    dockerContainerPath.mContainerPath
-        = STRING_FLAG(default_container_host_path).c_str() + dockerContainerPath.mContainerPath;
-    LOG_DEBUG(sLogger, ("docker container path", dockerContainerPath.mContainerPath));
+    containerInfo.mContainerPath = STRING_FLAG(default_container_host_path).c_str() + containerInfo.mContainerPath;
+    LOG_DEBUG(sLogger, ("docker container path", containerInfo.mContainerPath));
 }
 
-bool InputContainerLog::UpdateContainerInfoFunc(const Json::Value& paramsJSON,
-                                                bool allFlag,
-                                                FileDiscoveryOptions* fileDiscovery) {
-    if (!allFlag) {
-        DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONObj(paramsJSON, dockerContainerPath)) {
+bool InputContainerLog::UpdateContainerInfoFunc(FileDiscoveryOptions* fileDiscovery, const Json::Value& paramsJSON) {
+    if (!fileDiscovery->GetContainerInfo())
+        return false;
+
+    if (!paramsJSON.isMember("AllCmd")) {
+        ContainerInfo containerInfo;
+        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo)) {
             LOG_ERROR(sLogger,
                       ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
             return false;
         }
-        SetContainerPath(dockerContainerPath);
+        SetContainerPath(containerInfo);
         // try update
         for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
-            if ((*fileDiscovery->GetContainerInfo())[i].mContainerID == dockerContainerPath.mContainerID) {
+            if ((*fileDiscovery->GetContainerInfo())[i].mContainerID == containerInfo.mContainerID) {
                 // update
-                (*fileDiscovery->GetContainerInfo())[i] = dockerContainerPath;
+                (*fileDiscovery->GetContainerInfo())[i] = containerInfo;
                 return true;
             }
         }
         // add
-        fileDiscovery->GetContainerInfo()->push_back(dockerContainerPath);
+        fileDiscovery->GetContainerInfo()->push_back(containerInfo);
         return true;
     }
 
-    unordered_map<string, DockerContainerPath> allPathMap;
-    if (!DockerContainerPath::ParseAllByJSONObj(paramsJSON, allPathMap)) {
+    unordered_map<string, ContainerInfo> allPathMap;
+    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON, allPathMap)) {
         LOG_ERROR(sLogger,
                   ("invalid all docker container params", "skip this path")("params", paramsJSON.toStyledString()));
         return false;
     }
     // if update all, clear and reset
     fileDiscovery->GetContainerInfo()->clear();
-    for (unordered_map<string, DockerContainerPath>::iterator iter = allPathMap.begin(); iter != allPathMap.end();
-         ++iter) {
+    for (unordered_map<string, ContainerInfo>::iterator iter = allPathMap.begin(); iter != allPathMap.end(); ++iter) {
         SetContainerPath(iter->second);
         fileDiscovery->GetContainerInfo()->push_back(iter->second);
     }
     return true;
 }
 
-bool InputContainerLog::IsSameDockerContainerPath(const Json::Value& paramsJSON,
-                                                  bool allFlag,
-                                                  FileDiscoveryOptions* fileDiscovery) {
-    if (!allFlag) {
-        DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONObj(paramsJSON, dockerContainerPath)) {
+bool InputContainerLog::IsSameContainerInfo(FileDiscoveryOptions* fileDiscovery, const Json::Value& paramsJSON) {
+    if (!fileDiscovery->IsContainerDiscoveryEnabled())
+        return true;
+    if (!fileDiscovery->GetContainerInfo())
+        return false;
+
+    if (!paramsJSON.isMember("AllCmd")) {
+        ContainerInfo containerInfo;
+        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo)) {
             LOG_ERROR(sLogger,
                       ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
             return true;
         }
-        SetContainerPath(dockerContainerPath);
+        SetContainerPath(containerInfo);
         // try update
         for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
-            if ((*fileDiscovery->GetContainerInfo())[i] == dockerContainerPath) {
+            if ((*fileDiscovery->GetContainerInfo())[i] == containerInfo) {
                 return true;
             }
         }
@@ -250,8 +235,8 @@ bool InputContainerLog::IsSameDockerContainerPath(const Json::Value& paramsJSON,
     }
 
     // check all
-    unordered_map<string, DockerContainerPath> allPathMap;
-    if (!DockerContainerPath::ParseAllByJSONObj(paramsJSON, allPathMap)) {
+    unordered_map<string, ContainerInfo> allPathMap;
+    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON, allPathMap)) {
         LOG_ERROR(sLogger,
                   ("invalid all docker container params", "skip this path")("params", paramsJSON.toStyledString()));
         return true;
@@ -263,7 +248,7 @@ bool InputContainerLog::IsSameDockerContainerPath(const Json::Value& paramsJSON,
     }
 
     for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
-        unordered_map<string, DockerContainerPath>::iterator iter
+        unordered_map<string, ContainerInfo>::iterator iter
             = allPathMap.find((*fileDiscovery->GetContainerInfo())[i].mContainerID);
         // need delete
         if (iter == allPathMap.end()) {

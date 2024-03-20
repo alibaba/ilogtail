@@ -828,18 +828,18 @@ void ConfigManager::GetRelatedConfigs(const std::string& path, std::vector<FileD
     }
 }
 
-bool ConfigManager::UpdateContainerPath(DockerContainerPathCmd* cmd) {
-    mDockerContainerPathCmdLock.lock();
-    mDockerContainerPathCmdVec.push_back(cmd);
-    mDockerContainerPathCmdLock.unlock();
+bool ConfigManager::UpdateContainerPath(ConfigContainerInfoUpdateCmd* cmd) {
+    mContainerInfoCmdLock.lock();
+    mContainerInfoCmdVec.push_back(cmd);
+    mContainerInfoCmdLock.unlock();
     return true;
 }
 
 bool ConfigManager::DoUpdateContainerPaths() {
-    mDockerContainerPathCmdLock.lock();
-    std::vector<DockerContainerPathCmd*> tmpPathCmdVec = mDockerContainerPathCmdVec;
-    mDockerContainerPathCmdVec.clear();
-    mDockerContainerPathCmdLock.unlock();
+    mContainerInfoCmdLock.lock();
+    std::vector<ConfigContainerInfoUpdateCmd*> tmpPathCmdVec = mContainerInfoCmdVec;
+    mContainerInfoCmdVec.clear();
+    mContainerInfoCmdLock.unlock();
     LOG_INFO(sLogger, ("update container path", tmpPathCmdVec.size()));
     for (size_t i = 0; i < tmpPathCmdVec.size(); ++i) {
         FileDiscoveryConfig config = FileServer::GetInstance()->GetFileDiscoveryConfig(tmpPathCmdVec[i]->mConfigName);
@@ -850,7 +850,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
             continue;
         }
         if (tmpPathCmdVec[i]->mDeleteFlag) {
-            if (config.first->DeleteDockerContainerPath(tmpPathCmdVec[i]->mJsonParams)) {
+            if (config.first->DeleteContainerInfo(tmpPathCmdVec[i]->mJsonParams)) {
                 LOG_DEBUG(sLogger,
                           ("container path delete cmd success",
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
@@ -860,17 +860,14 @@ bool ConfigManager::DoUpdateContainerPaths() {
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             }
         } else {
-            if (config.first->UpdateDockerContainerPath(tmpPathCmdVec[i]->mJsonParams,
-                                                        tmpPathCmdVec[i]->mUpdateAllFlag)) {
+            if (config.first->UpdateContainerInfo(tmpPathCmdVec[i]->mJsonParams)) {
                 LOG_DEBUG(sLogger,
                           ("container path update cmd success",
-                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString())(
-                              "all", tmpPathCmdVec[i]->mUpdateAllFlag));
+                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             } else {
                 LOG_ERROR(sLogger,
                           ("container path update cmd fail",
-                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString())(
-                              "all", tmpPathCmdVec[i]->mUpdateAllFlag));
+                           tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             }
         }
         delete tmpPathCmdVec[i];
@@ -879,10 +876,10 @@ bool ConfigManager::DoUpdateContainerPaths() {
 }
 
 bool ConfigManager::IsUpdateContainerPaths() {
-    mDockerContainerPathCmdLock.lock();
+    mContainerInfoCmdLock.lock();
     bool rst = false;
-    for (size_t i = 0; i < mDockerContainerPathCmdVec.size(); ++i) {
-        DockerContainerPathCmd* pCmd = mDockerContainerPathCmdVec[i];
+    for (size_t i = 0; i < mContainerInfoCmdVec.size(); ++i) {
+        ConfigContainerInfoUpdateCmd* pCmd = mContainerInfoCmdVec[i];
         if (pCmd->mDeleteFlag) {
             rst = true;
             break;
@@ -891,21 +888,21 @@ bool ConfigManager::IsUpdateContainerPaths() {
         if (!pConfig.first) {
             continue;
         }
-        if (!pConfig.first->IsSameDockerContainerPath(pCmd->mJsonParams, pCmd->mUpdateAllFlag)) {
+        if (!pConfig.first->IsSameContainerInfo(pCmd->mJsonParams)) {
             rst = true;
             break;
         }
     }
-    if (mDockerContainerPathCmdVec.size() > 0) {
-        LOG_INFO(sLogger, ("check container path update flag", rst)("size", mDockerContainerPathCmdVec.size()));
+    if (mContainerInfoCmdVec.size() > 0) {
+        LOG_INFO(sLogger, ("check container path update flag", rst)("size", mContainerInfoCmdVec.size()));
     }
     if (rst == false) {
-        for (size_t i = 0; i < mDockerContainerPathCmdVec.size(); ++i) {
-            delete mDockerContainerPathCmdVec[i];
+        for (size_t i = 0; i < mContainerInfoCmdVec.size(); ++i) {
+            delete mContainerInfoCmdVec[i];
         }
-        mDockerContainerPathCmdVec.clear();
+        mContainerInfoCmdVec.clear();
     }
-    mDockerContainerPathCmdLock.unlock();
+    mContainerInfoCmdLock.unlock();
 
     /********** qps limit : only update docker config INT32_FLAG(max_docker_config_update_times) times in 3 minutes
      * ********/
@@ -936,14 +933,14 @@ bool ConfigManager::IsUpdateContainerPaths() {
     /************************************************************************************************************************/
 }
 
-bool ConfigManager::UpdateContainerStopped(DockerContainerPathCmd* cmd) {
+bool ConfigManager::UpdateContainerStopped(ConfigContainerInfoUpdateCmd* cmd) {
     PTScopedLock lock(mDockerContainerStoppedCmdLock);
     mDockerContainerStoppedCmdVec.push_back(cmd);
     return true;
 }
 
 void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
-    std::vector<DockerContainerPathCmd*> cmdVec;
+    std::vector<ConfigContainerInfoUpdateCmd*> cmdVec;
     {
         PTScopedLock lock(mDockerContainerStoppedCmdLock);
         cmdVec.swap(mDockerContainerStoppedCmdVec);
@@ -954,14 +951,14 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
         if (!config.first) {
             continue;
         }
-        DockerContainerPath dockerContainerPath;
-        if (!DockerContainerPath::ParseByJSONObj(cmd->mJsonParams, dockerContainerPath)) {
+        ContainerInfo containerInfo;
+        if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo)) {
             continue;
         }
-        std::vector<DockerContainerPath>::iterator iter = config.first->GetContainerInfo()->begin();
-        std::vector<DockerContainerPath>::iterator iend = config.first->GetContainerInfo()->end();
+        std::vector<ContainerInfo>::iterator iter = config.first->GetContainerInfo()->begin();
+        std::vector<ContainerInfo>::iterator iend = config.first->GetContainerInfo()->end();
         for (; iter != iend; ++iter) {
-            if (iter->mContainerID == dockerContainerPath.mContainerID) {
+            if (iter->mContainerID == containerInfo.mContainerID) {
                 break;
             }
         }
@@ -989,11 +986,11 @@ void ConfigManager::SaveDockerConfig() {
     Json::Value dockerPathValueRoot;
     dockerPathValueRoot["version"] = Json::Value(STRING_FLAG(ilogtail_docker_path_version));
     Json::Value dockerPathValueDetail;
-    mDockerContainerPathCmdLock.lock();
+    mContainerInfoCmdLock.lock();
     const auto& nameConfigMap = FileServer::GetInstance()->GetAllFileDiscoveryConfigs();
     for (auto it = nameConfigMap.begin(); it != nameConfigMap.end(); ++it) {
         if (it->second.first->GetContainerInfo()) {
-            std::vector<DockerContainerPath>& containerPathVec = *(it->second.first->GetContainerInfo());
+            std::vector<ContainerInfo>& containerPathVec = *(it->second.first->GetContainerInfo());
             for (size_t i = 0; i < containerPathVec.size(); ++i) {
                 Json::Value dockerPathValue;
                 dockerPathValue["config_name"] = Json::Value(it->first);
@@ -1003,7 +1000,7 @@ void ConfigManager::SaveDockerConfig() {
             }
         }
     }
-    mDockerContainerPathCmdLock.unlock();
+    mContainerInfoCmdLock.unlock();
     dockerPathValueRoot["detail"] = dockerPathValueDetail;
     string dockerInfo = dockerPathValueRoot.toStyledString();
     OverwriteFile(dockerPathConfigName, dockerInfo);
@@ -1027,7 +1024,7 @@ void ConfigManager::LoadDockerConfig() {
     if (!dockerPathValueDetail.isArray()) {
         return;
     }
-    std::vector<DockerContainerPathCmd*> localPaths;
+    std::vector<ConfigContainerInfoUpdateCmd*> localPaths;
     for (Json::Value::iterator iter = dockerPathValueDetail.begin(); iter != dockerPathValueDetail.end(); ++iter) {
         const Json::Value& dockerPathItem = *iter;
         string configName = dockerPathItem.isMember("config_name") && dockerPathItem["config_name"].isString()
@@ -1051,13 +1048,13 @@ void ConfigManager::LoadDockerConfig() {
             LOG_ERROR(sLogger, ("invalid docker container params", params)("errorMsg", errorMsg));
             continue;
         }
-        DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configName, false, jsonParams, false);
+        ConfigContainerInfoUpdateCmd* cmd = new ConfigContainerInfoUpdateCmd(configName, false, jsonParams);
         localPaths.push_back(cmd);
     }
-    mDockerContainerPathCmdLock.lock();
-    localPaths.insert(localPaths.end(), mDockerContainerPathCmdVec.begin(), mDockerContainerPathCmdVec.end());
-    mDockerContainerPathCmdVec = localPaths;
-    mDockerContainerPathCmdLock.unlock();
+    mContainerInfoCmdLock.lock();
+    localPaths.insert(localPaths.end(), mContainerInfoCmdVec.begin(), mContainerInfoCmdVec.end());
+    mContainerInfoCmdVec = localPaths;
+    mContainerInfoCmdLock.unlock();
 
     DoUpdateContainerPaths();
 }

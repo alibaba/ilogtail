@@ -30,11 +30,8 @@ class InputContainerLog : public Input {
 public:
     static const std::string sName;
 
-    static bool
-    UpdateContainerInfoFunc(const Json::Value& paramsJSON, bool allFlag, FileDiscoveryOptions* fileDiscovery);
-    static bool DeleteContainerInfo(const Json::Value& paramsJSON, FileDiscoveryOptions* fileDiscovery);
-    static bool
-    IsSameDockerContainerPath(const Json::Value& paramsJSON, bool allFlag, FileDiscoveryOptions* fileDiscovery);
+    static bool UpdateContainerInfoFunc(FileDiscoveryOptions*, const Json::Value&);
+    static bool IsSameContainerInfo(FileDiscoveryOptions*, const Json::Value&);
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
