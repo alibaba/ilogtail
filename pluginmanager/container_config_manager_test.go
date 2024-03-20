@@ -139,7 +139,7 @@ func loadMockConfig() error {
 		"inputs": [{
 			"detail": {
 				"Stderr": true,
-				"CollectContainersFlag": true,
+				"CollectingContainersMeta": true,
 				"IncludeLabel": {
 					"app": "^.*$"
 				},

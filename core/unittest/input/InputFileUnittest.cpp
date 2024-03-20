@@ -187,7 +187,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
                     {                
                         "type": "metric_container_info",
                         "detail": {
-                            "CollectContainersFlag": true,
+                            "CollectingContainersMeta": true,
                             "FilePattern": "*.log",
                             "K8sNamespaceRegex": "default",
                             "MaxDepth": 0,
@@ -209,7 +209,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
         APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
         APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
         APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
-        APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
+        APSARA_TEST_EQUAL(optionalGoPipelineJson.toStyledString(), optionalGoPipeline.toStyledString());
     }
     // 不启用容器元信息预览
     {
@@ -237,7 +237,11 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
                     {                
                         "type": "metric_container_info",
                         "detail": {
-                            "K8sNamespaceRegex": "default"
+                            "CollectingContainersMeta": false,
+                            "FilePattern": "*.log",
+                            "K8sNamespaceRegex": "default",
+                            "MaxDepth": 0,
+                            "LogPath": ""
                         }
                     }
                 ]
@@ -248,13 +252,14 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
         configJson["FilePaths"].append(Json::Value(filePath.string()));
         optionalGoPipelineJson["global"]["DefaultLogQueueSize"]
             = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
+        optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
         input.reset(new InputFile());
         input->SetContext(ctx);
         input->SetMetricsRecordRef(InputFile::sName, "1");
         APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
         APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
         APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
-        APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
+        APSARA_TEST_EQUAL(optionalGoPipelineJson.toStyledString(), optionalGoPipeline.toStyledString());
     }
 }
 

@@ -172,10 +172,10 @@ type ServiceDockerStdout struct {
 	collector pipeline.Collector
 
 	// Last return of GetAllAcceptedInfoV2
-	fullList              map[string]bool
-	matchList             map[string]*helper.DockerInfoDetail
-	lastUpdateTime        int64
-	CollectContainersFlag bool
+	fullList                 map[string]bool
+	matchList                map[string]*helper.DockerInfoDetail
+	lastUpdateTime           int64
+	CollectingContainersMeta bool
 }
 
 func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
@@ -269,7 +269,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 		sds.K8sFilter)
 	sds.lastUpdateTime = newUpdateTime
 
-	if sds.CollectContainersFlag {
+	if sds.CollectingContainersMeta {
 		// record config result
 		{
 			keys := make([]string, 0, len(sds.matchList))
