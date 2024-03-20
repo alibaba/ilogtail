@@ -18,6 +18,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/DynamicLibHelper.h"
+#include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 #include "config_manager/ConfigManager.h"
@@ -280,13 +281,9 @@ int LogtailPlugin::ExecPluginCmd(
     LOG_DEBUG(sLogger, ("exec cmd", cmdType)("config", configNameStr)("detail", paramsStr));
     // cmd 解析json
     Json::Value jsonParams;
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
-    std::string jsonParseErrs;
-    if (paramsStr.size() < 5UL
-        || !jsonReader->parse(paramsStr.data(), paramsStr.data() + paramsStr.size(), &jsonParams, &jsonParseErrs)) {
-        LOG_ERROR(sLogger, ("invalid docker container params", paramsStr));
+    std::string errorMsg;
+    if (paramsStr.size() < 5UL || !ParseJsonTable(paramsStr, jsonParams, errorMsg)) {
+        LOG_ERROR(sLogger, ("invalid docker container params", paramsStr)("errorMsg", errorMsg));
         return -2;
     }
 

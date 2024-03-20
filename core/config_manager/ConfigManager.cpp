@@ -1046,13 +1046,9 @@ void ConfigManager::LoadDockerConfig() {
 
         // cmd 解析json
         Json::Value jsonParams;
-        Json::CharReaderBuilder builder;
-        builder["collectComments"] = false;
-        std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
-        std::string jsonParseErrs;
-        if (params.size() < 5UL
-            || !jsonReader->parse(params.data(), params.data() + params.size(), &jsonParams, &jsonParseErrs)) {
-            LOG_ERROR(sLogger, ("invalid docker container params", params));
+        std::string errorMsg;
+        if (params.size() < 5UL || !ParseJsonTable(params, jsonParams, errorMsg)) {
+            LOG_ERROR(sLogger, ("invalid docker container params", params)("errorMsg", errorMsg));
             continue;
         }
         DockerContainerPathCmd* cmd = new DockerContainerPathCmd(configName, false, jsonParams, false);
