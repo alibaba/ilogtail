@@ -482,7 +482,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 								}
 							}
 						}
-						if strings.Contains(lowerKey, "collectingContainersMeta") {
+						if strings.Contains(lowerKey, "collectingcontainersmeta") {
 							collectingContainersMeta, valid := value.(bool)
 							if !valid {
 								continue
