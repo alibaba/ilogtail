@@ -417,15 +417,15 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	idf.avgInstanceMetric.Add(int64(len(dockerInfoDetails)))
 
 	for k, info := range dockerInfoDetails {
-		if len(idf.LogPath) > 1 && info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
+		if len(idf.LogPath) > 0 && info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
 			// inputFile
 			idf.updateMapping(info, allCmd)
-		} else {
+		} else if len(idf.LogPath) == 0 {
 			// stdout
 			idf.updateMapping(info, allCmd)
 		}
 		// 容器元信息预览使用
-		if idf.CollectContainersFlag && len(idf.LogPath) > 1 {
+		if idf.CollectContainersFlag && len(idf.LogPath) > 0 {
 			sourcePath, containerPath := info.FindBestMatchedPath(idf.LogPath)
 
 			formatSourcePath := formatPath(sourcePath)
@@ -491,7 +491,8 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 			idf.deleteMetric.Add(1)
 			idf.notifyStop(id)
 			idf.deleteMapping(id)
-		} else if c.Status() != helper.ContainerStatusRunning && len(idf.LogPath) > 1 {
+		} else if c.Status() != helper.ContainerStatusRunning && len(idf.LogPath) > 0 {
+			// input_file时会触发
 			idf.notifyStop(id)
 		}
 	}
