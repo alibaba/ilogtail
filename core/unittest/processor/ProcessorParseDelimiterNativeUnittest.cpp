@@ -241,6 +241,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
 
@@ -363,6 +364,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -514,6 +516,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -640,6 +643,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -764,6 +768,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -885,6 +890,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -1011,6 +1017,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
             // run function ProcessorParseDelimiterNative
@@ -1228,6 +1235,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             // run function ProcessorSplitRegexNative
             ProcessorSplitRegexNative processor;
             processor.SetContext(mContext);
+            processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
             processor.Process(eventGroup);
 

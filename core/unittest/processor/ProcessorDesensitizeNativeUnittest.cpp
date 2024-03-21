@@ -157,6 +157,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         // run function ProcessorSplitRegexNative
         ProcessorSplitRegexNative processorSplitRegexNative;
         processorSplitRegexNative.SetContext(mContext);
+        processorSplitRegexNative.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
         APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
         processorSplitRegexNative.Process(eventGroup);
 
