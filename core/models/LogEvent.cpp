@@ -116,7 +116,7 @@ LogEvent::ConstContentIterator LogEvent::cend() const {
     return ConstContentIterator(mContents.cend(), mContents);
 }
 
-void LogEvent::AppendContent(StringView key, StringView val) {
+void LogEvent::AppendContentNoCopy(StringView key, StringView val) {
     mContents.emplace_back(std::pair<StringView, StringView>(key, val), true);
     mIndex[key] = mContents.size() - 1;
 }

@@ -102,7 +102,7 @@ private:
     // this is only used for ProcessorParseApsaraNative for backward compatability, since multiple keys are allowed.
     // We do not invalidate existing LogContent when the same key has arrived.
     friend class ProcessorParseApsaraNative;
-    void AppendContent(StringView key, StringView val);
+    void AppendContentNoCopy(StringView key, StringView val);
 
     // since log reduce in SLS server requires the original order of log contents, we have to maintain this sequential
     // information for backward compatability.
