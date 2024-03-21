@@ -158,11 +158,56 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     return true;
 }
 
+static std::string TryGetRealPath(std::string path) {
+    int index = 0; // assume path is absolute
+    for (int i = 0; i < 10; i++) {
+        struct stat f;
+        if (stat(path.c_str(), &f) == 0) {
+            return path;
+        }
+        while (true) {
+            int j = path.find('/', index + 1);
+            if (j == std::string::npos) {
+                index = path.length();
+            } else {
+                index = j;
+            }
+
+            std::string subPath = path.substr(0, index);
+            struct stat f;
+            if (lstat(subPath.c_str(), &f) != 0) {
+                return "";
+            }
+            if (S_ISLNK(f.st_mode)) {
+                // subPath is a symlink
+                char target[PATH_MAX + 1];
+                readlink(subPath.c_str(), target, sizeof(target));
+                std::string partialPath = STRING_FLAG(default_container_host_path).c_str()
+                    + std::string(target); // You need to implement this function
+                path = partialPath + path.substr(index);
+                if (stat(partialPath.c_str(), &f) != 0) {
+                    // path referenced by partialPath does not exist or has symlink
+                    index = 0;
+                } else {
+                    index = partialPath.length();
+                }
+                break;
+            }
+        }
+    }
+    return "";
+}
+
 static void SetContainerPath(ContainerInfo& containerInfo) {
+    std::string realPath = TryGetRealPath(containerInfo.mStdoutPath);
+    if (realPath.empty()) {
+        LOG_ERROR(sLogger, ("failed to get real path", containerInfo.mStdoutPath));
+        return;
+    }
     containerInfo.mInputType = ContainerInfo::InputType::InputContainerLog;
-    size_t pos = containerInfo.mStdoutPath.find_last_of('/');
+    size_t pos = realPath.find_last_of('/');
     if (pos != std::string::npos) {
-        containerInfo.mContainerPath = containerInfo.mStdoutPath.substr(0, pos);
+        containerInfo.mContainerPath = realPath.substr(0, pos);
     }
     if (containerInfo.mContainerPath.length() > 1 && containerInfo.mContainerPath.back() == '/') {
         containerInfo.mContainerPath.pop_back();
