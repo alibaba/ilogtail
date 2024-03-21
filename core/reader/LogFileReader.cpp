@@ -2023,7 +2023,7 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     rollbackLineFeedCount = 0;
     // Single line rollback
     if (!mMultilineConfig.first->IsMultiline()) {
-        if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
+        if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
             return LastContainerdTextLinePos(buffer, size, rollbackLineFeedCount);
         }
         while (endPs >= 0) {
@@ -2150,7 +2150,7 @@ StringBuffer LogFileReader::GetStringBuffer() {
 }
 
 LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
-    if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
+    if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
         LineInfo res;
         GetLastContainerdTextLineData(buffer, begPs, endPs, res, true);
         return res;
@@ -2161,7 +2161,7 @@ LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
             StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
             LineInfo res = {lastLine, lineBegin, 1};
 
-            if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
+            if (mFileLogFormat == LogFormat::DOCKER_JSON_FILE) {
                 rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
                 doc.Parse(buffer + lineBegin, endPs - lineBegin);
                 if (doc.HasParseError()) {
