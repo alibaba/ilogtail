@@ -50,19 +50,17 @@ type Mount struct {
 }
 
 type DockerFileUpdateCmd struct {
-	ID            string
-	Tags          []string // 容器信息Tag
-	Mounts        []Mount  // 容器挂载路径
-	UpperDir      string   // 容器默认路径
-	StdoutPath    string   // 标准输出路径
-	StdoutLogType string   // 标准输出类型 json-file、containerd_text
+	ID         string
+	Tags       []string // 容器信息Tag
+	Mounts     []Mount  // 容器挂载路径
+	UpperDir   string   // 容器默认路径
+	StdoutPath string   // 标准输出路径
 }
 
 type ContainerInfoCache struct {
-	Mounts        []types.MountPoint
-	UpperDir      string
-	StdoutPath    string
-	StdoutLogType string
+	Mounts     []types.MountPoint
+	UpperDir   string
+	StdoutPath string
 }
 
 type DockerFileUpdateCmdAll struct {
@@ -217,7 +215,6 @@ func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, c
 	cmd.ID = info.ContainerInfo.ID
 	cmd.UpperDir = path.Clean(containerInfo.UpperDir)
 	cmd.StdoutPath = path.Clean(containerInfo.StdoutPath)
-	cmd.StdoutLogType = containerInfo.StdoutLogType
 	tags := info.GetExternalTags(idf.ExternalEnvTag, idf.ExternalK8sLabelTag)
 	cmd.Tags = make([]string, 0, len(tags)*2)
 	for key, val := range tags {
@@ -279,7 +276,6 @@ func (idf *InputDockerFile) updateAll(allCmd *DockerFileUpdateCmdAll) {
 
 func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, allCmd *DockerFileUpdateCmdAll) {
 	StdoutPath := path.Clean(info.StdoutPath)
-	stdoutLogType := info.StdoutLogType
 	id := info.ContainerInfo.ID
 	mounts := info.ContainerInfo.Mounts
 	upperDir := info.DefaultRootPath
@@ -295,19 +291,6 @@ func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, allCmd 
 		logger.Info(idf.context.GetRuntimeContext(), "container StdoutPath", "added", "stdoutPath", StdoutPath,
 			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
 		changed = true
-	}
-	// stdoutLogType
-	if !changed {
-		if val, ok := idf.lastContainerInfoCache[id]; ok && val.StdoutLogType != stdoutLogType {
-			// send delete first and then add this info
-			logger.Info(idf.context.GetRuntimeContext(), "container stdoutLogType", "changed", "last", val, "stdoutLogType", stdoutLogType,
-				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-			changed = true
-		} else if !ok {
-			logger.Info(idf.context.GetRuntimeContext(), "container stdoutLogType", "added", "stdoutLogType", stdoutLogType,
-				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-			changed = true
-		}
 	}
 	// upperDir
 	if !changed {
@@ -346,10 +329,9 @@ func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, allCmd 
 	if changed {
 		idf.updateMetric.Add(1)
 		newContainerInfoCache := ContainerInfoCache{
-			Mounts:        mounts,
-			UpperDir:      upperDir,
-			StdoutPath:    StdoutPath,
-			StdoutLogType: stdoutLogType,
+			Mounts:     mounts,
+			UpperDir:   upperDir,
+			StdoutPath: StdoutPath,
 		}
 		idf.lastContainerInfoCache[id] = newContainerInfoCache
 		idf.addMappingToLogtail(info, newContainerInfoCache, allCmd)
@@ -361,7 +343,6 @@ func (idf *InputDockerFile) deleteMapping(id string) {
 	idf.deleteMappingFromLogtail(id)
 	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "deleted", "id", helper.GetShortID(id),
 		"stdoutPath", idf.lastContainerInfoCache[id].StdoutPath,
-		"stdoutLogType", idf.lastContainerInfoCache[id].StdoutLogType,
 		"upperDir", idf.lastContainerInfoCache[id].UpperDir,
 		"mounts", idf.lastContainerInfoCache[id].Mounts)
 	delete(idf.lastContainerInfoCache, id)
@@ -372,7 +353,6 @@ func (idf *InputDockerFile) notifyStop(id string) {
 	idf.notifyStopToLogtail(id)
 	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "id", helper.GetShortID(id),
 		"stdoutPath", idf.lastContainerInfoCache[id].StdoutPath,
-		"stdoutLogType", idf.lastContainerInfoCache[id].StdoutLogType,
 		"upperDir", idf.lastContainerInfoCache[id].UpperDir,
 		"mounts", idf.lastContainerInfoCache[id].Mounts)
 }

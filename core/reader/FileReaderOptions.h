@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include <json/json.h>
-
 #include <cstdint>
 #include <string>
 #include <utility>
+
+#include <json/json.h>
 
 #include "pipeline/PipelineContext.h"
 

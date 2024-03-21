@@ -44,7 +44,6 @@ struct ContainerInfo {
     std::string mContainerPath;
 
     std::string mStdoutPath;
-    std::string mStdoutLogType;
     std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
     std::vector<sls_logs::LogTag> mContainerTags; // tags extracted from this container
@@ -63,9 +62,6 @@ struct ContainerInfo {
             return false;
         }
         if (mStdoutPath != rhs.mStdoutPath) {
-            return false;
-        }
-        if (mStdoutLogType != rhs.mStdoutLogType) {
             return false;
         }
         if (mUpperDir != rhs.mUpperDir) {

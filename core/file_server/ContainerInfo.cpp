@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "file_server/ContainerInfo.h"
+
 #include <memory>
 
-#include "file_server/ContainerInfo.h"
 #include "logger/Logger.h"
 
 namespace logtail {
@@ -75,9 +76,6 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
     }
     if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
         containerInfo.mStdoutPath = params["StdoutPath"].asString();
-    }
-    if (params.isMember("StdoutLogType") && params["StdoutLogType"].isString()) {
-        containerInfo.mStdoutLogType = params["StdoutLogType"].asString();
     }
     if (params.isMember("Tags") && params["Tags"].isArray()) {
         const Json::Value& tags = params["Tags"];

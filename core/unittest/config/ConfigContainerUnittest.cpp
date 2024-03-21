@@ -38,7 +38,7 @@ public:
   "Path":"/logtail_host/lib/var/docker/abcdef"
 })""";
         config1.SetEnableContainerDiscoveryFlag(true);
-        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr1, false));
+        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr1));
         FileServer::GetInstance()->AddFileDiscoveryConfig("test-config-1", &config1, nullptr);
 
         FileDiscoveryOptions config2;
@@ -47,7 +47,7 @@ public:
   "Path":"/logtail_host/lib/var/docker/000000"
 })""";
         config2.SetEnableContainerDiscoveryFlag(true);
-        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr2, false));
+        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr2));
         FileServer::GetInstance()->AddFileDiscoveryConfig("test-config-1", &config2, nullptr);
     }
 
@@ -59,16 +59,14 @@ public:
   "ID":"abcdef"
 })""";
         // Case: config name does not match any config, should not generate any event
-        ConfigContainerInfoUpdateCmd* cmd_invalid
-            = new ConfigContainerInfoUpdateCmd("test-config", true, params, false);
+        ConfigContainerInfoUpdateCmd* cmd_invalid = new ConfigContainerInfoUpdateCmd("test-config", true, params);
         ConfigManager::GetInstance()->UpdateContainerStopped(cmd_invalid);
         ConfigManager::GetInstance()->GetContainerStoppedEvents(eventVec);
         APSARA_TEST_TRUE_FATAL(ConfigManager::GetInstance()->mDockerContainerStoppedCmdVec.empty());
         APSARA_TEST_TRUE_FATAL(eventVec.empty());
 
         // Case: config name matches configs, should generate a event
-        ConfigContainerInfoUpdateCmd* cmd_valid
-            = new ConfigContainerInfoUpdateCmd("test-config-1", true, params, false);
+        ConfigContainerInfoUpdateCmd* cmd_valid = new ConfigContainerInfoUpdateCmd("test-config-1", true, params);
         ConfigManager::GetInstance()->UpdateContainerStopped(cmd_valid);
         ConfigManager::GetInstance()->GetContainerStoppedEvents(eventVec);
         APSARA_TEST_EQUAL_FATAL(eventVec.size(), 1UL);

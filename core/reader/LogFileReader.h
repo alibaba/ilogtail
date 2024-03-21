@@ -355,7 +355,6 @@ public:
     const std::string& GetLogstore() const { return mLogstore; }
     const std::string& GetRegion() const { return mRegion; }
     const std::string& GetConfigName() const { return mConfigName; }
-    const FileReaderConfig& GetReaderConfig() const { return mReaderConfig; }
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
