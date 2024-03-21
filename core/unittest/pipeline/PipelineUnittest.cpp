@@ -172,7 +172,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
                 {
                     "type": "metric_container_info",
                     "detail": {
-                        "CollectingContainersMeta": true,
+                        "CollectContainersFlag": true,
                         "LogPath": "/home",
                         "MaxDepth": 0,
                         "FilePattern": "test.log"
@@ -2497,7 +2497,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
                 {
                     "type": "metric_container_info",
                     "detail": {
-                        "CollectingContainersMeta": true,
+                        "CollectContainersFlag": true,
                         "LogPath": "/home",
                         "MaxDepth": 0,
                         "FilePattern": "test.log"
@@ -2559,7 +2559,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
                 {
                     "type": "metric_container_info",
                     "detail": {
-                        "CollectingContainersMeta": true,
+                        "CollectContainersFlag": true,
                         "LogPath": "/home",
                         "MaxDepth": 0,
                         "FilePattern": "test.log"
