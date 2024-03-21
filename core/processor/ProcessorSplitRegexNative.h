@@ -31,7 +31,6 @@ public:
     static const std::string sName;
 
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
-    char mSplitChar = '\n';
     MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
     bool mIgnoreUnmatchWarning = false;
@@ -49,12 +48,12 @@ private:
                       PipelineEventPtr&& e,
                       EventsContainer& newEvents);
     void SplitLogByRegex(PipelineEventGroup& logGroup);
-    void HandleSplittedLogs(const StringView& content,
-                            long sourceoffset,
-                            StringBuffer& sourceKey,
-                            const LogEvent& sourceEvent,
-                            PipelineEventGroup& logGroup,
-                            EventsContainer& newEvents);
+    void CreateNewEvent(const StringView& content,
+                        long sourceoffset,
+                        StringBuffer& sourceKey,
+                        const LogEvent& sourceEvent,
+                        PipelineEventGroup& logGroup,
+                        EventsContainer& newEvents);
     void HandleUnmatchLogs(const StringView& sourceVal,
                            long sourceoffset,
                            StringBuffer& sourceKey,

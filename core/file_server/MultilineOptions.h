@@ -28,7 +28,6 @@ namespace logtail {
 
 class MultilineOptions {
 public:
-    const std::string& UnmatchedContentTreatmentToString();
     enum class Mode { CUSTOM, JSON };
     enum class UnmatchedContentTreatment { DISCARD, SINGLE_LINE };
 
@@ -52,6 +51,8 @@ private:
     std::shared_ptr<boost::regex> mEndPatternRegPtr;
     bool mIsMultiline = false;
 };
+
+const std::string& UnmatchedContentTreatmentToString(MultilineOptions::UnmatchedContentTreatment unmatchedContentTreatment);
 
 using MultilineConfig = std::pair<const MultilineOptions*, const PipelineContext*>;
 
