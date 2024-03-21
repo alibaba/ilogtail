@@ -75,8 +75,9 @@ DEFINE_FLAG_INT32(force_release_deleted_file_fd_timeout,
 DECLARE_FLAG_INT32(reader_close_unused_file_time);
 DECLARE_FLAG_INT32(logtail_alarm_interval);
 
-namespace logtail {
-
+namespace logtail if (!isFirstLine) {
+    begPs = endPs - 1;
+}
 #define COMMON_READER_INFO \
     ("project", GetProject())("logstore", GetLogstore())("config", GetConfigName())("log reader queue name", \
                                                                                     mHostLogPath)( \
@@ -316,28 +317,28 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
     }
 }
 
-namespace detail {
-
-    void updatePrimaryCheckpoint(const std::string& key, PrimaryCheckpointPB& cpt, const std::string& field) {
-        cpt.set_update_time(time(NULL));
-        if (CheckpointManagerV2::GetInstance()->SetPB(key, cpt)) {
-            LOG_INFO(sLogger, ("update primary checkpoint", key)("field", field)("checkpoint", cpt.DebugString()));
-        } else {
-            LOG_WARNING(sLogger,
-                        ("update primary checkpoint error", key)("field", field)("checkpoint", cpt.DebugString()));
-        }
+namespace detail if (!isFirstLine) {
+    begPs = endPs - 1;
+}
+void updatePrimaryCheckpoint(const std::string& key, PrimaryCheckpointPB& cpt, const std::string& field) {
+    cpt.set_update_time(time(NULL));
+    if (CheckpointManagerV2::GetInstance()->SetPB(key, cpt)) {
+        LOG_INFO(sLogger, ("update primary checkpoint", key)("field", field)("checkpoint", cpt.DebugString()));
+    } else {
+        LOG_WARNING(sLogger, ("update primary checkpoint error", key)("field", field)("checkpoint", cpt.DebugString()));
     }
+}
 
-    std::pair<size_t, size_t> getPartitionRange(size_t idx, size_t concurrency, size_t totalPartitionCount) {
-        auto base = totalPartitionCount / concurrency;
-        auto extra = totalPartitionCount % concurrency;
-        if (extra == 0) {
-            return std::make_pair(idx * base, (idx + 1) * base - 1);
-        }
-        size_t min = idx <= extra ? idx * (base + 1) : extra * (base + 1) + (idx - extra) * base;
-        size_t max = idx < extra ? min + base : min + base - 1;
-        return std::make_pair(min, max);
+std::pair<size_t, size_t> getPartitionRange(size_t idx, size_t concurrency, size_t totalPartitionCount) {
+    auto base = totalPartitionCount / concurrency;
+    auto extra = totalPartitionCount % concurrency;
+    if (extra == 0) {
+        return std::make_pair(idx * base, (idx + 1) * base - 1);
     }
+    size_t min = idx <= extra ? idx * (base + 1) : extra * (base + 1) + (idx - extra) * base;
+    size_t max = idx < extra ? min + base : min + base - 1;
+    return std::make_pair(min, max);
+}
 
 } // namespace detail
 
@@ -2023,11 +2024,13 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     rollbackLineFeedCount = 0;
     // Single line rollback
     if (!mMultilineConfig.first->IsMultiline()) {
+        if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
+            return LastContainerdTextLinePos(buffer, size, rollbackLineFeedCount);
+        }
         while (endPs >= 0) {
-            LineInfo line = LogFileReader::GetLastLineData(buffer, begPs, endPs);
             if (buffer[endPs] == '\n') {
-                if (endPs != size - 1) { // if last line dose not end with '\n', rollback
-                    rollbackLineFeedCount += line.lineFeedCount;
+                if (endPs != size - 1) { // if last line dose not end with '\n', rollback last line
+                    rollbackLineFeedCount = 1;
                 }
                 return endPs + 1;
             }
@@ -2077,89 +2080,220 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     return 0;
 }
 
-rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
+int32_t LogFileReader::LastContainerdTextLinePos(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
+    rollbackLineFeedCount = 0;
+    int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
+    bool islastlineComplete = true;
+    if (buffer[endPs] != '\n') { // if last line dose not end with '\n', rollback last line
+        rollbackLineFeedCount++;
+        islastlineComplete = false;
+    }
 
-LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
+    if (!islastlineComplete) {
+        // find \n
+        while (endPs >= 0 && buffer[endPs] != '\n') {
+            --endPs;
+        }
+    }
+    int begPs = endPs - 1;
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
-            if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
-                if (buffer[begPs] == '\n' || begPs == 0) {
-                    int lineBegin = begPs == 0 ? 0 : begPs + 1;
-                    StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-                    LineInfo res = {lastLine, lineBegin, 1};
-
-                    rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
-                    doc.Parse(buffer + lineBegin, endPs - lineBegin);
-                    if (doc.HasParseError()) {
-                        return res;
-                    } else if (!doc.IsObject()) {
-                        return res;
-                    } else if (!doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str())
-                               || !doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.c_str())
-                               || !doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.c_str())) {
-                        return res;
-                    } else {
-                        StringView content(doc[ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str()].GetString());
-                        res.data = content;
-                    }
-                    return res;
-                }
-            } else if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
-                int lineBegin = begPs == 0 ? 0 : begPs + 1;
-                StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-                LineInfo res = {lastLine, lineBegin, 1};
-                const char* lineEnd = buffer + endPs;
-
-                // 寻找第一个分隔符位置
-                StringView timeValue;
-                const char* pch1 = std::find(
-                    buffer + lineBegin, buffer + endPs, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
-                if (pch1 == buffer + endPs) {
-                    return res;
-                }
-
-                // 寻找第二个分隔符位置
-                const char* pch2 = std::find(pch1 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
-                if (pch2 == lineEnd) {
-                    return res;
-                }
-                StringView sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
-                if (sourceValue != "stdout" && sourceValue != "stderr")
-                    return res;
-
-                // 如果既不以 CONTAINERD_PART_TAG 开头，也不以
-                // CONTAINERD_FULL_TAG 开头
-                if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
-                    && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
-                    res.data = StringView(pch2 + 1, lineEnd - pch2 - 1);
-                    return res;
-                }
-
-                // 寻找第三个分隔符位置
-                const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
-                if (pch3 == lineEnd || pch3 != pch2 + 2) {
-                    return res;
-                }
-                // F 继续往前找 有没有P
-                if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
-                    // 继续往前找P，直到找到第一个F
-                    return res;
-                }
-                // P
-                if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_PART_TAG) {
-                    // 继续往前找P，直到找到第一个P
-                    return res;
-                }
+            int lineBegin = begPs == 0 ? 0 : begPs + 1;
+            const char* lineEnd = buffer + endPs;
+            // 寻找第一个分隔符位置 time
+            StringView timeValue;
+            const char* pch1
+                = std::find(buffer + lineBegin, buffer + endPs, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+            if (pch1 == buffer + endPs) {
+                return endPs + 1;
+            }
+            // 寻找第二个分隔符位置 source
+            const char* pch2 = std::find(pch1 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+            if (pch2 == lineEnd) {
+            }
+            StringView sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
+            if (sourceValue != "stdout" && sourceValue != "stderr") {
+                return endPs + 1;
+            }
+            // 如果既不以 P 开头，也不以 F 开头
+            if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
+                && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
+                return endPs + 1;
+            }
+            // 寻找第三个分隔符位置 content
+            const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+            if (pch3 == lineEnd || pch3 != pch2 + 2) {
+                return endPs + 1;
+            }
+            if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
+                // F
+                return endPs + 1;
             } else {
-                int lineBegin = begPs == 0 ? 0 : begPs + 1;
-                StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-                LineInfo res = {lastLine, lineBegin, 1};
+                rollbackLineFeedCount++;
+            }
+            endPs = begPs;
+        }
+        begPs--;
+    }
+    return 0;
+}
+
+std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer(new SourceBuffer);
+StringBuffer LogFileReader::mStringBuffer;
+rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
+
+StringBuffer LogFileReader::GetStringBuffer() {
+    if (mStringBuffer.capacity == 0) {
+        LogFileReader::mStringBuffer = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
+    }
+    mStringBuffer.size = 0;
+    return mStringBuffer;
+}
+
+LineInfo LogFileReader::GetLastLineData(char* buffer, int& begPs, int& endPs) {
+    if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::CONTAINERD_TEXT) {
+        LineInfo res;
+        GetLastContainerdTextLineData(buffer, begPs, endPs, res, true);
+        return res;
+    }
+    while (begPs >= 0) {
+        if (buffer[begPs] == '\n' || begPs == 0) {
+            int lineBegin = begPs == 0 ? 0 : begPs + 1;
+            StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
+            LineInfo res = {lastLine, lineBegin, 1};
+
+            if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::DOCKER_JSON_FILE) {
+                rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
+                doc.Parse(buffer + lineBegin, endPs - lineBegin);
+                if (doc.HasParseError()) {
+                    return res;
+                } else if (!doc.IsObject()) {
+                    return res;
+                } else if (!doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str())
+                           || !doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.c_str())
+                           || !doc.HasMember(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.c_str())) {
+                    return res;
+                } else {
+                    StringView content(doc[ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str()].GetString());
+                    res.data = content;
+                }
+                return res;
+            } else {
                 return res;
             }
         }
         --begPs;
     }
     return {StringView(buffer, endPs), 1};
+}
+
+void LogFileReader::GetLastContainerdTextLineData(
+    char* buffer, int& begPs, int& endPs, LineInfo& res, bool isFirstLine) {
+    if (isFirstLine) {
+        StringBuffer rawBuffer = GetStringBuffer();
+        res.data = StringView(rawBuffer.data + rawBuffer.capacity, 0);
+    }
+    while (begPs >= 0) {
+        if (buffer[begPs] == '\n' || begPs == 0) {
+            int lineBegin = begPs == 0 ? 0 : begPs + 1;
+            StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
+            const char* lineEnd = buffer + endPs;
+            if (isFirstLine) {
+                res = {lastLine, lineBegin, 1};
+            }
+            // 寻找第一个分隔符位置 time
+            StringView timeValue;
+            const char* pch1
+                = std::find(buffer + lineBegin, buffer + endPs, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+            if (pch1 == buffer + endPs) {
+                if (!isFirstLine) {
+                    begPs = endPs - 1;
+                }
+                return;
+            }
+
+            // 寻找第二个分隔符位置 source
+            const char* pch2 = std::find(pch1 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+            if (pch2 == lineEnd) {
+                if (isFirstLine) {
+                    endPs = begPs;
+                    begPs--;
+                } else {
+                    begPs = endPs - 1;
+                }
+                return;
+            }
+            StringView sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
+            if (sourceValue != "stdout" && sourceValue != "stderr") {
+                if (isFirstLine) {
+                    endPs = begPs;
+                    begPs--;
+                } else {
+                    begPs = endPs - 1;
+                }
+                return;
+            }
+
+            // 如果既不以 P 开头，也不以 F 开头
+            if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
+                && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
+                if (isFirstLine) {
+                    res.data = StringView(pch2 + 1, lineEnd - pch2 - 1);
+                    res.lineBegin = lineBegin;
+                    res.lineFeedCount = 1;
+                    endPs = begPs;
+                    begPs--;
+                } else {
+                    begPs = endPs - 1;
+                }
+                return;
+            }
+
+            // 寻找第三个分隔符位置 content
+            const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+            if (pch3 == lineEnd || pch3 != pch2 + 2) {
+                if (isFirstLine) {
+                    res.data = StringView(pch2 + 1, lineEnd - pch2 - 1);
+                    res.lineBegin = lineBegin;
+                    res.lineFeedCount = 1;
+                    // 继续找
+                    endPs = begPs;
+                    begPs = begPs - 1;
+                    GetLastContainerdTextLineData(buffer, begPs, endPs, res, false);
+                }
+                return;
+            }
+            StringView content = StringView(pch3 + 1, lineEnd - pch3 - 1);
+            if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
+                if (isFirstLine) {
+                    char* data = const_cast<char*>(res.data.data());
+                    memcpy(data - content.size(), content.data(), content.size());
+                    res.data = StringView(data - content.size(), content.size() + res.data.size());
+                    // 继续找
+                    endPs = begPs;
+                    begPs = begPs - 1;
+                    GetLastContainerdTextLineData(buffer, begPs, endPs, res, false);
+                    return;
+                }
+                begPs = endPs + 1;
+                // 返回当前行之前的日志内容
+                return;
+            } else {
+                char* data = const_cast<char*>(res.data.data());
+                memcpy(data - content.size(), content.data(), content.size());
+                res.data = StringView(data - content.size(), content.size() + res.data.size());
+                // 继续找
+                endPs = begPs;
+                begPs = begPs - 1;
+                GetLastContainerdTextLineData(buffer, begPs, endPs, res, false);
+                return;
+            }
+        }
+        --begPs;
+    }
+    res.data = StringView(buffer, endPs);
+    res.lineFeedCount = 1;
+    return;
 }
 
 size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {

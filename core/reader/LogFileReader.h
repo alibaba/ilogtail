@@ -367,8 +367,6 @@ public:
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
 protected:
-    static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-    LineInfo GetLastLineData(char* buffer, int& begPs, int& endPs);
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
     void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
     void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
@@ -469,6 +467,14 @@ protected:
 private:
     bool mHasReadContainerBom = false;
     void checkContainerType();
+    static std::shared_ptr<SourceBuffer> mSourceBuffer;
+    static StringBuffer mStringBuffer;
+    static StringBuffer GetStringBuffer();
+
+    static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
+    int32_t LastContainerdTextLinePos(char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
+    LineInfo GetLastLineData(char* buffer, int& begPs, int& endPs);
+    void GetLastContainerdTextLineData(char* buffer, int& begPs, int& endPs, LineInfo& res, bool isFirstLine = false);
 
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
@@ -607,6 +613,7 @@ private:
     friend class LastMatchedLineDiscardUnmatchUnittest;
     friend class LastMatchedLineNoDiscardUnmatchUnittest;
     friend class LogFileReaderCheckpointUnittest;
+    friend class LastMatchedContainerdTextLineUnittest;
 
 protected:
     void UpdateReaderManual();
