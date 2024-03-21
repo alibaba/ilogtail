@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "processor/ProcessorSplitMultilineLogStringNative.h"
+
 #include <boost/regex.hpp>
 #include <string>
 
@@ -24,7 +26,6 @@
 #include "models/LogEvent.h"
 #include "monitor/MetricConstants.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorSplitMultilineLogStringNative.h"
 
 namespace logtail {
 
@@ -141,13 +142,14 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
 
     StringView sourceVal = sourceEvent.GetContent(mSourceKey);
     StringBuffer sourceKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
-    const char* multiStartIndex = sourceVal.data();
+    const char* multiStartIndex = nullptr;
     std::string exception;
     bool isPartialLog = false;
     if (mMultiline.GetStartPatternReg() == nullptr && mMultiline.GetContinuePatternReg() == nullptr
         && mMultiline.GetEndPatternReg() != nullptr) {
         // if only end pattern is given, then it will stick to this state
         isPartialLog = true;
+        multiStartIndex = sourceVal.data();
     }
 
     uint32_t sourceOffset = 0;
@@ -174,6 +176,7 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
                        && BoostRegexMatch(content.data(), content.size(), *mMultiline.GetEndPatternReg(), exception)) {
                 // case: continue + end
                 CreateNewEvent(content, sourceOffset, sourceKey, sourceEvent, logGroup, newEvents);
+                multiStartIndex = content.data() + content.size() + 1;
             } else {
                 HandleUnmatchLogs(content, sourceOffset, sourceKey, sourceEvent, logGroup, newEvents, logPath);
             }
@@ -216,9 +219,10 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
                                        sourceEvent,
                                        logGroup,
                                        newEvents);
-                        multiStartIndex = content.data() + content.size() + 1;
                         if (mMultiline.GetStartPatternReg() != nullptr) {
                             isPartialLog = false;
+                        } else {
+                            multiStartIndex = content.data() + content.size() + 1;
                         }
                         // if only end pattern is given, start another log automatically
                     }
@@ -240,26 +244,19 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
                 } else {
                     // case: start + continue
                     // continue pattern is given, but current line is not matched against the continue pattern
+                    CreateNewEvent(StringView(multiStartIndex, content.data() - 1 - multiStartIndex),
+                                   sourceOffset,
+                                   sourceKey,
+                                   sourceEvent,
+                                   logGroup,
+                                   newEvents);
                     if (!BoostRegexMatch(content.data(), content.size(), *mMultiline.GetStartPatternReg(), exception)) {
                         // when no end pattern is given, the only chance to enter unmatched state is when both
                         // start and continue pattern are given, and the current line is not matched against the
                         // start pattern
-                        HandleUnmatchLogs(
-                            StringView(multiStartIndex, content.data() + content.size() - multiStartIndex),
-                            sourceOffset,
-                            sourceKey,
-                            sourceEvent,
-                            logGroup,
-                            newEvents,
-                            logPath);
+                        HandleUnmatchLogs(content, sourceOffset, sourceKey, sourceEvent, logGroup, newEvents, logPath);
                         isPartialLog = false;
                     } else {
-                        CreateNewEvent(StringView(multiStartIndex, content.data() - 1 - multiStartIndex),
-                                       sourceOffset,
-                                       sourceKey,
-                                       sourceEvent,
-                                       logGroup,
-                                       newEvents);
                         multiStartIndex = content.data();
                     }
                 }
