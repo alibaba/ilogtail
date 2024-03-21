@@ -108,6 +108,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                           ("can not get container path by log path, base path",
                            discoveryConfig.first->GetBasePath())("host path", hostLogPathDir + "/" + hostLogPathFile));
             } else {
+                reader->mInputType = containerPath->mInputType;
                 // if config have wildcard path, use mWildcardPaths[0] as base path
                 reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
@@ -779,6 +780,20 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
 void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
+    }
+    if (mInputType == ContainerInfo::InputType::InputContainerLog && (!mHasReadContainerBom || mLastFilePos == 0)) {
+        // 判断container类型
+        char containerBOMBuffer[1] = {0};
+        size_t readBOMByte = 1;
+        int64_t filePos = 0;
+        TruncateInfo* truncateInfo = NULL;
+        ReadFile(mLogFileOp, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
+        if (containerBOMBuffer[0] == '{') {
+            mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
+        } else {
+            mFileLogFormat = LogFormat::CONTAINERD_TEXT;
+        }
+        mHasReadContainerBom = true;
     }
     int32_t readSize = endOffset - mLastFilePos < INT32_FLAG(max_fix_pos_bytes) ? endOffset - mLastFilePos
                                                                                 : INT32_FLAG(max_fix_pos_bytes);
@@ -1637,6 +1652,20 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
     if (!READ_BYTE) {
         return;
+    }
+    if (mInputType == ContainerInfo::InputType::InputContainerLog && (!mHasReadContainerBom || mLastFilePos == 0)) {
+        // 判断container类型
+        char containerBOMBuffer[1] = {0};
+        size_t readBOMByte = 1;
+        int64_t filePos = 0;
+        TruncateInfo* truncateInfo = NULL;
+        ReadFile(mLogFileOp, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
+        if (containerBOMBuffer[0] == '{') {
+            mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
+        } else {
+            mFileLogFormat = LogFormat::CONTAINERD_TEXT;
+        }
+        mHasReadContainerBom = true;
     }
     const size_t lastCacheSize = mCache.size();
     if (READ_BYTE < lastCacheSize) {
