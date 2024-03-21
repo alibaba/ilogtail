@@ -150,7 +150,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
         // make config
         Json::Value config = GetCastSensWordConfig("content");
         std::string pluginId = "testID";
-        config["StartPattern"] = ".*";
+        config["StartPattern"] = "[a-zA-Z0-9]*";
         config["UnmatchedContentTreatment"] = "split";
         config["AppendingLogPositionMeta"] = false;
 

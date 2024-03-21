@@ -233,7 +233,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -356,7 +356,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = true;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -508,7 +508,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -635,7 +635,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -760,7 +760,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -882,7 +882,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -1009,7 +1009,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = false;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 
@@ -1227,7 +1227,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             config["CopingRawLog"] = false;
             config["RenamedSourceKey"] = "__raw__";
             config["AllowingShortenedFields"] = true;
-            config["StartPattern"] = ".*";
+            config["StartPattern"] = "[a-zA-Z0-9]*";
             config["UnmatchedContentTreatment"] = "split";
             config["AppendingLogPositionMeta"] = false;
 

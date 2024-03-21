@@ -565,7 +565,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["KeepingSourceWhenParseSucceed"] = false;
         config["CopingRawLog"] = false;
         config["RenamedSourceKey"] = "__raw__";
-        config["StartPattern"] = ".*";
+        config["StartPattern"] = "[a-zA-Z0-9]*";
         config["UnmatchedContentTreatment"] = "split";
         config["AppendingLogPositionMeta"] = false;
 
