@@ -108,10 +108,10 @@ type InputDockerFile struct {
 	lastUpdateTime    int64
 
 	// Last return of GetAllAcceptedInfoV2
-	fullList                 map[string]bool
-	matchList                map[string]*helper.DockerInfoDetail
-	CollectingContainersMeta bool
-	firstStart               bool
+	fullList              map[string]bool
+	matchList             map[string]*helper.DockerInfoDetail
+	CollectContainersFlag bool
+	firstStart            bool
 }
 
 func formatPath(path string) string {
@@ -425,7 +425,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 			idf.updateMapping(info, allCmd)
 		}
 		// 容器元信息预览使用
-		if idf.CollectingContainersMeta && len(idf.LogPath) > 0 {
+		if idf.CollectContainersFlag && len(idf.LogPath) > 0 {
 			sourcePath, containerPath := info.FindBestMatchedPath(idf.LogPath)
 
 			formatSourcePath := formatPath(sourcePath)
@@ -443,7 +443,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 			}
 		}
 	}
-	if idf.CollectingContainersMeta {
+	if idf.CollectContainersFlag {
 		var configResult *helper.ContainerConfigResult
 		if len(idf.LogPath) == 0 {
 			keys := make([]string, 0, len(idf.matchList))
