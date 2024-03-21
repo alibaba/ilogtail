@@ -199,7 +199,7 @@ static std::string TryGetRealPath(std::string path) {
 }
 
 static void SetContainerPath(ContainerInfo& containerInfo) {
-    std::string realPath = TryGetRealPath(containerInfo.mStdoutPath);
+    std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path).c_str() + containerInfo.mStdoutPath);
     if (realPath.empty()) {
         LOG_ERROR(sLogger, ("failed to get real path", containerInfo.mStdoutPath));
         return;
@@ -212,7 +212,6 @@ static void SetContainerPath(ContainerInfo& containerInfo) {
     if (containerInfo.mContainerPath.length() > 1 && containerInfo.mContainerPath.back() == '/') {
         containerInfo.mContainerPath.pop_back();
     }
-    containerInfo.mContainerPath = STRING_FLAG(default_container_host_path).c_str() + containerInfo.mContainerPath;
     LOG_DEBUG(sLogger, ("docker container path", containerInfo.mContainerPath));
 }
 
