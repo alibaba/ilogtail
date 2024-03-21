@@ -26,7 +26,7 @@
 
 namespace logtail {
 
-class ProcessorSplitRegexNative : public Processor {
+class ProcessorSplitMultilineLogStringNative : public Processor {
 public:
     static const std::string sName;
 
@@ -70,7 +70,7 @@ private:
     CounterPtr mProcUnmatchedEventsCnt;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorSplitRegexNativeUnittest;
+    friend class ProcessorSplitMultilineLogStringNativeUnittest;
     friend class ProcessorSplitRegexDisacardUnmatchUnittest;
     friend class ProcessorSplitRegexKeepUnmatchUnittest;
 #endif

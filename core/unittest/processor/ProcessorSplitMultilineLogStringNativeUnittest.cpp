@@ -18,7 +18,7 @@
 #include "common/JsonUtil.h"
 #include "config/Config.h"
 #include "models/LogEvent.h"
-#include "processor/ProcessorSplitRegexNative.h"
+#include "processor/ProcessorSplitMultilineLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -31,7 +31,7 @@ const std::string LOG_END_STRING = "    ...23 more";
 const std::string LOG_END_REGEX = R"(\s*\.\.\.\d+ more)";
 const std::string LOG_UNMATCH = "unmatch log";
 
-class ProcessorSplitRegexNativeUnittest : public ::testing::Test {
+class ProcessorSplitMultilineLogStringNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
 
@@ -46,37 +46,37 @@ public:
     PipelineContext mContext;
 };
 
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestInit);
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestProcessEventMultiline);
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestProcessEventMultilineKeepUnmatch);
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestProcessEventMultilineDiscardUnmatch);
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestProcessEventMultilineAllNotMatchKeepUnmatch);
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestProcessEventMultilineAllNotMatchDiscardUnmatch);
-UNIT_TEST_CASE(ProcessorSplitRegexNativeUnittest, TestProcess);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestInit);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestProcessEventMultiline);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestProcessEventMultilineKeepUnmatch);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestProcessEventMultilineDiscardUnmatch);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestProcessEventMultilineAllNotMatchKeepUnmatch);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestProcessEventMultilineAllNotMatchDiscardUnmatch);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogStringNativeUnittest, TestProcess);
 
-void ProcessorSplitRegexNativeUnittest::TestInit() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestInit() {
     // make config
     Json::Value config;
     config["StartPattern"] = ".*";
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
 }
 
-void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestProcessEventMultiline() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
@@ -140,16 +140,16 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
 }
 
-void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
@@ -228,16 +228,16 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
 }
 
-void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestProcessEventMultilineDiscardUnmatch() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
@@ -287,16 +287,16 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch(
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
 }
 
-void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeepUnmatch() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestProcessEventMultilineAllNotMatchKeepUnmatch() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
@@ -371,16 +371,16 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
 }
 
-void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchDiscardUnmatch() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestProcessEventMultilineAllNotMatchDiscardUnmatch() {
     // make config
     Json::Value config;
     config["StartPattern"] = LOG_BEGIN_REGEX;
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
@@ -413,16 +413,16 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchDisc
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
 }
 
-void ProcessorSplitRegexNativeUnittest::TestProcess() {
+void ProcessorSplitMultilineLogStringNativeUnittest::TestProcess() {
     // make config
     Json::Value config;
     config["StartPattern"] = "line.*";
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = true;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
@@ -507,9 +507,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -658,9 +658,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -829,9 +829,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -922,9 +922,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -1062,9 +1062,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     config["UnmatchedContentTreatment"] = "discard";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -1174,9 +1174,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -1371,9 +1371,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -1624,9 +1624,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -1743,9 +1743,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log
@@ -1919,9 +1919,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
     config["UnmatchedContentTreatment"] = "split";
     config["AppendingLogPositionMeta"] = false;
     // make processor
-    ProcessorSplitRegexNative processor;
+    ProcessorSplitMultilineLogStringNative processor;
     processor.SetContext(mContext);
-    processor.SetMetricsRecordRef(ProcessorSplitRegexNative::sName, "1");
+    processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     std::string pluginId = "testID";
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     { // case: complete log

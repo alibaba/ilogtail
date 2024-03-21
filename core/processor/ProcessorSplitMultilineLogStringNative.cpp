@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorSplitRegexNative.h"
-
 #include <boost/regex.hpp>
 #include <string>
 
@@ -26,12 +24,13 @@
 #include "models/LogEvent.h"
 #include "monitor/MetricConstants.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "processor/ProcessorSplitMultilineLogStringNative.h"
 
 namespace logtail {
 
-const std::string ProcessorSplitRegexNative::sName = "processor_split_regex_native";
+const std::string ProcessorSplitMultilineLogStringNative::sName = "processor_split_multiline_log_string_native";
 
-bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
+bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
     std::string errorMsg;
 
     // SourceKey
@@ -86,7 +85,7 @@ bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
     return true;
 }
 
-void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
+void ProcessorSplitMultilineLogStringNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
@@ -100,7 +99,7 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
     logGroup.SwapEvents(newEvents);
 }
 
-bool ProcessorSplitRegexNative::IsSupportedEvent(const PipelineEventPtr& e) const {
+bool ProcessorSplitMultilineLogStringNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     if (e.Is<LogEvent>()) {
         return true;
     }
@@ -116,10 +115,10 @@ bool ProcessorSplitRegexNative::IsSupportedEvent(const PipelineEventPtr& e) cons
     return false;
 }
 
-void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
-                                             const StringView& logPath,
-                                             PipelineEventPtr&& e,
-                                             EventsContainer& newEvents) {
+void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
+                                                          const StringView& logPath,
+                                                          PipelineEventPtr&& e,
+                                                          EventsContainer& newEvents) {
     if (!IsSupportedEvent(e)) {
         newEvents.emplace_back(std::move(e));
         return;
@@ -291,12 +290,12 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     }
 }
 
-void ProcessorSplitRegexNative::CreateNewEvent(const StringView& content,
-                                               long sourceoffset,
-                                               StringBuffer& sourceKey,
-                                               const LogEvent& sourceEvent,
-                                               PipelineEventGroup& logGroup,
-                                               EventsContainer& newEvents) {
+void ProcessorSplitMultilineLogStringNative::CreateNewEvent(const StringView& content,
+                                                            long sourceoffset,
+                                                            StringBuffer& sourceKey,
+                                                            const LogEvent& sourceEvent,
+                                                            PipelineEventGroup& logGroup,
+                                                            EventsContainer& newEvents) {
     StringView sourceVal = sourceEvent.GetContent(mSourceKey);
     std::unique_ptr<LogEvent> targetEvent = logGroup.CreateLogEvent();
     targetEvent->SetTimestamp(
@@ -311,13 +310,13 @@ void ProcessorSplitRegexNative::CreateNewEvent(const StringView& content,
     newEvents.emplace_back(std::move(targetEvent));
 }
 
-void ProcessorSplitRegexNative::HandleUnmatchLogs(const StringView& sourceVal,
-                                                  long sourceoffset,
-                                                  StringBuffer& sourceKey,
-                                                  const LogEvent& sourceEvent,
-                                                  PipelineEventGroup& logGroup,
-                                                  EventsContainer& newEvents,
-                                                  StringView logPath) {
+void ProcessorSplitMultilineLogStringNative::HandleUnmatchLogs(const StringView& sourceVal,
+                                                               long sourceoffset,
+                                                               StringBuffer& sourceKey,
+                                                               const LogEvent& sourceEvent,
+                                                               PipelineEventGroup& logGroup,
+                                                               EventsContainer& newEvents,
+                                                               StringView logPath) {
     size_t begin = 0;
     while (begin < sourceVal.size()) {
         StringView content = GetNextLine(sourceVal, begin);
@@ -345,7 +344,7 @@ void ProcessorSplitRegexNative::HandleUnmatchLogs(const StringView& sourceVal,
     }
 }
 
-StringView ProcessorSplitRegexNative::GetNextLine(StringView log, size_t begin) {
+StringView ProcessorSplitMultilineLogStringNative::GetNextLine(StringView log, size_t begin) {
     if (begin >= log.size()) {
         return StringView();
     }
