@@ -238,7 +238,6 @@ func (info *K8SInfo) innerMatch(filter *K8SFilter) bool {
 
 type DockerInfoDetail struct {
 	StdoutPath       string
-	StdoutLogType    string
 	ContainerInfo    types.ContainerJSON
 	ContainerNameTag map[string]string
 	K8SInfo          *K8SInfo
@@ -602,7 +601,6 @@ func (dc *DockerCenter) CreateInfoDetail(info types.ContainerJSON, envConfigPref
 
 	did := &DockerInfoDetail{
 		StdoutPath:       info.LogPath,
-		StdoutLogType:    "docker_" + info.HostConfig.LogConfig.Type,
 		ContainerInfo:    info,
 		ContainerNameTag: containerNameTag,
 		K8SInfo:          &k8sInfo,

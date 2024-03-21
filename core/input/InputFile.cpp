@@ -23,11 +23,13 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
+#include "pipeline/PipelineManager.h"
 
 using namespace std;
 
 DEFINE_FLAG_INT32(search_checkpoint_default_dir_depth, "0 means only search current directory", 0);
 DEFINE_FLAG_INT32(max_exactly_once_concurrency, "", 512);
+DECLARE_FLAG_STRING(default_container_host_path);
 
 namespace logtail {
 
@@ -80,6 +82,8 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // 过渡使用
     mFileDiscovery.SetTailingAllMatchedFiles(mFileReader.mTailingAllMatchedFiles);
+    mFileDiscovery.SetUpdateContainerInfoFunc(UpdateContainerInfoFunc);
+    mFileDiscovery.SetIsSameContainerInfoFunc(IsSameContainerInfo);
 
     // Multiline
     const char* key = "Multiline";
@@ -143,6 +147,141 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     return true;
 }
 
+bool hasPrefix(const std::string& fullString, const std::string& prefix) {
+    if (fullString.length() < prefix.length()) {
+        return false;
+    }
+    return fullString.compare(0, prefix.length(), prefix) == 0;
+}
+
+static void SetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions* fileDiscovery) {
+    std::string logPath;
+    if (!fileDiscovery->GetWildcardPaths().empty()) {
+        logPath = fileDiscovery->GetWildcardPaths()[0];
+    } else {
+        logPath = fileDiscovery->GetBasePath();
+    }
+    int pthSize = logPath.size();
+
+    Mount bestMatchedMounts;
+
+    for (size_t i = 0; i < containerInfo.mMounts.size(); i++) {
+        std::string dst = containerInfo.mMounts[i].Destination;
+        int dstSize = dst.size();
+
+        if (hasPrefix(logPath, dst)
+            && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
+            && bestMatchedMounts.Destination.size() < dstSize) {
+            bestMatchedMounts = containerInfo.mMounts[i];
+        }
+    }
+    if (bestMatchedMounts.Source.size() > 0) {
+        containerInfo.mContainerPath = STRING_FLAG(default_container_host_path).c_str() + bestMatchedMounts.Source
+            + logPath.substr(bestMatchedMounts.Destination.size());
+        LOG_DEBUG(sLogger,
+                  ("docker container path", containerInfo.mContainerPath)("source", bestMatchedMounts.Source)(
+                      "destination", bestMatchedMounts.Destination)("logPath", logPath));
+    } else {
+        containerInfo.mContainerPath
+            = STRING_FLAG(default_container_host_path).c_str() + containerInfo.mUpperDir + logPath;
+        LOG_DEBUG(sLogger,
+                  ("docker container path", containerInfo.mContainerPath)("upperDir",
+                                                                          containerInfo.mUpperDir)("logPath", logPath));
+    }
+}
+
+bool InputFile::UpdateContainerInfoFunc(FileDiscoveryOptions* fileDiscovery, const Json::Value& paramsJSON) {
+    if (!fileDiscovery->GetContainerInfo())
+        return false;
+
+    if (!paramsJSON.isMember("AllCmd")) {
+        ContainerInfo containerInfo;
+        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo)) {
+            LOG_ERROR(sLogger,
+                      ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+            return false;
+        }
+        SetContainerPath(containerInfo, fileDiscovery);
+        // try update
+        for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
+            if ((*fileDiscovery->GetContainerInfo())[i].mContainerID == containerInfo.mContainerID) {
+                // update
+                (*fileDiscovery->GetContainerInfo())[i] = containerInfo;
+                return true;
+            }
+        }
+        // add
+        fileDiscovery->GetContainerInfo()->push_back(containerInfo);
+        return true;
+    }
+
+    unordered_map<string, ContainerInfo> allPathMap;
+    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON, allPathMap)) {
+        LOG_ERROR(sLogger,
+                  ("invalid all docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+        return false;
+    }
+    // if update all, clear and reset
+    fileDiscovery->GetContainerInfo()->clear();
+    for (unordered_map<string, ContainerInfo>::iterator iter = allPathMap.begin(); iter != allPathMap.end(); ++iter) {
+        SetContainerPath(iter->second, fileDiscovery);
+        fileDiscovery->GetContainerInfo()->push_back(iter->second);
+    }
+    return true;
+}
+
+bool InputFile::IsSameContainerInfo(FileDiscoveryOptions* fileDiscovery, const Json::Value& paramsJSON) {
+    if (!fileDiscovery->IsContainerDiscoveryEnabled())
+        return true;
+    if (!fileDiscovery->GetContainerInfo())
+        return false;
+
+    if (!paramsJSON.isMember("AllCmd")) {
+        ContainerInfo containerInfo;
+        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo)) {
+            LOG_ERROR(sLogger,
+                      ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+            return true;
+        }
+        SetContainerPath(containerInfo, fileDiscovery);
+        // try update
+        for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
+            if ((*fileDiscovery->GetContainerInfo())[i] == containerInfo) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // check all
+    unordered_map<string, ContainerInfo> allPathMap;
+    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON, allPathMap)) {
+        LOG_ERROR(sLogger,
+                  ("invalid all docker container params", "skip this path")("params", paramsJSON.toStyledString()));
+        return true;
+    }
+
+    // need add
+    if (fileDiscovery->GetContainerInfo()->size() != allPathMap.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < fileDiscovery->GetContainerInfo()->size(); ++i) {
+        unordered_map<string, ContainerInfo>::iterator iter
+            = allPathMap.find((*fileDiscovery->GetContainerInfo())[i].mContainerID);
+        // need delete
+        if (iter == allPathMap.end()) {
+            return false;
+        }
+        SetContainerPath(iter->second, fileDiscovery);
+        // need update
+        if ((*fileDiscovery->GetContainerInfo())[i] != iter->second) {
+            return false;
+        }
+    }
+    // same
+    return true;
+}
 bool InputFile::Start() {
     if (mEnableContainerDiscovery) {
         mFileDiscovery.SetContainerInfo(

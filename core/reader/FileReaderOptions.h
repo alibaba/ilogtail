@@ -16,17 +16,17 @@
 
 #pragma once
 
-#include <json/json.h>
-
 #include <cstdint>
 #include <string>
 #include <utility>
+
+#include <json/json.h>
 
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
 struct FileReaderOptions {
-    enum class Encoding { UTF8, UTF16, GBK, CONTAINERD_TEXT, DOCKER_JSON_FILE };
+    enum class Encoding { UTF8, UTF16, GBK };
 
     Encoding mFileEncoding = Encoding::UTF8;
     bool mTailingAllMatchedFiles = false;

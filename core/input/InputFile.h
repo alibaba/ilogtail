@@ -30,6 +30,9 @@ class InputFile : public Input {
 public:
     static const std::string sName;
 
+    static bool UpdateContainerInfoFunc(FileDiscoveryOptions*, const Json::Value&);
+    static bool IsSameContainerInfo(FileDiscoveryOptions*, const Json::Value&);
+
     InputFile();
 
     const std::string& Name() const override { return sName; }

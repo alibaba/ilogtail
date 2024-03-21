@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "container_manager/DockerContainerPathCmd.h"
+#include "container_manager/ConfigContainerInfoUpdateCmd.h"
 #include "log_pb/sls_logs.pb.h"
 
 namespace logtail {
@@ -33,7 +33,7 @@ struct Mount {
     std::string Destination;
 };
 
-struct DockerContainerPath {
+struct ContainerInfo {
     enum class InputType {
         InputFile = 0,
         InputContainerLog = 1,
@@ -43,33 +43,28 @@ struct DockerContainerPath {
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
     std::string mContainerPath;
 
-    std::string mStreamLogPath;
-    std::string mStreamLogType;
-    std::string mDefaultRootPath;
+    std::string mStdoutPath;
+    std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
     std::vector<sls_logs::LogTag> mContainerTags; // tags extracted from this container
     std::string mJsonStr; // this obj's json string, for saving to local file
 
     InputType mInputType;
 
-    static bool ParseByJSONStr(const DockerContainerPathCmd* pCmd, DockerContainerPath& dockerContainerPath);
-    static bool ParseAllByJSONStr(const DockerContainerPathCmd* pCmd,
-                                  std::unordered_map<std::string, DockerContainerPath>& dockerContainerPathMap);
+    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&);
+    static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&);
 
-    bool operator==(const DockerContainerPath& rhs) const {
+    bool operator==(const ContainerInfo& rhs) const {
         if (mContainerID != rhs.mContainerID) {
             return false;
         }
         if (mContainerPath != rhs.mContainerPath) {
             return false;
         }
-        if (mStreamLogPath != rhs.mStreamLogPath) {
+        if (mStdoutPath != rhs.mStdoutPath) {
             return false;
         }
-        if (mStreamLogType != rhs.mStreamLogType) {
-            return false;
-        }
-        if (mDefaultRootPath != rhs.mDefaultRootPath) {
+        if (mUpperDir != rhs.mUpperDir) {
             return false;
         }
         if (mMounts.size() != rhs.mMounts.size()) {
@@ -94,12 +89,9 @@ struct DockerContainerPath {
         }
         return true;
     }
-    bool operator!=(const DockerContainerPath& rhs) const { return !(*this == rhs); }
+    bool operator!=(const ContainerInfo& rhs) const { return !(*this == rhs); }
 
 private:
-    static bool ParseByJSONObj(const Json::Value& jsonObj,
-                               const DockerContainerPathCmd* pCmd,
-                               DockerContainerPath& dockerContainerPath);
 };
 
 } // namespace logtail

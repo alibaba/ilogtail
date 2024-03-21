@@ -459,19 +459,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         // construct a logGroup, it should be moved into input later
         PipelineEventGroup eventGroup(logBuffer);
         // TODO: metadata should be set in reader
-        switch (logFileReader.get()->GetReaderConfig().first->mFileEncoding) {
-            case FileReaderOptions::Encoding::DOCKER_JSON_FILE:
-                eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
-                                       ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
-                break;
-            case FileReaderOptions::Encoding::CONTAINERD_TEXT:
-                eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT,
-                                       ProcessorParseContainerLogNative::CONTAINERD_TEXT);
-                break;
-            default:
-                break;
-        }
-        FillEventGroupMetadata(*logBuffer, eventGroup);
+        FillEventGroupMetadata(*logBuffer, eventGroup, logFileReader->mFileLogFormat);
 
         LogEvent* event = eventGroup.AddLogEvent();
         time_t logtime = time(NULL);
@@ -514,7 +502,19 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     return 0;
 }
 
-void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const {
+void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer,
+                                        PipelineEventGroup& eventGroup,
+                                        LogFileReader::LogFormat fileLogFormat) const {
+    switch (fileLogFormat) {
+        case LogFileReader::LogFormat::DOCKER_JSON_FILE:
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
+            break;
+        case LogFileReader::LogFormat::CONTAINERD_TEXT:
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, ProcessorParseContainerLogNative::CONTAINERD_TEXT);
+            break;
+        default:
+            break;
+    }
     if (!eventGroup.HasMetadata(EventGroupMetaKey::LOG_FORMAT)) {
         eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
         eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED,

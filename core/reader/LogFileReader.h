@@ -88,6 +88,9 @@ struct LineInfo {
 
 class LogFileReader {
 public:
+    enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
+    LogFormat mFileLogFormat = LogFormat::TEXT;
+    ContainerInfo::InputType mInputType = ContainerInfo::InputType::InputFile;
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
         FileCompareResult_SigChange,
@@ -360,7 +363,6 @@ public:
     const std::string& GetLogstore() const { return mLogstore; }
     const std::string& GetRegion() const { return mRegion; }
     const std::string& GetConfigName() const { return mConfigName; }
-    const FileReaderConfig& GetReaderConfig() const { return mReaderConfig; }
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
@@ -465,6 +467,9 @@ protected:
     std::string mRegion;
 
 private:
+    bool mHasReadContainerBom = false;
+    void checkContainerType();
+
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
         std::string primaryCheckpointKey;
