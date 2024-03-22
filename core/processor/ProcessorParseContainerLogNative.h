@@ -45,7 +45,7 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
-    bool mIgnoreParseWarning = false;
+    bool mIgnoringParseWarning = false;
     bool mKeepingSourceWhenParseFail = true;
 
 protected:

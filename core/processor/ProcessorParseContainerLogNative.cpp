@@ -85,12 +85,12 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    // IgnoreParseWarning
-    if (!GetOptionalBoolParam(config, "IgnoreParseWarning", mIgnoreParseWarning, errorMsg)) {
+    // IgnoringParseWarning
+    if (!GetOptionalBoolParam(config, "IgnoringParseWarning", mIgnoringParseWarning, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
-                              mIgnoreParseWarning,
+                              mIgnoringParseWarning,
                               sName,
                               mContext->GetConfigName(),
                               mContext->GetProjectName(),
@@ -159,7 +159,7 @@ bool ProcessorParseContainerLogNative::ProcessEvent(StringView containerType, Pi
         mProcParseErrorTotal->Add(1);
     }
 
-    if (!mIgnoreParseWarning && !errorMsg.empty() && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+    if (!mIgnoringParseWarning && !errorMsg.empty() && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
         LOG_WARNING(sLogger,
                     ("failed to parse log line, errorMsg", errorMsg)("container runtime", containerType)(
                         "processor", sName)("config", mContext->GetConfigName()));

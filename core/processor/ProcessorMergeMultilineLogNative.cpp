@@ -47,11 +47,11 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
     }
 
     // Ignore Warning
-    if (!GetOptionalBoolParam(config, "IgnoreUnmatchWarning", mIgnoreUnmatchWarning, errorMsg)) {
+    if (!GetOptionalBoolParam(config, "IgnoringUnmatchWarning", mIgnoringUnmatchWarning, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
-                              mIgnoreUnmatchWarning,
+                              mIgnoringUnmatchWarning,
                               sName,
                               mContext->GetConfigName(),
                               mContext->GetProjectName(),
@@ -143,6 +143,15 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
         }
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
         if (sourceEvent->GetContents().empty()) {
+            LOG_ERROR(mContext->GetLogger(),
+                      ("unexpected error", "some events are not supported, no content")("processor", sName)(
+                          "config", mContext->GetConfigName()));
+            mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                           "unexpected error: some events are not supported, no content.\tprocessor: "
+                                               + sName + "\tconfig: " + mContext->GetConfigName(),
+                                           mContext->GetProjectName(),
+                                           mContext->GetLogstoreName(),
+                                           mContext->GetRegion());
             continue;
         }
         events.emplace_back(sourceEvent);
@@ -368,11 +377,11 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath) {
     mProcUnmatchedEventsCnt->Add(end - begin + 1);
     if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
-        && mIgnoreUnmatchWarning) {
+        && mIgnoringUnmatchWarning) {
         return;
     }
     for (size_t i = begin; i <= end; i++) {
-        if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        if (!mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
             LOG_WARNING(
                 GetContext().GetLogger(),
