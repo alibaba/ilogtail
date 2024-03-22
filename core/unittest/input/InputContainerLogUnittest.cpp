@@ -15,6 +15,7 @@
 #include <json/json.h>
 
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <string>
 
@@ -27,6 +28,7 @@
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
+DECLARE_FLAG_STRING(default_container_host_path);
 
 using namespace std;
 
@@ -37,6 +39,7 @@ public:
     void OnSuccessfulInit();
     void OnEnableContainerDiscovery();
     void OnPipelineUpdate();
+    void TestTryGetRealPath();
 
 protected:
     static void SetUpTestCase() { AppConfig::GetInstance()->mPurageContainerMode = true; }
@@ -49,6 +52,12 @@ private:
     Pipeline p;
     PipelineContext ctx;
 };
+
+void InputContainerLogUnittest::TestTryGetRealPath() {
+    std::string path = STRING_FLAG(default_container_host_path) + "/apsarapangu/SSDCache1/a.log";
+    std::string result = InputContainerLog::TryGetRealPath(path);
+    std::cout << result << std::endl;
+}
 
 void InputContainerLogUnittest::OnSuccessfulInit() {
     unique_ptr<InputContainerLog> input;
@@ -188,6 +197,7 @@ void InputContainerLogUnittest::OnPipelineUpdate() {
 UNIT_TEST_CASE(InputContainerLogUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputContainerLogUnittest, OnEnableContainerDiscovery)
 UNIT_TEST_CASE(InputContainerLogUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputContainerLogUnittest, TestTryGetRealPath)
 
 } // namespace logtail
 
