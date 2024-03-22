@@ -29,6 +29,8 @@ public:
     void TestSetTimestamp();
     void TestSetContent();
     void TestDelContent();
+    void TestReadOp();
+    void TestIterate();
 
     void TestFromJsonToJson();
 
@@ -40,6 +42,8 @@ protected:
 APSARA_UNIT_TEST_CASE(LogEventUnittest, TestSetTimestamp, 0);
 APSARA_UNIT_TEST_CASE(LogEventUnittest, TestSetContent, 0);
 APSARA_UNIT_TEST_CASE(LogEventUnittest, TestDelContent, 0);
+APSARA_UNIT_TEST_CASE(LogEventUnittest, TestReadOp, 0);
+APSARA_UNIT_TEST_CASE(LogEventUnittest, TestIterate, 0);
 APSARA_UNIT_TEST_CASE(LogEventUnittest, TestFromJsonToJson, 0);
 
 void LogEventUnittest::TestSetTimestamp() {
@@ -84,9 +88,73 @@ void LogEventUnittest::TestSetContent() {
 
 void LogEventUnittest::TestDelContent() {
     mLogEvent->SetContent(std::string("key1"), std::string("value1"));
-    APSARA_TEST_TRUE_FATAL(mLogEvent->HasContent("key1"));
-    mLogEvent->DelContent(std::string("key1"));
-    APSARA_TEST_FALSE_FATAL(mLogEvent->HasContent("key1"));
+    {
+        // key not exists
+        mLogEvent->DelContent(std::string("key2"));
+        APSARA_TEST_EQUAL(1, mLogEvent->Size());
+    }
+    {
+        // key exists
+        mLogEvent->DelContent(std::string("key1"));
+        APSARA_TEST_FALSE(mLogEvent->HasContent("key1"));
+        APSARA_TEST_TRUE(mLogEvent->Empty());
+    }
+}
+
+void LogEventUnittest::TestReadOp() {
+    mLogEvent->SetContent(std::string("key1"), std::string("value1"));
+    {
+        // key not exists
+        auto it = mLogEvent->FindContent("key2");
+        APSARA_TEST_TRUE(it == mLogEvent->end());
+        APSARA_TEST_FALSE(mLogEvent->HasContent("key2"));
+        APSARA_TEST_EQUAL(nullptr, mLogEvent->GetContent("key2").data());
+    }
+    {
+        // key exists
+        auto it = mLogEvent->FindContent("key1");
+        APSARA_TEST_TRUE(it != mLogEvent->end());
+        APSARA_TEST_STREQ("key1", it->first.data());
+        APSARA_TEST_STREQ("value1", it->second.data());
+        APSARA_TEST_TRUE(mLogEvent->HasContent("key1"));
+        APSARA_TEST_STREQ("value1", mLogEvent->GetContent("key1").data());
+    }
+}
+
+void LogEventUnittest::TestIterate() {
+    {
+        // first element is valid
+        mLogEvent->SetContent(std::string("key1"), std::string("value1"));
+        APSARA_TEST_STREQ("key1", mLogEvent->begin()->first.data());
+        APSARA_TEST_STREQ("value1", mLogEvent->begin()->second.data());
+    }
+    {
+        // first element is invalid, and no element is valid
+        mLogEvent->DelContent("key1");
+        APSARA_TEST_TRUE(mLogEvent->end() == mLogEvent->begin());
+    }
+    {
+        // first element is invalid, and at least one element is valid
+        mLogEvent->SetContent(std::string("key1"), std::string("value1"));
+        APSARA_TEST_STREQ("key1", mLogEvent->begin()->first.data());
+        APSARA_TEST_STREQ("value1", mLogEvent->begin()->second.data());
+    }
+
+    // 2 valid elements and 1 invalid element
+    mLogEvent->SetContent(std::string("key2"), std::string("value2"));
+    {
+        // suffix iteration
+        auto it = mLogEvent->begin()++;
+        APSARA_TEST_STREQ("key1", it->first.data());
+        APSARA_TEST_STREQ("value1", it->second.data());
+    }
+    {
+        // prefix iteration
+        auto it = ++mLogEvent->begin();
+        APSARA_TEST_STREQ("key2", it->first.data());
+        APSARA_TEST_STREQ("value2", it->second.data());
+        APSARA_TEST_TRUE(mLogEvent->end() == ++it);
+    }
 }
 
 void LogEventUnittest::TestFromJsonToJson() {

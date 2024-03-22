@@ -40,7 +40,7 @@ public:
         return false;
     }
 
-    virtual bool Match(const LogContents& contents, PipelineContext& mContext) {
+    virtual bool Match(const LogEvent& contents, PipelineContext& mContext) {
         if (BOOST_LIKELY(left && right)) {
             if (op == AND_OPERATOR) {
                 return left->Match(contents, mContext) && right->Match(contents, mContext);

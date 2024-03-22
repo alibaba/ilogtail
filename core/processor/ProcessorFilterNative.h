@@ -51,7 +51,7 @@ private:
     bool FilterGlobal(LogEvent& sourceEvent);
 
     bool ProcessEvent(PipelineEventPtr& e);
-    bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
+    bool IsMatched(const LogEvent& contents, const LogFilterRule& rule);
 
     bool noneUtf8(StringView & strSrc, bool modify);
     bool CheckNoneUtf8(const StringView & strSrc);

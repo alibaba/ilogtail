@@ -54,14 +54,12 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
 
     auto& sourceEvent = e.Cast<LogEvent>();
 
-    const LogContents& contents = sourceEvent.GetContents();
-
     for (auto it : mSensitiveWordCastOptions) {
         const std::string& key = it.first;
         if (!sourceEvent.HasContent(key)) {
             continue;
         }
-        const auto& content = contents.find(key);
+        const auto& content = sourceEvent.FindContent(key);
         std::string value = sourceEvent.GetContent(key).to_string();
         CastOneSensitiveWord(mSensitiveWordCastOptions[key], &value);
         mProcDesensitizeRecodesTotal->Add(1);

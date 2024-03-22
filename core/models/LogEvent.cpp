@@ -25,33 +25,104 @@ std::unique_ptr<LogEvent> LogEvent::CreateEvent(std::shared_ptr<SourceBuffer>& s
     return p;
 }
 
-void LogEvent::SetContent(const StringView& key, const StringView& val) {
-    SetContentNoCopy(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
-}
-void LogEvent::SetContent(const std::string& key, const std::string& val) {
-    SetContentNoCopy(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
-}
-void LogEvent::SetContentNoCopy(const StringBuffer& key, const StringBuffer& val) {
-    SetContentNoCopy(StringView(key.data, key.size), StringView(val.data, val.size));
-}
-
-const StringView& LogEvent::GetContent(const StringView& key) const {
-    auto it = contents.find(key);
-    if (it != contents.end()) {
-        return it->second;
+StringView LogEvent::GetContent(StringView key) const {
+    auto it = mIndex.find(key);
+    if (it != mIndex.end()) {
+        return mContents[it->second].first.second;
     }
     return gEmptyStringView;
 }
 
-bool LogEvent::HasContent(const StringView& key) const {
-    return contents.find(key) != contents.end();
-}
-void LogEvent::SetContentNoCopy(const StringView& key, const StringView& val) {
-    contents[key] = val;
+bool LogEvent::HasContent(StringView key) const {
+    return mIndex.find(key) != mIndex.end();
 }
 
-void LogEvent::DelContent(const StringView& key) {
-    contents.erase(key);
+void LogEvent::SetContent(StringView key, StringView val) {
+    SetContentNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
+}
+
+void LogEvent::SetContent(const std::string& key, const std::string& val) {
+    SetContentNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
+}
+
+void LogEvent::SetContent(const StringBuffer& key, StringView val) {
+    SetContentNoCopy(key, GetSourceBuffer()->CopyString(val));
+}
+
+void LogEvent::SetContentNoCopy(const StringBuffer& key, const StringBuffer& val) {
+    SetContentNoCopy(StringView(key.data, key.size), StringView(val.data, val.size));
+}
+
+void LogEvent::SetContentNoCopy(StringView key, StringView val) {
+    auto it = mIndex.find(key);
+    if (it != mIndex.end()) {
+        mContents[it->second].first = std::pair<StringView, StringView>(key, val);
+    } else {
+        mContents.emplace_back(std::pair<StringView, StringView>(key, val), true);
+        mIndex[key] = mContents.size() - 1;
+    }
+}
+
+void LogEvent::DelContent(StringView key) {
+    auto it = mIndex.find(key);
+    if (it != mIndex.end()) {
+        mContents[it->second].second = false;
+        mIndex.erase(it);
+    }
+}
+
+LogEvent::ContentIterator LogEvent::FindContent(StringView key) {
+    auto it = mIndex.find(key);
+    if (it != mIndex.end()) {
+        return ContentIterator(mContents.begin() + it->second, mContents);
+    }
+    return ContentIterator(mContents.end(), mContents);
+}
+
+LogEvent::ConstContentIterator LogEvent::FindContent(StringView key) const {
+    auto it = mIndex.find(key);
+    if (it != mIndex.end()) {
+        return ConstContentIterator(mContents.begin() + it->second, mContents);
+    }
+    return ConstContentIterator(mContents.end(), mContents);
+}
+
+LogEvent::ContentIterator LogEvent::begin() {
+    auto it = mContents.begin();
+    while (it != mContents.end() && !it->second) {
+        ++it;
+    }
+    return ContentIterator(it, mContents);
+}
+
+LogEvent::ContentIterator LogEvent::end() {
+    mContents.end() == mContents.end();
+    return ContentIterator(mContents.end(), mContents);
+}
+
+LogEvent::ConstContentIterator LogEvent::begin() const {
+    return cbegin();
+}
+
+LogEvent::ConstContentIterator LogEvent::end() const {
+    return cend();
+}
+
+LogEvent::ConstContentIterator LogEvent::cbegin() const {
+    auto it = mContents.cbegin();
+    while (it != mContents.cend() && !it->second) {
+        ++it;
+    }
+    return ConstContentIterator(it, mContents);
+}
+
+LogEvent::ConstContentIterator LogEvent::cend() const {
+    return ConstContentIterator(mContents.cend(), mContents);
+}
+
+void LogEvent::AppendContentNoCopy(StringView key, StringView val) {
+    mContents.emplace_back(std::pair<StringView, StringView>(key, val), true);
+    mIndex[key] = mContents.size() - 1;
 }
 
 LogEvent::LogEvent() {
@@ -63,9 +134,9 @@ Json::Value LogEvent::ToJson() const {
     root["type"] = GetType();
     root["timestamp"] = GetTimestamp();
     root["timestampNanosecond"] = GetTimestampNanosecond();
-    if (!GetContents().empty()) {
+    if (!Empty()) {
         Json::Value contents;
-        for (const auto& content : this->GetContents()) {
+        for (const auto& content : *this) {
             contents[content.first.to_string()] = content.second.to_string();
         }
         root["contents"] = std::move(contents);
