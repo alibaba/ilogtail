@@ -158,7 +158,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     return true;
 }
 
-static std::string TryGetRealPath(std::string path) {
+std::string InputContainerLog::TryGetRealPath(std::string path) {
     int index = 0; // assume path is absolute
     for (int i = 0; i < 10; i++) {
         struct stat f;
@@ -198,7 +198,7 @@ static std::string TryGetRealPath(std::string path) {
     return "";
 }
 
-static void SetContainerPath(ContainerInfo& containerInfo) {
+void InputContainerLog::SetContainerPath(ContainerInfo& containerInfo) {
     std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path).c_str() + containerInfo.mStdoutPath);
     if (realPath.empty()) {
         LOG_ERROR(sLogger, ("failed to get real path", containerInfo.mStdoutPath));

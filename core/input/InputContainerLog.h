@@ -32,6 +32,8 @@ public:
 
     static bool UpdateContainerInfoFunc(FileDiscoveryOptions*, const Json::Value&);
     static bool IsSameContainerInfo(FileDiscoveryOptions*, const Json::Value&);
+    static std::string TryGetRealPath(std::string path);
+    static void SetContainerPath(ContainerInfo& containerInfo);
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
