@@ -50,7 +50,6 @@ public:
     }
 
     void SetUp() override {
-        readerOpts.mFileEncoding = FileReaderOptions::Encoding::CONTAINERD_TEXT;
         std::string filepath = logPathDir + PATH_SEPARATOR + utf8File;
         std::unique_ptr<FILE, decltype(&std::fclose)> fp(std::fopen(filepath.c_str(), "r"), &std::fclose);
         if (!fp.get()) {
@@ -94,6 +93,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLinePos() {
     MultilineOptions multilineOpts;
     LogFileReader logFileReader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    logFileReader.mFileLogFormat = LogFileReader::LogFormat::CONTAINERD_TEXT;
     // case: F + P + P
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
@@ -200,6 +200,8 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastLineData() {
     MultilineOptions multilineOpts;
     LogFileReader logFileReader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    logFileReader.mFileLogFormat = LogFileReader::LogFormat::CONTAINERD_TEXT;
+
     // case: F + P + P
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
