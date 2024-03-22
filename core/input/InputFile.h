@@ -30,8 +30,8 @@ class InputFile : public Input {
 public:
     static const std::string sName;
 
-    static bool UpdateContainerInfoFunc(FileDiscoveryOptions*, const Json::Value&);
-    static bool IsSameContainerInfo(FileDiscoveryOptions*, const Json::Value&);
+    static void SetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions*);
+    static bool hasPrefix(const std::string& fullString, const std::string& prefix);
 
     InputFile();
 

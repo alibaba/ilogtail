@@ -45,9 +45,9 @@ public:
     void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
     const std::shared_ptr<std::vector<ContainerInfo>>& GetContainerInfo() const { return mContainerInfos; }
     void SetContainerInfo(const std::shared_ptr<std::vector<ContainerInfo>>& info) { mContainerInfos = info; }
-    void SetUpdateContainerInfoFunc(bool (*f)(FileDiscoveryOptions*, const Json::Value&)) { mUpdateContainerInfo = f; }
-    void SetIsSameContainerInfoFunc(bool (*f)(FileDiscoveryOptions*, const Json::Value&)) { mIsSameContainerInfo = f; }
-    void SetDeleteContainerInfoFunc(bool (*f)(FileDiscoveryOptions*, const Json::Value&)) { mDeleteContainerInfo = f; }
+    void SetContainerPathFunc(void (*f)(ContainerInfo& containerInfo, const FileDiscoveryOptions*)) {
+        mSetContainerPathFunc = f;
+    }
 
     bool IsDirectoryInBlacklist(const std::string& dirPath) const;
     bool IsMatch(const std::string& path, const std::string& name) const;
@@ -107,9 +107,7 @@ private:
 
     bool mEnableContainerDiscovery = false;
     std::shared_ptr<std::vector<ContainerInfo>> mContainerInfos; // must not be null if container discovery is enabled
-    bool (*mUpdateContainerInfo)(FileDiscoveryOptions*, const Json::Value&) = nullptr;
-    bool (*mDeleteContainerInfo)(FileDiscoveryOptions*, const Json::Value&) = nullptr;
-    bool (*mIsSameContainerInfo)(FileDiscoveryOptions*, const Json::Value&) = nullptr;
+    void (*mSetContainerPathFunc)(ContainerInfo& containerInfo, const FileDiscoveryOptions*) = nullptr;
 
     // 过渡使用
     bool mTailingAllMatchedFiles = false;

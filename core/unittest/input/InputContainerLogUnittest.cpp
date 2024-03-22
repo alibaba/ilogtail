@@ -53,10 +53,49 @@ private:
     PipelineContext ctx;
 };
 
+void create_directory(const std::string& path) {
+    size_t pos = 0;
+    std::string dir;
+    std::string dir_path = path;
+    int mkdir_status;
+
+    // Add trailing slash if missing
+    if (dir_path[dir_path.size() - 1] != '/') {
+        dir_path += '/';
+    }
+
+    while ((pos = dir_path.find_first_of('/', pos)) != std::string::npos) {
+        dir = dir_path.substr(0, pos++);
+        if (dir.size() == 0)
+            continue; // if leading / first time is 0 length
+        if ((mkdir_status = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) && errno != EEXIST) {
+            std::cerr << "Error creating directory " << dir << ": " << strerror(errno) << std::endl;
+            return;
+        }
+    }
+}
+
 void InputContainerLogUnittest::TestTryGetRealPath() {
-    std::string path = STRING_FLAG(default_container_host_path) + "/apsarapangu/SSDCache1/a.log";
+    std::string rootDirectory = "/tmp/home/admin";
+    std::string path = "/test/test/test";
+    STRING_FLAG(default_container_host_path) = rootDirectory;
+
+    // 删除 rootDirectory 目录
+    std::filesystem::remove_all(rootDirectory);
+    // 删除 STRING_FLAG(default_container_host_path)
+    std::filesystem::remove_all(STRING_FLAG(default_container_host_path));
+
+    // 创建 /tmp/home/admin/test/test/test 目录
+    create_directory(rootDirectory + path);
+    // 创建 /tmp/home/admin/test/test/test/test.log 文件
+    std::ofstream outfile(rootDirectory + path + "/test.log");
+    outfile.close();
+
+    symlink((path + "/test.log").c_str(), (rootDirectory + "/a.log").c_str());
+
+    path = STRING_FLAG(default_container_host_path) + "/a.log";
     std::string result = InputContainerLog::TryGetRealPath(path);
-    std::cout << result << std::endl;
+    APSARA_TEST_EQUAL(result, rootDirectory + path + "/test.log");
 }
 
 void InputContainerLogUnittest::OnSuccessfulInit() {
