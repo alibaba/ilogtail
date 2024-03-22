@@ -38,6 +38,19 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
                            mContext->GetRegion());
     }
 
+    // Ignore Warning
+    if (!GetOptionalBoolParam(config, "IgnoringUnmatchWarning", mIgnoringUnmatchWarning, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mIgnoringUnmatchWarning,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
+    }
+
     static Json::Value fileDiscoveryConfig(Json::objectValue);
     if (fileDiscoveryConfig.empty()) {
         fileDiscoveryConfig["FilePaths"] = Json::Value(Json::arrayValue);
@@ -112,12 +125,12 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
                               mContext->GetRegion());
     }
 
-    // IgnoreParseWarning
-    if (!GetOptionalBoolParam(config, "IgnoreParseWarning", mIgnoreParseWarning, errorMsg)) {
+    // IgnoringParseWarning
+    if (!GetOptionalBoolParam(config, "IgnoringParseWarning", mIgnoringParseWarning, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               mContext->GetAlarm(),
                               errorMsg,
-                              mIgnoreParseWarning,
+                              mIgnoringParseWarning,
                               sName,
                               mContext->GetConfigName(),
                               mContext->GetProjectName(),

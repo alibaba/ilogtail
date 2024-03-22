@@ -38,9 +38,10 @@ public:
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
+    bool mIgnoringUnmatchWarning = false;
     bool mIgnoringStdout = false;
     bool mIgnoringStderr = false;
-    bool mIgnoreParseWarning = false;
+    bool mIgnoringParseWarning = false;
     bool mKeepingSourceWhenParseFail = true;
 
 private:

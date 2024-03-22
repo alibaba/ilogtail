@@ -164,7 +164,7 @@ bool Pipeline::Init(Config&& config) {
             detail["IgnoringStdout"] = Json::Value(inputContainerLog->mIgnoringStdout);
             detail["IgnoringStderr"] = Json::Value(inputContainerLog->mIgnoringStderr);
             detail["KeepingSourceWhenParseFail"] = Json::Value(inputContainerLog->mKeepingSourceWhenParseFail);
-            detail["IgnoreParseWarning"] = Json::Value(inputContainerLog->mIgnoreParseWarning);
+            detail["IgnoringParseWarning"] = Json::Value(inputContainerLog->mIgnoringParseWarning);
             if (!processor->Init(detail, mContext)) {
                 return false;
             }
@@ -176,6 +176,7 @@ bool Pipeline::Init(Config&& config) {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
                                                                        to_string(++pluginIndex));
             detail["MergeType"] = Json::Value("flag");
+            detail["IgnoringUnmatchWarning"] = inputContainerLog->mIgnoringUnmatchWarning;
             if (!processor->Init(detail, mContext)) {
                 return false;
             }
@@ -191,6 +192,7 @@ bool Pipeline::Init(Config&& config) {
             } else {
                 processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
                                                                            to_string(++pluginIndex));
+                detail["IgnoringUnmatchWarning"] = inputContainerLog->mIgnoringUnmatchWarning;
                 detail["Mode"] = Json::Value("custom");
                 detail["MergeType"] = Json::Value("regex");
                 detail["StartPattern"] = Json::Value(inputContainerLog->mMultiline.mStartPattern);
