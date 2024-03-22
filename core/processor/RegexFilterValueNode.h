@@ -57,7 +57,7 @@ public:
 
     virtual bool Match(const LogEvent& contents,  PipelineContext& mContext) {
         const auto& content = contents.FindContent(key);
-        if (content == contents.End()) {
+        if (content == contents.end()) {
             return false;
         }
 
