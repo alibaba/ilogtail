@@ -118,8 +118,23 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
         return;
     }
     const LogEvent& sourceEvent = e.Cast<LogEvent>();
+    auto sourceIterator = sourceEvent.FindContent(mSourceKey);
     // This is an inner plugin, so the size of log content must equal to 2 (sourceKey, __file_offset__)
-    if (sourceEvent.GetContents().size() != 2 || !sourceEvent.HasContent(mSourceKey)) {
+    if (sourceEvent.Size() != 2) {
+        newEvents.emplace_back(std::move(e));
+        LOG_ERROR(mContext->GetLogger(),
+                  ("unexpected error", "size of event content doesn't equal to 2")("processor", sName)(
+                      "config", mContext->GetConfigName()));
+        mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                       "unexpected error: size of event content doesn't equal to 2.\tSourceKey: "
+                                           + mSourceKey + "\tprocessor: " + sName
+                                           + "\tconfig: " + mContext->GetConfigName(),
+                                       mContext->GetProjectName(),
+                                       mContext->GetLogstoreName(),
+                                       mContext->GetRegion());
+        return;
+    }
+    if (sourceIterator == sourceEvent.end()) {
         newEvents.emplace_back(std::move(e));
         LOG_ERROR(mContext->GetLogger(),
                   ("unexpected error", "some events do not have the SourceKey")("SourceKey", mSourceKey)(
@@ -134,7 +149,12 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
         return;
     }
 
-    StringView sourceVal = sourceEvent.GetContent(mSourceKey);
+    uint32_t sourceOffset = 0;
+    if (sourceEvent.FindContent(LOG_RESERVED_KEY_FILE_OFFSET) != sourceEvent.end()) {
+        sourceOffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
+    }
+
+    StringView sourceVal = sourceIterator->second;
     StringBuffer sourceKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
     const char* multiStartIndex = nullptr;
     std::string exception;
@@ -146,10 +166,6 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
         multiStartIndex = sourceVal.data();
     }
 
-    uint32_t sourceOffset = 0;
-    if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
-        sourceOffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
-    }
 
     size_t begin = 0;
     while (begin < sourceVal.size()) {
