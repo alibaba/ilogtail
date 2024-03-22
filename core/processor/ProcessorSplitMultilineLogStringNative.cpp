@@ -47,19 +47,6 @@ bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    // Ignore Warning
-    if (!GetOptionalBoolParam(config, "IgnoreUnmatchWarning", mIgnoreUnmatchWarning, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              mIgnoreUnmatchWarning,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
-    }
-
     if (!mMultiline.Init(config, *mContext, sName)) {
         return false;
     }
@@ -86,12 +73,18 @@ bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
     return true;
 }
 
+/*
+    Presume:
+    1. Events must be LogEvent
+    2. This is an inner plugin, so the size of log content must equal to 2 (sourceKey, __file_offset__)
+    3. The last character of each event must be \0 (set in LogFileReader)
+*/
 void ProcessorSplitMultilineLogStringNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
     EventsContainer newEvents;
-    const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
+    StringView logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     for (PipelineEventPtr& e : logGroup.MutableEvents()) {
         ProcessEvent(logGroup, logPath, std::move(e), newEvents);
     }
@@ -117,7 +110,7 @@ bool ProcessorSplitMultilineLogStringNative::IsSupportedEvent(const PipelineEven
 }
 
 void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
-                                                          const StringView& logPath,
+                                                          StringView logPath,
                                                           PipelineEventPtr&& e,
                                                           EventsContainer& newEvents) {
     if (!IsSupportedEvent(e)) {
@@ -125,6 +118,7 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
         return;
     }
     const LogEvent& sourceEvent = e.Cast<LogEvent>();
+    // This is an inner plugin, so the size of log content must equal to 2 (sourceKey, __file_offset__)
     if (sourceEvent.GetContents().size() != 2 || !sourceEvent.HasContent(mSourceKey)) {
         newEvents.emplace_back(std::move(e));
         LOG_ERROR(mContext->GetLogger(),
@@ -267,16 +261,15 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
     // when in unmatched state, the unmatched log is handled one by one, so there is no need for additional handle
     // here
     if (isPartialLog && multiStartIndex - sourceVal.data() < sourceVal.size()) {
-        int endIndex = sourceVal[sourceVal.size() - 1] == '\n' ? sourceVal.size() - 1 : sourceVal.size();
         if (mMultiline.GetEndPatternReg() == nullptr) {
-            CreateNewEvent(StringView(multiStartIndex, sourceVal.data() + endIndex - multiStartIndex),
+            CreateNewEvent(StringView(multiStartIndex, sourceVal.data() + sourceVal.size() - multiStartIndex),
                            sourceOffset,
                            sourceKey,
                            sourceEvent,
                            logGroup,
                            newEvents);
         } else {
-            HandleUnmatchLogs(StringView(multiStartIndex, sourceVal.data() + endIndex - multiStartIndex),
+            HandleUnmatchLogs(StringView(multiStartIndex, sourceVal.data() + sourceVal.size() - multiStartIndex),
                               sourceOffset,
                               sourceKey,
                               sourceEvent,
@@ -318,7 +311,7 @@ void ProcessorSplitMultilineLogStringNative::HandleUnmatchLogs(const StringView&
     while (begin < sourceVal.size()) {
         StringView content = GetNextLine(sourceVal, begin);
         mProcUnmatchedEventsCnt->Add(1);
-        if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        if (!mMultiline.mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             LOG_WARNING(
                 GetContext().GetLogger(),
                 ("unmatched log line", "please check regex")(

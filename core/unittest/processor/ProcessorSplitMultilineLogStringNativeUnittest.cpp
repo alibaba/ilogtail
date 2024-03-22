@@ -34,20 +34,24 @@ const std::string LOG_UNMATCH = "unmatch log";
 
 class ProcessorSplitMultilineLogDisacardUnmatchUnittest : public ::testing::Test {
 public:
-    void SetUp() override { mContext.SetConfigName("project##config_0"); }
     void TestLogSplitWithBeginContinue();
     void TestLogSplitWithBeginEnd();
     void TestLogSplitWithBegin();
     void TestLogSplitWithContinueEnd();
     void TestLogSplitWithEnd();
+
+protected:
+    void SetUp() override { mContext.SetConfigName("project##config_0"); }
+
+private:
     PipelineContext mContext;
 };
 
-UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithBeginContinue);
-UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithBeginEnd);
-UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithBegin);
-UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithContinueEnd);
-UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithEnd);
+UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithBeginContinue)
+UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithBeginEnd)
+UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithBegin)
+UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithContinueEnd)
+UNIT_TEST_CASE(ProcessorSplitMultilineLogDisacardUnmatchUnittest, TestLogSplitWithEnd)
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginContinue() {
     // make config
@@ -2015,6 +2019,51 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                     {
                         "content" : ")"
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
+    // case: start + unmatch + \n
+    {
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n",
+                        "__file_offset__": 0
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+
+        // run test function
+        ProcessorSplitMultilineLogStringNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,

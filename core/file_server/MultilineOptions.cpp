@@ -166,6 +166,19 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
                               ctx.GetRegion());
     }
 
+    // Ignore Warning
+    if (!GetOptionalBoolParam(config, "IgnoringUnmatchWarning", mIgnoringUnmatchWarning, errorMsg)) {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mIgnoringUnmatchWarning,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
+    }
+
     return true;
 }
 

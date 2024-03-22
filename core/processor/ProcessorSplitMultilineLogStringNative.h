@@ -33,7 +33,6 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
-    bool mIgnoreUnmatchWarning = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -43,10 +42,8 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvent(PipelineEventGroup& logGroup,
-                      const StringView& logPath,
-                      PipelineEventPtr&& e,
-                      EventsContainer& newEvents);
+    void
+    ProcessEvent(PipelineEventGroup& logGroup, StringView logPath, PipelineEventPtr&& e, EventsContainer& newEvents);
     void SplitLogByRegex(PipelineEventGroup& logGroup);
     void CreateNewEvent(const StringView& content,
                         long sourceoffset,
