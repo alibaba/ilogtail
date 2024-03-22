@@ -94,7 +94,6 @@ public:
     // for debug and test
     Json::Value ToJson() const override;
     bool FromJson(const Json::Value&) override;
-    uint64_t EventsSizeBytes() override;
 
 private:
     LogEvent();
