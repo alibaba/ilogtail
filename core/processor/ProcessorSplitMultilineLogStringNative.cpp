@@ -118,7 +118,6 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
         return;
     }
     const LogEvent& sourceEvent = e.Cast<LogEvent>();
-    auto sourceIterator = sourceEvent.FindContent(mSourceKey);
     // This is an inner plugin, so the size of log content must equal to 2 (sourceKey, __file_offset__)
     if (sourceEvent.Size() != 2) {
         newEvents.emplace_back(std::move(e));
@@ -126,35 +125,47 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
                   ("unexpected error", "size of event content doesn't equal to 2")("processor", sName)(
                       "config", mContext->GetConfigName()));
         mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
-                                       "unexpected error: size of event content doesn't equal to 2.\tSourceKey: "
-                                           + mSourceKey + "\tprocessor: " + sName
+                                       "unexpected error: size of event content doesn't equal to 2.\tprocessor: " + sName
                                            + "\tconfig: " + mContext->GetConfigName(),
                                        mContext->GetProjectName(),
                                        mContext->GetLogstoreName(),
                                        mContext->GetRegion());
         return;
     }
+    
+    auto sourceIterator = sourceEvent.FindContent(mSourceKey);
     if (sourceIterator == sourceEvent.end()) {
         newEvents.emplace_back(std::move(e));
         LOG_ERROR(mContext->GetLogger(),
-                  ("unexpected error", "some events do not have the SourceKey")("SourceKey", mSourceKey)(
+                  ("unexpected error", "some events do not have the SourceKey")(
                       "processor", sName)("config", mContext->GetConfigName()));
         mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
-                                       "unexpected error: some events do not have the sourceKey.\tSourceKey: "
-                                           + mSourceKey + "\tprocessor: " + sName
+                                       "unexpected error: some events do not have the sourceKey.\tprocessor: " + sName
                                            + "\tconfig: " + mContext->GetConfigName(),
                                        mContext->GetProjectName(),
                                        mContext->GetLogstoreName(),
                                        mContext->GetRegion());
         return;
     }
-
-    uint32_t sourceOffset = 0;
-    if (sourceEvent.FindContent(LOG_RESERVED_KEY_FILE_OFFSET) != sourceEvent.end()) {
-        sourceOffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
-    }
-
     StringView sourceVal = sourceIterator->second;
+
+    auto offsetIterator = sourceEvent.FindContent(LOG_RESERVED_KEY_FILE_OFFSET);
+    if (offsetIterator == sourceEvent.end()) {
+        newEvents.emplace_back(std::move(e));
+        LOG_ERROR(mContext->GetLogger(),
+                  ("unexpected error", "event do not have key __file_ofset__")("processor", sName)(
+                      "config", mContext->GetConfigName()));
+        mContext->GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                       "unexpected error: event do not have key __file_ofset__.\tprocessor"
+                                           + sName
+                                           + "\tconfig: " + mContext->GetConfigName(),
+                                       mContext->GetProjectName(),
+                                       mContext->GetLogstoreName(),
+                                       mContext->GetRegion());
+        return;
+    }
+    uint32_t sourceOffset = atol(offsetIterator->second.data());
+    
     StringBuffer sourceKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
     const char* multiStartIndex = nullptr;
     std::string exception;
