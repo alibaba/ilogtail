@@ -123,8 +123,8 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
             targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
-        if (sourceEvent.GetContents().size() > 1) { // copy other fields
-            for (auto& kv : sourceEvent.GetContents()) {
+        if (sourceEvent.Size() > 1) { // copy other fields
+            for (const auto& kv : sourceEvent) {
                 if (kv.first != mSplitKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
                     targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }

@@ -38,7 +38,7 @@ public:
 
 public:
     virtual bool Match(const sls_logs::Log& log, const LogGroupContext& context) { return true; }
-    virtual bool Match(const LogContents& contents, PipelineContext& mContext) { return true; }
+    virtual bool Match(const LogEvent& contents, PipelineContext& mContext) { return true; }
 
 public:
     FilterNodeType GetNodeType() const { return nodeType; }
