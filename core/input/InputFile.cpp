@@ -82,7 +82,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // 过渡使用
     mFileDiscovery.SetTailingAllMatchedFiles(mFileReader.mTailingAllMatchedFiles);
-    mFileDiscovery.SetContainerPathFunc(SetContainerPath);
+    mFileDiscovery.SetDeduceAndSetContainerPathFunc(DeduceAndDeduceAndSetContainerPath);
 
     // Multiline
     const char* key = "Multiline";
@@ -153,7 +153,8 @@ bool InputFile::hasPrefix(const std::string& fullString, const std::string& pref
     return fullString.compare(0, prefix.length(), prefix) == 0;
 }
 
-void InputFile::SetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions* fileDiscovery) {
+void InputFile::DeduceAndDeduceAndSetContainerPath(ContainerInfo& containerInfo,
+                                                   const FileDiscoveryOptions* fileDiscovery) {
     std::string logPath;
     if (!fileDiscovery->GetWildcardPaths().empty()) {
         logPath = fileDiscovery->GetWildcardPaths()[0];

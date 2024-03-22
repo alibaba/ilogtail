@@ -78,7 +78,7 @@ void create_directory(const std::string& path) {
 void InputContainerLogUnittest::TestTryGetRealPath() {
     std::string rootDirectory = "/tmp/home/admin";
     std::string path = "/test/test/test";
-    STRING_FLAG(default_container_host_path) = rootDirectory;
+    STRING_FLAG(default_container_host_path) = "/tmp/home/admin";
 
     // 删除 rootDirectory 目录
     std::filesystem::remove_all(rootDirectory);
@@ -93,8 +93,7 @@ void InputContainerLogUnittest::TestTryGetRealPath() {
 
     symlink((path + "/test.log").c_str(), (rootDirectory + "/a.log").c_str());
 
-    path = STRING_FLAG(default_container_host_path) + "/a.log";
-    std::string result = InputContainerLog::TryGetRealPath(path);
+    std::string result = InputContainerLog::TryGetRealPath(STRING_FLAG(default_container_host_path) + "/a.log");
     APSARA_TEST_EQUAL(result, rootDirectory + path + "/test.log");
 }
 

@@ -664,7 +664,7 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
                       ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
             return true;
         }
-        mSetContainerPathFunc(containerInfo, this);
+        mDeduceAndSetContainerPathFunc(containerInfo, this);
         // try update
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
             if ((*mContainerInfos)[i] == containerInfo) {
@@ -693,7 +693,7 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
         if (iter == allPathMap.end()) {
             return false;
         }
-        mSetContainerPathFunc(iter->second, this);
+        mDeduceAndSetContainerPathFunc(iter->second, this);
         // need update
         if ((*mContainerInfos)[i] != iter->second) {
             return false;
@@ -714,7 +714,7 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON) {
                       ("invalid docker container params", "skip this path")("params", paramsJSON.toStyledString()));
             return false;
         }
-        mSetContainerPathFunc(containerInfo, this);
+        mDeduceAndSetContainerPathFunc(containerInfo, this);
         // try update
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
             if ((*mContainerInfos)[i].mContainerID == containerInfo.mContainerID) {
@@ -737,7 +737,7 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON) {
     // if update all, clear and reset
     mContainerInfos->clear();
     for (unordered_map<string, ContainerInfo>::iterator iter = allPathMap.begin(); iter != allPathMap.end(); ++iter) {
-        mSetContainerPathFunc(iter->second, this);
+        mDeduceAndSetContainerPathFunc(iter->second, this);
         mContainerInfos->push_back(iter->second);
     }
     return true;

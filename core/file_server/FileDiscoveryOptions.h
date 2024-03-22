@@ -45,8 +45,8 @@ public:
     void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
     const std::shared_ptr<std::vector<ContainerInfo>>& GetContainerInfo() const { return mContainerInfos; }
     void SetContainerInfo(const std::shared_ptr<std::vector<ContainerInfo>>& info) { mContainerInfos = info; }
-    void SetContainerPathFunc(void (*f)(ContainerInfo& containerInfo, const FileDiscoveryOptions*)) {
-        mSetContainerPathFunc = f;
+    void SetDeduceAndSetContainerPathFunc(void (*f)(ContainerInfo& containerInfo, const FileDiscoveryOptions*)) {
+        mDeduceAndSetContainerPathFunc = f;
     }
 
     bool IsDirectoryInBlacklist(const std::string& dirPath) const;
@@ -107,7 +107,7 @@ private:
 
     bool mEnableContainerDiscovery = false;
     std::shared_ptr<std::vector<ContainerInfo>> mContainerInfos; // must not be null if container discovery is enabled
-    void (*mSetContainerPathFunc)(ContainerInfo& containerInfo, const FileDiscoveryOptions*) = nullptr;
+    void (*mDeduceAndSetContainerPathFunc)(ContainerInfo& containerInfo, const FileDiscoveryOptions*) = nullptr;
 
     // 过渡使用
     bool mTailingAllMatchedFiles = false;

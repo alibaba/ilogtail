@@ -59,7 +59,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
         return false;
     }
     mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
-    mFileDiscovery.SetContainerPathFunc(SetContainerPath);
+    mFileDiscovery.SetDeduceAndSetContainerPathFunc(DeduceAndDeduceAndSetContainerPath);
 
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
@@ -157,33 +157,34 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     return true;
 }
 
-std::string InputContainerLog::TryGetRealPath(std::string path) {
+std::string InputContainerLog::TryGetRealPath(const std::string& path) {
+    std::string tmpPath = path;
     int index = 0; // assume path is absolute
     for (int i = 0; i < 10; i++) {
         struct stat f;
-        if (stat(path.c_str(), &f) == 0) {
-            return path;
+        if (stat(tmpPath.c_str(), &f) == 0) {
+            return tmpPath;
         }
         while (true) {
-            int j = path.find('/', index + 1);
+            int j = tmpPath.find('/', index + 1);
             if (j == std::string::npos) {
-                index = path.length();
+                index = tmpPath.length();
             } else {
                 index = j;
             }
 
-            std::string subPath = path.substr(0, index);
+            std::string subPath = tmpPath.substr(0, index);
             struct stat f;
             if (lstat(subPath.c_str(), &f) != 0) {
                 return "";
             }
             if (S_ISLNK(f.st_mode)) {
                 // subPath is a symlink
-                char target[PATH_MAX + 1];
+                char target[PATH_MAX + 1]{0};
                 readlink(subPath.c_str(), target, sizeof(target));
                 std::string partialPath = STRING_FLAG(default_container_host_path).c_str()
                     + std::string(target); // You need to implement this function
-                path = partialPath + path.substr(index);
+                tmpPath = partialPath + tmpPath.substr(index);
                 if (stat(partialPath.c_str(), &f) != 0) {
                     // path referenced by partialPath does not exist or has symlink
                     index = 0;
@@ -197,7 +198,7 @@ std::string InputContainerLog::TryGetRealPath(std::string path) {
     return "";
 }
 
-void InputContainerLog::SetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions*) {
+void InputContainerLog::DeduceAndDeduceAndSetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions*) {
     std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path).c_str() + containerInfo.mStdoutPath);
     if (realPath.empty()) {
         LOG_ERROR(sLogger, ("failed to get real path", containerInfo.mStdoutPath));
