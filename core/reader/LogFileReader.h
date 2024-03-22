@@ -472,9 +472,8 @@ private:
     static StringBuffer GetStringBuffer();
 
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-    int32_t LastContainerdTextLinePos(char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
-    LineInfo GetLastLineData(char* buffer, int& begPs, int& endPs);
-    void GetLastContainerdTextLineData(char* buffer, int& begPs, int& endPs, LineInfo& res, bool isFirstLine = false);
+    LineInfo LastContainerdTextLinePos(const char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
+    LineInfo GetLastLineData(char* buffer, int& begPs, int endPs);
 
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
