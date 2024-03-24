@@ -82,8 +82,9 @@ enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
  */
 struct LineInfo {
     StringView data;
-    int lineBegin;
+    size_t lineBegin;
     int32_t lineFeedCount;
+    size_t lineEnd;
 };
 
 class LogFileReader {
@@ -472,13 +473,12 @@ private:
     static StringBuffer GetStringBuffer();
 
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-    LineInfo LastContainerdTextLinePos(const char* buffer, int32_t size);
 
-    LineInfo GetLastDockerJsonFileLine(char* buffer, int& begPs, int endPs);
-    LineInfo GetLastTextLine(char* buffer, int& begPs, int endPs);
-    LineInfo GetContainerdTextLine(char* buffer, int& begPs, int endPs);
+    LineInfo GetLastDockerJsonFileLine(const char* buffer, size_t& begPs, size_t endPs, int32_t& rollbackLineFeedCount);
+    LineInfo GetLastTextLine(const char* buffer, size_t& begPs, size_t endPs, int32_t& rollbackLineFeedCount);
+    LineInfo GetLastContainerdTextLine(const char* buffer, size_t& begPs, size_t endPs, int32_t& rollbackLineFeedCount);
 
-    LineInfo GetLastLineData(char* buffer, int& begPs, int endPs);
+    LineInfo GetLastLineData(const char* buffer, size_t& begPs, size_t endPs);
 
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
