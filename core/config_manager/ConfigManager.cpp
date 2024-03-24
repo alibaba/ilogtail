@@ -260,7 +260,7 @@ bool ConfigManager::RegisterHandlers() {
             result &= RegisterHandlers(config->GetBasePath(), *itr);
         } else {
             for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                result &= RegisterHandlers((*config->GetContainerInfo())[i].mContainerPath, *itr);
+                result &= RegisterHandlers((*config->GetContainerInfo())[i].mRealBaseDir, *itr);
             }
         }
     }
@@ -270,7 +270,7 @@ bool ConfigManager::RegisterHandlers() {
             RegisterWildcardPath(*itr, config->GetWildcardPaths()[0], 0);
         } else {
             for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                RegisterWildcardPath(*itr, (*config->GetContainerInfo())[i].mContainerPath, 0);
+                RegisterWildcardPath(*itr, (*config->GetContainerInfo())[i].mRealBaseDir, 0);
             }
         }
     }
@@ -952,20 +952,24 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
             continue;
         }
         ContainerInfo containerInfo;
-        if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo)) {
+        std::string errorMsg;
+        if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo, errorMsg)) {
+            if (!errorMsg.empty()) {
+                LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
+            }
             continue;
         }
         std::vector<ContainerInfo>::iterator iter = config.first->GetContainerInfo()->begin();
         std::vector<ContainerInfo>::iterator iend = config.first->GetContainerInfo()->end();
         for (; iter != iend; ++iter) {
-            if (iter->mContainerID == containerInfo.mContainerID) {
+            if (iter->mID == containerInfo.mID) {
                 break;
             }
         }
         if (iter == iend) {
             continue;
         }
-        Event* pStoppedEvent = new Event(iter->mContainerPath, "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
+        Event* pStoppedEvent = new Event(iter->mRealBaseDir, "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
         LOG_DEBUG(
             sLogger,
             ("GetContainerStoppedEvent Type", pStoppedEvent->GetType())("Source", pStoppedEvent->GetSource())(
@@ -994,7 +998,7 @@ void ConfigManager::SaveDockerConfig() {
             for (size_t i = 0; i < containerPathVec.size(); ++i) {
                 Json::Value dockerPathValue;
                 dockerPathValue["config_name"] = Json::Value(it->first);
-                dockerPathValue["container_id"] = Json::Value(containerPathVec[i].mContainerID);
+                dockerPathValue["container_id"] = Json::Value(containerPathVec[i].mID);
                 dockerPathValue["params"] = Json::Value(containerPathVec[i].mJsonStr);
                 dockerPathValueDetail.append(dockerPathValue);
             }

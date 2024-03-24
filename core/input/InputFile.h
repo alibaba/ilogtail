@@ -30,8 +30,7 @@ class InputFile : public Input {
 public:
     static const std::string sName;
 
-    static void DeduceAndDeduceAndSetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions*);
-    static bool hasPrefix(const std::string& fullString, const std::string& prefix);
+    static void DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const FileDiscoveryOptions*);
 
     InputFile();
 

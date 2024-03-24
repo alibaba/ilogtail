@@ -25,12 +25,15 @@
 
 #include "container_manager/ConfigContainerInfoUpdateCmd.h"
 #include "log_pb/sls_logs.pb.h"
+#include "models/StringView.h"
 
 namespace logtail {
 
 struct Mount {
     std::string Source;
     std::string Destination;
+    Mount(const std::string& source, const std::string& destination) : Source(source), Destination(destination) {}
+    Mount() = default;
 };
 
 struct ContainerInfo {
@@ -38,30 +41,30 @@ struct ContainerInfo {
         InputFile = 0,
         InputContainerLog = 1,
     };
-    std::string mContainerID; // id of this container
+    std::string mID; // id of this container
     // container path for this config's path. eg, config path '/home/admin', container path
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
-    std::string mContainerPath;
+    StringView mRealBaseDir;
 
-    std::string mStdoutPath;
+    std::string mLogPath;
     std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
-    std::vector<sls_logs::LogTag> mContainerTags; // tags extracted from this container
+    std::vector<sls_logs::LogTag> mMetadata; // tags extracted from this container
     std::string mJsonStr; // this obj's json string, for saving to local file
 
     InputType mInputType;
 
-    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&);
-    static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&);
+    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
+    static bool ParseAllByJSONObj(Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
 
     bool operator==(const ContainerInfo& rhs) const {
-        if (mContainerID != rhs.mContainerID) {
+        if (mID != rhs.mID) {
             return false;
         }
-        if (mContainerPath != rhs.mContainerPath) {
+        if (mRealBaseDir != rhs.mRealBaseDir) {
             return false;
         }
-        if (mStdoutPath != rhs.mStdoutPath) {
+        if (mLogPath != rhs.mLogPath) {
             return false;
         }
         if (mUpperDir != rhs.mUpperDir) {
@@ -77,12 +80,12 @@ struct ContainerInfo {
                 return false;
             }
         }
-        if (mContainerTags.size() != rhs.mContainerTags.size()) {
+        if (mMetadata.size() != rhs.mMetadata.size()) {
             return false;
         }
-        for (size_t idx = 0; idx < mContainerTags.size(); ++idx) {
-            const auto& lhsTag = mContainerTags[idx];
-            const auto& rhsTag = rhs.mContainerTags[idx];
+        for (size_t idx = 0; idx < mMetadata.size(); ++idx) {
+            const auto& lhsTag = mMetadata[idx];
+            const auto& rhsTag = rhs.mMetadata[idx];
             if (lhsTag.key() != rhsTag.key() || lhsTag.value() != rhsTag.value()) {
                 return false;
             }
