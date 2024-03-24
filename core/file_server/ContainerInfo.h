@@ -55,7 +55,7 @@ struct ContainerInfo {
     InputType mInputType;
 
     static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
-    static bool ParseAllByJSONObj(Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
+    static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
 
     bool operator==(const ContainerInfo& rhs) const {
         if (mID != rhs.mID) {

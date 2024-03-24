@@ -220,8 +220,10 @@ void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
     if (pos != std::string::npos) {
         containerInfo.mRealBaseDir = realPath.substr(0, pos);
     }
-    if (containerInfo.mRealBaseDir.length() > 1 && containerInfo.mRealBaseDir.back() == '/') {
-        containerInfo.mRealBaseDir.pop_back();
+    if (containerInfo.mRealBaseDir.size() > 1
+        && containerInfo.mRealBaseDir[containerInfo.mRealBaseDir.size() - 1] == '/') {
+        containerInfo.mRealBaseDir
+            = StringView(containerInfo.mRealBaseDir.data(), containerInfo.mRealBaseDir.size() - 1);
     }
     LOG_DEBUG(sLogger, ("docker container path", containerInfo.mRealBaseDir));
 }
