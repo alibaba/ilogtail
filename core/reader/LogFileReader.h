@@ -472,7 +472,12 @@ private:
     static StringBuffer GetStringBuffer();
 
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-    LineInfo LastContainerdTextLinePos(const char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
+    LineInfo LastContainerdTextLinePos(const char* buffer, int32_t size);
+
+    LineInfo GetLastDockerJsonFileLine(char* buffer, int& begPs, int endPs);
+    LineInfo GetLastTextLine(char* buffer, int& begPs, int endPs);
+    LineInfo GetContainerdTextLine(char* buffer, int& begPs, int endPs);
+
     LineInfo GetLastLineData(char* buffer, int& begPs, int endPs);
 
     // Initialized when the exactly once feature is enabled.
