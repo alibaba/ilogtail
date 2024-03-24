@@ -2020,8 +2020,7 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     if (!mMultilineConfig.first->IsMultiline()) {
         if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
             size_t begin = 0;
-            LineInfo line = GetLastContainerdTextLine(buffer, begin, endPs);
-            rollbackLineFeedCount = line.lineFeedCount;
+            LineInfo line = GetLastContainerdTextLine(buffer, begin, endPs, rollbackLineFeedCount);
             return line.lineEnd;
         }
         while (endPs >= 0) {

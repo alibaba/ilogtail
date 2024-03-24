@@ -23,6 +23,7 @@ const std::string LOG_PART = "2021-08-25T07:00:00.000000000Z stdout P ";
 const std::string LOG_FULL = "2021-08-25T07:00:00.000000000Z stdout F ";
 const std::string LOG_FULL_NOT_FOUND = "2021-08-25T07:00:00.000000000Z stdout ";
 const std::string LOG_ERROR = "2021-08-25T07:00:00.000000000Z stdout";
+
 const std::string LOG_BEGIN_STRING = "Exception in thread \"main\" java.lang.NullPointerException";
 const std::string LOG_BEGIN_REGEX = R"(Exception.*)";
 const std::string LOG_CONTINUE_STRING = "    at com.example.myproject.Book.getTitle(Book.java:16)";
@@ -30,6 +31,7 @@ const std::string LOG_CONTINUE_REGEX = R"(\s+at\s.*)";
 const std::string LOG_END_STRING = "    ...23 more";
 const std::string LOG_END_REGEX = R"(\s*\.\.\.\d+ more)";
 const std::string LOG_UNMATCH = "unmatch log";
+
 class LastMatchedContainerdTextLineUnittest : public ::testing::Test {
 public:
     static void SetUpTestCase() {
@@ -69,8 +71,9 @@ public:
 
     void TestSingleline();
     void TestMultiline();
-    void TestGetLastContainerdTextLine();
+    void TestLastContainerdTextLinePos();
     void TestGetLastLineData();
+
     std::unique_ptr<char[]> expectedContent;
     FileReaderOptions readerOpts;
     PipelineContext ctx;
@@ -78,106 +81,118 @@ public:
     static std::string gbkFile;
     static std::string utf8File;
 };
-UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestGetLastContainerdTextLine);
-// UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestGetLastLineData);
+
+UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLinePos);
+UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestGetLastLineData);
+
 std::string LastMatchedContainerdTextLineUnittest::logPathDir;
 std::string LastMatchedContainerdTextLineUnittest::gbkFile;
 std::string LastMatchedContainerdTextLineUnittest::utf8File;
-void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
+
+void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLinePos() {
     MultilineOptions multilineOpts;
     LogFileReader logFileReader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-    logFileReader.mFileLogFormat = LogFileReader::LogFormat::CONTAINERD_TEXT;
-    size_t begPs = 0;
+    size_t begin = 0;
     // case: F + P + P
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
         std::string expectedLog = LOG_FULL + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(2, line.lineFeedCount);
+        APSARA_TEST_EQUAL(2, rollbackLineFeedCount);
     }
     // case: F + P + P + '\n'
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
         std::string expectedLog = LOG_FULL + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(2, line.lineFeedCount);
+        APSARA_TEST_EQUAL(2, rollbackLineFeedCount);
     }
 
     // case: F + P + P + F
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
         std::string expectedLog = LOG_FULL + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(3, line.lineFeedCount);
+        APSARA_TEST_EQUAL(3, rollbackLineFeedCount);
     }
     // case: F + P + P + F + '\n'
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(0, line.lineFeedCount);
+        APSARA_TEST_EQUAL(0, rollbackLineFeedCount);
     }
 
     // F + errorLog
     {
         std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789";
         std::string expectedLog = LOG_FULL + "456\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(1, line.lineFeedCount);
+        APSARA_TEST_EQUAL(1, rollbackLineFeedCount);
     }
     // F + errorLog + '\n'
     {
         std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789\n";
         std::string expectedLog = LOG_FULL + "456\n" + LOG_ERROR + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(0, line.lineFeedCount);
+        APSARA_TEST_EQUAL(0, rollbackLineFeedCount);
     }
 
     // case: P + P + F
     {
         std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(0, line.lineEnd);
-        APSARA_TEST_EQUAL(3, line.lineFeedCount);
+        APSARA_TEST_EQUAL(3, rollbackLineFeedCount);
     }
     // case: P + P + F + '\n'
     {
         std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(0, line.lineFeedCount);
+        APSARA_TEST_EQUAL(0, rollbackLineFeedCount);
     }
 
     // case: P + P + error
     {
         std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(0, line.lineEnd);
-        APSARA_TEST_EQUAL(3, line.lineFeedCount);
+        APSARA_TEST_EQUAL(3, rollbackLineFeedCount);
     }
     // case: P + P + error + '\n'
     {
         std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789\n";
         std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789\n";
-        LineInfo line
-            = logFileReader.GetLastContainerdTextLine(const_cast<char*>(testLog.data()), begPs, testLog.size() - 1);
+        int32_t rollbackLineFeedCount = 0;
+        LineInfo line = logFileReader.GetLastContainerdTextLine(
+            const_cast<char*>(testLog.data()), begin, testLog.size() - 1, rollbackLineFeedCount);
         APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd);
-        APSARA_TEST_EQUAL(0, line.lineFeedCount);
+        APSARA_TEST_EQUAL(0, rollbackLineFeedCount);
     }
 }
 
@@ -185,14 +200,15 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //     MultilineOptions multilineOpts;
 //     LogFileReader logFileReader(
 //         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-//     logFileReader.mFileLogFormat = LogFileReader::LogFormat::CONTAINERD_TEXT;
 //     // case: F + P + P
 //     {
 //         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = LOG_FULL + "789\n";
 //         std::string expectedLog = "12345";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -202,8 +218,10 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = LOG_FULL + "789\n";
 //         std::string expectedLog = "123456";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -214,8 +232,10 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = LOG_FULL + "789\n";
 //         std::string expectedLog = "12345678";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -225,8 +245,10 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = LOG_FULL + "789\n";
 //         std::string expectedLog = "123456789";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -237,8 +259,10 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //         std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = LOG_FULL + "456\n";
 //         std::string expectedLog = LOG_ERROR + "78";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -248,8 +272,10 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //         std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789\n";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = LOG_FULL + "456\n";
 //         std::string expectedLog = LOG_ERROR + "789";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -260,8 +286,10 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //         std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
 //         int endPs = testLog.size() - 1;
 //         int begPs = testLog.size() - 2;
+
 //         std::string expectedRemainingLogs = "";
 //         std::string expectedLog = "12345678";
+
 //         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begPs, endPs);
 //         APSARA_TEST_EQUAL(line.data.to_string(), expectedLog);
 //         APSARA_TEST_EQUAL(begPs, expectedRemainingLogs.size());
@@ -269,31 +297,31 @@ void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
 //     // // case: P + P + F + '\n'
 //     // {
 //     //     std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-//     //
-//     //     LineInfo line  = logFileReader.GetLastContainerdTextLine(
-//     //         const_cast<char*>(testLog.data())begPs, testLog.size()-1);
+//     //     int32_t rollbackLineFeedCount = 0;
+//     //     LineInfo line =  logFileReader.LastContainerdTextLinePos(
+//     //         const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
 //     //     APSARA_TEST_EQUAL(int(testLog.size()),line.lineEnd);
-//     //                     APSARA_TEST_EQUAL(0 ,line.lineFeedCount);
+//     //     APSARA_TEST_EQUAL(0, rollbackLineFeedCount);
 //     // }
 
 //     // // case: P + P + error
 //     // {
 //     //     std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789";
-//     //
-//     //     LineInfo line  = logFileReader.GetLastContainerdTextLine(
-//     //         const_cast<char*>(testLog.data())begPs, testLog.size()-1);
+//     //     int32_t rollbackLineFeedCount = 0;
+//     //     LineInfo line =  logFileReader.LastContainerdTextLinePos(
+//     //         const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
 //     //     APSARA_TEST_EQUAL(0,line.lineEnd);
-//     //                     APSARA_TEST_EQUAL(3 ,line.lineFeedCount);
+//     //     APSARA_TEST_EQUAL(3, rollbackLineFeedCount);
 //     // }
 //     // // case: P + P + error + '\n'
 //     // {
 //     //     std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789\n";
 //     //     std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789\n";
-//     //
-//     //     LineInfo line  = logFileReader.GetLastContainerdTextLine(
-//     //         const_cast<char*>(testLog.data())begPs, testLog.size()-1);
+//     //     int32_t rollbackLineFeedCount = 0;
+//     //     LineInfo line =  logFileReader.LastContainerdTextLinePos(
+//     //         const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
 //     //     APSARA_TEST_EQUAL(int(expectedLog.size()),line.lineEnd);
-//     //                     APSARA_TEST_EQUAL(0 ,line.lineFeedCount);
+//     //     APSARA_TEST_EQUAL(0, rollbackLineFeedCount);
 //     // }
 // }
 
