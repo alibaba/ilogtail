@@ -22,8 +22,6 @@
 
 using namespace std;
 
-DECLARE_FLAG_STRING(default_container_host_path);
-
 namespace logtail {
 
 const string InputContainerLog::sName = "input_container_log";
@@ -59,7 +57,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
         return false;
     }
     mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
-    mFileDiscovery.SetDeduceAndSetContainerPathFunc(DeduceAndDeduceAndSetContainerPath);
+    mFileDiscovery.SetDeduceAndSetContainerBaseDirFunc(DeduceAndSetContainerBaseDir);
 
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
@@ -147,16 +145,17 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
                             "stderr logs at the same time, there may be issues with merging multiple lines";
         LOG_WARNING(sLogger, ("warning", warningMsg)("config", mContext->GetConfigName()));
         warningMsg = "warning msg: " + warningMsg + "\tconfig: " + mContext->GetConfigName();
-        LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
-                                               warningMsg,
-                                               GetContext().GetProjectName(),
-                                               GetContext().GetLogstoreName(),
-                                               GetContext().GetRegion());
+        mContext->GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
+                                       warningMsg,
+                                       GetContext().GetProjectName(),
+                                       GetContext().GetLogstoreName(),
+                                       GetContext().GetRegion());
     }
 
     return true;
 }
 
+#if defined(__linux__)
 std::string InputContainerLog::TryGetRealPath(const std::string& path) {
     std::string tmpPath = path;
     int index = 0; // assume path is absolute
@@ -173,16 +172,16 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
                 index = j;
             }
 
-            std::string subPath = tmpPath.substr(0, index);
+            StringView subPath = StringView(tmpPath.c_str(), index);
             struct stat f;
-            if (lstat(subPath.c_str(), &f) != 0) {
+            if (lstat(subPath.data(), &f) != 0) {
                 return "";
             }
             if (S_ISLNK(f.st_mode)) {
                 // subPath is a symlink
                 char target[PATH_MAX + 1]{0};
-                readlink(subPath.c_str(), target, sizeof(target));
-                std::string partialPath = STRING_FLAG(default_container_host_path).c_str()
+                readlink(subPath.data(), target, sizeof(target));
+                std::string partialPath = STRING_FLAG(default_container_host_path)
                     + std::string(target); // You need to implement this function
                 tmpPath = partialPath + tmpPath.substr(index);
                 if (stat(partialPath.c_str(), &f) != 0) {
@@ -197,22 +196,34 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
     }
     return "";
 }
+#elif defined(_MSC_VER)
+std::string InputContainerLog::TryGetRealPath(const std::string& path) {
+    struct stat f;
+    if (stat(path.c_str(), &f) == 0) {
+        return path;
+    }
+    return "";
+}
+#endif
 
-void InputContainerLog::DeduceAndDeduceAndSetContainerPath(ContainerInfo& containerInfo, const FileDiscoveryOptions*) {
-    std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path).c_str() + containerInfo.mStdoutPath);
+void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+                                                     const FileDiscoveryOptions* fileDiscovery) {
+    std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path) + containerInfo.mLogPath);
     if (realPath.empty()) {
-        LOG_ERROR(sLogger, ("failed to get real path", containerInfo.mStdoutPath));
+        LOG_ERROR(sLogger,
+                  ("failed to set container base dir", "container log path not existed")(
+                      "container id", containerInfo.mID)("container log path", containerInfo.mLogPath));
         return;
     }
     containerInfo.mInputType = ContainerInfo::InputType::InputContainerLog;
     size_t pos = realPath.find_last_of('/');
     if (pos != std::string::npos) {
-        containerInfo.mContainerPath = realPath.substr(0, pos);
+        containerInfo.mRealBaseDir = realPath.substr(0, pos);
     }
-    if (containerInfo.mContainerPath.length() > 1 && containerInfo.mContainerPath.back() == '/') {
-        containerInfo.mContainerPath.pop_back();
+    if (containerInfo.mRealBaseDir.length() > 1 && containerInfo.mRealBaseDir.back() == '/') {
+        containerInfo.mRealBaseDir.pop_back();
     }
-    LOG_DEBUG(sLogger, ("docker container path", containerInfo.mContainerPath));
+    LOG_DEBUG(sLogger, ("docker container path", containerInfo.mRealBaseDir));
 }
 
 bool InputContainerLog::Start() {

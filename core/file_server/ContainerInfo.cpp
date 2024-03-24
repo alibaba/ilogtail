@@ -20,62 +20,71 @@
 
 namespace logtail {
 
-bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
-                                      std::unordered_map<std::string, ContainerInfo>& containerInfoMap) {
+bool ContainerInfo::ParseAllByJSONObj(Json::Value& paramsAll,
+                                      std::unordered_map<std::string, ContainerInfo>& containerInfoMap,
+                                      std::string& errorMsg) {
     containerInfoMap.clear();
-    if (!paramsAll.isMember("AllCmd")) {
-        return false;
-    }
 
-    auto paramsArray = paramsAll["AllCmd"];
     // The json library changes its behavior for {"AllCmd":null}:
     // - v0.16.x: isArray() returns true.
     // - v1.x: isArray() returns false.
     // Do null check for compatibility.
-    if (paramsArray.isNull()) {
+    if (paramsAll.isNull()) {
         return true;
     }
-    if (!paramsArray.isArray()) {
+    if (!paramsAll.isArray()) {
+        errorMsg = "param is not of type array, param: " + paramsAll.toStyledString();
         return false;
     }
-    for (Json::Value::iterator iter = paramsArray.begin(); iter != paramsArray.end(); ++iter) {
+    for (Json::Value::iterator iter = paramsAll.begin(); iter != paramsAll.end(); ++iter) {
         Json::Value params = *iter;
         ContainerInfo nowDCP;
-        nowDCP.mJsonStr = params.toStyledString();
-        if (!ParseByJSONObj(params, nowDCP)) {
-            LOG_ERROR(sLogger, ("parse sub docker container params error", nowDCP.mJsonStr));
+        if (!ParseByJSONObj(params, nowDCP, errorMsg)) {
+            errorMsg = "some container info is invalid: " + errorMsg;
             return false;
         }
-        containerInfoMap[nowDCP.mContainerID] = nowDCP;
+        containerInfoMap[nowDCP.mID] = nowDCP;
     }
     return true;
 }
 
-bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo) {
+bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
     if (params.isMember("ID") && params["ID"].isString()) {
-        containerInfo.mContainerID = params["ID"].asString();
+        if (params["ID"].empty()) {
+            errorMsg = "container id is empty, param: " + params.asString();
+            return false;
+        }
+        containerInfo.mID = params["ID"].asString();
     }
 
     if (params.isMember("Mounts") && params["Mounts"].isArray()) {
         const Json::Value& mounts = params["Mounts"];
-        for (Json::ArrayIndex i = 0; i < mounts.size(); i++) {
+        for (Json::ArrayIndex i = 0; i < mounts.size(); ++i) {
             if (mounts[i].isMember("Source") && mounts[i]["Source"].isString() && mounts[i].isMember("Destination")
                 && mounts[i]["Destination"].isString()) {
                 std::string dst = mounts[i]["Destination"].asString();
                 std::string src = mounts[i]["Source"].asString();
+                if (dst != "\\" && dst != "/" && (dst.back() == '/' || dst.back() == '\\')) {
+                    dst.pop_back();
+                }
+                if (src != "\\" && src != "/" && (src.back() == '/' || src.back() == '\\')) {
+                    src.pop_back();
+                }
 
-                Mount mount;
-                mount.Source = src;
-                mount.Destination = dst;
+                Mount mount(src, dst);
                 containerInfo.mMounts.push_back(mount);
             }
         }
     }
     if (params.isMember("UpperDir") && params["UpperDir"].isString()) {
         containerInfo.mUpperDir = params["UpperDir"].asString();
+        if (containerInfo.mUpperDir != "\\" && containerInfo.mUpperDir != "/"
+            && (containerInfo.mUpperDir.back() == '/' || containerInfo.mUpperDir.back() == '\\')) {
+            containerInfo.mUpperDir.pop_back();
+        }
     }
     if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
-        containerInfo.mStdoutPath = params["StdoutPath"].asString();
+        containerInfo.mLogPath = params["StdoutPath"].asString();
     }
     if (params.isMember("Tags") && params["Tags"].isArray()) {
         const Json::Value& tags = params["Tags"];
@@ -84,15 +93,11 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 sls_logs::LogTag tag;
                 tag.set_key(tags[i - 1].asString());
                 tag.set_value(tags[i].asString());
-                containerInfo.mContainerTags.push_back(tag);
+                containerInfo.mMetadata.push_back(tag);
             }
         }
     }
-    // only check containerID (others are null when parse delete cmd)
-    if (containerInfo.mContainerID.size() > 0) {
-        return true;
-    }
-    return false;
+    return true;
 }
 
 } // namespace logtail
