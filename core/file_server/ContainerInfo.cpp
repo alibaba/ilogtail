@@ -20,7 +20,7 @@
 
 namespace logtail {
 
-bool ContainerInfo::ParseAllByJSONObj(Json::Value& paramsAll,
+bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
                                       std::unordered_map<std::string, ContainerInfo>& containerInfoMap,
                                       std::string& errorMsg) {
     containerInfoMap.clear();
@@ -36,7 +36,7 @@ bool ContainerInfo::ParseAllByJSONObj(Json::Value& paramsAll,
         errorMsg = "param is not of type array, param: " + paramsAll.toStyledString();
         return false;
     }
-    for (Json::Value::iterator iter = paramsAll.begin(); iter != paramsAll.end(); ++iter) {
+    for (auto iter = paramsAll.begin(); iter != paramsAll.end(); ++iter) {
         Json::Value params = *iter;
         ContainerInfo nowDCP;
         if (!ParseByJSONObj(params, nowDCP, errorMsg)) {

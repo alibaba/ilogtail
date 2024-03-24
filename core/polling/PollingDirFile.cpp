@@ -180,16 +180,16 @@ void PollingDirFile::Polling() {
                     CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
                 } else {
                     for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                        const string& basePath = (*config->GetContainerInfo())[i].mRealBaseDir;
+                        const StringView basePath = (*config->GetContainerInfo())[i].mRealBaseDir;
                         fsutil::PathStat baseDirStat;
-                        if (!fsutil::PathStat::stat(basePath.c_str(), baseDirStat)) {
+                        if (!fsutil::PathStat::stat(basePath.data(), baseDirStat)) {
                             LOG_DEBUG(sLogger,
                                       ("get docker base dir info error: ", basePath)(ctx->GetProjectName(),
                                                                                      ctx->GetLogstoreName()));
                             continue;
                         }
                         int32_t lastConfigStatCount = mStatCount;
-                        if (!PollingNormalConfigPath(*itr, basePath, string(), baseDirStat, 0)) {
+                        if (!PollingNormalConfigPath(*itr, basePath.to_string(), string(), baseDirStat, 0)) {
                             LOG_DEBUG(sLogger,
                                       ("docker logPath in config not exist", basePath)(ctx->GetProjectName(),
                                                                                        ctx->GetLogstoreName()));
@@ -218,9 +218,9 @@ void PollingDirFile::Polling() {
                     CheckConfigPollingStatCount(lastConfigStatCount, *itr, false);
                 } else {
                     for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                        const string& baseWildcardPath = (*config->GetContainerInfo())[i].mRealBaseDir;
+                        const StringView baseWildcardPath = (*config->GetContainerInfo())[i].mRealBaseDir;
                         int32_t lastConfigStatCount = mStatCount;
-                        if (!PollingWildcardConfigPath(*itr, baseWildcardPath, 0)) {
+                        if (!PollingWildcardConfigPath(*itr, baseWildcardPath.to_string(), 0)) {
                             LOG_DEBUG(sLogger,
                                       ("can not find matched path in config, "
                                        "Wildcard begin logPath ",

@@ -260,7 +260,7 @@ bool ConfigManager::RegisterHandlers() {
             result &= RegisterHandlers(config->GetBasePath(), *itr);
         } else {
             for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                result &= RegisterHandlers((*config->GetContainerInfo())[i].mRealBaseDir, *itr);
+                result &= RegisterHandlers((*config->GetContainerInfo())[i].mRealBaseDir.to_string(), *itr);
             }
         }
     }
@@ -270,7 +270,7 @@ bool ConfigManager::RegisterHandlers() {
             RegisterWildcardPath(*itr, config->GetWildcardPaths()[0], 0);
         } else {
             for (size_t i = 0; i < config->GetContainerInfo()->size(); ++i) {
-                RegisterWildcardPath(*itr, (*config->GetContainerInfo())[i].mRealBaseDir, 0);
+                RegisterWildcardPath(*itr, (*config->GetContainerInfo())[i].mRealBaseDir.to_string(), 0);
             }
         }
     }
@@ -969,7 +969,8 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
         if (iter == iend) {
             continue;
         }
-        Event* pStoppedEvent = new Event(iter->mRealBaseDir, "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
+        Event* pStoppedEvent
+            = new Event(iter->mRealBaseDir.to_string(), "", EVENT_ISDIR | EVENT_CONTAINER_STOPPED, -1, 0);
         LOG_DEBUG(
             sLogger,
             ("GetContainerStoppedEvent Type", pStoppedEvent->GetType())("Source", pStoppedEvent->GetSource())(
