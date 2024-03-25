@@ -421,13 +421,13 @@ public:
         needTrigger = mSenderInfo.RecordSendResult(sendRst, mSenderStatistics);
         if (!mSenderInfo.mNetworkValidFlag) {
             LOG_WARNING(sLogger,
-                        ("Network fail, pause ", mSenderInfo.mRegion)("project", item->mProjectName)(
-                            "logstore", item->mLogstore)("retry interval", mSenderInfo.mNetworkRetryInterval));
+                        ("Network fail, pause logstore", item->mLogstore)("project", item->mProjectName)(
+                            "region", mSenderInfo.mRegion)("retry interval", mSenderInfo.mNetworkRetryInterval));
         }
         if (!mSenderInfo.mQuotaValidFlag) {
             LOG_WARNING(sLogger,
-                        ("Quota fail, pause ", mSenderInfo.mRegion)("project", item->mProjectName)(
-                            "logstore", item->mLogstore)("retry interval", mSenderInfo.mQuotaRetryInterval));
+                        ("Quota fail, pause logstore", item->mLogstore)("project", item->mProjectName)(
+                            "region", mSenderInfo.mRegion)("retry interval", mSenderInfo.mQuotaRetryInterval));
         }
         // if send error, reset status to idle, and wait to send again
         // network fail or quota fail
