@@ -795,7 +795,8 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
     }
-    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom
+        && op.GetFileSize() > 0) {
         checkContainerType();
     }
     int32_t readSize = endOffset - mLastFilePos < INT32_FLAG(max_fix_pos_bytes) ? endOffset - mLastFilePos

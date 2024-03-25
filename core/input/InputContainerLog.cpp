@@ -15,6 +15,7 @@
 #include "input/InputContainerLog.h"
 
 #include "app_config/AppConfig.h"
+#include "common/FileSystemUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
@@ -155,13 +156,14 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     return true;
 }
 
-#if defined(__linux__)
 std::string InputContainerLog::TryGetRealPath(const std::string& path) {
     std::string tmpPath = path;
+#if defined(__linux__)
     int index = 0; // assume path is absolute
     for (int i = 0; i < 10; i++) {
         struct stat f;
-        if (stat(tmpPath.c_str(), &f) == 0) {
+        fsutil::PathStat buf;
+        if (fsutil::PathStat::stat(tmpPath, buf) == 0) {
             return tmpPath;
         }
         while (true) {
@@ -195,16 +197,14 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
         }
     }
     return "";
-}
 #elif defined(_MSC_VER)
-std::string InputContainerLog::TryGetRealPath(const std::string& path) {
-    struct stat f;
-    if (stat(path.c_str(), &f) == 0) {
-        return path;
+    fsutil::PathStat buf;
+    if (fsutil::PathStat::stat(tmpPath, buf) == 0) {
+        return tmpPath;
     }
     return "";
-}
 #endif
+}
 
 void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                                      const PipelineContext* ctx,

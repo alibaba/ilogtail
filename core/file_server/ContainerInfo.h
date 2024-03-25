@@ -29,9 +29,9 @@
 namespace logtail {
 
 struct Mount {
-    std::string Source;
-    std::string Destination;
-    Mount(const std::string& source, const std::string& destination) : Source(source), Destination(destination) {}
+    std::string mSource;
+    std::string mDestination;
+    Mount(const std::string& source, const std::string& destination) : mSource(source), mDestination(destination) {}
     Mount() = default;
 };
 
