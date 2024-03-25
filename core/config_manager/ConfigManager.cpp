@@ -860,7 +860,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             }
         } else {
-            if (config.first->UpdateContainerInfo(tmpPathCmdVec[i]->mJsonParams)) {
+            if (config.first->UpdateContainerInfo(tmpPathCmdVec[i]->mJsonParams, config.second)) {
                 LOG_DEBUG(sLogger,
                           ("container path update cmd success",
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
@@ -888,7 +888,7 @@ bool ConfigManager::IsUpdateContainerPaths() {
         if (!pConfig.first) {
             continue;
         }
-        if (!pConfig.first->IsSameContainerInfo(pCmd->mJsonParams)) {
+        if (!pConfig.first->IsSameContainerInfo(pCmd->mJsonParams, pConfig.second)) {
             rst = true;
             break;
         }
@@ -954,9 +954,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
         ContainerInfo containerInfo;
         std::string errorMsg;
         if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo, errorMsg)) {
-            if (!errorMsg.empty()) {
-                LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
-            }
+            LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             continue;
         }
         std::vector<ContainerInfo>::iterator iter = config.first->GetContainerInfo()->begin();

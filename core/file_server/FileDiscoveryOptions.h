@@ -45,7 +45,9 @@ public:
     void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
     const std::shared_ptr<std::vector<ContainerInfo>>& GetContainerInfo() const { return mContainerInfos; }
     void SetContainerInfo(const std::shared_ptr<std::vector<ContainerInfo>>& info) { mContainerInfos = info; }
-    void SetDeduceAndSetContainerBaseDirFunc(void (*f)(ContainerInfo& containerInfo, const FileDiscoveryOptions*)) {
+    void SetDeduceAndSetContainerBaseDirFunc(void (*f)(ContainerInfo&,
+                                                       const PipelineContext*,
+                                                       const FileDiscoveryOptions*)) {
         mDeduceAndSetContainerBaseDirFunc = f;
     }
 
@@ -53,8 +55,8 @@ public:
     bool IsMatch(const std::string& path, const std::string& name) const;
     bool IsTimeout(const std::string& path) const;
     bool WithinMaxDepth(const std::string& path) const;
-    bool IsSameContainerInfo(const Json::Value& paramsJSON);
-    bool UpdateContainerInfo(const Json::Value& paramsJSON);
+    bool IsSameContainerInfo(const Json::Value& paramsJSON, const PipelineContext*);
+    bool UpdateContainerInfo(const Json::Value& paramsJSON, const PipelineContext*);
     bool DeleteContainerInfo(const Json::Value& paramsJSON);
     ContainerInfo* GetContainerPathByLogPath(const std::string& logPath) const;
     // 过渡使用
@@ -107,7 +109,10 @@ private:
 
     bool mEnableContainerDiscovery = false;
     std::shared_ptr<std::vector<ContainerInfo>> mContainerInfos; // must not be null if container discovery is enabled
-    void (*mDeduceAndSetContainerBaseDirFunc)(ContainerInfo& containerInfo, const FileDiscoveryOptions*) = nullptr;
+    void (*mDeduceAndSetContainerBaseDirFunc)(ContainerInfo& containerInfo,
+                                              const PipelineContext*,
+                                              const FileDiscoveryOptions*)
+        = nullptr;
 
     // 过渡使用
     bool mTailingAllMatchedFiles = false;

@@ -38,8 +38,9 @@ public:
   "Path":"/logtail_host/lib/var/docker/abcdef"
 })""";
         config1.SetEnableContainerDiscoveryFlag(true);
-        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr1));
         FileServer::GetInstance()->AddFileDiscoveryConfig("test-config-1", &config1, nullptr);
+        FileDiscoveryConfig config = FileServer::GetInstance()->GetFileDiscoveryConfig("test-config-1");
+        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr1));
 
         FileDiscoveryOptions config2;
         std::string jsonStr2 = R"""({
@@ -47,8 +48,9 @@ public:
   "Path":"/logtail_host/lib/var/docker/000000"
 })""";
         config2.SetEnableContainerDiscoveryFlag(true);
-        APSARA_TEST_TRUE_FATAL(config1.UpdateContainerInfo(jsonStr2));
         FileServer::GetInstance()->AddFileDiscoveryConfig("test-config-1", &config2, nullptr);
+        config = FileServer::GetInstance()->GetFileDiscoveryConfig("test-config-1");
+        APSARA_TEST_TRUE_FATAL(config2.UpdateContainerInfo(jsonStr2));
     }
 
     void TestGetContainerStoppedEvents() {

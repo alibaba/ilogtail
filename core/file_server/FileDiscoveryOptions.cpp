@@ -691,7 +691,7 @@ ContainerInfo* FileDiscoveryOptions::GetContainerPathByLogPath(const string& log
     return NULL;
 }
 
-bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
+bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON, const PipelineContext* ctx) {
     if (!mEnableContainerDiscovery)
         return true;
 
@@ -702,7 +702,7 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             return true;
         }
-        mDeduceAndSetContainerBaseDirFunc(containerInfo, this);
+        mDeduceAndSetContainerBaseDirFunc(containerInfo, ctx, this);
         // try update
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
             if ((*mContainerInfos)[i] == containerInfo) {
@@ -731,7 +731,7 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
         if (iter == allPathMap.end()) {
             return false;
         }
-        mDeduceAndSetContainerBaseDirFunc(iter->second, this);
+        mDeduceAndSetContainerBaseDirFunc(iter->second, ctx, this);
         // need update
         if ((*mContainerInfos)[i] != iter->second) {
             return false;
@@ -741,7 +741,7 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON) {
     return true;
 }
 
-bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON) {
+bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON, const PipelineContext* ctx) {
     if (!mContainerInfos)
         return false;
 
@@ -752,7 +752,7 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON) {
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             return false;
         }
-        mDeduceAndSetContainerBaseDirFunc(containerInfo, this);
+        mDeduceAndSetContainerBaseDirFunc(containerInfo, ctx, this);
         // try update
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
             if ((*mContainerInfos)[i].mID == containerInfo.mID) {
@@ -777,7 +777,7 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON) {
     // if update all, clear and reset
     mContainerInfos->clear();
     for (unordered_map<string, ContainerInfo>::iterator iter = allPathMap.begin(); iter != allPathMap.end(); ++iter) {
-        mDeduceAndSetContainerBaseDirFunc(iter->second, this);
+        mDeduceAndSetContainerBaseDirFunc(iter->second, ctx, this);
         mContainerInfos->push_back(iter->second);
     }
     return true;
@@ -801,6 +801,5 @@ bool FileDiscoveryOptions::DeleteContainerInfo(const Json::Value& paramsJSON) {
     }
     return true;
 }
-
 
 } // namespace logtail

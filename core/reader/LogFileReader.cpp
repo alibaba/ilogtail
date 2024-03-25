@@ -110,7 +110,6 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                           ("can not get container path by log path, base path",
                            discoveryConfig.first->GetBasePath())("host path", hostLogPathDir + "/" + hostLogPathFile));
             } else {
-                reader->mInputType = containerPath->mInputType;
                 // if config have wildcard path, use mWildcardPaths[0] as base path
                 reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
@@ -798,7 +797,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
     }
-    if (mInputType == ContainerInfo::InputType::InputContainerLog && (!mHasReadContainerBom || mLastFilePos == 0)) {
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
         checkContainerType();
     }
     int32_t readSize = endOffset - mLastFilePos < INT32_FLAG(max_fix_pos_bytes) ? endOffset - mLastFilePos
@@ -1661,7 +1660,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (!READ_BYTE) {
         return;
     }
-    if (mInputType == ContainerInfo::InputType::InputContainerLog && !mHasReadContainerBom) {
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
         checkContainerType();
     }
     const size_t lastCacheSize = mCache.size();
