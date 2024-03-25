@@ -27,7 +27,9 @@
 namespace logtail {
 struct FileReaderOptions {
     enum class Encoding { UTF8, UTF16, GBK };
+    enum class InputType { InputFile, InputContainerLog };
 
+    InputType mInputType;
     Encoding mFileEncoding = Encoding::UTF8;
     bool mTailingAllMatchedFiles = false;
     uint32_t mTailSizeKB;

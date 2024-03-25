@@ -79,6 +79,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;
     }
+    mFileReader.mInputType = FileReaderOptions::InputType::InputFile;
 
     // 过渡使用
     mFileDiscovery.SetTailingAllMatchedFiles(mFileReader.mTailingAllMatchedFiles);

@@ -67,7 +67,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;
     }
-
+    mFileReader.mInputType = FileReaderOptions::InputType::InputContainerLog;
     // Multiline
     {
         const char* key = "Multiline";
@@ -215,7 +215,6 @@ void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
                       "container id", containerInfo.mID)("container log path", containerInfo.mLogPath));
         return;
     }
-    containerInfo.mInputType = ContainerInfo::InputType::InputContainerLog;
     size_t pos = realPath.find_last_of('/');
     if (pos != std::string::npos) {
         containerInfo.mRealBaseDir = realPath.substr(0, pos);
