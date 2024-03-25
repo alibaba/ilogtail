@@ -25,7 +25,6 @@
 
 #include "container_manager/ConfigContainerInfoUpdateCmd.h"
 #include "log_pb/sls_logs.pb.h"
-#include "models/StringView.h"
 
 namespace logtail {
 
