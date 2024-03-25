@@ -172,16 +172,16 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
                 index = j;
             }
 
-            StringView subPath = StringView(tmpPath.c_str(), index);
+            std::string subPath = tmpPath.substr(0, index);
             struct stat f;
-            if (lstat(subPath.data(), &f) != 0) {
+            if (lstat(subPath.c_str(), &f) != 0) {
                 return "";
             }
             if (S_ISLNK(f.st_mode)) {
                 // subPath is a symlink
                 char target[PATH_MAX + 1]{0};
-                readlink(subPath.data(), target, sizeof(target));
-                std::string partialPath = STRING_FLAG(default_container_host_path)
+                readlink(subPath.c_str(), target, sizeof(target));
+                std::string partialPath = STRING_FLAG(default_container_host_path).c_str()
                     + std::string(target); // You need to implement this function
                 tmpPath = partialPath + tmpPath.substr(index);
                 if (stat(partialPath.c_str(), &f) != 0) {
@@ -206,8 +206,8 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 }
 #endif
 
-void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
-                                                     const FileDiscoveryOptions* fileDiscovery) {
+void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const FileDiscoveryOptions*) {
+    // ParseByJSONObj 确保 mLogPath不会以\\或者/ 结尾
     std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path) + containerInfo.mLogPath);
     if (realPath.empty()) {
         LOG_ERROR(sLogger,

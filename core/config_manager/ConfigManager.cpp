@@ -954,9 +954,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
         ContainerInfo containerInfo;
         std::string errorMsg;
         if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo, errorMsg)) {
-            if (!errorMsg.empty()) {
                 LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
-            }
             continue;
         }
         std::vector<ContainerInfo>::iterator iter = config.first->GetContainerInfo()->begin();

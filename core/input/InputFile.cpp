@@ -157,7 +157,7 @@ void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const
     size_t pthSize = logPath.size();
 
     size_t bestMatchedMountsIndex = -1;
-
+    // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\\或者/结尾
     for (size_t i = 0; i < containerInfo.mMounts.size(); ++i) {
         size_t dstSize = containerInfo.mMounts[i].Destination.size();
 
