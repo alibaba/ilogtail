@@ -64,6 +64,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 && mounts[i]["Destination"].isString()) {
                 std::string dst = mounts[i]["Destination"].asString();
                 std::string src = mounts[i]["Source"].asString();
+                // go传cmd时也做了path.clean, 这边兜底再判断下
                 if (dst != "\\" && dst != "/" && (dst.back() == '/' || dst.back() == '\\')) {
                     dst.pop_back();
                 }
@@ -78,6 +79,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
     }
     if (params.isMember("UpperDir") && params["UpperDir"].isString()) {
         containerInfo.mUpperDir = params["UpperDir"].asString();
+        // go传cmd时也做了path.clean, 这边兜底再判断下
         if (containerInfo.mUpperDir != "\\" && containerInfo.mUpperDir != "/"
             && (containerInfo.mUpperDir.back() == '/' || containerInfo.mUpperDir.back() == '\\')) {
             containerInfo.mUpperDir.pop_back();

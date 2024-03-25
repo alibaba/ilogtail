@@ -802,5 +802,4 @@ bool FileDiscoveryOptions::DeleteContainerInfo(const Json::Value& paramsJSON) {
     return true;
 }
 
-
 } // namespace logtail
