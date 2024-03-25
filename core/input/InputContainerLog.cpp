@@ -229,12 +229,10 @@ void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
     if (pos != std::string::npos) {
         containerInfo.mRealBaseDir = realPath.substr(0, pos);
     }
-    if (containerInfo.mRealBaseDir.size() > 1
-        && containerInfo.mRealBaseDir[containerInfo.mRealBaseDir.size() - 1] == '/') {
-        containerInfo.mRealBaseDir
-            = StringView(containerInfo.mRealBaseDir.data(), containerInfo.mRealBaseDir.size() - 1);
+    if (containerInfo.mContainmRealBaseDirerPath.length() > 1 && containerInfo.mRealBaseDir.back() == '/') {
+        containerInfo.mRealBaseDir.pop_back();
     }
-    LOG_DEBUG(sLogger, ("docker container path", containerInfo.mRealBaseDir));
+    LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID)("config", ctx->GetPipeline().Name()));
 }
 
 bool InputContainerLog::Start() {

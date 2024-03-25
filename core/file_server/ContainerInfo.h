@@ -40,7 +40,7 @@ struct ContainerInfo {
     std::string mID; // id of this container
     // container path for this config's path. eg, config path '/home/admin', container path
     // '/host_all/var/lib/xxxxxx/upper/home/admin' if config is wildcard, this will mapping to config->mWildcardPaths[0]
-    StringView mRealBaseDir;
+    std::string mRealBaseDir;
 
     std::string mLogPath;
     std::string mUpperDir;

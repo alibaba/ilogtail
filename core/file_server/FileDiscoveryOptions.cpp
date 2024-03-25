@@ -550,7 +550,7 @@ bool FileDiscoveryOptions::IsMatch(const string& path, const string& name) const
 
         // Normal base path.
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-            const StringView containerBasePath = (*mContainerInfos)[i].mRealBaseDir;
+            const string& containerBasePath = (*mContainerInfos)[i].mRealBaseDir;
             if (_IsPathMatched(containerBasePath, path, mMaxDirSearchDepth)) {
                 if (!mHasBlacklist) {
                     return true;
