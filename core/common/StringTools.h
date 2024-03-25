@@ -15,16 +15,22 @@
  */
 
 #pragma once
-#include <vector>
-#include <string>
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
+#include <string>
+#include <vector>
+
+#include "models/StringView.h"
 
 namespace logtail {
 
 inline bool StartWith(const std::string& input, const std::string& pattern) {
     return input.find(pattern) == 0;
+}
+
+inline bool StartWith(const std::string& input, const StringView& pattern) {
+    return input.find(pattern.data(), pattern.size()) == 0;
 }
 
 inline bool EndWith(const std::string& input, const std::string& pattern) {

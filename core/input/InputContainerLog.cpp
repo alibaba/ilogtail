@@ -181,7 +181,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
                 // subPath is a symlink
                 char target[PATH_MAX + 1]{0};
                 readlink(subPath.c_str(), target, sizeof(target));
-                std::string partialPath = STRING_FLAG(default_container_host_path).c_str()
+                std::string partialPath = STRING_FLAG(default_container_host_path)
                     + std::string(target); // You need to implement this function
                 tmpPath = partialPath + tmpPath.substr(index);
                 if (stat(partialPath.c_str(), &f) != 0) {
