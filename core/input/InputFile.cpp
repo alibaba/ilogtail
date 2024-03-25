@@ -162,9 +162,10 @@ void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
     size_t bestMatchedMountsIndex = size;
     // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\\或者/结尾
     for (size_t i = 0; i < size; ++i) {
-        size_t dstSize = containerInfo.mMounts[i].Destination.size();
+        StringView dst = containerInfo.mMounts[i].Destination;
+        size_t dstSize = dst.size();
 
-        if (StartWith(logPath, containerInfo.mMounts[i].Destination)
+        if (StartWith(logPath, dst)
             && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
             && (bestMatchedMountsIndex == size
                 || containerInfo.mMounts[bestMatchedMountsIndex].Destination.size() < dstSize)) {
@@ -172,7 +173,7 @@ void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
         }
     }
     if (bestMatchedMountsIndex < size) {
-        containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path).c_str()
+        containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path)
             + containerInfo.mMounts[bestMatchedMountsIndex].Source
             + logPath.substr(containerInfo.mMounts[bestMatchedMountsIndex].Destination.size());
         LOG_DEBUG(sLogger,

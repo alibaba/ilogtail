@@ -38,49 +38,11 @@ inline bool _IsSubPath(const string& basePath, const string& subPath) {
     }
     return false;
 }
-inline bool _IsSubPath(const StringView basePath, const string& subPath) {
-    size_t pathSize = subPath.size();
-    size_t basePathSize = basePath.size();
-    if (pathSize >= basePathSize && memcmp(subPath.c_str(), basePath.data(), basePathSize) == 0) {
-        return pathSize == basePathSize || PATH_SEPARATOR[0] == subPath[basePathSize];
-    }
-    return false;
-}
 
 inline bool _IsPathMatched(const string& basePath, const string& path, int maxDepth) {
     size_t pathSize = path.size();
     size_t basePathSize = basePath.size();
     if (pathSize >= basePathSize && memcmp(path.c_str(), basePath.c_str(), basePathSize) == 0) {
-        // need check max_depth + preserve depth
-        if (pathSize == basePathSize) {
-            return true;
-        }
-        // like /log  --> /log/a/b , maxDepth 2, true
-        // like /log  --> /log1/a/b , maxDepth 2, false
-        // like /log  --> /log/a/b/c , maxDepth 2, false
-        else if (PATH_SEPARATOR[0] == path[basePathSize]) {
-            if (maxDepth < 0) {
-                return true;
-            }
-            int depth = 0;
-            for (size_t i = basePathSize; i < pathSize; ++i) {
-                if (PATH_SEPARATOR[0] == path[i]) {
-                    ++depth;
-                    if (depth > maxDepth) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
-inline bool _IsPathMatched(const StringView basePath, const string& path, int maxDepth) {
-    size_t pathSize = path.size();
-    size_t basePathSize = basePath.size();
-    if (pathSize >= basePathSize && memcmp(path.c_str(), basePath.data(), basePathSize) == 0) {
         // need check max_depth + preserve depth
         if (pathSize == basePathSize) {
             return true;
@@ -550,7 +512,7 @@ bool FileDiscoveryOptions::IsMatch(const string& path, const string& name) const
 
         // Normal base path.
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-            const StringView containerBasePath = (*mContainerInfos)[i].mRealBaseDir;
+            const string& containerBasePath = (*mContainerInfos)[i].mRealBaseDir;
             if (_IsPathMatched(containerBasePath, path, mMaxDirSearchDepth)) {
                 if (!mHasBlacklist) {
                     return true;
