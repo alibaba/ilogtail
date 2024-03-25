@@ -147,7 +147,9 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     return true;
 }
 
-void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const FileDiscoveryOptions* fileDiscovery) {
+void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+                                             const PipelineContext*,
+                                             const FileDiscoveryOptions* fileDiscovery) {
     std::string logPath;
     if (!fileDiscovery->GetWildcardPaths().empty()) {
         logPath = fileDiscovery->GetWildcardPaths()[0];
@@ -156,19 +158,20 @@ void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const
     }
     size_t pthSize = logPath.size();
 
-    size_t bestMatchedMountsIndex = -1;
+    size_t size = containerInfo.mMounts.size();
+    size_t bestMatchedMountsIndex = size;
     // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\\或者/结尾
-    for (size_t i = 0; i < containerInfo.mMounts.size(); ++i) {
+    for (size_t i = 0; i < size; ++i) {
         size_t dstSize = containerInfo.mMounts[i].Destination.size();
 
         if (StartWith(logPath, containerInfo.mMounts[i].Destination)
             && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
-            && (bestMatchedMountsIndex == -1
+            && (bestMatchedMountsIndex == size
                 || containerInfo.mMounts[bestMatchedMountsIndex].Destination.size() < dstSize)) {
             bestMatchedMountsIndex = i;
         }
     }
-    if (bestMatchedMountsIndex > 0) {
+    if (bestMatchedMountsIndex < size) {
         containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path).c_str()
             + containerInfo.mMounts[bestMatchedMountsIndex].Source
             + logPath.substr(containerInfo.mMounts[bestMatchedMountsIndex].Destination.size());

@@ -30,7 +30,8 @@ class InputFile : public Input {
 public:
     static const std::string sName;
 
-    static void DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const FileDiscoveryOptions*);
+    static void
+    DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const PipelineContext*, const FileDiscoveryOptions*);
 
     InputFile();
 
