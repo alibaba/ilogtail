@@ -83,7 +83,7 @@ enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
 struct LineInfo {
     StringView data;
     int32_t lineBegin;
-    int32_t lineFeedCount;
+    int32_t rollbackLineFeedCount;
     int32_t lineEnd;
     bool fullLine;
 };
@@ -478,12 +478,11 @@ private:
     LineInfo
     GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount);
     LineInfo GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount);
-    LineInfo
-    GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount);
+    LineInfo GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
     LineInfo GetLastFullContainerdTextLine(
-        const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount, bool needMerge);
+        const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount, bool needMerge = true);
 
-    LineInfo GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs);
+    LineInfo GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true);
 
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
