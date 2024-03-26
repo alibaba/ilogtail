@@ -341,7 +341,7 @@ void ProcessorSplitMultilineLogStringNative::HandleUnmatchLogs(const StringView&
                                                                PipelineEventGroup& logGroup,
                                                                EventsContainer& newEvents,
                                                                StringView logPath) {
-    size_t begin = 0;
+    size_t begin, fisrtLogSize, totalLines = 0;
     while (begin < sourceVal.size()) {
         StringView content = GetNextLine(sourceVal, begin);
         ++mUnmatchLinesOneProcess;
@@ -349,17 +349,21 @@ void ProcessorSplitMultilineLogStringNative::HandleUnmatchLogs(const StringView&
             CreateNewEvent(content, sourceoffset, sourceKey, sourceEvent, logGroup, newEvents);
         }
         begin += content.size() + 1;
+        ++totalLines;
+        if (fisrtLogSize <= 0) {
+            fisrtLogSize = content.size();
+        }
     }
     if (!mMultiline.mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-        size_t warningLogSize = sourceVal.size() < 1024 ? sourceVal.size() : 1024;
         LOG_WARNING(mContext->GetLogger(),
                     ("unmatched log line", "please check regex")(
                         "action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
-                        "first 1KB:", sourceVal.substr(0, warningLogSize).to_string())("filepath", logPath.to_string())(
-                        "processor", sName)("config", mContext->GetConfigName())("log bytes", sourceVal.size() + 1));
+                        "first log:", sourceVal.substr(0, fisrtLogSize).to_string())("filepath", logPath.to_string())(
+                        "processor", sName)("config", mContext->GetConfigName())("total lines", totalLines)(
+                        "log bytes", sourceVal.size() + 1));
         mContext->GetAlarm().SendAlarm(
             SPLIT_LOG_FAIL_ALARM,
-            "unmatched log line, first 1KB:" + sourceVal.substr(0, warningLogSize).to_string() + "\taction: "
+            "unmatched log line, first log:" + sourceVal.substr(0, fisrtLogSize).to_string() + "\taction: "
                 + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment) + "\tfilepath: "
                 + logPath.to_string() + "\tprocessor: " + sName + "\tconfig: " + mContext->GetConfigName(),
             mContext->GetProjectName(),
