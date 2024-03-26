@@ -163,7 +163,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
     for (int i = 0; i < 10; i++) {
         struct stat f;
         fsutil::PathStat buf;
-        if (fsutil::PathStat::stat(tmpPath, buf) == 0) {
+        if (fsutil::PathStat::stat(tmpPath, buf)) {
             return tmpPath;
         }
         while (true) {
@@ -199,7 +199,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
     return "";
 #elif defined(_MSC_VER)
     fsutil::PathStat buf;
-    if (fsutil::PathStat::stat(tmpPath, buf) == 0) {
+    if (fsutil::PathStat::stat(tmpPath, buf)) {
         return tmpPath;
     }
     return "";
