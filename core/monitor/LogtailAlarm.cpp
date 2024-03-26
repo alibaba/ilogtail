@@ -183,7 +183,7 @@ void LogtailAlarm::SendAllRegionAlarm() {
 
             // LOG_DEBUG(sLogger, ("3Send Alarm", region)("region", sendRegionIndex)("alarm index",
             // mMessageType[sendAlarmTypeIndex]));
-            map<string, LogtailAlarmMessage*>& alarmMap = alarmBufferVec[sendAlarmTypeIndex];
+            std::map<std::string, std::unique_ptr<LogtailAlarmMessage>>& alarmMap = alarmBufferVec[sendAlarmTypeIndex];
             if (alarmMap.size() == 0
                 || currentTime - lastUpdateTimeVec[sendAlarmTypeIndex] < INT32_FLAG(logtail_alarm_interval)) {
                 // go next alarm type
@@ -205,9 +205,9 @@ void LogtailAlarm::SendAllRegionAlarm() {
             logGroup.set_source(LogFileProfiler::mIpAddr);
             logGroup.set_category("logtail_alarm");
             auto now = GetCurrentLogtailTime();
-            for (map<string, LogtailAlarmMessage*>::iterator mapIter = alarmMap.begin(); mapIter != alarmMap.end();
-                 ++mapIter) {
-                messagePtr = mapIter->second;
+            for (std::map<std::string, std::unique_ptr<LogtailAlarmMessage>>::iterator mapIter = alarmMap.begin(); mapIter != alarmMap.end();
+                ++mapIter) {
+                messagePtr = mapIter->second.get();
 
                 // LOG_DEBUG(sLogger, ("5Send Alarm", region)("region", sendRegionIndex)("alarm index",
                 // sendAlarmTypeIndex)("msg", messagePtr->mMessage));
@@ -251,7 +251,6 @@ void LogtailAlarm::SendAllRegionAlarm() {
                     contentPtr->set_key("category");
                     contentPtr->set_value(messagePtr->mCategory);
                 }
-                delete messagePtr;
             }
             lastUpdateTimeVec[sendAlarmTypeIndex] = currentTime;
             alarmMap.clear();
@@ -305,9 +304,10 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
     string key = projectName + "_" + category;
     LogtailAlarmVector& alarmBufferVec = *MakesureLogtailAlarmMapVecUnlocked(region);
     if (alarmBufferVec[alarmType].find(key) == alarmBufferVec[alarmType].end()) {
-        LogtailAlarmMessage* messagePtr
-            = new LogtailAlarmMessage(mMessageType[alarmType], projectName, category, message, 1);
-        alarmBufferVec[alarmType].insert(pair<string, LogtailAlarmMessage*>(key, messagePtr));
+        std::unique_ptr<LogtailAlarmMessage> messagePtr
+            = std::make_unique<LogtailAlarmMessage>(mMessageType[alarmType], projectName, category, message, 1);
+        alarmBufferVec[alarmType].insert(
+            pair<string, std::unique_ptr<LogtailAlarmMessage>>(key, std::move(messagePtr)));
     } else
         alarmBufferVec[alarmType][key]->IncCount();
 }

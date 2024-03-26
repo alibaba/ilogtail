@@ -1025,7 +1025,7 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
                     flow[index - 4] = flow[index - 3] = flow[index - 2] = true;
             }
         }
-        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        ProcessorFilterNative processor;
         processor.FilterNoneUtf8(testStr);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
