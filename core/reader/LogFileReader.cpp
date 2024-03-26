@@ -825,7 +825,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         if (readBuf[i] == '\n') {
             int32_t begPs = begin;
             int32_t endPs = i;
-            LineInfo line = LogFileReader::GetLastLineData(readBuf, begPs, endPs);
+            LineInfo line = LogFileReader::GetLastLineData(readBuf, begPs, endPs, false, true);
             if (BoostRegexMatch(
                     line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
                 mLastFilePos += i + 1;
@@ -2128,25 +2128,33 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer,
     }
 }
 
-LineInfo LogFileReader::GetLastFullContainerdTextLine(
-    const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount, bool needMerge) {
+LineInfo LogFileReader::GetLastFullContainerdTextLine(const char* buffer,
+                                                      int32_t& begPs,
+                                                      int32_t endPs,
+                                                      int32_t& rollbackLineFeedCount,
+                                                      bool needMerge,
+                                                      bool singleLine) {
     LineInfo line = GetLastContainerdTextLine(buffer, begPs, endPs);
     line.rollbackLineFeedCount = rollbackLineFeedCount;
     endPs = begPs;
+    if (singleLine) {
+        return line;
+    }
     if (line.fullLine && !needMerge) {
         return line;
     }
     ++line.rollbackLineFeedCount;
     if (needMerge) {
-        StringBuffer buffer = GetStringBuffer();
-        char* data = buffer.data;
-        memcpy(data - line.data.size(), line.data.data(), line.data.size());
-        line.data = StringView(data - line.data.size(), line.data.size());
+        StringBuffer* buffer = GetStringBuffer();
+        buffer->size = 0;
+        char* data = buffer->data + buffer->capacity - line.data.size();
+        memcpy(data, line.data.data(), line.data.size());
+        buffer->size += line.data.size();
+        line.data = StringView(data, buffer->size);
     }
     while (endPs > 0) {
         LineInfo tmp = GetLastContainerdTextLine(buffer, begPs, endPs);
         endPs = begPs;
-        std::cout << tmp.data.to_string() << std::endl;
         if (tmp.fullLine) {
             if (!needMerge) {
                 tmp.rollbackLineFeedCount = line.rollbackLineFeedCount;
@@ -2154,18 +2162,24 @@ LineInfo LogFileReader::GetLastFullContainerdTextLine(
             }
             return line;
         } else {
-            ++line.rollbackLineFeedCount;
+            line.rollbackLineFeedCount += tmp.rollbackLineFeedCount;
             if (!needMerge) {
                 continue;
             }
-            StringBuffer buffer = GetStringBuffer();
-            char* data = buffer.data;
-            memcpy(data - line.data.size(), tmp.data.data(), tmp.data.size());
-            tmp.data = StringView(data - line.data.size() - tmp.data.size(), line.data.size() + tmp.data.size());
-            buffer.size = tmp.data.size();
-            line = tmp;
+            StringBuffer* buffer = GetStringBuffer();
+            char* data = buffer->data + buffer->capacity - buffer->size - tmp.data.size();
+            memcpy(data, tmp.data.data(), tmp.data.size());
+            buffer->size += tmp.data.size();
+            tmp.data = StringView(data, buffer->size);
+            line.data = tmp.data;
         }
     }
+    if (needMerge) {
+        return line;
+    }
+    line.data = StringView();
+    line.lineBegin = 0;
+    line.lineEnd = -1;
     return line;
 }
 
@@ -2211,11 +2225,13 @@ LineInfo LogFileReader::GetLastContainerdTextLine(const char* buffer, int32_t& b
             if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
                 // F
                 lastLine = StringView(pch3 + 1, lineEnd - pch3 - 1);
+                res.data = lastLine;
                 return res;
             } else {
                 // P
                 lastLine = StringView(pch3 + 1, lineEnd - pch3 - 1);
                 res.fullLine = false;
+                res.data = lastLine;
                 return res;
             }
             endPs = begPs;
@@ -2224,7 +2240,8 @@ LineInfo LogFileReader::GetLastContainerdTextLine(const char* buffer, int32_t& b
     }
 }
 
-LineInfo LogFileReader::GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge) {
+LineInfo
+LogFileReader::GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge, bool singleLine) {
     int32_t rollbackLineFeedCount = 0;
     bool islastlineComplete = true;
     if (buffer[endPs] != '\n') { // if last line dose not end with '\n', rollback last line
@@ -2239,12 +2256,12 @@ LineInfo LogFileReader::GetLastLineData(const char* buffer, int32_t& begPs, int3
         }
     }
     if (endPs == -1) {
-        LineInfo res = {StringView(), 0, 1, 0};
+        LineInfo res = {StringView(), 0, -1, rollbackLineFeedCount};
         return res;
     }
     begPs = endPs - 1;
     if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
-        return GetLastFullContainerdTextLine(buffer, begPs, endPs, rollbackLineFeedCount, needMerge);
+        return GetLastFullContainerdTextLine(buffer, begPs, endPs, rollbackLineFeedCount, needMerge, singleLine);
     }
     if (mFileLogFormat == LogFormat::DOCKER_JSON_FILE) {
         return GetLastDockerJsonFileLine(buffer, begPs, endPs, rollbackLineFeedCount);
@@ -2258,12 +2275,11 @@ std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer(new SourceBuffer);
 StringBuffer LogFileReader::mStringBuffer;
 rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
 
-StringBuffer LogFileReader::GetStringBuffer() {
+StringBuffer* LogFileReader::GetStringBuffer() {
     if (mStringBuffer.capacity == 0) {
         LogFileReader::mStringBuffer = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
     }
-    mStringBuffer.size = 0;
-    return mStringBuffer;
+    return &mStringBuffer;
 }
 
 size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
