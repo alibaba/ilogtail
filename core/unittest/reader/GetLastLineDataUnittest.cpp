@@ -69,10 +69,9 @@ public:
         }
     }
 
-    void TestSingleline();
-    void TestMultiline();
     void TestLastContainerdTextLineNoMerge();
     void TestLastContainerdTextLineMerge();
+    void TestGetLastContainerdTextLine();
 
     std::unique_ptr<char[]> expectedContent;
     FileReaderOptions readerOpts;
@@ -84,11 +83,14 @@ public:
 
 UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineNoMerge);
 UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineMerge);
-
+UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestGetLastContainerdTextLine);
 
 std::string LastMatchedContainerdTextLineUnittest::logPathDir;
 std::string LastMatchedContainerdTextLineUnittest::gbkFile;
 std::string LastMatchedContainerdTextLineUnittest::utf8File;
+
+void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
+}
 
 void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineNoMerge() {
     MultilineOptions multilineOpts;
