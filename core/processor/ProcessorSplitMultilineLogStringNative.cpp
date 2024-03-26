@@ -66,8 +66,7 @@ bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
 
     mProcMatchedEventsCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL);
     mProcMatchedLinesCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL);
-    mProcUnmatchedLinesCnt
-        = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL);
+    mProcUnmatchedLinesCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL);
 
     mSplitLines = &(mContext->GetProcessProfile().splitLines);
 
@@ -84,12 +83,15 @@ void ProcessorSplitMultilineLogStringNative::Process(PipelineEventGroup& logGrou
     if (logGroup.GetEvents().empty()) {
         return;
     }
+    mInputLinesOneProcess = 0;
+    mUnmatchLinesOneProcess = 0;
     EventsContainer newEvents;
     StringView logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     for (PipelineEventPtr& e : logGroup.MutableEvents()) {
         ProcessEvent(logGroup, logPath, std::move(e), newEvents);
     }
-    *mSplitLines = newEvents.size();
+    mProcMatchedLinesCnt->Add(mInputLinesOneProcess - mUnmatchLinesOneProcess);
+    mProcUnmatchedLinesCnt->Add(mUnmatchLinesOneProcess);
     logGroup.SwapEvents(newEvents);
 }
 
@@ -179,6 +181,7 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
     size_t begin = 0;
     while (begin < sourceVal.size()) {
         StringView content = GetNextLine(sourceVal, begin);
+        ++mInputLinesOneProcess;
         if (!isPartialLog) {
             // it is impossible to enter this state if only end pattern is given
             boost::regex regex;
@@ -341,26 +344,27 @@ void ProcessorSplitMultilineLogStringNative::HandleUnmatchLogs(const StringView&
     size_t begin = 0;
     while (begin < sourceVal.size()) {
         StringView content = GetNextLine(sourceVal, begin);
-        mProcUnmatchedLinesCnt->Add(1);
-        if (!mMultiline.mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-            LOG_WARNING(mContext->GetLogger(),
-                        ("unmatched log line", "please check regex")(
-                            "action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
-                            "first 1KB", content.substr(0, 1024).to_string())("filepath", logPath.to_string())(
-                            "processor", sName)("config", mContext->GetConfigName())("log bytes", content.size() + 1));
-            mContext->GetAlarm().SendAlarm(
-                SPLIT_LOG_FAIL_ALARM,
-                "unmatched log line, first 1KB:" + content.substr(0, 1024).to_string() + "\taction: "
-                    + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment) + "\tfilepath: "
-                    + logPath.to_string() + "\tprocessor: " + sName + "\tconfig: " + mContext->GetConfigName(),
-                mContext->GetProjectName(),
-                mContext->GetLogstoreName(),
-                mContext->GetRegion());
-        }
+        ++mUnmatchLinesOneProcess;
         if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
             CreateNewEvent(content, sourceoffset, sourceKey, sourceEvent, logGroup, newEvents);
         }
         begin += content.size() + 1;
+    }
+    if (!mMultiline.mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        size_t warningLogSize = sourceVal.size() < 1024 ? sourceVal.size() : 1024;
+        LOG_WARNING(mContext->GetLogger(),
+                    ("unmatched log line", "please check regex")(
+                        "action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
+                        "first 1KB:", sourceVal.substr(0, warningLogSize).to_string())("filepath", logPath.to_string())(
+                        "processor", sName)("config", mContext->GetConfigName())("log bytes", sourceVal.size() + 1));
+        mContext->GetAlarm().SendAlarm(
+            SPLIT_LOG_FAIL_ALARM,
+            "unmatched log line, first 1KB:" + sourceVal.substr(0, warningLogSize).to_string() + "\taction: "
+                + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment) + "\tfilepath: "
+                + logPath.to_string() + "\tprocessor: " + sName + "\tconfig: " + mContext->GetConfigName(),
+            mContext->GetProjectName(),
+            mContext->GetLogstoreName(),
+            mContext->GetRegion());
     }
 }
 

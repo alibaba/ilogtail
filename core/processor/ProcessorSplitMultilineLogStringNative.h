@@ -62,6 +62,8 @@ private:
     StringView GetNextLine(StringView log, size_t begin);
 
     int* mSplitLines = nullptr;
+    int mInputLinesOneProcess = 0;
+    int mUnmatchLinesOneProcess = 0;
 
     CounterPtr mProcMatchedEventsCnt;
     CounterPtr mProcMatchedLinesCnt;
@@ -69,8 +71,8 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitMultilineLogStringNativeUnittest;
-    friend class ProcessorSplitRegexDisacardUnmatchUnittest;
-    friend class ProcessorSplitRegexKeepUnmatchUnittest;
+    friend class ProcessorSplitMultilineLogDisacardUnmatchUnittest;
+    friend class ProcessorSplitMultilineLogKeepUnmatchUnittest;
 #endif
 };
 

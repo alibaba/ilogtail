@@ -67,6 +67,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
+    // input: 1 event, 2 lines
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -96,6 +98,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: start + unmatch
+    // input: 1 event, 2 lines
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -141,6 +145,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch + start + continue + continue + unmatch
+    // input: 1 event, 5 lines
+    // output: 1 event, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -187,6 +193,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch + start + start
+    // input: 1 event, 3 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -242,6 +250,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch + start + continue + continue
+    // input: 1 event, 4 lines
+    // output: 1 event, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -288,6 +298,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: continue
+    // input: 1 event, 1 line
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -315,6 +327,14 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1 + 2 + 1 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 3 + 2 + 3 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2 + 1 + 2 + 1 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
@@ -331,6 +351,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
+    // input: 1 event, 2 lines
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -360,6 +382,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: unmatch+start+unmatch
+    // input: 1 event, 3 lines
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -389,6 +413,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: unmatch+start+End+unmatch
+    // input: 1 event, 4 lines
+    // output: 1 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -434,8 +460,9 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-
     // case: start+start
+    // input: 1 event, 2 lines
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -465,6 +492,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: unmatch+start+End
+    // input: 1 event, 3 lines
+    // output: 1 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -510,6 +539,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch+start+unmatch+End+unmatch
+    // input: 1 event, 4 lines
+    // output: 1 event, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -555,6 +586,14 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 2 + 0 + 2 + 3,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2 + 3 + 2 + 2 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() {
@@ -571,6 +610,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + start
+    // input: 1 event, 2 lines
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -616,6 +657,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch
+    // input: 1 event, 1 line
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -646,6 +689,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: start + start
+    // input: 1 event, 2 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -701,6 +746,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: start + unmatch
+    // input: 1 event, 2 lines
+    // output: 1 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -745,6 +792,61 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+    // case: unmatch + start + unmatch + unmatch
+    // input: 1 event, 4 lines
+    // output: 1 event, 3 lines
+    {
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        std::stringstream inJson;
+        inJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH
+               << R"(",
+                        "__file_offset__": 0
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup.FromJsonString(inJson.str());
+
+        // run test function
+        ProcessorSplitMultilineLogStringNative.Process(eventGroup);
+        // judge result
+        std::stringstream expectJson;
+        expectJson << R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 2 + 3, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 1 + 0 + 0 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
@@ -761,6 +863,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch
+    // input: 1 event, 1 line
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -790,6 +894,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: Continue + unmatch
+    // input: 1 event, 2 lines
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -819,6 +925,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: Continue + Continue + end
+    // input: 1 event, 3 lines
+    // output: 1 event, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -864,6 +972,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: continue
+    // input: 1 event, 1 line
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -893,6 +1003,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: end
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -937,6 +1049,13 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 3 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 2 + 0 + 1 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
@@ -952,6 +1071,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: end
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -997,6 +1118,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch
+    // input: 1 event, 1 line
+    // output: 0 event, 0 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1026,6 +1149,8 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
         APSARA_TEST_STREQ("null", CompactJson(outJson).c_str());
     }
     // case: unmatch + end + unmatch
+    // input: 1 event, 3 lines
+    // output: 1 event, 2 lines
     {
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1071,6 +1196,11 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1, ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 class ProcessorSplitMultilineLogKeepUnmatchUnittest : public ::testing::Test {
@@ -1105,6 +1235,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
+    // input: 1 event, 2 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1160,6 +1292,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // start + unmatch
+    // input: 1 event, 2 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1215,6 +1349,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // unmatch + start + continue + continue + unmatch
+    // input: 1 event, 5 lines
+    // output: 3 events, 5 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1281,6 +1417,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch + start + start
+    // input: 1 event, 3 lines
+    // output: 3 events, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1346,6 +1484,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch + start + continue + continue
+    // input: 1 event, 4 lines
+    // output: 2 event, 4 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1402,6 +1542,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: continue
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1446,6 +1588,14 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1 + 2 + 1 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 3 + 2 + 3 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2 + 1 + 2 + 1 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
@@ -1463,6 +1613,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
+    // input: 1 event, 2 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1518,6 +1670,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch+start+unmatch
+    // input: 1 event, 3 lines
+    // output: 3 events, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1583,6 +1737,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch+start+End+unmatch
+    // input: 1 event, 4 lines
+    // output: 3 events, 4 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1648,8 +1804,9 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
-
     // case: start+start
+    // input: 1 event, 2 lines
+    // output: 2 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1705,6 +1862,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch+start+End
+    // input: 1 event, 3 lines
+    // output: 2 events, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1760,6 +1919,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch+start+unmatch+End
+    // input: 1 event, 4 lines
+    // output: 2 events, 4 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1815,6 +1976,14 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 2 + 0 + 2 + 3,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(2 + 3 + 2 + 2 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
@@ -1830,6 +1999,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + start
+    // input: 1 event, 2 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1885,6 +2056,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1930,6 +2103,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: start + start
+    // input: 1 event, 2 lines
+    // output: 2 events, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1985,6 +2160,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: start + unmatch
+    // input: 1 event, 2 lines
+    // output: 1 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2030,6 +2207,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: start + unmatch + \n
+    // input: 1 event, 2 lines
+    // output: 1 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2074,6 +2253,13 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 1 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2 + 2 + 2, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 1 + 0 + 0 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
@@ -2090,6 +2276,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2135,6 +2323,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: Continue + unmatch
+    // input: 1 event, 2 lines
+    // output: 1 event, 2 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2190,6 +2380,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: Continue + Continue + end
+    // input: 1 event, 3 lines
+    // output: 1 event, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2235,6 +2427,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: continue
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2280,6 +2474,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: end
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2324,6 +2520,13 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 1 + 0 + 1,
+                            ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 0 + 3 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 2 + 0 + 1 + 0,
+                            ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 
 void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
@@ -2344,6 +2547,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
     ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: end
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2389,6 +2594,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch
+    // input: 1 event, 1 line
+    // output: 1 event, 1 line
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2434,6 +2641,8 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     // case: unmatch + end + unmatch
+    // input: 1 event, 3 lines
+    // output: 2 events, 3 lines
     {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -2488,6 +2697,11 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
+
+    // metric
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 1, ProcessorSplitMultilineLogStringNative.mProcMatchedEventsCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(1 + 0 + 2, ProcessorSplitMultilineLogStringNative.mProcMatchedLinesCnt->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0 + 1 + 1, ProcessorSplitMultilineLogStringNative.mProcUnmatchedLinesCnt->GetValue());
 }
 } // namespace logtail
 
