@@ -147,7 +147,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     return true;
 }
 
-void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
                                              const FileDiscoveryOptions* fileDiscovery) {
     std::string logPath;
@@ -162,28 +162,29 @@ void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
     size_t bestMatchedMountsIndex = size;
     // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\\或者/结尾
     for (size_t i = 0; i < size; ++i) {
-        StringView dst = containerInfo.mMounts[i].Destination;
+        StringView dst = containerInfo.mMounts[i].mDestination;
         size_t dstSize = dst.size();
 
         if (StartWith(logPath, dst)
             && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
             && (bestMatchedMountsIndex == size
-                || containerInfo.mMounts[bestMatchedMountsIndex].Destination.size() < dstSize)) {
+                || containerInfo.mMounts[bestMatchedMountsIndex].mDestination.size() < dstSize)) {
             bestMatchedMountsIndex = i;
         }
     }
     if (bestMatchedMountsIndex < size) {
         containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path)
-            + containerInfo.mMounts[bestMatchedMountsIndex].Source
-            + logPath.substr(containerInfo.mMounts[bestMatchedMountsIndex].Destination.size());
+            + containerInfo.mMounts[bestMatchedMountsIndex].mSource
+            + logPath.substr(containerInfo.mMounts[bestMatchedMountsIndex].mDestination.size());
         LOG_DEBUG(sLogger,
                   ("set container base dir",
-                   containerInfo.mRealBaseDir)("source", containerInfo.mMounts[bestMatchedMountsIndex].Source)(
-                      "destination", containerInfo.mMounts[bestMatchedMountsIndex].Destination)("logPath", logPath));
+                   containerInfo.mRealBaseDir)("source", containerInfo.mMounts[bestMatchedMountsIndex].mSource)(
+                      "destination", containerInfo.mMounts[bestMatchedMountsIndex].mDestination)("logPath", logPath));
     } else {
         containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path) + containerInfo.mUpperDir + logPath;
     }
     LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID));
+    return true;
 }
 
 bool InputFile::Start() {

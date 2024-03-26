@@ -29,9 +29,9 @@
 namespace logtail {
 
 struct Mount {
-    std::string Source;
-    std::string Destination;
-    Mount(const std::string& source, const std::string& destination) : Source(source), Destination(destination) {}
+    std::string mSource;
+    std::string mDestination;
+    Mount(const std::string& source, const std::string& destination) : mSource(source), mDestination(destination) {}
     Mount() = default;
 };
 
@@ -69,7 +69,7 @@ struct ContainerInfo {
         for (size_t idx = 0; idx < mMounts.size(); ++idx) {
             const auto& lhsMount = mMounts[idx];
             const auto& rhsMount = rhs.mMounts[idx];
-            if (lhsMount.Source != rhsMount.Source || lhsMount.Destination != rhsMount.Destination) {
+            if (lhsMount.mSource != rhsMount.mSource || lhsMount.mDestination != rhsMount.mDestination) {
                 return false;
             }
         }

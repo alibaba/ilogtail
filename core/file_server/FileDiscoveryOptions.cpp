@@ -664,7 +664,9 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON, co
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             return true;
         }
-        mDeduceAndSetContainerBaseDirFunc(containerInfo, ctx, this);
+        if (!mDeduceAndSetContainerBaseDirFunc(containerInfo, ctx, this)) {
+            return true;
+        }
         // try update
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
             if ((*mContainerInfos)[i] == containerInfo) {
@@ -693,7 +695,9 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON, co
         if (iter == allPathMap.end()) {
             return false;
         }
-        mDeduceAndSetContainerBaseDirFunc(iter->second, ctx, this);
+        if (!mDeduceAndSetContainerBaseDirFunc(iter->second, ctx, this)) {
+            return true;
+        }
         // need update
         if ((*mContainerInfos)[i] != iter->second) {
             return false;
@@ -714,7 +718,9 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON, co
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             return false;
         }
-        mDeduceAndSetContainerBaseDirFunc(containerInfo, ctx, this);
+        if (!mDeduceAndSetContainerBaseDirFunc(containerInfo, ctx, this)) {
+            return false;
+        }
         // try update
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
             if ((*mContainerInfos)[i].mID == containerInfo.mID) {
@@ -739,7 +745,9 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON, co
     // if update all, clear and reset
     mContainerInfos->clear();
     for (unordered_map<string, ContainerInfo>::iterator iter = allPathMap.begin(); iter != allPathMap.end(); ++iter) {
-        mDeduceAndSetContainerBaseDirFunc(iter->second, ctx, this);
+        if (!mDeduceAndSetContainerBaseDirFunc(iter->second, ctx, this)) {
+            return false;
+        }
         mContainerInfos->push_back(iter->second);
     }
     return true;

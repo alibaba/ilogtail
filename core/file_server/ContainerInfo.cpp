@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "common/PathUtil.h"
 #include "logger/Logger.h"
 
 namespace logtail {
@@ -65,25 +66,16 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 std::string dst = mounts[i]["Destination"].asString();
                 std::string src = mounts[i]["Source"].asString();
                 // go传cmd时也做了path.clean, 这边兜底再判断下
-                if (dst != "\\" && dst != "/" && (dst.back() == '/' || dst.back() == '\\')) {
-                    dst.pop_back();
-                }
-                if (src != "\\" && src != "/" && (src.back() == '/' || src.back() == '\\')) {
-                    src.pop_back();
-                }
-
-                Mount mount(src, dst);
-                containerInfo.mMounts.push_back(mount);
+                RemoveFilePathTrailingSlash(dst);
+                RemoveFilePathTrailingSlash(src);
+                containerInfo.mMounts.emplace_back(src, dst);
             }
         }
     }
     if (params.isMember("UpperDir") && params["UpperDir"].isString()) {
         containerInfo.mUpperDir = params["UpperDir"].asString();
         // go传cmd时也做了path.clean, 这边兜底再判断下
-        if (containerInfo.mUpperDir != "\\" && containerInfo.mUpperDir != "/"
-            && (containerInfo.mUpperDir.back() == '/' || containerInfo.mUpperDir.back() == '\\')) {
-            containerInfo.mUpperDir.pop_back();
-        }
+        RemoveFilePathTrailingSlash(containerInfo.mUpperDir);
     }
     if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
         containerInfo.mLogPath = params["StdoutPath"].asString();
