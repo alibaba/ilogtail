@@ -42,8 +42,12 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void
-    ProcessEvent(PipelineEventGroup& logGroup, StringView logPath, PipelineEventPtr&& e, EventsContainer& newEvents);
+    void ProcessEvent(PipelineEventGroup& logGroup,
+                      StringView logPath,
+                      PipelineEventPtr&& e,
+                      EventsContainer& newEvents,
+                      int* inputLines,
+                      int* unmatchLines);
     void SplitLogByRegex(PipelineEventGroup& logGroup);
     void CreateNewEvent(const StringView& content,
                         long sourceoffset,
@@ -57,13 +61,12 @@ private:
                            const LogEvent& sourceEvent,
                            PipelineEventGroup& logGroup,
                            EventsContainer& newEvents,
-                           StringView logPath);
+                           StringView logPath,
+                           int* unmatchLines);
 
     StringView GetNextLine(StringView log, size_t begin);
 
     int* mSplitLines = nullptr;
-    int mInputLinesOneProcess = 0;
-    int mUnmatchLinesOneProcess = 0;
 
     CounterPtr mProcMatchedEventsCnt;
     CounterPtr mProcMatchedLinesCnt;
