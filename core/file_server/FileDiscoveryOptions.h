@@ -45,7 +45,7 @@ public:
     void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
     const std::shared_ptr<std::vector<ContainerInfo>>& GetContainerInfo() const { return mContainerInfos; }
     void SetContainerInfo(const std::shared_ptr<std::vector<ContainerInfo>>& info) { mContainerInfos = info; }
-    void SetDeduceAndSetContainerBaseDirFunc(void (*f)(ContainerInfo&,
+    void SetDeduceAndSetContainerBaseDirFunc(bool (*f)(ContainerInfo&,
                                                        const PipelineContext*,
                                                        const FileDiscoveryOptions*)) {
         mDeduceAndSetContainerBaseDirFunc = f;
@@ -109,7 +109,7 @@ private:
 
     bool mEnableContainerDiscovery = false;
     std::shared_ptr<std::vector<ContainerInfo>> mContainerInfos; // must not be null if container discovery is enabled
-    void (*mDeduceAndSetContainerBaseDirFunc)(ContainerInfo& containerInfo,
+    bool (*mDeduceAndSetContainerBaseDirFunc)(ContainerInfo& containerInfo,
                                               const PipelineContext*,
                                               const FileDiscoveryOptions*)
         = nullptr;

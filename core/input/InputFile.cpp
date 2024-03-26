@@ -147,7 +147,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     return true;
 }
 
-void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
                                              const FileDiscoveryOptions* fileDiscovery) {
     std::string logPath;
@@ -184,6 +184,7 @@ void InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
         containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path) + containerInfo.mUpperDir + logPath;
     }
     LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID));
+    return true;
 }
 
 bool InputFile::Start() {

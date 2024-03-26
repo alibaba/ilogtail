@@ -206,7 +206,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 #endif
 }
 
-void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+bool InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                                      const PipelineContext* ctx,
                                                      const FileDiscoveryOptions*) {
     // ParseByJSONObj 确保 mLogPath不会以\\或者/ 结尾
@@ -223,7 +223,7 @@ void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
                                   ctx->GetProjectName(),
                                   ctx->GetLogstoreName(),
                                   ctx->GetRegion());
-        return;
+        return false;
     }
     size_t pos = realPath.find_last_of('/');
     if (pos != std::string::npos) {
@@ -235,6 +235,7 @@ void InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
     LOG_INFO(sLogger,
              ("set container base dir",
               containerInfo.mRealBaseDir)("container id", containerInfo.mID)("config", ctx->GetPipeline().Name()));
+    return true;
 }
 
 bool InputContainerLog::Start() {

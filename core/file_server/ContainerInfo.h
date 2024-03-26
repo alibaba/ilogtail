@@ -69,7 +69,7 @@ struct ContainerInfo {
         for (size_t idx = 0; idx < mMounts.size(); ++idx) {
             const auto& lhsMount = mMounts[idx];
             const auto& rhsMount = rhs.mMounts[idx];
-            if (lhsMount.Source != rhsMount.Source || lhsMount.Destination != rhsMount.Destination) {
+            if (lhsMount.mSource != rhsMount.mSource || lhsMount.mDestination != rhsMount.mDestination) {
                 return false;
             }
         }

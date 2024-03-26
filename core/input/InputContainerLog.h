@@ -31,7 +31,7 @@ public:
     static const std::string sName;
 
     static std::string TryGetRealPath(const std::string& path);
-    static void
+    static bool
     DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const PipelineContext*, const FileDiscoveryOptions*);
 
     const std::string& Name() const override { return sName; }
