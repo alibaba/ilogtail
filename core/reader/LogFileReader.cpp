@@ -2132,15 +2132,14 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer, int32_t& b
 LineInfo LogFileReader::GetLastFullContainerdTextLine(
     const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge, bool singleLine) {
     LineInfo line = GetLastContainerdTextLine(buffer, begPs, endPs);
-    line.rollbackLineFeedCount = 0;
     endPs = begPs;
     if (singleLine) {
         return line;
     }
     if (line.fullLine && !needMerge) {
+        line.rollbackLineFeedCount = 0;
         return line;
     }
-    ++line.rollbackLineFeedCount;
     if (needMerge) {
         StringBuffer* buffer = GetStringBuffer();
         buffer->size = 0;
