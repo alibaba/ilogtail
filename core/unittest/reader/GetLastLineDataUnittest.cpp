@@ -24,14 +24,6 @@ const std::string LOG_FULL = "2021-08-25T07:00:00.000000000Z stdout F ";
 const std::string LOG_FULL_NOT_FOUND = "2021-08-25T07:00:00.000000000Z stdout ";
 const std::string LOG_ERROR = "2021-08-25T07:00:00.000000000Z stdout";
 
-const std::string LOG_BEGIN_STRING = "Exception in thread \"main\" java.lang.NullPointerException";
-const std::string LOG_BEGIN_REGEX = R"(Exception.*)";
-const std::string LOG_CONTINUE_STRING = "    at com.example.myproject.Book.getTitle(Book.java:16)";
-const std::string LOG_CONTINUE_REGEX = R"(\s+at\s.*)";
-const std::string LOG_END_STRING = "    ...23 more";
-const std::string LOG_END_REGEX = R"(\s*\.\.\.\d+ more)";
-const std::string LOG_UNMATCH = "unmatch log";
-
 class LastMatchedContainerdTextLineUnittest : public ::testing::Test {
 public:
     static void SetUpTestCase() {
@@ -81,9 +73,9 @@ public:
     static std::string utf8File;
 };
 
+UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineNoMergeSingleLine);
 UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineNoMerge);
 UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineMerge);
-UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineNoMergeSingleLine);
 
 std::string LastMatchedContainerdTextLineUnittest::logPathDir;
 std::string LastMatchedContainerdTextLineUnittest::gbkFile;
@@ -646,6 +638,192 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
         APSARA_TEST_EQUAL("123456", line.data.to_string());
     }
 }
+
+class LastMatchedDockerJsonFileUnittest : public ::testing::Test {
+public:
+    static void SetUpTestCase() {
+        logPathDir = GetProcessExecutionDir();
+        if (PATH_SEPARATOR[0] == logPathDir.back()) {
+            logPathDir.resize(logPathDir.size() - 1);
+        }
+        logPathDir += PATH_SEPARATOR + "testDataSet" + PATH_SEPARATOR + "LogFileReaderUnittest";
+        gbkFile = "gbk.txt";
+        utf8File = "utf8.txt"; // content of utf8.txt is equivalent to gbk.txt
+    }
+
+    static void TearDownTestCase() {
+        remove(gbkFile.c_str());
+        remove(utf8File.c_str());
+    }
+
+    void SetUp() override {
+        std::string filepath = logPathDir + PATH_SEPARATOR + utf8File;
+        std::unique_ptr<FILE, decltype(&std::fclose)> fp(std::fopen(filepath.c_str(), "r"), &std::fclose);
+        if (!fp.get()) {
+            return;
+        }
+        std::fseek(fp.get(), 0, SEEK_END);
+        long filesize = std::ftell(fp.get());
+        std::fseek(fp.get(), 0, SEEK_SET);
+        expectedContent.reset(new char[filesize + 1]);
+        fread(expectedContent.get(), filesize, 1, fp.get());
+        expectedContent[filesize] = '\0';
+        for (long i = filesize - 1; i >= 0; --i) {
+            if (expectedContent[i] == '\n') {
+                expectedContent[i] = 0;
+                break;
+            };
+        }
+    }
+
+    void TestLastDockerJsonFile();
+
+    std::unique_ptr<char[]> expectedContent;
+    FileReaderOptions readerOpts;
+    PipelineContext ctx;
+    static std::string logPathDir;
+    static std::string gbkFile;
+    static std::string utf8File;
+};
+
+UNIT_TEST_CASE(LastMatchedDockerJsonFileUnittest, TestLastDockerJsonFile);
+
+std::string LastMatchedDockerJsonFileUnittest::logPathDir;
+std::string LastMatchedDockerJsonFileUnittest::gbkFile;
+std::string LastMatchedDockerJsonFileUnittest::utf8File;
+
+void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
+    MultilineOptions multilineOpts;
+    LogFileReader logFileReader(
+        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    logFileReader.mFileLogFormat = LogFileReader::LogFormat::DOCKER_JSON_FILE;
+    // 不带回车
+    {
+        // 合法
+        {
+            std::string testLog
+                = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
+        }
+        // log非法
+        {
+            std::string testLog
+                = R"({"log1":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+        // stream非法
+        {
+            std::string testLog
+                = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream1":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+        // time非法
+        {
+            std::string testLog
+                = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time1":"2024-02-19T03:49:37.793533014Z"})";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+        // 非法json
+        {
+            std::string testLog
+                = R"(log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+    }
+    // 带回车
+    {
+        // 合法
+        {
+            std::string testLog
+                = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            testLog += "\n";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
+        }
+        // log非法
+        {
+            std::string testLog
+                = R"({"log1":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            testLog += "\n";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            testLog.pop_back();
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+        // stream非法
+        {
+            std::string testLog
+                = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream1":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            testLog += "\n";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            testLog.pop_back();
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+        // time非法
+        {
+            std::string testLog
+                = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time1":"2024-02-19T03:49:37.793533014Z"})";
+            testLog += "\n";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            testLog.pop_back();
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+        // 非法json
+        {
+            std::string testLog
+                = R"(log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            testLog += "\n";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            testLog.pop_back();
+            APSARA_TEST_EQUAL(testLog, line.data.to_string());
+        }
+    }
+}
+
 
 } // namespace logtail
 

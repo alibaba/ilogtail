@@ -2088,7 +2088,7 @@ LineInfo LogFileReader::GetLastTextLine(const char* buffer, int32_t& begPs, int3
         if (buffer[begPs] == '\n' || begPs == 0) {
             int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
             StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            LineInfo res = {lastLine, lineBegin, 1};
+            LineInfo res = {lastLine, lineBegin, 1, endPs, true};
             return res;
         }
         --begPs;
@@ -2099,11 +2099,16 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer, int32_t& b
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
             int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
-            StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            LineInfo res = {lastLine, lineBegin, 1};
+            StringView lastLine;
+            if (buffer[endPs] != '\n' && buffer[endPs] == '}') {
+                lastLine = StringView(buffer + lineBegin, endPs + 1 - lineBegin);
+            } else {
+                lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
+            }
+            LineInfo res = {lastLine, lineBegin, 1, endPs, true};
 
             rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
-            doc.Parse(buffer + lineBegin, endPs - lineBegin);
+            doc.Parse(lastLine.data(), lastLine.size());
             if (doc.HasParseError()) {
                 return res;
             } else if (!doc.IsObject()) {
@@ -2122,6 +2127,9 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer, int32_t& b
                 return res;
             }
             StringView content = StringView(it->value.GetString());
+            if (content.size() > 0 && content[content.size() - 1] == '\n') {
+                content = StringView(content.data(), content.size() - 1);
+            }
             res.data = content;
             return res;
         }
