@@ -1754,6 +1754,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
 }
 
 void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
+    std::unique_ptr<char[]> gbkMemory;
     char* gbkBuffer = nullptr;
     size_t readCharCount = 0, originReadCount = 0;
     int64_t lastReadPos = 0;
@@ -1763,6 +1764,8 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     if (!mLogFileOp.IsOpen()) {
         // read flush timeout
         readCharCount = mCache.size();
+        gbkMemory.reset(new char[readCharCount + 1]);
+        gbkBuffer = gbkMemory.get();
         memcpy(gbkBuffer, mCache.data(), readCharCount);
         // Ignore \n if last is force read
         if (gbkBuffer[0] == '\n' && mLastForceRead) {
@@ -1780,7 +1783,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         if (READ_BYTE < lastCacheSize) {
             READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
         }
-        std::unique_ptr<char[]> gbkMemory(new char[READ_BYTE + 1]);
+        gbkMemory.reset(new char[READ_BYTE + 1]);
         gbkBuffer = gbkMemory.get();
         if (lastCacheSize) {
             READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
