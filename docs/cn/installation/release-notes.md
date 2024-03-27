@@ -1,5 +1,44 @@
 # 发布历史
 
+## 1.8.8
+
+### 发布记录
+
+发版日期：2024 年 3 月 27 日
+
+新功能
+
+* 新增processo_rate_limit采样限流插件 [#1321](https://github.com/alibaba/ilogtail/pull/1321)
+
+优化
+
+* 优化Sender日志打印和告警 [#1419](https://github.com/alibaba/ilogtail/pull/1419)
+* Skywalking插件中数据库Span新增Connection_string标签 [#1407](https://github.com/alibaba/ilogtail/pull/1407)
+
+问题修复
+
+* 修复飞天格式解析字段和时间错乱问题 [#1307](https://github.com/alibaba/ilogtail/pull/1307) [#1309](https://github.com/alibaba/ilogtail/pull/1309)
+* 解决高精度时间设置后Go插件意外加载的问题 [#1336](https://github.com/alibaba/ilogtail/pull/1307) [#1309](https://github.com/alibaba/ilogtail/pull/1336)
+* 确保导入历史文件后进程可以正常退出 [#1369](https://github.com/alibaba/ilogtail/pull/1307) [#1309](https://github.com/alibaba/ilogtail/pull/1369)
+* 维持解析后的日志字段顺序与原始日志一致，飞天格式允许重复key以兼容原有行为 [#1416](https://github.com/alibaba/ilogtail/pull/1416)
+
+[详情和源代码](https://github.com/alibaba/ilogtail/blob/main/changes/v1.8.8.md)
+
+### 下载
+
+| 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
+| [ilogtail-1.8.8.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.8.8/ilogtail-1.8.8.linux-amd64.tar.gz) | Linux | x86-64 | 0f0b7d707f91e583fd8f73f9ebae7051de7c965d581176a84550745862213e91 |
+| [ilogtail-1.8.8.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.8.8/ilogtail-1.8.8.linux-arm64.tar.gz) | Linux | arm64  | 1828515e7dbef33c2d6b3d260c25fb2b84bf60d3a8b756df8dd0e3c7c6ad1737 |
+
+### Docker 镜像
+
+**Docker Pull 命令**&#x20;
+
+``` bash
+docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.8.8
+```
+
 ## 1.8.4
 
 ### 发布记录
