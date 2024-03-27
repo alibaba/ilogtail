@@ -94,6 +94,120 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineNoMergeSin
     LogFileReader logFileReader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     logFileReader.mFileLogFormat = LogFileReader::LogFormat::CONTAINERD_TEXT;
+    // 异常情况+有回车
+    {
+        // case: PartLogFlag存在，第三个空格存在但空格后无内容
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P \n";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("", line.data.to_string());
+        }
+        // case: PartLogFlag存在，第三个空格不存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P\n";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("P", line.data.to_string());
+        }
+        // case: PartLogFlag不存在，第二个空格存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout \n";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("", line.data.to_string());
+        }
+        // case: 第二个空格不存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout\n";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("2024-01-05T23:28:06.818486411+08:00 stdout", line.data.to_string());
+        }
+        // case: 第一个空格不存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00stdout\n";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("2024-01-05T23:28:06.818486411+08:00stdout", line.data.to_string());
+        }
+    }
+    // 异常情况+无回车
+    {
+        // case: PartLogFlag存在，第三个空格存在但空格后无内容
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P ";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("P", line.data.to_string());
+        }
+        // case: PartLogFlag存在，第三个空格不存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("", line.data.to_string());
+        }
+        // case: PartLogFlag不存在，第二个空格存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout ";
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("2024-01-05T23:28:06.818486411+08:00 stdout", line.data.to_string());
+        }
+        // case: 第二个空格不存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("2024-01-05T23:28:06.818486411+08:00 stdou", line.data.to_string());
+        }
+        // case: 第一个空格不存在
+        {
+            std::string testLog = "2024-01-05T23:28:06.818486411+08:00stdout";
+
+            int32_t endPs = testLog.size() - 1;
+            int32_t begin = endPs - 1;
+            LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, false, true);
+            APSARA_TEST_EQUAL(int(testLog.size()), line.lineEnd + 1);
+            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL("2024-01-05T23:28:06.818486411+08:00stdou", line.data.to_string());
+        }
+    }
     // case: F + P + P
     {
         std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";

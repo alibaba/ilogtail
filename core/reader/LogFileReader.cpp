@@ -2210,12 +2210,14 @@ LineInfo LogFileReader::GetLastContainerdTextLine(const char* buffer, int32_t& b
             if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
                 && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
                 lastLine = StringView(pch2 + 1, lineEnd - pch2 - 1);
+                res.data = lastLine;
                 return res;
             }
             // 寻找第三个分隔符位置 content
             const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
             if (pch3 == lineEnd || pch3 != pch2 + 2) {
                 lastLine = StringView(pch2 + 1, lineEnd - pch2 - 1);
+                res.data = lastLine;
                 return res;
             }
             if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
