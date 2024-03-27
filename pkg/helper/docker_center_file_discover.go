@@ -26,11 +26,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const staticContainerInfoPathEnvKey = "ALIYUN_LOG_STATIC_CONTAINER_INFO"
@@ -237,7 +237,8 @@ func innerReadStatisContainerInfo(file string, lastContainerInfo []types.Contain
 
 func isStaticContainerInfoEnabled() bool {
 	envPath := os.Getenv(staticContainerInfoPathEnvKey)
-	return len(envPath) != 0
+	acsFlag := os.Getenv(acsFlag)
+	return (len(envPath) != 0 || len(acsFlag) != 0)
 }
 
 func tryReadStaticContainerInfo() ([]types.ContainerJSON, []string, bool, error) {
