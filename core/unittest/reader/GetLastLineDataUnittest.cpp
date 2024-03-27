@@ -71,7 +71,7 @@ public:
 
     void TestLastContainerdTextLineNoMerge();
     void TestLastContainerdTextLineMerge();
-    void TestGetLastContainerdTextLine();
+    void TestLastContainerdTextLineNoMergeSingleLine();
 
     std::unique_ptr<char[]> expectedContent;
     FileReaderOptions readerOpts;
@@ -83,13 +83,13 @@ public:
 
 UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineNoMerge);
 UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineMerge);
-UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestGetLastContainerdTextLine);
+UNIT_TEST_CASE(LastMatchedContainerdTextLineUnittest, TestLastContainerdTextLineNoMergeSingleLine);
 
 std::string LastMatchedContainerdTextLineUnittest::logPathDir;
 std::string LastMatchedContainerdTextLineUnittest::gbkFile;
 std::string LastMatchedContainerdTextLineUnittest::utf8File;
 
-void LastMatchedContainerdTextLineUnittest::TestGetLastContainerdTextLine() {
+void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineNoMergeSingleLine() {
 }
 
 void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineNoMerge() {
@@ -342,7 +342,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
         LineInfo line = logFileReader.GetLastLineData(const_cast<char*>(testLog.data()), begin, endPs, true);
         // APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineEnd + 1);
         APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-        APSARA_TEST_EQUAL("12345" + LOG_ERROR + "789", line.data.to_string());
+        APSARA_TEST_EQUAL("12345" + LOG_ERROR + "78", line.data.to_string());
     }
     // case: P + P + error + '\n'
     {
