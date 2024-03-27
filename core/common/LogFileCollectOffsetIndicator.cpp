@@ -112,11 +112,11 @@ void LogFileCollectOffsetIndicator::RecordFileOffset(LoggroupTimeValue* data) {
                                                                      devInode,
                                                                      data->mLogGroupContext.mFuseMode,
                                                                      fd,
-                                                                     data->mLastUpdateTime);
+                                                                     data->mEnqueueTime);
         iter = mLogFileOffsetInfoMap.insert(std::make_pair(logFileInfo, logFileOffsetInfo)).first;
     }
     LogFileOffsetInfo* logFileOffsetInfo = iter->second;
-    logFileOffsetInfo->mLastUpdateTime = data->mLastUpdateTime;
+    logFileOffsetInfo->mLastUpdateTime = data->mEnqueueTime;
 
     LogFileOffsetInfoNode node(seqNum,
                                fileInfoPtr->offset,
