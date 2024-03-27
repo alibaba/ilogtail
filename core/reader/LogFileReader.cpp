@@ -827,7 +827,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
             int32_t begPs = begin;
             int32_t endPs = i;
             LineInfo line = LogFileReader::GetLastLineData(readBuf, begPs, endPs, false, true);
-            if (BoostRegexMatch(
+            if (BoostRegexSearch(
                     line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
                 mLastFilePos += i + 1;
                 mCache.clear();
@@ -2046,12 +2046,12 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     while (begPs >= 0) {
         LineInfo line = LogFileReader::GetLastLineData(buffer, begPs, endPs);
         if (mMultilineConfig.first->GetContinuePatternReg()
-            && BoostRegexMatch(
+            && BoostRegexSearch(
                 line.data.data(), line.data.size(), *mMultilineConfig.first->GetContinuePatternReg(), exception)) {
             rollbackLineFeedCount += line.rollbackLineFeedCount;
             endPs = begPs;
         } else if (mMultilineConfig.first->GetEndPatternReg()
-                   && BoostRegexMatch(
+                   && BoostRegexSearch(
                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetEndPatternReg(), exception)) {
             // Ensure the end line is complete
             if (buffer[endPs] == '\n') {
@@ -2061,7 +2061,7 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
                 endPs = begPs;
             }
         } else if (mMultilineConfig.first->GetStartPatternReg()
-                   && BoostRegexMatch(
+                   && BoostRegexSearch(
                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
             rollbackLineFeedCount += line.rollbackLineFeedCount;
             // Keep all the buffer if rollback all

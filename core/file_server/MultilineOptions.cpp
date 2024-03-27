@@ -187,11 +187,15 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
 }
 
 bool MultilineOptions::ParseRegex(const string& pattern, shared_ptr<boost::regex>& reg) {
-    if (pattern.empty() || pattern == ".*") {
+    string regexPattern = pattern;
+    if (EndWith(pattern, ".*")) {
+        regexPattern = pattern.substr(0, pattern.size() - 2);
+    }
+    if (regexPattern.empty() || regexPattern == ".*") {
         return true;
     }
     try {
-        reg.reset(new boost::regex(pattern));
+        reg.reset(new boost::regex(regexPattern));
     } catch (...) {
         return false;
     }

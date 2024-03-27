@@ -236,13 +236,13 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             } else {
                 regex = *mMultiline.GetContinuePatternReg();
             }
-            if (BoostRegexMatch(sourceVal.data(), sourceVal.size(), regex, exception)) {
+            if (BoostRegexSearch(sourceVal.data(), sourceVal.size(), regex, exception)) {
                 events.emplace_back(sourceEvent);
                 begin = cur;
                 isPartialLog = true;
             } else if (mMultiline.GetEndPatternReg() != nullptr && mMultiline.GetStartPatternReg() == nullptr
                        && mMultiline.GetContinuePatternReg() != nullptr
-                       && BoostRegexMatch(
+                       && BoostRegexSearch(
                            sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                 // case: continue + end
                 // current line is matched against the end pattern rather than the continue pattern
@@ -255,7 +255,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
         } else {
             // case: start + continue or continue + end
             if (mMultiline.GetContinuePatternReg() != nullptr
-                && BoostRegexMatch(
+                && BoostRegexSearch(
                     sourceVal.data(), sourceVal.size(), *mMultiline.GetContinuePatternReg(), exception)) {
                 events.emplace_back(sourceEvent);
                 continue;
@@ -266,7 +266,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 if (mMultiline.GetContinuePatternReg() != nullptr) {
                     // current line is not matched against the continue pattern, so the end pattern will decide if
                     // the current log is a match or not
-                    if (BoostRegexMatch(
+                    if (BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                         MergeEvents(events, true);
                         sourceEvents[newSize++] = std::move(sourceEvents[begin]);
@@ -277,7 +277,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                     isPartialLog = false;
                 } else {
                     // case: start + end or end
-                    if (BoostRegexMatch(
+                    if (BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                         MergeEvents(events, true);
                         sourceEvents[newSize++] = std::move(sourceEvents[begin]);
@@ -294,7 +294,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             } else {
                 if (mMultiline.GetContinuePatternReg() == nullptr) {
                     // case: start
-                    if (!BoostRegexMatch(
+                    if (!BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetStartPatternReg(), exception)) {
                         events.emplace_back(sourceEvent);
                     } else {
@@ -308,7 +308,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                     // continue pattern is given, but current line is not matched against the continue pattern
                     MergeEvents(events, true);
                     sourceEvents[newSize++] = std::move(sourceEvents[begin]);
-                    if (!BoostRegexMatch(
+                    if (!BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetStartPatternReg(), exception)) {
                         // when no end pattern is given, the only chance to enter unmatched state is when both start
                         // and continue pattern are given, and the current line is not matched against the start
