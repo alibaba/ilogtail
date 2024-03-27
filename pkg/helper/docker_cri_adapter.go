@@ -84,14 +84,6 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		return true
 	}
 
-	// Verify dockershim.sock existence.
-	for _, sock := range []string{dockerShimUnixSocket1, dockerShimUnixSocket2} {
-		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
-			// Having dockershim.sock means k8s + docker cri
-			return false
-		}
-	}
-
 	// Verify containerd.sock cri valid.
 	if fi, err := os.Stat(criRuntimeEndpoint); err == nil && !fi.IsDir() {
 		if IsCRIStatusValid(criRuntimeEndpoint) {
