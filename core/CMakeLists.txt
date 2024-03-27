@@ -24,7 +24,7 @@ option(WITHOUTGDB "Build Logtail without gdb" OFF)
 
 # Name/Version information.
 if (NOT DEFINED LOGTAIL_VERSION)
-    set(LOGTAIL_VERSION "1.8.4")
+    set(LOGTAIL_VERSION "1.8.8")
 endif ()
 message(STATUS "Version: ${LOGTAIL_VERSION}")
 
