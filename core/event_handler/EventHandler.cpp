@@ -776,6 +776,7 @@ void ModifyHandler::Handle(const Event& event) {
                                  "config", mConfigName)("log reader queue name", reader->GetHostLogPath())(
                                  "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
                                  "file size", reader->GetFileSize()));
+                    reader->CloseFilePtr();
                 } else if (reader->IsContainerStopped()) {
                     // release fd as quick as possible
                     LOG_INFO(
@@ -786,8 +787,8 @@ void ModifyHandler::Handle(const Event& event) {
                                                                                reader->GetDevInode().dev)(
                             "file inode", reader->GetDevInode().inode)("file size", reader->GetFileSize()));
                     ForceReadLogAndPush(reader);
+                    reader->CloseFilePtr();
                 }
-                reader->CloseFilePtr();
                 break;
             }
             if (pushRetry >= 5 || GetCurrentTimeInMicroSeconds() - beginTime > mReadFileTimeSlice) {
