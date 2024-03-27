@@ -15,7 +15,7 @@
 FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:1.3.0
 
 ARG HOST_OS=Linux
-ARG VERSION=1.8.4
+ARG VERSION=1.8.8
 
 USER root
 WORKDIR /ilogtail
