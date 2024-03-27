@@ -475,16 +475,11 @@ private:
 
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
 
-    LineInfo
-    GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount);
-    LineInfo GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount);
+    LineInfo GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs);
+    LineInfo GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
     LineInfo GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastFullContainerdTextLine(const char* buffer,
-                                           int32_t& begPs,
-                                           int32_t endPs,
-                                           int32_t& rollbackLineFeedCount,
-                                           bool needMerge = true,
-                                           bool singleLine = false);
+    LineInfo GetLastFullContainerdTextLine(
+        const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
 
     LineInfo
     GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);

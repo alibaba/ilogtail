@@ -2029,6 +2029,12 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
                 if (endPs != size - 1) { // if last line dose not end with '\n', rollback last line
                     rollbackLineFeedCount = 1;
                 }
+                if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
+                    int32_t begin = 0;
+                    LineInfo line = GetLastLineData(buffer, begin, endPs, false);
+                    rollbackLineFeedCount += line.rollbackLineFeedCount;
+                    return line.lineEnd + 1;
+                }
                 return endPs + 1;
             }
             endPs--;
@@ -2077,30 +2083,24 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     return 0;
 }
 
-LineInfo
-LogFileReader::GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs, int32_t& rollbackLineFeedCount) {
+LineInfo LogFileReader::GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs) {
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
-            ++rollbackLineFeedCount;
             int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
             StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            LineInfo res = {lastLine, lineBegin, rollbackLineFeedCount};
+            LineInfo res = {lastLine, lineBegin, 1};
             return res;
         }
         --begPs;
     }
 }
 
-LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer,
-                                                  int32_t& begPs,
-                                                  int32_t endPs,
-                                                  int32_t& rollbackLineFeedCount) {
+LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs) {
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
-            ++rollbackLineFeedCount;
             int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
             StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            LineInfo res = {lastLine, lineBegin, rollbackLineFeedCount};
+            LineInfo res = {lastLine, lineBegin, 1};
 
             rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
             doc.Parse(buffer + lineBegin, endPs - lineBegin);
@@ -2129,14 +2129,10 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer,
     }
 }
 
-LineInfo LogFileReader::GetLastFullContainerdTextLine(const char* buffer,
-                                                      int32_t& begPs,
-                                                      int32_t endPs,
-                                                      int32_t& rollbackLineFeedCount,
-                                                      bool needMerge,
-                                                      bool singleLine) {
+LineInfo LogFileReader::GetLastFullContainerdTextLine(
+    const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge, bool singleLine) {
     LineInfo line = GetLastContainerdTextLine(buffer, begPs, endPs);
-    line.rollbackLineFeedCount = rollbackLineFeedCount;
+    line.rollbackLineFeedCount = 0;
     endPs = begPs;
     if (singleLine) {
         return line;
@@ -2243,32 +2239,14 @@ LineInfo LogFileReader::GetLastContainerdTextLine(const char* buffer, int32_t& b
 
 LineInfo
 LogFileReader::GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge, bool singleLine) {
-    int32_t rollbackLineFeedCount = 0;
-    bool islastlineComplete = true;
-    if (buffer[endPs] != '\n') { // if last line dose not end with '\n', rollback last line
-        ++rollbackLineFeedCount;
-        islastlineComplete = false;
-    }
-
-    if (!islastlineComplete) {
-        // find \n
-        while (endPs >= 0 && buffer[endPs] != '\n') {
-            --endPs;
-        }
-    }
-    if (endPs == -1) {
-        LineInfo res = {StringView(), 0, -1, rollbackLineFeedCount};
-        return res;
-    }
-    begPs = endPs - 1;
     if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
-        return GetLastFullContainerdTextLine(buffer, begPs, endPs, rollbackLineFeedCount, needMerge, singleLine);
+        return GetLastFullContainerdTextLine(buffer, begPs, endPs, needMerge, singleLine);
     }
     if (mFileLogFormat == LogFormat::DOCKER_JSON_FILE) {
-        return GetLastDockerJsonFileLine(buffer, begPs, endPs, rollbackLineFeedCount);
+        return GetLastDockerJsonFileLine(buffer, begPs, endPs);
     }
     if (mFileLogFormat == LogFormat::TEXT) {
-        return GetLastTextLine(buffer, begPs, endPs, rollbackLineFeedCount);
+        return GetLastTextLine(buffer, begPs, endPs);
     }
 }
 
