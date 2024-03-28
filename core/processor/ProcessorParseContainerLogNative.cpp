@@ -267,7 +267,7 @@ struct DockerLog {
 enum class DockerLogType { Log, Stream, Time };
 
 bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
-    if (buffer[0] != '{' || buffer[size - 1] != '}') {
+    if (size == 0 || buffer[0] != '{' || buffer[size - 1] != '}') {
         return false;
     }
     int32_t beginIdx = 0;
@@ -283,42 +283,34 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
         }
         if (buffer[idx] == '\"') {
             ++idx;
-            if (idx + 4 < size && buffer[idx] == 'l' && buffer[idx + 1] == 's' && buffer[idx + 2] == 't'
-                && buffer[idx + 3] == '\"') {
-                idx += 4;
+            if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size() < size
+                && std::equal(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.begin(),
+                              ProcessorParseContainerLogNative::DOCKER_JSON_LOG.end(),
+                              &buffer[idx])) {
+                idx += ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size();
                 logType = DockerLogType::Log;
-            } else if (idx + 7 < size && buffer[idx] == 's' && buffer[idx + 1] == 't' && buffer[idx + 2] == 'r'
-                       && buffer[idx + 3] == 'e' && buffer[idx + 4] == 'a' && buffer[idx + 5] == 'm'
-                       && buffer[idx + 6] == '\"') {
-                idx += 7;
+            } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size() < size
+                       && std::equal(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.begin(),
+                                     ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.end(),
+                                     &buffer[idx])) {
+                idx += ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size();
                 logType = DockerLogType::Stream;
-            } else if (idx + 5 < size && buffer[idx] == 't' && buffer[idx + 1] == 'i' && buffer[idx + 2] == 'm'
-                       && buffer[idx + 3] == 'e' && buffer[idx + 4] == '\"') {
-                idx += 5;
+            } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size() < size
+                       && std::equal(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.begin(),
+                                     ProcessorParseContainerLogNative::DOCKER_JSON_TIME.end(),
+                                     &buffer[idx])) {
+                idx += ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size();
                 logType = DockerLogType::Time;
             } else {
                 return false;
             }
-            // skip ' '
-            while (buffer[idx] == ' ') {
+            while (buffer[idx] != '\"') {
                 ++idx;
-                if (idx == size) {
-                    return false;
-                }
             }
-            if (buffer[idx] != ':' || idx + 1 == size) {
-                return false;
-            }
-            ++idx; // skip ':'
-            // skip ' '
-            while (buffer[idx] == ' ') {
+            ++idx;
+            // skip ' ' and ':'
+            while (buffer[idx] == ':' || buffer[idx] == ' ') {
                 ++idx;
-                if (idx == size) {
-                    return false;
-                }
-            }
-            if (buffer[idx] != '\"' || idx + 1 == size) {
-                return false;
             }
             ++idx; // skip '\"'
             char* valueBegion = buffer + beginIdx;
@@ -381,8 +373,9 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
                     dockerLog.time.resize(begin);
                     break;
             }
+        } else {
+            ++idx;
         }
-        return false;
     }
 
     return true;
