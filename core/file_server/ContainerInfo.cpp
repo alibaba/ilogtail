@@ -50,6 +50,7 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
 }
 
 bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
+    containerInfo.mJsonStr = params.toStyledString();
     if (params.isMember("ID") && params["ID"].isString()) {
         if (params["ID"].empty()) {
             errorMsg = "container id is empty, param: " + params.asString();
