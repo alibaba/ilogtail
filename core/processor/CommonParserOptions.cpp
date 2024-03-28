@@ -100,10 +100,11 @@ bool CommonParserOptions::ShouldEraseEvent(bool parseSuccess, const LogEvent& so
         if (sourceEvent.Empty()) {
             return true;
         }
+        size_t size = sourceEvent.Size();
         // "__file_offset__"
-        if (sourceEvent.Size() == 1 && (sourceEvent.cbegin()->first == LOG_RESERVED_KEY_FILE_OFFSET)) {
+        if (size == 1 && (sourceEvent.cbegin()->first == LOG_RESERVED_KEY_FILE_OFFSET)) {
             return true;
-        } else if (sourceEvent.Size() == 2 && sourceEvent.HasContent(ProcessorParseContainerLogNative::containerTimeKey)
+        } else if (size == 2 && sourceEvent.HasContent(ProcessorParseContainerLogNative::containerTimeKey)
                    && sourceEvent.HasContent(ProcessorParseContainerLogNative::containerSourceKey)) {
             return true;
         }
