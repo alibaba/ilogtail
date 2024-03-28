@@ -267,27 +267,58 @@ struct DockerLog {
 enum class DockerLogType { Log, Stream, Time };
 
 bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
+    if (buffer[0] != '{' || buffer[size - 1] != '}') {
+        return false;
+    }
     int32_t beginIdx = 0;
 
     int32_t idx = beginIdx;
     DockerLogType logType;
     while (idx < size) {
+        while (buffer[idx] == ' ') {
+            ++idx;
+            if (idx == size) {
+                return false;
+            }
+        }
         if (buffer[idx] == '\"') {
             ++idx;
-            if (buffer[idx] == 'l') {
+            if (idx + 4 < size && buffer[idx] == 'l' && buffer[idx + 1] == 's' && buffer[idx + 2] == 't'
+                && buffer[idx + 3] == '\"') {
+                idx += 4;
                 logType = DockerLogType::Log;
-            } else if (buffer[idx] == 's') {
+            } else if (idx + 7 < size && buffer[idx] == 's' && buffer[idx + 1] == 't' && buffer[idx + 2] == 'r'
+                       && buffer[idx + 3] == 'e' && buffer[idx + 4] == 'a' && buffer[idx + 5] == 'm'
+                       && buffer[idx + 6] == '\"') {
+                idx += 7;
                 logType = DockerLogType::Stream;
-            } else if (buffer[idx] == 't') {
+            } else if (idx + 5 < size && buffer[idx] == 't' && buffer[idx + 1] == 'i' && buffer[idx + 2] == 'm'
+                       && buffer[idx + 3] == 'e' && buffer[idx + 4] == '\"') {
+                idx += 5;
                 logType = DockerLogType::Time;
+            } else {
+                return false;
             }
-            while (buffer[idx] != '\"') {
+            // skip ' '
+            while (buffer[idx] == ' ') {
                 ++idx;
+                if (idx == size) {
+                    return false;
+                }
             }
-            ++idx;
-            // skip ' ' and ':'
-            while (buffer[idx] == ':' || buffer[idx] == ' ') {
+            if (buffer[idx] != ':' || idx + 1 == size) {
+                return false;
+            }
+            ++idx; // skip ':'
+            // skip ' '
+            while (buffer[idx] == ' ') {
                 ++idx;
+                if (idx == size) {
+                    return false;
+                }
+            }
+            if (buffer[idx] != '\"' || idx + 1 == size) {
+                return false;
             }
             ++idx; // skip '\"'
             char* valueBegion = buffer + beginIdx;
@@ -350,9 +381,8 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
                     dockerLog.time.resize(begin);
                     break;
             }
-        } else {
-            ++idx;
         }
+        return false;
     }
 
     return true;
