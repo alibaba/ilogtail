@@ -48,8 +48,6 @@ const (
 
 var (
 	containerdUnixSocket  = "/run/containerd/containerd.sock"
-	dockerShimUnixSocket1 = "/var/run/dockershim.sock"
-	dockerShimUnixSocket2 = "/run/dockershim.sock"
 )
 
 var criRuntimeWrapper *CRIRuntimeWrapper
