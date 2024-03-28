@@ -360,11 +360,13 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
 
 bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
     if (oldJson == 0) {
-        char* env_var = std::getenv("old");
-        if (env_var != nullptr && std::string(env_var) == "ON") {
+        char* env_var = std::getenv("version");
+        if (env_var != nullptr && std::string(env_var) == "ON1") {
             oldJson = 1;
-        } else {
+        } else if (env_var != nullptr && std::string(env_var) == "ON2") {
             oldJson = 2;
+        } else {
+            oldJson = 3;
         }
     }
     if (oldJson == 1) {
@@ -463,7 +465,6 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
         ResetDockerJsonLogField(data, containerLogKey, content, sourceEvent);
         return true;
     }
-
     StringView buffer = sourceEvent.GetContent(mSourceKey);
 
     bool parseSuccess = true;
@@ -473,7 +474,7 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     entry.stream.resize(10);
     StringView timeValue, sourceValue, content;
 
-    if (!IsValidJson(buffer.data(), buffer.size())) {
+    if (oldJson == 2 && !IsValidJson(buffer.data(), buffer.size())) {
         std::ostringstream errorMsgStream;
         errorMsgStream << "docker stdout json log line is not a valid json obejct."
                        << "\tfirst 1KB log:" << buffer.substr(0, 1024);
