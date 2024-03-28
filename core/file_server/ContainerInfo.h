@@ -45,7 +45,7 @@ struct ContainerInfo {
     std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
     std::vector<sls_logs::LogTag> mMetadata; // tags extracted from this container
-    std::string mJson; // this obj's json, for saving to local file
+    Json::Value mJson; // this obj's json, for saving to local file
 
     static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
     static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
