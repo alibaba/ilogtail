@@ -361,7 +361,7 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
 bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
     if (oldJson == 0) {
         char* env_var = std::getenv("old");
-        if (env_var != nullptr && std::string(env_var) == "true") {
+        if (env_var != nullptr && std::string(env_var) == "ON") {
             oldJson = 1;
         } else {
             oldJson = 2;
