@@ -46,9 +46,7 @@ const (
 	maxMsgSize            = 1024 * 1024 * 16
 )
 
-var (
-	containerdUnixSocket  = "/run/containerd/containerd.sock"
-)
+var containerdUnixSocket = "/run/containerd/containerd.sock"
 
 var criRuntimeWrapper *CRIRuntimeWrapper
 
