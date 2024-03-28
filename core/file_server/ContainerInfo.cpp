@@ -50,7 +50,7 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
 }
 
 bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
-    containerInfo.mJsonStr = params.toStyledString();
+    containerInfo.mJson = params;
     if (params.isMember("ID") && params["ID"].isString()) {
         if (params["ID"].empty()) {
             errorMsg = "container id is empty, param: " + params.asString();
@@ -91,6 +91,9 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 containerInfo.mMetadata.push_back(tag);
             }
         }
+    }
+    if (params.isMember("Path") && params["Path"].isString()) {
+        containerInfo.mRealBaseDir = params["Path"].asString();
     }
     return true;
 }
