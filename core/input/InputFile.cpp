@@ -150,6 +150,10 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
                                              const FileDiscoveryOptions* fileDiscovery) {
+    if (!containerInfo.mRealBaseDir.empty()) {
+        LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID));
+        return true;
+    }
     std::string logPath;
     if (!fileDiscovery->GetWildcardPaths().empty()) {
         logPath = fileDiscovery->GetWildcardPaths()[0];
