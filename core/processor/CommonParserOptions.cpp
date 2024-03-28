@@ -18,6 +18,7 @@
 
 #include "common/Constants.h"
 #include "common/ParamExtractor.h"
+#include "processor/ProcessorParseContainerLogNative.h"
 
 using namespace std;
 
@@ -101,6 +102,9 @@ bool CommonParserOptions::ShouldEraseEvent(bool parseSuccess, const LogEvent& so
         }
         // "__file_offset__"
         if (sourceEvent.Size() == 1 && (sourceEvent.cbegin()->first == LOG_RESERVED_KEY_FILE_OFFSET)) {
+            return true;
+        } else if (sourceEvent.Size() == 2 && sourceEvent.HasContent(ProcessorParseContainerLogNative::containerTimeKey)
+                   && sourceEvent.HasContent(ProcessorParseContainerLogNative::containerSourceKey)) {
             return true;
         }
     }
