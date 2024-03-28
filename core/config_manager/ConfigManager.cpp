@@ -997,7 +997,7 @@ void ConfigManager::SaveDockerConfig() {
                 Json::Value dockerPathValue;
                 dockerPathValue["config_name"] = Json::Value(it->first);
                 dockerPathValue["container_id"] = Json::Value(containerPathVec[i].mID);
-                mJson["Path"] = Json::Value(containerPathVec[i].mRealBaseDir);
+                containerPathVec[i].mJson["Path"] = Json::Value(containerPathVec[i].mRealBaseDir);
                 dockerPathValue["params"] = Json::Value(containerPathVec[i].mJson.toStyledString());
                 dockerPathValueDetail.append(dockerPathValue);
             }
