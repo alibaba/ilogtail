@@ -483,6 +483,7 @@ private:
 
     LineInfo
     GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
+    void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
