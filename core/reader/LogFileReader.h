@@ -35,6 +35,7 @@
 #include "file_server/MultilineOptions.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
+#include "rapidjson/allocators.h"
 #include "reader/FileReaderOptions.h"
 #include "reader/SourceBuffer.h"
 
@@ -79,6 +80,14 @@ enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
  * "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\n" -> "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\0"
  * "SingleLineLog_1\nSingleLineLog_2\nxxx" -> "SingleLineLog_1\nSingleLineLog_2\0"
  */
+struct LineInfo {
+    StringView data;
+    int32_t lineBegin;
+    int32_t rollbackLineFeedCount;
+    int32_t lineEnd;
+    bool fullLine;
+};
+
 class LogFileReader {
 public:
     enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
@@ -459,6 +468,21 @@ protected:
 
 private:
     bool mHasReadContainerBom = false;
+    void checkContainerType();
+    static std::shared_ptr<SourceBuffer> mSourceBuffer;
+    static StringBuffer mStringBuffer;
+    static StringBuffer* GetStringBuffer();
+
+    static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
+
+    LineInfo GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs);
+    LineInfo GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
+    LineInfo GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
+    LineInfo GetLastFullContainerdTextLine(
+        const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
+
+    LineInfo
+    GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
     void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
@@ -598,6 +622,8 @@ private:
     friend class LastMatchedLineDiscardUnmatchUnittest;
     friend class LastMatchedLineNoDiscardUnmatchUnittest;
     friend class LogFileReaderCheckpointUnittest;
+    friend class LastMatchedContainerdTextLineUnittest;
+    friend class LastMatchedDockerJsonFileUnittest;
 
 protected:
     void UpdateReaderManual();
