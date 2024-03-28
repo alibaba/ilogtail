@@ -776,7 +776,7 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
     FixLastFilePos(op, endOffset);
 }
 
-void LogFileReader::checkContainerType() {
+void LogFileReader::checkContainerType(LogFileOperator& op) {
     // 判断container类型
     char containerBOMBuffer[1] = {0};
     size_t readBOMByte = 1;
@@ -796,8 +796,8 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         return;
     }
     if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom
-        && endOffset > 0 && op.IsOpen()) {
-        checkContainerType();
+        && endOffset > 0) {
+        checkContainerType(op);
     }
     int32_t readSize = endOffset - mLastFilePos < INT32_FLAG(max_fix_pos_bytes) ? endOffset - mLastFilePos
                                                                                 : INT32_FLAG(max_fix_pos_bytes);
@@ -1658,7 +1658,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         return;
     }
     if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
-        checkContainerType();
+        checkContainerType(mLogFileOp);
     }
     const size_t lastCacheSize = mCache.size();
     if (READ_BYTE < lastCacheSize) {

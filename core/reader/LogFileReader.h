@@ -459,7 +459,7 @@ protected:
 
 private:
     bool mHasReadContainerBom = false;
-    void checkContainerType();
+    void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
