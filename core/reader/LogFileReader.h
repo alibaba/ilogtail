@@ -81,6 +81,9 @@ enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
  */
 class LogFileReader {
 public:
+    enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
+    LogFormat mFileLogFormat = LogFormat::TEXT;
+
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
         FileCompareResult_SigChange,
@@ -455,6 +458,9 @@ protected:
     std::string mRegion;
 
 private:
+    bool mHasReadContainerBom = false;
+    void checkContainerType(LogFileOperator& op);
+
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
         std::string primaryCheckpointKey;

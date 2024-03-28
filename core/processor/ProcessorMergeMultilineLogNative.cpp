@@ -142,7 +142,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
             return;
         }
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
-        if (sourceEvent->GetContents().empty()) {
+        if (sourceEvent->Empty()) {
             continue;
         }
         events.emplace_back(sourceEvent);
@@ -156,8 +156,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByFlag(PipelineEventGroup& logGr
             }
         } else {
             if (sourceEvent->HasContent(PartLogFlag)) {
-                auto& contents = sourceEvent->MutableContents();
-                contents.erase(PartLogFlag);
+                sourceEvent->DelContent(PartLogFlag);
                 isPartialLog = true;
             } else {
                 MergeEvents(events, false);
@@ -205,7 +204,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             return;
         }
         LogEvent* sourceEvent = &sourceEvents[cur].Cast<LogEvent>();
-        if (sourceEvent->GetContents().empty()) {
+        if (sourceEvent->Empty()) {
             continue;
         }
         if (!sourceEvent->HasContent(mSourceKey)) {

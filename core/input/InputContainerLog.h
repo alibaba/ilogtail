@@ -30,6 +30,10 @@ class InputContainerLog : public Input {
 public:
     static const std::string sName;
 
+    static std::string TryGetRealPath(const std::string& path);
+    static bool
+    DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const PipelineContext*, const FileDiscoveryOptions*);
+
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;

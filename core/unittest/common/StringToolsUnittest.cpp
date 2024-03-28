@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "unittest/Unittest.h"
 #include "common/StringTools.h"
+#include "unittest/Unittest.h"
 
 namespace logtail {
 extern std::vector<std::string> GetTopicNames(const boost::regex& regex);
@@ -34,6 +34,14 @@ TEST_F(StringToolsUnittest, TestToStringVector) {
 
     std::vector<std::string> v4{"a", "b", "c"};
     EXPECT_EQ("a,b,c", ToString(v4));
+}
+
+TEST_F(StringToolsUnittest, TestStartWith) {
+    EXPECT_TRUE(StartWith("/asdfasdf/asdfasdf/asdfasdf", "/"));
+    EXPECT_TRUE(StartWith("/asdfasdf/asdfasdf/asdfasdf", "/asdfasdf"));
+    EXPECT_FALSE(StartWith("/asdfasdf/asdfasdf/asdfasdf", "/213123"));
+    EXPECT_FALSE(StartWith("/", "/asdfasdf"));
+    EXPECT_FALSE(StartWith("", "/asdfasdf"));
 }
 
 TEST_F(StringToolsUnittest, TestEndWith) {

@@ -18,16 +18,15 @@
 #include <fcntl.h>
 #include <io.h>
 #endif
+#include <cityhash/city.h>
 #include <time.h>
 
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <limits>
 #include <numeric>
 #include <random>
-
-#include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
-#include <cityhash/city.h>
 
 #include "GloablFileDescriptorManager.h"
 #include "app_config/AppConfig.h"
@@ -103,7 +102,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
             reader->SetReadFromBeginning();
         }
         if (discoveryConfig.first->IsContainerDiscoveryEnabled()) {
-            DockerContainerPath* containerPath = discoveryConfig.first->GetContainerPathByLogPath(hostLogPathDir);
+            ContainerInfo* containerPath = discoveryConfig.first->GetContainerPathByLogPath(hostLogPathDir);
             if (containerPath == NULL) {
                 LOG_ERROR(sLogger,
                           ("can not get container path by log path, base path",
@@ -113,8 +112,8 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                 reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
                                           : discoveryConfig.first->GetBasePath(),
-                                      containerPath->mContainerPath.size());
-                reader->AddExtraTags(containerPath->mContainerTags);
+                                      containerPath->mRealBaseDir.size());
+                reader->AddExtraTags(containerPath->mMetadata);
             }
         }
         if (readerConfig.first->mAppendingLogPositionMeta) {
@@ -777,9 +776,28 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
     FixLastFilePos(op, endOffset);
 }
 
+void LogFileReader::checkContainerType(LogFileOperator& op) {
+    // 判断container类型
+    char containerBOMBuffer[1] = {0};
+    size_t readBOMByte = 1;
+    int64_t filePos = 0;
+    TruncateInfo* truncateInfo = NULL;
+    ReadFile(op, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
+    if (containerBOMBuffer[0] == '{') {
+        mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
+    } else {
+        mFileLogFormat = LogFormat::CONTAINERD_TEXT;
+    }
+    mHasReadContainerBom = true;
+}
+
 void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
+    }
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom
+        && endOffset > 0) {
+        checkContainerType(op);
     }
     int32_t readSize = endOffset - mLastFilePos < INT32_FLAG(max_fix_pos_bytes) ? endOffset - mLastFilePos
                                                                                 : INT32_FLAG(max_fix_pos_bytes);
@@ -1638,6 +1656,9 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
     if (!READ_BYTE) {
         return;
+    }
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
+        checkContainerType(mLogFileOp);
     }
     const size_t lastCacheSize = mCache.size();
     if (READ_BYTE < lastCacheSize) {

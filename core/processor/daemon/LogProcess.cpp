@@ -43,6 +43,7 @@
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
+#include "processor/ProcessorParseContainerLogNative.h"
 #include "sdk/Client.h"
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
@@ -458,7 +459,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         // construct a logGroup, it should be moved into input later
         PipelineEventGroup eventGroup(logBuffer);
         // TODO: metadata should be set in reader
-        FillEventGroupMetadata(*logBuffer, eventGroup);
+        FillEventGroupMetadata(*logBuffer, eventGroup, logFileReader->mFileLogFormat);
 
         LogEvent* event = eventGroup.AddLogEvent();
         time_t logtime = time(NULL);
@@ -501,11 +502,26 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     return 0;
 }
 
-void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const {
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
-    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
-    eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
-                           std::to_string(logBuffer.logFileReader->GetDevInode().inode));
+void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer,
+                                        PipelineEventGroup& eventGroup,
+                                        LogFileReader::LogFormat fileLogFormat) const {
+    switch (fileLogFormat) {
+        case LogFileReader::LogFormat::DOCKER_JSON_FILE:
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, ProcessorParseContainerLogNative::DOCKER_JSON_FILE);
+            break;
+        case LogFileReader::LogFormat::CONTAINERD_TEXT:
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, ProcessorParseContainerLogNative::CONTAINERD_TEXT);
+            break;
+        default:
+            break;
+    }
+    if (!eventGroup.HasMetadata(EventGroupMetaKey::LOG_FORMAT)) {
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
+        eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED,
+                                     logBuffer.logFileReader->GetHostLogPath());
+        eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
+                               std::to_string(logBuffer.logFileReader->GetDevInode().inode));
+    }
 #ifdef __ENTERPRISE__
     std::string agentTag = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     if (!agentTag.empty()) {

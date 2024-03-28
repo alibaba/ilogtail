@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# goc server is only for e2e test to analysis code coverage.
+FROM busybox
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:2.0 as build
-
-USER root
-ENTRYPOINT ["goc","server"]
+CMD ["sh", "-c","echo \"today\nhello\" && sleep 90"]
