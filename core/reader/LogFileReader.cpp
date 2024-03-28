@@ -2065,12 +2065,6 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
     begPs = size - 2;
     rollbackLineFeedCount = 0;
-    if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
-        int32_t begin = 0;
-        LineInfo line = GetLastLineData(buffer, begin, endPs, false);
-        rollbackLineFeedCount = line.rollbackLineFeedCount;
-        return line.lineEnd + 1;
-    }
     while (endPs >= 0) {
         if (buffer[endPs] == '\n') {
             if (endPs != size - 1) { // if last line dose not end with '\n', rollback last line
