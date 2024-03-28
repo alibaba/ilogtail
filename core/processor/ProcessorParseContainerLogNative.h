@@ -37,6 +37,11 @@ public:
     static const std::string DOCKER_JSON_TIME; // docker json 时间字段
     static const std::string DOCKER_JSON_STREAM_TYPE; // docker json 流字段
 
+    // needed by ShouldEraseEvent
+    static const std::string containerTimeKey; // 容器时间字段
+    static const std::string containerSourceKey; // 容器来源字段
+    static const std::string containerLogKey; // 容器日志字段
+
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
@@ -52,11 +57,8 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    static const std::string containerTimeKey; // 容器时间字段
-    static const std::string containerSourceKey; // 容器来源字段
-    static const std::string containerLogKey; // 容器日志字段
-
     bool ProcessEvent(StringView containerType, PipelineEventPtr& e, PipelineEventGroup& logGroup);
+    bool ProcessEvent(StringView containerType, PipelineEventPtr& e);
     void ResetDockerJsonLogField(char* data, StringView key, StringView value, LogEvent& targetEvent);
     void ResetContainerdTextLog(
         StringView time, StringView source, StringView content, bool isPartialLog, LogEvent& sourceEvent);
