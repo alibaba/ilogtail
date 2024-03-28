@@ -97,6 +97,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/mwitkow/go-conntrack](https://pkg.go.dev/github.com/mwitkow/go-conntrack?tab=licenses)
 - [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [go.opentelemetry.io/proto/otlp](https://pkg.go.dev/go.opentelemetry.io/proto/otlp?tab=licenses)
+- [github.com/xwb1989/sqlparser](https://pkg.go.dev/github.com/xwb1989/sqlparser?tab=licenses)
 
 ## BSD licenses
 
