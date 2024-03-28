@@ -782,7 +782,7 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     size_t readBOMByte = 1;
     int64_t filePos = 0;
     TruncateInfo* truncateInfo = NULL;
-    ReadFile(mLogFileOp, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
+    ReadFile(op, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
     } else {
