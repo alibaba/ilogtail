@@ -26,7 +26,7 @@
 namespace logtail {
 
 inline bool StartWith(const std::string& input, StringView pattern) {
-    return input.find(pattern.data(), pattern.size()) == 0;
+    return input.find(pattern.data(), 0, pattern.size()) == 0;
 }
 
 inline bool EndWith(const std::string& input, const std::string& pattern) {
