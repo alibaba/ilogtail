@@ -24,7 +24,7 @@ namespace logtail {
 class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
-
+    int oldJson = 0;
     static const std::string CONTAINERD_TEXT;
     static const std::string DOCKER_JSON_FILE;
 

@@ -20,6 +20,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
 #include "models/LogEvent.h"
 #include "monitor/MetricConstants.h"
@@ -358,6 +359,111 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
 }
 
 bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
+    if (oldJson == 0) {
+        char* env_var = std::getenv("old");
+        if (env_var != nullptr && std::string(env_var) == "true") {
+            oldJson = 1;
+        } else {
+            oldJson = 2;
+        }
+    }
+    if (oldJson == 1) {
+        StringView buffer = sourceEvent.GetContent(mSourceKey);
+
+        bool parseSuccess = true;
+        rapidjson::Document doc;
+        doc.Parse(buffer.data(), buffer.size());
+        if (doc.HasParseError()) {
+            std::ostringstream errorMsgStream;
+            errorMsgStream << "parse docker stdout json log fail, rapidjson offset: " << doc.GetErrorOffset()
+                           << "\trapidjson error: " << doc.GetParseError()
+                           << "\tfirst 1KB log:" << buffer.substr(0, 1024);
+            errorMsg = errorMsgStream.str();
+            parseSuccess = false;
+        } else if (!doc.IsObject()) {
+            std::ostringstream errorMsgStream;
+            errorMsgStream << "docker stdout json log line is not a valid json obejct."
+                           << "\tfirst 1KB log:" << buffer.substr(0, 1024);
+            errorMsg = errorMsgStream.str();
+            parseSuccess = false;
+        }
+        if (!parseSuccess) {
+            return mKeepingSourceWhenParseFail;
+        }
+
+        // time
+        auto it = doc.FindMember(DOCKER_JSON_TIME.c_str());
+        if (it == doc.MemberEnd() || !it->value.IsString()) {
+            std::ostringstream errorMsgStream;
+            errorMsgStream << "time field cannot be found in log line."
+                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+            errorMsg = errorMsgStream.str();
+            return mKeepingSourceWhenParseFail;
+        }
+        StringView timeValue = StringView(it->value.GetString());
+
+        // content
+        it = doc.FindMember(DOCKER_JSON_LOG.c_str());
+        if (it == doc.MemberEnd() || !it->value.IsString()) {
+            std::ostringstream errorMsgStream;
+            errorMsgStream << "content field cannot be found in log line."
+                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+            errorMsg = errorMsgStream.str();
+            return mKeepingSourceWhenParseFail;
+        }
+        StringView content = StringView(it->value.GetString());
+
+        // source
+        it = doc.FindMember(DOCKER_JSON_STREAM_TYPE.c_str());
+        StringView sourceValue;
+        if (it == doc.MemberEnd() || !it->value.IsString()) {
+            sourceValue = StringView();
+        } else {
+            sourceValue = StringView(it->value.GetString());
+        }
+        if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
+            std::ostringstream errorMsgStream;
+            errorMsgStream << "source field cannot be found in log line."
+                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+            errorMsg = errorMsgStream.str();
+            return mKeepingSourceWhenParseFail;
+        }
+
+        if (sourceValue == "stdout") {
+            mProcParseStdoutTotal->Add(1);
+            if (mIgnoringStdout) {
+                return false;
+            }
+        } else {
+            mProcParseStderrTotal->Add(1);
+            if (mIgnoringStderr) {
+                return false;
+            }
+        }
+
+        if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
+            std::ostringstream errorMsgStream;
+            errorMsgStream << "unexpected error: the original log line length is smaller than the sum of parsed fields."
+                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
+            errorMsg = errorMsgStream.str();
+            return mKeepingSourceWhenParseFail;
+        }
+
+        char* data = const_cast<char*>(buffer.data());
+        // time
+        ResetDockerJsonLogField(data, containerTimeKey, timeValue, sourceEvent);
+        data += timeValue.size();
+        // source
+        ResetDockerJsonLogField(data, containerSourceKey, sourceValue, sourceEvent);
+        data += sourceValue.size();
+        // content
+        if (!content.empty() && content.back() == '\n') {
+            content = StringView(content.data(), content.size() - 1);
+        }
+        ResetDockerJsonLogField(data, containerLogKey, content, sourceEvent);
+        return true;
+    }
+
     StringView buffer = sourceEvent.GetContent(mSourceKey);
 
     bool parseSuccess = true;
@@ -367,6 +473,13 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     entry.stream.resize(10);
     StringView timeValue, sourceValue, content;
 
+    if (!IsValidJson(buffer.data(), buffer.size())) {
+        std::ostringstream errorMsgStream;
+        errorMsgStream << "docker stdout json log line is not a valid json obejct."
+                       << "\tfirst 1KB log:" << buffer.substr(0, 1024);
+        errorMsg = errorMsgStream.str();
+        return mKeepingSourceWhenParseFail;
+    }
     char* data = const_cast<char*>(buffer.data());
 
     if (ParseDockerLog(data, buffer.size(), entry)) {
@@ -431,9 +544,15 @@ void ProcessorParseContainerLogNative::ResetDockerJsonLogField(char* data,
                                                                StringView key,
                                                                StringView value,
                                                                LogEvent& targetEvent) {
-    // memmove(data, value.data(), value.size());
-    targetEvent.SetContentNoCopy(key, value);
-    mProcParseOutSizeBytes->Add(key.size() + value.size());
+    if (oldJson == 1) {
+        memmove(data, value.data(), value.size());
+        StringView valueBuffer = StringView(data, value.size());
+        targetEvent.SetContentNoCopy(key, valueBuffer);
+        mProcParseOutSizeBytes->Add(key.size() + valueBuffer.size());
+    } else {
+        targetEvent.SetContentNoCopy(key, value);
+        mProcParseOutSizeBytes->Add(key.size() + value.size());
+    }
 }
 
 void ProcessorParseContainerLogNative::ResetContainerdTextLog(
