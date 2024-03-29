@@ -425,6 +425,11 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	}
 	if idf.CollectContainersFlag {
 		var configResult *helper.ContainerConfigResult
+		configName := idf.context.GetConfigName()
+		lastSlashIndex := strings.LastIndex(configName, "/")
+		if lastSlashIndex != -1 {
+			configName = configName[:lastSlashIndex]
+		}
 		if len(idf.LogPath) == 0 {
 			keys := make([]string, 0, len(idf.matchList))
 			for k := range idf.matchList {
@@ -436,7 +441,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 				DataType:                   "container_config_result",
 				Project:                    idf.context.GetProject(),
 				Logstore:                   idf.context.GetLogstore(),
-				ConfigName:                 idf.context.GetConfigName(),
+				ConfigName:                 configName,
 				PathExistInputContainerIDs: helper.GetStringFromList(keys),
 				SourceAddress:              "stdout",
 				InputType:                  "input_container_log",
@@ -448,7 +453,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 				DataType:                      "container_config_result",
 				Project:                       idf.context.GetProject(),
 				Logstore:                      idf.context.GetLogstore(),
-				ConfigName:                    idf.context.GetConfigName(),
+				ConfigName:                    configName,
 				SourceAddress:                 fmt.Sprintf("%s/**/%s", idf.LogPath, idf.FilePattern),
 				PathExistInputContainerIDs:    helper.GetStringFromList(havingPathkeys),
 				PathNotExistInputContainerIDs: helper.GetStringFromList(nothavingPathkeys),
