@@ -504,6 +504,8 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
+    size_t GetNextLine(const char* buffer, size_t begin);
+
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
 
@@ -589,8 +591,7 @@ private:
     friend class LogSplitUnittest;
     friend class LogSplitDiscardUnmatchUnittest;
     friend class LogSplitNoDiscardUnmatchUnittest;
-    friend class LastMatchedLineDiscardUnmatchUnittest;
-    friend class LastMatchedLineNoDiscardUnmatchUnittest;
+    friend class LastMatchedLineMultilineUnittest;
     friend class LogFileReaderCheckpointUnittest;
 
 protected:

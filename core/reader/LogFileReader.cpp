@@ -18,16 +18,15 @@
 #include <fcntl.h>
 #include <io.h>
 #endif
+#include <cityhash/city.h>
 #include <time.h>
 
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <limits>
 #include <numeric>
 #include <random>
-
-#include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
-#include <cityhash/city.h>
 
 #include "GloablFileDescriptorManager.h"
 #include "app_config/AppConfig.h"
@@ -2004,52 +2003,48 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
         return 0;
     }
     // Multiline rollback
-    int begPs = size - 2;
     std::string exception;
-    while (begPs >= 0) {
-        if (buffer[begPs] == '\n' || begPs == 0) {
-            int lineBegin = begPs == 0 ? 0 : begPs + 1;
-            if (mMultilineConfig.first->GetContinuePatternReg()
-                && BoostRegexMatch(buffer + lineBegin,
-                                   endPs - lineBegin,
-                                   *mMultilineConfig.first->GetContinuePatternReg(),
-                                   exception)) {
-                ++rollbackLineFeedCount;
-                endPs = begPs;
-            } else if (mMultilineConfig.first->GetEndPatternReg()
-                       && BoostRegexMatch(buffer + lineBegin,
-                                          endPs - lineBegin,
-                                          *mMultilineConfig.first->GetEndPatternReg(),
-                                          exception)) {
+    while (endPs >= 0) {
+        size_t begPs = GetNextLine(buffer, endPs);
+        if (mMultilineConfig.first->GetEndPatternReg()) {
+            // start + end, continue + end, end
+            if (BoostRegexMatch(
+                    buffer + begPs, endPs - begPs, *mMultilineConfig.first->GetEndPatternReg(), exception)) {
                 // Ensure the end line is complete
                 if (buffer[endPs] == '\n') {
                     return endPs + 1;
                 } else {
                     ++rollbackLineFeedCount;
-                    endPs = begPs;
-                }
-            } else if (mMultilineConfig.first->GetStartPatternReg()
-                       && BoostRegexMatch(buffer + lineBegin,
-                                          endPs - lineBegin,
-                                          *mMultilineConfig.first->GetStartPatternReg(),
-                                          exception)) {
-                ++rollbackLineFeedCount;
-                // Keep all the buffer if rollback all
-                return lineBegin;
-            } else if (mMultilineConfig.first->GetContinuePatternReg()) {
-                // We can confirm the logs before are complete if continue is configured but no regex pattern can match.
-                if (buffer[endPs] == '\n') {
-                    return endPs + 1;
-                } else {
-                    // Keep all the buffer if rollback all
-                    return lineBegin;
+                    endPs = begPs - 1;
                 }
             } else {
                 ++rollbackLineFeedCount;
-                endPs = begPs;
+                endPs = begPs - 1;
             }
+        } else if (mMultilineConfig.first->GetStartPatternReg()
+                   && BoostRegexMatch(
+                       buffer + begPs, endPs - begPs, *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+            // start + continue, start
+            ++rollbackLineFeedCount;
+            // Keep all the buffer if rollback all
+            return begPs;
+        } else {
+            ++rollbackLineFeedCount;
+            endPs = begPs - 1;
         }
-        begPs--;
+    }
+    return 0;
+}
+
+size_t LogFileReader::GetNextLine(const char* buffer, size_t end) {
+    if (end <= 0) {
+        return 0;
+    }
+
+    for (size_t begin = end; begin > 0; --begin) {
+        if (buffer[begin - 1] == '\n') {
+            return begin;
+        }
     }
     return 0;
 }
