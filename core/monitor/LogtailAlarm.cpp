@@ -305,12 +305,12 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
     std::lock_guard<std::mutex> lock(mAlarmBufferMutex);
     string key = projectName + "_" + category;
     LogtailAlarmVector& alarmBufferVec = *MakesureLogtailAlarmMapVecUnlocked(region);
-    // if (alarmBufferVec[alarmType].find(key) == alarmBufferVec[alarmType].end()) {
-    //     LogtailAlarmMessage* messagePtr
-    //         = new LogtailAlarmMessage(mMessageType[alarmType], projectName, category, message, 1);
-    //     alarmBufferVec[alarmType].insert(pair<string, LogtailAlarmMessage*>(key, messagePtr));
-    // } else
-    //     alarmBufferVec[alarmType][key]->IncCount();
+    if (alarmBufferVec[alarmType].find(key) == alarmBufferVec[alarmType].end()) {
+        LogtailAlarmMessage* messagePtr
+            = new LogtailAlarmMessage(mMessageType[alarmType], projectName, category, message, 1);
+        alarmBufferVec[alarmType].insert(pair<string, LogtailAlarmMessage*>(key, messagePtr));
+    } else
+        alarmBufferVec[alarmType][key]->IncCount();
 }
 
 void LogtailAlarm::ForceToSend() {
