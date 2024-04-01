@@ -485,6 +485,16 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 	serverFilePattern, _ := util.InterfaceToString(serverConfigDetail["filePattern"])
 	serverIncludeEnv, _ := util.InterfaceToJSONString(serverConfigDetail["dockerIncludeEnv"])
 	serverIncludeLabel, _ := util.InterfaceToJSONString(serverConfigDetail["dockerIncludeLabel"])
+	if advanced, ok := serverConfigDetail["advanced"]; ok {
+		if k8s, ok := advanced.(map[string]interface{}); ok {
+			if IncludeEnv, ok := k8s["IncludeEnv"]; ok {
+				serverIncludeEnv, _ = util.InterfaceToJSONString(IncludeEnv)
+			}
+			if IncludeLabel, ok := k8s["IncludeLabel"]; ok {
+				serverIncludeLabel, _ = util.InterfaceToJSONString(IncludeLabel)
+			}
+		}
+	}
 	return filePath != serverFilePath ||
 		filePattern != serverFilePattern ||
 		includeEnv != serverIncludeEnv ||
@@ -651,6 +661,17 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						if _, hasLabel := configDetail["dockerIncludeLabel"]; hasLabel {
 							if _, hasLocalLabel := config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]; hasLocalLabel {
 								configDetail["dockerIncludeLabel"] = config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]
+							}
+						}
+						if advanced, ok := configDetail["advanced"]; ok {
+							if k8s, ok := advanced.(map[string]interface{}); ok {
+								k8s["IncludeEnv"] = config.LogtailConfig.LogtailConfig["dockerIncludeEnv"]
+								if _, hasLabel := k8s["IncludeLabel"]; hasLabel {
+									if _, hasLocalLabel := config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]; hasLocalLabel {
+										k8s["IncludeLabel"] = config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]
+									}
+								}
+								configDetail["advanced"] = k8s
 							}
 						}
 						serverConfig.InputDetail = configDetail
