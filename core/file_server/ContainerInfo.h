@@ -48,8 +48,11 @@ struct ContainerInfo {
     std::vector<sls_logs::LogTag> mMetadatas; // tags extracted from this container
     Json::Value mJson; // this obj's json, for saving to local file
 
-    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
-    static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
+    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&, const std::string&);
+    static bool ParseAllByJSONObj(const Json::Value&,
+                                  std::unordered_map<std::string, ContainerInfo>&,
+                                  std::string&,
+                                  const std::string&);
 
     bool operator==(const ContainerInfo& rhs) const {
         if (mID != rhs.mID) {

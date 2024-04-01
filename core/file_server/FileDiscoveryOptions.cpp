@@ -653,14 +653,16 @@ ContainerInfo* FileDiscoveryOptions::GetContainerPathByLogPath(const string& log
     return NULL;
 }
 
-bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON, const PipelineContext* ctx) {
+bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON,
+                                               const PipelineContext* ctx,
+                                               const std::string& configName) {
     if (!mEnableContainerDiscovery)
         return true;
 
     if (!paramsJSON.isMember("AllCmd")) {
         ContainerInfo containerInfo;
         std::string errorMsg;
-        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo, errorMsg)) {
+        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo, errorMsg, configName)) {
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             return true;
         }
@@ -679,7 +681,7 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON, co
     // check all
     unordered_map<string, ContainerInfo> allPathMap;
     std::string errorMsg;
-    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON["AllCmd"], allPathMap, errorMsg)) {
+    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON["AllCmd"], allPathMap, errorMsg, configName)) {
         LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
         return true;
     }
@@ -707,14 +709,16 @@ bool FileDiscoveryOptions::IsSameContainerInfo(const Json::Value& paramsJSON, co
     return true;
 }
 
-bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON, const PipelineContext* ctx) {
+bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON,
+                                               const PipelineContext* ctx,
+                                               const std::string& configName) {
     if (!mContainerInfos)
         return false;
 
     if (!paramsJSON.isMember("AllCmd")) {
         ContainerInfo containerInfo;
         std::string errorMsg;
-        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo, errorMsg)) {
+        if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo, errorMsg, configName)) {
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             return false;
         }
@@ -736,7 +740,7 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON, co
 
     unordered_map<string, ContainerInfo> allPathMap;
     std::string errorMsg;
-    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON["AllCmd"], allPathMap, errorMsg)) {
+    if (!ContainerInfo::ParseAllByJSONObj(paramsJSON["AllCmd"], allPathMap, errorMsg, configName)) {
         LOG_ERROR(sLogger,
                   ("invalid all docker container params",
                    "skip this path")("params", paramsJSON.toStyledString())("errorMsg", errorMsg));
@@ -753,13 +757,13 @@ bool FileDiscoveryOptions::UpdateContainerInfo(const Json::Value& paramsJSON, co
     return true;
 }
 
-bool FileDiscoveryOptions::DeleteContainerInfo(const Json::Value& paramsJSON) {
+bool FileDiscoveryOptions::DeleteContainerInfo(const Json::Value& paramsJSON, const std::string& configName) {
     if (!mContainerInfos)
         return false;
 
     ContainerInfo containerInfo;
     std::string errorMsg;
-    if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo, errorMsg)) {
+    if (!ContainerInfo::ParseByJSONObj(paramsJSON, containerInfo, errorMsg, configName)) {
         LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
         return false;
     }

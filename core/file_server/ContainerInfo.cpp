@@ -17,13 +17,18 @@
 #include <memory>
 
 #include "common/PathUtil.h"
+#include "input/InputContainerLog.h"
+#include "input/InputFile.h"
 #include "logger/Logger.h"
+#include "pipeline/Pipeline.h"
+#include "pipeline/PipelineManager.h"
 
 namespace logtail {
 
 bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
                                       std::unordered_map<std::string, ContainerInfo>& containerInfoMap,
-                                      std::string& errorMsg) {
+                                      std::string& errorMsg,
+                                      const std::string& configName) {
     containerInfoMap.clear();
 
     // The json library changes its behavior for {"AllCmd":null}:
@@ -40,7 +45,7 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
     for (auto iter = paramsAll.begin(); iter != paramsAll.end(); ++iter) {
         Json::Value params = *iter;
         ContainerInfo nowDCP;
-        if (!ParseByJSONObj(params, nowDCP, errorMsg)) {
+        if (!ParseByJSONObj(params, nowDCP, errorMsg, configName)) {
             errorMsg = "some container info is invalid: " + errorMsg;
             return false;
         }
@@ -49,7 +54,10 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
     return true;
 }
 
-bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
+bool ContainerInfo::ParseByJSONObj(const Json::Value& params,
+                                   ContainerInfo& containerInfo,
+                                   std::string& errorMsg,
+                                   const std::string& configName) {
     containerInfo.mJson = params;
     if (params.isMember("ID") && params["ID"].isString()) {
         if (params["ID"].empty()) {
@@ -81,17 +89,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
     if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
         containerInfo.mLogPath = params["StdoutPath"].asString();
     }
-    if (params.isMember("Tags") && params["Tags"].isArray()) {
-        const Json::Value& tags = params["Tags"];
-        for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
-            if (tags[i].isString() && tags[i - 1].isString()) {
-                sls_logs::LogTag tag;
-                tag.set_key(tags[i - 1].asString());
-                tag.set_value(tags[i].asString());
-                containerInfo.mTags.push_back(tag);
-            }
-        }
-    }
+    bool oldVersion = false;
     if (params.isMember("MetaDatas") && params["MetaDatas"].isArray()) {
         const Json::Value& metaDatas = params["MetaDatas"];
         for (Json::ArrayIndex i = 1; i < metaDatas.size(); i += 2) {
@@ -100,6 +98,69 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 tag.set_key(metaDatas[i - 1].asString());
                 tag.set_value(metaDatas[i].asString());
                 containerInfo.mMetadatas.push_back(tag);
+            }
+        }
+    } else {
+        oldVersion = true;
+    }
+    if (oldVersion) {
+        std::shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(configName);
+        // Determine the type of input plugin.
+        std::string name = config->GetInputs()[0]->GetPlugin()->Name();
+        const InputFile* inputFile = nullptr;
+        const InputContainerLog* inputContainerLog = nullptr;
+        std::unordered_map<std::string, std::string> externalEnvTag;
+        std::unordered_map<std::string, std::string> externalK8sLabelTag;
+        if (name == InputFile::sName) {
+            inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
+            externalEnvTag = inputFile->mContainerDiscovery.mExternalEnvTag;
+            externalK8sLabelTag = inputFile->mContainerDiscovery.mExternalK8sLabelTag;
+
+        } else if (name == InputContainerLog::sName) {
+            inputContainerLog = static_cast<const InputContainerLog*>(config->GetInputs()[0]->GetPlugin());
+            externalEnvTag = inputContainerLog->mContainerDiscovery.mExternalEnvTag;
+            externalK8sLabelTag = inputContainerLog->mContainerDiscovery.mExternalK8sLabelTag;
+        }
+        if (params.isMember("Tags") && params["Tags"].isArray()) {
+            const Json::Value& tags = params["Tags"];
+            for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
+                if (tags[i].isString() && tags[i - 1].isString()) {
+                    sls_logs::LogTag tag;
+                    tag.set_key(tags[i - 1].asString());
+                    tag.set_value(tags[i].asString());
+                    bool found = false;
+                    for (const auto& pair : externalEnvTag) {
+                        if (pair.second == tags[i - 1].asString()) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        for (const auto& pair : externalK8sLabelTag) {
+                            if (pair.second == tags[i - 1].asString()) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
+                        containerInfo.mMetadatas.push_back(tag);
+                    } else {
+                        containerInfo.mTags.push_back(tag);
+                    }
+                }
+            }
+        }
+    } else {
+        if (params.isMember("Tags") && params["Tags"].isArray()) {
+            const Json::Value& tags = params["Tags"];
+            for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
+                if (tags[i].isString() && tags[i - 1].isString()) {
+                    sls_logs::LogTag tag;
+                    tag.set_key(tags[i - 1].asString());
+                    tag.set_value(tags[i].asString());
+                    containerInfo.mTags.push_back(tag);
+                }
             }
         }
     }
