@@ -677,7 +677,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 												k8sObj["IncludeLabel"] = config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]
 											}
 										}
-										configDetail["advanced"] = k8s
+										configDetail["advanced"].(map[string]interface{})["k8s"] = k8s
 									}
 								}
 							}
