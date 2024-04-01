@@ -206,7 +206,7 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const 
     ConvertMapToJsonObj("ExternalK8sLabelTag", mContainerDiscovery.mExternalK8sLabelTag);
     ConvertMapToJsonObj("ExternalEnvTag", mContainerDiscovery.mExternalEnvTag);
     if (mContainerDiscovery.mCollectingContainersMeta) {
-        detail["CollectContainersFlag"] = Json::Value(true);
+        detail["CollectingContainersMeta"] = Json::Value(true);
     }
     plugin["type"] = Json::Value("metric_docker_file");
     plugin["detail"] = detail;
