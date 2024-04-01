@@ -52,9 +52,10 @@ type Mount struct {
 type DockerFileUpdateCmd struct {
 	ID         string
 	Tags       []string // 容器信息Tag
-	Mounts     []Mount  // 容器挂载路径
-	UpperDir   string   // 容器默认路径
-	StdoutPath string   // 标准输出路径
+	MetaDatas  []string
+	Mounts     []Mount // 容器挂载路径
+	UpperDir   string  // 容器默认路径
+	StdoutPath string  // 标准输出路径
 }
 
 type ContainerInfoCache struct {
@@ -215,9 +216,16 @@ func (idf *InputDockerFile) addMappingToLogtail(info *helper.DockerInfoDetail, c
 	cmd.ID = info.ContainerInfo.ID
 	cmd.UpperDir = path.Clean(containerInfo.UpperDir)
 	cmd.StdoutPath = path.Clean(containerInfo.StdoutPath)
-	tags := info.GetExternalTags(idf.ExternalEnvTag, idf.ExternalK8sLabelTag)
-	cmd.Tags = make([]string, 0, len(tags)*2)
-	for key, val := range tags {
+	// metas
+	metaDatas := info.GetExternalTags(idf.ExternalEnvTag, idf.ExternalK8sLabelTag)
+	cmd.MetaDatas = make([]string, 0, len(metaDatas)*2)
+	for key, val := range metaDatas {
+		cmd.MetaDatas = append(cmd.MetaDatas, key)
+		cmd.MetaDatas = append(cmd.MetaDatas, val)
+	}
+	// info.ContainerNameTag
+	cmd.Tags = make([]string, 0, len(info.ContainerNameTag)*2)
+	for key, val := range info.ContainerNameTag {
 		cmd.Tags = append(cmd.Tags, key)
 		cmd.Tags = append(cmd.Tags, val)
 	}
