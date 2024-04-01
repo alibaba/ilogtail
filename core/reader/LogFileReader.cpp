@@ -2028,20 +2028,25 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
         1. xxx\nend\nxxx\n -> xxx\nend
 */
 /*
-    return: the number of bytes left
+    return: the number of bytes left, including \n
 */
 int32_t
 LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback) {
     if (!allowRollback) {
         return size;
     }
-    int endPs = size - 1;
+    int32_t endPs; // the position of \n or \0
+    if (buffer[size - 1] == '\n') {
+        endPs = size - 1;
+    } else {
+        endPs = size;
+    }
     rollbackLineFeedCount = 0;
     // Multiline rollback
     if (mMultilineConfig.first->IsMultiline()) {
         std::string exception;
         while (endPs >= 0) {
-            StringView content = GetNextLine(StringView(buffer, size), endPs);
+            StringView content = GetLastLine(StringView(buffer, size), endPs);
             if (mMultilineConfig.first->GetEndPatternReg()) {
                 // start + end, continue + end, end
                 if (BoostRegexMatch(
@@ -2065,22 +2070,22 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
     }
     // Single line rollback or all unmatch rollback
     rollbackLineFeedCount = 0;
-    StringView content = GetNextLine(StringView(buffer, size), size);
-    size_t rollbackSize = content.data() - buffer;
-    if (rollbackSize < size) {
-        ++rollbackLineFeedCount;
+    if (buffer[size - 1] == '\n') {
+        return size;
     }
-    return rollbackSize;
+    StringView content = GetLastLine(StringView(buffer, size), size - 1);
+    ++rollbackLineFeedCount;
+    return content.data() - buffer;
 }
 
 /*
     params:
         buffer: all read logs
-        end: the end position of current line
+        end: the end position of current line, \n or \0
     return:
-        next line (backward), with \n
+        last line (backward), without \n or \0
 */
-StringView LogFileReader::GetNextLine(StringView buffer, size_t end) {
+StringView LogFileReader::GetLastLine(StringView buffer, size_t end) {
     if (end == 0) {
         return buffer;
     }
