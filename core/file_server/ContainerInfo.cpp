@@ -21,6 +21,15 @@
 
 namespace logtail {
 
+const std::unordered_map<std::string, bool> containerNameTag = {
+    {"_image_name_", true},
+    {"_container_name_", true},
+    {"_pod_name_", true},
+    {"_namespace_", true},
+    {"_pod_uid_", true},
+    {"_container_ip_", true},
+};
+
 bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
                                       std::unordered_map<std::string, ContainerInfo>& containerInfoMap,
                                       std::string& errorMsg) {
@@ -81,17 +90,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
     if (params.isMember("StdoutPath") && params["StdoutPath"].isString()) {
         containerInfo.mLogPath = params["StdoutPath"].asString();
     }
-    if (params.isMember("Tags") && params["Tags"].isArray()) {
-        const Json::Value& tags = params["Tags"];
-        for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
-            if (tags[i].isString() && tags[i - 1].isString()) {
-                sls_logs::LogTag tag;
-                tag.set_key(tags[i - 1].asString());
-                tag.set_value(tags[i].asString());
-                containerInfo.mTags.push_back(tag);
-            }
-        }
-    }
+    bool oldVersion = false;
     if (params.isMember("MetaDatas") && params["MetaDatas"].isArray()) {
         const Json::Value& metaDatas = params["MetaDatas"];
         for (Json::ArrayIndex i = 1; i < metaDatas.size(); i += 2) {
@@ -100,6 +99,27 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 tag.set_key(metaDatas[i - 1].asString());
                 tag.set_value(metaDatas[i].asString());
                 containerInfo.mMetadatas.push_back(tag);
+            }
+        }
+    } else {
+        oldVersion = true;
+    }
+    if (params.isMember("Tags") && params["Tags"].isArray()) {
+        const Json::Value& tags = params["Tags"];
+        for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
+            if (tags[i].isString() && tags[i - 1].isString()) {
+                sls_logs::LogTag tag;
+                tag.set_key(tags[i - 1].asString());
+                tag.set_value(tags[i].asString());
+                if (oldVersion) {
+                    containerInfo.mTags.push_back(tag);
+                } else {
+                    if (containerNameTag.find(tags[i - 1].asString()) != containerNameTag.end()) {
+                        containerInfo.mTags.push_back(tag);
+                    } else {
+                        containerInfo.mMetadatas.push_back(tag);
+                    }
+                }
             }
         }
     }
