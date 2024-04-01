@@ -488,12 +488,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 								continue
 							}
 							logstoreC.CollectContainersFlag = collectContainersFlag
-						} else if strings.Contains(lowerKey, "collectingcontainersmeta") {
-							collectContainersFlag, valid := value.(bool)
-							if !valid {
-								continue
-							}
-							logstoreC.CollectContainersFlag = collectContainersFlag
 						}
 					}
 				}
