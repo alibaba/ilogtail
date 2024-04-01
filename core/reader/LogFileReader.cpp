@@ -1698,7 +1698,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         }
         if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
             int32_t rollbackLineFeedCount;
-            nbytes = LastMatchedLine(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
+            nbytes = RemoveLastIncompleteLog(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
         }
 
         if (nbytes == 0) {
@@ -1706,7 +1706,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
                 nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
                 if (mReaderConfig.second->RequiringJsonReader()) {
                     int32_t rollbackLineFeedCount;
-                    nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount, false);
+                    nbytes = RemoveLastIncompleteLog(stringBuffer, nbytes, rollbackLineFeedCount, false);
                 }
                 LOG_WARNING(sLogger,
                             ("Log is too long and forced to be split at offset: ",
