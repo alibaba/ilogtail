@@ -502,7 +502,7 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
-    StringView GetLastLine(StringView buffer, size_t begin);
+    StringView GetLastLine(StringView buffer, size_t end);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
