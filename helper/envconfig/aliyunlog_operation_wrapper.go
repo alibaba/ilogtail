@@ -486,16 +486,6 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 	serverIncludeEnv, _ := util.InterfaceToJSONString(serverConfigDetail["dockerIncludeEnv"])
 	serverIncludeLabel, _ := util.InterfaceToJSONString(serverConfigDetail["dockerIncludeLabel"])
 	if advanced, ok := serverConfigDetail["advanced"]; ok {
-		if k8s, ok := advanced.(map[string]interface{}); ok {
-			if IncludeEnv, ok := k8s["IncludeEnv"]; ok {
-				serverIncludeEnv, _ = util.InterfaceToJSONString(IncludeEnv)
-			}
-			if IncludeLabel, ok := k8s["IncludeLabel"]; ok {
-				serverIncludeLabel, _ = util.InterfaceToJSONString(IncludeLabel)
-			}
-		}
-	}
-	if advanced, ok := serverConfigDetail["advanced"]; ok {
 		if advancedObj, ok := advanced.(map[string]interface{}); ok {
 			if k8s, ok := advancedObj["k8s"]; ok {
 				if k8sObj, ok := k8s.(map[string]interface{}); ok {
