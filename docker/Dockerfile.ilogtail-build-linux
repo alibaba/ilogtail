@@ -9,7 +9,7 @@ RUN curl -sSfL https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/p
     mkdir ilogtail-deps &&\
     tar -xzvf ilogtail-deps.linux-${TARGETPLATFORM##*/}.tar.gz -C ilogtail-deps --strip-components 1
 
-RUN curl -sSfL https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/logtail-spl-dependencies/logtail_spl_${TARGETPLATFORM##*/}-2.0.1.tar.gz -o ilogtail-spl.linux-${TARGETPLATFORM##*/}.tar.gz && \
+RUN curl -sSfL https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/logtail-spl-dependencies/logtail-spl-${TARGETPLATFORM##*/}-2.0.1.tar.gz -o ilogtail-spl.linux-${TARGETPLATFORM##*/}.tar.gz && \
     mkdir ilogtail-spl  &&\
     tar -xzvf ilogtail-spl.linux-${TARGETPLATFORM##*/}.tar.gz -C ilogtail-spl --strip-components 1
 
