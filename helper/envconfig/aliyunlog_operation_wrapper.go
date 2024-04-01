@@ -495,6 +495,20 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 			}
 		}
 	}
+	if advanced, ok := serverConfigDetail["advanced"]; ok {
+		if advancedObj, ok := advanced.(map[string]interface{}); ok {
+			if k8s, ok := advancedObj["k8s"]; ok {
+				if k8sObj, ok := k8s.(map[string]interface{}); ok {
+					if IncludeEnv, ok := k8sObj["IncludeEnv"]; ok {
+						serverIncludeEnv, _ = util.InterfaceToJSONString(IncludeEnv)
+					}
+					if IncludeLabel, ok := k8sObj["IncludeLabel"]; ok {
+						serverIncludeLabel, _ = util.InterfaceToJSONString(IncludeLabel)
+					}
+				}
+			}
+		}
+	}
 	return filePath != serverFilePath ||
 		filePattern != serverFilePattern ||
 		includeEnv != serverIncludeEnv ||
@@ -664,14 +678,18 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 							}
 						}
 						if advanced, ok := configDetail["advanced"]; ok {
-							if k8s, ok := advanced.(map[string]interface{}); ok {
-								k8s["IncludeEnv"] = config.LogtailConfig.LogtailConfig["dockerIncludeEnv"]
-								if _, hasLabel := k8s["IncludeLabel"]; hasLabel {
-									if _, hasLocalLabel := config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]; hasLocalLabel {
-										k8s["IncludeLabel"] = config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]
+							if advancedObj, ok := advanced.(map[string]interface{}); ok {
+								if k8s, ok := advancedObj["k8s"]; ok {
+									if k8sObj, ok := k8s.(map[string]interface{}); ok {
+										k8sObj["IncludeEnv"] = config.LogtailConfig.LogtailConfig["dockerIncludeEnv"]
+										if _, hasLabel := k8sObj["IncludeLabel"]; hasLabel {
+											if _, hasLocalLabel := config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]; hasLocalLabel {
+												k8sObj["IncludeLabel"] = config.LogtailConfig.LogtailConfig["dockerIncludeLabel"]
+											}
+										}
+										configDetail["advanced"] = k8s
 									}
 								}
-								configDetail["advanced"] = k8s
 							}
 						}
 						serverConfig.InputDetail = configDetail
