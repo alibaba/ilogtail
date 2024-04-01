@@ -113,10 +113,10 @@ type LogstoreConfig struct {
 	// flushWaitSema    sync.WaitGroup
 	pauseOrResumeWg sync.WaitGroup
 
-	K8sLabelSet           map[string]struct{}
-	ContainerLabelSet     map[string]struct{}
-	EnvSet                map[string]struct{}
-	CollectContainersFlag bool
+	K8sLabelSet              map[string]struct{}
+	ContainerLabelSet        map[string]struct{}
+	EnvSet                   map[string]struct{}
+	CollectingContainersMeta bool
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
@@ -487,13 +487,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 							if !valid {
 								continue
 							}
-							logstoreC.CollectContainersFlag = collectContainersFlag
+							logstoreC.CollectingContainersMeta = collectContainersFlag
 						} else if strings.Contains(lowerKey, "collectingcontainersmeta") {
 							collectContainersFlag, valid := value.(bool)
 							if !valid {
 								continue
 							}
-							logstoreC.CollectContainersFlag = collectContainersFlag
+							logstoreC.CollectingContainersMeta = collectContainersFlag
 						}
 					}
 				}
