@@ -1678,7 +1678,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     }
     if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
         int32_t rollbackLineFeedCount;
-        nbytes = LastMatchedLine(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
+        nbytes = RemoveLastIncompleteLog(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
     }
 
     if (nbytes == 0) {
@@ -1686,7 +1686,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
             nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
             if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
-                nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount, false);
+                nbytes = RemoveLastIncompleteLog(stringBuffer, nbytes, rollbackLineFeedCount, false);
             }
             LOG_WARNING(
                 sLogger,
@@ -1812,7 +1812,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     int32_t rollbackLineFeedCount = 0;
     int32_t bakResultCharCount = resultCharCount;
     if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
-        resultCharCount = LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, allowRollback);
+        resultCharCount = RemoveLastIncompleteLog(stringBuffer, resultCharCount, rollbackLineFeedCount, allowRollback);
     }
     if (resultCharCount == 0) {
         if (moreData) {
@@ -1820,7 +1820,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             rollbackLineFeedCount = 0;
             if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
-                LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
+                RemoveLastIncompleteLog(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
             }
             // Cannot get the split position here, so just mark a flag and send alarm later
             logTooLongSplitFlag = true;
@@ -1983,70 +1983,70 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
         1. xxx\nend\n -> xxx\nend
         1. xxx\nend\nxxx\n -> xxx\nend
 */
-int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback) {
+/*
+    return: the number of bytes left
+*/
+int32_t
+LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback) {
     if (!allowRollback) {
         return size;
     }
-    int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
+    int endPs = size - 1;
     rollbackLineFeedCount = 0;
-    // Single line rollback
-    if (!mMultilineConfig.first->IsMultiline()) {
-        while (endPs >= 0) {
-            if (buffer[endPs] == '\n') {
-                if (endPs != size - 1) { // if last line dose not end with '\n', rollback
-                    ++rollbackLineFeedCount;
-                }
-                return endPs + 1;
-            }
-            endPs--;
-        }
-        return 0;
-    }
     // Multiline rollback
-    std::string exception;
-    while (endPs >= 0) {
-        size_t begPs = GetNextLine(buffer, endPs);
-        if (mMultilineConfig.first->GetEndPatternReg()) {
-            // start + end, continue + end, end
-            if (BoostRegexMatch(
-                    buffer + begPs, endPs - begPs, *mMultilineConfig.first->GetEndPatternReg(), exception)) {
-                // Ensure the end line is complete
-                if (buffer[endPs] == '\n') {
-                    return endPs + 1;
-                } else {
-                    ++rollbackLineFeedCount;
-                    endPs = begPs - 1;
+    if (mMultilineConfig.first->IsMultiline()) {
+        std::string exception;
+        while (endPs >= 0) {
+            StringView content = GetNextLine(StringView(buffer, size), endPs);
+            if (mMultilineConfig.first->GetEndPatternReg()) {
+                // start + end, continue + end, end
+                if (BoostRegexMatch(
+                        content.data(), content.size(), *mMultilineConfig.first->GetEndPatternReg(), exception)) {
+                    // Ensure the end line is complete
+                    if (buffer[endPs] == '\n') {
+                        return endPs + 1;
+                    }
                 }
-            } else {
+            } else if (mMultilineConfig.first->GetStartPatternReg()
+                       && BoostRegexMatch(
+                           content.data(), content.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                // start + continue, start
                 ++rollbackLineFeedCount;
-                endPs = begPs - 1;
+                // Keep all the buffer if rollback all
+                return content.data() - buffer;
             }
-        } else if (mMultilineConfig.first->GetStartPatternReg()
-                   && BoostRegexMatch(
-                       buffer + begPs, endPs - begPs, *mMultilineConfig.first->GetStartPatternReg(), exception)) {
-            // start + continue, start
             ++rollbackLineFeedCount;
-            // Keep all the buffer if rollback all
-            return begPs;
-        } else {
-            ++rollbackLineFeedCount;
-            endPs = begPs - 1;
+            endPs = content.data() - buffer - 1;
         }
     }
-    return 0;
+    // Single line rollback or all unmatch rollback
+    rollbackLineFeedCount = 0;
+    StringView content = GetNextLine(StringView(buffer, size), size);
+    size_t rollbackSize = content.data() - buffer;
+    if (rollbackSize < size) {
+        ++rollbackLineFeedCount;
+    }
+    return rollbackSize;
 }
 
-size_t LogFileReader::GetNextLine(const char* buffer, size_t end) {
-    if (end <= 0) {
-        return 0;
+/*
+    params:
+        buffer: all read logs
+        end: the end position of current line
+    return:
+        next line (backward), with \n
+*/
+StringView LogFileReader::GetNextLine(StringView buffer, size_t end) {
+    if (end == 0) {
+        return buffer;
     }
 
     for (size_t begin = end; begin > 0; --begin) {
         if (buffer[begin - 1] == '\n') {
-            return begin;
+            return StringView(buffer.data() + begin, end - begin);
         }
     }
-    return 0;
+    return StringView(buffer.data(), end);
 }
 
 size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
@@ -2060,8 +2060,8 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         // 1. The number of byte for one character can be 1, 2, 4.
         // 2. 1 byte character: the top bit is 0.
         // 3. 2 bytes character: the 1st byte is between 0x81 and 0xFE; the 2nd byte is between 0x40 and 0xFE.
-        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between 0x30
-        // and 0x39. (not supported to align)
+        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between
+        // 0x30 and 0x39. (not supported to align)
 
         // 1 byte character, 2nd byte of 2 bytes, 2nd or 4th byte of 4 bytes
         if ((buffer[endPs] & 0x80) == 0 || size == 1) {

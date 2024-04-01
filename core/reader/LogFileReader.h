@@ -130,7 +130,7 @@ public:
     FileCompareResult CompareToFile(const std::string& filePath);
 
     virtual int32_t
-    LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback = true);
+    RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback = true);
 
     size_t AlignLastCharacter(char* buffer, size_t size);
 
@@ -504,7 +504,7 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
-    size_t GetNextLine(const char* buffer, size_t begin);
+    StringView GetNextLine(StringView buffer, size_t begin);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
@@ -591,7 +591,7 @@ private:
     friend class LogSplitUnittest;
     friend class LogSplitDiscardUnmatchUnittest;
     friend class LogSplitNoDiscardUnmatchUnittest;
-    friend class LastMatchedLineMultilineUnittest;
+    friend class RemoveLastIncompleteLogMultilineUnittest;
     friend class LogFileReaderCheckpointUnittest;
 
 protected:
