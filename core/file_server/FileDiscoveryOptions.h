@@ -55,9 +55,9 @@ public:
     bool IsMatch(const std::string& path, const std::string& name) const;
     bool IsTimeout(const std::string& path) const;
     bool WithinMaxDepth(const std::string& path) const;
-    bool IsSameContainerInfo(const Json::Value& paramsJSON, const PipelineContext*, const std::string&);
-    bool UpdateContainerInfo(const Json::Value& paramsJSON, const PipelineContext*, const std::string&);
-    bool DeleteContainerInfo(const Json::Value& paramsJSON, const std::string&);
+    bool IsSameContainerInfo(const Json::Value& paramsJSON, const PipelineContext*);
+    bool UpdateContainerInfo(const Json::Value& paramsJSON, const PipelineContext*);
+    bool DeleteContainerInfo(const Json::Value& paramsJSON);
     ContainerInfo* GetContainerPathByLogPath(const std::string& logPath) const;
     // 过渡使用
     bool IsTailingAllMatchedFiles() const { return mTailingAllMatchedFiles; }

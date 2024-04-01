@@ -850,7 +850,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
             continue;
         }
         if (tmpPathCmdVec[i]->mDeleteFlag) {
-            if (config.first->DeleteContainerInfo(tmpPathCmdVec[i]->mJsonParams, tmpPathCmdVec[i]->mConfigName)) {
+            if (config.first->DeleteContainerInfo(tmpPathCmdVec[i]->mJsonParams)) {
                 LOG_DEBUG(sLogger,
                           ("container path delete cmd success",
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
@@ -860,8 +860,7 @@ bool ConfigManager::DoUpdateContainerPaths() {
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
             }
         } else {
-            if (config.first->UpdateContainerInfo(
-                    tmpPathCmdVec[i]->mJsonParams, config.second, tmpPathCmdVec[i]->mConfigName)) {
+            if (config.first->UpdateContainerInfo(tmpPathCmdVec[i]->mJsonParams, config.second)) {
                 LOG_DEBUG(sLogger,
                           ("container path update cmd success",
                            tmpPathCmdVec[i]->mConfigName)("params", tmpPathCmdVec[i]->mJsonParams.toStyledString()));
@@ -889,7 +888,7 @@ bool ConfigManager::IsUpdateContainerPaths() {
         if (!pConfig.first) {
             continue;
         }
-        if (!pConfig.first->IsSameContainerInfo(pCmd->mJsonParams, pConfig.second, pCmd->mConfigName)) {
+        if (!pConfig.first->IsSameContainerInfo(pCmd->mJsonParams, pConfig.second)) {
             rst = true;
             break;
         }
@@ -954,7 +953,7 @@ void ConfigManager::GetContainerStoppedEvents(std::vector<Event*>& eventVec) {
         }
         ContainerInfo containerInfo;
         std::string errorMsg;
-        if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo, errorMsg, cmd->mConfigName)) {
+        if (!ContainerInfo::ParseByJSONObj(cmd->mJsonParams, containerInfo, errorMsg)) {
             LOG_ERROR(sLogger, ("invalid container info update param", errorMsg)("action", "ignore current cmd"));
             continue;
         }
