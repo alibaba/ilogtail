@@ -399,3 +399,11 @@ func UniqueStrings(strSlices ...[]string) []string {
 	}
 	return result
 }
+
+func GetBaseConfigName(configName string) string {
+	lastSlashIndex := strings.LastIndex(configName, "/")
+	if lastSlashIndex != -1 {
+		configName = configName[:lastSlashIndex]
+	}
+	return configName
+}

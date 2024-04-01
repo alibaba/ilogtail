@@ -344,17 +344,11 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		}
 	}
 	if idf.CollectContainersFlag {
-        var configResult *helper.ContainerConfigResult
-        configName := idf.context.GetConfigName()
-        lastSlashIndex := strings.LastIndex(configName, "/")
-        if lastSlashIndex != -1 {
-            configName = configName[:lastSlashIndex]
-        }
 		configResult := &helper.ContainerConfigResult{
 			DataType:                      "container_config_result",
 			Project:                       idf.context.GetProject(),
 			Logstore:                      idf.context.GetLogstore(),
-            ConfigName:                    configName,
+			ConfigName:                    util.GetBaseConfigName(idf.context.GetConfigName()),
 			SourceAddress:                 fmt.Sprintf("%s/**/%s", idf.LogPath, idf.FilePattern),
 			PathExistInputContainerIDs:    helper.GetStringFromList(havingPathkeys),
 			PathNotExistInputContainerIDs: helper.GetStringFromList(nothavingPathkeys),
