@@ -88,7 +88,18 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 sls_logs::LogTag tag;
                 tag.set_key(tags[i - 1].asString());
                 tag.set_value(tags[i].asString());
-                containerInfo.mMetadata.push_back(tag);
+                containerInfo.mTags.push_back(tag);
+            }
+        }
+    }
+    if (params.isMember("MetaDatas") && params["MetaDatas"].isArray()) {
+        const Json::Value& metaDatas = params["MetaDatas"];
+        for (Json::ArrayIndex i = 1; i < metaDatas.size(); i += 2) {
+            if (metaDatas[i].isString() && metaDatas[i - 1].isString()) {
+                sls_logs::LogTag tag;
+                tag.set_key(metaDatas[i - 1].asString());
+                tag.set_value(metaDatas[i].asString());
+                containerInfo.mMetadatas.push_back(tag);
             }
         }
     }

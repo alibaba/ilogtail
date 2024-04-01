@@ -44,7 +44,8 @@ struct ContainerInfo {
     std::string mLogPath;
     std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
-    std::vector<sls_logs::LogTag> mMetadata; // tags extracted from this container
+    std::vector<sls_logs::LogTag> mTags; // tags extracted from this container
+    std::vector<sls_logs::LogTag> mMetadatas; // tags extracted from this container
     Json::Value mJson; // this obj's json, for saving to local file
 
     static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
@@ -73,12 +74,22 @@ struct ContainerInfo {
                 return false;
             }
         }
-        if (mMetadata.size() != rhs.mMetadata.size()) {
+        if (mMetadatas.size() != rhs.mMetadatas.size()) {
             return false;
         }
-        for (size_t idx = 0; idx < mMetadata.size(); ++idx) {
-            const auto& lhsTag = mMetadata[idx];
-            const auto& rhsTag = rhs.mMetadata[idx];
+        for (size_t idx = 0; idx < mMetadatas.size(); ++idx) {
+            const auto& lhsTag = mMetadatas[idx];
+            const auto& rhsTag = rhs.mMetadatas[idx];
+            if (lhsTag.key() != rhsTag.key() || lhsTag.value() != rhsTag.value()) {
+                return false;
+            }
+        }
+        if (mTags.size() != rhs.mTags.size()) {
+            return false;
+        }
+        for (size_t idx = 0; idx < mTags.size(); ++idx) {
+            const auto& lhsTag = mTags[idx];
+            const auto& rhsTag = rhs.mTags[idx];
             if (lhsTag.key() != rhsTag.key() || lhsTag.value() != rhsTag.value()) {
                 return false;
             }

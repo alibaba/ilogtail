@@ -277,16 +277,12 @@ func (did *DockerInfoDetail) IsTimeout() bool {
 }
 
 func (did *DockerInfoDetail) GetExternalTags(envs, k8sLabels map[string]string) map[string]string {
+	tags := map[string]string{}
 	if len(envs) == 0 && len(k8sLabels) == 0 {
-		return did.ContainerNameTag
-	}
-	tags := make(map[string]string)
-	for k, v := range did.ContainerNameTag {
-		tags[k] = v
+		return tags
 	}
 	did.GetCustomExternalTags(tags, envs, k8sLabels)
 	return tags
-
 }
 
 func (did *DockerInfoDetail) GetCustomExternalTags(tags, envs, k8sLabels map[string]string) {

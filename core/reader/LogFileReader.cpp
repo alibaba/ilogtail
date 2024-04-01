@@ -113,7 +113,8 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
                                           : discoveryConfig.first->GetBasePath(),
                                       containerPath->mRealBaseDir.size());
-                reader->AddExtraTags(containerPath->mMetadata);
+                reader->AddExtraTags(containerPath->mMetadatas);
+                reader->AddExtraTags(containerPath->mTags);
             }
         }
         if (readerConfig.first->mAppendingLogPositionMeta) {
