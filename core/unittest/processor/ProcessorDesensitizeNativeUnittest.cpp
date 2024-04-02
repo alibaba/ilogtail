@@ -32,8 +32,8 @@ public:
     void TestCastSensWordFail();
     void TestCastSensWordLoggroup();
     void TestCastSensWordMulti();
+    void TestMultipleLines();
     void TestMultipleLinesWithProcessorMergeMultilineLogNative();
-    void TestMultipleLinesWithProcessorSplitRegexNative();
 
     PipelineContext mContext;
 };
@@ -50,9 +50,9 @@ UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordLoggroup);
 
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMulti);
 
-UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLinesWithProcessorMergeMultilineLogNative);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLines);
 
-UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLinesWithProcessorMergeMultilineLogNative);
 
 Json::Value
 ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey = std::string("cast1"),
@@ -73,7 +73,7 @@ ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey 
     return config;
 }
 
-void ProcessorDesensitizeNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
+void ProcessorDesensitizeNativeUnittest::TestMultipleLines() {
     std::string inJson = R"({
         "events" :
         [

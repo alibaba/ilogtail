@@ -35,7 +35,7 @@ public:
 
     void TestInit();
     void TestMultipleLinesWithProcessorMergeMultilineLogNative();
-    void TestMultipleLinesWithProcessorSplitRegexNative();
+    void TestMultipleLines();
     void TestProcessWholeLine();
     void TestProcessQuote();
     void TestProcessKeyOverwritten();
@@ -50,7 +50,7 @@ public:
 
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestInit);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestMultipleLinesWithProcessorMergeMultilineLogNative);
-UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
+UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestMultipleLines);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessWholeLine);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessQuote);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessKeyOverwritten);
@@ -665,7 +665,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
     }
 }
 
-void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
+void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
     // case < field
     {
         std::string inJson = R"({

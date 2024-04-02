@@ -42,7 +42,7 @@ public:
     void TestAddLog();
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
-    void TestMultipleLinesWithProcessorSplitRegexNative();
+    void TestMultipleLines();
     void TestProcessEventMicrosecondUnmatch();
     void TestApsaraEasyReadLogTimeParser();
     void TestApsaraLogLineParser();
@@ -58,7 +58,7 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestUploadRawLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
-UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLinesWithProcessorSplitRegexNative);
+UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventMicrosecondUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraEasyReadLogTimeParser);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraLogLineParser);
@@ -419,7 +419,7 @@ void ProcessorParseApsaraNativeUnittest::TestApsaraLogLineParser() {
     }
 }
 
-void ProcessorParseApsaraNativeUnittest::TestMultipleLinesWithProcessorSplitRegexNative() {
+void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
     // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
     std::string inJson = R"({
         "events" :
