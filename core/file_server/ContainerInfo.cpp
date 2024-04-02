@@ -17,18 +17,22 @@
 #include <memory>
 
 #include "common/PathUtil.h"
-#include "input/InputContainerLog.h"
-#include "input/InputFile.h"
 #include "logger/Logger.h"
-#include "pipeline/Pipeline.h"
-#include "pipeline/PipelineManager.h"
 
 namespace logtail {
 
+const std::unordered_map<std::string, bool> containerNameTag = {
+    {"_image_name_", true},
+    {"_container_name_", true},
+    {"_pod_name_", true},
+    {"_namespace_", true},
+    {"_pod_uid_", true},
+    {"_container_ip_", true},
+};
+
 bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
                                       std::unordered_map<std::string, ContainerInfo>& containerInfoMap,
-                                      std::string& errorMsg,
-                                      const std::string& configName) {
+                                      std::string& errorMsg) {
     containerInfoMap.clear();
 
     // The json library changes its behavior for {"AllCmd":null}:
@@ -45,7 +49,7 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
     for (auto iter = paramsAll.begin(); iter != paramsAll.end(); ++iter) {
         Json::Value params = *iter;
         ContainerInfo nowDCP;
-        if (!ParseByJSONObj(params, nowDCP, errorMsg, configName)) {
+        if (!ParseByJSONObj(params, nowDCP, errorMsg)) {
             errorMsg = "some container info is invalid: " + errorMsg;
             return false;
         }
@@ -54,10 +58,7 @@ bool ContainerInfo::ParseAllByJSONObj(const Json::Value& paramsAll,
     return true;
 }
 
-bool ContainerInfo::ParseByJSONObj(const Json::Value& params,
-                                   ContainerInfo& containerInfo,
-                                   std::string& errorMsg,
-                                   const std::string& configName) {
+bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& containerInfo, std::string& errorMsg) {
     containerInfo.mJson = params;
     if (params.isMember("ID") && params["ID"].isString()) {
         if (params["ID"].empty()) {
@@ -97,69 +98,26 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params,
                 sls_logs::LogTag tag;
                 tag.set_key(metaDatas[i - 1].asString());
                 tag.set_value(metaDatas[i].asString());
-                containerInfo.mMetadatas.push_back(tag);
+                containerInfo.mMetadatas.emplace_back(tag);
             }
         }
     } else {
         oldVersion = true;
     }
-    if (oldVersion) {
-        std::shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(configName);
-        // Determine the type of input plugin.
-        std::string name = config->GetInputs()[0]->GetPlugin()->Name();
-        const InputFile* inputFile = nullptr;
-        const InputContainerLog* inputContainerLog = nullptr;
-        std::unordered_map<std::string, std::string> externalEnvTag;
-        std::unordered_map<std::string, std::string> externalK8sLabelTag;
-        if (name == InputFile::sName) {
-            inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
-            externalEnvTag = inputFile->mContainerDiscovery.mExternalEnvTag;
-            externalK8sLabelTag = inputFile->mContainerDiscovery.mExternalK8sLabelTag;
-
-        } else if (name == InputContainerLog::sName) {
-            inputContainerLog = static_cast<const InputContainerLog*>(config->GetInputs()[0]->GetPlugin());
-            externalEnvTag = inputContainerLog->mContainerDiscovery.mExternalEnvTag;
-            externalK8sLabelTag = inputContainerLog->mContainerDiscovery.mExternalK8sLabelTag;
-        }
-        if (params.isMember("Tags") && params["Tags"].isArray()) {
-            const Json::Value& tags = params["Tags"];
-            for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
-                if (tags[i].isString() && tags[i - 1].isString()) {
-                    sls_logs::LogTag tag;
-                    tag.set_key(tags[i - 1].asString());
-                    tag.set_value(tags[i].asString());
-                    bool found = false;
-                    for (const auto& pair : externalEnvTag) {
-                        if (pair.second == tags[i - 1].asString()) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        for (const auto& pair : externalK8sLabelTag) {
-                            if (pair.second == tags[i - 1].asString()) {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (found) {
-                        containerInfo.mMetadatas.push_back(tag);
-                    } else {
-                        containerInfo.mTags.push_back(tag);
-                    }
-                }
-            }
-        }
-    } else {
-        if (params.isMember("Tags") && params["Tags"].isArray()) {
-            const Json::Value& tags = params["Tags"];
-            for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
-                if (tags[i].isString() && tags[i - 1].isString()) {
-                    sls_logs::LogTag tag;
-                    tag.set_key(tags[i - 1].asString());
-                    tag.set_value(tags[i].asString());
-                    containerInfo.mTags.push_back(tag);
+    if (params.isMember("Tags") && params["Tags"].isArray()) {
+        const Json::Value& tags = params["Tags"];
+        for (Json::ArrayIndex i = 1; i < tags.size(); i += 2) {
+            if (tags[i].isString() && tags[i - 1].isString()) {
+                sls_logs::LogTag tag;
+                tag.set_key(tags[i - 1].asString());
+                tag.set_value(tags[i].asString());
+                // 不是老版本
+                if (!oldVersion) {
+                    containerInfo.mTags.emplace_back(tag);
+                } else if (containerNameTag.find(tags[i - 1].asString()) != containerNameTag.end()) {
+                    containerInfo.mTags.emplace_back(tag);
+                } else {
+                    containerInfo.mMetadatas.emplace_back(tag);
                 }
             }
         }

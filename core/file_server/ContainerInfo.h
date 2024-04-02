@@ -44,15 +44,12 @@ struct ContainerInfo {
     std::string mLogPath;
     std::string mUpperDir;
     std::vector<Mount> mMounts; // mounts of this container
-    std::vector<sls_logs::LogTag> mTags; // tags extracted from this container
-    std::vector<sls_logs::LogTag> mMetadatas; // tags extracted from this container
+    std::vector<sls_logs::LogTag> mTags; // ContainerNameTag
+    std::vector<sls_logs::LogTag> mMetadatas; // ExternalEnvTag and ExternalK8sLabelTag
     Json::Value mJson; // this obj's json, for saving to local file
 
-    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&, const std::string&);
-    static bool ParseAllByJSONObj(const Json::Value&,
-                                  std::unordered_map<std::string, ContainerInfo>&,
-                                  std::string&,
-                                  const std::string&);
+    static bool ParseByJSONObj(const Json::Value&, ContainerInfo&, std::string&);
+    static bool ParseAllByJSONObj(const Json::Value&, std::unordered_map<std::string, ContainerInfo>&, std::string&);
 
     bool operator==(const ContainerInfo& rhs) const {
         if (mID != rhs.mID) {
