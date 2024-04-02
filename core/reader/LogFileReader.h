@@ -84,12 +84,29 @@ struct LineInfo {
     int32_t rollbackLineFeedCount;
     int32_t lineEnd;
     bool fullLine;
+    LineInfo(StringView data = StringView(),
+             int32_t lineBegin = 0,
+             int32_t rollbackLineFeedCount = 0,
+             int32_t lineEnd = 0,
+             bool fullLine = false)
+        : data(data),
+          lineBegin(lineBegin),
+          rollbackLineFeedCount(rollbackLineFeedCount),
+          lineEnd(lineEnd),
+          fullLine(fullLine) {}
 };
 
 class LogFileReader {
 public:
     enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
     LogFormat mFileLogFormat = LogFormat::TEXT;
+
+    static LineInfo GetLastDockerJsonFileLine2(StringView buffer, int32_t end);
+    static LineInfo GetLastTextLine2(StringView buffer, int32_t end);
+    static LineInfo GetLastContainerdTextLine2(StringView buffer, int32_t end);
+
+    using GetLastLineFunc = LineInfo (*)(StringView buffer, int32_t end);
+    std::vector<GetLastLineFunc> mGetLastLineFuncs = {};
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
@@ -465,6 +482,8 @@ protected:
     std::string mRegion;
 
 private:
+    LineInfo GetLastLine2(StringView buffer, int32_t end, size_t n, bool needMerge = true, bool singleLine = false);
+
     bool mHasReadContainerBom = false;
     void checkContainerType();
     static std::shared_ptr<SourceBuffer> mSourceBuffer;
