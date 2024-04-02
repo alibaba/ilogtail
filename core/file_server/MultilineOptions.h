@@ -43,6 +43,7 @@ public:
     std::string mContinuePattern;
     std::string mEndPattern;
     UnmatchedContentTreatment mUnmatchedContentTreatment = UnmatchedContentTreatment::SINGLE_LINE;
+    bool mIgnoringUnmatchWarning = false;
 
 private:
     bool ParseRegex(const std::string& pattern, std::shared_ptr<boost::regex>& reg);
@@ -52,6 +53,9 @@ private:
     std::shared_ptr<boost::regex> mEndPatternRegPtr;
     bool mIsMultiline = false;
 };
+
+const std::string&
+UnmatchedContentTreatmentToString(MultilineOptions::UnmatchedContentTreatment unmatchedContentTreatment);
 
 using MultilineConfig = std::pair<const MultilineOptions*, const PipelineContext*>;
 
