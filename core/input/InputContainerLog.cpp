@@ -175,7 +175,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 
             std::string subPath = tmpPath.substr(0, index);
             fsutil::PathStat buf;
-            if (fsutil::PathStat::lstat(subPath.c_str(), buf) != 0) {
+            if (!fsutil::PathStat::lstat(subPath.c_str(), buf)) {
                 return "";
             }
             if (buf.IsLink()) {
@@ -186,7 +186,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
                     + std::string(target); // You need to implement this function
                 tmpPath = partialPath + tmpPath.substr(index);
                 fsutil::PathStat buf;
-                if (fsutil::PathStat::stat(partialPath.c_str(), buf) != 0) {
+                if (!fsutil::PathStat::stat(partialPath.c_str(), buf)) {
                     // path referenced by partialPath does not exist or has symlink
                     index = 0;
                 } else {
@@ -209,6 +209,9 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 bool InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                                      const PipelineContext* ctx,
                                                      const FileDiscoveryOptions*) {
+    if (!containerInfo.mRealBaseDir.empty()) {
+        return true;
+    }
     // ParseByJSONObj 确保 mLogPath不会以\\或者/ 结尾
     std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path) + containerInfo.mLogPath);
     if (realPath.empty()) {
