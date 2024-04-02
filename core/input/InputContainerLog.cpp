@@ -161,7 +161,6 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 #if defined(__linux__)
     int index = 0; // assume path is absolute
     for (int i = 0; i < 10; i++) {
-        struct stat f;
         fsutil::PathStat buf;
         if (fsutil::PathStat::stat(tmpPath, buf)) {
             return tmpPath;
@@ -175,18 +174,19 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
             }
 
             std::string subPath = tmpPath.substr(0, index);
-            struct stat f;
-            if (lstat(subPath.c_str(), &f) != 0) {
+            fsutil::PathStat buf;
+            if (fsutil::PathStat::lstat(subPath.c_str(), buf) != 0) {
                 return "";
             }
-            if (S_ISLNK(f.st_mode)) {
+            if (buf.IsLink()) {
                 // subPath is a symlink
                 char target[PATH_MAX + 1]{0};
                 readlink(subPath.c_str(), target, sizeof(target));
                 std::string partialPath = STRING_FLAG(default_container_host_path)
                     + std::string(target); // You need to implement this function
                 tmpPath = partialPath + tmpPath.substr(index);
-                if (stat(partialPath.c_str(), &f) != 0) {
+                fsutil::PathStat buf;
+                if (fsutil::PathStat::stat(partialPath.c_str(), buf) != 0) {
                     // path referenced by partialPath does not exist or has symlink
                     index = 0;
                 } else {
