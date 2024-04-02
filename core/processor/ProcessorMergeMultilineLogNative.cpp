@@ -376,12 +376,12 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
             LOG_WARNING(
                 GetContext().GetLogger(),
-                ("unmatched log line", "please check regex")("action", mMultiline.UnmatchedContentTreatmentToString())(
+                ("unmatched log line", "please check regex")("action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
                     "first 1KB", sourceVal.substr(0, 1024).to_string())("filepath", logPath.to_string())(
                     "processor", sName)("config", GetContext().GetConfigName())("log bytes", sourceVal.size() + 1));
             GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
                                               "unmatched log line, first 1KB:" + sourceVal.substr(0, 1024).to_string()
-                                                  + "\taction: " + mMultiline.UnmatchedContentTreatmentToString()
+                                                  + "\taction: " + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment)
                                                   + "\tfilepath: " + logPath.to_string() + "\tprocessor: " + sName
                                                   + "\tconfig: " + GetContext().GetConfigName(),
                                               GetContext().GetProjectName(),
