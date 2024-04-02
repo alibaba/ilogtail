@@ -282,7 +282,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 				DataType:                   "container_config_result",
 				Project:                    sds.context.GetProject(),
 				Logstore:                   sds.context.GetLogstore(),
-				ConfigName:                 util.GetBaseConfigName(sds.context.GetConfigName()),
+				ConfigName:                 sds.context.GetConfigName(),
 				PathExistInputContainerIDs: helper.GetStringFromList(keys),
 				SourceAddress:              "stdout",
 				InputType:                  input.ServiceDockerStdoutPluginName,

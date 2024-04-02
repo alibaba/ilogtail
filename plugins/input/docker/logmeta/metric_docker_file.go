@@ -348,7 +348,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 			DataType:                      "container_config_result",
 			Project:                       idf.context.GetProject(),
 			Logstore:                      idf.context.GetLogstore(),
-			ConfigName:                    util.GetBaseConfigName(idf.context.GetConfigName()),
+			ConfigName:                    idf.context.GetConfigName(),
 			SourceAddress:                 fmt.Sprintf("%s/**/%s", idf.LogPath, idf.FilePattern),
 			PathExistInputContainerIDs:    helper.GetStringFromList(havingPathkeys),
 			PathNotExistInputContainerIDs: helper.GetStringFromList(nothavingPathkeys),
