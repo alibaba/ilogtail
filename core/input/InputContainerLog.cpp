@@ -161,7 +161,6 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 #if defined(__linux__)
     int index = 0; // assume path is absolute
     for (int i = 0; i < 10; i++) {
-        struct stat f;
         fsutil::PathStat buf;
         if (fsutil::PathStat::stat(tmpPath, buf)) {
             return tmpPath;
@@ -175,7 +174,6 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
             }
 
             std::string subPath = tmpPath.substr(0, index);
-            struct stat f;
             if (lstat(subPath.c_str(), &f) != 0) {
                 return "";
             }
