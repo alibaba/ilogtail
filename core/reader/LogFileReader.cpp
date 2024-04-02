@@ -1678,7 +1678,8 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         if (!READ_BYTE) {
             return;
         }
-        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
+        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog
+            && !mHasReadContainerBom) {
             checkContainerType(mLogFileOp);
         }
         const size_t lastCacheSize = mCache.size();
@@ -1817,6 +1818,10 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             = READ_BYTE ? ReadFile(mLogFileOp, gbkBuffer + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo) : 0UL;
         if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
             return;
+        }
+        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog
+            && !mHasReadContainerBom) {
+            checkContainerType(mLogFileOp);
         }
         if (lastCacheSize) {
             memcpy(gbkBuffer, mCache.data(), lastCacheSize); // copy from cache
