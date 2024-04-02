@@ -43,6 +43,9 @@ extern const std::string METRIC_PROC_PARSE_ERROR_TOTAL;
 extern const std::string METRIC_PROC_PARSE_SUCCESS_TOTAL;
 extern const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL;
 extern const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL;
+extern const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL;
+extern const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL;
+extern const std::string METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL;
 
 // processor filter metrics
 extern const std::string METRIC_PROC_FILTER_IN_SIZE_BYTES;
