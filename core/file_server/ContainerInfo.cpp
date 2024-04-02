@@ -98,7 +98,7 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 sls_logs::LogTag tag;
                 tag.set_key(metaDatas[i - 1].asString());
                 tag.set_value(metaDatas[i].asString());
-                containerInfo.mMetadatas.push_back(tag);
+                containerInfo.mMetadatas.emplace_back(tag);
             }
         }
     } else {
@@ -111,14 +111,13 @@ bool ContainerInfo::ParseByJSONObj(const Json::Value& params, ContainerInfo& con
                 sls_logs::LogTag tag;
                 tag.set_key(tags[i - 1].asString());
                 tag.set_value(tags[i].asString());
-                if (oldVersion) {
-                    containerInfo.mTags.push_back(tag);
+                // 不是老版本
+                if (!oldVersion) {
+                    containerInfo.mTags.emplace_back(tag);
+                } else if (containerNameTag.find(tags[i - 1].asString()) != containerNameTag.end()) {
+                    containerInfo.mTags.emplace_back(tag);
                 } else {
-                    if (containerNameTag.find(tags[i - 1].asString()) != containerNameTag.end()) {
-                        containerInfo.mTags.push_back(tag);
-                    } else {
-                        containerInfo.mMetadatas.push_back(tag);
-                    }
+                    containerInfo.mMetadatas.emplace_back(tag);
                 }
             }
         }
