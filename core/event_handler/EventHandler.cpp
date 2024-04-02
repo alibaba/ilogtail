@@ -714,11 +714,12 @@ void ModifyHandler::Handle(const Event& event) {
             }
 
             if (reader->ShouldForceReleaseDeletedFileFd()) {
-                LOG_INFO(sLogger,
-                         ("force closing the file, project", reader->GetProject())("logstore", reader->GetLogstore())(
-                             "config", mConfigName)("log reader queue name", reader->GetHostLogPath())(
-                             "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
-                             "file size", reader->GetFileSize())("last file position", reader->GetLastFilePos()));
+                LOG_INFO(
+                    sLogger,
+                    ("force closing the file, project", reader->GetProjectName())("logstore", reader->GetCategory())(
+                        "config", mConfigName)("log reader queue name", reader->GetHostLogPath())(
+                        "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
+                        "file size", reader->GetFileSize())("last file position", reader->GetLastFilePos()));
                 reader->CloseFilePtr();
             }
         }
