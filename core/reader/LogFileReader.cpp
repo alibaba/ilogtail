@@ -100,9 +100,6 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
     }
 
     if (reader) {
-        if (reader->mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputFile) {
-            reader->mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
-        }
         if (forceFromBeginning) {
             reader->SetReadFromBeginning();
         }
@@ -194,6 +191,9 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mLogstore = readerConfig.second->GetLogstoreName();
     mConfigName = readerConfig.second->GetConfigName();
     mRegion = readerConfig.second->GetRegion();
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputFile) {
+        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
+    }
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
