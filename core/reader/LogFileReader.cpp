@@ -2258,10 +2258,9 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bo
     if (end == 0) {
         return LineInfo{buffer, 0, 1, end, true};
     }
-    LineInfo line;
     LineInfo resultLine;
     if (n < mGetLastLineFuncs.size() - 1) {
-        line = GetLastLine(buffer, end, n + 1, false, singleLine);
+        LineInfo line = GetLastLine(buffer, end, n + 1, false, singleLine);
         resultLine = mGetLastLineFuncs[n](line.data, line.data.size());
         resultLine.lineBegin = line.lineBegin;
         resultLine.rollbackLineFeedCount = line.rollbackLineFeedCount;
@@ -2330,8 +2329,8 @@ void LogFileReader::mergeLines(LineInfo& resultLine, const LineInfo& additionalL
     resultLine.data = StringView(newDataPosition, buffer->size);
 }
 
-std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer(new SourceBuffer);
-StringBuffer LogFileReader::mStringBuffer;
+std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer = std::make_shared<SourceBuffer>();
+StringBuffer LogFileReader::mStringBuffer = StringBuffer();
 rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
 
 StringBuffer* LogFileReader::GetStringBuffer() {
