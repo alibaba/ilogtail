@@ -17,7 +17,6 @@ package stdout
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -281,16 +280,11 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 					keys = append(keys, helper.GetShortID(k))
 				}
 			}
-			configName := sds.context.GetConfigName()
-			lastSlashIndex := strings.LastIndex(configName, "/")
-			if lastSlashIndex != -1 {
-				configName = configName[:lastSlashIndex]
-			}
 			configResult := &helper.ContainerConfigResult{
 				DataType:                   "container_config_result",
 				Project:                    sds.context.GetProject(),
 				Logstore:                   sds.context.GetLogstore(),
-				ConfigName:                 configName,
+				ConfigName:                 sds.context.GetConfigName(),
 				PathExistInputContainerIDs: helper.GetStringFromList(keys),
 				SourceAddress:              "stdout",
 				InputType:                  input.ServiceDockerStdoutPluginName,
