@@ -492,7 +492,6 @@ void LogMultiBytesUnittest::TestAlignLastCharacterGBK() {
     MultilineOptions multilineOpts;
     FileReaderOptions readerOpts;
     readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
-    readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
     readerOpts.mFileEncoding = FileReaderOptions::Encoding::GBK;
     LogFileReader logFileReader(
         "", "", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
@@ -516,7 +515,6 @@ void LogMultiBytesUnittest::TestReadUTF8() {
     MultilineOptions multilineOpts;
     FileReaderOptions readerOpts;
     readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
-    readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
     LogFileReader reader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     LogFileReader::BUFFER_SIZE = 13; // equal to "iLogtail 为" plus one illegal byte
@@ -535,7 +533,6 @@ void LogMultiBytesUnittest::TestReadUTF8() {
 void LogMultiBytesUnittest::TestReadGBK() {
     MultilineOptions multilineOpts;
     FileReaderOptions readerOpts;
-    readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
     readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
     readerOpts.mFileEncoding = FileReaderOptions::Encoding::GBK;
     LogFileReader reader(
