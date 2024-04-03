@@ -17,7 +17,6 @@ package stdout
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -73,7 +72,9 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 
 	source := util.NewPackIDPrefix(info.ContainerInfo.ID + sds.context.GetConfigName())
 	tags := info.GetExternalTags(sds.ExternalEnvTag, sds.ExternalK8sLabelTag)
-
+	for k, v := range info.ContainerNameTag {
+		tags[k] = v
+	}
 	processor := NewDockerStdoutProcessor(reg, time.Duration(sds.BeginLineTimeoutMs)*time.Millisecond, sds.BeginLineCheckLength, sds.MaxLogSize, sds.Stdout, sds.Stderr, sds.context, sds.collector, tags, source)
 
 	checkpoint, ok := checkpointMap[info.ContainerInfo.ID]
@@ -279,16 +280,11 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 					keys = append(keys, helper.GetShortID(k))
 				}
 			}
-			configName := sds.context.GetConfigName()
-			lastSlashIndex := strings.LastIndex(configName, "/")
-			if lastSlashIndex != -1 {
-				configName = configName[:lastSlashIndex]
-			}
 			configResult := &helper.ContainerConfigResult{
 				DataType:                   "container_config_result",
 				Project:                    sds.context.GetProject(),
 				Logstore:                   sds.context.GetLogstore(),
-				ConfigName:                 configName,
+				ConfigName:                 sds.context.GetConfigName(),
 				PathExistInputContainerIDs: helper.GetStringFromList(keys),
 				SourceAddress:              "stdout",
 				InputType:                  input.ServiceDockerStdoutPluginName,

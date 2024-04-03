@@ -183,6 +183,19 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
                               ctx.GetRegion());
     }
 
+    // Ignore Warning
+    if (!GetOptionalBoolParam(config, "IgnoringUnmatchWarning", mIgnoringUnmatchWarning, errorMsg)) {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mIgnoringUnmatchWarning,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
+    }
+
     return true;
 }
 
@@ -202,12 +215,13 @@ bool MultilineOptions::ParseRegex(const string& pattern, shared_ptr<boost::regex
     return true;
 }
 
-const std::string& MultilineOptions::UnmatchedContentTreatmentToString() {
-    switch (mUnmatchedContentTreatment) {
-        case UnmatchedContentTreatment::DISCARD:
+const std::string&
+UnmatchedContentTreatmentToString(MultilineOptions::UnmatchedContentTreatment unmatchedContentTreatment) {
+    switch (unmatchedContentTreatment) {
+        case MultilineOptions::UnmatchedContentTreatment::DISCARD:
             static std::string discardStr = "discard";
             return discardStr;
-        case UnmatchedContentTreatment::SINGLE_LINE:
+        case MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE:
             static std::string singleLine = "single line";
             return singleLine;
         default:
@@ -215,4 +229,5 @@ const std::string& MultilineOptions::UnmatchedContentTreatmentToString() {
             return unkonwn;
     }
 }
+
 } // namespace logtail

@@ -115,7 +115,8 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                           ? discoveryConfig.first->GetWildcardPaths()[0]
                                           : discoveryConfig.first->GetBasePath(),
                                       containerPath->mRealBaseDir.size());
-                reader->AddExtraTags(containerPath->mMetadata);
+                reader->AddExtraTags(containerPath->mMetadatas);
+                reader->AddExtraTags(containerPath->mTags);
             }
         }
         if (readerConfig.first->mAppendingLogPositionMeta) {
@@ -190,6 +191,9 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mLogstore = readerConfig.second->GetLogstoreName();
     mConfigName = readerConfig.second->GetConfigName();
     mRegion = readerConfig.second->GetRegion();
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputFile) {
+        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
+    }
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
@@ -787,8 +791,10 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     ReadFile(op, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
+        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastDockerJsonFileLine);
     } else {
         mFileLogFormat = LogFormat::CONTAINERD_TEXT;
+        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastContainerdTextLine);
     }
     mHasReadContainerBom = true;
 }
@@ -820,21 +826,17 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
             }
         }
     }
-    int32_t begin = 0;
     string exception;
-    for (size_t i = 0; i < readSizeReal - 1; ++i) {
-        if (readBuf[i] == '\n') {
-            int32_t begPs = begin;
-            int32_t endPs = i;
-            LineInfo line = LogFileReader::GetLastLineData(readBuf, begPs, endPs, false, true);
+    for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
+        if (readBuf[endPs] == '\n') {
+            LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, false, true);
             if (BoostRegexSearch(
                     line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
-                mLastFilePos += i + 1;
+                mLastFilePos += endPs + 1;
                 mCache.clear();
                 free(readBuf);
                 return;
             }
-            begin = i + 1;
         }
     }
 
@@ -1000,7 +1002,8 @@ void LogFileReader::skipCheckpointRelayHole() {
 }
 
 bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
-    if (mLogFileOp.IsOpen() == false) {
+    // when event is read timeout and the file cannot be opened, simply flush the cache.
+    if (!mLogFileOp.IsOpen() && (event == nullptr || !event->IsReaderFlushTimeout())) {
         if (!ShouldForceReleaseDeletedFileFd()) {
             // should never happen
             LOG_ERROR(sLogger, ("unknow error, log file not open", mHostLogPath));
@@ -1010,7 +1013,7 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     if (AppConfig::GetInstance()->IsInputFlowControl())
         LogInput::GetInstance()->FlowControl();
 
-    if (mFirstWatched && (mLastFilePos == 0))
+    if ((event == nullptr || !event->IsReaderFlushTimeout()) && mFirstWatched && (mLastFilePos == 0))
         CheckForFirstOpen();
 
     // Init checkpoint for this read, new if no checkpoint to replay.
@@ -1655,87 +1658,112 @@ void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
 }
 
 void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
-    logBuffer.readOffset = mLastFilePos;
-    bool fromCpt = false;
-    size_t READ_BYTE = getNextReadSize(end, fromCpt);
-    if (!READ_BYTE) {
-        return;
-    }
-    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom) {
-        checkContainerType(mLogFileOp);
-    }
-    const size_t lastCacheSize = mCache.size();
-    if (READ_BYTE < lastCacheSize) {
-        READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
-    }
-    StringBuffer stringMemory = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
-    if (lastCacheSize) {
-        READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
-    }
-    TruncateInfo* truncateInfo = nullptr;
-    int64_t lastReadPos = GetLastReadPos();
-    size_t nbytes = READ_BYTE
-        ? ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo)
-        : 0UL;
-    char* stringBuffer = stringMemory.data;
-    if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // read nothing, if no cached data or allow rollback the
-        // reader's state cannot be changed
-        return;
-    }
-    if (lastCacheSize) {
-        memcpy(stringBuffer, mCache.data(), lastCacheSize); // copy from cache
-        nbytes += lastCacheSize;
-    }
-    // Ignore \n if last is force read
-    if (stringBuffer[0] == '\n' && mLastForceRead) {
-        ++stringBuffer;
-        ++mLastFilePos;
-        logBuffer.readOffset = mLastFilePos;
-        --nbytes;
-    }
-    const size_t stringBufferLen = nbytes;
-    logBuffer.truncateInfo.reset(truncateInfo);
-    lastReadPos = mLastFilePos + nbytes; // this doesn't seem right when ulogfs is used and a hole is skipped
-    LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", lastReadPos));
-    moreData = (nbytes == BUFFER_SIZE);
-    auto alignedBytes = nbytes;
-    if (allowRollback) {
-        alignedBytes = AlignLastCharacter(stringBuffer, nbytes);
-    }
-    if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
-        int32_t rollbackLineFeedCount;
-        nbytes = LastMatchedLine(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
-    }
+    char* stringBuffer = nullptr;
+    size_t nbytes = 0;
 
-    if (nbytes == 0) {
-        if (moreData) { // excessively long line without '\n' or multiline begin or valid wchar
-            nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
-            if (mReaderConfig.second->RequiringJsonReader()) {
-                int32_t rollbackLineFeedCount;
-                nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount, false);
-            }
-            LOG_WARNING(
-                sLogger,
-                ("Log is too long and forced to be split at offset: ", mLastFilePos + nbytes)("file: ", mHostLogPath)(
-                    "inode: ", mDevInode.inode)("first 1024B log: ", logBuffer.rawBuffer.substr(0, 1024)));
-            std::ostringstream oss;
-            oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos + nbytes)
-                << " file: " << mHostLogPath << " inode: " << ToString(mDevInode.inode)
-                << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024) << std::endl;
-            LogtailAlarm::GetInstance()->SendAlarm(
-                SPLIT_LOG_FAIL_ALARM, oss.str(), GetProject(), GetLogstore(), GetRegion());
-        } else {
-            // line is not finished yet nor more data, put all data in cache
-            mCache.assign(stringBuffer, stringBufferLen);
+    logBuffer.readOffset = mLastFilePos;
+    if (!mLogFileOp.IsOpen()) {
+        // read flush timeout
+        nbytes = mCache.size();
+        StringBuffer stringMemory = logBuffer.AllocateStringBuffer(nbytes);
+        stringBuffer = stringMemory.data;
+        memcpy(stringBuffer, mCache.data(), nbytes);
+        // Ignore \n if last is force read
+        if (stringBuffer[0] == '\n' && mLastForceRead) {
+            ++stringBuffer;
+            ++mLastFilePos;
+            logBuffer.readOffset = mLastFilePos;
+            --nbytes;
+        }
+        mCache.clear();
+        moreData = false;
+    } else {
+        bool fromCpt = false;
+        size_t READ_BYTE = getNextReadSize(end, fromCpt);
+        if (!READ_BYTE) {
             return;
         }
+        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog
+            && !mHasReadContainerBom) {
+            checkContainerType(mLogFileOp);
+        }
+        const size_t lastCacheSize = mCache.size();
+        if (READ_BYTE < lastCacheSize) {
+            READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
+        }
+        StringBuffer stringMemory = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
+        if (lastCacheSize) {
+            READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
+        }
+        TruncateInfo* truncateInfo = nullptr;
+        int64_t lastReadPos = GetLastReadPos();
+        nbytes = READ_BYTE
+            ? ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo)
+            : 0UL;
+        stringBuffer = stringMemory.data;
+        if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // read nothing, if no cached data or allow rollback the
+            // reader's state cannot be changed
+            return;
+        }
+        if (lastCacheSize) {
+            memcpy(stringBuffer, mCache.data(), lastCacheSize); // copy from cache
+            nbytes += lastCacheSize;
+        }
+        // Ignore \n if last is force read
+        if (stringBuffer[0] == '\n' && mLastForceRead) {
+            ++stringBuffer;
+            ++mLastFilePos;
+            logBuffer.readOffset = mLastFilePos;
+            --nbytes;
+        }
+        const size_t stringBufferLen = nbytes;
+        logBuffer.truncateInfo.reset(truncateInfo);
+        lastReadPos = mLastFilePos + nbytes; // this doesn't seem right when ulogfs is used and a hole is skipped
+        LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", lastReadPos));
+        moreData = (nbytes == BUFFER_SIZE);
+        auto alignedBytes = nbytes;
+        if (allowRollback) {
+            alignedBytes = AlignLastCharacter(stringBuffer, nbytes);
+        }
+        if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
+            int32_t rollbackLineFeedCount;
+            nbytes = RemoveLastIncompleteLog(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
+        }
+
+        if (nbytes == 0) {
+            if (moreData) { // excessively long line without '\n' or multiline begin or valid wchar
+                nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
+                if (mReaderConfig.second->RequiringJsonReader()) {
+                    int32_t rollbackLineFeedCount;
+                    nbytes = RemoveLastIncompleteLog(stringBuffer, nbytes, rollbackLineFeedCount, false);
+                }
+                LOG_WARNING(sLogger,
+                            ("Log is too long and forced to be split at offset: ",
+                             mLastFilePos + nbytes)("file: ", mHostLogPath)("inode: ", mDevInode.inode)(
+                                "first 1024B log: ", logBuffer.rawBuffer.substr(0, 1024)));
+                std::ostringstream oss;
+                oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos + nbytes)
+                    << " file: " << mHostLogPath << " inode: " << ToString(mDevInode.inode)
+                    << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024) << std::endl;
+                LogtailAlarm::GetInstance()->SendAlarm(
+                    SPLIT_LOG_FAIL_ALARM, oss.str(), GetProject(), GetLogstore(), GetRegion());
+            } else {
+                // line is not finished yet nor more data, put all data in cache
+                mCache.assign(stringBuffer, stringBufferLen);
+                return;
+            }
+        }
+        if (nbytes < stringBufferLen) {
+            // rollback happend, put rollbacked part in cache
+            mCache.assign(stringBuffer + nbytes, stringBufferLen - nbytes);
+        } else {
+            mCache.clear();
+        }
+        if (!moreData && fromCpt && lastReadPos < end) {
+            moreData = true;
+        }
     }
-    if (nbytes < stringBufferLen) {
-        // rollback happend, put rollbacked part in cache
-        mCache.assign(stringBuffer + nbytes, stringBufferLen - nbytes);
-    } else {
-        mCache.clear();
-    }
+
     // cache is sealed, nbytes should no change any more
     size_t stringLen = nbytes;
     if (stringBuffer[stringLen - 1] == '\n'
@@ -1745,9 +1773,6 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     }
     stringBuffer[stringLen] = '\0';
 
-    if (!moreData && fromCpt && lastReadPos < end) {
-        moreData = true;
-    }
     logBuffer.rawBuffer = StringView(stringBuffer, stringLen); // set readable buffer
     logBuffer.readLength = nbytes;
     setExactlyOnceCheckpointAfterRead(nbytes);
@@ -1758,56 +1783,82 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
 }
 
 void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
+    std::unique_ptr<char[]> gbkMemory;
+    char* gbkBuffer = nullptr;
+    size_t readCharCount = 0, originReadCount = 0;
+    int64_t lastReadPos = 0;
+    bool logTooLongSplitFlag = false, fromCpt = false;
+
     logBuffer.readOffset = mLastFilePos;
-    bool fromCpt = false;
-    size_t READ_BYTE = getNextReadSize(end, fromCpt);
-    const size_t lastCacheSize = mCache.size();
-    if (READ_BYTE < lastCacheSize) {
-        READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
-    }
-    std::unique_ptr<char[]> gbkMemory(new char[READ_BYTE + 1]);
-    char* gbkBuffer = gbkMemory.get();
-    if (lastCacheSize) {
-        READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
-    }
-    TruncateInfo* truncateInfo = nullptr;
-    int64_t lastReadPos = GetLastReadPos();
-    size_t readCharCount
-        = READ_BYTE ? ReadFile(mLogFileOp, gbkBuffer + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo) : 0UL;
-    if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
-        return;
-    }
-    if (lastCacheSize) {
-        memcpy(gbkBuffer, mCache.data(), lastCacheSize); // copy from cache
-        readCharCount += lastCacheSize;
-    }
-    // Ignore \n if last is force read
-    if (gbkBuffer[0] == '\n' && mLastForceRead) {
-        ++gbkBuffer;
-        --readCharCount;
-        ++mLastFilePos;
-        logBuffer.readOffset = mLastFilePos;
-    }
-    logBuffer.truncateInfo.reset(truncateInfo);
-    lastReadPos = mLastFilePos + readCharCount;
-    const size_t originReadCount = readCharCount;
-    moreData = (readCharCount == BUFFER_SIZE);
-    bool logTooLongSplitFlag = false;
-    auto alignedBytes = readCharCount;
-    if (allowRollback) {
-        alignedBytes = AlignLastCharacter(gbkBuffer, readCharCount);
-    }
-    if (alignedBytes == 0) {
-        if (moreData) { // excessively long line without valid wchar
-            logTooLongSplitFlag = true;
-            alignedBytes = BUFFER_SIZE;
-        } else {
-            // line is not finished yet nor more data, put all data in cache
-            mCache.assign(gbkBuffer, originReadCount);
+    if (!mLogFileOp.IsOpen()) {
+        // read flush timeout
+        readCharCount = mCache.size();
+        gbkMemory.reset(new char[readCharCount + 1]);
+        gbkBuffer = gbkMemory.get();
+        memcpy(gbkBuffer, mCache.data(), readCharCount);
+        // Ignore \n if last is force read
+        if (gbkBuffer[0] == '\n' && mLastForceRead) {
+            ++gbkBuffer;
+            ++mLastFilePos;
+            logBuffer.readOffset = mLastFilePos;
+            --readCharCount;
+        }
+        lastReadPos = mLastFilePos + readCharCount;
+        originReadCount = readCharCount;
+        moreData = false;
+    } else {
+        size_t READ_BYTE = getNextReadSize(end, fromCpt);
+        const size_t lastCacheSize = mCache.size();
+        if (READ_BYTE < lastCacheSize) {
+            READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
+        }
+        gbkMemory.reset(new char[READ_BYTE + 1]);
+        gbkBuffer = gbkMemory.get();
+        if (lastCacheSize) {
+            READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
+        }
+        TruncateInfo* truncateInfo = nullptr;
+        lastReadPos = GetLastReadPos();
+        readCharCount
+            = READ_BYTE ? ReadFile(mLogFileOp, gbkBuffer + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo) : 0UL;
+        if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
             return;
         }
+        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog
+            && !mHasReadContainerBom) {
+            checkContainerType(mLogFileOp);
+        }
+        if (lastCacheSize) {
+            memcpy(gbkBuffer, mCache.data(), lastCacheSize); // copy from cache
+            readCharCount += lastCacheSize;
+        }
+        // Ignore \n if last is force read
+        if (gbkBuffer[0] == '\n' && mLastForceRead) {
+            ++gbkBuffer;
+            --readCharCount;
+            ++mLastFilePos;
+            logBuffer.readOffset = mLastFilePos;
+        }
+        logBuffer.truncateInfo.reset(truncateInfo);
+        lastReadPos = mLastFilePos + readCharCount;
+        originReadCount = readCharCount;
+        moreData = (readCharCount == BUFFER_SIZE);
+        auto alignedBytes = readCharCount;
+        if (allowRollback) {
+            alignedBytes = AlignLastCharacter(gbkBuffer, readCharCount);
+        }
+        if (alignedBytes == 0) {
+            if (moreData) { // excessively long line without valid wchar
+                logTooLongSplitFlag = true;
+                alignedBytes = BUFFER_SIZE;
+            } else {
+                // line is not finished yet nor more data, put all data in cache
+                mCache.assign(gbkBuffer, originReadCount);
+                return;
+            }
+        }
+        readCharCount = alignedBytes;
     }
-    readCharCount = alignedBytes;
     gbkBuffer[readCharCount] = '\0';
 
     vector<long> lineFeedPos = {-1}; // elements point to the last char of each line
@@ -1838,7 +1889,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     int32_t rollbackLineFeedCount = 0;
     int32_t bakResultCharCount = resultCharCount;
     if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
-        resultCharCount = LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, allowRollback);
+        resultCharCount = RemoveLastIncompleteLog(stringBuffer, resultCharCount, rollbackLineFeedCount, allowRollback);
     }
     if (resultCharCount == 0) {
         if (moreData) {
@@ -1846,7 +1897,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             rollbackLineFeedCount = 0;
             if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
-                LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
+                RemoveLastIncompleteLog(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
             }
             // Cannot get the split position here, so just mark a flag and send alarm later
             logTooLongSplitFlag = true;
@@ -1875,7 +1926,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         --stringLen;
     }
     stringBuffer[stringLen] = '\0';
-    if (!moreData && fromCpt && lastReadPos < end) {
+    if (mLogFileOp.IsOpen() && !moreData && fromCpt && lastReadPos < end) {
         moreData = true;
     }
     logBuffer.rawBuffer = StringView(stringBuffer, stringLen);
@@ -2009,106 +2060,102 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
         1. xxx\nend\n -> xxx\nend
         1. xxx\nend\nxxx\n -> xxx\nend
 */
-int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback) {
-    if (!allowRollback) {
+/*
+    return: the number of bytes left, including \n
+*/
+int32_t
+LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback) {
+    if (!allowRollback || size == 0) {
         return size;
     }
-    int32_t endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
-    int32_t begPs = size - 2;
+    int32_t endPs; // the position of \n or \0
+    if (buffer[size - 1] == '\n') {
+        endPs = size - 1;
+    } else {
+        endPs = size;
+    }
     rollbackLineFeedCount = 0;
-    // Single line rollback
+    // Multiline rollback
     if (mMultilineConfig.first->IsMultiline()) {
-        // Multiline rollback
         std::string exception;
-        while (begPs >= 0) {
-            LineInfo line = LogFileReader::GetLastLineData(buffer, begPs, endPs);
-            if (mMultilineConfig.first->GetContinuePatternReg()
-                && BoostRegexSearch(
-                    line.data.data(), line.data.size(), *mMultilineConfig.first->GetContinuePatternReg(), exception)) {
-                rollbackLineFeedCount += line.rollbackLineFeedCount;
-                endPs = begPs;
-            } else if (mMultilineConfig.first->GetEndPatternReg()
-                       && BoostRegexSearch(line.data.data(),
-                                           line.data.size(),
-                                           *mMultilineConfig.first->GetEndPatternReg(),
-                                           exception)) {
-                // Ensure the end line is complete
-                if (buffer[endPs] == '\n') {
-                    return endPs + 1;
-                } else {
-                    rollbackLineFeedCount += line.rollbackLineFeedCount;
-                    endPs = begPs;
+        while (endPs >= 0) {
+            LineInfo content = GetLastLine(StringView(buffer, size), endPs, 0, true, false);
+            if (mMultilineConfig.first->GetEndPatternReg()) {
+                // start + end, continue + end, end
+                if (BoostRegexSearch(content.data.data(),
+                                     content.data.size(),
+                                     *mMultilineConfig.first->GetEndPatternReg(),
+                                     exception)) {
+                    // Ensure the end line is complete
+                    if (buffer[endPs] == '\n') {
+                        return endPs + 1;
+                    }
                 }
             } else if (mMultilineConfig.first->GetStartPatternReg()
-                       && BoostRegexSearch(line.data.data(),
-                                           line.data.size(),
+                       && BoostRegexSearch(content.data.data(),
+                                           content.data.size(),
                                            *mMultilineConfig.first->GetStartPatternReg(),
                                            exception)) {
-                rollbackLineFeedCount += line.rollbackLineFeedCount;
+                // start + continue, start
+                rollbackLineFeedCount += content.rollbackLineFeedCount;
                 // Keep all the buffer if rollback all
-                return line.lineBegin;
-            } else if (mMultilineConfig.first->GetContinuePatternReg()) {
-                // We can confirm the logs before are complete if continue is configured but no regex pattern can match.
-                if (buffer[endPs] == '\n') {
-                    return endPs + 1;
-                } else {
-                    // Keep all the buffer if rollback all
-                    return line.lineBegin;
-                }
-            } else {
-                rollbackLineFeedCount += line.rollbackLineFeedCount;
-                endPs = begPs;
+                return content.lineBegin;
             }
-            begPs--;
+            rollbackLineFeedCount += content.rollbackLineFeedCount;
+            endPs = content.lineBegin - 1;
         }
     }
-    endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
-    begPs = size - 2;
+    // Single line rollback or all unmatch rollback
     rollbackLineFeedCount = 0;
-    while (endPs >= 0) {
-        if (buffer[endPs] == '\n') {
-            if (endPs != size - 1) { // if last line dose not end with '\n', rollback last line
-                rollbackLineFeedCount = 1;
-            }
-            if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
-                int32_t begin = 0;
-                LineInfo line = GetLastLineData(buffer, begin, endPs, false);
-                rollbackLineFeedCount += line.rollbackLineFeedCount;
-                return line.lineEnd + 1;
-            }
-            return endPs + 1;
-        }
-        endPs--;
+    if (buffer[size - 1] == '\n') {
+        endPs = size - 1;
+    } else {
+        endPs = size;
     }
-    return 0;
+    LineInfo content = GetLastLine(StringView(buffer, size), endPs, 0, false, true);
+    // 最后一行是完整行，且以 \n 结尾
+    if (content.fullLine && buffer[endPs] == '\n') {
+        return size;
+    }
+    content = GetLastLine(StringView(buffer, size), content.lineBegin, 0, false, false);
+    rollbackLineFeedCount = content.rollbackLineFeedCount;
+    return content.lineBegin;
 }
 
-LineInfo LogFileReader::GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs) {
-    while (begPs >= 0) {
-        if (buffer[begPs] == '\n' || begPs == 0) {
-            int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
-            StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            LineInfo res = {lastLine, lineBegin, 1, endPs, true};
-            return res;
-        }
-        --begPs;
+/*
+    params:
+        buffer: all read logs
+        end: the end position of current line, \n or \0
+    return:
+        last line (backward), without \n or \0
+*/
+LineInfo LogFileReader::GetLastTextLine(StringView buffer, int32_t end) {
+    if (end == 0) {
+        return LineInfo{buffer, 0, 1, end, true};
     }
+
+    for (int32_t begin = end; begin > 0; --begin) {
+        if (begin == 0 || buffer[begin - 1] == '\n') {
+            // 返回 begin～end-1的日志内容, lineBegin为begin, rollbackLineFeedCount为1, lineEnd为end, fullLine为true
+            return LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
+        }
+    }
+    // 整行都没换行符时
+    // 返回 0～end-1的日志内容, lineBegin为0, rollbackLineFeedCount为1, lineEnd为end, fullLine为true
+    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
 }
 
-LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs) {
-    while (begPs >= 0) {
-        if (buffer[begPs] == '\n' || begPs == 0) {
-            int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
-            StringView lastLine;
-            if (buffer[endPs] != '\n' && buffer[endPs] == '}') {
-                lastLine = StringView(buffer + lineBegin, endPs + 1 - lineBegin);
-            } else {
-                lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            }
-            LineInfo res = {lastLine, lineBegin, 1, endPs, true};
+LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end) {
+    if (end == 0) {
+        return LineInfo{buffer, 0, 1, end, true};
+    }
 
+    for (int32_t begin = end; begin >= 0; --begin) {
+        if (begin == 0 || buffer[begin - 1] == '\n') {
+            StringView lastLine = StringView(buffer.data() + begin, end - begin);
             rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
             doc.Parse(lastLine.data(), lastLine.size());
+            LineInfo res = LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
             if (doc.HasParseError()) {
                 return res;
             } else if (!doc.IsObject()) {
@@ -2133,75 +2180,26 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(const char* buffer, int32_t& b
             res.data = content;
             return res;
         }
-        --begPs;
     }
+    // The return here will not occur.
+    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
 }
 
-LineInfo LogFileReader::GetLastFullContainerdTextLine(
-    const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge, bool singleLine) {
-    LineInfo line = GetLastContainerdTextLine(buffer, begPs, endPs);
-    endPs = begPs;
-    if (singleLine) {
-        return line;
+LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end) {
+    if (end == 0) {
+        return LineInfo{buffer, 0, 1, end, true};
     }
-    if (line.fullLine && !needMerge) {
-        line.rollbackLineFeedCount = 0;
-        return line;
-    }
-    if (needMerge) {
-        StringBuffer* buffer = GetStringBuffer();
-        buffer->size = 0;
-        char* data = buffer->data + buffer->capacity - line.data.size();
-        memcpy(data, line.data.data(), line.data.size());
-        buffer->size += line.data.size();
-        line.data = StringView(data, buffer->size);
-    }
-    while (endPs > 0) {
-        LineInfo tmp = GetLastContainerdTextLine(buffer, begPs, endPs);
-        endPs = begPs;
-        if (tmp.fullLine) {
-            if (!needMerge) {
-                tmp.rollbackLineFeedCount = line.rollbackLineFeedCount;
-                return tmp;
-            }
-            return line;
-        } else {
-            line.rollbackLineFeedCount += tmp.rollbackLineFeedCount;
-            if (!needMerge) {
-                continue;
-            }
-            StringBuffer* buffer = GetStringBuffer();
-            char* data = buffer->data + buffer->capacity - buffer->size - tmp.data.size();
-            memcpy(data, tmp.data.data(), tmp.data.size());
-            buffer->size += tmp.data.size();
-            tmp.data = StringView(data, buffer->size);
-            line.data = tmp.data;
-        }
-    }
-    if (needMerge) {
-        return line;
-    }
-    line.data = StringView();
-    line.lineBegin = 0;
-    line.lineEnd = -1;
-    return line;
-}
 
-LineInfo LogFileReader::GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs) {
-    begPs = endPs - 1;
-    while (begPs >= 0) {
-        if (buffer[begPs] == '\n' || begPs == 0) {
-            int32_t lineBegin = begPs == 0 ? 0 : begPs + 1;
-            const char* lineEnd = buffer + endPs;
-            // endPs + 1 = res.lineBegin + lineBegin.data.size() + 1 = lineBegin + endPs - lineBegin = endPs + 1
-            // lastLine最后没有不包含endPs
-            StringView lastLine = StringView(buffer + lineBegin, endPs - lineBegin);
-            LineInfo res = {lastLine, lineBegin, 1, endPs, true};
+    for (int32_t begin = end; begin >= 0; --begin) {
+        if (begin == 0 || buffer[begin - 1] == '\n') {
+            StringView lastLine = StringView(buffer.data() + begin, end - begin);
+            const char* lineEnd = buffer.data() + end;
 
+            LineInfo res = LineInfo{lastLine, begin, 1, end, true};
             // 寻找第一个分隔符位置 time
             StringView timeValue;
             const char* pch1
-                = std::find(buffer + lineBegin, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+                = std::find(buffer.data() + begin, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
             if (pch1 == lineEnd) {
                 return res;
             }
@@ -2240,23 +2238,96 @@ LineInfo LogFileReader::GetLastContainerdTextLine(const char* buffer, int32_t& b
                 res.data = lastLine;
                 return res;
             }
-            endPs = begPs;
         }
-        begPs--;
     }
+    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
 }
 
-LineInfo
-LogFileReader::GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge, bool singleLine) {
-    if (mFileLogFormat == LogFormat::CONTAINERD_TEXT) {
-        return GetLastFullContainerdTextLine(buffer, begPs, endPs, needMerge, singleLine);
+// 优先级：singleLine > needMerge
+// 日志示例：F P P P F
+
+// 当 singleLine 为 true 时，函数会直接返回最后一行的日志。此时，lineBegin
+// 是最后一行日志的起始位置，rollbackLineFeedCount 为 1， lineEnd 是最后一行日志的结束位置。
+
+// 当 needMerge 为 true 时，函数会合并连续的 P P P F 日志并返回完整的日志。此时，lineBegin 是第一个 P
+// 的起始位置，rollbackLineFeedCount 为 4， lineEnd 是 F 的结束位置。
+
+// 当 singleLine 为 false 时，函数不会合并日志，而是直接返回第一个 P。此时，lineBegin 是第一个 P
+// 的起始位置，rollbackLineFeedCount 为 4， lineEnd 是 F 的结束位置。
+LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bool needMerge, bool singleLine) {
+    if (end == 0) {
+        return LineInfo{buffer, 0, 1, end, true};
     }
-    if (mFileLogFormat == LogFormat::DOCKER_JSON_FILE) {
-        return GetLastDockerJsonFileLine(buffer, begPs, endPs);
+    LineInfo line;
+    LineInfo resultLine;
+    if (n < mGetLastLineFuncs.size() - 1) {
+        line = GetLastLine(buffer, end, n + 1, false, singleLine);
+        resultLine = mGetLastLineFuncs[n](line.data, line.data.size());
+        resultLine.lineBegin = line.lineBegin;
+        resultLine.rollbackLineFeedCount = line.rollbackLineFeedCount;
+        resultLine.lineEnd = line.lineEnd;
+    } else {
+        resultLine = mGetLastLineFuncs[n](buffer, end);
     }
-    if (mFileLogFormat == LogFormat::TEXT) {
-        return GetLastTextLine(buffer, begPs, endPs);
+    // 只需要单行日志
+    if (singleLine) {
+        return resultLine;
     }
+
+    // 需要合并
+    if (needMerge) {
+        mergeLines(resultLine, resultLine, true);
+    }
+    // res不是完整日志 或者 res是完整日志且需要合并
+    while (true) {
+        LineInfo tmp;
+        if (n < mGetLastLineFuncs.size() - 1) {
+            LineInfo tmpRawLine = GetLastLine(buffer, resultLine.lineBegin - 1, n + 1, false, singleLine);
+            tmp = mGetLastLineFuncs[n](tmpRawLine.data, tmpRawLine.data.size());
+            tmp.lineBegin = tmpRawLine.lineBegin;
+            tmp.rollbackLineFeedCount = tmpRawLine.rollbackLineFeedCount;
+        } else {
+            tmp = mGetLastLineFuncs[n](buffer, resultLine.lineBegin - 1);
+        }
+        // tmp是完整行，说明res已经合并完毕
+        if (tmp.fullLine) {
+            resultLine.fullLine = true;
+            return resultLine;
+        } else {
+            resultLine.rollbackLineFeedCount += tmp.rollbackLineFeedCount;
+            resultLine.lineBegin = tmp.lineBegin;
+            if (!needMerge) {
+                resultLine.data = tmp.data;
+                continue;
+            }
+            mergeLines(resultLine, tmp, false);
+        }
+        if (resultLine.lineBegin == 0) {
+            break;
+        }
+    }
+    return resultLine;
+}
+
+void LogFileReader::mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer) {
+    StringBuffer* buffer = GetStringBuffer();
+
+    // If buffer needs to be reset, set its size to 0
+    if (shouldResetBuffer) {
+        buffer->size = 0;
+    }
+
+    // Calculate the new data position in the buffer
+    char* newDataPosition = buffer->data + buffer->capacity - buffer->size - additionalLine.data.size();
+
+    // Copy the data from the additional line to the new position in the buffer
+    memcpy(newDataPosition, additionalLine.data.data(), additionalLine.data.size());
+
+    // Increase the buffer size by the size of the additional line
+    buffer->size += additionalLine.data.size();
+
+    // Update the result line's data to reflect the new data and size
+    resultLine.data = StringView(newDataPosition, buffer->size);
 }
 
 std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer(new SourceBuffer);
@@ -2281,8 +2352,8 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         // 1. The number of byte for one character can be 1, 2, 4.
         // 2. 1 byte character: the top bit is 0.
         // 3. 2 bytes character: the 1st byte is between 0x81 and 0xFE; the 2nd byte is between 0x40 and 0xFE.
-        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between 0x30
-        // and 0x39. (not supported to align)
+        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between
+        // 0x30 and 0x39. (not supported to align)
 
         // 1 byte character, 2nd byte of 2 bytes, 2nd or 4th byte of 4 bytes
         if ((buffer[endPs] & 0x80) == 0 || size == 1) {

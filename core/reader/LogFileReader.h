@@ -48,8 +48,6 @@ class DevInode;
 typedef std::shared_ptr<LogFileReader> LogFileReaderPtr;
 typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
 
-enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
-
 // Only get the currently written log file, it will choose the last modified file to read. There are several condition
 // to choose the lastmodify file:
 // 1. if the last read file don't exist
@@ -86,12 +84,29 @@ struct LineInfo {
     int32_t rollbackLineFeedCount;
     int32_t lineEnd;
     bool fullLine;
+    LineInfo(StringView data = StringView(),
+             int32_t lineBegin = 0,
+             int32_t rollbackLineFeedCount = 0,
+             int32_t lineEnd = 0,
+             bool fullLine = false)
+        : data(data),
+          lineBegin(lineBegin),
+          rollbackLineFeedCount(rollbackLineFeedCount),
+          lineEnd(lineEnd),
+          fullLine(fullLine) {}
 };
 
 class LogFileReader {
 public:
     enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
     LogFormat mFileLogFormat = LogFormat::TEXT;
+
+    static LineInfo GetLastDockerJsonFileLine(StringView buffer, int32_t end);
+    static LineInfo GetLastTextLine(StringView buffer, int32_t end);
+    static LineInfo GetLastContainerdTextLine(StringView buffer, int32_t end);
+
+    using GetLastLineFunc = LineInfo (*)(StringView buffer, int32_t end);
+    std::vector<GetLastLineFunc> mGetLastLineFuncs = {};
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
@@ -142,7 +157,7 @@ public:
     FileCompareResult CompareToFile(const std::string& filePath);
 
     virtual int32_t
-    LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback = true);
+    RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback = true);
 
     size_t AlignLastCharacter(char* buffer, size_t size);
 
@@ -467,22 +482,13 @@ protected:
     std::string mRegion;
 
 private:
+    void mergeLines(LineInfo&, const LineInfo&, bool);
     bool mHasReadContainerBom = false;
     void checkContainerType();
     static std::shared_ptr<SourceBuffer> mSourceBuffer;
     static StringBuffer mStringBuffer;
     static StringBuffer* GetStringBuffer();
-
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-
-    LineInfo GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastFullContainerdTextLine(
-        const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
-
-    LineInfo
-    GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
     void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
@@ -533,6 +539,8 @@ private:
     // @param fileEnd: file size, ie. tell(seek(end)).
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
+
+    LineInfo GetLastLine(StringView buffer, int32_t end, size_t n, bool needMerge = true, bool singleLine = false);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
@@ -619,8 +627,7 @@ private:
     friend class LogSplitUnittest;
     friend class LogSplitDiscardUnmatchUnittest;
     friend class LogSplitNoDiscardUnmatchUnittest;
-    friend class LastMatchedLineDiscardUnmatchUnittest;
-    friend class LastMatchedLineNoDiscardUnmatchUnittest;
+    friend class RemoveLastIncompleteLogMultilineUnittest;
     friend class LogFileReaderCheckpointUnittest;
     friend class LastMatchedContainerdTextLineUnittest;
     friend class LastMatchedDockerJsonFileUnittest;
