@@ -2118,6 +2118,7 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
         return size;
     }
     content = GetLastLine(StringView(buffer, size), content.lineBegin, 0, false, false);
+    rollbackLineFeedCount = content.rollbackLineFeedCount;
     return content.lineBegin;
 }
 
