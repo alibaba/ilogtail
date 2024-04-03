@@ -777,7 +777,8 @@ void ModifyHandler::Handle(const Event& event) {
                                  "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
                                  "file size", reader->GetFileSize()));
                     reader->CloseFilePtr();
-                } else if (reader->IsContainerStopped()) {
+                } else if (reader->IsContainerStopped()
+                           && reader->GetInputType() == FileReaderOptions::InputType::InputFile) {
                     // release fd as quick as possible
                     LOG_INFO(
                         sLogger,
