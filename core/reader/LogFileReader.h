@@ -101,9 +101,9 @@ public:
     enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
     LogFormat mFileLogFormat = LogFormat::TEXT;
 
-    static LineInfo GetLastDockerJsonFileLine2(StringView buffer, int32_t end);
-    static LineInfo GetLastTextLine2(StringView buffer, int32_t end);
-    static LineInfo GetLastContainerdTextLine2(StringView buffer, int32_t end);
+    static LineInfo GetLastDockerJsonFileLine(StringView buffer, int32_t end);
+    static LineInfo GetLastTextLine(StringView buffer, int32_t end);
+    static LineInfo GetLastContainerdTextLine(StringView buffer, int32_t end);
 
     using GetLastLineFunc = LineInfo (*)(StringView buffer, int32_t end);
     std::vector<GetLastLineFunc> mGetLastLineFuncs = {};
@@ -482,24 +482,13 @@ protected:
     std::string mRegion;
 
 private:
-    LineInfo GetLastLine2(StringView buffer, int32_t end, size_t n, bool needMerge = true, bool singleLine = false);
-
+    void mergeLines(LineInfo&, const LineInfo&, bool);
     bool mHasReadContainerBom = false;
     void checkContainerType();
     static std::shared_ptr<SourceBuffer> mSourceBuffer;
     static StringBuffer mStringBuffer;
     static StringBuffer* GetStringBuffer();
-
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
-
-    LineInfo GetLastDockerJsonFileLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastContainerdTextLine(const char* buffer, int32_t& begPs, int32_t endPs);
-    LineInfo GetLastFullContainerdTextLine(
-        const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
-
-    LineInfo
-    GetLastLineData(const char* buffer, int32_t& begPs, int32_t endPs, bool needMerge = true, bool singleLine = false);
     void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
@@ -551,7 +540,7 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
-    StringView GetLastLine(StringView buffer, size_t end);
+    LineInfo GetLastLine(StringView buffer, int32_t end, size_t n, bool needMerge = true, bool singleLine = false);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
