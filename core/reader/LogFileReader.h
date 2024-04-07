@@ -382,9 +382,7 @@ public:
     const std::string& GetConfigName() const { return mConfigName; }
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
-    FileReaderOptions::InputType GetInputType() {
-        return mReaderConfig.first->mInputType;
-    }
+    FileReaderOptions::InputType GetInputType() { return mReaderConfig.first->mInputType; }
 
 protected:
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
@@ -488,7 +486,7 @@ private:
     void mergeLines(LineInfo&, const LineInfo&, bool);
     bool mHasReadContainerBom = false;
     void checkContainerType();
-    static std::shared_ptr<SourceBuffer> mSourceBuffer;
+    static std::unique_ptr<SourceBuffer> mSourceBuffer;
     static StringBuffer mStringBuffer;
     static StringBuffer* GetStringBuffer();
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;

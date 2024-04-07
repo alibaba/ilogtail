@@ -2329,7 +2329,7 @@ void LogFileReader::mergeLines(LineInfo& resultLine, const LineInfo& additionalL
     resultLine.data = StringView(newDataPosition, buffer->size);
 }
 
-std::shared_ptr<SourceBuffer> LogFileReader::mSourceBuffer = std::make_shared<SourceBuffer>();
+std::unique_ptr<SourceBuffer> LogFileReader::mSourceBuffer = std::make_unique<SourceBuffer>();
 StringBuffer LogFileReader::mStringBuffer = StringBuffer();
 rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
 
