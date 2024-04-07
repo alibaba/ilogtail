@@ -23,7 +23,7 @@ ilogtail:
             - Type: file_log
               LogPath: /root/test
               FilePattern: simple.log
-              ReaderFlushTimeout: 10000
+              ReaderFlushTimeout: 2
           outputs:
             - Type: flusher_stdout
               OnlyStdout: false
