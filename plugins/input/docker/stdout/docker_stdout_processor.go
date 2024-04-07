@@ -17,8 +17,6 @@ package stdout
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -83,9 +81,6 @@ type DockerStdoutProcessor struct {
 	// save last parsed logs
 	lastLogs      []*LogMessage
 	lastLogsCount int
-
-	ProcessingSpeed float64
-	lastTime        time.Time
 }
 
 func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time.Duration, beginLineCheckLength int,
@@ -280,16 +275,6 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 		l := &LogMessage{Time: "_time_", StreamType: "_source_", Content: fileBlock}
 		p.collector.AddRawLogWithContext(p.newRawLogBySingleLine(l), map[string]interface{}{"source": p.source})
 		processedCount = len(fileBlock)
-	}
-	benchmark, exists := os.LookupEnv("BENCHMARK")
-	if exists && benchmark == "ON" {
-		p.ProcessingSpeed += float64(len(fileBlock))
-		timeNow := time.Now()
-		if (time.Duration(timeNow.Sub(p.lastTime).Seconds())) > 10 {
-			fmt.Println(p.ProcessingSpeed/1024.0/1024.0/(timeNow.Sub(p.lastTime).Seconds()), "MB/s go")
-			p.ProcessingSpeed = 0
-			p.lastTime = timeNow
-		}
 	}
 	return processedCount
 }
