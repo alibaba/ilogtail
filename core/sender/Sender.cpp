@@ -1555,6 +1555,10 @@ void Sender::DaemonSender() {
                                                            data->mRegion);
                 }
                 if (skipSend) {
+                    AddSendingBufferCount();
+                    sendBufferBytes += data->mRawSize;
+                    sendNetBodyBytes += data->mLogData.size();
+                    sendLines += data->mLogLines;
                     OnSendDone(data, LogstoreSenderInfo::SendResult_OK);
                     DescSendingCount();
                 } else {
@@ -1564,7 +1568,6 @@ void Sender::DaemonSender() {
                     sendLines += data->mLogLines;
                     SendToNetAsync(data);
                 }
-
 #ifdef __ENTERPRISE__
             }
 #endif
