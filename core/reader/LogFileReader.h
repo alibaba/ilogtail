@@ -84,16 +84,19 @@ struct LineInfo {
     int32_t rollbackLineFeedCount;
     int32_t lineEnd;
     bool fullLine;
+    bool needMerge;
     LineInfo(StringView data = StringView(),
              int32_t lineBegin = 0,
              int32_t rollbackLineFeedCount = 0,
              int32_t lineEnd = 0,
-             bool fullLine = false)
+             bool fullLine = false,
+             bool needMerge = false)
         : data(data),
           lineBegin(lineBegin),
           rollbackLineFeedCount(rollbackLineFeedCount),
           lineEnd(lineEnd),
-          fullLine(fullLine) {}
+          fullLine(fullLine),
+          needMerge(needMerge) {}
 };
 
 class LogFileReader {
@@ -382,9 +385,7 @@ public:
     const std::string& GetConfigName() const { return mConfigName; }
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
-    FileReaderOptions::InputType GetInputType() {
-        return mReaderConfig.first->mInputType;
-    }
+    FileReaderOptions::InputType GetInputType() { return mReaderConfig.first->mInputType; }
 
 protected:
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
@@ -485,12 +486,12 @@ protected:
     std::string mRegion;
 
 private:
-    void mergeLines(LineInfo&, const LineInfo&, bool);
+    void mergeLines(LineInfo&, size_t n, const LineInfo&, bool);
     bool mHasReadContainerBom = false;
     void checkContainerType();
-    static std::shared_ptr<SourceBuffer> mSourceBuffer;
-    static StringBuffer mStringBuffer;
-    static StringBuffer* GetStringBuffer();
+    static std::unique_ptr<SourceBuffer> mSourceBuffer;
+    static std::vector<StringBuffer> mStringBuffer;
+    static StringBuffer* GetStringBuffer(size_t n);
     static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
     void checkContainerType(LogFileOperator& op);
 
@@ -543,7 +544,7 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
-    LineInfo GetLastLine(StringView buffer, int32_t end, size_t n, bool needMerge = true, bool singleLine = false);
+    LineInfo GetLastLine(StringView buffer, int32_t end, size_t n, bool singleLine = false);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
