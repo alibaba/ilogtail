@@ -2334,7 +2334,7 @@ StringBuffer LogFileReader::mStringBuffer = StringBuffer();
 rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
 
 StringBuffer* LogFileReader::GetStringBuffer() {
-    if (mStringBuffer.capacity == 0) {
+    if (mStringBuffer.capacity < BUFFER_SIZE + 1) {
         LogFileReader::mStringBuffer = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
     }
     return &mStringBuffer;
