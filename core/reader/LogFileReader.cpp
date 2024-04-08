@@ -2248,10 +2248,11 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
 // 参数：
 // - buffer：日志文件的内容
 // - end：结束的位置
-// - n：协议函数函数索引, 越小越外层, 例如 先解析 text, 再解析 containerd-text, 则 GetLastContainerdTextLine 索引为0,
+// - n：协议函数索引, 越小越外层, 例如 先解析 text, 再解析 containerd-text, 则 GetLastContainerdTextLine 索引为0,
 // GetLastTextLine 索引为1
 // - singleLine：是否只需要单行日志
-// 返回值：返回一个LineInfo对象，包含了最后一行的信息
+// 返回值：返回一个LineInfo对象，包含了最后一个完整日志块的信息,
+// lineBegin为日志块在原始日志buffer的起始位置、rollbackLineFeedCount为日志块在原始日志buffer的行数、lineEnd为日志块在原始日志buffer的结束位置
 LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bool singleLine) {
     if (end == 0) {
         return LineInfo{buffer, 0, 1, end, true};
@@ -2277,7 +2278,13 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bo
         mergeLines(resultLine, n, resultLine, true);
     }
 
+    // 循环直到找到完整的日志块
     while (true) {
+        // 如果到达日志的开头，退出循环
+        if (resultLine.lineBegin == 0) {
+            resultLine.fullLine = true;
+            break;
+        }
         LineInfo lastLine;
         if (n < mGetLastLineFuncs.size() - 1) {
             LineInfo lastRawLine = GetLastLine(buffer, resultLine.lineBegin - 1, n + 1, singleLine);
@@ -2288,7 +2295,7 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bo
         } else {
             lastLine = mGetLastLineFuncs[n](buffer, resultLine.lineBegin - 1);
         }
-        // lastLine是完整行，说明 resultLine 是一个完整的日志块
+        // 如果lastLine是完整行，说明 resultLine 是一个完整的日志块
         if (lastLine.fullLine) {
             resultLine.fullLine = true;
             return resultLine;
@@ -2301,9 +2308,6 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bo
                 continue;
             }
             mergeLines(resultLine, n, lastLine, false);
-        }
-        if (resultLine.lineBegin == 0) {
-            break;
         }
     }
     return resultLine;
