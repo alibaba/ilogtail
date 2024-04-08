@@ -40,7 +40,7 @@ std::string formatSize(long long size) {
     return ss.str();
 }
 
-static void BM_RawJson(int size, int batchSize) {
+static void BM_DockerJson(int size, int batchSize) {
     logtail::Logger::Instance().InitGlobalLoggers();
 
     PipelineContext mContext;
@@ -153,6 +153,119 @@ static void BM_RawJson(int size, int batchSize) {
     }
 }
 
+static void BM_ContainerdText(int size, int batchSize) {
+    logtail::Logger::Instance().InitGlobalLoggers();
+
+    PipelineContext mContext;
+    mContext.SetConfigName("project##config_0");
+
+    Json::Value config;
+    config["IgnoringStdout"] = false;
+    config["IgnoringStderr"] = false;
+    ProcessorParseContainerLogNative processor;
+    processor.SetContext(mContext);
+    processor.SetMetricsRecordRef(ProcessorParseContainerLogNative::sName, "1");
+
+    std::string data1
+        = R"(2024-04-08T12:48:59.665663286+08:00 stdout P Exception in thread "main" java.lang.NullPointerExceptionat  com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat )";
+    std::string data2
+        = R"(2024-04-08T12:48:59.665663286+08:00 stdout P com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat)";
+
+    std::string data3
+        = R"(2024-04-08T12:48:59.66566455+08:00 stdout P com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitle)";
+    std::string data4 = R"(2024-04-08T12:48:59.665665738+08:00 stdout F     at com.example.myproject.Book.getTitle)";
+    std::cout << "log size:\t" << formatSize((data1.size() + data2.size() + data3.size() + data4.size() + 7 * 4) * size)
+              << std::endl;
+
+    // make events
+    Json::Value root;
+    Json::Value events;
+    for (int i = 0; i < size; i++) {
+        {
+            Json::Value event;
+            event["type"] = 1;
+            event["timestamp"] = 1234567890;
+            event["timestampNanosecond"] = 0;
+            {
+                Json::Value contents;
+                contents["content"] = data1;
+                event["contents"] = std::move(contents);
+            }
+            events.append(event);
+        }
+        {
+            Json::Value event;
+            event["type"] = 1;
+            event["timestamp"] = 1234567890;
+            event["timestampNanosecond"] = 0;
+            {
+                Json::Value contents;
+                contents["content"] = data2;
+                event["contents"] = std::move(contents);
+            }
+            events.append(event);
+        }
+        {
+            Json::Value event;
+            event["type"] = 1;
+            event["timestamp"] = 1234567890;
+            event["timestampNanosecond"] = 0;
+            {
+                Json::Value contents;
+                contents["content"] = data3;
+                event["contents"] = std::move(contents);
+            }
+            events.append(event);
+        }
+        {
+            Json::Value event;
+            event["type"] = 1;
+            event["timestamp"] = 1234567890;
+            event["timestampNanosecond"] = 0;
+            {
+                Json::Value contents;
+                contents["content"] = data4;
+                event["contents"] = std::move(contents);
+            }
+            events.append(event);
+        }
+    }
+
+    root["events"] = events;
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    std::ostringstream oss;
+    writer->write(root, &oss);
+    std::string inJson = oss.str();
+
+    bool init = processor.Init(config);
+    if (init) {
+        int count = 0;
+        // Perform setup here
+        uint64_t durationTime = 0;
+        for (int i = 0; i < batchSize; i++) {
+            count++;
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.SetMetadata(EventGroupMetaKey::LOG_FORMAT, ProcessorParseContainerLogNative::CONTAINERD_TEXT);
+            eventGroup.FromJsonString(inJson);
+
+            uint64_t startTime = GetCurrentTimeInMicroSeconds();
+            processor.Process(eventGroup);
+            durationTime += GetCurrentTimeInMicroSeconds() - startTime;
+
+            // std::string outJson = eventGroup.ToJsonString();
+            // std::cout << "outJson: " << outJson << std::endl;
+        }
+        std::cout << "durationTime: " << durationTime << std::endl;
+        std::cout << "process: "
+                  << formatSize((data1.size() + data2.size() + data3.size() + data4.size() + 7 * 4) * (uint64_t)count
+                                * 1000000 * (uint64_t)size / durationTime)
+                  << std::endl;
+    }
+}
+
 int main(int argc, char** argv) {
     logtail::Logger::Instance().InitGlobalLoggers();
 #ifdef NDEBUG
@@ -160,16 +273,18 @@ int main(int argc, char** argv) {
 #else
     std::cout << "debug" << std::endl;
 #endif
-    std::cout << "ON1" << std::endl;
+    std::cout << "使用rapidjson" << std::endl;
     setenv("version", "ON1", 1);
-    BM_RawJson(1024, 100);
+    BM_DockerJson(512, 100);
 
-    std::cout << "ON2" << std::endl;
+    std::cout << "先判断json是否合法，再使用自己编写的json解析" << std::endl;
     setenv("version", "ON2", 1);
-    BM_RawJson(1024, 100);
+    BM_DockerJson(512, 100);
 
-    std::cout << "ON3" << std::endl;
+    std::cout << "只使用自己编写的json解析" << std::endl;
     setenv("version", "ON3", 1);
-    BM_RawJson(1024, 100);
+    BM_DockerJson(512, 100);
+    std::cout << "containerdText" << std::endl;
+    BM_ContainerdText(512, 100);
     return 0;
 }
