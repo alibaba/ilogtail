@@ -2113,11 +2113,11 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
         endPs = size;
     }
     LineInfo content = GetLastLine(StringView(buffer, size), endPs, 0, true);
-    // 最后一行是完整行，且以 \n 结尾
+    // 最后一行是完整行,且以 \n 结尾
     if (content.fullLine && buffer[endPs] == '\n') {
         return size;
     }
-    content = GetLastLine(StringView(buffer, size), content.lineBegin, 0, false);
+    content = GetLastLine(StringView(buffer, size), endPs, 0, false);
     rollbackLineFeedCount = content.rollbackLineFeedCount;
     return content.lineBegin;
 }
@@ -2212,7 +2212,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
             if (sourceValue != "stdout" && sourceValue != "stderr") {
                 return res;
             }
-            // 如果既不以 P 开头，也不以 F 开头
+            // 如果既不以 P 开头,也不以 F 开头
             if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
                 && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
                 lastLine = StringView(pch2 + 1, lineEnd - pch2 - 1);
@@ -2244,79 +2244,101 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
 }
 
 // GetLastLine函数
-// 功能：获取日志文件中的最后一行
+// 功能：获取日志文件中的最后一个完整日志块的信息
 // 参数：
 // - buffer：日志文件的内容
 // - end：结束的位置
-// - n：协议函数函数索引, 越小越外层, 例如 先解析 text, 再解析 containerd-text, 则 GetLastContainerdTextLine 索引为0,
-// GetLastTextLine 索引为1
-// - singleLine：是否只需要单行日志
-// 返回值：返回一个LineInfo对象，包含了最后一行的信息
-LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t n, bool singleLine) {
+// - protocolFunctionIndex：协议函数索引, 越小越外层
+// - needSingleLine：是否只需要单行日志
+// 返回值：返回一个LineInfo对象,包含了最后一个完整日志块的信息,
+// lineBegin为日志块在原始日志buffer的起始位置、rollbackLineFeedCount为日志块在原始日志buffer的行数、lineEnd为日志块在原始日志buffer的结束位置
+LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t protocolFunctionIndex, bool needSingleLine) {
+    // 如果结束位置为0,直接返回
     if (end == 0) {
         return LineInfo{buffer, 0, 1, end, true};
     }
-    LineInfo resultLine;
-    if (n < mGetLastLineFuncs.size() - 1) {
-        LineInfo rawLine = GetLastLine(buffer, end, n + 1, singleLine);
-        resultLine = mGetLastLineFuncs[n](rawLine.data, rawLine.data.size());
-        // 记录lineBegin、rollbackLineFeedCount、lineEnd 为 最里层协议函数的值
-        resultLine.lineBegin = rawLine.lineBegin;
-        resultLine.rollbackLineFeedCount = rawLine.rollbackLineFeedCount;
-        resultLine.lineEnd = rawLine.lineEnd;
+
+    // 处理rawLine
+    auto processLine = [&](LineInfo rawLine) {
+        LineInfo line = mGetLastLineFuncs[protocolFunctionIndex](rawLine.data, rawLine.data.size());
+        line.lineBegin = rawLine.lineBegin;
+        line.rollbackLineFeedCount = rawLine.rollbackLineFeedCount;
+        line.lineEnd = rawLine.lineEnd;
+        return line;
+    };
+
+    // 获取最后一行的信息
+    LineInfo finalLine;
+    if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
+        finalLine = processLine(GetLastLine(buffer, end, protocolFunctionIndex + 1, needSingleLine));
     } else {
-        // 最里层协议函数
-        resultLine = mGetLastLineFuncs[n](buffer, end);
-    }
-    // 只需要单行日志
-    if (singleLine) {
-        return resultLine;
+        finalLine = mGetLastLineFuncs[protocolFunctionIndex](buffer, end);
     }
 
-    if (resultLine.needMerge) {
-        mergeLines(resultLine, n, resultLine, true);
+    // 如果行开始位置为0,标记为完整行
+    if (finalLine.lineBegin == 0) {
+        finalLine.fullLine = true;
     }
 
+    // 如果只需要单行日志或行开始位置为0,直接返回
+    if (needSingleLine || finalLine.lineBegin == 0) {
+        return finalLine;
+    }
+
+    // 如果需要合并行,进行合并
+    if (finalLine.needMerge) {
+        mergeLines(finalLine, protocolFunctionIndex, finalLine, true);
+    }
+
+    // 循环处理,直到找到完整的日志块
     while (true) {
-        LineInfo lastLine;
-        if (n < mGetLastLineFuncs.size() - 1) {
-            LineInfo lastRawLine = GetLastLine(buffer, resultLine.lineBegin - 1, n + 1, singleLine);
-            lastLine = mGetLastLineFuncs[n](lastRawLine.data, lastRawLine.data.size());
-            // 记录 lineBegin、rollbackLineFeedCount 为 最里层协议函数的值
-            lastLine.lineBegin = lastRawLine.lineBegin;
-            lastLine.rollbackLineFeedCount = lastRawLine.rollbackLineFeedCount;
-        } else {
-            lastLine = mGetLastLineFuncs[n](buffer, resultLine.lineBegin - 1);
-        }
-        // lastLine是完整行，说明 resultLine 是一个完整的日志块
-        if (lastLine.fullLine) {
-            resultLine.fullLine = true;
-            return resultLine;
-        } else {
-            // 更新 lineBegin、rollbackLineFeedCount
-            resultLine.rollbackLineFeedCount += lastLine.rollbackLineFeedCount;
-            resultLine.lineBegin = lastLine.lineBegin;
-            if (!resultLine.needMerge) {
-                resultLine.data = lastLine.data;
-                continue;
-            }
-            mergeLines(resultLine, n, lastLine, false);
-        }
-        if (resultLine.lineBegin == 0) {
+        // 如果行开始位置为0,标记为完整行并退出循环
+        if (finalLine.lineBegin == 0) {
+            finalLine.fullLine = true;
             break;
         }
+
+        // 获取前一行的信息
+        LineInfo previousLine;
+        if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
+            previousLine
+                = processLine(GetLastLine(buffer, finalLine.lineBegin - 1, protocolFunctionIndex + 1, needSingleLine));
+        } else {
+            previousLine = mGetLastLineFuncs[protocolFunctionIndex](buffer, finalLine.lineBegin - 1);
+        }
+
+        // 如果前一行是完整行, 说明 finalLine 是一个完整的日志块
+        if (previousLine.fullLine) {
+            finalLine.fullLine = true;
+            return finalLine;
+        }
+
+        // 更新回滚行数和行开始位置
+        finalLine.rollbackLineFeedCount += previousLine.rollbackLineFeedCount;
+        finalLine.lineBegin = previousLine.lineBegin;
+
+        // 如果不需要合并行,更新行数据并继续循环
+        if (!finalLine.needMerge) {
+            finalLine.data = previousLine.data;
+            continue;
+        }
+
+        // 合并行
+        mergeLines(finalLine, protocolFunctionIndex, previousLine, false);
     }
-    return resultLine;
+
+    // 返回最后一个完整日志块的信息
+    return finalLine;
 }
 
 // mergeLines函数
 // 功能：合并两行日志
 // 参数：
-// - resultLine：结果行，将被合并的行
+// - resultLine：结果行,将被合并的行
 // - n：函数索引
 // - additionalLine：需要被合并的行
 // - shouldResetBuffer：是否需要重置缓冲区
-// 示例：假设resultLine的data成员为"line1"，additionalLine的data成员为"line2"，那么合并后resultLine的data成员将变为"line1line2"
+// 示例：假设resultLine的data成员为"line1",additionalLine的data成员为"line2",那么合并后resultLine的data成员将变为"line1line2"
 void LogFileReader::mergeLines(LineInfo& resultLine, size_t n, const LineInfo& additionalLine, bool shouldResetBuffer) {
     StringBuffer* buffer = GetStringBuffer(n);
 
@@ -2347,7 +2369,7 @@ rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
 // 参数：
 // - n：缓冲区的索引
 // 返回值：返回一个指向StringBuffer对象的指针
-// 示例：假设n为1，那么返回的将是mStringBuffer的第二个元素的地址
+// 示例：假设n为1,那么返回的将是mStringBuffer的第二个元素的地址
 StringBuffer* LogFileReader::GetStringBuffer(size_t n) {
     if (mStringBuffer.size() < n + 1) {
         mStringBuffer.resize(n + 1);
