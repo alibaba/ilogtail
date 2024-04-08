@@ -2244,7 +2244,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
 }
 
 // GetLastLine函数
-// 功能：获取日志文件中的最后一行
+// 功能：获取日志文件中的最后一个完整日志块的信息
 // 参数：
 // - buffer：日志文件的内容
 // - end：结束的位置
@@ -2327,7 +2327,7 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
         mergeLines(finalLine, protocolFunctionIndex, previousLine, false);
     }
 
-    // 返回最后一行的信息
+    // 返回最后一个完整日志块的信息
     return finalLine;
 }
 
