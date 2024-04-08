@@ -105,7 +105,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(false, line.fullLine);
+                APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -203,7 +203,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(false, line.fullLine);
+                APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -551,7 +551,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(false, line.fullLine);
+                APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -649,7 +649,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(false, line.fullLine);
+                APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
