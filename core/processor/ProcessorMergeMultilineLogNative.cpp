@@ -46,19 +46,6 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    // Ignore Warning
-    if (!GetOptionalBoolParam(config, "IgnoreUnmatchWarning", mIgnoreUnmatchWarning, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              mIgnoreUnmatchWarning,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
-    }
-
     std::string mergeType;
     if (!GetMandatoryStringParam(config, "MergeType", mergeType, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -367,25 +354,26 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath) {
     mProcUnmatchedEventsCnt->Add(end - begin + 1);
     if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
-        && mIgnoreUnmatchWarning) {
+        && mMultiline.mIgnoringUnmatchWarning) {
         return;
     }
     for (size_t i = begin; i <= end; i++) {
-        if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        if (!mMultiline.mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
             LOG_WARNING(
                 GetContext().GetLogger(),
-                ("unmatched log line", "please check regex")("action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
+                ("unmatched log line", "please check regex")(
+                    "action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
                     "first 1KB", sourceVal.substr(0, 1024).to_string())("filepath", logPath.to_string())(
                     "processor", sName)("config", GetContext().GetConfigName())("log bytes", sourceVal.size() + 1));
-            GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
-                                              "unmatched log line, first 1KB:" + sourceVal.substr(0, 1024).to_string()
-                                                  + "\taction: " + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment)
-                                                  + "\tfilepath: " + logPath.to_string() + "\tprocessor: " + sName
-                                                  + "\tconfig: " + GetContext().GetConfigName(),
-                                              GetContext().GetProjectName(),
-                                              GetContext().GetLogstoreName(),
-                                              GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(
+                SPLIT_LOG_FAIL_ALARM,
+                "unmatched log line, first 1KB:" + sourceVal.substr(0, 1024).to_string() + "\taction: "
+                    + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment) + "\tfilepath: "
+                    + logPath.to_string() + "\tprocessor: " + sName + "\tconfig: " + GetContext().GetConfigName(),
+                GetContext().GetProjectName(),
+                GetContext().GetLogstoreName(),
+                GetContext().GetRegion());
         }
         if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
             logEvents[newSize++] = std::move(logEvents[i]);

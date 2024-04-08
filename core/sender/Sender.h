@@ -15,21 +15,20 @@
  */
 
 #pragma once
-#include <atomic>
-#include <iostream>
-#include <string>
 #include <unordered_map>
+#include <string>
 #include <vector>
-
-#include "SenderQueueParam.h"
-#include "aggregator/Aggregator.h"
-#include "common/Lock.h"
+#include <iostream>
+#include <atomic>
 #include "common/LogstoreSenderQueue.h"
-#include "common/Thread.h"
 #include "common/WaitObject.h"
-#include "log_pb/logtail_buffer_meta.pb.h"
-#include "log_pb/sls_logs.pb.h"
+#include "common/Lock.h"
+#include "common/Thread.h"
 #include "sdk/Closure.h"
+#include "log_pb/sls_logs.pb.h"
+#include "log_pb/logtail_buffer_meta.pb.h"
+#include "aggregator/Aggregator.h"
+#include "SenderQueueParam.h"
 
 namespace logtail {
 
@@ -209,7 +208,6 @@ private:
         int32_t mRetryTime;
     };
 
-    static bool skipSend;
     volatile bool mFlushLog;
     std::string mBufferFilePath;
     std::atomic_int mSendingLogGroupCount{0};
