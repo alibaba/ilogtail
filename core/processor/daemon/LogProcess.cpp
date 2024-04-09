@@ -213,15 +213,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     static atomic_int s_processLines{0};
     // only thread 0 update metric
     int32_t lastUpdateMetricTime = time(NULL);
-    int32_t updateMetricTimeInterval = 40;
-    bool isBenchmark = false;
-    char* env_var = std::getenv("BENCHMARK");
-    if (env_var != nullptr) {
-        isBenchmark = std::string(env_var) == "ON";
-    }
-    if (isBenchmark) {
-        updateMetricTimeInterval = 5;
-    }
 #ifdef LOGTAIL_DEBUG_FLAG
     int32_t lastPrintTime = time(NULL);
     uint64_t processCount = 0;
@@ -239,22 +230,13 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             aggregator->FlushReadyBuffer();
         }
 
-        if (threadNo == 0 && curTime - lastUpdateMetricTime >= updateMetricTimeInterval) {
+        if (threadNo == 0 && curTime - lastUpdateMetricTime >= 40) {
             static auto sMonitor = LogtailMonitor::GetInstance();
 
             // atomic counter will be negative if process speed is too fast.
             sMonitor->UpdateMetric("process_tps", 1.0 * s_processCount / (curTime - lastUpdateMetricTime));
             sMonitor->UpdateMetric("process_bytes_ps", 1.0 * s_processBytes / (curTime - lastUpdateMetricTime));
             sMonitor->UpdateMetric("process_lines_ps", 1.0 * s_processLines / (curTime - lastUpdateMetricTime));
-            if (isBenchmark) {
-                // 把processBytes写到一个文件里
-                std::string processBytesFile = AppConfig::GetInstance()->GetProcessExecutionDir() + "processBytes.txt";
-                std::ofstream out(processBytesFile, std::ios::app); // 使用追加模式打开文件
-                double processBytes = 1.0 * s_processBytes / (curTime - lastUpdateMetricTime);
-                out << std::to_string(processBytes) + "\n";
-                out.close();
-                std::cout << std::to_string(processBytes / 1024.0 / 1024.0) << "MB/s" << std::endl;
-            }
             lastUpdateMetricTime = curTime;
             s_processCount = 0;
             s_processBytes = 0;

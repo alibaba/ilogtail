@@ -208,7 +208,6 @@ private:
         int32_t mRetryTime;
     };
 
-    static bool skipSend;
     volatile bool mFlushLog;
     std::string mBufferFilePath;
     std::atomic_int mSendingLogGroupCount{0};

@@ -486,13 +486,6 @@ SendClosure::RecompressData(sdk::Response* response, const string& errorCode, co
 }
 
 Sender::Sender() : mDefaultRegion(STRING_FLAG(default_region_name)) {
-    char* env_var = std::getenv("SKIPSEND");
-    if (env_var != nullptr) {
-        skipSend = std::string(env_var) == "ON";
-    } else {
-        skipSend = false;
-    }
-
     setupServerSwitchPolicy();
 
     srand(time(NULL));
@@ -1387,8 +1380,6 @@ bool Sender::IsSecondaryBufferEmpty() {
     return true;
 }
 
-bool Sender::skipSend = false;
-
 void Sender::DaemonSender() {
     LOG_INFO(sLogger, ("SendThread", "start"));
     int32_t lastUpdateMetricTime = time(NULL);
@@ -1544,17 +1535,13 @@ void Sender::DaemonSender() {
                                                            data->mLogstore,
                                                            data->mRegion);
                 }
-                if (skipSend) {
-                    OnSendDone(data, LogstoreSenderInfo::SendResult_OK);
-                    DescSendingCount();
-                } else {
-                    AddSendingBufferCount();
-                    sendBufferBytes += data->mRawSize;
-                    sendNetBodyBytes += data->mLogData.size();
-                    sendLines += data->mLogLines;
-                    data->mLastUpdateTime = time(NULL); // set last update time before sending
-                    SendToNetAsync(data);
-                }
+
+                AddSendingBufferCount();
+                sendBufferBytes += data->mRawSize;
+                sendNetBodyBytes += data->mLogData.size();
+                sendLines += data->mLogLines;
+                data->mLastUpdateTime = time(NULL); // set last update time before sending
+                SendToNetAsync(data);
 #ifdef __ENTERPRISE__
             }
 #endif

@@ -236,7 +236,7 @@ bool BoostRegexSearch(const char* buffer, size_t size, const boost::regex& reg, 
     } catch (std::exception& e) {
         exception.append("exception message: ");
         exception.append(e.what());
-        exception.append("; buffer ");
+        exception.append("; buffer: ");
         exception.append(buffer);
         return false;
     } catch (...) {
@@ -257,13 +257,13 @@ bool BoostRegexSearch(const char* buffer, const boost::regex& reg, string& excep
     } catch (boost::regex_error& e) {
         exception.append("regex_error: ");
         exception.append(ToString(e.what()));
-        exception.append("; buffer is ");
+        exception.append("; buffer: ");
         exception.append(buffer);
         return false;
     } catch (std::exception& e) {
         exception.append("exception message: ");
         exception.append(e.what());
-        exception.append("; buffer ");
+        exception.append("; buffer: ");
         exception.append(buffer);
         return false;
     } catch (...) {
