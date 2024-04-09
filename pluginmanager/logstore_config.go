@@ -382,7 +382,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	logstoreC := &LogstoreConfig{
 		ProjectName:      project,
 		LogstoreName:     logstore,
-		ConfigName:       configName,
+		ConfigName:       config.GetRealConfigName(configName),
 		LogstoreKey:      logstoreKey,
 		Context:          contextImp,
 		configDetailHash: fmt.Sprintf("%x", md5.Sum([]byte(jsonStr))), //nolint:gosec
@@ -686,9 +686,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 }
 
 func fetchPluginVersion(config map[string]interface{}) ConfigVersion {
-	if v, ok := config["StructureType"]; ok {
-		if s, ok := v.(string); ok {
-			return ConfigVersion(strings.ToLower(s))
+	if v, ok := config["global"]; ok {
+		if global, ok := v.(map[string]interface{}); ok {
+			if version, ok := global["StructureType"]; ok {
+				if str, ok := version.(string); ok {
+					return ConfigVersion(strings.ToLower(str))
+				}
+			}
 		}
 	}
 	return v1

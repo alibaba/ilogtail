@@ -151,7 +151,6 @@ bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
                                              const FileDiscoveryOptions* fileDiscovery) {
     if (!containerInfo.mRealBaseDir.empty()) {
-        LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID));
         return true;
     }
     std::string logPath;
