@@ -21,10 +21,18 @@
 
 namespace logtail {
 
+struct DockerLog {
+    StringView log;
+    StringView stream;
+    StringView time;
+};
+
+enum class DockerLogType { Log, Stream, Time };
+
 class ProcessorParseContainerLogNative : public Processor {
 public:
     static const std::string sName;
-    int oldJson = 0;
+
     static const std::string CONTAINERD_TEXT;
     static const std::string DOCKER_JSON_FILE;
 
@@ -57,6 +65,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    static bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog);
     bool ProcessEvent(StringView containerType, PipelineEventPtr& e, PipelineEventGroup& logGroup);
     bool ProcessEvent(StringView containerType, PipelineEventPtr& e);
     void ResetDockerJsonLogField(char* data, StringView key, StringView value, LogEvent& targetEvent);

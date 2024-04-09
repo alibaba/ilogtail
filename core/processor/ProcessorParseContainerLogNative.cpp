@@ -44,6 +44,10 @@ const std::string ProcessorParseContainerLogNative::containerTimeKey = "_time_";
 const std::string ProcessorParseContainerLogNative::containerSourceKey = "_source_"; // 容器来源字段
 const std::string ProcessorParseContainerLogNative::containerLogKey = "content"; // 容器日志字段
 
+
+static const std::unordered_map<char, char> escapeMapping
+    = {{'\"', '\"'}, {'\\', '\\'}, {'/', '/'}, {'b', '\b'}, {'f', '\f'}, {'n', '\n'}, {'r', '\r'}, {'t', '\t'}};
+
 bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
     std::string errorMsg;
 
@@ -258,28 +262,63 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
     }
 }
 
-struct DockerLog {
-    StringView log;
-    std::string stream;
-    std::string time;
-};
+char16_t hexToChar(const std::string& hex) {
+    std::istringstream iss(hex);
+    int result;
+    iss >> std::hex >> result;
+    return static_cast<char16_t>(result);
+}
 
-enum class DockerLogType { Log, Stream, Time };
+// 将UTF-16编码的字符转换为UTF-8编码的字符串
+std::string utf16ToUtf8(char16_t unicode) {
+    std::string utf8;
+    if (unicode <= 0x7F) {
+        // 一字节UTF-8编码
+        utf8 += static_cast<char>(unicode);
+    } else if (unicode <= 0x7FF) {
+        // 两字节UTF-8编码
+        utf8 += static_cast<char>(0xC0 | ((unicode >> 6) & 0x1F));
+        utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
+    } else {
+        // 三字节UTF-8编码
+        utf8 += static_cast<char>(0xE0 | ((unicode >> 12) & 0x0F));
+        utf8 += static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
+        utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
+    }
+    return utf8;
+}
 
-bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
+// buffer: {"log":"Hello, World!","stream":"stdout","time":"2021-12-01T00:00:00.000Z"}
+bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
     if (size == 0 || buffer[0] != '{' || buffer[size - 1] != '}') {
         return false;
     }
+    int logTypeCnt = 0;
     int32_t beginIdx = 0;
-
     int32_t idx = beginIdx;
+    // skip '{'
+    if (buffer[idx] != '{') {
+        return false;
+    }
+    ++idx;
+    if (idx == size) {
+        return false;
+    }
     DockerLogType logType;
     while (idx < size) {
+        // skip ' '
         while (buffer[idx] == ' ') {
             ++idx;
             if (idx == size) {
                 return false;
             }
+        }
+        // skip '}'
+        if (buffer[idx] == '}') {
+            if (idx == size - 1) {
+                return true;
+            }
+            return false;
         }
         if (buffer[idx] == '\"') {
             ++idx;
@@ -304,77 +343,127 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
             } else {
                 return false;
             }
-            while (buffer[idx] != '\"') {
-                ++idx;
+            ++logTypeCnt;
+            // skip '\"'
+            if (buffer[idx] != '\"') {
+                return false;
             }
             ++idx;
-            // skip ' ' and ':'
-            while (buffer[idx] == ':' || buffer[idx] == ' ') {
-                ++idx;
+            if (idx == size) {
+                return false;
             }
-            ++idx; // skip '\"'
+            // skip ' '
+            while (buffer[idx] == ' ') {
+                ++idx;
+                if (idx == size) {
+                    return false;
+                }
+            }
+            // skip ':'
+            if (buffer[idx] != ':') {
+                return false;
+            }
+            ++idx;
+            if (idx == size) {
+                return false;
+            }
+            // skip ' '
+            while (buffer[idx] == ' ') {
+                ++idx;
+                if (idx == size) {
+                    return false;
+                }
+            }
+
+            // skip '"'
+            if (buffer[idx] != '\"') {
+                return false;
+            }
+            ++idx;
+            if (idx == size) {
+                return false;
+            }
+            beginIdx = idx;
             char* valueBegion = buffer + beginIdx;
             size_t begin = 0;
             while (buffer[idx] != '\"') {
+                if (idx == size) {
+                    return false;
+                }
                 if (buffer[idx] == '\\') {
-                    ++idx; // skip escape char
-                    if (buffer[idx] == '\"') {
-                        switch (logType) {
-                            case DockerLogType::Log:
-                                buffer[beginIdx++] = '\"';
-                                break;
-                            case DockerLogType::Stream:
-                                dockerLog.stream[begin++] = '\"';
-                                break;
-                            case DockerLogType::Time:
-                                dockerLog.time[begin++] = '\"';
-                                break;
-                        }
-                    } else if (buffer[idx] == '\\') {
-                        switch (logType) {
-                            case DockerLogType::Log:
-                                buffer[beginIdx++] = '\\';
-                                break;
-                            case DockerLogType::Stream:
-                                dockerLog.stream[begin++] = '\\';
-                                break;
-                            case DockerLogType::Time:
-                                dockerLog.time[begin++] = '\\';
-                                break;
-                        }
-                    }
-                } else {
                     switch (logType) {
                         case DockerLogType::Log:
-                            buffer[beginIdx++] = buffer[idx];
                             break;
                         case DockerLogType::Stream:
-                            dockerLog.stream[begin++] = buffer[idx];
-                            break;
                         case DockerLogType::Time:
-                            dockerLog.time[begin++] = buffer[idx];
-                            break;
+                            return false;
                     }
+                    ++idx; // skip escape char
+                    if (idx == size) {
+                        return false;
+                    }
+                    auto it = escapeMapping.find(buffer[idx]);
+                    if (it != escapeMapping.end()) {
+                        buffer[beginIdx++] = it->second;
+                    } else if (idx + 4 < size && buffer[idx] == 'u') {
+                        std::string hex;
+                        hex.append(buffer + idx + 1, 4);
+                        char16_t unicodeChar = hexToChar(hex);
+                        std::string utf8 = utf16ToUtf8(unicodeChar);
+                        strcpy(buffer + beginIdx, utf8.c_str());
+                        beginIdx += utf8.size();
+                        idx += 4;
+                    } else {
+                        buffer[beginIdx++] = '\\';
+                        buffer[beginIdx++] = buffer[idx];
+                    }
+                } else {
+                    buffer[beginIdx++] = buffer[idx];
                 }
                 ++idx;
             }
             ++idx; // skip '\"'
-            while (idx < size && (buffer[idx] == ' ' || buffer[idx] == ',')) {
-                ++idx; // skip ' ' or ','
+            if (idx == size) {
+                return false;
+            }
+            // skip ' '
+            while (buffer[idx] == ' ') {
+                ++idx;
+                if (idx == size) {
+                    return false;
+                }
+            }
+            // skip ','
+            if (logTypeCnt < 3) {
+                if (buffer[idx] != ',') {
+                    return false;
+                } else {
+                    ++idx;
+                }
+            }
+            if (idx == size) {
+                return false;
+            }
+            // skip ' '
+            while (buffer[idx] == ' ') {
+                ++idx;
+                if (idx == size) {
+                    return false;
+                }
             }
             switch (logType) {
                 case DockerLogType::Log:
                     dockerLog.log = StringView(valueBegion, beginIdx - (valueBegion - buffer));
                     break;
                 case DockerLogType::Stream:
-                    dockerLog.stream.resize(begin);
+                    dockerLog.stream = StringView(valueBegion, beginIdx - (valueBegion - buffer));
                     break;
                 case DockerLogType::Time:
-                    dockerLog.time.resize(begin);
+                    dockerLog.time = StringView(valueBegion, beginIdx - (valueBegion - buffer));
                     break;
             }
         } else {
-            ++idx;
+            return false;
         }
     }
 
@@ -382,128 +471,13 @@ bool ParseDockerLog(char* buffer, int32_t size, DockerLog& dockerLog) {
 }
 
 bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
-    if (oldJson == 0) {
-        char* env_var = std::getenv("version");
-        if (env_var != nullptr && std::string(env_var) == "ON1") {
-            oldJson = 1;
-        } else if (env_var != nullptr && std::string(env_var) == "ON2") {
-            oldJson = 2;
-        } else {
-            oldJson = 3;
-        }
-    }
-    if (oldJson == 1) {
-        StringView buffer = sourceEvent.GetContent(mSourceKey);
-
-        bool parseSuccess = true;
-        rapidjson::Document doc;
-        doc.Parse(buffer.data(), buffer.size());
-        if (doc.HasParseError()) {
-            std::ostringstream errorMsgStream;
-            errorMsgStream << "parse docker stdout json log fail, rapidjson offset: " << doc.GetErrorOffset()
-                           << "\trapidjson error: " << doc.GetParseError()
-                           << "\tfirst 1KB log:" << buffer.substr(0, 1024);
-            errorMsg = errorMsgStream.str();
-            parseSuccess = false;
-        } else if (!doc.IsObject()) {
-            std::ostringstream errorMsgStream;
-            errorMsgStream << "docker stdout json log line is not a valid json obejct."
-                           << "\tfirst 1KB log:" << buffer.substr(0, 1024);
-            errorMsg = errorMsgStream.str();
-            parseSuccess = false;
-        }
-        if (!parseSuccess) {
-            return mKeepingSourceWhenParseFail;
-        }
-
-        // time
-        auto it = doc.FindMember(DOCKER_JSON_TIME.c_str());
-        if (it == doc.MemberEnd() || !it->value.IsString()) {
-            std::ostringstream errorMsgStream;
-            errorMsgStream << "time field cannot be found in log line."
-                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
-            errorMsg = errorMsgStream.str();
-            return mKeepingSourceWhenParseFail;
-        }
-        StringView timeValue = StringView(it->value.GetString());
-
-        // content
-        it = doc.FindMember(DOCKER_JSON_LOG.c_str());
-        if (it == doc.MemberEnd() || !it->value.IsString()) {
-            std::ostringstream errorMsgStream;
-            errorMsgStream << "content field cannot be found in log line."
-                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
-            errorMsg = errorMsgStream.str();
-            return mKeepingSourceWhenParseFail;
-        }
-        StringView content = StringView(it->value.GetString());
-
-        // source
-        it = doc.FindMember(DOCKER_JSON_STREAM_TYPE.c_str());
-        StringView sourceValue;
-        if (it == doc.MemberEnd() || !it->value.IsString()) {
-            sourceValue = StringView();
-        } else {
-            sourceValue = StringView(it->value.GetString());
-        }
-        if (sourceValue.empty() || (sourceValue != "stdout" && sourceValue != "stderr")) {
-            std::ostringstream errorMsgStream;
-            errorMsgStream << "source field cannot be found in log line."
-                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
-            errorMsg = errorMsgStream.str();
-            return mKeepingSourceWhenParseFail;
-        }
-
-        if (sourceValue == "stdout") {
-            mProcParseStdoutTotal->Add(1);
-            if (mIgnoringStdout) {
-                return false;
-            }
-        } else {
-            mProcParseStderrTotal->Add(1);
-            if (mIgnoringStderr) {
-                return false;
-            }
-        }
-
-        if (buffer.size() < content.size() + timeValue.size() + sourceValue.size()) {
-            std::ostringstream errorMsgStream;
-            errorMsgStream << "unexpected error: the original log line length is smaller than the sum of parsed fields."
-                           << "\tfirst 1KB log:" << buffer.substr(0, 1024).to_string();
-            errorMsg = errorMsgStream.str();
-            return mKeepingSourceWhenParseFail;
-        }
-
-        char* data = const_cast<char*>(buffer.data());
-        // time
-        ResetDockerJsonLogField(data, containerTimeKey, timeValue, sourceEvent);
-        data += timeValue.size();
-        // source
-        ResetDockerJsonLogField(data, containerSourceKey, sourceValue, sourceEvent);
-        data += sourceValue.size();
-        // content
-        if (!content.empty() && content.back() == '\n') {
-            content = StringView(content.data(), content.size() - 1);
-        }
-        ResetDockerJsonLogField(data, containerLogKey, content, sourceEvent);
-        return true;
-    }
     StringView buffer = sourceEvent.GetContent(mSourceKey);
 
     bool parseSuccess = true;
 
     DockerLog entry;
-    entry.time.resize(40);
-    entry.stream.resize(10);
     StringView timeValue, sourceValue, content;
 
-    if (oldJson == 2 && !IsValidJson(buffer.data(), buffer.size())) {
-        std::ostringstream errorMsgStream;
-        errorMsgStream << "docker stdout json log line is not a valid json obejct."
-                       << "\tfirst 1KB log:" << buffer.substr(0, 1024);
-        errorMsg = errorMsgStream.str();
-        return mKeepingSourceWhenParseFail;
-    }
     char* data = const_cast<char*>(buffer.data());
 
     if (ParseDockerLog(data, buffer.size(), entry)) {

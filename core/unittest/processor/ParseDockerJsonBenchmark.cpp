@@ -273,16 +273,7 @@ int main(int argc, char** argv) {
 #else
     std::cout << "debug" << std::endl;
 #endif
-    std::cout << "使用rapidjson" << std::endl;
-    setenv("version", "ON1", 1);
-    BM_DockerJson(512, 100);
-
-    std::cout << "先判断json是否合法，再使用自己编写的json解析" << std::endl;
-    setenv("version", "ON2", 1);
-    BM_DockerJson(512, 100);
-
-    std::cout << "只使用自己编写的json解析" << std::endl;
-    setenv("version", "ON3", 1);
+    std::cout << "docker json" << std::endl;
     BM_DockerJson(512, 100);
     std::cout << "containerdText" << std::endl;
     BM_ContainerdText(512, 100);
