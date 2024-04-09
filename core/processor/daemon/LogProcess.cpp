@@ -13,37 +13,39 @@
 // limitations under the License.
 
 #include "LogProcess.h"
-#include <algorithm>
-#include <time.h>
+
 #include <sys/types.h>
+#include <time.h>
+
+#include <algorithm>
 #if defined(__linux__)
 #include <sys/syscall.h>
 #include <unistd.h>
 #endif
+#include "aggregator/Aggregator.h"
+#include "app_config/AppConfig.h"
 #include "common/Constants.h"
-#include "common/TimeUtil.h"
-#include "common/LogtailCommonFlags.h"
+#include "common/LogFileCollectOffsetIndicator.h"
 #include "common/LogGroupContext.h"
-#include "go_pipeline/LogtailPlugin.h"
-#include "models/PipelineEventGroup.h"
-#include "pipeline/PipelineManager.h"
-#include "monitor/Monitor.h"
-#include "parser/LogParser.h"
-#include "sdk/Client.h"
-#include "sender/Sender.h"
-#include "log_pb/sls_logs.pb.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
-#include "monitor/LogtailAlarm.h"
+#include "common/TimeUtil.h"
+#include "config/IntegrityConfig.h"
+#include "config_manager/ConfigManager.h"
+#include "fuse/FuseFileBlacklist.h"
+#include "go_pipeline/LogtailPlugin.h"
+#include "log_pb/sls_logs.pb.h"
+#include "logger/Logger.h"
+#include "models/PipelineEventGroup.h"
+#include "monitor/LogFileProfiler.h"
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
-#include "config/IntegrityConfig.h"
-#include "app_config/AppConfig.h"
-#include "monitor/LogFileProfiler.h"
-#include "config_manager/ConfigManager.h"
-#include "logger/Logger.h"
-#include "aggregator/Aggregator.h"
-#include "fuse/FuseFileBlacklist.h"
-#include "common/LogFileCollectOffsetIndicator.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/Monitor.h"
+#include "parser/LogParser.h"
+#include "pipeline/PipelineManager.h"
+#include "sdk/Client.h"
+#include "sender/Sender.h"
 
 
 using namespace sls_logs;
@@ -441,11 +443,11 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     FillEventGroupMetadata(*logBuffer, eventGroup);
 
     std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
-    time_t logtime = time(NULL);
+    auto now = GetCurrentLogtailTime();
     if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-        logtime += GetTimeDelta();
+        now.tv_sec += GetTimeDelta();
     }
-    event->SetTimestamp(logtime);
+    event->SetTimestamp(now.tv_sec, now.tv_nsec);
     event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
     auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
     event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
