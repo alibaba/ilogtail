@@ -461,11 +461,11 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         FillEventGroupMetadata(*logBuffer, eventGroup);
 
         LogEvent* event = eventGroup.AddLogEvent();
-        time_t logtime = time(NULL);
+        auto now = GetCurrentLogtailTime();
         if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-            logtime += GetTimeDelta();
+            now.tv_sec += GetTimeDelta();
         }
-        event->SetTimestamp(logtime);
+        event->SetTimestamp(now.tv_sec, now.tv_nsec);
         event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
         auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
         event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
