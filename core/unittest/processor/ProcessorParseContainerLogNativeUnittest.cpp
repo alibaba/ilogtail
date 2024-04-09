@@ -2217,7 +2217,7 @@ void ProcessorParseContainerLogNativeUnittest::TestParseDockerLog() {
     {
         DockerLog dockerLog;
         std::string str
-            = R"({"log":"Hello, \" \\ / \b \f \n \r \t 🌍 u1F30D \u0041 \u006E \u0064 \u0072 \u0065 \u0079 \u1F30D\u0041\u006E\u0064\u0072\u0065\u0079","stream":"stdout","time":"2021-12-01T00:00:00.000Z"})";
+            = R"({"log":"Hello, \" \\ / \b \f \n \r \t 🌍 \uFFFE u1F30D \u0041 \u006E \u0064 \u0072 \u0065 \u0079 \u1F30D\u0041\u006E\u0064\u0072\u0065\u0079\u7231 \u006c\u006f\u0067\u0074\u0061\u0069\u006c\u6c38\u8fdc\u65e0\u654c","stream":"stdout","time":"2021-12-01T00:00:00.000Z"})";
         int32_t size = str.size();
 
         char* buffer = new char[size + 1]();
@@ -2226,8 +2226,9 @@ void ProcessorParseContainerLogNativeUnittest::TestParseDockerLog() {
         bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
 
         APSARA_TEST_TRUE(result);
-        APSARA_TEST_STREQ("Hello, \" \\ / \b \f \n \r \t 🌍 u1F30D \u0041 \u006E \u0064 \u0072 \u0065 \u0079 "
-                          "\u1F30D\u0041\u006E\u0064\u0072\u0065\u0079",
+        APSARA_TEST_STREQ("Hello, \" \\ / \b \f \n \r \t 🌍 \uFFFE u1F30D \u0041 \u006E \u0064 \u0072 \u0065 \u0079 "
+                          "\u1F30D\u0041\u006E\u0064\u0072\u0065\u0079\u7231 "
+                          "\u006c\u006f\u0067\u0074\u0061\u0069\u006c\u6c38\u8fdc\u65e0\u654c",
                           dockerLog.log.to_string().c_str());
         APSARA_TEST_EQUAL("stdout", dockerLog.stream);
         APSARA_TEST_EQUAL("2021-12-01T00:00:00.000Z", dockerLog.time);

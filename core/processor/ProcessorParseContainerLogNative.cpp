@@ -263,29 +263,108 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
 }
 
 char16_t hexToChar(const std::string& hex) {
-    std::istringstream iss(hex);
-    int result;
-    iss >> std::hex >> result;
-    return static_cast<char16_t>(result);
+    char16_t result = 0;
+    for (char c : hex) {
+        result <<= 4; // 左移4位来为下一个十六进制数字腾出空间
+        if (c >= '0' && c <= '9') {
+            result |= c - '0';
+        } else if (c >= 'A' && c <= 'F') {
+            result |= (c - 'A') + 10;
+        } else if (c >= 'a' && c <= 'f') {
+            result |= (c - 'a') + 10;
+        }
+    }
+    return result;
 }
 
+
 // 将UTF-16编码的字符转换为UTF-8编码的字符串
-std::string utf16ToUtf8(char16_t unicode) {
-    std::string utf8;
+void utf16ToUtf8(char16_t unicode, char* utf8, int32_t& size) {
     if (unicode <= 0x7F) {
         // 一字节UTF-8编码
-        utf8 += static_cast<char>(unicode);
+        utf8[size++] = static_cast<char>(unicode);
     } else if (unicode <= 0x7FF) {
         // 两字节UTF-8编码
-        utf8 += static_cast<char>(0xC0 | ((unicode >> 6) & 0x1F));
-        utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
-    } else {
+        utf8[size++] = static_cast<char>(0xC0 | ((unicode >> 6) & 0x1F));
+        utf8[size++] = static_cast<char>(0x80 | (unicode & 0x3F));
+    } else if (unicode <= 0xFFFF) {
         // 三字节UTF-8编码
-        utf8 += static_cast<char>(0xE0 | ((unicode >> 12) & 0x0F));
-        utf8 += static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
-        utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
+        utf8[size++] = static_cast<char>(0xE0 | ((unicode >> 12) & 0x0F));
+        utf8[size++] = static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
+        utf8[size++] = static_cast<char>(0x80 | (unicode & 0x3F));
+    } else {
+        // 四字节UTF-8编码
+        utf8[size++] = static_cast<char>(0xF0 | ((unicode >> 18) & 0x07));
+        utf8[size++] = static_cast<char>(0x80 | ((unicode >> 12) & 0x3F));
+        utf8[size++] = static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
+        utf8[size++] = static_cast<char>(0x80 | (unicode & 0x3F));
     }
-    return utf8;
+}
+
+static int32_t skipSpaces(char* buffer, int32_t idx, int32_t size) {
+    while (idx < size && buffer[idx] == ' ') {
+        ++idx;
+    }
+    return idx;
+}
+
+static int32_t parseLogType(char* buffer, int32_t idx, int32_t size, DockerLogType& logType) {
+    if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size() < size
+        && memcmp(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.data(),
+                  &buffer[idx],
+                  ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size())
+            == 0) {
+        idx += ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size();
+        logType = DockerLogType::Log;
+    } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size() < size
+               && memcmp(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.data(),
+                         &buffer[idx],
+                         ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size())
+                   == 0) {
+        idx += ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size();
+        logType = DockerLogType::Stream;
+    } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size() < size
+               && memcmp(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.data(),
+                         &buffer[idx],
+                         ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size())
+                   == 0) {
+        idx += ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size();
+        logType = DockerLogType::Time;
+    } else {
+        return -1;
+    }
+    return idx;
+}
+
+static int32_t parseValue(char* buffer, int32_t idx, int32_t size, DockerLogType logType, int32_t& beginIdx) {
+    while (idx < size && buffer[idx] != '\"') {
+        if (buffer[idx] == '\\') {
+            if (logType != DockerLogType::Log) {
+                return -1;
+            }
+            ++idx; // skip escape char
+            if (idx >= size) {
+                return -1;
+            }
+            auto it = escapeMapping.find(buffer[idx]);
+            if (it != escapeMapping.end()) {
+                buffer[beginIdx++] = it->second;
+            } else if (idx + 4 < size && buffer[idx] == 'u') {
+                std::string hex;
+                hex.append(buffer + idx + 1, 4);
+                char16_t unicodeChar = hexToChar(hex);
+                utf16ToUtf8(unicodeChar, buffer, beginIdx);
+                idx += 4;
+            } else {
+                buffer[beginIdx++] = '\\';
+                buffer[beginIdx++] = buffer[idx];
+            }
+        } else {
+            buffer[beginIdx++] = buffer[idx];
+        }
+        ++idx;
+    }
+    return idx;
 }
 
 // buffer: {"log":"Hello, World!","stream":"stdout","time":"2021-12-01T00:00:00.000Z"}
@@ -295,23 +374,12 @@ bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size
     }
     int logTypeCnt = 0;
     int32_t beginIdx = 0;
-    int32_t idx = beginIdx;
-    // skip '{'
-    if (buffer[idx] != '{') {
-        return false;
-    }
-    ++idx;
-    if (idx == size) {
-        return false;
-    }
+    int32_t idx = 1; // skip '{'
     DockerLogType logType;
     while (idx < size) {
-        // skip ' '
-        while (buffer[idx] == ' ') {
-            ++idx;
-            if (idx == size) {
-                return false;
-            }
+        idx = skipSpaces(buffer, idx, size);
+        if (idx >= size) {
+            return false;
         }
         // skip '}'
         if (buffer[idx] == '}') {
@@ -320,150 +388,83 @@ bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size
             }
             return false;
         }
-        if (buffer[idx] == '\"') {
-            ++idx;
-            if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size() < size
-                && std::equal(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.begin(),
-                              ProcessorParseContainerLogNative::DOCKER_JSON_LOG.end(),
-                              &buffer[idx])) {
-                idx += ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size();
-                logType = DockerLogType::Log;
-            } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size() < size
-                       && std::equal(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.begin(),
-                                     ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.end(),
-                                     &buffer[idx])) {
-                idx += ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size();
-                logType = DockerLogType::Stream;
-            } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size() < size
-                       && std::equal(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.begin(),
-                                     ProcessorParseContainerLogNative::DOCKER_JSON_TIME.end(),
-                                     &buffer[idx])) {
-                idx += ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size();
-                logType = DockerLogType::Time;
-            } else {
-                return false;
-            }
-            ++logTypeCnt;
-            // skip '\"'
-            if (buffer[idx] != '\"') {
-                return false;
-            }
-            ++idx;
-            if (idx == size) {
-                return false;
-            }
-            // skip ' '
-            while (buffer[idx] == ' ') {
-                ++idx;
-                if (idx == size) {
-                    return false;
-                }
-            }
-            // skip ':'
-            if (buffer[idx] != ':') {
-                return false;
-            }
-            ++idx;
-            if (idx == size) {
-                return false;
-            }
-            // skip ' '
-            while (buffer[idx] == ' ') {
-                ++idx;
-                if (idx == size) {
-                    return false;
-                }
-            }
 
-            // skip '"'
-            if (buffer[idx] != '\"') {
-                return false;
-            }
-            ++idx;
-            if (idx == size) {
-                return false;
-            }
-            beginIdx = idx;
-            char* valueBegion = buffer + beginIdx;
-            size_t begin = 0;
-            while (buffer[idx] != '\"') {
-                if (idx == size) {
-                    return false;
-                }
-                if (buffer[idx] == '\\') {
-                    switch (logType) {
-                        case DockerLogType::Log:
-                            break;
-                        case DockerLogType::Stream:
-                        case DockerLogType::Time:
-                            return false;
-                    }
-                    ++idx; // skip escape char
-                    if (idx == size) {
-                        return false;
-                    }
-                    auto it = escapeMapping.find(buffer[idx]);
-                    if (it != escapeMapping.end()) {
-                        buffer[beginIdx++] = it->second;
-                    } else if (idx + 4 < size && buffer[idx] == 'u') {
-                        std::string hex;
-                        hex.append(buffer + idx + 1, 4);
-                        char16_t unicodeChar = hexToChar(hex);
-                        std::string utf8 = utf16ToUtf8(unicodeChar);
-                        strcpy(buffer + beginIdx, utf8.c_str());
-                        beginIdx += utf8.size();
-                        idx += 4;
-                    } else {
-                        buffer[beginIdx++] = '\\';
-                        buffer[beginIdx++] = buffer[idx];
-                    }
-                } else {
-                    buffer[beginIdx++] = buffer[idx];
-                }
-                ++idx;
-            }
-            ++idx; // skip '\"'
-            if (idx == size) {
-                return false;
-            }
-            // skip ' '
-            while (buffer[idx] == ' ') {
-                ++idx;
-                if (idx == size) {
-                    return false;
-                }
-            }
-            // skip ','
-            if (logTypeCnt < 3) {
-                if (buffer[idx] != ',') {
-                    return false;
-                } else {
-                    ++idx;
-                }
-            }
-            if (idx == size) {
-                return false;
-            }
-            // skip ' '
-            while (buffer[idx] == ' ') {
-                ++idx;
-                if (idx == size) {
-                    return false;
-                }
-            }
-            switch (logType) {
-                case DockerLogType::Log:
-                    dockerLog.log = StringView(valueBegion, beginIdx - (valueBegion - buffer));
-                    break;
-                case DockerLogType::Stream:
-                    dockerLog.stream = StringView(valueBegion, beginIdx - (valueBegion - buffer));
-                    break;
-                case DockerLogType::Time:
-                    dockerLog.time = StringView(valueBegion, beginIdx - (valueBegion - buffer));
-                    break;
-            }
-        } else {
+        if (buffer[idx] != '\"') {
             return false;
+        }
+        ++idx;
+
+        idx = parseLogType(buffer, idx, size, logType);
+        if (idx == -1) {
+            return false;
+        }
+        ++logTypeCnt;
+
+        // skip '\"'
+        if (buffer[idx] != '\"') {
+            return false;
+        }
+        ++idx;
+        idx = skipSpaces(buffer, idx, size);
+        if (idx >= size) {
+            return false;
+        }
+
+        // skip ':'
+        if (buffer[idx] != ':') {
+            return false;
+        }
+        ++idx;
+        idx = skipSpaces(buffer, idx, size);
+        if (idx >= size) {
+            return false;
+        }
+
+        // skip '"'
+        if (buffer[idx] != '\"') {
+            return false;
+        }
+        ++idx;
+        if (idx >= size) {
+            return false;
+        }
+
+        beginIdx = idx;
+        char* valueBegion = buffer + beginIdx;
+        idx = parseValue(buffer, idx, size, logType, beginIdx);
+        if (idx == -1) {
+            return false;
+        }
+
+        ++idx; // skip '\"'
+        idx = skipSpaces(buffer, idx, size);
+        if (idx >= size) {
+            return false;
+        }
+
+        // skip ','
+        if (logTypeCnt < 3) {
+            if (buffer[idx] != ',') {
+                return false;
+            } else {
+                ++idx;
+            }
+        }
+        idx = skipSpaces(buffer, idx, size);
+        if (idx >= size) {
+            return false;
+        }
+
+        switch (logType) {
+            case DockerLogType::Log:
+                dockerLog.log = StringView(valueBegion, beginIdx - (valueBegion - buffer));
+                break;
+            case DockerLogType::Stream:
+                dockerLog.stream = StringView(valueBegion, beginIdx - (valueBegion - buffer));
+                break;
+            case DockerLogType::Time:
+                dockerLog.time = StringView(valueBegion, beginIdx - (valueBegion - buffer));
+                break;
         }
     }
 
@@ -472,8 +473,6 @@ bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size
 
 bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEvent, std::string& errorMsg) {
     StringView buffer = sourceEvent.GetContent(mSourceKey);
-
-    bool parseSuccess = true;
 
     DockerLog entry;
     StringView timeValue, sourceValue, content;
@@ -536,21 +535,6 @@ bool ProcessorParseContainerLogNative::ParseDockerJsonLogLine(LogEvent& sourceEv
     mProcParseOutSizeBytes->Add(containerLogKey.size() + content.size());
 
     return true;
-}
-
-void ProcessorParseContainerLogNative::ResetDockerJsonLogField(char* data,
-                                                               StringView key,
-                                                               StringView value,
-                                                               LogEvent& targetEvent) {
-    if (oldJson == 1) {
-        memmove(data, value.data(), value.size());
-        StringView valueBuffer = StringView(data, value.size());
-        targetEvent.SetContentNoCopy(key, valueBuffer);
-        mProcParseOutSizeBytes->Add(key.size() + valueBuffer.size());
-    } else {
-        targetEvent.SetContentNoCopy(key, value);
-        mProcParseOutSizeBytes->Add(key.size() + value.size());
-    }
 }
 
 void ProcessorParseContainerLogNative::ResetContainerdTextLog(
