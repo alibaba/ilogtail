@@ -150,9 +150,11 @@ func (p *DockerStdoutProcessor) logBenchmark(fileBlock []byte) {
 	p.ProcessingSpeed += float64(len(fileBlock))
 	timeNow := time.Now()
 
-	if timeNow.Sub(p.lastTime) > time.Duration(p.updateMetricTimeInterval)*time.Second {
+	duration := timeNow.Sub(p.lastTime)
+	if duration > time.Duration(p.updateMetricTimeInterval)*time.Second {
 		timeNow = timeNow.In(p.loc)
-		logMessage := fmt.Sprintf("id: %s time: %s GoBenchmark:%f", p.id, timeNow.Format(TimeFormat), p.ProcessingSpeed/(timeNow.Sub(p.lastTime).Seconds()))
+		processingSpeedPerSecond := p.ProcessingSpeed / duration.Seconds()
+		logMessage := fmt.Sprintf("id: %s time: %s GoBenchmark:%f", p.id, timeNow.Format(TimeFormat), processingSpeedPerSecond)
 		p.loggerBenchmark.Println(logMessage)
 		p.ProcessingSpeed = 0
 		p.lastTime = timeNow
