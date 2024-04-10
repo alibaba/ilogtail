@@ -2153,7 +2153,7 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end
     for (int32_t begin = end; begin >= 0; --begin) {
         if (begin == 0 || buffer[begin - 1] == '\n') {
             StringView lastLine = StringView(buffer.data() + begin, end - begin);
-            rapidjson::Document doc(&LogFileReader::rapidjsonAllocator);
+            rapidjson::Document doc;
             doc.Parse(lastLine.data(), lastLine.size());
             LineInfo res = LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
             if (doc.HasParseError()) {
@@ -2362,7 +2362,6 @@ void LogFileReader::mergeLines(LineInfo& resultLine, size_t n, const LineInfo& a
 
 std::unique_ptr<SourceBuffer> LogFileReader::mSourceBuffer = std::make_unique<SourceBuffer>();
 vector<StringBuffer> LogFileReader::mStringBuffer;
-rapidjson::MemoryPoolAllocator<> LogFileReader::rapidjsonAllocator;
 
 // GetStringBuffer函数
 // 功能：获取字符串缓冲区

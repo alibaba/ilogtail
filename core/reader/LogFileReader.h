@@ -492,7 +492,6 @@ private:
     static std::unique_ptr<SourceBuffer> mSourceBuffer;
     static std::vector<StringBuffer> mStringBuffer;
     static StringBuffer* GetStringBuffer(size_t n);
-    static rapidjson::MemoryPoolAllocator<> rapidjsonAllocator;
     void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
