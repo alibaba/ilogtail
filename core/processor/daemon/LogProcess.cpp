@@ -203,6 +203,26 @@ bool LogProcess::FlushOut(int32_t waitMs) {
     return false;
 }
 
+// @return true if input configValue has been updated.
+template <typename T>
+bool LoadSingleValueEnvConfig(const char* envKey, T& configValue, const T minValue) {
+    try {
+        char* value = NULL;
+        value = getenv(envKey);
+        if (value != NULL) {
+            T val = StringTo<T>(value);
+            if (val >= minValue) {
+                configValue = val;
+                LOG_INFO(sLogger, (string("set ") + envKey + " from env, value", value));
+                return true;
+            }
+        }
+    } catch (const exception& e) {
+        LOG_WARNING(sLogger, (string("set ") + envKey + " from env failed, exception", e.what()));
+    }
+    return false;
+}
+
 void* LogProcess::ProcessLoop(int32_t threadNo) {
     LOG_DEBUG(sLogger, ("LogProcessThread", "Start")("threadNo", threadNo));
     LogstoreFeedBackKey logstoreKey = 0;
@@ -213,13 +233,11 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     // only thread 0 update metric
     int32_t lastUpdateMetricTime = time(NULL);
     int32_t updateMetricTimeInterval = 40;
+    LoadSingleValueEnvConfig("updateMetricTimeInterval", updateMetricTimeInterval, (int32_t)1);
     bool isBenchmark = false;
     char* env_var = std::getenv("BENCHMARK");
     if (env_var != nullptr) {
         isBenchmark = std::string(env_var) == "ON";
-    }
-    if (isBenchmark) {
-        updateMetricTimeInterval = 5;
     }
 #ifdef LOGTAIL_DEBUG_FLAG
     int32_t lastPrintTime = time(NULL);

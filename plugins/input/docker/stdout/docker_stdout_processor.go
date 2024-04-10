@@ -16,9 +16,16 @@ package stdout
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"log"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -81,6 +88,75 @@ type DockerStdoutProcessor struct {
 	// save last parsed logs
 	lastLogs      []*LogMessage
 	lastLogsCount int
+
+	ProcessingSpeed          float64
+	lastTime                 time.Time
+	once                     sync.Once
+	loggerBenchmark          *log.Logger
+	id                       string
+	benchmarkOn              bool
+	loc                      *time.Location
+	updateMetricTimeInterval int64
+}
+
+const TimeFormat = "2006-01-02 15:04:05.000000"
+
+func generateRandomID() string {
+	id := make([]byte, 16)
+	_, err := rand.Read(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return hex.EncodeToString(id)
+}
+
+func (p *DockerStdoutProcessor) setupTimeInterval() {
+	updateMetricTimeInterval, exists := os.LookupEnv("updateMetricTimeInterval")
+	if !exists {
+		p.updateMetricTimeInterval = 5
+		return
+	}
+
+	interval, err := strconv.Atoi(updateMetricTimeInterval)
+	if err != nil {
+		p.updateMetricTimeInterval = 5
+		return
+	}
+
+	p.updateMetricTimeInterval = int64(interval)
+}
+
+func (p *DockerStdoutProcessor) setupLogger() {
+	p.setupTimeInterval()
+	benchmark, exists := os.LookupEnv("BENCHMARK")
+	p.benchmarkOn = exists && benchmark == "ON"
+	if !p.benchmarkOn {
+		return
+	}
+	logFile, err := os.OpenFile(util.GetCurrentBinaryPath()+"benchmarkGo.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	p.loggerBenchmark = log.New(logFile, "", 0)
+	p.id = generateRandomID()
+	p.loc, _ = time.LoadLocation("Asia/Shanghai")
+}
+
+func (p *DockerStdoutProcessor) logBenchmark(fileBlock []byte) {
+	p.once.Do(p.setupLogger)
+	if !p.benchmarkOn {
+		return
+	}
+	p.ProcessingSpeed += float64(len(fileBlock))
+	timeNow := time.Now()
+
+	if timeNow.Sub(p.lastTime) > time.Duration(p.updateMetricTimeInterval)*time.Second {
+		timeNow = timeNow.In(p.loc)
+		logMessage := fmt.Sprintf("id: %s time: %s GoBenchmark:%f", p.id, timeNow.Format(TimeFormat), p.ProcessingSpeed/(timeNow.Sub(p.lastTime).Seconds()))
+		p.loggerBenchmark.Println(logMessage)
+		p.ProcessingSpeed = 0
+		p.lastTime = timeNow
+	}
 }
 
 func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time.Duration, beginLineCheckLength int,
@@ -276,6 +352,7 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 		p.collector.AddRawLogWithContext(p.newRawLogBySingleLine(l), map[string]interface{}{"source": p.source})
 		processedCount = len(fileBlock)
 	}
+	p.logBenchmark(fileBlock)
 	return processedCount
 }
 
