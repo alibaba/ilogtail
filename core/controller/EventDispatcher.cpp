@@ -560,7 +560,7 @@ EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
     }
 
     auto const searchResult = SearchFilePathByDevInodeInDirectory(
-        path, inputFile->mExactlyOnceConcurrency, checkpoint->mDevInode, &cachePathDevInodeMap);
+        path, inputFile->mMaxCheckpointDirSearchDepth, checkpoint->mDevInode, &cachePathDevInodeMap);
     if (searchResult) {
         const auto& newRealPath = searchResult.value();
         if (CheckFileSignature(newRealPath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, false)) {
@@ -1000,6 +1000,15 @@ void EventDispatcher::DumpCheckPointPeriod(int32_t curTime) {
         FileServer::GetInstance()->Resume(false);
         LOG_INFO(sLogger, ("checkpoint dump", "succeeded"));
     }
+}
+
+bool EventDispatcher::IsAllFileRead() {
+    for (auto it = mWdDirInfoMap.begin(); it != mWdDirInfoMap.end(); ++it) {
+        if (!((it->second)->mHandler)->IsAllFileRead()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN

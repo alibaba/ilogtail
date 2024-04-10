@@ -113,10 +113,10 @@ type LogstoreConfig struct {
 	// flushWaitSema    sync.WaitGroup
 	pauseOrResumeWg sync.WaitGroup
 
-	K8sLabelSet           map[string]struct{}
-	ContainerLabelSet     map[string]struct{}
-	EnvSet                map[string]struct{}
-	CollectContainersFlag bool
+	K8sLabelSet              map[string]struct{}
+	ContainerLabelSet        map[string]struct{}
+	EnvSet                   map[string]struct{}
+	CollectingContainersMeta bool
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
@@ -382,7 +382,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	logstoreC := &LogstoreConfig{
 		ProjectName:      project,
 		LogstoreName:     logstore,
-		ConfigName:       configName,
+		ConfigName:       config.GetRealConfigName(configName),
 		LogstoreKey:      logstoreKey,
 		Context:          contextImp,
 		configDetailHash: fmt.Sprintf("%x", md5.Sum([]byte(jsonStr))), //nolint:gosec
@@ -487,7 +487,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 							if !valid {
 								continue
 							}
-							logstoreC.CollectContainersFlag = collectContainersFlag
+							logstoreC.CollectingContainersMeta = collectContainersFlag
+						} else if strings.Contains(lowerKey, "collectingcontainersmeta") {
+							collectingContainersMeta, valid := value.(bool)
+							if !valid {
+								continue
+							}
+							logstoreC.CollectingContainersMeta = collectingContainersMeta
 						}
 					}
 				}
@@ -686,9 +692,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 }
 
 func fetchPluginVersion(config map[string]interface{}) ConfigVersion {
-	if v, ok := config["StructureType"]; ok {
-		if s, ok := v.(string); ok {
-			return ConfigVersion(strings.ToLower(s))
+	if v, ok := config["global"]; ok {
+		if global, ok := v.(map[string]interface{}); ok {
+			if version, ok := global["StructureType"]; ok {
+				if str, ok := version.(string); ok {
+					return ConfigVersion(strings.ToLower(str))
+				}
+			}
 		}
 	}
 	return v1
