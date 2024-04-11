@@ -94,8 +94,6 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
         readerSharePtr->CheckFileSignatureAndOffset(false);
 
         bool doneFlag = false;
-        mLastPushBufferTime = GetCurrentTimeInMicroSeconds();
-        mAvailableTokenBytes = 0;
         while (true) {
             while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
                 usleep(1000 * 10);
@@ -104,7 +102,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
-                WaitForFlowControl(logBuffer->rawBuffer.size(), event.mRate);
+                FlowControl(logBuffer->rawBuffer.size(), event.mRate);
                 logProcess->PushBuffer(logBuffer, 100000000);
             } else {
                 delete logBuffer;
@@ -123,23 +121,22 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
     }
 }
 
-void HistoryFileImporter::WaitForFlowControl(uint32_t toConsumeBytes, uint32_t rate) {
-    if (rate <= 0) {
+void HistoryFileImporter::FlowControl(uint32_t bufferSize, uint32_t rate) {
+    if (rate == 0) {
         return;
     }
+    static uint64_t lastPushBufferTime
+        = GetCurrentTimeInMicroSeconds() - 1; // to avoid divide by zero at the first time
     auto now = GetCurrentTimeInMicroSeconds();
-    // rate is in MB/s, convert it to bytes/us
-    double rateInBytesPerUs = rate * 1024 * 1024 / 1000000;
-    double tokenToAdd = (now - mLastPushBufferTime) * rateInBytesPerUs;
-    mAvailableTokenBytes = std::min(rateInBytesPerUs * 1000000, mAvailableTokenBytes + tokenToAdd);
+    // rate is in bytes/s, convert it to bytes/us
+    double rateInBytesPerUs = rate / 1000000;
+    double curRate = bufferSize / (now - lastPushBufferTime);
 
-    if (mAvailableTokenBytes < toConsumeBytes) {
-        auto waitTime = (toConsumeBytes - mAvailableTokenBytes) / rateInBytesPerUs;
+    if (curRate > rateInBytesPerUs) {
+        auto waitTime = (bufferSize / rateInBytesPerUs) - (bufferSize / curRate);
         usleep(waitTime);
-        mAvailableTokenBytes = 0;
-    } else {
-        mAvailableTokenBytes -= toConsumeBytes;
+        LOG_ERROR(sLogger, ("history wait", waitTime));
     }
-    mLastPushBufferTime = GetCurrentTimeInMicroSeconds();
+    lastPushBufferTime = GetCurrentTimeInMicroSeconds();
 }
 } // namespace logtail
