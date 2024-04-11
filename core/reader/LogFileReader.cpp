@@ -826,16 +826,19 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
             }
         }
     }
+    size_t beginPs = 0;
     string exception;
     for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
         if (readBuf[endPs] == '\n') {
             LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, true);
             if (BoostRegexMatch(
                     line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
-                mLastFilePos += endPs + 1;
+                mLastFilePos += beginPs;
                 mCache.clear();
                 free(readBuf);
                 return;
+            } else {
+                beginPs = endPs + 1;
             }
         }
     }
