@@ -102,6 +102,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
+                WaitForFlowControl(logBuffer->rawBuffer.size(), event.mRate);
                 logProcess->PushBuffer(logBuffer, 100000000);
             } else {
                 delete logBuffer;
@@ -118,5 +119,25 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
                                                                                                              "done")(
                      "file", filePath)("offset", readerSharePtr->GetLastFilePos())("time(ms)", doneTime - startTime));
     }
+}
+
+void HistoryFileImporter::WaitForFlowControl(uint32_t toConsumeBytes, uint32_t rate) {
+    if (rate <= 0) {
+        return;
+    }
+    auto now = GetCurrentTimeInMicroSeconds();
+    // rate is in MB/s, convert it to bytes/ms
+    double rateInBytesPerMs = rate * 1024 * 1024 / 1000000;
+    double tokenToAdd = (now - mLastPushBufferTime) * rateInBytesPerMs;
+    mAvailableTokenBytes = std::min(rateInBytesPerMs * 1000000, mAvailableTokenBytes + tokenToAdd);
+
+    if (mAvailableTokenBytes < toConsumeBytes) {
+        auto waitTime = (toConsumeBytes - mAvailableTokenBytes) / rateInBytesPerMs;
+        usleep(waitTime);
+        mAvailableTokenBytes = 0;
+    } else {
+        mAvailableTokenBytes -= toConsumeBytes;
+    }
+    mLastPushBufferTime = GetCurrentTimeInMicroSeconds();
 }
 } // namespace logtail

@@ -225,6 +225,7 @@ bool LogInput::ReadLocalEvents() {
         string source;
         string object;
         string configName;
+        uint32_t rate = 0;
         if (eventItem.isMember("dir") && eventItem["dir"].isString()) {
             source = eventItem["dir"].asString();
         } else {
@@ -256,6 +257,10 @@ bool LogInput::ReadLocalEvents() {
             continue;
         }
 
+        if (eventItem.isMember("rate") && eventItem["rate"].isUInt()) {
+            rate = eventItem["rate"].asUInt();
+        }
+
         Config* pConfig = ConfigManager::GetInstance()->FindConfigByName(configName);
         if (pConfig == NULL) {
             LOG_WARNING(sLogger, ("can not find config", configName));
@@ -266,6 +271,7 @@ bool LogInput::ReadLocalEvents() {
         historyFileEvent.mDirName = source;
         historyFileEvent.mFileName = object;
         historyFileEvent.mConfigName = configName;
+        historyFileEvent.mRate = rate;
         historyFileEvent.mConfig.reset(new Config(*pConfig));
 
         vector<string> objList;
@@ -279,7 +285,7 @@ bool LogInput::ReadLocalEvents() {
                      "project", pConfig->GetProjectName())("logstore", pConfig->GetCategory()));
         LogtailAlarm::GetInstance()->SendAlarm(LOAD_LOCAL_EVENT_ALARM,
                                                string("process local event, dir:") + source + ", file name:" + object
-                                                   + ", config:" + configName
+                                                   + ", config:" + configName + ", rate:" + ToString(rate)
                                                    + ", file count:" + ToString(objList.size()),
                                                pConfig->GetProjectName(),
                                                pConfig->GetCategory(),
