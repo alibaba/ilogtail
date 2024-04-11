@@ -827,7 +827,6 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
             }
         }
     } else {
-        size_t beginPs = 0;
         string exception;
         for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
             if (readBuf[endPs] == '\n') {
@@ -848,13 +847,12 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
                                          line.data.size(),
                                          *mMultilineConfig.first->GetStartPatternReg(),
                                          exception)) {
-                        mLastFilePos += beginPs;
+                        mLastFilePos += line.lineBegin;
                         mCache.clear();
                         free(readBuf);
                         return;
                     }
                 }
-                beginPs = endPs + 1;
             }
         }
     }
@@ -2344,8 +2342,10 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
             continue;
         }
 
-        // 合并行
-        mergeLines(finalLine, protocolFunctionIndex, previousLine, false);
+        // 如果需要合并行,进行合并
+        if (finalLine.needMerge) {
+            mergeLines(finalLine, protocolFunctionIndex, previousLine, false);
+        }
     }
 
     // 返回最后一个完整日志块的信息
