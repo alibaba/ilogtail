@@ -2168,6 +2168,7 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end
     if (end == 0) {
         return LineInfo{buffer, 0, 1, end, true};
     }
+    static std::string log;
 
     for (int32_t begin = end; begin >= 0; --begin) {
         if (begin == 0 || buffer[begin - 1] == '\n') {
@@ -2192,7 +2193,8 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end
             if (it == doc.MemberEnd() || !it->value.IsString()) {
                 return res;
             }
-            StringView content = StringView(it->value.GetString());
+            log = it->value.GetString();
+            StringView content = log;
             if (content.size() > 0 && content[content.size() - 1] == '\n') {
                 content = StringView(content.data(), content.size() - 1);
             }
