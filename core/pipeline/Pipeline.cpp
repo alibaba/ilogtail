@@ -125,7 +125,7 @@ bool Pipeline::Init(Config&& config) {
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
             detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
-            detail["IgnoringUnmatchWarning"] = Json::Value(inputFile->mFileReader.mIgnoringUnmatchWarning);
+            detail["IgnoringUnmatchWarning"] = Json::Value(inputFile->mMultiline.mIgnoringUnmatchWarning);
             if (inputFile->mMultiline.mUnmatchedContentTreatment
                 == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
                 detail["UnmatchedContentTreatment"] = Json::Value("discard");
@@ -197,7 +197,7 @@ bool Pipeline::Init(Config&& config) {
                 detail["StartPattern"] = Json::Value(inputContainerLog->mMultiline.mStartPattern);
                 detail["ContinuePattern"] = Json::Value(inputContainerLog->mMultiline.mContinuePattern);
                 detail["EndPattern"] = Json::Value(inputContainerLog->mMultiline.mEndPattern);
-                detail["IgnoringUnmatchWarning"] = Json::Value(inputFile->mFileReader.mIgnoringUnmatchWarning);
+                detail["IgnoringUnmatchWarning"] = Json::Value(inputContainerLog->mMultiline.mIgnoringUnmatchWarning);
                 if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
                     == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
                     detail["UnmatchedContentTreatment"] = Json::Value("discard");
