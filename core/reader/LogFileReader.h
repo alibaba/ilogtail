@@ -80,6 +80,7 @@ typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
  */
 struct LineInfo {
     StringView data;
+    std::string dataRaw;
     int32_t lineBegin;
     int32_t rollbackLineFeedCount;
     int32_t lineEnd;
