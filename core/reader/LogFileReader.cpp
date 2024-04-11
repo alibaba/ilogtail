@@ -834,20 +834,20 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
                 LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, true);
                 // GetEndPattern
                 if (mMultilineConfig.first->GetEndPatternReg() != nullptr) {
-                    if (BoostRegexSearch(line.data.data(),
-                                         line.data.size(),
-                                         *mMultilineConfig.first->GetEndPatternReg(),
-                                         exception)) {
+                    if (BoostRegexMatch(line.data.data(),
+                                        line.data.size(),
+                                        *mMultilineConfig.first->GetEndPatternReg(),
+                                        exception)) {
                         mLastFilePos += endPs + 1;
                         mCache.clear();
                         free(readBuf);
                         return;
                     }
                 } else {
-                    if (BoostRegexSearch(line.data.data(),
-                                         line.data.size(),
-                                         *mMultilineConfig.first->GetStartPatternReg(),
-                                         exception)) {
+                    if (BoostRegexMatch(line.data.data(),
+                                        line.data.size(),
+                                        *mMultilineConfig.first->GetStartPatternReg(),
+                                        exception)) {
                         mLastFilePos += beginPs;
                         mCache.clear();
                         free(readBuf);
