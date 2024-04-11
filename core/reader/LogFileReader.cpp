@@ -800,6 +800,7 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
 }
 
 void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
+    // 此处要不要取消mLastFilePos == 0的限制
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
     }
@@ -848,6 +849,9 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
                                          *mMultilineConfig.first->GetStartPatternReg(),
                                          exception)) {
                         mLastFilePos += line.lineBegin;
+                        std::cout << readBuf[line.lineBegin] << std::endl;
+                        std::cout << StringView(readBuf + line.lineBegin, endPs - line.lineBegin).to_string()
+                                  << std::endl;
                         mCache.clear();
                         free(readBuf);
                         return;
