@@ -816,7 +816,8 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         free(readBuf);
         return;
     }
-    if (!mMultilineConfig.first->GetStartPatternReg() && !mMultilineConfig.first->GetEndPatternReg()) {
+    if (mMultilineConfig.first->GetStartPatternReg() == nullptr
+        && mMultilineConfig.first->GetEndPatternReg() == nullptr) {
         for (size_t i = 0; i < readSizeReal - 1; ++i) {
             if (readBuf[i] == '\n') {
                 mLastFilePos += i + 1;
@@ -825,31 +826,36 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
                 return;
             }
         }
-    }
-    size_t beginPs = 0;
-    string exception;
-    for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
-        if (readBuf[endPs] == '\n') {
-            LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, true);
-            // GetEndPattern
-            if (!mMultilineConfig.first->GetEndPatternReg()) {
-                if (BoostRegexSearch(
-                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetEndPatternReg(), exception)) {
-                    mLastFilePos += endPs + 1;
-                    mCache.clear();
-                    free(readBuf);
-                    return;
+    } else {
+        size_t beginPs = 0;
+        string exception;
+        for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
+            if (readBuf[endPs] == '\n') {
+                LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, true);
+                // GetEndPattern
+                if (mMultilineConfig.first->GetEndPatternReg() != nullptr) {
+                    if (BoostRegexSearch(line.data.data(),
+                                         line.data.size(),
+                                         *mMultilineConfig.first->GetEndPatternReg(),
+                                         exception)) {
+                        mLastFilePos += endPs + 1;
+                        mCache.clear();
+                        free(readBuf);
+                        return;
+                    }
+                } else {
+                    if (BoostRegexSearch(line.data.data(),
+                                         line.data.size(),
+                                         *mMultilineConfig.first->GetStartPatternReg(),
+                                         exception)) {
+                        mLastFilePos += beginPs;
+                        mCache.clear();
+                        free(readBuf);
+                        return;
+                    }
                 }
-            } else {
-                if (BoostRegexSearch(
-                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
-                    mLastFilePos += beginPs;
-                    mCache.clear();
-                    free(readBuf);
-                    return;
-                }
+                beginPs = endPs + 1;
             }
-            beginPs = endPs + 1;
         }
     }
 
