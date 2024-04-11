@@ -816,8 +816,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         free(readBuf);
         return;
     }
-    if (mMultilineConfig.first->GetStartPatternReg() == nullptr
-        && mMultilineConfig.first->GetEndPatternReg() == nullptr) {
+    if (mMultilineConfig.first->GetStartPatternReg() == nullptr) {
         for (size_t i = 0; i < readSizeReal - 1; ++i) {
             if (readBuf[i] == '\n') {
                 mLastFilePos += i + 1;
@@ -831,27 +830,12 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
             if (readBuf[endPs] == '\n') {
                 LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, true);
-                // GetEndPattern
-                if (mMultilineConfig.first->GetEndPatternReg() != nullptr) {
-                    if (BoostRegexMatch(line.data.data(),
-                                        line.data.size(),
-                                        *mMultilineConfig.first->GetEndPatternReg(),
-                                        exception)) {
-                        mLastFilePos += endPs + 1;
-                        mCache.clear();
-                        free(readBuf);
-                        return;
-                    }
-                } else {
-                    if (BoostRegexMatch(line.data.data(),
-                                        line.data.size(),
-                                        *mMultilineConfig.first->GetStartPatternReg(),
-                                        exception)) {
-                        mLastFilePos += line.lineBegin;
-                        mCache.clear();
-                        free(readBuf);
-                        return;
-                    }
+                if (BoostRegexMatch(
+                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                    mLastFilePos += line.lineBegin;
+                    mCache.clear();
+                    free(readBuf);
+                    return;
                 }
             }
         }
