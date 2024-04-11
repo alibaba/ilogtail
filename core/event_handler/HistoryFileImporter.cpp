@@ -94,6 +94,8 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
         readerSharePtr->CheckFileSignatureAndOffset(false);
 
         bool doneFlag = false;
+        mLastPushBufferTime = GetCurrentTimeInMicroSeconds();
+        mAvailableTokenBytes = 0;
         while (true) {
             while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
                 usleep(1000 * 10);
@@ -126,13 +128,13 @@ void HistoryFileImporter::WaitForFlowControl(uint32_t toConsumeBytes, uint32_t r
         return;
     }
     auto now = GetCurrentTimeInMicroSeconds();
-    // rate is in MB/s, convert it to bytes/ms
-    double rateInBytesPerMs = rate * 1024 * 1024 / 1000000;
-    double tokenToAdd = (now - mLastPushBufferTime) * rateInBytesPerMs;
-    mAvailableTokenBytes = std::min(rateInBytesPerMs * 1000000, mAvailableTokenBytes + tokenToAdd);
+    // rate is in MB/s, convert it to bytes/us
+    double rateInBytesPerUs = rate * 1024 * 1024 / 1000000;
+    double tokenToAdd = (now - mLastPushBufferTime) * rateInBytesPerUs;
+    mAvailableTokenBytes = std::min(rateInBytesPerUs * 1000000, mAvailableTokenBytes + tokenToAdd);
 
     if (mAvailableTokenBytes < toConsumeBytes) {
-        auto waitTime = (toConsumeBytes - mAvailableTokenBytes) / rateInBytesPerMs;
+        auto waitTime = (toConsumeBytes - mAvailableTokenBytes) / rateInBytesPerUs;
         usleep(waitTime);
         mAvailableTokenBytes = 0;
     } else {
