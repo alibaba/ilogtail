@@ -16,6 +16,7 @@ package helper
 
 import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"reflect"
 	"testing"
