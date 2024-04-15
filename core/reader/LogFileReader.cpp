@@ -2289,7 +2289,7 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
 
     // 如果需要合并行,进行合并
     if (finalLine.needMerge) {
-        mergeLines(finalLine, protocolFunctionIndex, finalLine, true);
+        mergeLines(finalLine, mGetLastLineFuncs[protocolFunctionIndex], finalLine, true);
     }
 
     // 循环处理,直到找到完整的日志块
@@ -2327,7 +2327,7 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
 
         // 如果需要合并行,进行合并
         if (finalLine.needMerge) {
-            mergeLines(finalLine, protocolFunctionIndex, previousLine, false);
+            mergeLines(finalLine, mGetLastLineFuncs[protocolFunctionIndex], previousLine, false);
         }
     }
 
@@ -2343,8 +2343,11 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
 // - additionalLine：需要被合并的行
 // - shouldResetBuffer：是否需要重置缓冲区
 // 示例：假设resultLine的data成员为"line1",additionalLine的data成员为"line2",那么合并后resultLine的data成员将变为"line1line2"
-void LogFileReader::mergeLines(LineInfo& resultLine, size_t n, const LineInfo& additionalLine, bool shouldResetBuffer) {
-    StringBuffer* buffer = GetStringBuffer(n);
+void LogFileReader::mergeLines(LineInfo& resultLine,
+                               GetLastLineFunc func,
+                               const LineInfo& additionalLine,
+                               bool shouldResetBuffer) {
+    StringBuffer* buffer = GetStringBuffer(func);
 
     // If buffer needs to be reset, set its size to 0
     if (shouldResetBuffer) {
@@ -2365,7 +2368,7 @@ void LogFileReader::mergeLines(LineInfo& resultLine, size_t n, const LineInfo& a
 }
 
 std::unique_ptr<SourceBuffer> LogFileReader::mSourceBuffer = std::make_unique<SourceBuffer>();
-vector<StringBuffer> LogFileReader::mStringBuffer;
+std::unordered_map<LogFileReader::GetLastLineFunc, StringBuffer> LogFileReader::mStringBuffer;
 
 // GetStringBuffer函数
 // 功能：获取字符串缓冲区
@@ -2373,14 +2376,17 @@ vector<StringBuffer> LogFileReader::mStringBuffer;
 // - n：缓冲区的索引
 // 返回值：返回一个指向StringBuffer对象的指针
 // 示例：假设n为1,那么返回的将是mStringBuffer的第二个元素的地址
-StringBuffer* LogFileReader::GetStringBuffer(size_t n) {
-    if (mStringBuffer.size() < n + 1) {
-        mStringBuffer.resize(n + 1);
+StringBuffer* LogFileReader::GetStringBuffer(GetLastLineFunc func) {
+    auto it = mStringBuffer.find(func);
+    if (it == mStringBuffer.end()) {
+        // Allocate a new StringBuffer if it doesn't exist
+        StringBuffer newBuffer = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
+        it = mStringBuffer.insert({func, std::move(newBuffer)}).first;
+    } else if (it->second.capacity < BUFFER_SIZE + 1) {
+        // Resize the existing StringBuffer if it's too small
+        it->second = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
     }
-    if (mStringBuffer[n].capacity < BUFFER_SIZE + 1) {
-        mStringBuffer[n] = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
-    }
-    return &mStringBuffer[n];
+    return &it->second;
 }
 
 size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {

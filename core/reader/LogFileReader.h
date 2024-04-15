@@ -487,12 +487,12 @@ protected:
     std::string mRegion;
 
 private:
-    void mergeLines(LineInfo&, size_t n, const LineInfo&, bool);
+    void mergeLines(LineInfo&, GetLastLineFunc func, const LineInfo&, bool);
     bool mHasReadContainerBom = false;
     void checkContainerType();
     static std::unique_ptr<SourceBuffer> mSourceBuffer;
-    static std::vector<StringBuffer> mStringBuffer;
-    static StringBuffer* GetStringBuffer(size_t n);
+    static std::unordered_map<GetLastLineFunc, StringBuffer> mStringBuffer;
+    static StringBuffer* GetStringBuffer(GetLastLineFunc func);
     void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
