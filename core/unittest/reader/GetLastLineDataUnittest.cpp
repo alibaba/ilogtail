@@ -2293,7 +2293,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDock
     logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastDockerJsonFileLine);
     {
         std::string testLog
-            = R"({"log":"2021-07-13T16:32:21.212861448Z stdout P Exception in thread  "main" java\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            = R"({"log":"2021-07-13T16:32:21.212861448Z stdout P Exception in thread  \"main\" java\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
         testLog += "\n";
         testLog
             += R"({"log":"2021-07-13T16:32:21.212861448Z stdout F .lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
@@ -2312,7 +2312,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDock
     }
     {
         std::string testLog
-            = R"({"log":"2021-07-13T16:32:21.212861448Z stdout P Exception in thread  "main" java\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+            = R"({"log":"2021-07-13T16:32:21.212861448Z stdout P Exception in thread  \"main\" java\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
         testLog += "\n";
         testLog
             += R"({"log":"2021-07-13T16:32:21.212861448Z stdout F .lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
@@ -2330,7 +2330,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDock
             endPs = size;
         }
         LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-        APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
+        APSARA_TEST_EQUAL(4, line.rollbackLineFeedCount);
         APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
         APSARA_TEST_EQUAL(0, line.lineBegin);
         APSARA_TEST_EQUAL(true, line.fullLine);
@@ -2363,10 +2363,10 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestDockerJsonWithContaine
     }
     {
         std::string testLog
-            = R"(2021-07-13T16:32:21.212861448Z stdout P {"log":"Exception in thread  \"main\" java.lang.NullPoinntterExc","t)";
+            = R"(2021-07-13T16:32:21.212861448Z stdout P {"log":"Exception in thread  \"main\" java.lang.NullPoinntterEx})";
         testLog += "\n";
         testLog
-            += R"(2021-07-13T16:32:21.212861448Z stdout F eption\n","stream":"stdoutime":"2024-02-19T03:49:37.793533014Z"})";
+            += R"(2021-07-13T16:32:21.212861448Z stdout F ception\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z")";
         testLog += "\n";
         testLog += R"(2021-07-13T16:32:21.212861448Z stdo)";
         int32_t size = testLog.size();
