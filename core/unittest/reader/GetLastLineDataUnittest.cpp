@@ -2363,10 +2363,10 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestDockerJsonWithContaine
     }
     {
         std::string testLog
-            = R"(2021-07-13T16:32:21.212861448Z stdout P {"log":"Exception in thread  \"main\" java.lang.NullPoinntterEx})";
+            = R"(2021-07-13T16:32:21.212861448Z stdout P {"log":"Exception in thread  \"main\" java.lang.NullPoinntterEx)";
         testLog += "\n";
         testLog
-            += R"(2021-07-13T16:32:21.212861448Z stdout F ception\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z")";
+            += R"(2021-07-13T16:32:21.212861448Z stdout F ception\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
         testLog += "\n";
         testLog += R"(2021-07-13T16:32:21.212861448Z stdo)";
         int32_t size = testLog.size();
