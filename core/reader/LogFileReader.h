@@ -83,19 +83,16 @@ struct LineInfo {
     std::string dataRaw;
     int32_t lineBegin;
     int32_t rollbackLineFeedCount;
-    int32_t lineEnd;
     bool fullLine;
     bool needMerge;
     LineInfo(StringView data = StringView(),
              int32_t lineBegin = 0,
              int32_t rollbackLineFeedCount = 0,
-             int32_t lineEnd = 0,
              bool fullLine = false,
              bool needMerge = false)
         : data(data),
           lineBegin(lineBegin),
           rollbackLineFeedCount(rollbackLineFeedCount),
-          lineEnd(lineEnd),
           fullLine(fullLine),
           needMerge(needMerge) {}
 };

@@ -2132,23 +2132,23 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
 */
 LineInfo LogFileReader::GetLastTextLine(StringView buffer, int32_t end) {
     if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true};
+        return LineInfo{buffer, 0, 1, true};
     }
 
     for (int32_t begin = end; begin > 0; --begin) {
         if (begin == 0 || buffer[begin - 1] == '\n') {
             // 返回 begin～end-1的日志内容, lineBegin为begin, rollbackLineFeedCount为1, lineEnd为end, fullLine为true
-            return LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
+            return LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, true};
         }
     }
     // 整行都没换行符时
     // 返回 0～end-1的日志内容, lineBegin为0, rollbackLineFeedCount为1, lineEnd为end, fullLine为true
-    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
+    return LineInfo{StringView(buffer.data(), end), 0, 1, true};
 }
 
 LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end) {
     if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true};
+        return LineInfo{buffer, 0, 1, true};
     }
 
     for (int32_t begin = end; begin >= 0; --begin) {
@@ -2156,7 +2156,8 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end
             StringView lastLine = StringView(buffer.data() + begin, end - begin);
             rapidjson::Document doc;
             doc.Parse(lastLine.data(), lastLine.size());
-            LineInfo res = LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
+            LineInfo res = LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1};
+            res.fullLine = false;
             if (doc.HasParseError()) {
                 return res;
             } else if (!doc.IsObject()) {
@@ -2180,16 +2181,17 @@ LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end
             }
             res.dataRaw = content.to_string();
             res.data = res.dataRaw;
+            res.fullLine = true;
             return res;
         }
     }
     // The return here will not occur.
-    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
+    return LineInfo{StringView(buffer.data(), end), 0, 1, true};
 }
 
 LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end) {
     if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true, true};
+        return LineInfo{buffer, 0, 1, true, true};
     }
 
     for (int32_t begin = end; begin >= 0; --begin) {
@@ -2197,7 +2199,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
             StringView lastLine = StringView(buffer.data() + begin, end - begin);
             const char* lineEnd = buffer.data() + end;
 
-            LineInfo res = LineInfo{lastLine, begin, 1, end, true, true};
+            LineInfo res = LineInfo{lastLine, begin, 1, true, true};
             // 寻找第一个分隔符位置 time
             StringView timeValue;
             const char* pch1
@@ -2212,6 +2214,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
             }
             StringView sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
             if (sourceValue != "stdout" && sourceValue != "stderr") {
+                res.fullLine = false;
                 return res;
             }
             // 如果既不以 P 开头,也不以 F 开头
@@ -2226,6 +2229,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
             if (pch3 == lineEnd || pch3 != pch2 + 2) {
                 lastLine = StringView(pch2 + 1, lineEnd - pch2 - 1);
                 res.data = lastLine;
+                res.fullLine = false;
                 return res;
             }
             if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
@@ -2242,7 +2246,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
             }
         }
     }
-    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true, true};
+    return LineInfo{StringView(buffer.data(), end), 0, 1, true, true};
 }
 
 // GetLastLine函数
@@ -2257,7 +2261,7 @@ LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end
 LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t protocolFunctionIndex, bool needSingleLine) {
     // 如果结束位置为0,直接返回
     if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true};
+        return LineInfo{buffer, 0, 1, true};
     }
 
     // 处理rawLine
@@ -2265,25 +2269,37 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
         LineInfo line = mGetLastLineFuncs[protocolFunctionIndex](rawLine.data, rawLine.data.size());
         line.lineBegin = rawLine.lineBegin;
         line.rollbackLineFeedCount = rawLine.rollbackLineFeedCount;
-        line.lineEnd = rawLine.lineEnd;
         return line;
     };
 
     // 获取最后一行的信息
     LineInfo finalLine;
-    if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
-        finalLine = processLine(GetLastLine(buffer, end, protocolFunctionIndex + 1, needSingleLine));
-    } else {
-        finalLine = mGetLastLineFuncs[protocolFunctionIndex](buffer, end);
+    while (!finalLine.fullLine) {
+        LineInfo line;
+        if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
+            line = processLine(GetLastLine(buffer, end, protocolFunctionIndex + 1, needSingleLine));
+        } else {
+            line = mGetLastLineFuncs[protocolFunctionIndex](buffer, end);
+        }
+        line.rollbackLineFeedCount += finalLine.rollbackLineFeedCount;
+        finalLine = line;
+        if (!finalLine.fullLine) {
+            if (finalLine.lineBegin == 0) {
+                finalLine.data = StringView();
+                return finalLine;
+            }
+            end = finalLine.lineBegin - 1;
+        }
     }
 
     // 如果行开始位置为0,标记为完整行
     if (finalLine.lineBegin == 0) {
         finalLine.fullLine = true;
+        return finalLine;
     }
 
-    // 如果只需要单行日志或行开始位置为0,直接返回
-    if (needSingleLine || finalLine.lineBegin == 0) {
+    // 如果只需要单行日志,直接返回
+    if (needSingleLine) {
         return finalLine;
     }
 
@@ -2324,11 +2340,7 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
             finalLine.data = previousLine.data;
             continue;
         }
-
-        // 如果需要合并行,进行合并
-        if (finalLine.needMerge) {
-            mergeLines(finalLine, mGetLastLineFuncs[protocolFunctionIndex], previousLine, false);
-        }
+        mergeLines(finalLine, mGetLastLineFuncs[protocolFunctionIndex], previousLine, false);
     }
 
     // 返回最后一个完整日志块的信息
