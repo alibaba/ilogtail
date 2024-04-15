@@ -19,7 +19,7 @@ bool InputInstance::Init(const Json::Value& config, PipelineContext& context, Js
     mPlugin->SetContext(context);
     auto meta = Meta();
     mPlugin->SetMetricsRecordRef(Name(), meta.pluginID, meta.nodeID, meta.childNodeID);
-    if (mPlugin->Init(config)) {
+    if (mPlugin->Init(config, optionalGoPipeline)) {
         return false;
     }
     return true;

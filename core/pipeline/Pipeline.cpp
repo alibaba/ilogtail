@@ -40,9 +40,9 @@ using namespace std;
 
 namespace logtail {
 
-void genPluginAndNodeID(int& pluginIndex, bool lastOne, PluginInstance::PluginMeta& pluginMeta) {
+void genPluginAndNodeID(int16_t& pluginIndex, bool lastOne, PluginInstance::PluginMeta& pluginMeta) {
     pluginIndex ++;
-    int childNodeID = pluginIndex;
+    int16_t childNodeID = pluginIndex;
     if (lastOne) {
         childNodeID = -1;
     } else {
@@ -82,7 +82,7 @@ bool Pipeline::Init(Config&& config) {
 #endif
 
     int16_t pluginIndex = 0;
-
+    PluginInstance::PluginMeta pluginMeta;
     genPluginAndNodeID(pluginIndex, false, pluginMeta);
     for (auto detail : config.mInputs) {
         string name = (*detail)["Type"].asString();

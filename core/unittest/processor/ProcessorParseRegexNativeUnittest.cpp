@@ -43,6 +43,11 @@ private:
     PipelineContext ctx;
 };
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
+    return pluginMeta;
+}
+
 void ProcessorParseRegexNativeUnittest::TestInit() {
     // make config
     Json::Value config;
@@ -81,7 +86,7 @@ void ProcessorParseRegexNativeUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     processor.reset(new ProcessorParseRegexNative());
     processor->SetContext(ctx);
-    processor->SetMetricsRecordRef(ProcessorParseRegexNative::sName, "1");
+    processor->SetMetricsRecordRef(ProcessorParseRegexNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE(processor->Init(configJson));
     APSARA_TEST_EQUAL(2, processor->mKeys.size());
     APSARA_TEST_EQUAL("k1", processor->mKeys[0]);

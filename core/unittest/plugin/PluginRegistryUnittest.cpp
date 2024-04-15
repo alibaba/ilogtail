@@ -43,24 +43,28 @@ protected:
 };
 
 void PluginRegistryUnittest::TestCreateInput() const {
-    unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, "0");
+    unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, {"0", "0", "1"});
     APSARA_TEST_NOT_EQUAL_FATAL(nullptr, input);
-    APSARA_TEST_EQUAL("0", input->Id());
+    APSARA_TEST_EQUAL_FATAL("0", input->Meta().pluginID);
+    APSARA_TEST_EQUAL_FATAL("0", input->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", input->Meta().childNodeID);
 }
 
 void PluginRegistryUnittest::TestCreateProcessor() const {
-    auto processorParseRegexNative = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorParseRegexNative::sName, {"0", "0", "1"});
-    APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processorParseRegexNative.get());
-    APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().pluginID);
-    APSARA_TEST_EQUAL_FATAL("0", processorParseRegexNative->Meta().nodeID);
-    APSARA_TEST_EQUAL_FATAL("1", processorParseRegexNative->Meta().childNodeID);
+    unique_ptr<ProcessorInstance> processor  = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorMock::sName, {"0", "0", "1"});
+    APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processor);
+    APSARA_TEST_EQUAL_FATAL("0", processor->Meta().pluginID);
+    APSARA_TEST_EQUAL_FATAL("0", processor->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", processor->Meta().childNodeID);
 }
 
 void PluginRegistryUnittest::TestCreateFlusher() const {
-    unique_ptr<FlusherInstance> flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, "0");
+    unique_ptr<FlusherInstance> flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, {"0", "0", "1"});
     APSARA_TEST_NOT_EQUAL_FATAL(nullptr, flusher);
-    APSARA_TEST_EQUAL("0", flusher->Id());
+    APSARA_TEST_EQUAL_FATAL("0", flusher->Meta().pluginID);
+    APSARA_TEST_EQUAL_FATAL("0", flusher->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", flusher->Meta().childNodeID);
 }
 
 void PluginRegistryUnittest::TestValidPlugin() const {

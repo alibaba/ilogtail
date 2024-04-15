@@ -21,6 +21,9 @@
 #include "MetricConstants.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "app_config/AppConfig.h"
+#include "common/TimeUtil.h"
+#include "pipeline/PipelineManager.h"
+
 
 using namespace sls_logs;
 using namespace std;
@@ -47,9 +50,13 @@ void MetricExportor::PushGoPluginMetrics() {
             }
             if (!configName.empty()) {
                 // get region info by config_name
-                Config* config = ConfigManager::GetInstance()->FindConfigByName(configName);
-                if (config) {
-                    region = config->mRegion;
+                shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindPipelineByName(configName);
+                if (p) {
+                    FlusherSLS* pConfig = NULL;
+                    pConfig = const_cast<FlusherSLS*>(static_cast<const FlusherSLS*>(p->GetFlushers()[0]->GetPlugin()));
+                    if (pConfig) {
+                        region = pConfig->mRegion;
+                    }
                 }
             } 
         }
