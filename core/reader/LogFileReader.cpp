@@ -2274,6 +2274,7 @@ LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t proto
 
     // 获取最后一行的信息
     LineInfo finalLine;
+    finalLine.fullLine = false;
     while (!finalLine.fullLine) {
         LineInfo line;
         if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
