@@ -34,6 +34,7 @@ namespace logtail {
 class PipelineUnittest : public ::testing::Test {
 public:
     void OnSuccessfulInit() const;
+    
     void OnFailedInit() const;
     void OnInitVariousTopology() const;
     void OnInputFileWithMultiline() const;
@@ -83,6 +84,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -2340,6 +2342,7 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
+    APSARA_TEST_EQUAL(2, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(ProcessorSplitMultilineLogStringNative::sName, pipeline->mProcessorLine[1]->Name());
 
     // json multiline
