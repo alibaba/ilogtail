@@ -60,7 +60,7 @@ private:
     // @todo multi line, flush last buffer
     void ProcessEvent(const HistoryFileEvent& event, const std::vector<std::string>& fileNames);
 
-    void FlowControl(uint32_t toConsumeBytes, uint32_t rate);
+    void FlowControl(uint32_t toConsumeBytes, double rate);
 
     static const int32_t HISTORY_EVENT_MAX = 10000;
     CircularBufferSem<HistoryFileEvent, HISTORY_EVENT_MAX> mEventQueue;

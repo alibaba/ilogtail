@@ -121,19 +121,16 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
     }
 }
 
-void HistoryFileImporter::FlowControl(uint32_t bufferSize, uint32_t rate) {
+void HistoryFileImporter::FlowControl(uint32_t bufferSize, double rate) {
     if (rate == 0) {
         return;
     }
-    static uint64_t lastPushBufferTime
-        = GetCurrentTimeInMicroSeconds() - 1; // to avoid divide by zero at the first time
+    static uint64_t lastPushBufferTime = GetCurrentTimeInMicroSeconds();
     auto now = GetCurrentTimeInMicroSeconds();
-    // rate is in bytes/s, convert it to bytes/us
-    double rateInBytesPerUs = rate / 1000000;
-    double curRate = bufferSize / (now - lastPushBufferTime);
-
-    if (curRate > rateInBytesPerUs) {
-        auto waitTime = (bufferSize / rateInBytesPerUs) - (bufferSize / curRate);
+    // rate is in bytes per second
+    double curRate = bufferSize / (now - lastPushBufferTime + 1) * 1000000; // to avoid divide by zero
+    if (curRate > rate) {
+        auto waitTime = ((bufferSize / rate) - (bufferSize / curRate)) * 1000000;
         usleep(waitTime);
         LOG_ERROR(sLogger, ("history wait", waitTime));
     }
