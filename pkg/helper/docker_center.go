@@ -17,6 +17,7 @@ package helper
 import (
 	"context"
 	"hash/fnv"
+	"os"
 	"path"
 	"regexp"
 	"runtime"
@@ -632,39 +633,51 @@ func getDockerCenterInstance() *DockerCenter {
 		dockerCenterInstance = &DockerCenter{}
 		dockerCenterInstance.imageCache = make(map[string]string)
 		dockerCenterInstance.containerMap = make(map[string]*DockerInfoDetail)
-		if IsCRIRuntimeValid(containerdUnixSocket) {
-			retryTimes := 10
-			for i := 0; i < retryTimes; i++ {
-				var err error
-				criRuntimeWrapper, err = NewCRIRuntimeWrapper(dockerCenterInstance)
-				if err != nil {
-					logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] creare cri-runtime client error: %v", err)
-					criRuntimeWrapper = nil
+		go func() {
+			var enableCriFinding, enableDocker, enableStatic bool
+			retryCount := 0
+			for {
+				if IsCRIRuntimeValid(containerdUnixSocket) {
+					var err error
+					criRuntimeWrapper, err = NewCRIRuntimeWrapper(dockerCenterInstance)
+					if err != nil {
+						logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] creare cri-runtime client error: %v", err)
+						criRuntimeWrapper = nil
+					} else {
+						logger.Infof(context.Background(), "[CRIRuntime] create cri-runtime client successfully")
+					}
+				}
+				if ok, err := util.PathExists(DefaultLogtailMountPath); err == nil {
+					if !ok {
+						logger.Info(context.Background(), "no docker mount path", "set empty")
+						DefaultLogtailMountPath = ""
+					}
 				} else {
-					logger.Infof(context.Background(), "[CRIRuntime] create cri-runtime client successfully")
-					break
+					logger.Warning(context.Background(), "check docker mount path error", err.Error())
 				}
+				enableCriFinding = criRuntimeWrapper != nil
+				enableDocker = dockerCenterInstance.initClient() == nil
+				enableStatic = isStaticContainerInfoEnabled()
+				if len(os.Getenv("USE_CONTAINERD")) > 0 {
+					if enableCriFinding {
+						break
+					}
+				} else {
+					if enableCriFinding || enableDocker || enableStatic {
+						break
+					}
+				}
+				if retryCount%10 == 0 {
+					logger.Error(context.Background(), "DOCKER_CENTER_ALARM", "docker center init failed", "retry count", retryCount)
+				}
+				retryCount++
 				time.Sleep(time.Second * 1)
-				if i == retryTimes-1 {
-					logger.Error(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] create cri-runtime client failed")
-				}
 			}
-		}
-		if ok, err := util.PathExists(DefaultLogtailMountPath); err == nil {
-			if !ok {
-				logger.Info(context.Background(), "no docker mount path", "set empty")
-				DefaultLogtailMountPath = ""
-			}
-		} else {
-			logger.Warning(context.Background(), "check docker mount path error", err.Error())
-		}
-		var enableCriFinding = criRuntimeWrapper != nil
-		var enableDocker = dockerCenterInstance.initClient() == nil
-		var enableStatic = isStaticContainerInfoEnabled()
-		containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
-		containerFindingManager.Init(3)
-		containerFindingManager.TimerFetch()
-		containerFindingManager.SyncContainers()
+			containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
+			containerFindingManager.Init(3)
+			containerFindingManager.TimerFetch()
+			containerFindingManager.SyncContainers()
+		}()
 	})
 	return dockerCenterInstance
 }
