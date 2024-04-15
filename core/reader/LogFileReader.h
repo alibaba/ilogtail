@@ -632,6 +632,7 @@ private:
     friend class LogFileReaderCheckpointUnittest;
     friend class LastMatchedContainerdTextLineUnittest;
     friend class LastMatchedDockerJsonFileUnittest;
+    friend class LastMatchedContainerdTextWithDockerJsonUnittest;
 
 protected:
     void UpdateReaderManual();
