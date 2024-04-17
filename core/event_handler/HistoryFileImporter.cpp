@@ -94,6 +94,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
         readerSharePtr->CheckFileSignatureAndOffset(false);
 
         bool doneFlag = false;
+        lastPushBufferTime = GetCurrentTimeInMicroSeconds();
         while (true) {
             while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
                 usleep(1000 * 10);
@@ -125,14 +126,13 @@ void HistoryFileImporter::FlowControl(uint32_t bufferSize, double rate) {
     if (rate == 0) {
         return;
     }
-    static uint64_t lastPushBufferTime = GetCurrentTimeInMicroSeconds();
     auto now = GetCurrentTimeInMicroSeconds();
     // rate is in bytes per second
-    double curRate = bufferSize / (now - lastPushBufferTime + 1) * 1000000; // to avoid divide by zero
-    if (curRate > rate) {
-        auto waitTime = ((bufferSize / rate) - (bufferSize / curRate)) * 1000000;
-        usleep(waitTime);
-        LOG_ERROR(sLogger, ("history wait", waitTime));
+    double realRateTime = now - lastPushBufferTime;
+    double limitRateTime = bufferSize / rate * 1000000;
+    if (limitRateTime > realRateTime) {
+        usleep(limitRateTime - realRateTime);
+        LOG_WARNING(sLogger, ("history wait", limitRateTime - realRateTime));
     }
     lastPushBufferTime = GetCurrentTimeInMicroSeconds();
 }

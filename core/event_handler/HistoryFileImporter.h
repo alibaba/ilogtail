@@ -67,6 +67,11 @@ private:
     std::unordered_map<std::string, int64_t> mCheckPoints;
     FILE* mCheckPointPtr;
     ThreadPtr mThread;
+    uint64_t lastPushBufferTime = 0;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class HistoryFileImporterUnittest;
+#endif
 };
 
 } // namespace logtail
