@@ -210,6 +210,9 @@ void Application::Start() {
     CommonConfigProvider::GetInstance()->Init("common");
 #endif
 
+    LogtailAlarm::GetInstance()->Init();
+    LogtailMonitor::GetInstance()->Init();
+
     PluginRegistry::GetInstance()->LoadPlugins();
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
