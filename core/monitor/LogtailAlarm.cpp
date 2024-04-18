@@ -294,7 +294,7 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
         return;
     }
 
-    // ignore logtail self alarm
+    // ignore alarm for profile data
     if (Sender::IsProfileData(region, projectName, category)) {
         return;
     }
