@@ -598,8 +598,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                         logPath = tmpLogPath;
                 }
                 if (IsRelativePath(logPath)) {
-                    logPath = NormalizePath(AbsolutePath(logPath, AppConfig::GetInstance()->GetProcessExecutionDir()));
+                    logPath = AbsolutePath(logPath, AppConfig::GetInstance()->GetProcessExecutionDir());
                 }
+                logPath = NormalizePath(logPath);
 
                 // one may still make mistakes, teminate logPath by '/'
                 size_t size = logPath.size();

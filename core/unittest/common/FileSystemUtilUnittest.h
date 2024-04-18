@@ -451,4 +451,42 @@ TEST_F(FileSystemUtilUnittest, TestGetFdPath) {
     fclose(file);
 }
 
+TEST_F(FileSystemUtilUnittest, TestNormalizePath) {
+    std::string path;
+
+    path = "/";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/");
+
+    path = "/.";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/");
+
+    path = "/a";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/a");
+
+    path = "/a/";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/a");
+
+    path = "/a/.";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/a");
+
+    path = "/a/./";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/a");
+
+    path = "/a/..";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/");
+
+    path = "/a/../";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "/");
+
+    // '//x' is considered root name in windows
+    path = "//a//**//b*//c?";
+    EXPECT_STREQ(NormalizePath(path).c_str(), "//a/**/b*/c?");
+
+    path = ".";
+    EXPECT_STREQ(NormalizePath(path).c_str(), ".");
+
+    path = "./";
+    EXPECT_STREQ(NormalizePath(path).c_str(), ".");
+}
+
 } // namespace logtail

@@ -87,11 +87,19 @@ std::string AbsolutePath(const std::string& path, const std::string& basepath) {
 }
 
 std::string NormalizePath(const std::string& path) {
+    // for boost, if path ends with slash, then lexically_normal() will return /.
+    // otherwise, lexically_normal() returns without slash
     boost::filesystem::path abs(path);
-    if (abs.filename_is_dot() || abs.filename_is_dot_dot()) {
-        abs.remove_filename();
+    string res = abs.lexically_normal().string();
+    size_t len = res.size();
+    if (len >= 2 && res[len - 2] == PATH_SEPARATOR[0] && res[len - 1] == '.') {
+        if (len == 2) {
+            res.resize(1);
+        } else {
+            res.resize(len - 2);
+        }
     }
-    return abs.string();
+    return res;
 }
 
 int FSeek(FILE* stream, int64_t offset, int origin) {
