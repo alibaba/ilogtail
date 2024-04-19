@@ -41,12 +41,12 @@ private:
 // only movable
 class BufferAllocator {
 private:
-    static const int32_t kAlignSize = sizeof(void*);
-    static const int32_t kPageSize = 4096; // in bytes
+    static const uint32_t kAlignSize = sizeof(void*);
+    static const uint32_t kPageSize = 4096; // in bytes
 
 public:
-    explicit BufferAllocator(int32_t firstChunkSize = 4096, int32_t chunkSizeLimit = 1024 * 128)
-        : mFirstChunkSize(firstChunkSize), mChunkSize(firstChunkSize), mChunkSizeLimit(chunkSizeLimit) {
+    explicit BufferAllocator(uint32_t firstChunkSize = 4096, uint32_t chunkSizeLimit = 1024 * 128)
+        : mFirstChunkSize(firstChunkSize), mChunkSizeLimit(chunkSizeLimit), mChunkSize(firstChunkSize) {
         mAllocPtr = new uint8_t[mChunkSize];
         mAllocatedChunks.push_back(mAllocPtr);
         mFreeBytesInChunk = mChunkSize;
@@ -77,7 +77,7 @@ public:
         mUsed = 0;
     }
 
-    void* Allocate(int32_t bytes) {
+    void* Allocate(uint32_t bytes) {
         // Align the alloc size
         int32_t aligned = (bytes + kAlignSize - 1) & ~(kAlignSize - 1);
         return Alloc(aligned);
@@ -92,7 +92,7 @@ public:
 private:
     // Please do not make it public, user should always use Allocate() to get a better performance.
     // If you have a strong reason to do it, please drop a email to me: shiquan.yangsq@aliyun-inc.com
-    uint8_t* Alloc(int32_t bytes) {
+    uint8_t* Alloc(uint32_t bytes) {
         uint8_t* mem = NULL;
 
         if (bytes <= mFreeBytesInChunk) {
