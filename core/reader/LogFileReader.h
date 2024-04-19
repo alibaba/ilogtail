@@ -610,6 +610,7 @@ struct LogBuffer {
     SourceBuffer* sourcebuffer = nullptr;
 
     LogBuffer() : sourcebuffer(new SourceBuffer()) {}
+    void SetDependecy(const LogFileReaderPtr& reader) { logFileReader = reader; }
 };
 
 } // namespace logtail
