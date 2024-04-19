@@ -283,15 +283,17 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 	if state == cri.ContainerState_CONTAINER_RUNNING && ContainerProcessAlive(int(ci.Pid)) {
 		stateStatus = ContainerStatusRunning
 	}
-
+	finishedTime := status.GetStatus().GetFinishedAt()
+	finishedAt := time.Unix(0, finishedTime).Format(time.RFC3339Nano)
 	dockerContainer := types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
 			ID:      containerID,
 			Created: time.Unix(0, status.GetStatus().CreatedAt).Format(time.RFC3339Nano),
 			LogPath: status.GetStatus().GetLogPath(),
 			State: &types.ContainerState{
-				Status: stateStatus,
-				Pid:    int(ci.Pid),
+				Status:     stateStatus,
+				Pid:        int(ci.Pid),
+				FinishedAt: finishedAt,
 			},
 			HostConfig: &container.HostConfig{
 				VolumeDriver: ci.Snapshotter,
@@ -401,7 +403,11 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 			logger.Error(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "Create container info from cri-runtime error, Container Info:%+v", c)
 			continue
 		}
-		if dockerContainer.Status() != ContainerStatusRunning {
+		finishedAt := dockerContainer.FinishedAt()
+		finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
+		now := time.Now()
+		duration := now.Sub(finishedAtTime)
+		if dockerContainer.Status() != ContainerStatusRunning && duration >= ContainerInfoDeletedTimeout {
 			continue
 		}
 		cw.containers[c.GetId()] = &innerContainerInfo{
