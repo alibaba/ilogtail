@@ -129,7 +129,7 @@ void HistoryFileImporter::FlowControl(uint32_t bufferSize, double rate) {
     auto now = GetCurrentTimeInMicroSeconds();
     // rate is in bytes per second
     double realRateTime = now - lastPushBufferTime;
-    if (bufferSize > realRateTime * rate) {
+    if (bufferSize * 1000000 > realRateTime * rate) {
         double limitRateTime = bufferSize / rate * 1000000;
         usleep(limitRateTime - realRateTime);
         LOG_DEBUG(sLogger,
