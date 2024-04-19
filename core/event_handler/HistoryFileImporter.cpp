@@ -132,7 +132,7 @@ void HistoryFileImporter::FlowControl(uint32_t bufferSize, double rate) {
     if (bufferSize > realRateTime * rate) {
         double limitRateTime = bufferSize / rate * 1000000;
         usleep(limitRateTime - realRateTime);
-        LOG_WARNING(sLogger, ("history wait", limitRateTime - realRateTime));
+        LOG_DEBUG(sLogger, ("history file import wait because of flow control (us)", limitRateTime - realRateTime));
     }
     lastPushBufferTime = GetCurrentTimeInMicroSeconds();
 }
