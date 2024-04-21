@@ -94,6 +94,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
         readerSharePtr->CheckFileSignatureAndOffset(false);
 
         bool doneFlag = false;
+        lastPushBufferTime = GetCurrentTimeInMicroSeconds();
         while (true) {
             while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
                 usleep(1000 * 10);
@@ -102,6 +103,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
+                FlowControl(logBuffer->rawBuffer.size(), event.mRate);
                 logProcess->PushBuffer(logBuffer, 100000000);
             } else {
                 delete logBuffer;
@@ -118,5 +120,22 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
                                                                                                              "done")(
                      "file", filePath)("offset", readerSharePtr->GetLastFilePos())("time(ms)", doneTime - startTime));
     }
+}
+
+void HistoryFileImporter::FlowControl(uint32_t bufferSize, double rate) {
+    if (rate == 0) {
+        return;
+    }
+    auto now = GetCurrentTimeInMicroSeconds();
+    // rate is in bytes per second
+    double realRateTime = now - lastPushBufferTime;
+    if (bufferSize * 1000000 > realRateTime * rate) {
+        double limitRateTime = bufferSize / rate * 1000000;
+        usleep(limitRateTime - realRateTime);
+        LOG_DEBUG(sLogger,
+                  ("history file import wait because of flow control, wait time in microsecond:",
+                   limitRateTime - realRateTime));
+    }
+    lastPushBufferTime = GetCurrentTimeInMicroSeconds();
 }
 } // namespace logtail
