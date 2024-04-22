@@ -1058,6 +1058,7 @@ func (dc *DockerCenter) fetchAll() error {
 		}
 		if err == nil {
 			if !ContainerProcessAlive(containerDetail.State.Pid) {
+				containerDetail.State.Status = ContainerStatusExited
 				finishedAt := containerDetail.State.FinishedAt
 				finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
 				now := time.Now()
