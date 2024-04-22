@@ -607,7 +607,7 @@ struct LogBuffer {
     // Current buffer's offset in file, for log position meta feature.
     uint64_t readOffset = 0;
     uint64_t readLength = 0;
-    SourceBuffer* sourcebuffer = nullptr;
+    std::unique_ptr<SourceBuffer> sourcebuffer;
 
     LogBuffer() : sourcebuffer(new SourceBuffer()) {}
     void SetDependecy(const LogFileReaderPtr& reader) { logFileReader = reader; }
