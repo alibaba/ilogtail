@@ -84,8 +84,9 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
         MultilineOptions multilineOpts;
         LogFileReader logFileReader(
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastContainerdTextLine);
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
+        BaseLineParse* baseLineParsePtr = nullptr;
+        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+        logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
         // 异常情况+有回车
         {
             // case: PartLogFlag存在，第三个空格存在但空格后无内容
@@ -99,13 +100,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -118,13 +118,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
-                APSARA_TEST_EQUAL("P", line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag不存在，第二个空格存在
             {
@@ -137,12 +136,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第二个空格不存在
@@ -156,12 +154,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第一个空格不存在
@@ -175,12 +172,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
         }
@@ -197,13 +193,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -216,13 +211,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
-                APSARA_TEST_EQUAL("P", line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag不存在，第二个空格存在
             {
@@ -235,12 +229,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第二个空格不存在
@@ -254,12 +247,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第一个空格不存在
@@ -273,19 +265,18 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
         }
         // case: F + P + P
         {
             std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
-            std::string expectedLog = LOG_FULL + "789\n" + LOG_PART + "123\n";
+            std::string expectedLog = LOG_FULL + "789\n";
 
             int32_t size = testLog.size();
             int32_t endPs; // the position of \n or \0
@@ -294,18 +285,17 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(false, line.fullLine);
+            APSARA_TEST_EQUAL("789", line.data.to_string());
+            APSARA_TEST_EQUAL(0, line.lineBegin);
+            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: F + P + P + '\n'
         {
             std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
-            std::string expectedLog = LOG_FULL + "789\n" + LOG_PART + "123\n";
+            std::string expectedLog = LOG_FULL + "789\n";
 
             int32_t size = testLog.size();
             int32_t endPs; // the position of \n or \0
@@ -314,13 +304,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(false, line.fullLine);
+            APSARA_TEST_EQUAL("789", line.data.to_string());
+            APSARA_TEST_EQUAL(0, line.lineBegin);
+            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
+            APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
         // case: F + P + P + F
@@ -335,12 +324,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: F + P + P + F + '\n'
@@ -355,12 +343,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -376,12 +363,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // F + errorLog + '\n'
@@ -396,12 +382,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -417,12 +402,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: P + P + F + '\n'
@@ -437,12 +421,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -458,12 +441,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: P + P + error + '\n'
@@ -478,12 +460,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: P + P
@@ -498,12 +479,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
+            APSARA_TEST_EQUAL("", line.data.to_string());
+            APSARA_TEST_EQUAL(0, line.lineBegin);
+            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
             APSARA_TEST_EQUAL(false, line.fullLine);
         }
         // case: P + P + '\n'
@@ -518,458 +498,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
 
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(false, line.fullLine);
-        }
-    }
-    {
-        MultilineOptions multilineOpts;
-        LogFileReader logFileReader(
-            logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastContainerdTextLine);
-        // 异常情况+有回车
-        {
-            // case: PartLogFlag存在，第三个空格存在但空格后无内容
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P \n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag存在，第三个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL("P", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag不存在，第二个空格存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout \n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第二个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第一个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00stdout\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-        }
-        // 异常情况+无回车
-        {
-            // case: PartLogFlag存在，第三个空格存在但空格后无内容
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P ";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag存在，第三个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL("P", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag不存在，第二个空格存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout ";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第二个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第一个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00stdout";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-        }
-        // case: F + P + P
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
-            std::string expectedLog = LOG_FULL + "789\n" + LOG_PART + "123\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(false, line.fullLine);
-        }
-        // case: F + P + P + '\n'
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
-            std::string expectedLog = LOG_FULL + "789\n" + LOG_PART + "123\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(false, line.fullLine);
-        }
-
-        // case: F + P + P + F
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
-            std::string expectedLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: F + P + P + F + '\n'
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-            std::string expectedLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // F + errorLog
-        {
-            std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789";
-            std::string expectedLog = LOG_FULL + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // F + errorLog + '\n'
-        {
-            std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789\n";
-            std::string expectedLog = LOG_FULL + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // case: P + P + F
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P + F + '\n'
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // case: P + P + error
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P + error + '\n'
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789\n";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456";
-            std::string expectedLog = LOG_PART + "123\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(false, line.fullLine);
-        }
-        // case: P + P + '\n'
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-            std::string expectedLog = LOG_PART + "123\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0, true);
-
-            APSARA_TEST_EQUAL("456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
+            APSARA_TEST_EQUAL("", line.data.to_string());
+            APSARA_TEST_EQUAL(0, line.lineBegin);
+            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
             APSARA_TEST_EQUAL(false, line.fullLine);
         }
     }
@@ -980,8 +513,9 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
         MultilineOptions multilineOpts;
         LogFileReader logFileReader(
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastContainerdTextLine);
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
+        BaseLineParse* baseLineParsePtr = nullptr;
+        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+        logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
         // 异常情况+有回车
         {
             // case: PartLogFlag存在，第三个空格存在但空格后无内容
@@ -995,13 +529,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -1014,13 +547,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
-                APSARA_TEST_EQUAL("P", line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag不存在，第二个空格存在
             {
@@ -1033,12 +565,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第二个空格不存在
@@ -1052,12 +583,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第一个空格不存在
@@ -1071,12 +601,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
         }
@@ -1093,13 +622,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag存在，第三个空格不存在
             {
@@ -1112,13 +640,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
-                APSARA_TEST_EQUAL("P", line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // case: PartLogFlag不存在，第二个空格存在
             {
@@ -1131,12 +658,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第二个空格不存在
@@ -1150,12 +676,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
             // case: 第一个空格不存在
@@ -1169,12 +694,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
                 APSARA_TEST_EQUAL(true, line.fullLine);
             }
         }
@@ -1190,12 +714,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
+            APSARA_TEST_EQUAL("789", line.data.to_string());
+            APSARA_TEST_EQUAL(0, line.lineBegin);
+            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: F + P + P + '\n'
@@ -1210,12 +733,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
+            APSARA_TEST_EQUAL("789", line.data.to_string());
+            APSARA_TEST_EQUAL(0, line.lineBegin);
+            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -1231,12 +753,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: F + P + P + F + '\n'
@@ -1251,12 +772,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -1272,12 +792,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // F + errorLog + '\n'
@@ -1292,12 +811,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
             APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -1313,12 +831,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
             APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: P + P + F + '\n'
@@ -1333,12 +850,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
             APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
 
@@ -1354,12 +870,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456" + LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
             APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: P + P + error + '\n'
@@ -1374,12 +889,11 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456" + LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
             APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
             APSARA_TEST_EQUAL(true, line.fullLine);
         }
         // case: P + P
@@ -1394,13 +908,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
+            APSARA_TEST_EQUAL("", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
             APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
+            APSARA_TEST_EQUAL(false, line.fullLine);
         }
         // case: P + P + '\n'
         {
@@ -1414,459 +927,12 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
+            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
 
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
+            APSARA_TEST_EQUAL("", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
             APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-    }
-    {
-        MultilineOptions multilineOpts;
-        LogFileReader logFileReader(
-            logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastContainerdTextLine);
-        // 异常情况+有回车
-        {
-            // case: PartLogFlag存在，第三个空格存在但空格后无内容
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P \n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag存在，第三个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL("P", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag不存在，第二个空格存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout \n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第二个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第一个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00stdout\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-        }
-        // 异常情况+无回车
-        {
-            // case: PartLogFlag存在，第三个空格存在但空格后无内容
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P ";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag存在，第三个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout P";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL("P", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: PartLogFlag不存在，第二个空格存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout ";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL("", line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第二个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00 stdout";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // case: 第一个空格不存在
-            {
-                std::string testLog = "2024-01-05T23:28:06.818486411+08:00stdout";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-        }
-        // case: F + P + P
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456";
-            std::string expectedLog = LOG_FULL + "789\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: F + P + P + '\n'
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n";
-            std::string expectedLog = LOG_FULL + "789\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // case: F + P + P + F
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
-            std::string expectedLog = LOG_FULL + "789\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: F + P + P + F + '\n'
-        {
-            std::string testLog = LOG_FULL + "789\n" + LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-            std::string expectedLog = LOG_FULL + "789\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // F + errorLog
-        {
-            std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789";
-            std::string expectedLog = LOG_FULL + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // F + errorLog + '\n'
-        {
-            std::string testLog = LOG_FULL + "456\n" + LOG_ERROR + "789\n";
-            std::string expectedLog = LOG_FULL + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
-            APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // case: P + P + F
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456789", line.data.to_string());
-            APSARA_TEST_EQUAL(0, line.lineBegin);
-            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P + F + '\n'
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_FULL + "789\n";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456789", line.data.to_string());
-            APSARA_TEST_EQUAL(0, line.lineBegin);
-            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-
-        // case: P + P + error
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456" + LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(0, line.lineBegin);
-            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P + error + '\n'
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n" + LOG_ERROR + "789\n";
-            std::string expectedLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456" + LOG_ERROR + "789", line.data.to_string());
-            APSARA_TEST_EQUAL(0, line.lineBegin);
-            APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456";
-            std::string expectedLog = LOG_PART + "123\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
-            APSARA_TEST_EQUAL(0, line.lineBegin);
-            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
-        }
-        // case: P + P + '\n'
-        {
-            std::string testLog = LOG_PART + "123\n" + LOG_PART + "456\n";
-            std::string expectedLog = LOG_PART + "123\n";
-
-            int32_t size = testLog.size();
-            int32_t endPs; // the position of \n or \0
-            if (testLog[size - 1] == '\n') {
-                endPs = size - 1;
-            } else {
-                endPs = size;
-            }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-
-            APSARA_TEST_EQUAL("123456", line.data.to_string());
-            APSARA_TEST_EQUAL(0, line.lineBegin);
-            APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
-            APSARA_TEST_EQUAL(endPs, line.lineEnd);
-            APSARA_TEST_EQUAL(true, line.fullLine);
+            APSARA_TEST_EQUAL(false, line.fullLine);
         }
     }
 }
@@ -1929,8 +995,10 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
         MultilineOptions multilineOpts;
         LogFileReader logFileReader(
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastDockerJsonFileLine);
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
+        BaseLineParse* baseLineParsePtr = nullptr;
+        baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+        logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
+        // 不带回车
         // 不带回车
         {
             // 合法
@@ -1944,8 +1012,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)",
                                   line.data.to_string());
@@ -1963,12 +1030,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // stream非法
             {
@@ -1981,12 +1047,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // time非法
             {
@@ -1999,12 +1064,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // 非法json
             {
@@ -2017,12 +1081,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
         }
         // 带回车
@@ -2040,8 +1103,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)",
                                   line.data.to_string());
@@ -2061,13 +1123,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // stream非法
             {
@@ -2082,13 +1142,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // time非法
             {
@@ -2103,13 +1161,11 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
             // 非法json
             {
@@ -2124,226 +1180,176 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
+                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
+                APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-        }
-    }
-    {
-        MultilineOptions multilineOpts;
-        LogFileReader logFileReader(
-            logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
-        logFileReader.mGetLastLineFuncs.emplace_back(LogFileReader::GetLastDockerJsonFileLine);
-        // 不带回车
-        {
-            // 合法
-            {
-                std::string testLog
-                    = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)",
-                                  line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // log非法
-            {
-                std::string testLog
-                    = R"({"log1":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // stream非法
-            {
-                std::string testLog
-                    = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream1":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // time非法
-            {
-                std::string testLog
-                    = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time1":"2024-02-19T03:49:37.793533014Z"})";
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // 非法json
-            {
-                std::string testLog
-                    = R"(log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-        }
-        // 带回车
-        {
-            // 合法
-            {
-                std::string testLog
-                    = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                testLog += "\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)",
-                                  line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // log非法
-            {
-                std::string testLog
-                    = R"({"log1":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                testLog += "\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // stream非法
-            {
-                std::string testLog
-                    = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream1":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                testLog += "\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // time非法
-            {
-                std::string testLog
-                    = R"({"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time1":"2024-02-19T03:49:37.793533014Z"})";
-                testLog += "\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
-            }
-            // 非法json
-            {
-                std::string testLog
-                    = R"(log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
-                testLog += "\n";
-
-                int32_t size = testLog.size();
-                int32_t endPs; // the position of \n or \0
-                if (testLog[size - 1] == '\n') {
-                    endPs = size - 1;
-                } else {
-                    endPs = size;
-                }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, 0);
-                APSARA_TEST_EQUAL(endPs, line.lineEnd);
-                APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
-                testLog.pop_back();
-                APSARA_TEST_EQUAL(testLog, line.data.to_string());
-                APSARA_TEST_EQUAL(0, line.lineBegin);
-                APSARA_TEST_EQUAL(true, line.fullLine);
+                APSARA_TEST_EQUAL(false, line.fullLine);
             }
         }
     }
 }
 
+
+class LastMatchedContainerdTextWithDockerJsonUnittest : public ::testing::Test {
+public:
+    static void SetUpTestCase() {
+        logPathDir = GetProcessExecutionDir();
+        if (PATH_SEPARATOR[0] == logPathDir.back()) {
+            logPathDir.resize(logPathDir.size() - 1);
+        }
+        logPathDir += PATH_SEPARATOR + "testDataSet" + PATH_SEPARATOR + "LogFileReaderUnittest";
+        gbkFile = "gbk.txt";
+        utf8File = "utf8.txt"; // content of utf8.txt is equivalent to gbk.txt
+    }
+
+    static void TearDownTestCase() {
+        remove(gbkFile.c_str());
+        remove(utf8File.c_str());
+    }
+
+    void SetUp() override {
+        std::string filepath = logPathDir + PATH_SEPARATOR + utf8File;
+        std::unique_ptr<FILE, decltype(&std::fclose)> fp(std::fopen(filepath.c_str(), "r"), &std::fclose);
+        if (!fp.get()) {
+            return;
+        }
+        std::fseek(fp.get(), 0, SEEK_END);
+        long filesize = std::ftell(fp.get());
+        std::fseek(fp.get(), 0, SEEK_SET);
+        expectedContent.reset(new char[filesize + 1]);
+        fread(expectedContent.get(), filesize, 1, fp.get());
+        expectedContent[filesize] = '\0';
+        for (long i = filesize - 1; i >= 0; --i) {
+            if (expectedContent[i] == '\n') {
+                expectedContent[i] = 0;
+                break;
+            };
+        }
+    }
+
+    void TestContainerdTextWithDockerJson();
+    void TestDockerJsonWithContainerdText();
+
+    std::unique_ptr<char[]> expectedContent;
+    FileReaderOptions readerOpts;
+    PipelineContext ctx;
+    static std::string logPathDir;
+    static std::string gbkFile;
+    static std::string utf8File;
+};
+
+UNIT_TEST_CASE(LastMatchedContainerdTextWithDockerJsonUnittest, TestContainerdTextWithDockerJson);
+UNIT_TEST_CASE(LastMatchedContainerdTextWithDockerJsonUnittest, TestDockerJsonWithContainerdText);
+
+std::string LastMatchedContainerdTextWithDockerJsonUnittest::logPathDir;
+std::string LastMatchedContainerdTextWithDockerJsonUnittest::gbkFile;
+std::string LastMatchedContainerdTextWithDockerJsonUnittest::utf8File;
+
+void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDockerJson() {
+    MultilineOptions multilineOpts;
+    LogFileReader logFileReader(
+        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    BaseLineParse* baseLineParsePtr = nullptr;
+    baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+    logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
+    baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+    logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
+    {
+        std::string testLog
+            = R"({"log":"2021-07-13T16:32:21.212861448Z stdout P Exception in thread  \"main\" java\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+        testLog += "\n";
+        testLog
+            += R"({"log":"2021-07-13T16:32:21.212861448Z stdout F .lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+        int32_t size = testLog.size();
+        int32_t endPs; // the position of \n or \0
+        if (testLog[size - 1] == '\n') {
+            endPs = size - 1;
+        } else {
+            endPs = size;
+        }
+        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
+        APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
+        APSARA_TEST_EQUAL(0, line.lineBegin);
+        APSARA_TEST_EQUAL(true, line.fullLine);
+    }
+    {
+        std::string testLog
+            = R"({"log":"2021-07-13T16:32:21.212861448Z stdout P Exception in thread  \"main\" java\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+        testLog += "\n";
+        testLog
+            += R"({"log":"2021-07-13T16:32:21.212861448Z stdout F .lang.NullPoinntterException\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+        testLog += "\n";
+        testLog
+            += R"({"log":"2021-07-13T16:32:21.212861448Z stdout P 哈哈哈哈\n","stream":"stdout","time":"2024-02-19T03:49:37.79353)";
+        testLog += "\n";
+        testLog
+            += R"({"log":"2021-07-13T16:32:21.212861448Z stdout F 啦啦啦啦\n","stream":"stdout","time":"2024-02-19T03:49:37.79353)";
+        int32_t size = testLog.size();
+        int32_t endPs; // the position of \n or \0
+        if (testLog[size - 1] == '\n') {
+            endPs = size - 1;
+        } else {
+            endPs = size;
+        }
+        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        APSARA_TEST_EQUAL(4, line.rollbackLineFeedCount);
+        APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
+        APSARA_TEST_EQUAL(0, line.lineBegin);
+        APSARA_TEST_EQUAL(true, line.fullLine);
+    }
+}
+
+void LastMatchedContainerdTextWithDockerJsonUnittest::TestDockerJsonWithContainerdText() {
+    MultilineOptions multilineOpts;
+    LogFileReader logFileReader(
+        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    BaseLineParse* baseLineParsePtr = nullptr;
+    baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+    logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
+    baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+    logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
+    {
+        std::string testLog
+            = R"(2021-07-13T16:32:21.212861448Z stdout P {"log":"Exception in thread  \"main\" java.lang.NullPoinntterException\n","stream":"stdout","t)";
+        testLog += "\n";
+        testLog += R"(2021-07-13T16:32:21.212861448Z stdout F ime":"2024-02-19T03:49:37.793533014Z"})";
+        int32_t size = testLog.size();
+        int32_t endPs; // the position of \n or \0
+        if (testLog[size - 1] == '\n') {
+            endPs = size - 1;
+        } else {
+            endPs = size;
+        }
+        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
+        APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
+        APSARA_TEST_EQUAL(0, line.lineBegin);
+        APSARA_TEST_EQUAL(true, line.fullLine);
+    }
+    {
+        std::string testLog
+            = R"(2021-07-13T16:32:21.212861448Z stdout P {"log":"Exception in thread  \"main\" java.lang.NullPoinntterEx)";
+        testLog += "\n";
+        testLog
+            += R"(2021-07-13T16:32:21.212861448Z stdout F ception\n","stream":"stdout","time":"2024-02-19T03:49:37.793533014Z"})";
+        testLog += "\n";
+        testLog += R"(2021-07-13T16:32:21.212861448Z stdo)";
+        int32_t size = testLog.size();
+        int32_t endPs; // the position of \n or \0
+        if (testLog[size - 1] == '\n') {
+            endPs = size - 1;
+        } else {
+            endPs = size;
+        }
+        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
+        APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
+        APSARA_TEST_EQUAL(0, line.lineBegin);
+        APSARA_TEST_EQUAL(true, line.fullLine);
+    }
+}
 } // namespace logtail
 
 UNIT_TEST_MAIN

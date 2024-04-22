@@ -84,6 +84,10 @@ namespace logtail {
 
 size_t LogFileReader::BUFFER_SIZE = 1024 * 512; // 512KB
 
+ContainerdTextParse LogFileReader::mContainerdTextParse = ContainerdTextParse();
+DockerJsonFileParse LogFileReader::mDockerJsonFileParse = DockerJsonFileParse();
+RawTextParse LogFileReader::mRawTextParse = RawTextParse();
+
 LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                                   const string& hostLogPathFile,
                                                   const DevInode& devInode,
@@ -191,9 +195,10 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mLogstore = readerConfig.second->GetLogstoreName();
     mConfigName = readerConfig.second->GetConfigName();
     mRegion = readerConfig.second->GetRegion();
-    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputFile) {
-        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastTextLine);
-    }
+
+    BaseLineParse* baseLineParsePtr = nullptr;
+    baseLineParsePtr = &LogFileReader::mRawTextParse;
+    mLineParsers.emplace_back(baseLineParsePtr);
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
@@ -789,13 +794,15 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     int64_t filePos = 0;
     TruncateInfo* truncateInfo = NULL;
     ReadFile(op, containerBOMBuffer, readBOMByte, filePos, &truncateInfo);
+    BaseLineParse* baseLineParsePtr = nullptr;
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
-        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastDockerJsonFileLine);
+        baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
     } else {
         mFileLogFormat = LogFormat::CONTAINERD_TEXT;
-        mGetLastLineFuncs.emplace_back(LogFileReader::GetLastContainerdTextLine);
+        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
     }
+    mLineParsers.emplace_back(baseLineParsePtr);
     mHasReadContainerBom = true;
 }
 
@@ -830,7 +837,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         string exception;
         for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
             if (readBuf[endPs] == '\n') {
-                LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, 0, true);
+                LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, true);
                 if (BoostRegexSearch(
                         line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
                     mLastFilePos += line.lineBegin;
@@ -2081,7 +2088,7 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
     if (mMultilineConfig.first->IsMultiline()) {
         std::string exception;
         while (endPs >= 0) {
-            LineInfo content = GetLastLine(StringView(buffer, size), endPs, 0, false);
+            LineInfo content = GetLastLine(StringView(buffer, size), endPs, false);
             if (mMultilineConfig.first->GetEndPatternReg()) {
                 // start + end, continue + end, end
                 if (BoostRegexSearch(content.data.data(),
@@ -2089,8 +2096,8 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
                                      *mMultilineConfig.first->GetEndPatternReg(),
                                      exception)) {
                     // Ensure the end line is complete
-                    if (buffer[endPs] == '\n') {
-                        return endPs + 1;
+                    if (buffer[content.lineEnd] == '\n') {
+                        return content.lineEnd + 1;
                     }
                 }
             } else if (mMultilineConfig.first->GetStartPatternReg()
@@ -2114,274 +2121,20 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
     } else {
         endPs = size;
     }
-    LineInfo content = GetLastLine(StringView(buffer, size), endPs, 0, true);
+    LineInfo content = GetLastLine(StringView(buffer, size), endPs, true);
     // 最后一行是完整行,且以 \n 结尾
     if (content.fullLine && buffer[endPs] == '\n') {
         return size;
     }
-    content = GetLastLine(StringView(buffer, size), endPs, 0, false);
+    content = GetLastLine(StringView(buffer, size), endPs, false);
     rollbackLineFeedCount = content.rollbackLineFeedCount;
     return content.lineBegin;
 }
 
-/*
-    params:
-        buffer: all read logs
-        end: the end position of current line, \n or \0
-    return:
-        last line (backward), without \n or \0
-*/
-LineInfo LogFileReader::GetLastTextLine(StringView buffer, int32_t end) {
-    if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true};
-    }
-
-    for (int32_t begin = end; begin > 0; --begin) {
-        if (begin == 0 || buffer[begin - 1] == '\n') {
-            // 返回 begin～end-1的日志内容, lineBegin为begin, rollbackLineFeedCount为1, lineEnd为end, fullLine为true
-            return LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
-        }
-    }
-    // 整行都没换行符时
-    // 返回 0～end-1的日志内容, lineBegin为0, rollbackLineFeedCount为1, lineEnd为end, fullLine为true
-    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
-}
-
-LineInfo LogFileReader::GetLastDockerJsonFileLine(StringView buffer, int32_t end) {
-    if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true};
-    }
-
-    for (int32_t begin = end; begin >= 0; --begin) {
-        if (begin == 0 || buffer[begin - 1] == '\n') {
-            StringView lastLine = StringView(buffer.data() + begin, end - begin);
-            rapidjson::Document doc;
-            doc.Parse(lastLine.data(), lastLine.size());
-            LineInfo res = LineInfo{StringView(buffer.data() + begin, end - begin), begin, 1, end, true};
-            if (doc.HasParseError()) {
-                return res;
-            } else if (!doc.IsObject()) {
-                return res;
-            }
-            auto it = doc.FindMember(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.c_str());
-            if (it == doc.MemberEnd() || !it->value.IsString()) {
-                return res;
-            }
-            it = doc.FindMember(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.c_str());
-            if (it == doc.MemberEnd() || !it->value.IsString()) {
-                return res;
-            }
-            it = doc.FindMember(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str());
-            if (it == doc.MemberEnd() || !it->value.IsString()) {
-                return res;
-            }
-            StringView content = it->value.GetString();
-            if (content.size() > 0 && content[content.size() - 1] == '\n') {
-                content = StringView(content.data(), content.size() - 1);
-            }
-            res.dataRaw = content.to_string();
-            res.data = res.dataRaw;
-            return res;
-        }
-    }
-    // The return here will not occur.
-    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true};
-}
-
-LineInfo LogFileReader::GetLastContainerdTextLine(StringView buffer, int32_t end) {
-    if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true, true};
-    }
-
-    for (int32_t begin = end; begin >= 0; --begin) {
-        if (begin == 0 || buffer[begin - 1] == '\n') {
-            StringView lastLine = StringView(buffer.data() + begin, end - begin);
-            const char* lineEnd = buffer.data() + end;
-
-            LineInfo res = LineInfo{lastLine, begin, 1, end, true, true};
-            // 寻找第一个分隔符位置 time
-            StringView timeValue;
-            const char* pch1
-                = std::find(buffer.data() + begin, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
-            if (pch1 == lineEnd) {
-                return res;
-            }
-            // 寻找第二个分隔符位置 source
-            const char* pch2 = std::find(pch1 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
-            if (pch2 == lineEnd) {
-                return res;
-            }
-            StringView sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
-            if (sourceValue != "stdout" && sourceValue != "stderr") {
-                return res;
-            }
-            // 如果既不以 P 开头,也不以 F 开头
-            if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
-                && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
-                lastLine = StringView(pch2 + 1, lineEnd - pch2 - 1);
-                res.data = lastLine;
-                return res;
-            }
-            // 寻找第三个分隔符位置 content
-            const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
-            if (pch3 == lineEnd || pch3 != pch2 + 2) {
-                lastLine = StringView(pch2 + 1, lineEnd - pch2 - 1);
-                res.data = lastLine;
-                return res;
-            }
-            if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
-                // F
-                lastLine = StringView(pch3 + 1, lineEnd - pch3 - 1);
-                res.data = lastLine;
-                return res;
-            } else {
-                // P
-                lastLine = StringView(pch3 + 1, lineEnd - pch3 - 1);
-                res.fullLine = false;
-                res.data = lastLine;
-                return res;
-            }
-        }
-    }
-    return LineInfo{StringView(buffer.data(), end), 0, 1, end, true, true};
-}
-
-// GetLastLine函数
-// 功能：获取日志文件中的最后一个完整日志块的信息
-// 参数：
-// - buffer：日志文件的内容
-// - end：结束的位置
-// - protocolFunctionIndex：协议函数索引, 越小越外层
-// - needSingleLine：是否只需要单行日志
-// 返回值：返回一个LineInfo对象,包含了最后一个完整日志块的信息,
-// lineBegin为日志块在原始日志buffer的起始位置、rollbackLineFeedCount为日志块在原始日志buffer的行数、lineEnd为日志块在原始日志buffer的结束位置
-LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, size_t protocolFunctionIndex, bool needSingleLine) {
-    // 如果结束位置为0,直接返回
-    if (end == 0) {
-        return LineInfo{buffer, 0, 1, end, true};
-    }
-
-    // 处理rawLine
-    auto processLine = [&](LineInfo rawLine) {
-        LineInfo line = mGetLastLineFuncs[protocolFunctionIndex](rawLine.data, rawLine.data.size());
-        line.lineBegin = rawLine.lineBegin;
-        line.rollbackLineFeedCount = rawLine.rollbackLineFeedCount;
-        line.lineEnd = rawLine.lineEnd;
-        return line;
-    };
-
-    // 获取最后一行的信息
-    LineInfo finalLine;
-    if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
-        finalLine = processLine(GetLastLine(buffer, end, protocolFunctionIndex + 1, needSingleLine));
-    } else {
-        finalLine = mGetLastLineFuncs[protocolFunctionIndex](buffer, end);
-    }
-
-    // 如果行开始位置为0,标记为完整行
-    if (finalLine.lineBegin == 0) {
-        finalLine.fullLine = true;
-    }
-
-    // 如果只需要单行日志或行开始位置为0,直接返回
-    if (needSingleLine || finalLine.lineBegin == 0) {
-        return finalLine;
-    }
-
-    // 如果需要合并行,进行合并
-    if (finalLine.needMerge) {
-        mergeLines(finalLine, protocolFunctionIndex, finalLine, true);
-    }
-
-    // 循环处理,直到找到完整的日志块
-    while (true) {
-        // 如果行开始位置为0,标记为完整行并退出循环
-        if (finalLine.lineBegin == 0) {
-            finalLine.fullLine = true;
-            break;
-        }
-
-        // 获取前一行的信息
-        LineInfo previousLine;
-        if (protocolFunctionIndex < mGetLastLineFuncs.size() - 1) {
-            previousLine
-                = processLine(GetLastLine(buffer, finalLine.lineBegin - 1, protocolFunctionIndex + 1, needSingleLine));
-        } else {
-            previousLine = mGetLastLineFuncs[protocolFunctionIndex](buffer, finalLine.lineBegin - 1);
-        }
-
-        // 如果前一行是完整行, 说明 finalLine 是一个完整的日志块
-        if (previousLine.fullLine) {
-            finalLine.fullLine = true;
-            return finalLine;
-        }
-
-        // 更新回滚行数和行开始位置
-        finalLine.rollbackLineFeedCount += previousLine.rollbackLineFeedCount;
-        finalLine.lineBegin = previousLine.lineBegin;
-
-        // 如果不需要合并行,更新行数据并继续循环
-        if (!finalLine.needMerge) {
-            finalLine.data = previousLine.data;
-            continue;
-        }
-
-        // 如果需要合并行,进行合并
-        if (finalLine.needMerge) {
-            mergeLines(finalLine, protocolFunctionIndex, previousLine, false);
-        }
-    }
-
-    // 返回最后一个完整日志块的信息
-    return finalLine;
-}
-
-// mergeLines函数
-// 功能：合并两行日志
-// 参数：
-// - resultLine：结果行,将被合并的行
-// - n：函数索引
-// - additionalLine：需要被合并的行
-// - shouldResetBuffer：是否需要重置缓冲区
-// 示例：假设resultLine的data成员为"line1",additionalLine的data成员为"line2",那么合并后resultLine的data成员将变为"line1line2"
-void LogFileReader::mergeLines(LineInfo& resultLine, size_t n, const LineInfo& additionalLine, bool shouldResetBuffer) {
-    StringBuffer* buffer = GetStringBuffer(n);
-
-    // If buffer needs to be reset, set its size to 0
-    if (shouldResetBuffer) {
-        buffer->size = 0;
-    }
-
-    // Calculate the new data position in the buffer
-    char* newDataPosition = buffer->data + buffer->capacity - buffer->size - additionalLine.data.size();
-
-    // Copy the data from the additional line to the new position in the buffer
-    memcpy(newDataPosition, additionalLine.data.data(), additionalLine.data.size());
-
-    // Increase the buffer size by the size of the additional line
-    buffer->size += additionalLine.data.size();
-
-    // Update the result line's data to reflect the new data and size
-    resultLine.data = StringView(newDataPosition, buffer->size);
-}
-
-std::unique_ptr<SourceBuffer> LogFileReader::mSourceBuffer = std::make_unique<SourceBuffer>();
-vector<StringBuffer> LogFileReader::mStringBuffer;
-
-// GetStringBuffer函数
-// 功能：获取字符串缓冲区
-// 参数：
-// - n：缓冲区的索引
-// 返回值：返回一个指向StringBuffer对象的指针
-// 示例：假设n为1,那么返回的将是mStringBuffer的第二个元素的地址
-StringBuffer* LogFileReader::GetStringBuffer(size_t n) {
-    if (mStringBuffer.size() < n + 1) {
-        mStringBuffer.resize(n + 1);
-    }
-    if (mStringBuffer[n].capacity < BUFFER_SIZE + 1) {
-        mStringBuffer[n] = mSourceBuffer.get()->AllocateStringBuffer(BUFFER_SIZE + 1);
-    }
-    return &mStringBuffer[n];
+LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, bool needSingleLine) {
+    size_t protocolFunctionIndex = mLineParsers.size() - 1;
+    return mLineParsers[protocolFunctionIndex]->GetLastLine(
+        buffer, end, protocolFunctionIndex, needSingleLine, &mLineParsers);
 }
 
 size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
@@ -2491,6 +2244,268 @@ LogFileReader::~LogFileReader() {
 
         static auto sCptM = CheckpointManagerV2::GetInstance();
         sCptM->MarkGC(mEOOption->primaryCheckpointKey);
+    }
+}
+
+std::unique_ptr<SourceBuffer> BaseLineParse::mSourceBuffer = std::make_unique<SourceBuffer>();
+std::unordered_map<BaseLineParse*, StringBuffer> BaseLineParse::mStringBuffer;
+
+StringBuffer* BaseLineParse::GetStringBuffer(BaseLineParse* lineParse) {
+    auto it = mStringBuffer.find(lineParse);
+    if (it == mStringBuffer.end()) {
+        StringBuffer newBuffer = mSourceBuffer.get()->AllocateStringBuffer(LogFileReader::BUFFER_SIZE + 1);
+        it = mStringBuffer.insert({lineParse, std::move(newBuffer)}).first;
+        std::cout << "mStringBuffer.insert" << std::endl;
+    } else if (it->second.capacity < LogFileReader::BUFFER_SIZE + 1) {
+        it->second = mSourceBuffer.get()->AllocateStringBuffer(LogFileReader::BUFFER_SIZE + 1);
+        std::cout << "capacity < LogFileReader" << std::endl;
+    }
+    return &it->second;
+}
+
+LineInfo RawTextParse::GetLastLine(StringView buffer,
+                                   int32_t end,
+                                   size_t protocolFunctionIndex,
+                                   bool needSingleLine,
+                                   std::vector<BaseLineParse*>* lineParsers) {
+    if (end == 0) {
+        return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    }
+    if (protocolFunctionIndex != 0) {
+        return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    }
+
+    for (int32_t begin = end; begin > 0; --begin) {
+        if (begin == 0 || buffer[begin - 1] == '\n') {
+            return {.data = StringView(buffer.data() + begin, end - begin),
+                    .lineBegin = begin,
+                    .lineEnd = end,
+                    .rollbackLineFeedCount = 1,
+                    .fullLine = true};
+        }
+    }
+    return {.data = StringView(buffer.data(), end),
+            .lineBegin = 0,
+            .lineEnd = end,
+            .rollbackLineFeedCount = 1,
+            .fullLine = true};
+}
+
+LineInfo DockerJsonFileParse::GetLastLine(StringView buffer,
+                                          int32_t end,
+                                          size_t protocolFunctionIndex,
+                                          bool needSingleLine,
+                                          std::vector<BaseLineParse*>* lineParsers) {
+    if (end == 0) {
+        return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    }
+    if (protocolFunctionIndex == 0) {
+        // 异常情况, DockerJsonFileParse不允许在最后一个解析器
+        return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    }
+
+    size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
+    LineInfo finalLine;
+    while (!finalLine.fullLine) {
+        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
+            buffer, end, nextProtocolFunctionIndex, needSingleLine, lineParsers);
+        if (rawLine.data.back() == '\n') {
+            rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
+        }
+
+        LineInfo line;
+        parseLine(rawLine, line);
+        finalLine.data = line.data;
+        finalLine.fullLine = line.fullLine;
+        finalLine.lineBegin = line.lineBegin;
+        finalLine.rollbackLineFeedCount += line.rollbackLineFeedCount;
+        finalLine.dataRaw = line.dataRaw;
+        if (finalLine.lineEnd == 0) {
+            finalLine.lineEnd = line.lineEnd;
+        }
+        if (!finalLine.fullLine) {
+            if (finalLine.lineBegin == 0) {
+                finalLine.data = StringView();
+                return finalLine;
+            }
+            end = finalLine.lineBegin - 1;
+        }
+    }
+    return finalLine;
+}
+
+bool DockerJsonFileParse::parseLine(LineInfo rawLine, LineInfo& paseLine) {
+    paseLine = rawLine;
+    paseLine.fullLine = false;
+
+    rapidjson::Document doc;
+    doc.Parse(rawLine.data.data(), rawLine.data.size());
+
+    if (doc.HasParseError()) {
+        return false;
+    } else if (!doc.IsObject()) {
+        return false;
+    }
+    auto it = doc.FindMember(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
+        return false;
+    }
+    it = doc.FindMember(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
+        return false;
+    }
+    it = doc.FindMember(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.c_str());
+    if (it == doc.MemberEnd() || !it->value.IsString()) {
+        return false;
+    }
+    StringView content = it->value.GetString();
+    if (content.size() > 0 && content[content.size() - 1] == '\n') {
+        content = StringView(content.data(), content.size() - 1);
+    }
+
+    paseLine.dataRaw = content.to_string();
+    paseLine.data = paseLine.dataRaw;
+    paseLine.fullLine = true;
+    return true;
+}
+
+LineInfo ContainerdTextParse::GetLastLine(StringView buffer,
+                                          int32_t end,
+                                          size_t protocolFunctionIndex,
+                                          bool needSingleLine,
+                                          std::vector<BaseLineParse*>* lineParsers) {
+    if (end == 0) {
+        return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    }
+    if (protocolFunctionIndex == 0) {
+        // 异常情况, DockerJsonFileParse不允许在最后一个解析器
+        return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    }
+    LineInfo finalLine;
+    finalLine.fullLine = false;
+    // 跳过最后的连续P
+    size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
+
+    while (!finalLine.fullLine) {
+        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
+            buffer, end, nextProtocolFunctionIndex, needSingleLine, lineParsers);
+        if (rawLine.data.back() == '\n') {
+            rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
+        }
+
+        LineInfo line;
+        parseLine(rawLine, line);
+        // containerd 不需要外层协议的 dataRaw
+        finalLine.data = line.data;
+        finalLine.fullLine = line.fullLine;
+        finalLine.lineBegin = line.lineBegin;
+        finalLine.rollbackLineFeedCount += line.rollbackLineFeedCount;
+        mergeLines(finalLine, finalLine, true);
+        if (finalLine.lineEnd == 0) {
+            finalLine.lineEnd = line.lineEnd;
+        }
+        if (!finalLine.fullLine) {
+            if (finalLine.lineBegin == 0) {
+                finalLine.data = StringView();
+                return finalLine;
+            }
+            end = finalLine.lineBegin - 1;
+        }
+    }
+
+    if (finalLine.lineBegin == 0) {
+        finalLine.fullLine = true;
+        return finalLine;
+    }
+    if (needSingleLine) {
+        return finalLine;
+    }
+
+    while (true) {
+        if (finalLine.lineBegin == 0) {
+            finalLine.fullLine = true;
+            break;
+        }
+
+        LineInfo previousLine;
+        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
+            buffer, finalLine.lineBegin - 1, nextProtocolFunctionIndex, needSingleLine, lineParsers);
+        if (rawLine.data.back() == '\n') {
+            rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
+        }
+
+        parseLine(rawLine, previousLine);
+        if (previousLine.fullLine) {
+            finalLine.fullLine = true;
+            return finalLine;
+        }
+
+        finalLine.rollbackLineFeedCount += previousLine.rollbackLineFeedCount;
+        finalLine.lineBegin = previousLine.lineBegin;
+
+        mergeLines(finalLine, previousLine, false);
+    }
+
+    return finalLine;
+}
+
+void ContainerdTextParse::mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer) {
+    StringBuffer* buffer = GetStringBuffer(this);
+    if (shouldResetBuffer) {
+        buffer->size = 0;
+    }
+    char* newDataPosition = buffer->data + buffer->capacity - buffer->size - additionalLine.data.size();
+
+    memcpy(newDataPosition, additionalLine.data.data(), additionalLine.data.size());
+
+    buffer->size += additionalLine.data.size();
+
+    resultLine.data = StringView(newDataPosition, buffer->size);
+}
+
+void ContainerdTextParse::parseLine(LineInfo rawLine, LineInfo& paseLine) {
+    const char* lineEnd = rawLine.data.data() + rawLine.data.size();
+    paseLine = rawLine;
+    paseLine.fullLine = true;
+
+    // 寻找第一个分隔符位置 time
+    StringView timeValue;
+    const char* pch1 = std::find(rawLine.data.data(), lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+    if (pch1 == lineEnd) {
+        return;
+    }
+    // 寻找第二个分隔符位置 source
+    const char* pch2 = std::find(pch1 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+    if (pch2 == lineEnd) {
+        return;
+    }
+    StringView sourceValue = StringView(pch1 + 1, pch2 - pch1 - 1);
+    if (sourceValue != "stdout" && sourceValue != "stderr") {
+        paseLine.fullLine = false;
+        return;
+    }
+    // 如果既不以 P 开头,也不以 F 开头
+    if (*(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_PART_TAG
+        && *(pch2 + 1) != ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
+        paseLine.data = StringView(pch2 + 1, lineEnd - pch2 - 1);
+        return;
+    }
+    // 寻找第三个分隔符位置 content
+    const char* pch3 = std::find(pch2 + 1, lineEnd, ProcessorParseContainerLogNative::CONTAINERD_DELIMITER);
+    if (pch3 == lineEnd || pch3 != pch2 + 2) {
+        paseLine.data = StringView(pch2 + 1, lineEnd - pch2 - 1);
+        paseLine.fullLine = false;
+        return;
+    }
+    if (*(pch2 + 1) == ProcessorParseContainerLogNative::CONTAINERD_FULL_TAG) {
+        // F
+        paseLine.data = StringView(pch3 + 1, lineEnd - pch3 - 1);
+        return;
+    } else {
+        // P
+        paseLine.fullLine = false;
+        paseLine.data = StringView(pch3 + 1, lineEnd - pch3 - 1);
+        return;
     }
 }
 

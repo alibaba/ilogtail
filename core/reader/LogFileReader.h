@@ -35,6 +35,7 @@
 #include "file_server/MultilineOptions.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
+#include "models/StringView.h"
 #include "rapidjson/allocators.h"
 #include "reader/FileReaderOptions.h"
 #include "reader/SourceBuffer.h"
@@ -47,6 +48,70 @@ class DevInode;
 
 typedef std::shared_ptr<LogFileReader> LogFileReaderPtr;
 typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
+struct LineInfo {
+    StringView data;
+    std::string dataRaw;
+    int32_t lineBegin;
+    int32_t lineEnd;
+    int32_t rollbackLineFeedCount;
+    bool fullLine;
+    LineInfo(StringView data = StringView(),
+             int32_t lineBegin = 0,
+             int32_t lineEnd = 0,
+             int32_t rollbackLineFeedCount = 0,
+             bool fullLine = false)
+        : data(data),
+          lineBegin(lineBegin),
+          lineEnd(lineEnd),
+          rollbackLineFeedCount(rollbackLineFeedCount),
+          fullLine(fullLine) {}
+};
+
+class BaseLineParse {
+public:
+    virtual LineInfo GetLastLine(StringView buffer,
+                                 int32_t end,
+                                 size_t protocolFunctionIndex,
+                                 bool needSingleLine,
+                                 std::vector<BaseLineParse*>* lineParsers)
+        = 0;
+    static StringBuffer* GetStringBuffer(BaseLineParse* lineParse);
+
+private:
+    static std::unique_ptr<SourceBuffer> mSourceBuffer;
+    static std::unordered_map<BaseLineParse*, StringBuffer> mStringBuffer;
+};
+
+class ContainerdTextParse : public BaseLineParse {
+public:
+    LineInfo GetLastLine(StringView buffer,
+                         int32_t end,
+                         size_t protocolFunctionIndex,
+                         bool needSingleLine,
+                         std::vector<BaseLineParse*>* lineParsers) override;
+    void parseLine(LineInfo rawLine, LineInfo& paseLine);
+    void mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer);
+};
+
+class DockerJsonFileParse : public BaseLineParse {
+public:
+    LineInfo GetLastLine(StringView buffer,
+                         int32_t end,
+                         size_t protocolFunctionIndex,
+                         bool needSingleLine,
+                         std::vector<BaseLineParse*>* lineParsers) override;
+    bool parseLine(LineInfo rawLine, LineInfo& paseLine);
+};
+
+class RawTextParse : public BaseLineParse {
+public:
+    LineInfo GetLastLine(StringView buffer,
+                         int32_t end,
+                         size_t protocolFunctionIndex,
+                         bool needSingleLine,
+                         std::vector<BaseLineParse*>* lineParsers) override;
+    LineInfo parse(StringView buffer, int32_t end, size_t protocolFunctionIndex);
+};
 
 // Only get the currently written log file, it will choose the last modified file to read. There are several condition
 // to choose the lastmodify file:
@@ -78,39 +143,16 @@ typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
  * "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\n" -> "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\0"
  * "SingleLineLog_1\nSingleLineLog_2\nxxx" -> "SingleLineLog_1\nSingleLineLog_2\0"
  */
-struct LineInfo {
-    StringView data;
-    std::string dataRaw;
-    int32_t lineBegin;
-    int32_t rollbackLineFeedCount;
-    int32_t lineEnd;
-    bool fullLine;
-    bool needMerge;
-    LineInfo(StringView data = StringView(),
-             int32_t lineBegin = 0,
-             int32_t rollbackLineFeedCount = 0,
-             int32_t lineEnd = 0,
-             bool fullLine = false,
-             bool needMerge = false)
-        : data(data),
-          lineBegin(lineBegin),
-          rollbackLineFeedCount(rollbackLineFeedCount),
-          lineEnd(lineEnd),
-          fullLine(fullLine),
-          needMerge(needMerge) {}
-};
-
 class LogFileReader {
 public:
     enum class LogFormat { TEXT, CONTAINERD_TEXT, DOCKER_JSON_FILE };
     LogFormat mFileLogFormat = LogFormat::TEXT;
 
-    static LineInfo GetLastDockerJsonFileLine(StringView buffer, int32_t end);
-    static LineInfo GetLastTextLine(StringView buffer, int32_t end);
-    static LineInfo GetLastContainerdTextLine(StringView buffer, int32_t end);
-
-    using GetLastLineFunc = LineInfo (*)(StringView buffer, int32_t end);
-    std::vector<GetLastLineFunc> mGetLastLineFuncs = {};
+    static size_t BUFFER_SIZE;
+    std::vector<BaseLineParse*> mLineParsers = {};
+    static ContainerdTextParse mContainerdTextParse;
+    static DockerJsonFileParse mDockerJsonFileParse;
+    static RawTextParse mRawTextParse;
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
@@ -413,7 +455,6 @@ protected:
         return mLastFilePos + mCache.size();
     }
 
-    static size_t BUFFER_SIZE;
     // std::string mRegion;
     // std::string mCategory;
     // std::string mConfigName;
@@ -487,12 +528,8 @@ protected:
     std::string mRegion;
 
 private:
-    void mergeLines(LineInfo&, size_t n, const LineInfo&, bool);
     bool mHasReadContainerBom = false;
     void checkContainerType();
-    static std::unique_ptr<SourceBuffer> mSourceBuffer;
-    static std::vector<StringBuffer> mStringBuffer;
-    static StringBuffer* GetStringBuffer(size_t n);
     void checkContainerType(LogFileOperator& op);
 
     // Initialized when the exactly once feature is enabled.
@@ -544,7 +581,7 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
-    LineInfo GetLastLine(StringView buffer, int32_t end, size_t protocolFunctionIndex, bool needSingleLine = false);
+    LineInfo GetLastLine(StringView buffer, int32_t end, bool needSingleLine = false);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
@@ -635,6 +672,7 @@ private:
     friend class LogFileReaderCheckpointUnittest;
     friend class LastMatchedContainerdTextLineUnittest;
     friend class LastMatchedDockerJsonFileUnittest;
+    friend class LastMatchedContainerdTextWithDockerJsonUnittest;
 
 protected:
     void UpdateReaderManual();
