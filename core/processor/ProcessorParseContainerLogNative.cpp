@@ -20,6 +20,9 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include <codecvt>
+#include <locale>
+
 #include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
 #include "models/LogEvent.h"
@@ -43,10 +46,6 @@ const std::string ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE = "s
 const std::string ProcessorParseContainerLogNative::containerTimeKey = "_time_"; // 容器时间字段
 const std::string ProcessorParseContainerLogNative::containerSourceKey = "_source_"; // 容器来源字段
 const std::string ProcessorParseContainerLogNative::containerLogKey = "content"; // 容器日志字段
-
-
-static const std::unordered_map<char, char> escapeMapping
-    = {{'\"', '\"'}, {'\\', '\\'}, {'/', '/'}, {'b', '\b'}, {'f', '\f'}, {'n', '\n'}, {'r', '\r'}, {'t', '\t'}};
 
 bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -262,45 +261,6 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
     }
 }
 
-char16_t hexToChar(const std::string& hex) {
-    char16_t result = 0;
-    for (char c : hex) {
-        result <<= 4; // 左移4位来为下一个十六进制数字腾出空间
-        if (c >= '0' && c <= '9') {
-            result |= c - '0';
-        } else if (c >= 'A' && c <= 'F') {
-            result |= (c - 'A') + 10;
-        } else if (c >= 'a' && c <= 'f') {
-            result |= (c - 'a') + 10;
-        }
-    }
-    return result;
-}
-
-
-// 将UTF-16编码的字符转换为UTF-8编码的字符串
-void utf16ToUtf8(char16_t unicode, char* utf8, int32_t& size) {
-    if (unicode <= 0x7F) {
-        // 一字节UTF-8编码
-        utf8[size++] = static_cast<char>(unicode);
-    } else if (unicode <= 0x7FF) {
-        // 两字节UTF-8编码
-        utf8[size++] = static_cast<char>(0xC0 | ((unicode >> 6) & 0x1F));
-        utf8[size++] = static_cast<char>(0x80 | (unicode & 0x3F));
-    } else if (unicode <= 0xFFFF) {
-        // 三字节UTF-8编码
-        utf8[size++] = static_cast<char>(0xE0 | ((unicode >> 12) & 0x0F));
-        utf8[size++] = static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
-        utf8[size++] = static_cast<char>(0x80 | (unicode & 0x3F));
-    } else {
-        // 四字节UTF-8编码
-        utf8[size++] = static_cast<char>(0xF0 | ((unicode >> 18) & 0x07));
-        utf8[size++] = static_cast<char>(0x80 | ((unicode >> 12) & 0x3F));
-        utf8[size++] = static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
-        utf8[size++] = static_cast<char>(0x80 | (unicode & 0x3F));
-    }
-}
-
 static int32_t skipSpaces(char* buffer, int32_t idx, int32_t size) {
     while (idx < size && buffer[idx] == ' ') {
         ++idx;
@@ -336,7 +296,9 @@ static int32_t parseLogType(char* buffer, int32_t idx, int32_t size, DockerLogTy
     return idx;
 }
 
-static int32_t parseValue(char* buffer, int32_t idx, int32_t size, DockerLogType logType, int32_t& beginIdx) {
+std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+
+static int32_t parseValue(char* buffer, int32_t idx, int32_t size, DockerLogType logType, int32_t& endIndex) {
     while (idx < size && buffer[idx] != '\"') {
         if (buffer[idx] == '\\') {
             if (logType != DockerLogType::Log) {
@@ -346,21 +308,49 @@ static int32_t parseValue(char* buffer, int32_t idx, int32_t size, DockerLogType
             if (idx >= size) {
                 return -1;
             }
-            auto it = escapeMapping.find(buffer[idx]);
-            if (it != escapeMapping.end()) {
-                buffer[beginIdx++] = it->second;
-            } else if (idx + 4 < size && buffer[idx] == 'u') {
-                std::string hex;
-                hex.append(buffer + idx + 1, 4);
-                char16_t unicodeChar = hexToChar(hex);
-                utf16ToUtf8(unicodeChar, buffer, beginIdx);
-                idx += 4;
-            } else {
-                buffer[beginIdx++] = '\\';
-                buffer[beginIdx++] = buffer[idx];
+            switch (buffer[idx]) {
+                case '\"':
+                    buffer[endIndex++] = '\"';
+                    break;
+                case '\\':
+                    buffer[endIndex++] = '\\';
+                    break;
+                case '/':
+                    buffer[endIndex++] = '/';
+                    break;
+                case 'b':
+                    buffer[endIndex++] = '\b';
+                    break;
+                case 'f':
+                    buffer[endIndex++] = '\f';
+                    break;
+                case 'n':
+                    buffer[endIndex++] = '\n';
+                    break;
+                case 'r':
+                    buffer[endIndex++] = '\r';
+                    break;
+                case 't':
+                    buffer[endIndex++] = '\t';
+                    break;
+                default:
+                    if (idx + 4 < size && buffer[idx] == 'u') {
+                        std::string unicode_seq;
+                        unicode_seq.append(buffer + idx + 1, 4);
+                        char32_t unicode_char = std::stoul(unicode_seq, nullptr, 16);
+                        std::string res = convert.to_bytes(unicode_char);
+                        for (int i = 0; i < res.size(); ++i) {
+                            buffer[endIndex++] = res[i];
+                        }
+                        idx += 4;
+                    } else {
+                        buffer[endIndex++] = '\\';
+                        buffer[endIndex++] = buffer[idx];
+                    }
+                    break;
             }
         } else {
-            buffer[beginIdx++] = buffer[idx];
+            buffer[endIndex++] = buffer[idx];
         }
         ++idx;
     }
@@ -373,7 +363,7 @@ bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size
         return false;
     }
     int logTypeCnt = 0;
-    int32_t beginIdx = 0;
+    int32_t endIndex = 0;
     int32_t idx = 1; // skip '{'
     DockerLogType logType;
     while (idx < size) {
@@ -429,9 +419,9 @@ bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size
             return false;
         }
 
-        beginIdx = idx;
-        char* valueBegion = buffer + beginIdx;
-        idx = parseValue(buffer, idx, size, logType, beginIdx);
+        endIndex = idx;
+        char* valueBegion = buffer + endIndex;
+        idx = parseValue(buffer, idx, size, logType, endIndex);
         if (idx == -1) {
             return false;
         }
@@ -457,13 +447,13 @@ bool ProcessorParseContainerLogNative::ParseDockerLog(char* buffer, int32_t size
 
         switch (logType) {
             case DockerLogType::Log:
-                dockerLog.log = StringView(valueBegion, beginIdx - (valueBegion - buffer));
+                dockerLog.log = StringView(valueBegion, endIndex - (valueBegion - buffer));
                 break;
             case DockerLogType::Stream:
-                dockerLog.stream = StringView(valueBegion, beginIdx - (valueBegion - buffer));
+                dockerLog.stream = StringView(valueBegion, endIndex - (valueBegion - buffer));
                 break;
             case DockerLogType::Time:
-                dockerLog.time = StringView(valueBegion, beginIdx - (valueBegion - buffer));
+                dockerLog.time = StringView(valueBegion, endIndex - (valueBegion - buffer));
                 break;
         }
     }

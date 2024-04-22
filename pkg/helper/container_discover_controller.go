@@ -180,15 +180,6 @@ func (c *ContainerDiscoverManager) Init(initTryTimes int) {
 	if listenLoopIntervalSec > 0 {
 		DefaultSyncContainersPeriod = time.Second * time.Duration(listenLoopIntervalSec)
 	}
-	// Used for situations where there is a large amount of logs, containers exist, and there is not enough time to collect them.
-	ContainerInfoDeletedTimeoutSecStr := os.Getenv("ALIYUN_LOGTAIL_CONTAINER_DELETED_TIMEOUT")
-	ContainerInfoDeletedTimeoutSec := 0
-	if len(listenLoopIntervalStr) > 0 {
-		ContainerInfoDeletedTimeoutSec, _ = strconv.Atoi(ContainerInfoDeletedTimeoutSecStr)
-	}
-	if ContainerInfoDeletedTimeoutSec > 0 {
-		ContainerInfoDeletedTimeout = time.Second * time.Duration(ContainerInfoDeletedTimeoutSec)
-	}
 	// @note config for Fetch All Interval
 	fetchAllSec := (int)(FetchAllInterval.Seconds())
 	if err := util.InitFromEnvInt("DOCKER_FETCH_ALL_INTERVAL", &fetchAllSec, fetchAllSec); err != nil {
