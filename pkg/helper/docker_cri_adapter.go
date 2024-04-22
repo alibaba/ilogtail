@@ -403,12 +403,14 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 			logger.Error(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "Create container info from cri-runtime error, Container Info:%+v", c)
 			continue
 		}
-		finishedAt := dockerContainer.FinishedAt()
-		finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
-		now := time.Now()
-		duration := now.Sub(finishedAtTime)
-		if dockerContainer.Status() != ContainerStatusRunning && duration >= ContainerInfoDeletedTimeout {
-			continue
+		if dockerContainer.Status() != ContainerStatusRunning {
+			finishedAt := dockerContainer.FinishedAt()
+			finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
+			now := time.Now()
+			duration := now.Sub(finishedAtTime)
+			if duration >= ContainerInfoDeletedTimeout {
+				continue
+			}
 		}
 		cw.containers[c.GetId()] = &innerContainerInfo{
 			State:  c.State,

@@ -1057,12 +1057,14 @@ func (dc *DockerCenter) fetchAll() error {
 			time.Sleep(time.Second * 5)
 		}
 		if err == nil {
-			finishedAt := containerDetail.State.FinishedAt
-			finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
-			now := time.Now()
-			duration := now.Sub(finishedAtTime)
-			if !ContainerProcessAlive(containerDetail.State.Pid) && duration >= ContainerInfoDeletedTimeout {
-				continue
+			if !ContainerProcessAlive(containerDetail.State.Pid) {
+				finishedAt := containerDetail.State.FinishedAt
+				finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
+				now := time.Now()
+				duration := now.Sub(finishedAtTime)
+				if duration >= ContainerInfoDeletedTimeout {
+					continue
+				}
 			}
 			containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
 		} else {
