@@ -261,8 +261,8 @@ func (did *DockerInfoDetail) PodName() string {
 }
 
 func (did *DockerInfoDetail) FinishedAt() string {
-	if did.K8SInfo != nil {
-		return did.FinishedAt()
+	if did.ContainerInfo.State != nil {
+		return did.ContainerInfo.State.FinishedAt
 	}
 	return ""
 }
