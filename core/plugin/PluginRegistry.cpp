@@ -211,6 +211,12 @@ void PluginRegistry::UnloadPlugins() {
     mPluginDict.clear();
 }
 
+void PluginRegistry::RegisterGoPlugins(const std::string& goPluginName) {
+    // insert the go plugin name into the mGoPlugins set
+    mGoPlugins.insert(goPluginName);
+}
+
+
 unique_ptr<InputInstance> PluginRegistry::CreateInput(const string& name, const string& pluginId) {
     return unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
 }

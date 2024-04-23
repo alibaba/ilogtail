@@ -51,6 +51,7 @@ public:
     bool IsValidNativeInputPlugin(const std::string& name) const;
     bool IsValidNativeProcessorPlugin(const std::string& name) const;
     bool IsValidNativeFlusherPlugin(const std::string& name) const;
+    void RegisterGoPlugins(const std::string& name);
 
 private:
     enum PluginCat { INPUT_PLUGIN, PROCESSOR_PLUGIN, FLUSHER_PLUGIN };

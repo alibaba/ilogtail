@@ -218,6 +218,12 @@ void Application::Start() {
     }
 #endif
 
+
+    // if load_plugin_base is true, force load the plugin base.
+    if (AppConfig::GetInstance()->IsLoadPluginBase()) {
+        LogtailPlugin::GetInstance()->LoadPluginBase();
+    }
+
     // If in purage container mode, it means iLogtail is deployed as Daemonset, so plugin base should be loaded since
     // liveness probe relies on it.
     if (AppConfig::GetInstance()->IsPurageContainerMode()) {

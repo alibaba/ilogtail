@@ -20,6 +20,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pluginmanager"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -201,4 +203,11 @@ func TestSlowConfigWhenStop(t *testing.T) {
 	HoldOn(1)
 	time.Sleep(time.Second * 6)
 	require.Empty(t, pluginmanager.DisabledLogtailConfig)
+}
+
+func TestPluginsNames(t *testing.T) {
+	pluginNames := GetGoPlugins()
+	if len(pluginNames) > 0 {
+		assert.True(t, strings.Contains(pluginNames, "|"))
+	}
 }
