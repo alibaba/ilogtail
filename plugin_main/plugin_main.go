@@ -19,10 +19,8 @@ import (
 	"flag"
 	"fmt"
 	"runtime"
-	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/doc"
-	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/signals"
@@ -93,17 +91,4 @@ func generatePluginDoc() {
 		doc.Register("flusher", name, creator())
 	}
 	doc.Generate(*flags.DocPath)
-}
-
-//export GetGoPlugins
-func GetGoPlugins() *C.char {
-	var buffer strings.Builder
-	helper.ConvertCreatorMapToString(&buffer, pipeline.MetricInputs)
-	helper.ConvertCreatorMapToString(&buffer, pipeline.ServiceInputs)
-	helper.ConvertCreatorMapToString(&buffer, pipeline.Processors)
-	helper.ConvertCreatorMapToString(&buffer, pipeline.Aggregators)
-	helper.ConvertCreatorMapToString(&buffer, pipeline.Flushers)
-	helper.ConvertCreatorMapToString(&buffer, pipeline.Extensions)
-	res := buffer.String()
-	return C.CString(res)
 }
