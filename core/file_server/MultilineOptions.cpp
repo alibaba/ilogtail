@@ -210,9 +210,6 @@ bool MultilineOptions::ParseRegex(const string& pattern, shared_ptr<boost::regex
     if (regexPattern.empty()) {
         return true;
     }
-    if (regexPattern[0] != '^') {
-        regexPattern = "^" + regexPattern;
-    }
     try {
         reg.reset(new boost::regex(regexPattern));
     } catch (...) {
