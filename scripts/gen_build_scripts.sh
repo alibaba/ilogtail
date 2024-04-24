@@ -104,7 +104,7 @@ function check_external_plugins_config() {
         fi
     done
 
-    return 1 # false，no config file for external plugins pfound
+    return 1 # false，no config files for external plugins were found
 }
 
 
