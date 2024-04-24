@@ -167,10 +167,10 @@ void LogEventUnittest::TestFromJsonToJson() {
             "key1" : "value1",
             "key2" : "value2"
         },
-        "timestamp" : 12345678901,
-        "timestampNanosecond" : 0,
         "fileOffset": 1,
         "length": 2,
+        "timestamp" : 12345678901,
+        "timestampNanosecond" : 0,
         "type" : 1
     })";
     APSARA_TEST_TRUE(mLogEvent->FromJsonString(inJson));

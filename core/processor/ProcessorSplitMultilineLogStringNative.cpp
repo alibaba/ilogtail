@@ -157,7 +157,7 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
     size_t begin = 0;
     while (begin < sourceVal.size()) {
         StringView content = GetNextLine(sourceVal, begin);
-        bool isLastLog = begin + content.size() + 1 == sourceVal.size();
+        bool isLastLog = begin + content.size() == sourceVal.size();
         ++(*inputLines);
         if (!isPartialLog) {
             // it is impossible to enter this state if only end pattern is given

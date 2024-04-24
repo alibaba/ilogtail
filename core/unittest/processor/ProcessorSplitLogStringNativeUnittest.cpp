@@ -138,10 +138,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                 {
                     "content" : "line1\nline2"
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "fileOffset": 1,
                 "length": 12,
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -149,10 +149,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                 {
                     "content" : "line3\nline4"
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "fileOffset": 0,
                 "length": 11,
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -173,10 +173,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                 {
                     "content" : "line1"
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "fileOffset": 1,
                 "length": 6,
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -184,10 +184,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                 {
                     "content" : "line2"
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "fileOffset": 7,
                 "length": 6,
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -195,10 +195,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                 {
                     "content" : "line3"
                 },
+                "fileOffset": 0,
+                "length": 6,
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
-                "fileOffset": 1,
-                "length": 6,
                 "type" : 1
             },
             {
@@ -206,10 +206,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                 {
                     "content" : "line4"
                 },
+                "fileOffset": 6,
+                "length": 5,
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
-                "fileOffset": 7,
-                "length": 5,
                 "type" : 1
             }
         ]
