@@ -90,6 +90,24 @@ EOF
   fi
 }
 
+function check_external_plugins_config() {
+    local IFS=, # delimiter is ,
+    local file
+
+    read -ra config_files <<< "$1"
+
+    for file in "${config_files[@]}"; do        
+        file=$(echo "$file" | tr -d '[:space:]')
+        # echo "Checking $file"        
+        if [[ "$file" != "plugins.yml" && -s "$file" ]]; then
+            return 0 # true，found a config file for external plugins
+        fi
+    done
+
+    return 1 # false，no config file for external plugins pfound
+}
+
+
 function generateCopyScript() {
   rm -rf $COPY_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail\n" >$COPY_SCRIPT_FILE && chmod 755 $COPY_SCRIPT_FILE
   echo 'BINDIR=$(cd $(dirname "${BASH_SOURCE[0]}")&& cd .. && pwd)/'${OUT_DIR}'/' >>$COPY_SCRIPT_FILE
@@ -114,7 +132,12 @@ function generateCopyScript() {
       echo 'docker cp "$id":/src/core/build core/build' >>$COPY_SCRIPT_FILE
     fi
   fi
-  echo 'echo -e "{\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE
+
+  if check_external_plugins_config "$PLUGINS_CONFIG_FILE"; then
+    echo 'echo -e "{\n  \"load_plugin_base\": true\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE
+  else
+    echo 'echo -e "{\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE
+  fi
   echo 'mkdir -p $BINDIR/config/local' >>$COPY_SCRIPT_FILE
   echo 'docker rm -v "$id"' >>$COPY_SCRIPT_FILE
 }
