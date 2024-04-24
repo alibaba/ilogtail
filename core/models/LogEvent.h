@@ -79,6 +79,12 @@ public:
     void SetContentNoCopy(StringView key, StringView val);
     void DelContent(StringView key);
 
+    void SetMeta(uint32_t offset, uint32_t size) {
+        mFileOffset = offset;
+        mRawSize = size;
+    }
+    std::pair<uint32_t, uint32_t> GetMeta() const { return {mFileOffset, mRawSize}; }
+
     bool Empty() const { return mIndex.empty(); }
     size_t Size() const { return mIndex.size(); }
 
@@ -108,6 +114,8 @@ private:
     // information for backward compatability.
     ContentsContainer mContents;
     std::map<StringView, size_t> mIndex;
+    uint32_t mFileOffset = 0;
+    uint32_t mRawSize = 0;
 };
 
 } // namespace logtail

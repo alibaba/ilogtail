@@ -1071,16 +1071,37 @@ int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* lo
                                                               reader->GetFileSize(),
                                                               reader->GetLastFilePos(),
                                                               time(NULL));
-        logBuffer->SetDependecy(reader);
-        while (!LogProcess::GetInstance()->PushBuffer(logBuffer)) // 10ms
+
+        PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
+        group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, reader->GetConvertedPath());
+        group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, reader->GetHostLogPath());
+        group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(reader->GetDevInode().inode));
+        group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(reader->GetSourceId()));
+        group.SetMetadata(EventGroupMetaKey::TOPIC, reader->GetTopicName());
+        group.SetMetadata(EventGroupMetaKey::LOGGROUP_KEY, ToString(reader->GetLogGroupKey()));
+
+        const std::vector<sls_logs::LogTag>& extraTags = reader->GetExtraTags();
+        for (size_t i = 0; i < extraTags.size(); ++i) {
+            group.SetTag(extraTags[i].key(), extraTags[i].value());
+        }
+
+        LogEvent* event = group.AddLogEvent();
+        time_t logtime = time(nullptr);
+        if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
+            logtime += GetTimeDelta();
+        }
+        event->SetTimestamp(logtime);
+        event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
+        event->SetMeta(logBuffer->readOffset, logBuffer->readLength);
+
+        while (!LogProcess::GetInstance()->PushBuffer(reader->GetLogstoreKey(), reader->GetConfigName(), 0, std::move(group))) // 10ms
         {
             ++pushRetry;
             if (pushRetry % 10 == 0)
                 LogInput::GetInstance()->TryReadEvents(false);
         }
-    } else {
-        delete logBuffer;
     }
+    delete logBuffer;
     return pushRetry;
 }
 

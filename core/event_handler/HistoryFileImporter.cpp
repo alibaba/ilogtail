@@ -13,14 +13,16 @@
 // limitations under the License.
 
 #include "HistoryFileImporter.h"
+
+#include "common/FileSystemUtil.h"
+#include "common/RuntimeUtil.h"
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
-#include "common/RuntimeUtil.h"
-#include "common/FileSystemUtil.h"
 #include "config_manager/ConfigManager.h"
-#include "processor/daemon/LogProcess.h"
 #include "logger/Logger.h"
+#include "processor/daemon/LogProcess.h"
 #include "reader/LogFileReader.h"
+#include "app_config/AppConfig.h"
 
 namespace logtail {
 
@@ -108,7 +110,31 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
-                logProcess->PushBuffer(logBuffer, 100000000);
+
+                PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
+                group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, readerSharePtr->GetConvertedPath());
+                group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, readerSharePtr->GetHostLogPath());
+                group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(readerSharePtr->GetDevInode().inode));
+                group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(readerSharePtr->GetSourceId()));
+                group.SetMetadata(EventGroupMetaKey::TOPIC, readerSharePtr->GetTopicName());
+                group.SetMetadata(EventGroupMetaKey::LOGGROUP_KEY, ToString(readerSharePtr->GetLogGroupKey()));
+
+                const std::vector<sls_logs::LogTag>& extraTags = readerSharePtr->GetExtraTags();
+                for (size_t i = 0; i < extraTags.size(); ++i) {
+                    group.SetTag(extraTags[i].key(), extraTags[i].value());
+                }
+
+                LogEvent* event = group.AddLogEvent();
+                time_t logtime = time(nullptr);
+                if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
+                    logtime += GetTimeDelta();
+                }
+                event->SetTimestamp(logtime);
+                event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
+                event->SetMeta(logBuffer->readOffset, logBuffer->readLength);
+
+                logProcess->PushBuffer(
+                    readerSharePtr->GetLogstoreKey(), readerSharePtr->GetConfigName(), 0, std::move(group), 100000000);
             } else {
                 delete logBuffer;
                 // when ReadLog return false, retry once

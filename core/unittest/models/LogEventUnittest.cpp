@@ -22,11 +22,12 @@ namespace logtail {
 
 class LogEventUnittest : public ::testing::Test {
 public:
-    void TestSetTimestamp();
+    void TestTimestampOp();
     void TestSetContent();
     void TestDelContent();
-    void TestReadOp();
-    void TestIterate();
+    void TestReadContentOp();
+    void TestIterateContent();
+    void TestMeta();
     void TestFromJsonToJson();
 
 protected:
@@ -42,7 +43,7 @@ private:
     unique_ptr<LogEvent> mLogEvent;
 };
 
-void LogEventUnittest::TestSetTimestamp() {
+void LogEventUnittest::TestTimestampOp() {
     mLogEvent->SetTimestamp(13800000000);
     APSARA_TEST_EQUAL(13800000000, mLogEvent->GetTimestamp());
 }
@@ -97,7 +98,7 @@ void LogEventUnittest::TestDelContent() {
     }
 }
 
-void LogEventUnittest::TestReadOp() {
+void LogEventUnittest::TestReadContentOp() {
     mLogEvent->SetContent(string("key1"), string("value1"));
     {
         // key not exists
@@ -117,7 +118,7 @@ void LogEventUnittest::TestReadOp() {
     }
 }
 
-void LogEventUnittest::TestIterate() {
+void LogEventUnittest::TestIterateContent() {
     {
         // first element is valid
         mLogEvent->SetContent(string("key1"), string("value1"));
@@ -153,6 +154,12 @@ void LogEventUnittest::TestIterate() {
     }
 }
 
+void LogEventUnittest::TestMeta() {
+    mLogEvent->SetMeta(1U, 2U);
+    APSARA_TEST_EQUAL(1U, mLogEvent->GetMeta().first);
+    APSARA_TEST_EQUAL(2U, mLogEvent->GetMeta().second);
+}
+
 void LogEventUnittest::TestFromJsonToJson() {
     string inJson = R"({
         "contents" :
@@ -162,10 +169,14 @@ void LogEventUnittest::TestFromJsonToJson() {
         },
         "timestamp" : 12345678901,
         "timestampNanosecond" : 0,
+        "fileOffset": 1,
+        "length": 2,
         "type" : 1
     })";
     APSARA_TEST_TRUE(mLogEvent->FromJsonString(inJson));
     APSARA_TEST_EQUAL(12345678901L, mLogEvent->GetTimestamp());
+    APSARA_TEST_EQUAL(1U, mLogEvent->GetMeta().first);
+    APSARA_TEST_EQUAL(2U, mLogEvent->GetMeta().second);
     vector<pair<string, string>> answers = {{"key1", "value1"}, {"key2", "value2"}};
     for (const auto kv : answers) {
         APSARA_TEST_TRUE(mLogEvent->HasContent(kv.first));
@@ -175,11 +186,11 @@ void LogEventUnittest::TestFromJsonToJson() {
     APSARA_TEST_STREQ(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
 }
 
-UNIT_TEST_CASE(LogEventUnittest, TestSetTimestamp)
+UNIT_TEST_CASE(LogEventUnittest, TestTimestampOp)
 UNIT_TEST_CASE(LogEventUnittest, TestSetContent)
 UNIT_TEST_CASE(LogEventUnittest, TestDelContent)
-UNIT_TEST_CASE(LogEventUnittest, TestReadOp)
-UNIT_TEST_CASE(LogEventUnittest, TestIterate)
+UNIT_TEST_CASE(LogEventUnittest, TestReadContentOp)
+UNIT_TEST_CASE(LogEventUnittest, TestIterateContent)
 UNIT_TEST_CASE(LogEventUnittest, TestFromJsonToJson)
 
 } // namespace logtail
