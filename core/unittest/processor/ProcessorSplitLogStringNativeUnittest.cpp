@@ -66,11 +66,11 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
                 {
                     "content" : "{\n\"k1\":\"v1\"\n}\u0000{\n\"k2\":\"v2\"\n}"
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "fileOffset": 1,
                 "length": )"
            << strlen(R"({n"k1":"v1"n}0{n"k2":"v2"n})") << R"(,
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -91,28 +91,29 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
+                    "__file_offset__": "1",
                     "content" : "{\n\"k1\":\"v1\"\n}"
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "fileOffset": 1,
                 "length": )"
                << strlen(R"({n"k1":"v1"n}0)") << R"(,
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
                 "contents" :
                 {
                     "__file_offset__": ")"
-               << strlen(R"({n"k2":"v2"n}0)") << R"(",
+               << strlen(R"({n"k1":"v1"n}0)") + 1 << R"(",
                     "content" : "{\n\"k2\":\"v2\"\n}"
                 },
+                "fileOffset": )"
+               << strlen(R"({n"k1":"v1"n}0)") + 1 << R"(,
+                "length": )"
+               << strlen(R"({n"k2":"v2"n})") << R"(,
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
-                "fileOffset": 1,
-                "length": )"
-               << strlen(R"({n"k2":"v2"n}0)") << R"(,
                 "type" : 1
             }
         ]
