@@ -182,7 +182,7 @@ void LogEventUnittest::TestFromJsonToJson() {
         APSARA_TEST_TRUE(mLogEvent->HasContent(kv.first));
         APSARA_TEST_STREQ(kv.second.c_str(), mLogEvent->GetContent(kv.first).data());
     }
-    string outJson = mLogEvent->ToJsonString();
+    string outJson = mLogEvent->ToJsonString(true);
     APSARA_TEST_STREQ(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
 }
 
