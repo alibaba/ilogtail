@@ -31,8 +31,7 @@ public:
 protected:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
-        LogFileProfiler::mHostname = "host";
-        LogFileProfiler::mIpAddr = "192.0.0.1";
+        LogFileProfiler::GetInstance();
 #ifdef __ENTERPRISE__
         EnterpriseConfigProvider::GetInstance()->SetUserDefinedIdSet(std::vector<std::string>{"machine_group"});
 #endif

@@ -35,16 +35,16 @@ bool ProcessorTagNative::Init(const Json::Value& config) {
 
 void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
     // group level
-    const logtail::StringView& filePath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH);
+    StringView filePath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH);
     if (!filePath.empty()) {
         logGroup.SetTagNoCopy(LOG_RESERVED_KEY_PATH, filePath.substr(0, 511));
     }
 
     // process level
 #ifdef __ENTERPRISE__
-    const string &agent_tag = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
+    const string& agent_tag = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     if (!agent_tag.empty()) {
-        logGroup.SetTagNoCopy(LOG_RESERVED_KEY_USER_DEFINED_ID, agent_tag.substr(0, 99));
+        logGroup.SetTagNoCopy(LOG_RESERVED_KEY_USER_DEFINED_ID, agent_tag);
     }
 #endif
 
@@ -62,7 +62,7 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
     }
 
     // group level
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, LogFileProfiler::mHostname.substr(0, 99));
+    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, LogFileProfiler::mHostname);
 
     // process level
     static const std::vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
