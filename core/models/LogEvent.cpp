@@ -127,13 +127,12 @@ uint64_t LogEvent::EventsSizeBytes() {
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
-Json::Value LogEvent::ToJson() const {
+Json::Value LogEvent::ToJson(bool enableEventMeta) const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
     root["timestampNanosecond"] = GetTimestampNanosecond();
-    // only output position meta when it is set
-    if (GetMeta().second != 0) {
+    if (enableEventMeta) {
         root["fileOffset"] = GetMeta().first;
         root["length"] = GetMeta().second;
     }

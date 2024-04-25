@@ -204,7 +204,7 @@ EventGroupMetaKey StringToEventGroupMetaKey(const std::string& key) {
     return EventGroupMetaKey::UNKNOWN;
 }
 
-Json::Value PipelineEventGroup::ToJson() const {
+Json::Value PipelineEventGroup::ToJson(bool enableEventMeta) const {
     Json::Value root;
     if (!mMetadata.empty()) {
         Json::Value metadata;
@@ -223,7 +223,7 @@ Json::Value PipelineEventGroup::ToJson() const {
     if (!this->GetEvents().empty()) {
         Json::Value events;
         for (const auto& event : this->GetEvents()) {
-            events.append(event->ToJson());
+            events.append(event->ToJson(enableEventMeta));
         }
         root["events"] = std::move(events);
     }
@@ -258,8 +258,8 @@ bool PipelineEventGroup::FromJson(const Json::Value& root) {
     return true;
 }
 
-std::string PipelineEventGroup::ToJsonString() const {
-    Json::Value root = ToJson();
+std::string PipelineEventGroup::ToJsonString(bool enableEventMeta) const {
+    Json::Value root = ToJson(enableEventMeta);
     Json::StreamWriterBuilder builder;
     builder["commentStyle"] = "None";
     std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());

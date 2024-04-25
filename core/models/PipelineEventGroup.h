@@ -112,9 +112,9 @@ public:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     // for debug and test
-    Json::Value ToJson() const;
+    Json::Value ToJson(bool enableEventMeta = false) const;
     bool FromJson(const Json::Value&);
-    std::string ToJsonString() const;
+    std::string ToJsonString(bool enableEventMeta = false) const;
     bool FromJsonString(const std::string&);
 #endif
 
