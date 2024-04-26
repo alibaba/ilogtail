@@ -1,5 +1,9 @@
 # ConfigServer 能力升级 + 体验优化（全栈）
 
+## 项目链接
+
+<https://summer-ospp.ac.cn/org/prodetail/246eb0236?lang=zh&list=pro>
+
 ## 项目描述
 
 ### iLogtail介绍
