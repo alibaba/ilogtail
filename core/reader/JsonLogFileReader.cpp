@@ -23,6 +23,9 @@ int32_t JsonLogFileReader::RemoveLastIncompleteLog(char* buffer,
                                                    int32_t size,
                                                    int32_t& rollbackLineFeedCount,
                                                    bool allowRollback) {
+    if (!allowRollback)
+      return size;
+  
     int32_t readBytes = 0;
     int32_t endIdx = 0;
     int32_t beginIdx = 0;
@@ -47,14 +50,11 @@ int32_t JsonLogFileReader::RemoveLastIncompleteLog(char* buffer,
     } while (beginIdx < size);
     readBytes = beginIdx;
 
-    if (allowRollback) {
-        rollbackLineFeedCount = std::count(buffer + beginIdx, buffer + size, '\n');
-        if (beginIdx < size && buffer[size - 1] != '\n') {
-            ++rollbackLineFeedCount;
-        }
-    } else {
-        return size;
+    rollbackLineFeedCount = std::count(buffer + beginIdx, buffer + size, '\n');
+    if (beginIdx < size && buffer[size - 1] != '\n') {
+      ++rollbackLineFeedCount;
     }
+
     return readBytes;
 }
 
