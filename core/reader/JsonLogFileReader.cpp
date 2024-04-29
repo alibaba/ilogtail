@@ -23,13 +23,13 @@ int32_t JsonLogFileReader::RemoveLastIncompleteLog(char* buffer,
                                                    int32_t size,
                                                    int32_t& rollbackLineFeedCount,
                                                    bool allowRollback) {
+    rollbackLineFeedCount = 0;
     if (!allowRollback)
       return size;
   
     int32_t readBytes = 0;
     int32_t endIdx = 0;
     int32_t beginIdx = 0;
-    rollbackLineFeedCount = 0;
     bool startWithBlock = false;
     // check if has json block in this buffer
     do {
