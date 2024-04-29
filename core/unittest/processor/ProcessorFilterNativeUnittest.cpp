@@ -991,7 +991,6 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         // generate test string with character randomly, and record whether a position should be replaced by blunck
         for (int j = 0; j < CHARACTER_COUNT; ++j) {
             int randIndex = rand() % 80;
-            LOG_INFO(sLogger, ("j", j)("randIndex", randIndex)("index", index));
             testStr += characterSet[randIndex];
             if (randIndex >= 0 && randIndex < 20) {
                 flow[index] = isBlunk[randIndex][0];

@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include <memory>
 #include <list>
+#include <memory>
+
 #include "models/StringView.h"
 
 namespace logtail {
@@ -26,47 +27,48 @@ class SourceBuffer;
 
 struct StringBuffer {
     bool IsValid() { return data != nullptr; }
-    char* const data;
+    char* data;
     size_t size;
-    const size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
+    size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
+public:
+    StringBuffer() : data(nullptr), size(0), capacity(0) {}
+
 private:
     StringBuffer(char* data, size_t capacity) : data(data), size(0), capacity(capacity) { data[0] = '\0'; }
     friend class SourceBuffer;
 };
 
-class BufferAllocator
-{
+class BufferAllocator {
 private:
     static const int32_t kAlignSize = sizeof(void*);
     static const int32_t kPageSize = 4096; // in bytes
 
 public:
     explicit BufferAllocator(int32_t firstChunkSize = 4096, int32_t chunkSizeLimit = 1024 * 128)
-      : mFirstChunkSize(firstChunkSize),
-        mChunkSize(firstChunkSize),
-        mChunkSizeLimit(chunkSizeLimit),
-        mFreeBytesInChunk(0),
-        mAllocPtr(NULL),
-        mAllocated(0),
-        mUsed(0)
-    {
+        : mFirstChunkSize(firstChunkSize),
+          mChunkSize(firstChunkSize),
+          mChunkSizeLimit(chunkSizeLimit),
+          mFreeBytesInChunk(0),
+          mAllocPtr(NULL),
+          mAllocated(0),
+          mUsed(0) {
         mAllocPtr = new uint8_t[mChunkSize];
         mAllocatedChunks.push_back(mAllocPtr);
         mFreeBytesInChunk = mChunkSize;
         mAllocated = mChunkSize;
     }
 
-    ~BufferAllocator()
-    {
-        for(size_t i = 0 ; i < mAllocatedChunks.size() ; i++) {
-            delete[] mAllocatedChunks[i];
+    ~BufferAllocator() {
+        for (size_t i = 0; i < mAllocatedChunks.size(); i++) {
+            if (mAllocatedChunks[i] != nullptr) {
+                delete[] mAllocatedChunks[i];
+                mAllocatedChunks[i] = nullptr;
+            }
         }
     }
 
-    void Reset(void)
-    {
-        for(size_t i = 1 ; i < mAllocatedChunks.size() ; i++)
-        {
+    void Reset(void) {
+        for (size_t i = 1; i < mAllocatedChunks.size(); i++) {
             delete[] mAllocatedChunks[i];
         }
         mAllocatedChunks.resize(1);
@@ -77,30 +79,22 @@ public:
         mUsed = 0;
     }
 
-    void* Allocate(int32_t bytes)
-    {
+    void* Allocate(int32_t bytes) {
         // Align the alloc size
         int32_t aligned = (bytes + kAlignSize - 1) & ~(kAlignSize - 1);
         return Alloc(aligned);
     }
 
-    int64_t GetUsedSize() const
-    {
-        return mUsed;
-    }
+    int64_t GetUsedSize() const { return mUsed; }
 
     size_t TotalAllocated() { return mAllocated; }
 
-    int64_t GetAllocatedSize() const
-    {
-        return mAllocated + mAllocatedChunks.size() * sizeof(void*);
-    }
+    int64_t GetAllocatedSize() const { return mAllocated + mAllocatedChunks.size() * sizeof(void*); }
 
 private:
     // Please do not make it public, user should always use Allocate() to get a better performance.
     // If you have a strong reason to do it, please drop a email to me: shiquan.yangsq@aliyun-inc.com
-    uint8_t* Alloc(int32_t bytes)
-    {
+    uint8_t* Alloc(int32_t bytes) {
         uint8_t* mem = NULL;
 
         if (bytes <= mFreeBytesInChunk) {
@@ -154,7 +148,7 @@ private:
     friend class SourceBufferUnittest;
 #endif
 
-private : 
+private:
     BufferAllocator(const BufferAllocator&);
 };
 

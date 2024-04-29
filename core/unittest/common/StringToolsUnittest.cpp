@@ -115,6 +115,89 @@ TEST_F(StringToolsUnittest, TestGetTopicNames) {
     }
 }
 
+TEST_F(StringToolsUnittest, TestBoostRegexSearch) {
+    {
+        // ^(\[\d+-\d+-\d+\].*)|(\[\d+\].*)
+        std::string buffer = "[2024-04-01] xxxxxx";
+        boost::regex reg(R"(^(\[\d+-\d+-\d+\].*)|(\[\d+\].*))"); // Regular expression to match "test"
+        std::string exception;
+        bool result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+
+        buffer = "aaa[2024-04-01] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+
+        buffer = "[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+        buffer = "123[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+    }
+
+    {
+        // ^(\[\d+-\d+-\d+\].*)|\[\d+\]
+        std::string buffer = "[2024-04-01] xxxxxx";
+        boost::regex reg(R"(^(\[\d+-\d+-\d+\].*)|\[\d+\])"); // Regular expression to match "test"
+        std::string exception;
+        bool result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+
+        buffer = "aaa[2024-04-01] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+
+        buffer = "[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+        buffer = "123[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+    }
+
+    {
+        // ^\[\d+-\d+-\d+\].*|\[\d+\]
+        std::string buffer = "[2024-04-01] xxxxxx";
+        boost::regex reg(R"(^\[\d+-\d+-\d+\].*|\[\d+\])"); // Regular expression to match "test"
+        std::string exception;
+        bool result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+
+        buffer = "aaa[2024-04-01] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+
+        buffer = "[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+        buffer = "123[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+    }
+
+
+    {
+        // ^\[\d+-\d+-\d+\]|\[\d+\]
+        std::string buffer = "[2024-04-01] xxxxxx";
+        boost::regex reg(R"(^\[\d+-\d+-\d+\]|\[\d+\])"); // Regular expression to match "test"
+        std::string exception;
+        bool result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+
+        buffer = "aaa[2024-04-01] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+
+        buffer = "[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_TRUE(result);
+        buffer = "123[138998928392] xxxxxx";
+        result = BoostRegexSearch(buffer.data(), reg, exception);
+        EXPECT_FALSE(result);
+    }
+}
+
 TEST_F(StringToolsUnittest, TestNormalizeTopicRegFormat) {
     { // Perl flavor
         std::string topicFormat(R"(/stdlog/(?<container_name>.*?)/(?<log_name>.*?))");
