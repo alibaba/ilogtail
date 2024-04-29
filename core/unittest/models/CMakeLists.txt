@@ -26,3 +26,6 @@ target_link_libraries(pipeline_event_ptr_unittest unittest_base)
 
 add_executable(pipeline_event_group_unittest PipelineEventGroupUnittest.cpp)
 target_link_libraries(pipeline_event_group_unittest unittest_base)
+
+add_executable(event_group_benchmark EventGroupBenchmark.cpp)
+target_link_libraries(event_group_benchmark unittest_base)

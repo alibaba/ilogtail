@@ -22,6 +22,10 @@
 
 namespace logtail {
 
+PipelineEventGroup::PipelineEventGroup(PipelineEventGroup&&) = default;
+
+PipelineEventGroup& PipelineEventGroup::operator=(PipelineEventGroup&) = default;
+
 void PipelineEventGroup::AddEvent(const PipelineEventPtr& event) {
     mEvents.emplace_back(event);
 }
