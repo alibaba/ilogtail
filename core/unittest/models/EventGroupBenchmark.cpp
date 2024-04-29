@@ -18,6 +18,16 @@
 #include "models/LogEvent.h"
 #include "models/PipelineEventGroup.h"
 
+#ifdef ENABLE_COMPATIBLE_MODE
+extern "C" {
+#include <string.h>
+asm(".symver memcpy, memcpy@GLIBC_2.2.5");
+void* __wrap_memcpy(void* dest, const void* src, size_t n) {
+    return memcpy(dest, src, n);
+}
+}
+#endif
+
 namespace logtail {
 
 class LogEventDisallowCopy : public PipelineEvent {
