@@ -31,7 +31,7 @@ cmake_dependent_option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode 
 cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" OFF "LINUX" OFF)
 option(WITHOUTGDB "Build Logtail without gdb")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
-option(BUILD_SPL_UT "Build spl unit test" OFF)
+option(BUILD_SPL_UT "Build spl unit test" ON)
 
 if (ENABLE_ENTERPRISE)
     message(STATUS "Enable Enterprise Feature.")
