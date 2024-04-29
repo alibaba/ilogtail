@@ -46,19 +46,6 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    // Ignore Warning
-    if (!GetOptionalBoolParam(config, "IgnoreUnmatchWarning", mIgnoreUnmatchWarning, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              mIgnoreUnmatchWarning,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
-    }
-
     std::string mergeType;
     if (!GetMandatoryStringParam(config, "MergeType", mergeType, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -101,7 +88,8 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
     }
     if (mMergeType == MergeType::BY_REGEX) {
         MergeLogsByRegex(logGroup);
-    } else if (mMergeType == MergeType::BY_FLAG) {
+    } else if (mMergeType == MergeType::BY_FLAG && logGroup.HasMetadata(EventGroupMetaKey::HAS_PART_LOG)) {
+        // If there is no part log in the logGroup, this part of the logic does not need to be executed.
         MergeLogsByFlag(logGroup);
     }
     *mSplitLines = logGroup.GetEvents().size();
@@ -236,13 +224,13 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             } else {
                 regex = *mMultiline.GetContinuePatternReg();
             }
-            if (BoostRegexMatch(sourceVal.data(), sourceVal.size(), regex, exception)) {
+            if (BoostRegexSearch(sourceVal.data(), sourceVal.size(), regex, exception)) {
                 events.emplace_back(sourceEvent);
                 begin = cur;
                 isPartialLog = true;
             } else if (mMultiline.GetEndPatternReg() != nullptr && mMultiline.GetStartPatternReg() == nullptr
                        && mMultiline.GetContinuePatternReg() != nullptr
-                       && BoostRegexMatch(
+                       && BoostRegexSearch(
                            sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                 // case: continue + end
                 // current line is matched against the end pattern rather than the continue pattern
@@ -255,7 +243,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
         } else {
             // case: start + continue or continue + end
             if (mMultiline.GetContinuePatternReg() != nullptr
-                && BoostRegexMatch(
+                && BoostRegexSearch(
                     sourceVal.data(), sourceVal.size(), *mMultiline.GetContinuePatternReg(), exception)) {
                 events.emplace_back(sourceEvent);
                 continue;
@@ -266,7 +254,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                 if (mMultiline.GetContinuePatternReg() != nullptr) {
                     // current line is not matched against the continue pattern, so the end pattern will decide if
                     // the current log is a match or not
-                    if (BoostRegexMatch(
+                    if (BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                         MergeEvents(events, true);
                         sourceEvents[newSize++] = std::move(sourceEvents[begin]);
@@ -277,7 +265,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                     isPartialLog = false;
                 } else {
                     // case: start + end or end
-                    if (BoostRegexMatch(
+                    if (BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetEndPatternReg(), exception)) {
                         MergeEvents(events, true);
                         sourceEvents[newSize++] = std::move(sourceEvents[begin]);
@@ -294,7 +282,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
             } else {
                 if (mMultiline.GetContinuePatternReg() == nullptr) {
                     // case: start
-                    if (!BoostRegexMatch(
+                    if (!BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetStartPatternReg(), exception)) {
                         events.emplace_back(sourceEvent);
                     } else {
@@ -308,7 +296,7 @@ void ProcessorMergeMultilineLogNative::MergeLogsByRegex(PipelineEventGroup& logG
                     // continue pattern is given, but current line is not matched against the continue pattern
                     MergeEvents(events, true);
                     sourceEvents[newSize++] = std::move(sourceEvents[begin]);
-                    if (!BoostRegexMatch(
+                    if (!BoostRegexSearch(
                             sourceVal.data(), sourceVal.size(), *mMultiline.GetStartPatternReg(), exception)) {
                         // when no end pattern is given, the only chance to enter unmatched state is when both start
                         // and continue pattern are given, and the current line is not matched against the start
@@ -367,25 +355,26 @@ void ProcessorMergeMultilineLogNative::HandleUnmatchLogs(
     std::vector<PipelineEventPtr>& logEvents, size_t& newSize, size_t begin, size_t end, StringView logPath) {
     mProcUnmatchedEventsCnt->Add(end - begin + 1);
     if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD
-        && mIgnoreUnmatchWarning) {
+        && mMultiline.mIgnoringUnmatchWarning) {
         return;
     }
     for (size_t i = begin; i <= end; i++) {
-        if (!mIgnoreUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+        if (!mMultiline.mIgnoringUnmatchWarning && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             StringView sourceVal = logEvents[i].Cast<LogEvent>().GetContent(mSourceKey);
             LOG_WARNING(
                 GetContext().GetLogger(),
-                ("unmatched log line", "please check regex")("action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
+                ("unmatched log line", "please check regex")(
+                    "action", UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment))(
                     "first 1KB", sourceVal.substr(0, 1024).to_string())("filepath", logPath.to_string())(
                     "processor", sName)("config", GetContext().GetConfigName())("log bytes", sourceVal.size() + 1));
-            GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
-                                              "unmatched log line, first 1KB:" + sourceVal.substr(0, 1024).to_string()
-                                                  + "\taction: " + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment)
-                                                  + "\tfilepath: " + logPath.to_string() + "\tprocessor: " + sName
-                                                  + "\tconfig: " + GetContext().GetConfigName(),
-                                              GetContext().GetProjectName(),
-                                              GetContext().GetLogstoreName(),
-                                              GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(
+                SPLIT_LOG_FAIL_ALARM,
+                "unmatched log line, first 1KB:" + sourceVal.substr(0, 1024).to_string() + "\taction: "
+                    + UnmatchedContentTreatmentToString(mMultiline.mUnmatchedContentTreatment) + "\tfilepath: "
+                    + logPath.to_string() + "\tprocessor: " + sName + "\tconfig: " + GetContext().GetConfigName(),
+                GetContext().GetProjectName(),
+                GetContext().GetLogstoreName(),
+                GetContext().GetRegion());
         }
         if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
             logEvents[newSize++] = std::move(logEvents[i]);

@@ -807,6 +807,7 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
 }
 
 void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
+    // 此处要不要取消mLastFilePos == 0的限制
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
     }
@@ -837,7 +838,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
             if (readBuf[endPs] == '\n') {
                 LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, true);
-                if (BoostRegexMatch(
+                if (BoostRegexSearch(
                         line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
                     mLastFilePos += line.lineBegin;
                     mCache.clear();
@@ -2090,20 +2091,20 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
             LineInfo content = GetLastLine(StringView(buffer, size), endPs, false);
             if (mMultilineConfig.first->GetEndPatternReg()) {
                 // start + end, continue + end, end
-                if (BoostRegexMatch(content.data.data(),
-                                    content.data.size(),
-                                    *mMultilineConfig.first->GetEndPatternReg(),
-                                    exception)) {
+                if (BoostRegexSearch(content.data.data(),
+                                     content.data.size(),
+                                     *mMultilineConfig.first->GetEndPatternReg(),
+                                     exception)) {
                     // Ensure the end line is complete
                     if (buffer[content.lineEnd] == '\n') {
                         return content.lineEnd + 1;
                     }
                 }
             } else if (mMultilineConfig.first->GetStartPatternReg()
-                       && BoostRegexMatch(content.data.data(),
-                                          content.data.size(),
-                                          *mMultilineConfig.first->GetStartPatternReg(),
-                                          exception)) {
+                       && BoostRegexSearch(content.data.data(),
+                                           content.data.size(),
+                                           *mMultilineConfig.first->GetStartPatternReg(),
+                                           exception)) {
                 // start + continue, start
                 rollbackLineFeedCount += content.rollbackLineFeedCount;
                 // Keep all the buffer if rollback all

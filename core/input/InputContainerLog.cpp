@@ -43,7 +43,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     static Json::Value fileDiscoveryConfig(Json::objectValue);
     if (fileDiscoveryConfig.empty()) {
         fileDiscoveryConfig["FilePaths"] = Json::Value(Json::arrayValue);
-        fileDiscoveryConfig["FilePaths"].append("/**/*.log*");
+        fileDiscoveryConfig["FilePaths"].append("/**/*.log");
         fileDiscoveryConfig["AllowingCollectingFilesInRootDir"] = true;
     }
 
