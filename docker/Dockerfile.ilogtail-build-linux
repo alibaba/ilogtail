@@ -29,6 +29,8 @@ ARG USER_UID=500
 ARG GROUPNAME=$USERNAME
 ARG GROUP_GID=$USER_UID
 
+ENV LD_LIBRARY_PATH=/opt/logtail/deps/lib:$LD_LIBRARY_PATH
+
 # Create the user
 RUN if getent passwd $USERNAME; then userdel -f $USERNAME; fi && \
     if getent group $GROUPNAME; then groupdel $GROUPNAME; fi && \
