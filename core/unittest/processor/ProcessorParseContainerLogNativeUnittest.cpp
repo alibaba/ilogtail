@@ -542,7 +542,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 ],
                 "metadata": {
                     "container.type": "containerd_text",
-                    "log.part": "P"
+                    "has.part.log": "P"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -734,7 +734,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 ],
                 "metadata": {
                     "container.type": "containerd_text",
-                    "log.part": "P"
+                    "has.part.log": "P"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
@@ -873,7 +873,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
             ],
             "metadata": {
                 "container.type": "containerd_text",
-                "log.part": "P"
+                "has.part.log": "P"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -981,7 +981,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
             ],
             "metadata": {
                 "container.type": "containerd_text",
-                "log.part": "P"
+                "has.part.log": "P"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
@@ -1097,7 +1097,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
         ],
         "metadata":{
             "container.type":"containerd_text",
-            "log.part": "P"
+            "has.part.log": "P"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
@@ -1750,7 +1750,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
             ],
             "metadata": {
                 "container.type": "containerd_text",
-                "log.part": "P"
+                "has.part.log": "P"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();

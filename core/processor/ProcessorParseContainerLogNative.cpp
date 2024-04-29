@@ -256,7 +256,9 @@ bool ProcessorParseContainerLogNative::ParseContainerdTextLogLine(LogEvent& sour
         // P
         StringView content = StringView(pch3 + 1, contentValue.end() - pch3 - 1);
         ResetContainerdTextLog(timeValue, sourceValue, content, true, sourceEvent);
-        logGroup.SetMetadata(EventGroupMetaKey::LOG_PART_LOG, ProcessorMergeMultilineLogNative::PartLogFlag);
+        // There are some part logs, set HAS_PART_LOG
+        // ProcessorMergeMultilineLogNative will merge the logs when it recognizes this flag.
+        logGroup.SetMetadata(EventGroupMetaKey::HAS_PART_LOG, ProcessorMergeMultilineLogNative::PartLogFlag);
         return true;
     }
 }
