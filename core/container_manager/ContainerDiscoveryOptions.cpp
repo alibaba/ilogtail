@@ -246,7 +246,7 @@ void ContainerDiscoveryOptions::GenerateContainerMetaFetchingGoPipeline(
     ConvertMapToJsonObj("ExternalEnvTag", mExternalEnvTag);
     // 启用容器元信息预览
     if (mCollectingContainersMeta) {
-        detail["CollectContainersFlag"] = Json::Value(true);
+        detail["CollectingContainersMeta"] = Json::Value(true);
     }
     plugin["type"] = Json::Value("metric_container_info");
     plugin["detail"] = detail;
