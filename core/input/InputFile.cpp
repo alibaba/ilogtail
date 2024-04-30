@@ -16,6 +16,7 @@
 
 #include <filesystem>
 
+#include "StringTools.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
@@ -23,6 +24,7 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
+#include "pipeline/PipelineManager.h"
 
 using namespace std;
 
@@ -77,9 +79,11 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;
     }
+    mFileReader.mInputType = FileReaderOptions::InputType::InputFile;
 
     // 过渡使用
     mFileDiscovery.SetTailingAllMatchedFiles(mFileReader.mTailingAllMatchedFiles);
+    mFileDiscovery.SetDeduceAndSetContainerBaseDirFunc(DeduceAndSetContainerBaseDir);
 
     // Multiline
     const char* key = "Multiline";
@@ -140,6 +144,49 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         mExactlyOnceConcurrency = exactlyOnceConcurrency;
     }
 
+    return true;
+}
+
+bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+                                             const PipelineContext*,
+                                             const FileDiscoveryOptions* fileDiscovery) {
+    if (!containerInfo.mRealBaseDir.empty()) {
+        return true;
+    }
+    std::string logPath;
+    if (!fileDiscovery->GetWildcardPaths().empty()) {
+        logPath = fileDiscovery->GetWildcardPaths()[0];
+    } else {
+        logPath = fileDiscovery->GetBasePath();
+    }
+    size_t pthSize = logPath.size();
+
+    size_t size = containerInfo.mMounts.size();
+    size_t bestMatchedMountsIndex = size;
+    // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\\或者/结尾
+    for (size_t i = 0; i < size; ++i) {
+        StringView dst = containerInfo.mMounts[i].mDestination;
+        size_t dstSize = dst.size();
+
+        if (StartWith(logPath, dst)
+            && (pthSize == dstSize || (pthSize > dstSize && (logPath[dstSize] == '/' || logPath[dstSize] == '\\')))
+            && (bestMatchedMountsIndex == size
+                || containerInfo.mMounts[bestMatchedMountsIndex].mDestination.size() < dstSize)) {
+            bestMatchedMountsIndex = i;
+        }
+    }
+    if (bestMatchedMountsIndex < size) {
+        containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path)
+            + containerInfo.mMounts[bestMatchedMountsIndex].mSource
+            + logPath.substr(containerInfo.mMounts[bestMatchedMountsIndex].mDestination.size());
+        LOG_DEBUG(sLogger,
+                  ("set container base dir",
+                   containerInfo.mRealBaseDir)("source", containerInfo.mMounts[bestMatchedMountsIndex].mSource)(
+                      "destination", containerInfo.mMounts[bestMatchedMountsIndex].mDestination)("logPath", logPath));
+    } else {
+        containerInfo.mRealBaseDir = STRING_FLAG(default_container_host_path) + containerInfo.mUpperDir + logPath;
+    }
+    LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID));
     return true;
 }
 

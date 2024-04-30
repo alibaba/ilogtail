@@ -15,6 +15,8 @@
 #include "input/InputContainerLog.h"
 
 #include "app_config/AppConfig.h"
+#include "common/FileSystemUtil.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
@@ -41,7 +43,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     static Json::Value fileDiscoveryConfig(Json::objectValue);
     if (fileDiscoveryConfig.empty()) {
         fileDiscoveryConfig["FilePaths"] = Json::Value(Json::arrayValue);
-        fileDiscoveryConfig["FilePaths"].append("/**/*.log*");
+        fileDiscoveryConfig["FilePaths"].append("/**/*.log");
         fileDiscoveryConfig["AllowingCollectingFilesInRootDir"] = true;
     }
 
@@ -56,6 +58,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
         return false;
     }
     mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
+    mFileDiscovery.SetDeduceAndSetContainerBaseDirFunc(DeduceAndSetContainerBaseDir);
 
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
@@ -65,7 +68,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;
     }
-
+    mFileReader.mInputType = FileReaderOptions::InputType::InputContainerLog;
     // Multiline
     {
         const char* key = "Multiline";
@@ -143,13 +146,98 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
                             "stderr logs at the same time, there may be issues with merging multiple lines";
         LOG_WARNING(sLogger, ("warning", warningMsg)("config", mContext->GetConfigName()));
         warningMsg = "warning msg: " + warningMsg + "\tconfig: " + mContext->GetConfigName();
-        LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
-                                               warningMsg,
-                                               GetContext().GetProjectName(),
-                                               GetContext().GetLogstoreName(),
-                                               GetContext().GetRegion());
+        mContext->GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
+                                       warningMsg,
+                                       GetContext().GetProjectName(),
+                                       GetContext().GetLogstoreName(),
+                                       GetContext().GetRegion());
     }
 
+    return true;
+}
+
+std::string InputContainerLog::TryGetRealPath(const std::string& path) {
+    std::string tmpPath = path;
+#if defined(__linux__)
+    int index = 0; // assume path is absolute
+    for (int i = 0; i < 10; i++) {
+        fsutil::PathStat buf;
+        if (fsutil::PathStat::stat(tmpPath, buf)) {
+            return tmpPath;
+        }
+        while (true) {
+            size_t j = tmpPath.find('/', index + 1);
+            if (j == std::string::npos) {
+                index = tmpPath.length();
+            } else {
+                index = j;
+            }
+
+            std::string subPath = tmpPath.substr(0, index);
+            fsutil::PathStat buf;
+            if (!fsutil::PathStat::lstat(subPath.c_str(), buf)) {
+                return "";
+            }
+            if (buf.IsLink()) {
+                // subPath is a symlink
+                char target[PATH_MAX + 1]{0};
+                readlink(subPath.c_str(), target, sizeof(target));
+                std::string partialPath = STRING_FLAG(default_container_host_path)
+                    + std::string(target); // You need to implement this function
+                tmpPath = partialPath + tmpPath.substr(index);
+                fsutil::PathStat buf;
+                if (!fsutil::PathStat::stat(partialPath.c_str(), buf)) {
+                    // path referenced by partialPath does not exist or has symlink
+                    index = 0;
+                } else {
+                    index = partialPath.length();
+                }
+                break;
+            }
+        }
+    }
+    return "";
+#elif defined(_MSC_VER)
+    fsutil::PathStat buf;
+    if (fsutil::PathStat::stat(tmpPath, buf)) {
+        return tmpPath;
+    }
+    return "";
+#endif
+}
+
+bool InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+                                                     const PipelineContext* ctx,
+                                                     const FileDiscoveryOptions*) {
+    if (!containerInfo.mRealBaseDir.empty()) {
+        return true;
+    }
+    // ParseByJSONObj 确保 mLogPath不会以\\或者/ 结尾
+    std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path) + containerInfo.mLogPath);
+    if (realPath.empty()) {
+        LOG_ERROR(
+            sLogger,
+            ("failed to set container base dir", "container log path not existed")("container id", containerInfo.mID)(
+                "container log path", containerInfo.mLogPath)("input", sName)("config", ctx->GetPipeline().Name()));
+        ctx->GetAlarm().SendAlarm(INVALID_CONTAINER_PATH_ALARM,
+                                  "failed to set container base dir: container log path not existed\tcontainer id: "
+                                      + ToString(containerInfo.mID) + "\tcontainer log path: " + containerInfo.mLogPath
+                                      + "\tconfig: " + ctx->GetPipeline().Name(),
+                                  ctx->GetProjectName(),
+                                  ctx->GetLogstoreName(),
+                                  ctx->GetRegion());
+        return false;
+    }
+    size_t pos = realPath.find_last_of('/');
+    if (pos != std::string::npos) {
+        containerInfo.mRealBaseDir = realPath.substr(0, pos);
+    }
+    if (containerInfo.mRealBaseDir.length() > 1 && containerInfo.mRealBaseDir.back() == '/') {
+        containerInfo.mRealBaseDir.pop_back();
+    }
+    LOG_INFO(sLogger,
+             ("set container base dir",
+              containerInfo.mRealBaseDir)("container id", containerInfo.mID)("config", ctx->GetPipeline().Name()));
     return true;
 }
 

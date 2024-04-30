@@ -51,6 +51,7 @@ public:
     void TestFindAndSearchPerformance();
     void TestDockerJsonLogLineParser();
     void TestKeepingSourceWhenParseFail();
+    void TestParseDockerLog();
 
     PipelineContext mContext;
 };
@@ -62,6 +63,7 @@ UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestContainerdLogWithSp
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestDockerJsonLogLineParserWithSplit);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestDockerJsonLogLineParser);
 UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestKeepingSourceWhenParseFail);
+UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestParseDockerLog);
 // UNIT_TEST_CASE(ProcessorParseContainerLogNativeUnittest, TestFindAndSearchPerformance);
 
 // 生成一个随机字符串
@@ -244,7 +246,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
     // 测试IgnoringStdout 为true
@@ -382,7 +384,7 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
     // 测试 IgnoringStderr 为true
@@ -539,11 +541,12 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd_text"
+                    "container.type": "containerd_text",
+                    "has.part.log": "P"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
     // 测试都不为true
@@ -730,11 +733,12 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                     }
                 ],
                 "metadata": {
-                    "container.type": "containerd_text"
+                    "container.type": "containerd_text",
+                    "has.part.log": "P"
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
 }
@@ -868,11 +872,12 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd_text"
+                "container.type": "containerd_text",
+                "has.part.log": "P"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
-        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
     {
         // case：正常情况下的日志
@@ -975,11 +980,12 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                 }
             ],
             "metadata": {
-                "container.type": "containerd_text"
+                "container.type": "containerd_text",
+                "has.part.log": "P"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
-        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
 }
 
@@ -1090,11 +1096,12 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
             }
         ],
         "metadata":{
-            "container.type":"containerd_text"
+            "container.type":"containerd_text",
+            "has.part.log": "P"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
 }
 
 void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSplit() {
@@ -1207,7 +1214,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+    APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
 }
 
 void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
@@ -1261,7 +1268,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
         // log为空
         {
@@ -1306,7 +1313,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
         // log为不是string
         {
@@ -1349,7 +1356,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
     // time
@@ -1385,7 +1392,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     {
                         "contents" :
                         {
-                            "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time1\":\"2024-02-19T03:49:37.793559367Z\"}"
+                            "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time1\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
                         "timestampNanosecond" : 0,
@@ -1397,7 +1404,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
         // time 为空
         {
@@ -1430,7 +1437,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     {
                         "contents" :
                         {
-                            "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"\"}"
+                            "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"\"}"
                         },
                         "timestamp" : 12345678901,
                         "timestampNanosecond" : 0,
@@ -1442,7 +1449,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
         // time 不是string
         {
@@ -1475,7 +1482,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     {
                         "contents" :
                         {
-                            "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":1}"
+                            "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":1}"
                         },
                         "timestamp" : 12345678901,
                         "timestampNanosecond" : 0,
@@ -1487,7 +1494,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
     // stream
@@ -1523,7 +1530,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     {
                         "contents" :
                         {
-                            "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream1\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
+                            "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream1\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
                         "timestampNanosecond" : 0,
@@ -1535,7 +1542,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
         // stream非法
         {
@@ -1568,7 +1575,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     {
                         "contents" :
                         {
-                            "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
+                            "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
                         "timestampNanosecond" : 0,
@@ -1580,7 +1587,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
         // stream不是string
         {
@@ -1613,7 +1620,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                     {
                         "contents" :
                         {
-                            "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":1,\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
+                            "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":1,\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
                         "timestampNanosecond" : 0,
@@ -1625,7 +1632,7 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                 }
             })";
             std::string outJson = eventGroup.ToJsonString();
-            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+            APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
         }
     }
 }
@@ -1742,11 +1749,12 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                 }
             ],
             "metadata": {
-                "container.type": "containerd_text"
+                "container.type": "containerd_text",
+                "has.part.log": "P"
             }
         })";
         std::string outJson = eventGroup.ToJsonString();
-        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+        APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
     }
 
     // docker
@@ -1791,7 +1799,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
             // log为空
             {
@@ -1836,7 +1844,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
             // log为不是string
             {
@@ -1868,7 +1876,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
         }
         // time
@@ -1905,7 +1913,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
             // time 为空
             {
@@ -1939,7 +1947,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
             // time 不是string
             {
@@ -1973,7 +1981,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
         }
         // stream
@@ -2010,7 +2018,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
             // stream非法
             {
@@ -2044,7 +2052,7 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
             // stream不是string
             {
@@ -2078,9 +2086,182 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                     }
                 })";
                 std::string outJson = eventGroup.ToJsonString();
-                APSARA_TEST_STREQ_FATAL(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
+                APSARA_TEST_STREQ(CompactJson(expectJson.str()).c_str(), CompactJson(outJson).c_str());
             }
         }
+    }
+}
+
+void ProcessorParseContainerLogNativeUnittest::TestParseDockerLog() {
+    {
+        DockerLog dockerLog;
+
+        std::string str
+            = R"({"log":"Exception in thread \"main\" java.lang.NullPointerExceptionat  com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitle\n","stream":"stdout","time":"2024-04-09T02:21:28.744862802Z"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_TRUE(result);
+        APSARA_TEST_STREQ(
+            "Exception in thread \"main\" java.lang.NullPointerExceptionat  com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitleat com.example.myproject.Book.getTitleat "
+            "com.example.myproject.Book.getTitle\n",
+            dockerLog.log.to_string().c_str());
+        APSARA_TEST_EQUAL("stdout", dockerLog.stream);
+        APSARA_TEST_EQUAL("2024-04-09T02:21:28.744862802Z", dockerLog.time);
+        delete[] buffer;
+    }
+    {
+        DockerLog dockerLog;
+        std::string str = R"({"log":"Hello, World!","stream":"stdout","time":"2021-12-01T00:00:00.000Z)";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
+    }
+    {
+        DockerLog dockerLog;
+        std::string str = R"()";
+        int32_t size = str.size();
+
+        char* buffer = new char[1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
+    }
+
+    // Test with a valid log message but missing stream and time fields.
+    {
+        DockerLog dockerLog;
+        std::string str = R"({"log":"Hello, World!"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
+    }
+    // Test with a valid log message and stream but missing time field.
+    {
+        DockerLog dockerLog;
+        std::string str = R"({"log":"Hello, World!","stream":"stdout"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
+    }
+    // Test with a valid log message and time but missing stream field.
+    {
+        DockerLog dockerLog;
+        std::string str = R"({"log":"Hello, World!","time":"2021-12-01T00:00:00.000Z"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
+    }
+    // Test with a log message that contains special characters.
+    {
+        DockerLog dockerLog;
+        std::string str
+            = R"({"log":"Hello, @#$%^&*()_+{}|:\"<>?~`","stream":"stdout","time":"2021-12-01T00:00:00.000Z"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_TRUE(result);
+        APSARA_TEST_STREQ("Hello, @#$%^&*()_+{}|:\"<>?~`", dockerLog.log.to_string().c_str());
+        APSARA_TEST_EQUAL("stdout", dockerLog.stream);
+        APSARA_TEST_EQUAL("2021-12-01T00:00:00.000Z", dockerLog.time);
+        delete[] buffer;
+    }
+    // Test with a log message that contains escape characters and special characters.
+    {
+        DockerLog dockerLog;
+        std::string str
+            = R"({"log":"ברי צקלהHello 你好, \\u \" \ / \b \f \n \r \t 🌍 \u0069\u004c\u006f\u0067\u0074\u0061\u0069\u006c\u0020\u4e3a\u53ef\u89c2\u6d4b\u573a\u666f\u800c\u751f\uff0c\u62e5\u6709\u7684\u8f7b\u91cf\u7ea7\u3001\u9ad8\u6027\u80fd\u3001\u81ea\u52a8\u5316\u914d\u7f6e\u7b49\u8bf8\u591a\u751f\u4ea7\u7ea7\u522b\u7279\u6027\uff0c\u5728\u963f\u91cc\u5df4\u5df4\u4ee5\u53ca\u5916\u90e8\u6570\u4e07\u5bb6\u963f\u91cc\u4e91\u5ba2\u6237\u5185\u90e8\u5e7f\u6cdb\u5e94\u7528\u3002\u4f60\u53ef\u4ee5\u5c06\u5b83\u90e8\u7f72\u4e8e\u7269\u7406\u673a\uff0c\u865a\u62df\u673a\uff0c\u004b\u0075\u0062\u0065\u0072\u006e\u0065\u0074\u0065\u0073\u7b49\u591a\u79cd\u73af\u5883\u4e2d\u6765\u91c7\u96c6\u9065\u6d4b\u6570\u636e\uff0c\u4f8b\u5982\u006c\u006f\u0067\u0073\u3001\u0074\u0072\u0061\u0063\u0065\u0073\u548c\u006d\u0065\u0074\u0072\u0069\u0063\u0073\u3002\n","stream":"stdout","time":"2021-12-01T00:00:00.000Z"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_TRUE(result);
+        APSARA_TEST_STREQ("ברי צקלהHello 你好, \\u \" \\ / \b \f \n \r \t 🌍 iLogtail "
+                          "为可观测场景而生，拥有的轻量级、高性能、自动化配置等诸多生产级别特性，在阿里巴巴以及外部数万"
+                          "家阿里云客户内部广泛应用。你可以将它部署于物理机，虚拟机，Kubernetes等多种环境中来采集遥测数"
+                          "据，例如logs、traces和metrics。\n",
+                          dockerLog.log.to_string().c_str());
+        APSARA_TEST_EQUAL("stdout", dockerLog.stream);
+        APSARA_TEST_EQUAL("2021-12-01T00:00:00.000Z", dockerLog.time);
+        delete[] buffer;
+    }
+    // Test with a incomplete log
+    {
+        DockerLog dockerLog;
+        std::string str = R"({"log":"Hello, Wor)";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
+    }
+    // Test with a incomplete log
+    {
+        DockerLog dockerLog;
+        std::string str = R"(og":"Hello, world","stream":"stdout","time":"2021-12-01T00:00:00.000Z"})";
+        int32_t size = str.size();
+
+        char* buffer = new char[size + 1]();
+        strcpy(buffer, str.c_str());
+
+        bool result = ProcessorParseContainerLogNative::ParseDockerLog(buffer, size, dockerLog);
+
+        APSARA_TEST_FALSE(result);
+        delete[] buffer;
     }
 }
 

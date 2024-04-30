@@ -15,6 +15,7 @@
 #include <json/json.h>
 
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <string>
 
@@ -27,6 +28,7 @@
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
+DECLARE_FLAG_STRING(default_container_host_path);
 
 using namespace std;
 
@@ -37,6 +39,7 @@ public:
     void OnSuccessfulInit();
     void OnEnableContainerDiscovery();
     void OnPipelineUpdate();
+    void TestTryGetRealPath();
 
 protected:
     static void SetUpTestCase() { AppConfig::GetInstance()->mPurageContainerMode = true; }
@@ -49,6 +52,50 @@ private:
     Pipeline p;
     PipelineContext ctx;
 };
+
+void create_directory(const std::string& path) {
+    size_t pos = 0;
+    std::string dir;
+    std::string dir_path = path;
+    int mkdir_status;
+
+    // Add trailing slash if missing
+    if (dir_path[dir_path.size() - 1] != '/') {
+        dir_path += '/';
+    }
+
+    while ((pos = dir_path.find_first_of('/', pos)) != std::string::npos) {
+        dir = dir_path.substr(0, pos++);
+        if (dir.size() == 0)
+            continue; // if leading / first time is 0 length
+        if ((mkdir_status = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) && errno != EEXIST) {
+            std::cerr << "Error creating directory " << dir << ": " << strerror(errno) << std::endl;
+            return;
+        }
+    }
+}
+
+void InputContainerLogUnittest::TestTryGetRealPath() {
+    std::string rootDirectory = "/tmp/home/admin";
+    std::string path = "/test/test/test";
+    STRING_FLAG(default_container_host_path) = "/tmp/home/admin";
+
+    // 删除 rootDirectory 目录
+    std::filesystem::remove_all(rootDirectory);
+    // 删除 STRING_FLAG(default_container_host_path)
+    std::filesystem::remove_all(STRING_FLAG(default_container_host_path));
+
+    // 创建 /tmp/home/admin/test/test/test 目录
+    create_directory(rootDirectory + path);
+    // 创建 /tmp/home/admin/test/test/test/test.log 文件
+    std::ofstream outfile(rootDirectory + path + "/test.log");
+    outfile.close();
+
+    symlink((path + "/test.log").c_str(), (rootDirectory + "/a.log").c_str());
+
+    std::string result = InputContainerLog::TryGetRealPath(STRING_FLAG(default_container_host_path) + "/a.log");
+    APSARA_TEST_EQUAL(result, rootDirectory + path + "/test.log");
+}
 
 void InputContainerLogUnittest::OnSuccessfulInit() {
     unique_ptr<InputContainerLog> input;
@@ -144,7 +191,7 @@ void InputContainerLogUnittest::OnEnableContainerDiscovery() {
             },
             "inputs": [
                 {                
-                    "type": "metric_docker_file",
+                    "type": "metric_container_info",
                     "detail": {
                         "K8sNamespaceRegex": "default"
                     }
@@ -188,6 +235,7 @@ void InputContainerLogUnittest::OnPipelineUpdate() {
 UNIT_TEST_CASE(InputContainerLogUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputContainerLogUnittest, OnEnableContainerDiscovery)
 UNIT_TEST_CASE(InputContainerLogUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputContainerLogUnittest, TestTryGetRealPath)
 
 } // namespace logtail
 

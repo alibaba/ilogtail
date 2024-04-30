@@ -86,7 +86,7 @@ PluginRegistry::PluginRegistry() {
                   "service_syslog",
                   "service_udp_server",
                   "metric_debug_file",
-                  "metric_docker_file",
+                  "metric_container_info",
                   "metric_checkpoint_example",
                   "metric_input_example",
                   "metric_meta_host",
