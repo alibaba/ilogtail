@@ -187,7 +187,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
                     {                
                         "type": "metric_container_info",
                         "detail": {
-                            "CollectContainersFlag": true,
+                            "CollectingContainersMeta": true,
                             "FilePattern": "*.log",
                             "K8sNamespaceRegex": "default",
                             "MaxDepth": 0,
