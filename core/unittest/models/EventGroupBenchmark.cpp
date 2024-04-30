@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
     benchmark.TestEraseInLoop();
     benchmark.TestWriteIndexInLoop();
     /* Result:
-       TestEraseInLoop costs 28219ms
-       TestWriteIndexInLoop costs 245ms
+       TestEraseInLoop costs 453ms
+       TestWriteIndexInLoop costs 22ms
      */
     return 0;
 }
