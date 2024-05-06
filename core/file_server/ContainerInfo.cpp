@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "common/PathUtil.h"
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 
 namespace logtail {

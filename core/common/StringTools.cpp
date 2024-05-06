@@ -18,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/all.hpp>
+#include <boost/filesystem.hpp>
 
 #include "logger/Logger.h"
 #if defined(_MSC_VER)
@@ -346,6 +347,12 @@ bool NormalizeTopicRegFormat(std::string& topicFormat) {
         return false;
     }
     return true;
+}
+
+void RemoveFilePathTrailingSlash(std::string& filePath) {
+    boost::filesystem::path path(filePath);
+    path.remove_trailing_separator();
+    filePath = path.string();
 }
 
 } // namespace logtail

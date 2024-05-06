@@ -144,6 +144,8 @@ bool ExtractTopics(const std::string& val,
 
 bool NormalizeTopicRegFormat(std::string& regStr);
 
+void RemoveFilePathTrailingSlash(std::string& path);
+
 #if defined(_MSC_VER)
 // TODO: Test it.
 #define FNM_PATHNAME 0
