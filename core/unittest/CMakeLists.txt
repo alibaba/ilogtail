@@ -30,7 +30,6 @@ link_jsoncpp(${PROJECT_NAME})
 link_yamlcpp(${PROJECT_NAME})
 link_boost(${PROJECT_NAME})
 link_gflags(${PROJECT_NAME})
-link_curl(${PROJECT_NAME})
 link_lz4(${PROJECT_NAME})
 link_zlib(${PROJECT_NAME})
 link_zstd(${PROJECT_NAME})
@@ -44,6 +43,9 @@ link_asan(${PROJECT_NAME})
 if (BUILD_SPL_UT)
     link_spl(${PROJECT_NAME})
 endif ()
+link_curl(${PROJECT_NAME})
+link_ssl(${PROJECT_NAME}) # must after link_spl
+link_crypto(${PROJECT_NAME}) # must after link_spl
 link_tcmalloc(${PROJECT_NAME})
 
 if (UNIX)
