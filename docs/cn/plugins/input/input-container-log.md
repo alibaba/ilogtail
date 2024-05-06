@@ -21,7 +21,7 @@
 |  ExternalK8sLabelTag  |  map  |  否  |  空  |  对于部署于K8s环境的容器，需要在日志中额外添加的与Pod标签相关的tag。map中的key为Pod标签名，value为对应的tag名。 例如：在map中添加`app: k8s_label_app`，则若pod中包含`app=serviceA`的标签时，会将该信息以tag的形式添加到日志中，即添加字段\_\_tag\_\_:k8s\_label\_app: serviceA；若不包含`app`标签，则会添加空字段\_\_tag\_\_:k8s\_label\_app:  |
 |  ExternalEnvTag  |  map  |  否  |  空  |  对于部署于K8s环境的容器，需要在日志中额外添加的与容器环境变量相关的tag。map中的key为环境变量名，value为对应的tag名。 例如：在map中添加`VERSION: env_version`，则当容器中包含环境变量`VERSION=v1.0.0`时，会将该信息以tag的形式添加到日志中，即添加字段\_\_tag\_\_:env\_version: v1.0.0；若不包含`VERSION`环境变量，则会添加空字段\_\_tag\_\_:env\_version:  |
 |  FlushTimeoutSecs  |  uint  |  否  |  5  |  当文件超过指定时间未出现新的完整日志时，将当前读取缓存中的内容作为一条日志输出。  |
-|  AllowingIncludedByMultiConfigs  |  bool  |  否  |  false  |  是否允许当前配置采集其它配置已匹配的文件。  |
+|  AllowingIncludedByMultiConfigs  |  bool  |  否  |  false  |  是否允许当前配置采集其它配置已匹配的容器的标准输出日志。  |
 
 * 表1：多行聚合选项
 
