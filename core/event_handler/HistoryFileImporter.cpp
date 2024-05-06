@@ -132,9 +132,11 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
                 event->SetTimestamp(logtime);
                 event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
                 event->SetMeta(logBuffer->readOffset, logBuffer->readLength);
-
+                
+                // TODO: currently only 1 input is allowed, so we assume 0 here. It should be the actual input seq after refactorization.
                 logProcess->PushBuffer(
                     readerSharePtr->GetLogstoreKey(), readerSharePtr->GetConfigName(), 0, std::move(group), 100000000);
+                delete logBuffer;
             } else {
                 delete logBuffer;
                 // when ReadLog return false, retry once

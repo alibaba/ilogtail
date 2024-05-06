@@ -168,7 +168,7 @@ void LogEventUnittest::TestFromJsonToJson() {
             "key2" : "value2"
         },
         "fileOffset": 1,
-        "length": 2,
+        "rawSize": 2,
         "timestamp" : 12345678901,
         "timestampNanosecond" : 0,
         "type" : 1
