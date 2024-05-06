@@ -1073,17 +1073,7 @@ int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* lo
                                                               time(NULL));
 
         PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
-        group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, reader->GetConvertedPath());
-        group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, reader->GetHostLogPath());
-        group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(reader->GetDevInode().inode));
-        group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(reader->GetSourceId()));
-        group.SetMetadata(EventGroupMetaKey::TOPIC, reader->GetTopicName());
-        group.SetMetadata(EventGroupMetaKey::LOGGROUP_KEY, ToString(reader->GetLogGroupKey()));
-
-        const std::vector<sls_logs::LogTag>& extraTags = reader->GetExtraTags();
-        for (size_t i = 0; i < extraTags.size(); ++i) {
-            group.SetTag(extraTags[i].key(), extraTags[i].value());
-        }
+        reader->SetEventGroupMetaAndTag(group);
 
         LogEvent* event = group.AddLogEvent();
         time_t logtime = time(nullptr);

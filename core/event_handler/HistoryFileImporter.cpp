@@ -112,17 +112,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
                 logBuffer->logFileReader = readerSharePtr;
 
                 PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
-                group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, readerSharePtr->GetConvertedPath());
-                group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, readerSharePtr->GetHostLogPath());
-                group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(readerSharePtr->GetDevInode().inode));
-                group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(readerSharePtr->GetSourceId()));
-                group.SetMetadata(EventGroupMetaKey::TOPIC, readerSharePtr->GetTopicName());
-                group.SetMetadata(EventGroupMetaKey::LOGGROUP_KEY, ToString(readerSharePtr->GetLogGroupKey()));
-
-                const std::vector<sls_logs::LogTag>& extraTags = readerSharePtr->GetExtraTags();
-                for (size_t i = 0; i < extraTags.size(); ++i) {
-                    group.SetTag(extraTags[i].key(), extraTags[i].value());
-                }
+                readerSharePtr->SetEventGroupMetaAndTag(group);
 
                 LogEvent* event = group.AddLogEvent();
                 time_t logtime = time(nullptr);

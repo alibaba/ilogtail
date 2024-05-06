@@ -354,6 +354,8 @@ public:
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
+    void SetEventGroupMetaAndTag(PipelineEventGroup& group);
+
 protected:
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
     void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);

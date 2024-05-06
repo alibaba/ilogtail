@@ -1662,7 +1662,8 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         if (READ_BYTE < lastCacheSize) {
             READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
         }
-        StringBuffer stringMemory = logBuffer.sourcebuffer->AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
+        StringBuffer stringMemory
+            = logBuffer.sourcebuffer->AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
         if (lastCacheSize) {
             READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
         }
@@ -2205,6 +2206,27 @@ LogFileReader::~LogFileReader() {
 
         static auto sCptM = CheckpointManagerV2::GetInstance();
         sCptM->MarkGC(mEOOption->primaryCheckpointKey);
+    }
+}
+
+void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
+    // we store source-specific info with fixed key in metadata
+    group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, GetConvertedPath());
+    group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, GetHostLogPath());
+    group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
+    group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(GetSourceId()));
+    group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
+    group.SetMetadata(EventGroupMetaKey::LOGGROUP_KEY, ToString(GetLogGroupKey()));
+
+    // for source-specific info without fixed key, we store them in tags directly
+    // for log, these includes:
+    // 1. extra topic
+    // 2. external k8s env/label tag
+    // 3. inode (this is special, currently it is in both metadata and tag, since it is not a default tag; later on, it
+    // should be controlled by tag processor)
+    const std::vector<sls_logs::LogTag>& extraTags = GetExtraTags();
+    for (size_t i = 0; i < extraTags.size(); ++i) {
+        group.SetTag(extraTags[i].key(), extraTags[i].value());
     }
 }
 
