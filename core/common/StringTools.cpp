@@ -350,6 +350,9 @@ bool NormalizeTopicRegFormat(std::string& topicFormat) {
 }
 
 void RemoveFilePathTrailingSlash(std::string& filePath) {
+    if (filePath == "/") {
+        return;
+    }    
     boost::filesystem::path path(filePath);
     path.remove_trailing_separator();
     filePath = path.string();
