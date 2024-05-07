@@ -147,6 +147,7 @@ void Application::Init() {
     }
 
     GenerateInstanceId();
+    TryGetUUID();
 
     int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
     LogFileProfiler::mSystemBootTime = systemBootTime > 0 ? systemBootTime : GetSystemBootTime();
