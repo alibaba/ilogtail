@@ -147,17 +147,19 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     return true;
 }
 
-bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
-                                             const PipelineContext*,
-                                             const FileDiscoveryOptions* fileDiscovery) {
-    if (!containerInfo.mRealBaseDir.empty()) {
-        return true;
-    }
+std::string InputFile::GetLogPath(const FileDiscoveryOptions* fileDiscovery) {
     std::string logPath;
     if (!fileDiscovery->GetWildcardPaths().empty()) {
         logPath = fileDiscovery->GetWildcardPaths()[0];
     } else {
         logPath = fileDiscovery->GetBasePath();
+    }
+    return logPath;
+}
+
+bool InputFile::SetContainerBaseDir(ContainerInfo& containerInfo, const std::string& logPath) {
+    if (!containerInfo.mRealBaseDir.empty()) {
+        return true;
     }
     size_t pthSize = logPath.size();
 
@@ -188,6 +190,13 @@ bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
     }
     LOG_INFO(sLogger, ("set container base dir", containerInfo.mRealBaseDir)("container id", containerInfo.mID));
     return true;
+}
+
+bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+                                             const PipelineContext*,
+                                             const FileDiscoveryOptions* fileDiscovery) {
+    std::string logPath = GetLogPath(fileDiscovery);
+    return SetContainerBaseDir(containerInfo, logPath);
 }
 
 bool InputFile::Start() {

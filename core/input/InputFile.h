@@ -30,6 +30,8 @@ class InputFile : public Input {
 public:
     static const std::string sName;
 
+    static bool SetContainerBaseDir(ContainerInfo& containerInfo, const std::string& logPath);
+    static std::string GetLogPath(const FileDiscoveryOptions* fileDiscovery);
     static bool
     DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const PipelineContext*, const FileDiscoveryOptions*);
 

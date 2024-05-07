@@ -38,6 +38,7 @@ public:
     void OnFailedInit();
     void OnEnableContainerDiscovery();
     void OnPipelineUpdate();
+    void TestSetContainerBaseDir();
 
 protected:
     static void SetUpTestCase() { AppConfig::GetInstance()->mPurageContainerMode = true; }
@@ -293,10 +294,49 @@ void InputFileUnittest::OnPipelineUpdate() {
     APSARA_TEST_EQUAL(0, FileServer::GetInstance()->GetExactlyOnceConcurrency("test_config"));
 }
 
+void InputFileUnittest::TestSetContainerBaseDir() {
+    // Create an InputFile object
+    InputFile inputFile;
+    {
+        ContainerInfo containerInfo;
+        containerInfo.mID = "testContainer";
+        containerInfo.mUpperDir = "/UpperDir";
+        containerInfo.mMounts.push_back(Mount("/source1", "/data1"));
+        containerInfo.mMounts.push_back(Mount("/source2", "/data1/data2"));
+        containerInfo.mMounts.push_back(Mount("/source3", "/data1/data2/data3"));
+        containerInfo.mMounts.push_back(Mount("/source4", "/data1/data2/data3/data4"));
+
+        containerInfo.mRealBaseDir = "";
+        ASSERT_TRUE(inputFile.SetContainerBaseDir(containerInfo, "/data2/log"));
+        APSARA_TEST_EQUAL("/logtail_host/UpperDir/data2/log", containerInfo.mRealBaseDir);
+
+        containerInfo.mRealBaseDir = "";
+        ASSERT_TRUE(inputFile.SetContainerBaseDir(containerInfo, "/data1/log"));
+        APSARA_TEST_EQUAL("/logtail_host/source1/log", containerInfo.mRealBaseDir);
+
+        containerInfo.mRealBaseDir = "";
+        ASSERT_TRUE(inputFile.SetContainerBaseDir(containerInfo, "/data1/data2/log"));
+        APSARA_TEST_EQUAL("/logtail_host/source2/log", containerInfo.mRealBaseDir);
+
+        containerInfo.mRealBaseDir = "";
+        ASSERT_TRUE(inputFile.SetContainerBaseDir(containerInfo, "/data1/data2/data3/log"));
+        APSARA_TEST_EQUAL("/logtail_host/source3/log", containerInfo.mRealBaseDir);
+
+        containerInfo.mRealBaseDir = "";
+        ASSERT_TRUE(inputFile.SetContainerBaseDir(containerInfo, "/data1/data2/data3/data4/log"));
+        APSARA_TEST_EQUAL("/logtail_host/source4/log", containerInfo.mRealBaseDir);
+
+        containerInfo.mRealBaseDir = "";
+        ASSERT_TRUE(inputFile.SetContainerBaseDir(containerInfo, "/data1/data2/data3/data4/data5/log"));
+        APSARA_TEST_EQUAL("/logtail_host/source4/data5/log", containerInfo.mRealBaseDir);
+    }
+}
+
 UNIT_TEST_CASE(InputFileUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputFileUnittest, OnFailedInit)
 UNIT_TEST_CASE(InputFileUnittest, OnEnableContainerDiscovery)
 UNIT_TEST_CASE(InputFileUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputFileUnittest, TestSetContainerBaseDir)
 
 } // namespace logtail
 
