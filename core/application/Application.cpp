@@ -388,12 +388,7 @@ void Application::CheckCriticalCondition(int32_t curTime) {
 }
 
 bool Application::GetUUIDThread() {
-    string uuid;
-#if defined(__aarch64__) || defined(__sw_64__)
-    // DMI can not work on such platforms but might crash Logtail, disable.
-#else
-    uuid = CalculateRandomUUID();
-#endif
+    string uuid = CalculateRandomUUID();
     SetUUID(uuid);
     return true;
 }
