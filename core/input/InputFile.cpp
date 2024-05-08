@@ -165,7 +165,7 @@ bool InputFile::SetContainerBaseDir(ContainerInfo& containerInfo, const std::str
 
     size_t size = containerInfo.mMounts.size();
     size_t bestMatchedMountsIndex = size;
-    // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\\或者/结尾
+    // ParseByJSONObj 确保 Destination、Source、mUpperDir 不会以\或者/结尾
     for (size_t i = 0; i < size; ++i) {
         StringView dst = containerInfo.mMounts[i].mDestination;
         size_t dstSize = dst.size();

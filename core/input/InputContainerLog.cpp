@@ -212,7 +212,7 @@ bool InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
     if (!containerInfo.mRealBaseDir.empty()) {
         return true;
     }
-    // ParseByJSONObj 确保 mLogPath不会以\\或者/ 结尾
+    // ParseByJSONObj 确保 mLogPath不会以\或者/ 结尾
     std::string realPath = TryGetRealPath(STRING_FLAG(default_container_host_path) + containerInfo.mLogPath);
     if (realPath.empty()) {
         LOG_ERROR(
