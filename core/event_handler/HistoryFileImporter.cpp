@@ -121,7 +121,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
                 }
                 event->SetTimestamp(logtime);
                 event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-                event->SetMeta(logBuffer->readOffset, logBuffer->readLength);
+                event->SetPosition(logBuffer->readOffset, logBuffer->readLength);
                 
                 // TODO: currently only 1 input is allowed, so we assume 0 here. It should be the actual input seq after refactorization.
                 logProcess->PushBuffer(

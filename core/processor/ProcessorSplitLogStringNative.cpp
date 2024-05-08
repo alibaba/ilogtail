@@ -141,11 +141,11 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
         targetEvent->SetTimestamp(
             sourceEvent.GetTimestamp(),
             sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
-        auto const offset = sourceEvent.GetMeta().first + (content.data() - sourceVal.data());
+        auto const offset = sourceEvent.GetPosition().first + (content.data() - sourceVal.data());
         auto const length = begin + content.size() == sourceVal.size()
-            ? sourceEvent.GetMeta().second - (content.data() - sourceVal.data())
+            ? sourceEvent.GetPosition().second - (content.data() - sourceVal.data())
             : content.size() + 1;
-        targetEvent->SetMeta(offset, length);
+        targetEvent->SetPosition(offset, length);
         if (mAppendingLogPositionMeta) {
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(ToString(offset));
             targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));

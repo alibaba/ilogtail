@@ -1082,7 +1082,7 @@ int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* lo
         }
         event->SetTimestamp(logtime);
         event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-        event->SetMeta(logBuffer->readOffset, logBuffer->readLength);
+        event->SetPosition(logBuffer->readOffset, logBuffer->readLength);
 
         while (!LogProcess::GetInstance()->PushBuffer(reader->GetLogstoreKey(), reader->GetConfigName(), 0, std::move(group))) // 10ms
         {

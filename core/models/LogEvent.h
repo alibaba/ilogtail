@@ -79,11 +79,11 @@ public:
     void SetContentNoCopy(StringView key, StringView val);
     void DelContent(StringView key);
 
-    void SetMeta(uint32_t offset, uint32_t size) {
+    void SetPosition(uint32_t offset, uint32_t size) {
         mFileOffset = offset;
         mRawSize = size;
     }
-    std::pair<uint32_t, uint32_t> GetMeta() const { return {mFileOffset, mRawSize}; }
+    std::pair<uint32_t, uint32_t> GetPosition() const { return {mFileOffset, mRawSize}; }
 
     bool Empty() const { return mIndex.empty(); }
     size_t Size() const { return mIndex.size(); }

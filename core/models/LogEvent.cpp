@@ -133,8 +133,8 @@ Json::Value LogEvent::ToJson(bool enableEventMeta) const {
     root["timestamp"] = GetTimestamp();
     root["timestampNanosecond"] = GetTimestampNanosecond();
     if (enableEventMeta) {
-        root["fileOffset"] = GetMeta().first;
-        root["rawSize"] = GetMeta().second;
+        root["fileOffset"] = GetPosition().first;
+        root["rawSize"] = GetPosition().second;
     }
     if (!Empty()) {
         Json::Value contents;
@@ -153,7 +153,7 @@ bool LogEvent::FromJson(const Json::Value& root) {
         SetTimestamp(root["timestamp"].asInt64());
     }
     if (root.isMember("fileOffset") && root.isMember("rawSize")) {
-        SetMeta(root["fileOffset"].asUInt64(), root["rawSize"].asUInt64());
+        SetPosition(root["fileOffset"].asUInt64(), root["rawSize"].asUInt64());
     }
     if (root.isMember("contents")) {
         Json::Value contents = root["contents"];

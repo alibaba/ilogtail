@@ -155,9 +155,9 @@ void LogEventUnittest::TestIterateContent() {
 }
 
 void LogEventUnittest::TestMeta() {
-    mLogEvent->SetMeta(1U, 2U);
-    APSARA_TEST_EQUAL(1U, mLogEvent->GetMeta().first);
-    APSARA_TEST_EQUAL(2U, mLogEvent->GetMeta().second);
+    mLogEvent->SetPosition(1U, 2U);
+    APSARA_TEST_EQUAL(1U, mLogEvent->GetPosition().first);
+    APSARA_TEST_EQUAL(2U, mLogEvent->GetPosition().second);
 }
 
 void LogEventUnittest::TestFromJsonToJson() {
@@ -175,8 +175,8 @@ void LogEventUnittest::TestFromJsonToJson() {
     })";
     APSARA_TEST_TRUE(mLogEvent->FromJsonString(inJson));
     APSARA_TEST_EQUAL(12345678901L, mLogEvent->GetTimestamp());
-    APSARA_TEST_EQUAL(1U, mLogEvent->GetMeta().first);
-    APSARA_TEST_EQUAL(2U, mLogEvent->GetMeta().second);
+    APSARA_TEST_EQUAL(1U, mLogEvent->GetPosition().first);
+    APSARA_TEST_EQUAL(2U, mLogEvent->GetPosition().second);
     vector<pair<string, string>> answers = {{"key1", "value1"}, {"key2", "value2"}};
     for (const auto kv : answers) {
         APSARA_TEST_TRUE(mLogEvent->HasContent(kv.first));

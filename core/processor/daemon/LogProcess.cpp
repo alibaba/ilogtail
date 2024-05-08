@@ -301,7 +301,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             auto& processProfile = pipeline->GetContext().GetProcessProfile();
             ProcessProfile profile = processProfile;
             if (item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
-                profile.readBytes = item->mEventGroup.GetEvents()[0].Cast<LogEvent>().GetMeta().second
+                profile.readBytes = item->mEventGroup.GetEvents()[0].Cast<LogEvent>().GetPosition().second
                     + 1; // may not be accurate if input is not utf8
             }
             processProfile.Reset();
