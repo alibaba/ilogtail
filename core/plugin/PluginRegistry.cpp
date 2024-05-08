@@ -60,10 +60,6 @@ using namespace std;
 
 namespace logtail {
 
-PluginRegistry::PluginRegistry() {
-    mGoPlugins = {};
-}
-
 void PluginRegistry::LoadPlugins() {
     LoadStaticPlugins();
     auto& plugins = AppConfig::GetInstance()->GetDynamicPlugins();
