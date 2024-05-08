@@ -34,8 +34,6 @@
 
 // for special treatment
 #include "file_server/MultilineOptions.h"
-#include "input/InputContainerLog.h"
-#include "input/InputFile.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
@@ -50,6 +48,117 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
             global[itr.name()] = *itr;
         }
     }
+}
+
+bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
+                                        int16_t& pluginIndex,
+                                        const Config& config) {
+    unique_ptr<ProcessorInstance> processor;
+    Json::Value detail;
+    if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
+        mContext.SetRequiringJsonReaderFlag(true);
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                   to_string(++pluginIndex));
+        detail["SplitChar"] = Json::Value('\0');
+        detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
+    } else if (inputFile->mMultiline.IsMultiline()) {
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
+                                                                   to_string(++pluginIndex));
+        detail["Mode"] = Json::Value("custom");
+        detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
+        detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
+        detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
+        detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
+        detail["IgnoringUnmatchWarning"] = Json::Value(inputFile->mMultiline.mIgnoringUnmatchWarning);
+        if (inputFile->mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
+            detail["UnmatchedContentTreatment"] = Json::Value("discard");
+        } else if (inputFile->mMultiline.mUnmatchedContentTreatment
+                   == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
+            detail["UnmatchedContentTreatment"] = Json::Value("single_line");
+        }
+    } else {
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                   to_string(++pluginIndex));
+        detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
+    }
+    if (!processor->Init(detail, mContext)) {
+        // should not happen
+        return false;
+    }
+    mProcessorLine.emplace_back(std::move(processor));
+    return true;
+}
+
+bool Pipeline::handleInputContainerLogProcessor(const logtail::InputContainerLog* inputContainerLog,
+                                                int16_t& pluginIndex,
+                                                const Config& config) {
+    unique_ptr<ProcessorInstance> processor;
+    // ProcessorSplitLogStringNative
+    {
+        Json::Value detail;
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                   to_string(++pluginIndex));
+        detail["SplitChar"] = Json::Value('\n');
+        if (!processor->Init(detail, mContext)) {
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
+    }
+    // ProcessorParseContainerLogNative
+    {
+        Json::Value detail;
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseContainerLogNative::sName,
+                                                                   to_string(++pluginIndex));
+        detail["IgnoringStdout"] = Json::Value(inputContainerLog->mIgnoringStdout);
+        detail["IgnoringStderr"] = Json::Value(inputContainerLog->mIgnoringStderr);
+        detail["KeepingSourceWhenParseFail"] = Json::Value(inputContainerLog->mKeepingSourceWhenParseFail);
+        detail["IgnoreParseWarning"] = Json::Value(inputContainerLog->mIgnoreParseWarning);
+        if (!processor->Init(detail, mContext)) {
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
+    }
+    // ProcessorMergeMultilineLogNative
+    {
+        Json::Value detail;
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
+                                                                   to_string(++pluginIndex));
+        detail["MergeType"] = Json::Value("flag");
+        if (!processor->Init(detail, mContext)) {
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
+    }
+    if (inputContainerLog->mMultiline.IsMultiline()) {
+        Json::Value detail;
+        if (config.mIsFirstProcessorJson || inputContainerLog->mMultiline.mMode == MultilineOptions::Mode::JSON) {
+            mContext.SetRequiringJsonReaderFlag(true);
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                       to_string(++pluginIndex));
+            detail["SplitChar"] = Json::Value('\0');
+        } else {
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
+                                                                       to_string(++pluginIndex));
+            detail["Mode"] = Json::Value("custom");
+            detail["MergeType"] = Json::Value("regex");
+            detail["StartPattern"] = Json::Value(inputContainerLog->mMultiline.mStartPattern);
+            detail["ContinuePattern"] = Json::Value(inputContainerLog->mMultiline.mContinuePattern);
+            detail["EndPattern"] = Json::Value(inputContainerLog->mMultiline.mEndPattern);
+            detail["IgnoringUnmatchWarning"] = Json::Value(inputContainerLog->mMultiline.mIgnoringUnmatchWarning);
+            if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
+                == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
+                detail["UnmatchedContentTreatment"] = Json::Value("discard");
+            } else if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
+                       == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
+                detail["UnmatchedContentTreatment"] = Json::Value("single_line");
+            }
+        }
+        if (!processor->Init(detail, mContext)) {
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
+    }
+    return true;
 }
 
 bool Pipeline::Init(Config&& config) {
@@ -108,109 +217,11 @@ bool Pipeline::Init(Config&& config) {
     }
 
     // add log split processor for input_file
-    if (inputFile) {
-        unique_ptr<ProcessorInstance> processor;
-        Json::Value detail;
-        if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
-            mContext.SetRequiringJsonReaderFlag(true);
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["SplitChar"] = Json::Value('\0');
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
-        } else if (inputFile->mMultiline.IsMultiline()) {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["Mode"] = Json::Value("custom");
-            detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
-            detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
-            detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
-            detail["IgnoringUnmatchWarning"] = Json::Value(inputFile->mMultiline.mIgnoringUnmatchWarning);
-            if (inputFile->mMultiline.mUnmatchedContentTreatment
-                == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
-                detail["UnmatchedContentTreatment"] = Json::Value("discard");
-            } else if (inputFile->mMultiline.mUnmatchedContentTreatment
-                       == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
-                detail["UnmatchedContentTreatment"] = Json::Value("single_line");
-            }
-        } else {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
-        }
-        if (!processor->Init(detail, mContext)) {
-            // should not happen
-            return false;
-        }
-        mProcessorLine.emplace_back(std::move(processor));
+    if (inputFile && !handleInputFileProcessor(inputFile, pluginIndex, config)) {
+        return false;
     }
-    if (inputContainerLog) {
-        unique_ptr<ProcessorInstance> processor;
-        // ProcessorSplitLogStringNative
-        {
-            Json::Value detail;
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["SplitChar"] = Json::Value('\n');
-            if (!processor->Init(detail, mContext)) {
-                return false;
-            }
-            mProcessorLine.emplace_back(std::move(processor));
-        }
-        // ProcessorParseContainerLogNative
-        {
-            Json::Value detail;
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseContainerLogNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["IgnoringStdout"] = Json::Value(inputContainerLog->mIgnoringStdout);
-            detail["IgnoringStderr"] = Json::Value(inputContainerLog->mIgnoringStderr);
-            detail["KeepingSourceWhenParseFail"] = Json::Value(inputContainerLog->mKeepingSourceWhenParseFail);
-            detail["IgnoreParseWarning"] = Json::Value(inputContainerLog->mIgnoreParseWarning);
-            if (!processor->Init(detail, mContext)) {
-                return false;
-            }
-            mProcessorLine.emplace_back(std::move(processor));
-        }
-        // ProcessorMergeMultilineLogNative
-        {
-            Json::Value detail;
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                       to_string(++pluginIndex));
-            detail["MergeType"] = Json::Value("flag");
-            if (!processor->Init(detail, mContext)) {
-                return false;
-            }
-            mProcessorLine.emplace_back(std::move(processor));
-        }
-        if (inputContainerLog->mMultiline.IsMultiline()) {
-            Json::Value detail;
-            if (config.mIsFirstProcessorJson || inputContainerLog->mMultiline.mMode == MultilineOptions::Mode::JSON) {
-                mContext.SetRequiringJsonReaderFlag(true);
-                processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                           to_string(++pluginIndex));
-                detail["SplitChar"] = Json::Value('\0');
-            } else {
-                processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                           to_string(++pluginIndex));
-                detail["Mode"] = Json::Value("custom");
-                detail["MergeType"] = Json::Value("regex");
-                detail["StartPattern"] = Json::Value(inputContainerLog->mMultiline.mStartPattern);
-                detail["ContinuePattern"] = Json::Value(inputContainerLog->mMultiline.mContinuePattern);
-                detail["EndPattern"] = Json::Value(inputContainerLog->mMultiline.mEndPattern);
-                detail["IgnoringUnmatchWarning"] = Json::Value(inputContainerLog->mMultiline.mIgnoringUnmatchWarning);
-                if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
-                    == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
-                    detail["UnmatchedContentTreatment"] = Json::Value("discard");
-                } else if (inputContainerLog->mMultiline.mUnmatchedContentTreatment
-                           == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
-                    detail["UnmatchedContentTreatment"] = Json::Value("single_line");
-                }
-            }
-            if (!processor->Init(detail, mContext)) {
-                return false;
-            }
-            mProcessorLine.emplace_back(std::move(processor));
-        }
+    if (inputContainerLog && !handleInputContainerLogProcessor(inputContainerLog, pluginIndex, config)) {
+        return false;
     }
 
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
