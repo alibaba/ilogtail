@@ -273,7 +273,7 @@ void ProcessorSplitMultilineLogStringNative::ProcessEvent(PipelineEventGroup& lo
     }
     // when in unmatched state, the unmatched log is handled one by one, so there is no need for additional handle
     // here
-    if (isPartialLog && static_cast<size_t>(multiStartIndex - sourceVal.data()) < sourceVal.size()) {
+    if (isPartialLog && multiStartIndex - sourceVal.data() < static_cast<int64_t>(sourceVal.size())) {
         if (mMultiline.GetEndPatternReg() == nullptr) {
             CreateNewEvent(StringView(multiStartIndex, sourceVal.data() + sourceVal.size() - multiStartIndex),
                            true,
