@@ -765,9 +765,9 @@ void ModifyHandler::Handle(const Event& event) {
                     reader->GetLogstoreKey(), mConfigName, event, reader->GetDevInode(), curTime);
                 return;
             }
-            LogBuffer* logBuffer = new LogBuffer;
+            unique_ptr<LogBuffer> logBuffer(new LogBuffer);
             hasMoreData = reader->ReadLog(*logBuffer, &event);
-            int32_t pushRetry = PushLogToProcessor(reader, logBuffer);
+            int32_t pushRetry = PushLogToProcessor(reader, logBuffer.get());
             if (!hasMoreData) {
                 if (reader->IsFileDeleted()) {
                     LOG_INFO(sLogger,
@@ -1091,7 +1091,6 @@ int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* lo
                 LogInput::GetInstance()->TryReadEvents(false);
         }
     }
-    delete logBuffer;
     return pushRetry;
 }
 
