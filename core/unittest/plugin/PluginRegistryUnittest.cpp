@@ -37,7 +37,6 @@ protected:
         PluginRegistry::GetInstance()->RegisterInputCreator(new StaticInputCreator<InputMock>());
         PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMock>());
         PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>());
-        PluginRegistry::GetInstance()->mGoPlugins = {"service_mock"};
     }
     void TearDown() override { PluginRegistry::GetInstance()->UnloadPlugins(); }
 };

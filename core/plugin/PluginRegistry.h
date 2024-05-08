@@ -68,7 +68,7 @@ private:
         }
     };
 
-    PluginRegistry();
+    PluginRegistry() {}
     ~PluginRegistry() = default;
 
     void LoadStaticPlugins();
