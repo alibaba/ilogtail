@@ -99,8 +99,6 @@ DEFINE_FLAG_INT32(data_server_port, "", 80);
 // DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
 // DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
 
-DECLARE_FLAG_STRING(default_container_host_path);
-
 DECLARE_FLAG_STRING(check_point_filename);
 
 DECLARE_FLAG_INT32(polling_max_stat_count);
