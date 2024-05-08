@@ -22,7 +22,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "file_server/FileServer.h"
-#include "input/InputContainerLog.h"
+#include "input/InputContainerStdio.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -34,7 +34,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputContainerLogUnittest : public testing::Test {
+class InputContainerStdioUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnEnableContainerDiscovery();
@@ -75,7 +75,7 @@ void create_directory(const std::string& path) {
     }
 }
 
-void InputContainerLogUnittest::TestTryGetRealPath() {
+void InputContainerStdioUnittest::TestTryGetRealPath() {
     std::string rootDirectory = "/tmp/home/admin";
     std::string path = "/test/test/test";
     STRING_FLAG(default_container_host_path) = "/tmp/home/admin";
@@ -93,91 +93,91 @@ void InputContainerLogUnittest::TestTryGetRealPath() {
 
     symlink((path + "/test.log").c_str(), (rootDirectory + "/a.log").c_str());
 
-    std::string result = InputContainerLog::TryGetRealPath(STRING_FLAG(default_container_host_path) + "/a.log");
+    std::string result = InputContainerStdio::TryGetRealPath(STRING_FLAG(default_container_host_path) + "/a.log");
     APSARA_TEST_EQUAL(result, rootDirectory + path + "/test.log");
 }
 
-void InputContainerLogUnittest::OnSuccessfulInit() {
-    unique_ptr<InputContainerLog> input;
+void InputContainerStdioUnittest::OnSuccessfulInit() {
+    unique_ptr<InputContainerStdio> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
     // only mandatory param
     configStr = R"(
         {
-            "Type": "input_container_log",
+            "Type": "input_container_stdio",
             "IgnoringStderr": false,
             "IgnoringStdout": true
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerLog());
+    input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerLog::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // valid optional param
     configStr = R"(
         {
-            "Type": "input_container_log",
+            "Type": "input_container_stdio",
             "EnableContainerDiscovery": true,
             "IgnoringStderr": false,
             "IgnoringStdout": true        
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerLog());
+    input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerLog::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // invalid optional param
     configStr = R"(
         {
-            "Type": "input_container_log",
+            "Type": "input_container_stdio",
             "EnableContainerDiscovery": "true"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerLog());
+    input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerLog::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // TailingAllMatchedFiles
     configStr = R"(
         {
-            "Type": "input_container_log",
+            "Type": "input_container_stdio",
             "TailingAllMatchedFiles": true,
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerLog());
+    input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerLog::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mFileReader.mTailingAllMatchedFiles);
 
     configStr = R"(
         {
-            "Type": "input_container_log"
+            "Type": "input_container_stdio"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputContainerLog());
+    input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerLog::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 }
 
-void InputContainerLogUnittest::OnEnableContainerDiscovery() {
-    unique_ptr<InputContainerLog> input;
+void InputContainerStdioUnittest::OnEnableContainerDiscovery() {
+    unique_ptr<InputContainerStdio> input;
     Json::Value configJson, optionalGoPipelineJson, optionalGoPipeline;
     string configStr, optionalGoPipelineStr, errorMsg;
 
     configStr = R"(
         {
-            "Type": "input_container_log",
+            "Type": "input_container_stdio",
             "EnableContainerDiscovery": true,
             "ContainerFilters": {
                 "K8sNamespaceRegex": "default"
@@ -202,21 +202,21 @@ void InputContainerLogUnittest::OnEnableContainerDiscovery() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
     optionalGoPipelineJson["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-    input.reset(new InputContainerLog());
+    input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerLog::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }
 
-void InputContainerLogUnittest::OnPipelineUpdate() {
+void InputContainerStdioUnittest::OnPipelineUpdate() {
     Json::Value configJson, optionalGoPipeline;
-    InputContainerLog input;
+    InputContainerStdio input;
     string configStr, errorMsg;
 
     configStr = R"(
         {
-            "Type": "input_container_log"
+            "Type": "input_container_stdio"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -232,10 +232,10 @@ void InputContainerLogUnittest::OnPipelineUpdate() {
     APSARA_TEST_EQUAL(nullptr, FileServer::GetInstance()->GetMultilineConfig("test_config").first);
 }
 
-UNIT_TEST_CASE(InputContainerLogUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputContainerLogUnittest, OnEnableContainerDiscovery)
-UNIT_TEST_CASE(InputContainerLogUnittest, OnPipelineUpdate)
-UNIT_TEST_CASE(InputContainerLogUnittest, TestTryGetRealPath)
+UNIT_TEST_CASE(InputContainerStdioUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputContainerStdioUnittest, OnEnableContainerDiscovery)
+UNIT_TEST_CASE(InputContainerStdioUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputContainerStdioUnittest, TestTryGetRealPath)
 
 } // namespace logtail
 

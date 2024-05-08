@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "config/Config.h"
-#include "input/InputContainerLog.h"
+#include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
@@ -57,7 +57,7 @@ public:
 
 private:
     bool handleInputFileProcessor(const InputFile* inputFile, int16_t& pluginIndex, const Config& config);
-    bool handleInputContainerLogProcessor(const InputContainerLog* inputContainerLog,
+    bool handleInputContainerStdioProcessor(const InputContainerStdio* inputContainerStdio,
                                           int16_t& pluginIndex,
                                           const Config& config);
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);

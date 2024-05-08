@@ -811,7 +811,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
     }
-    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog && !mHasReadContainerBom
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio && !mHasReadContainerBom
         && endOffset > 0) {
         checkContainerType(op);
     }
@@ -1692,7 +1692,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         if (!READ_BYTE) {
             return;
         }
-        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog
+        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio
             && !mHasReadContainerBom) {
             checkContainerType(mLogFileOp);
         }
@@ -1833,7 +1833,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
             return;
         }
-        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerLog
+        if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio
             && !mHasReadContainerBom) {
             checkContainerType(mLogFileOp);
         }

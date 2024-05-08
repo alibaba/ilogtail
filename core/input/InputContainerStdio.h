@@ -26,7 +26,7 @@
 
 namespace logtail {
 
-class InputContainerLog : public Input {
+class InputContainerStdio : public Input {
 public:
     static const std::string sName;
 
@@ -51,7 +51,7 @@ private:
     FileDiscoveryOptions mFileDiscovery;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class InputContainerLogUnittest;
+    friend class InputContainerStdioUnittest;
 #endif
 };
 

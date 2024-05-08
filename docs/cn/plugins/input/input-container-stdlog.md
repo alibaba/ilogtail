@@ -2,7 +2,7 @@
 
 ## 简介
 
-`input_container_log` `input`插件可以实现从容器标准输出/标准错误流中采集日志，采集的日志内容将会保存在`content`字段中。支持通过容器元信息筛选待采集容器，并支持多行文本切分、添加容器Meta信息等数据处理操作，仅支持 iLogtail 2.1 及以后版本。
+`input_container_stdio` `input`插件可以实现从容器标准输出/标准错误流中采集日志，采集的日志内容将会保存在`content`字段中。支持通过容器元信息筛选待采集容器，并支持多行文本切分、添加容器Meta信息等数据处理操作，仅支持 iLogtail 2.1 及以后版本。
 
 ## 版本
 
@@ -101,7 +101,7 @@ iLogtail采集配置示例如下所示。
 
 ```yaml
 inputs:
-  - Type: input_container_log
+  - Type: input_container_stdio
     IgnoringStdout: false
     IgnoringStderr: true
     ContainerFilters:
@@ -131,7 +131,7 @@ Logtail采集配置示例如下所示。
 
 ```yaml
 inputs:
-  - Type: input_container_log
+  - Type: input_container_stdio
     IgnoringStdout: false
     IgnoringStderr: true
     ContainerFilters:
@@ -166,7 +166,7 @@ Containers:
 
 ```yaml
 inputs:
-  - Type: input_container_log
+  - Type: input_container_stdio
     IgnoringStdout: false
     IgnoringStderr: true
     ContainerFilters:
@@ -193,7 +193,7 @@ Labels:       app=nginx
 
 ```yaml
 inputs:
-  - Type: input_container_log
+  - Type: input_container_stdio
     IgnoringStdout: false
     IgnoringStderr: true
     ContainerFilters:
@@ -226,7 +226,7 @@ at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterCha
 
 ```yaml
 inputs:
-  - Type: input_container_log
+  - Type: input_container_stdio
     IgnoringStdout: false
     IgnoringStderr: true
     Multiline:

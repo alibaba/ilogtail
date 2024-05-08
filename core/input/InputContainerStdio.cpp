@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "input/InputContainerLog.h"
+#include "input/InputContainerStdio.h"
 
 #include "app_config/AppConfig.h"
 #include "common/FileSystemUtil.h"
@@ -25,9 +25,9 @@ using namespace std;
 
 namespace logtail {
 
-const string InputContainerLog::sName = "input_container_log";
+const string InputContainerStdio::sName = "input_container_stdio";
 
-bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputContainerStdio::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
     if (!AppConfig::GetInstance()->IsPurageContainerMode()) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -68,7 +68,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;
     }
-    mFileReader.mInputType = FileReaderOptions::InputType::InputContainerLog;
+    mFileReader.mInputType = FileReaderOptions::InputType::InputContainerStdio;
     // Multiline
     {
         const char* key = "Multiline";
@@ -156,7 +156,7 @@ bool InputContainerLog::Init(const Json::Value& config, Json::Value& optionalGoP
     return true;
 }
 
-std::string InputContainerLog::TryGetRealPath(const std::string& path) {
+std::string InputContainerStdio::TryGetRealPath(const std::string& path) {
     std::string tmpPath = path;
 #if defined(__linux__)
     int index = 0; // assume path is absolute
@@ -206,7 +206,7 @@ std::string InputContainerLog::TryGetRealPath(const std::string& path) {
 #endif
 }
 
-bool InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
+bool InputContainerStdio::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                                      const PipelineContext* ctx,
                                                      const FileDiscoveryOptions*) {
     if (!containerInfo.mRealBaseDir.empty()) {
@@ -241,7 +241,7 @@ bool InputContainerLog::DeduceAndSetContainerBaseDir(ContainerInfo& containerInf
     return true;
 }
 
-bool InputContainerLog::Start() {
+bool InputContainerStdio::Start() {
     mFileDiscovery.SetContainerInfo(
         FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
@@ -250,7 +250,7 @@ bool InputContainerLog::Start() {
     return true;
 }
 
-bool InputContainerLog::Stop(bool isPipelineRemoving) {
+bool InputContainerStdio::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         FileServer::GetInstance()->SaveContainerInfo(mContext->GetPipeline().Name(), mFileDiscovery.GetContainerInfo());
     }
