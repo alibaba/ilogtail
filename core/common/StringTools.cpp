@@ -349,10 +349,15 @@ bool NormalizeTopicRegFormat(std::string& topicFormat) {
     return true;
 }
 
+bool isRootDirectory(const std::string& pathStr) {
+    boost::filesystem::path path(pathStr);
+    return path.has_root_directory() && !path.has_parent_path();
+}
+
 void RemoveFilePathTrailingSlash(std::string& filePath) {
-    if (filePath == "/") {
+    if (isRootDirectory(filePath)) {
         return;
-    }    
+    }
     boost::filesystem::path path(filePath);
     path.remove_trailing_separator();
     filePath = path.string();
