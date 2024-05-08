@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorParseContainerLogNative.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -27,7 +27,7 @@
 #include "common/ParamExtractor.h"
 #include "models/LogEvent.h"
 #include "monitor/MetricConstants.h"
-#include "processor/ProcessorMergeMultilineLogNative.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 
 namespace logtail {
 

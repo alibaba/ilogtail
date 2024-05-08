@@ -20,7 +20,7 @@
 #include "config/Config.h"
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "unittest/Unittest.h"
 
 

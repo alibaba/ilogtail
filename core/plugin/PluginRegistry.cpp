@@ -41,16 +41,16 @@
 #include "plugin/creator/StaticProcessorCreator.h"
 #include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorFilterNative.h"
-#include "processor/ProcessorMergeMultilineLogNative.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
-#include "processor/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitMultilineLogStringNative.h"
-#include "processor/ProcessorTagNative.h"
+#include "processor/inner/ProcessorSplitLogStringNative.h"
+#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "processor/inner/ProcessorTagNative.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "processor/ProcessorSPL.h"
 #endif
@@ -255,16 +255,17 @@ void PluginRegistry::LoadStaticPlugins() {
 
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitMultilineLogStringNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMergeMultilineLogNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseContainerLogNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
+
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseApsaraNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseDelimiterNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorDesensitizeNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseJsonNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseRegexNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
-    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
-    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMergeMultilineLogNative>());
-    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseContainerLogNative>());
 #if defined(__linux__) && !defined(__ANDROID__)
     if (BOOL_FLAG(enable_processor_spl)) {
         RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSPL>());

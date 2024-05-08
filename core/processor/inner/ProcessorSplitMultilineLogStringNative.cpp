@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorSplitMultilineLogStringNative.h"
+#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 
 #include <boost/regex.hpp>
 #include <string>

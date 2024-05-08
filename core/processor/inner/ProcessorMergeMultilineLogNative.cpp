@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorMergeMultilineLogNative.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 
 #include <boost/regex.hpp>
 #include <string>

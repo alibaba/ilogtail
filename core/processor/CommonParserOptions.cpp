@@ -18,7 +18,7 @@
 
 #include "common/Constants.h"
 #include "common/ParamExtractor.h"
-#include "processor/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorParseContainerLogNative.h"
 
 using namespace std;
 

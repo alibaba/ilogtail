@@ -16,7 +16,7 @@
 
 #include "models/PipelineEventGroup.h"
 
-#include <processor/ProcessorParseContainerLogNative.h>
+#include "processor/inner/ProcessorParseContainerLogNative.h"
 
 #include <sstream>
 

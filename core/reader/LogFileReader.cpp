@@ -49,7 +49,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
-#include "processor/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "rapidjson/document.h"
 #include "reader/JsonLogFileReader.h"
 #include "sdk/Common.h"

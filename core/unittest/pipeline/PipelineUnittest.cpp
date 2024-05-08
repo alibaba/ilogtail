@@ -23,8 +23,8 @@
 #include "config/Config.h"
 #include "pipeline/Pipeline.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitMultilineLogStringNative.h"
+#include "processor/inner/ProcessorSplitLogStringNative.h"
+#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
