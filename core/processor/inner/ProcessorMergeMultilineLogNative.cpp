@@ -91,6 +91,7 @@ void ProcessorMergeMultilineLogNative::Process(PipelineEventGroup& logGroup) {
     } else if (mMergeType == MergeType::BY_FLAG && logGroup.HasMetadata(EventGroupMetaKey::HAS_PART_LOG)) {
         // If there is no part log in the logGroup, this part of the logic does not need to be executed.
         MergeLogsByFlag(logGroup);
+        logGroup.DelMetadata(EventGroupMetaKey::HAS_PART_LOG);
     }
     *mSplitLines = logGroup.GetEvents().size();
     return;

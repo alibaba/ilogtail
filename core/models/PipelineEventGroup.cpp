@@ -225,7 +225,8 @@ EventGroupMetaKey StringToEventGroupMetaKey(const std::string& key) {
            {EVENT_GROUP_META_LOG_FILE_PATH_RESOLVED, EventGroupMetaKey::LOG_FILE_PATH_RESOLVED},
            {EVENT_GROUP_META_LOG_FILE_INODE, EventGroupMetaKey::LOG_FILE_INODE},
            {EVENT_GROUP_META_LOG_FILE_OFFSET, EventGroupMetaKey::LOG_READ_OFFSET},
-           {EVENT_GROUP_META_LOG_FILE_LENGTH, EventGroupMetaKey::LOG_READ_LENGTH}};
+           {EVENT_GROUP_META_LOG_FILE_LENGTH, EventGroupMetaKey::LOG_READ_LENGTH},
+           {EVENT_GROUP_META_HAS_PART_LOG, EventGroupMetaKey::HAS_PART_LOG}};
     auto it = sStringToEnum.find(key);
     if (it != sStringToEnum.end()) {
         return it->second;

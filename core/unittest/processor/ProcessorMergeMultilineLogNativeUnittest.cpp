@@ -889,7 +889,10 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                     "timestampNanosecond" : 0,
                     "type" : 1
                 }
-            ]
+            ],
+            "metadata": {
+                "has.part.log": "P"
+            }
         })";
         eventGroup.FromJsonString(inJson);
 
@@ -996,7 +999,10 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                     "timestampNanosecond" : 0,
                     "type" : 1
                 }
-            ]
+            ],
+            "metadata": {
+                "has.part.log": "P"
+            }
         })";
         eventGroup.FromJsonString(inJson);
 
@@ -1054,7 +1060,10 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                     "timestampNanosecond" : 0,
                     "type" : 1
                 }
-            ]
+            ],
+            "metadata": {
+                "has.part.log": "P"
+            }
         })";
         eventGroup.FromJsonString(inJson);
 
@@ -1112,7 +1121,10 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                     "timestampNanosecond" : 0,
                     "type" : 1
                 }
-            ]
+            ],
+            "metadata": {
+                "has.part.log": "P"
+            }
         })";
         eventGroup.FromJsonString(inJson);
 
@@ -1189,7 +1201,10 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                     "timestampNanosecond" : 0,
                     "type" : 1
                 }
-            ]
+            ],
+            "metadata": {
+                "has.part.log": "P"
+            }
         })";
         eventGroup.FromJsonString(inJson);
 
@@ -1267,7 +1282,10 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                     "timestampNanosecond" : 0,
                     "type" : 1
                 }
-            ]
+            ],
+            "metadata": {
+                "has.part.log": "P"
+            }
         })";
         eventGroup.FromJsonString(inJson);
 
@@ -1367,7 +1385,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                         "timestampNanosecond" : 0,
                         "type" : 1
                     }
-                ]
+                ],
+                "metadata": {
+                    "has.part.log": "P"
+                }
             })";
             eventGroup.FromJsonString(inJson);
             // run test function
@@ -1449,7 +1470,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                         "timestampNanosecond" : 0,
                         "type" : 1
                     }
-                ]
+                ],
+                "metadata": {
+                    "has.part.log": "P"
+                }
             })";
             eventGroup.FromJsonString(inJson);
             eventGroup.AddMetricEvent();
@@ -1492,7 +1516,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                         "timestampNanosecond" : 0,
                         "type" : 1
                     }
-                ]
+                ],
+                "metadata": {
+                    "has.part.log": "P"
+                }
             })";
             eventGroup.FromJsonString(inJson);
             // run test function
@@ -1583,7 +1610,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                         "timestampNanosecond" : 0,
                         "type" : 1
                     }
-                ]
+                ],
+                "metadata": {
+                    "has.part.log": "P"
+                }
             })";
             eventGroup.FromJsonString(inJson);
             eventGroup.AddMetricEvent();
@@ -1725,7 +1755,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                         "timestampNanosecond" : 0,
                         "type" : 1
                     },
-                ]
+                ],
+                "metadata": {
+                    "has.part.log": "P"
+                }
             })";
             eventGroup.FromJsonString(inJson);
             eventGroup.AddMetricEvent();

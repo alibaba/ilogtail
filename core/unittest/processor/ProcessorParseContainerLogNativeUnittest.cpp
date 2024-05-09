@@ -1096,8 +1096,7 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
             }
         ],
         "metadata":{
-            "container.type":"containerd_text",
-            "has.part.log": "P"
+            "container.type":"containerd_text"
         }
     })";
     std::string outJson = eventGroup.ToJsonString();
