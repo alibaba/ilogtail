@@ -69,17 +69,20 @@ struct LineInfo {
 
 class BaseLineParse {
 public:
+    BaseLineParse(size_t size = 0)
+        : mSourceBuffer(std::make_unique<SourceBuffer>()),
+          mStringBuffer(mSourceBuffer->AllocateStringBuffer(size + 1)) {}
     virtual LineInfo GetLastLine(StringView buffer,
                                  int32_t end,
                                  size_t protocolFunctionIndex,
                                  bool needSingleLine,
                                  std::vector<BaseLineParse*>* lineParsers)
         = 0;
-    static StringBuffer* GetStringBuffer(BaseLineParse* lineParse);
+    StringBuffer* GetStringBuffer();
 
 private:
-    static std::unique_ptr<SourceBuffer> mSourceBuffer;
-    static std::unordered_map<BaseLineParse*, StringBuffer> mStringBuffer;
+    std::unique_ptr<SourceBuffer> mSourceBuffer;
+    StringBuffer mStringBuffer;
 };
 
 class ContainerdTextParse : public BaseLineParse {
@@ -91,6 +94,7 @@ public:
                          std::vector<BaseLineParse*>* lineParsers) override;
     void parseLine(LineInfo rawLine, LineInfo& paseLine);
     void mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer);
+    ContainerdTextParse(size_t size = 0) : BaseLineParse(size) {}
 };
 
 class DockerJsonFileParse : public BaseLineParse {
@@ -101,6 +105,7 @@ public:
                          bool needSingleLine,
                          std::vector<BaseLineParse*>* lineParsers) override;
     bool parseLine(LineInfo rawLine, LineInfo& paseLine);
+    DockerJsonFileParse(size_t size = 0) : BaseLineParse(size) {}
 };
 
 class RawTextParse : public BaseLineParse {
@@ -111,6 +116,7 @@ public:
                          bool needSingleLine,
                          std::vector<BaseLineParse*>* lineParsers) override;
     LineInfo parse(StringView buffer, int32_t end, size_t protocolFunctionIndex);
+    RawTextParse(size_t size = 0) : BaseLineParse(size) {}
 };
 
 // Only get the currently written log file, it will choose the last modified file to read. There are several condition
@@ -150,9 +156,8 @@ public:
 
     static size_t BUFFER_SIZE;
     std::vector<BaseLineParse*> mLineParsers = {};
-    static ContainerdTextParse mContainerdTextParse;
-    static DockerJsonFileParse mDockerJsonFileParse;
-    static RawTextParse mRawTextParse;
+    template <typename T>
+    T* GetParse();
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,

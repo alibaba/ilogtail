@@ -84,10 +84,6 @@ namespace logtail {
 
 size_t LogFileReader::BUFFER_SIZE = 1024 * 512; // 512KB
 
-ContainerdTextParse LogFileReader::mContainerdTextParse = ContainerdTextParse();
-DockerJsonFileParse LogFileReader::mDockerJsonFileParse = DockerJsonFileParse();
-RawTextParse LogFileReader::mRawTextParse = RawTextParse();
-
 LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                                   const string& hostLogPathFile,
                                                   const DevInode& devInode,
@@ -197,7 +193,7 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mRegion = readerConfig.second->GetRegion();
 
     BaseLineParse* baseLineParsePtr = nullptr;
-    baseLineParsePtr = &LogFileReader::mRawTextParse;
+    baseLineParsePtr = GetParse<RawTextParse>();
     mLineParsers.emplace_back(baseLineParsePtr);
 }
 
@@ -797,10 +793,10 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     BaseLineParse* baseLineParsePtr = nullptr;
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
-        baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+        baseLineParsePtr = GetParse<DockerJsonFileParse>();
     } else {
         mFileLogFormat = LogFormat::CONTAINERD_TEXT;
-        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+        baseLineParsePtr = GetParse<ContainerdTextParse>();
     }
     mLineParsers.emplace_back(baseLineParsePtr);
     mHasReadContainerBom = true;
@@ -2247,20 +2243,14 @@ LogFileReader::~LogFileReader() {
     }
 }
 
-std::unique_ptr<SourceBuffer> BaseLineParse::mSourceBuffer = std::make_unique<SourceBuffer>();
-std::unordered_map<BaseLineParse*, StringBuffer> BaseLineParse::mStringBuffer;
+template <typename T>
+T* LogFileReader::GetParse() {
+    thread_local T sParse = T(LogFileReader::BUFFER_SIZE);
+    return &sParse;
+}
 
-StringBuffer* BaseLineParse::GetStringBuffer(BaseLineParse* lineParse) {
-    auto it = mStringBuffer.find(lineParse);
-    if (it == mStringBuffer.end()) {
-        StringBuffer newBuffer = mSourceBuffer.get()->AllocateStringBuffer(LogFileReader::BUFFER_SIZE + 1);
-        it = mStringBuffer.insert({lineParse, std::move(newBuffer)}).first;
-        std::cout << "mStringBuffer.insert" << std::endl;
-    } else if (it->second.capacity < LogFileReader::BUFFER_SIZE + 1) {
-        it->second = mSourceBuffer.get()->AllocateStringBuffer(LogFileReader::BUFFER_SIZE + 1);
-        std::cout << "capacity < LogFileReader" << std::endl;
-    }
-    return &it->second;
+StringBuffer* BaseLineParse::GetStringBuffer() {
+    return &mStringBuffer;
 }
 
 LineInfo RawTextParse::GetLastLine(StringView buffer,
@@ -2450,7 +2440,7 @@ LineInfo ContainerdTextParse::GetLastLine(StringView buffer,
 }
 
 void ContainerdTextParse::mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer) {
-    StringBuffer* buffer = GetStringBuffer(this);
+    StringBuffer* buffer = GetStringBuffer();
     if (shouldResetBuffer) {
         buffer->size = 0;
     }

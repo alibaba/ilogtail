@@ -85,7 +85,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
         LogFileReader logFileReader(
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         BaseLineParse* baseLineParsePtr = nullptr;
-        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+        baseLineParsePtr = logFileReader.GetParse<ContainerdTextParse>();
         logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
         // 异常情况+有回车
         {
@@ -514,7 +514,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
         LogFileReader logFileReader(
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         BaseLineParse* baseLineParsePtr = nullptr;
-        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+        baseLineParsePtr = logFileReader.GetParse<ContainerdTextParse>();
         logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
         // 异常情况+有回车
         {
@@ -996,7 +996,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
         LogFileReader logFileReader(
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         BaseLineParse* baseLineParsePtr = nullptr;
-        baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+        baseLineParsePtr = logFileReader.GetParse<DockerJsonFileParse>();
         logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
         // 不带回车
         // 不带回车
@@ -1251,9 +1251,9 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDock
     LogFileReader logFileReader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     BaseLineParse* baseLineParsePtr = nullptr;
-    baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+    baseLineParsePtr = logFileReader.GetParse<DockerJsonFileParse>();
     logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
-    baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+    baseLineParsePtr = logFileReader.GetParse<ContainerdTextParse>();
     logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
     {
         std::string testLog
@@ -1306,9 +1306,9 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestDockerJsonWithContaine
     LogFileReader logFileReader(
         logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     BaseLineParse* baseLineParsePtr = nullptr;
-    baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+    baseLineParsePtr = logFileReader.GetParse<ContainerdTextParse>();
     logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
-    baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+    baseLineParsePtr = logFileReader.GetParse<DockerJsonFileParse>();
     logFileReader.mLineParsers.emplace_back(baseLineParsePtr);
     {
         std::string testLog
