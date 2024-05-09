@@ -84,9 +84,9 @@ namespace logtail {
 
 size_t LogFileReader::BUFFER_SIZE = 1024 * 512; // 512KB
 
-ContainerdTextParse LogFileReader::mContainerdTextParse = ContainerdTextParse();
-DockerJsonFileParse LogFileReader::mDockerJsonFileParse = DockerJsonFileParse();
-RawTextParse LogFileReader::mRawTextParse = RawTextParse();
+thread_local ContainerdTextParse LogFileReader::sContainerdTextParse = ContainerdTextParse();
+thread_local DockerJsonFileParse LogFileReader::sDockerJsonFileParse = DockerJsonFileParse();
+thread_local RawTextParse LogFileReader::sRawTextParse = RawTextParse();
 
 LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                                   const string& hostLogPathFile,
@@ -197,7 +197,7 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mRegion = readerConfig.second->GetRegion();
 
     BaseLineParse* baseLineParsePtr = nullptr;
-    baseLineParsePtr = &LogFileReader::mRawTextParse;
+    baseLineParsePtr = &LogFileReader::sRawTextParse;
     mLineParsers.emplace_back(baseLineParsePtr);
 }
 
@@ -797,10 +797,10 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     BaseLineParse* baseLineParsePtr = nullptr;
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
-        baseLineParsePtr = &LogFileReader::mDockerJsonFileParse;
+        baseLineParsePtr = &LogFileReader::sDockerJsonFileParse;
     } else {
         mFileLogFormat = LogFormat::CONTAINERD_TEXT;
-        baseLineParsePtr = &LogFileReader::mContainerdTextParse;
+        baseLineParsePtr = &LogFileReader::sContainerdTextParse;
     }
     mLineParsers.emplace_back(baseLineParsePtr);
     mHasReadContainerBom = true;
@@ -2247,21 +2247,6 @@ LogFileReader::~LogFileReader() {
     }
 }
 
-std::unique_ptr<SourceBuffer> BaseLineParse::mSourceBuffer = std::make_unique<SourceBuffer>();
-std::unordered_map<BaseLineParse*, StringBuffer> BaseLineParse::mStringBuffer;
-
-StringBuffer* BaseLineParse::GetStringBuffer(BaseLineParse* lineParse) {
-    auto it = mStringBuffer.find(lineParse);
-    if (it == mStringBuffer.end()) {
-        StringBuffer newBuffer = mSourceBuffer.get()->AllocateStringBuffer(LogFileReader::BUFFER_SIZE + 1);
-        it = mStringBuffer.insert({lineParse, std::move(newBuffer)}).first;
-        std::cout << "mStringBuffer.insert" << std::endl;
-    } else if (it->second.capacity < LogFileReader::BUFFER_SIZE + 1) {
-        it->second = mSourceBuffer.get()->AllocateStringBuffer(LogFileReader::BUFFER_SIZE + 1);
-        std::cout << "capacity < LogFileReader" << std::endl;
-    }
-    return &it->second;
-}
 
 LineInfo RawTextParse::GetLastLine(StringView buffer,
                                    int32_t end,
@@ -2450,17 +2435,23 @@ LineInfo ContainerdTextParse::GetLastLine(StringView buffer,
 }
 
 void ContainerdTextParse::mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer) {
-    StringBuffer* buffer = GetStringBuffer(this);
-    if (shouldResetBuffer) {
-        buffer->size = 0;
+    if (mDataBuffer.dataCapacity < LogFileReader::BUFFER_SIZE + 1) {
+        mDataBuffer.rawDataString.resize(LogFileReader::BUFFER_SIZE + 2);
+        mDataBuffer.dataCapacity = LogFileReader::BUFFER_SIZE + 2;
+        mDataBuffer.data = const_cast<char*>(mDataBuffer.rawDataString.data());
+        mDataBuffer.dataSize = 0;
     }
-    char* newDataPosition = buffer->data + buffer->capacity - buffer->size - additionalLine.data.size();
+    if (shouldResetBuffer) {
+        mDataBuffer.dataSize = 0;
+    }
+    char* newDataPosition
+        = mDataBuffer.data + mDataBuffer.dataCapacity - mDataBuffer.dataSize - additionalLine.data.size();
 
     memcpy(newDataPosition, additionalLine.data.data(), additionalLine.data.size());
 
-    buffer->size += additionalLine.data.size();
+    mDataBuffer.dataSize += additionalLine.data.size();
 
-    resultLine.data = StringView(newDataPosition, buffer->size);
+    resultLine.data = StringView(newDataPosition, mDataBuffer.dataSize);
 }
 
 void ContainerdTextParse::parseLine(LineInfo rawLine, LineInfo& paseLine) {

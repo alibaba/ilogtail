@@ -32,7 +32,7 @@ public:
 
     char* data;
     size_t size;
-    size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
+    const size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
 
 private:
     // capacity is guranteed to be greater than 0

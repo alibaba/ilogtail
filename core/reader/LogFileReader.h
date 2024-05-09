@@ -67,6 +67,14 @@ struct LineInfo {
           fullLine(fullLine) {}
 };
 
+
+struct DataContainer {
+    char* data;
+    std::string rawDataString;
+    size_t dataSize;
+    size_t dataCapacity;
+};
+
 class BaseLineParse {
 public:
     virtual LineInfo GetLastLine(StringView buffer,
@@ -75,11 +83,6 @@ public:
                                  bool needSingleLine,
                                  std::vector<BaseLineParse*>* lineParsers)
         = 0;
-    static StringBuffer* GetStringBuffer(BaseLineParse* lineParse);
-
-private:
-    static std::unique_ptr<SourceBuffer> mSourceBuffer;
-    static std::unordered_map<BaseLineParse*, StringBuffer> mStringBuffer;
 };
 
 class ContainerdTextParse : public BaseLineParse {
@@ -91,6 +94,8 @@ public:
                          std::vector<BaseLineParse*>* lineParsers) override;
     void parseLine(LineInfo rawLine, LineInfo& paseLine);
     void mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer);
+private:
+    DataContainer mDataBuffer;
 };
 
 class DockerJsonFileParse : public BaseLineParse {
@@ -150,9 +155,9 @@ public:
 
     static size_t BUFFER_SIZE;
     std::vector<BaseLineParse*> mLineParsers = {};
-    static ContainerdTextParse mContainerdTextParse;
-    static DockerJsonFileParse mDockerJsonFileParse;
-    static RawTextParse mRawTextParse;
+    thread_local static ContainerdTextParse sContainerdTextParse;
+    thread_local static DockerJsonFileParse sDockerJsonFileParse;
+    thread_local static RawTextParse sRawTextParse;
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
