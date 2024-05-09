@@ -45,6 +45,7 @@ public:
     }
 
     void SetUp() override {
+        readerOpts.mInputType = FileReaderOptions::InputType::InputFile;
         std::string filepath = logPathDir + PATH_SEPARATOR + utf8File;
         std::unique_ptr<FILE, decltype(&std::fclose)> fp(std::fopen(filepath.c_str(), "r"), &std::fclose);
         if (!fp.get()) {
@@ -171,7 +172,7 @@ void RemoveLastIncompleteLogUnittest::TestMultiline() {
         int32_t rollbackLineFeedCount = 0;
         int32_t matchSize = logFileReader.RemoveLastIncompleteLog(
             const_cast<char*>(testLog2.data()), testLog2.size(), rollbackLineFeedCount);
-        APSARA_TEST_EQUAL_FATAL(testLog2.size(), matchSize);
+        APSARA_TEST_EQUAL_FATAL(int32_t(testLog2.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
     }
     { // case multi line not match, buffer size not big enough (no new line at the end of line)
@@ -180,7 +181,7 @@ void RemoveLastIncompleteLogUnittest::TestMultiline() {
         int32_t rollbackLineFeedCount = 0;
         int32_t matchSize = logFileReader.RemoveLastIncompleteLog(
             const_cast<char*>(testLog2.data()), testLog2.size(), rollbackLineFeedCount);
-        APSARA_TEST_EQUAL_FATAL(expectMatch.size(), matchSize);
+        APSARA_TEST_EQUAL_FATAL(int32_t(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
     }
     { // case empty string
@@ -201,6 +202,7 @@ public:
     void TestRemoveLastIncompleteLogWithBegin();
     void TestRemoveLastIncompleteLogWithContinueEnd();
     void TestRemoveLastIncompleteLogWithEnd();
+    void SetUp() override { readerOpts.mInputType = FileReaderOptions::InputType::InputFile; }
 
 private:
     FileReaderOptions readerOpts;
