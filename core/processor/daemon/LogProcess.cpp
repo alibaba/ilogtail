@@ -280,6 +280,15 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 continue;
             }
 
+            // record profile
+            auto& processProfile = pipeline->GetContext().GetProcessProfile();
+            ProcessProfile profile = processProfile;
+            if (item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
+                profile.readBytes = item->mEventGroup.GetEvents()[0].Cast<LogEvent>().GetPosition().second
+                    + 1; // may not be accurate if input is not utf8
+            }
+            processProfile.Reset();
+
             int32_t startTime = (int32_t)time(NULL);
             std::vector<PipelineEventGroup> eventGroupList;
             eventGroupList.emplace_back(std::move(item->mEventGroup));
@@ -296,15 +305,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                             ("event processing took too long, elapsed time",
                              ToString(elapsedTime) + "s")("config", pipeline->Name()));
             }
-
-            // record profile
-            auto& processProfile = pipeline->GetContext().GetProcessProfile();
-            ProcessProfile profile = processProfile;
-            if (item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
-                profile.readBytes = item->mEventGroup.GetEvents()[0].Cast<LogEvent>().GetPosition().second
-                    + 1; // may not be accurate if input is not utf8
-            }
-            processProfile.Reset();
 
             s_processCount++;
             s_processBytes += profile.readBytes;
