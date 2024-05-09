@@ -29,7 +29,7 @@ class StringBuffer {
 public:
     bool IsValid() { return data != nullptr; }
 
-    char* data;
+    char* const data;
     size_t size;
     const size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
 

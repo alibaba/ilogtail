@@ -193,7 +193,7 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mRegion = readerConfig.second->GetRegion();
 
     BaseLineParse* baseLineParsePtr = nullptr;
-    baseLineParsePtr = GetParse<RawTextParse>();
+    baseLineParsePtr = GetParser<RawTextParser>();
     mLineParsers.emplace_back(baseLineParsePtr);
 }
 
@@ -793,10 +793,10 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     BaseLineParse* baseLineParsePtr = nullptr;
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
-        baseLineParsePtr = GetParse<DockerJsonFileParse>();
+        baseLineParsePtr = GetParser<DockerJsonFileParser>();
     } else {
         mFileLogFormat = LogFormat::CONTAINERD_TEXT;
-        baseLineParsePtr = GetParse<ContainerdTextParse>();
+        baseLineParsePtr = GetParser<ContainerdTextParser>();
     }
     mLineParsers.emplace_back(baseLineParsePtr);
     mHasReadContainerBom = true;
@@ -2244,7 +2244,7 @@ LogFileReader::~LogFileReader() {
 }
 
 template <typename T>
-T* LogFileReader::GetParse() {
+T* LogFileReader::GetParser() {
     thread_local T sParse = T(LogFileReader::BUFFER_SIZE);
     return &sParse;
 }
@@ -2253,7 +2253,7 @@ StringBuffer* BaseLineParse::GetStringBuffer() {
     return &mStringBuffer;
 }
 
-LineInfo RawTextParse::GetLastLine(StringView buffer,
+LineInfo RawTextParser::GetLastLine(StringView buffer,
                                    int32_t end,
                                    size_t protocolFunctionIndex,
                                    bool needSingleLine,
@@ -2281,7 +2281,7 @@ LineInfo RawTextParse::GetLastLine(StringView buffer,
             .fullLine = true};
 }
 
-LineInfo DockerJsonFileParse::GetLastLine(StringView buffer,
+LineInfo DockerJsonFileParser::GetLastLine(StringView buffer,
                                           int32_t end,
                                           size_t protocolFunctionIndex,
                                           bool needSingleLine,
@@ -2324,7 +2324,7 @@ LineInfo DockerJsonFileParse::GetLastLine(StringView buffer,
     return finalLine;
 }
 
-bool DockerJsonFileParse::parseLine(LineInfo rawLine, LineInfo& paseLine) {
+bool DockerJsonFileParser::parseLine(LineInfo rawLine, LineInfo& paseLine) {
     paseLine = rawLine;
     paseLine.fullLine = false;
 
@@ -2359,7 +2359,7 @@ bool DockerJsonFileParse::parseLine(LineInfo rawLine, LineInfo& paseLine) {
     return true;
 }
 
-LineInfo ContainerdTextParse::GetLastLine(StringView buffer,
+LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
                                           int32_t end,
                                           size_t protocolFunctionIndex,
                                           bool needSingleLine,
@@ -2439,7 +2439,7 @@ LineInfo ContainerdTextParse::GetLastLine(StringView buffer,
     return finalLine;
 }
 
-void ContainerdTextParse::mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer) {
+void ContainerdTextParser::mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer) {
     StringBuffer* buffer = GetStringBuffer();
     if (shouldResetBuffer) {
         buffer->size = 0;
@@ -2453,7 +2453,7 @@ void ContainerdTextParse::mergeLines(LineInfo& resultLine, const LineInfo& addit
     resultLine.data = StringView(newDataPosition, buffer->size);
 }
 
-void ContainerdTextParse::parseLine(LineInfo rawLine, LineInfo& paseLine) {
+void ContainerdTextParser::parseLine(LineInfo rawLine, LineInfo& paseLine) {
     const char* lineEnd = rawLine.data.data() + rawLine.data.size();
     paseLine = rawLine;
     paseLine.fullLine = true;

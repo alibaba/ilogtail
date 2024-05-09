@@ -85,7 +85,7 @@ private:
     StringBuffer mStringBuffer;
 };
 
-class ContainerdTextParse : public BaseLineParse {
+class ContainerdTextParser : public BaseLineParse {
 public:
     LineInfo GetLastLine(StringView buffer,
                          int32_t end,
@@ -94,10 +94,10 @@ public:
                          std::vector<BaseLineParse*>* lineParsers) override;
     void parseLine(LineInfo rawLine, LineInfo& paseLine);
     void mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer);
-    ContainerdTextParse(size_t size = 0) : BaseLineParse(size) {}
+    ContainerdTextParser(size_t size = 0) : BaseLineParse(size) {}
 };
 
-class DockerJsonFileParse : public BaseLineParse {
+class DockerJsonFileParser : public BaseLineParse {
 public:
     LineInfo GetLastLine(StringView buffer,
                          int32_t end,
@@ -105,10 +105,10 @@ public:
                          bool needSingleLine,
                          std::vector<BaseLineParse*>* lineParsers) override;
     bool parseLine(LineInfo rawLine, LineInfo& paseLine);
-    DockerJsonFileParse(size_t size = 0) : BaseLineParse(size) {}
+    DockerJsonFileParser(size_t size = 0) : BaseLineParse(size) {}
 };
 
-class RawTextParse : public BaseLineParse {
+class RawTextParser : public BaseLineParse {
 public:
     LineInfo GetLastLine(StringView buffer,
                          int32_t end,
@@ -116,7 +116,7 @@ public:
                          bool needSingleLine,
                          std::vector<BaseLineParse*>* lineParsers) override;
     LineInfo parse(StringView buffer, int32_t end, size_t protocolFunctionIndex);
-    RawTextParse(size_t size = 0) : BaseLineParse(size) {}
+    RawTextParser(size_t size = 0) : BaseLineParse(size) {}
 };
 
 // Only get the currently written log file, it will choose the last modified file to read. There are several condition
@@ -157,7 +157,7 @@ public:
     static size_t BUFFER_SIZE;
     std::vector<BaseLineParse*> mLineParsers = {};
     template <typename T>
-    T* GetParse();
+    T* GetParser();
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,
