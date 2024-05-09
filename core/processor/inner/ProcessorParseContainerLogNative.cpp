@@ -271,21 +271,21 @@ static int32_t skipSpaces(char* buffer, int32_t idx, int32_t size) {
 }
 
 static int32_t parseLogType(char* buffer, int32_t idx, int32_t size, DockerLogType& logType) {
-    if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size() < size
+    if (idx + int32_t(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size()) < size
         && memcmp(ProcessorParseContainerLogNative::DOCKER_JSON_LOG.data(),
                   &buffer[idx],
                   ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size())
             == 0) {
         idx += ProcessorParseContainerLogNative::DOCKER_JSON_LOG.size();
         logType = DockerLogType::Log;
-    } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size() < size
+    } else if (idx + int32_t(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size()) < size
                && memcmp(ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.data(),
                          &buffer[idx],
                          ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size())
                    == 0) {
         idx += ProcessorParseContainerLogNative::DOCKER_JSON_STREAM_TYPE.size();
         logType = DockerLogType::Stream;
-    } else if (idx + ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size() < size
+    } else if (idx + int32_t(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size()) < size
                && memcmp(ProcessorParseContainerLogNative::DOCKER_JSON_TIME.data(),
                          &buffer[idx],
                          ProcessorParseContainerLogNative::DOCKER_JSON_TIME.size())
@@ -341,7 +341,7 @@ static int32_t parseValue(char* buffer, int32_t idx, int32_t size, DockerLogType
                         unicode_seq.append(buffer + idx + 1, 4);
                         char32_t unicode_char = std::stoul(unicode_seq, nullptr, 16);
                         std::string res = convert.to_bytes(unicode_char);
-                        for (int i = 0; i < res.size(); ++i) {
+                        for (size_t i = 0; i < res.size(); ++i) {
                             buffer[endIndex++] = res[i];
                         }
                         idx += 4;
