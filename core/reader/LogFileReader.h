@@ -69,7 +69,7 @@ struct LineInfo {
 
 class BaseLineParse {
 public:
-    BaseLineParse(size_t size = 0)
+    BaseLineParse(size_t size)
         : mSourceBuffer(std::make_unique<SourceBuffer>()),
           mStringBuffer(mSourceBuffer->AllocateStringBuffer(size + 1)) {}
     virtual LineInfo GetLastLine(StringView buffer,
@@ -94,7 +94,7 @@ public:
                          std::vector<BaseLineParse*>* lineParsers) override;
     void parseLine(LineInfo rawLine, LineInfo& paseLine);
     void mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer);
-    ContainerdTextParser(size_t size = 0) : BaseLineParse(size) {}
+    ContainerdTextParser(size_t size) : BaseLineParse(size) {}
 };
 
 class DockerJsonFileParser : public BaseLineParse {
@@ -105,7 +105,7 @@ public:
                          bool needSingleLine,
                          std::vector<BaseLineParse*>* lineParsers) override;
     bool parseLine(LineInfo rawLine, LineInfo& paseLine);
-    DockerJsonFileParser(size_t size = 0) : BaseLineParse(size) {}
+    DockerJsonFileParser(size_t size) : BaseLineParse(size) {}
 };
 
 class RawTextParser : public BaseLineParse {
@@ -116,7 +116,7 @@ public:
                          bool needSingleLine,
                          std::vector<BaseLineParse*>* lineParsers) override;
     LineInfo parse(StringView buffer, int32_t end, size_t protocolFunctionIndex);
-    RawTextParser(size_t size = 0) : BaseLineParse(size) {}
+    RawTextParser(size_t size) : BaseLineParse(size) {}
 };
 
 // Only get the currently written log file, it will choose the last modified file to read. There are several condition
@@ -157,7 +157,10 @@ public:
     static size_t BUFFER_SIZE;
     std::vector<BaseLineParse*> mLineParsers = {};
     template <typename T>
-    T* GetParser();
+    T* GetParser(size_t size) {
+        thread_local static T sParse = T(size);
+        return &sParse;
+    };
 
     enum FileCompareResult {
         FileCompareResult_DevInodeChange,

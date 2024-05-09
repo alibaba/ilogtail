@@ -193,7 +193,7 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mRegion = readerConfig.second->GetRegion();
 
     BaseLineParse* baseLineParsePtr = nullptr;
-    baseLineParsePtr = GetParser<RawTextParser>();
+    baseLineParsePtr = GetParser<RawTextParser>(0);
     mLineParsers.emplace_back(baseLineParsePtr);
 }
 
@@ -793,10 +793,10 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
     BaseLineParse* baseLineParsePtr = nullptr;
     if (containerBOMBuffer[0] == '{') {
         mFileLogFormat = LogFormat::DOCKER_JSON_FILE;
-        baseLineParsePtr = GetParser<DockerJsonFileParser>();
+        baseLineParsePtr = GetParser<DockerJsonFileParser>(0);
     } else {
         mFileLogFormat = LogFormat::CONTAINERD_TEXT;
-        baseLineParsePtr = GetParser<ContainerdTextParser>();
+        baseLineParsePtr = GetParser<ContainerdTextParser>(LogFileReader::BUFFER_SIZE);
     }
     mLineParsers.emplace_back(baseLineParsePtr);
     mHasReadContainerBom = true;
@@ -2241,12 +2241,6 @@ LogFileReader::~LogFileReader() {
         static auto sCptM = CheckpointManagerV2::GetInstance();
         sCptM->MarkGC(mEOOption->primaryCheckpointKey);
     }
-}
-
-template <typename T>
-T* LogFileReader::GetParser() {
-    thread_local T sParse = T(LogFileReader::BUFFER_SIZE);
-    return &sParse;
 }
 
 StringBuffer* BaseLineParse::GetStringBuffer() {
