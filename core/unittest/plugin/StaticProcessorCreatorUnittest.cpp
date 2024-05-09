@@ -40,9 +40,11 @@ void StaticProcessorCreatorUnittest::TestIsDynamic() {
 
 void StaticProcessorCreatorUnittest::TestCreate() {
     StaticProcessorCreator<ProcessorMock> creator;
-    unique_ptr<PluginInstance> processorMock = creator.Create("0");
-    APSARA_TEST_NOT_EQUAL(nullptr, processorMock.get());
-    APSARA_TEST_EQUAL("0", processorMock->Id());
+    unique_ptr<PluginInstance> processorMock = creator.Create({"0", "0", "1"});
+    APSARA_TEST_NOT_EQUAL_FATAL(nullptr, processorMock.get());
+    APSARA_TEST_EQUAL_FATAL("0", processorMock->Meta().pluginID);
+    APSARA_TEST_EQUAL_FATAL("0", processorMock->Meta().nodeID);
+    APSARA_TEST_EQUAL_FATAL("1", processorMock->Meta().childNodeID);
 }
 
 UNIT_TEST_CASE(StaticProcessorCreatorUnittest, TestName)

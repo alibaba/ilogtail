@@ -65,6 +65,11 @@ Json::Value SplUnittest::GetCastConfig(std::string spl) {
     return config;
 }
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
+    return pluginMeta;
+}
+
 
 void SplUnittest::TestInit() {
     std::ifstream input("spl.txt");
@@ -74,8 +79,8 @@ void SplUnittest::TestInit() {
         Json::Value config = GetCastConfig(line);
 
         ProcessorSPL& processor = *(new ProcessorSPL);
-        std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         
         bool init = processorInstance.Init(config, mContext);
         if (!init) {
@@ -121,8 +126,8 @@ void SplUnittest::TestWhere() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -171,8 +176,8 @@ void SplUnittest::TestExtend() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -230,8 +235,8 @@ void SplUnittest::TestJsonParse() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -301,8 +306,8 @@ void SplUnittest::TestRegexParse() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -373,8 +378,8 @@ void SplUnittest::TestRegexCSV() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -451,8 +456,8 @@ void SplUnittest::TestRegexKV() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -528,8 +533,8 @@ void SplUnittest::TestTag() {
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);
@@ -613,8 +618,8 @@ $ds2;
     logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processor.Process(logGroupList);

@@ -28,6 +28,7 @@ type ProcessorRateLimit struct {
 	Limit  string   `comment:"Optional. Limit rate in the format of (number)/(time unit). Supported time unit: 's' (per second), 'm' (per minute), and 'h' (per hour)."`
 
 	Algorithm       algorithm
+	metricRecord    *pipeline.MetricsRecord
 	limitMetric     pipeline.CounterMetric
 	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
@@ -44,10 +45,11 @@ func (p *ProcessorRateLimit) Init(context pipeline.Context) error {
 		return err
 	}
 	p.Algorithm = newTokenBucket(limit)
-	p.limitMetric = helper.NewCounterMetric(fmt.Sprintf("%v_limited", pluginName))
-	p.context.RegisterCounterMetric(p.limitMetric)
-	p.processedMetric = helper.NewCounterMetric(fmt.Sprintf("%v_processed", pluginName))
-	p.context.RegisterCounterMetric(p.processedMetric)
+
+	p.metricRecord = p.context.GetMetricRecord()
+
+	p.limitMetric = helper.NewCounterMetricAndRegister(p.metricRecord, fmt.Sprintf("%v_limited", pluginName))
+	p.processedMetric = helper.NewCounterMetricAndRegister(p.metricRecord, fmt.Sprintf("%v_processed", pluginName))
 	return nil
 }
 

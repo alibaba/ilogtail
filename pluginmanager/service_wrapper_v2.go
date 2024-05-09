@@ -16,14 +16,28 @@ package pluginmanager
 
 import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"time"
 )
 
-type FlusherWrapper struct {
-	Flusher       pipeline.FlusherV1
-	Config        *LogstoreConfig
-	LogGroupsChan chan *protocol.LogGroup
-	Interval      time.Duration
+type ServiceWrapperV2 struct {
+	pipeline.PluginContext
+	Input    pipeline.ServiceInputV2
+	Config   *LogstoreConfig
+	Tags     map[string]string
+	Interval time.Duration
+
+	LogsChan chan *pipeline.LogWithContext
+}
+
+func (p *ServiceWrapperV2) Init(pluginMeta *pipeline.PluginMeta) error {
+	labels := pipeline.GetCommonLabels(p.Config.Context, pluginMeta)
+	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
+
+	_, err := p.Input.Init(p.Config.Context)
+	return err
+}
+
+func (p *ServiceWrapperV2) StartService(pipelineContext pipeline.PipelineContext) error {
+	return p.Input.StartService(pipelineContext)
 }

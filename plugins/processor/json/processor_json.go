@@ -19,6 +19,7 @@ import (
 
 	"github.com/buger/jsonparser"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -38,7 +39,9 @@ type ProcessorJSON struct {
 	IgnoreFirstConnector   bool // 是否忽略第一个Connector
 	ExpandArray            bool // 是否展开数组类型
 
-	context pipeline.Context
+	context              pipeline.Context
+	metricRecord         *pipeline.MetricsRecord
+	procParseInSizeBytes pipeline.CounterMetric
 }
 
 const pluginName = "processor_json"
@@ -49,6 +52,9 @@ func (p *ProcessorJSON) Init(context pipeline.Context) error {
 		return fmt.Errorf("must specify SourceKey for plugin %v", pluginName)
 	}
 	p.context = context
+	p.metricRecord = p.context.GetMetricRecord()
+	p.procParseInSizeBytes = helper.NewCounterMetric("proc_parse_in_size_bytes")
+	p.metricRecord.RegisterCounterMetric(p.procParseInSizeBytes)
 	return nil
 }
 
@@ -67,6 +73,7 @@ func (p *ProcessorJSON) processLog(log *protocol.Log) {
 	findKey := false
 	for idx := range log.Contents {
 		if log.Contents[idx].Key == p.SourceKey {
+			p.procParseInSizeBytes.Add(int64(len(log.Contents[idx].Key) + len(log.Contents[idx].Value)))
 			objectVal := log.Contents[idx].Value
 			param := ExpandParam{
 				sourceKey:            p.SourceKey,

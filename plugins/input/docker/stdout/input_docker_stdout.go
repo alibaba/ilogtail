@@ -158,7 +158,10 @@ type ServiceDockerStdout struct {
 	K8sFilter         *helper.K8SFilter
 
 	// for tracker
-	tracker           *helper.ReaderMetricTracker
+	tracker *helper.ReaderMetricTracker
+
+	metricRecord *pipeline.MetricsRecord
+
 	avgInstanceMetric pipeline.CounterMetric
 	addMetric         pipeline.CounterMetric
 	deleteMetric      pipeline.CounterMetric
@@ -192,20 +195,23 @@ func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 		sds.MaxLogSize = 1024 * 1024 * 20
 	}
 	sds.tracker = helper.NewReaderMetricTracker()
-	sds.context.RegisterCounterMetric(sds.tracker.CloseCounter)
-	sds.context.RegisterCounterMetric(sds.tracker.OpenCounter)
-	sds.context.RegisterCounterMetric(sds.tracker.ReadSizeCounter)
-	sds.context.RegisterCounterMetric(sds.tracker.ReadCounter)
-	sds.context.RegisterCounterMetric(sds.tracker.FileSizeCounter)
-	sds.context.RegisterCounterMetric(sds.tracker.FileRotatorCounter)
-	sds.context.RegisterLatencyMetric(sds.tracker.ProcessLatency)
+
+	sds.metricRecord = sds.context.GetMetricRecord()
+
+	sds.metricRecord.RegisterCounterMetric(sds.tracker.CloseCounter)
+	sds.metricRecord.RegisterCounterMetric(sds.tracker.OpenCounter)
+	sds.metricRecord.RegisterCounterMetric(sds.tracker.ReadSizeCounter)
+	sds.metricRecord.RegisterCounterMetric(sds.tracker.ReadCounter)
+	sds.metricRecord.RegisterCounterMetric(sds.tracker.FileSizeCounter)
+	sds.metricRecord.RegisterCounterMetric(sds.tracker.FileRotatorCounter)
+	sds.metricRecord.RegisterLatencyMetric(sds.tracker.ProcessLatency)
 
 	sds.avgInstanceMetric = helper.NewAverageMetric("container_count")
 	sds.addMetric = helper.NewCounterMetric("add_container")
 	sds.deleteMetric = helper.NewCounterMetric("remove_container")
-	sds.context.RegisterCounterMetric(sds.avgInstanceMetric)
-	sds.context.RegisterCounterMetric(sds.addMetric)
-	sds.context.RegisterCounterMetric(sds.deleteMetric)
+	sds.metricRecord.RegisterCounterMetric(sds.avgInstanceMetric)
+	sds.metricRecord.RegisterCounterMetric(sds.addMetric)
+	sds.metricRecord.RegisterCounterMetric(sds.deleteMetric)
 
 	var err error
 	sds.IncludeEnv, sds.IncludeEnvRegex, err = helper.SplitRegexFromMap(sds.IncludeEnv)

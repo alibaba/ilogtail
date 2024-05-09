@@ -69,7 +69,7 @@ void InputFileUnittest::OnSuccessfulInit() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_FALSE(input->mEnableContainerDiscovery);
     APSARA_TEST_EQUAL(0, input->mMaxCheckpointDirSearchDepth);
@@ -89,7 +89,7 @@ void InputFileUnittest::OnSuccessfulInit() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
     APSARA_TEST_EQUAL(1, input->mMaxCheckpointDirSearchDepth);
@@ -109,7 +109,7 @@ void InputFileUnittest::OnSuccessfulInit() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_FALSE(input->mEnableContainerDiscovery);
     APSARA_TEST_EQUAL(0, input->mMaxCheckpointDirSearchDepth);
@@ -127,7 +127,7 @@ void InputFileUnittest::OnSuccessfulInit() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mFileReader.mTailingAllMatchedFiles);
     APSARA_TEST_TRUE(input->mFileDiscovery.IsTailingAllMatchedFiles());
@@ -144,7 +144,7 @@ void InputFileUnittest::OnSuccessfulInit() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(0, input->mExactlyOnceConcurrency);
 }
@@ -155,7 +155,7 @@ void InputFileUnittest::OnFailedInit() {
 
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 }
 
@@ -200,7 +200,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
     optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1");
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
     APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());
