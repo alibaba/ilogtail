@@ -28,7 +28,6 @@ class StringBuffer {
 
 public:
     bool IsValid() { return data != nullptr; }
-    StringBuffer() : data(nullptr), size(0), capacity(0) {}
 
     char* data;
     size_t size;
