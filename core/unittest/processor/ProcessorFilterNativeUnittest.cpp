@@ -983,7 +983,6 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
     }
 
     for (int i = 0; i < 10; ++i) {
-        LOG_INFO(sLogger, ("################################round", i));
         std::string testStr;
         const int CHARACTER_COUNT = 8192;
         bool flow[CHARACTER_COUNT * 4];
