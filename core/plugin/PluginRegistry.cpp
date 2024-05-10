@@ -41,16 +41,16 @@
 #include "plugin/creator/StaticProcessorCreator.h"
 #include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorFilterNative.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
-#include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "processor/inner/inner/ProcessorSplitLogStringNative.h"
-#include "processor/inner/inner/ProcessorSplitMultilineLogStringNative.h"
-#include "processor/inner/inner/ProcessorTagNative.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
+#include "processor/inner/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorSplitLogStringNative.h"
+#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "processor/inner/ProcessorTagNative.h"
 #if defined(__linux__) && !defined(__ANDROID__) && !defined(__EXCLUDE_SPL__)
 #include "processor/ProcessorSPL.h"
 #endif
@@ -99,9 +99,7 @@ unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const string& name, co
 bool PluginRegistry::IsValidGoPlugin(const string& name) const {
     // If the plugin is not a C++ plugin, iLogtail core considers it is a go plugin.
     // Go PluginManager validates the go plugins instead of C++ core.
-    return !IsValidNativeInputPlugin(name) &&
-        !IsValidNativeProcessorPlugin(name) &&
-        !IsValidNativeFlusherPlugin(name);
+    return !IsValidNativeInputPlugin(name) && !IsValidNativeProcessorPlugin(name) && !IsValidNativeFlusherPlugin(name);
 }
 
 bool PluginRegistry::IsValidNativeInputPlugin(const string& name) const {
