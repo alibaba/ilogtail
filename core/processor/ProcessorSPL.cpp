@@ -17,13 +17,16 @@
 #include "processor/ProcessorSPL.h"
 
 #include <curl/curl.h>
+#ifdef FMT_HEADER_ONLY
+#undef FMT_HEADER_ONLY
+#endif
 #include <spl/logger/Logger.h>
 #include <spl/pipeline/SplPipeline.h>
 
 #include <iostream>
 
-#include "common/ParamExtractor.h"
 #include "common/Flags.h"
+#include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "monitor/MetricConstants.h"
 #include "spl/PipelineEventGroupInput.h"
@@ -140,6 +143,7 @@ void ProcessorSPL::Process(std::vector<PipelineEventGroup>& logGroupList) {
     // 根据spip->getInputSearches()，设置input数组
     std::vector<Input*> inputs;
     for (const auto& search : mSPLPipelinePtr->getInputSearches()) {
+        (void)search; //-Wunused-variable
         PipelineEventGroupInput* input = new PipelineEventGroupInput(colNames, logGroup, *mContext);
         if (!input) {
             logGroupList.emplace_back(std::move(logGroup));
