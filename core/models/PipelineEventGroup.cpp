@@ -16,6 +16,8 @@
 
 #include "models/PipelineEventGroup.h"
 
+#include "processor/inner/ProcessorParseContainerLogNative.h"
+
 #include <sstream>
 
 #include "logger/Logger.h"
@@ -157,6 +159,8 @@ const std::string EVENT_GROUP_META_LOG_FILE_PATH_RESOLVED = "log.file.path_resol
 const std::string EVENT_GROUP_META_LOG_FILE_INODE = "log.file.inode";
 // const std::string EVENT_GROUP_META_LOG_FILE_OFFSET = "log.file.offset";
 // const std::string EVENT_GROUP_META_LOG_FILE_LENGTH = "log.file.length";
+const std::string EVENT_GROUP_META_CONTAINER_TYPE = "container.type";
+const std::string EVENT_GROUP_META_HAS_PART_LOG = "has.part.log";
 
 const std::string EVENT_GROUP_META_K8S_CLUSTER_ID = "k8s.cluster.id";
 const std::string EVENT_GROUP_META_K8S_NODE_NAME = "k8s.node.name";
@@ -169,6 +173,8 @@ const std::string EVENT_GROUP_META_CONTAINER_IP = "container.ip";
 const std::string EVENT_GROUP_META_CONTAINER_IMAGE_NAME = "container.image.name";
 const std::string EVENT_GROUP_META_CONTAINER_IMAGE_ID = "container.image.id";
 
+const std::string EVENT_GROUP_META_CONTAINERD_TEXT = "containerd_text";
+const std::string EVENT_GROUP_META_DOCKER_JSON_FILE = "docker_json-file";
 const std::string EVENT_GROUP_META_SOURCE_ID = "source.id";
 const std::string EVENT_GROUP_META_TOPIC = "topic";
 
@@ -184,10 +190,23 @@ const std::string& EventGroupMetaKeyToString(EventGroupMetaKey key) {
             return EVENT_GROUP_META_SOURCE_ID;
         case EventGroupMetaKey::TOPIC:
             return EVENT_GROUP_META_TOPIC;
+        case EventGroupMetaKey::LOG_FORMAT:
+            return EVENT_GROUP_META_CONTAINER_TYPE;
+        case EventGroupMetaKey::HAS_PART_LOG:
+            return EVENT_GROUP_META_HAS_PART_LOG;
         default:
             static std::string sEmpty = "unknown";
             return sEmpty;
     }
+}
+
+const std::string EventGroupMetaValueToString(std::string value) {
+    if (value == ProcessorParseContainerLogNative::CONTAINERD_TEXT) {
+        return EVENT_GROUP_META_CONTAINERD_TEXT;
+    } else if (value == ProcessorParseContainerLogNative::DOCKER_JSON_FILE) {
+        return EVENT_GROUP_META_DOCKER_JSON_FILE;
+    }
+    return value;
 }
 
 EventGroupMetaKey StringToEventGroupMetaKey(const std::string& key) {
@@ -196,7 +215,8 @@ EventGroupMetaKey StringToEventGroupMetaKey(const std::string& key) {
         {EVENT_GROUP_META_LOG_FILE_PATH_RESOLVED, EventGroupMetaKey::LOG_FILE_PATH_RESOLVED},
         {EVENT_GROUP_META_LOG_FILE_INODE, EventGroupMetaKey::LOG_FILE_INODE},
         {EVENT_GROUP_META_SOURCE_ID, EventGroupMetaKey::SOURCE_ID},
-        {EVENT_GROUP_META_TOPIC, EventGroupMetaKey::TOPIC}};
+        {EVENT_GROUP_META_TOPIC, EventGroupMetaKey::TOPIC},
+           {EVENT_GROUP_META_HAS_PART_LOG, EventGroupMetaKey::HAS_PART_LOG}};
     auto it = sStringToEnum.find(key);
     if (it != sStringToEnum.end()) {
         return it->second;
@@ -209,7 +229,7 @@ Json::Value PipelineEventGroup::ToJson(bool enableEventMeta) const {
     if (!mMetadata.empty()) {
         Json::Value metadata;
         for (const auto& meta : mMetadata) {
-            metadata[EventGroupMetaKeyToString(meta.first)] = meta.second.to_string();
+            metadata[EventGroupMetaKeyToString(meta.first)] = EventGroupMetaValueToString(meta.second.to_string());
         }
         root["metadata"] = metadata;
     }

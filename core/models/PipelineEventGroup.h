@@ -37,6 +37,8 @@ enum class EventGroupMetaKey {
     LOG_FILE_PATH,
     LOG_FILE_PATH_RESOLVED,
     LOG_FILE_INODE,
+    LOG_FORMAT,
+    HAS_PART_LOG,
 
     K8S_CLUSTER_ID,
     K8S_NODE_NAME,
