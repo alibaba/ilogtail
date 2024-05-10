@@ -34,7 +34,10 @@ public:
 
 protected:
     static void SetUpTestCase() { sEventGroup.reset(new PipelineEventGroup(make_shared<SourceBuffer>())); }
-    void TearDown() override { sProcessQueueManager->Clear(); }
+    void TearDown() override {
+        sProcessQueueManager->Clear();
+        ExactlyOnceQueueManager::GetInstance()->Clear();
+    }
 
 private:
     static unique_ptr<PipelineEventGroup> sEventGroup;
@@ -218,8 +221,10 @@ void ProcessQueueManagerUnittest::TestPopItem() {
     sProcessQueueManager->CreateOrUpdateQueue(key4, 1);
     ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(5, 0, "test_config_5", vector<RangeCheckpointPtr>(5));
 
-    sProcessQueueManager->PushQueue(key2, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0)));
-    sProcessQueueManager->PushQueue(key3, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0)));
+    sProcessQueueManager->PushQueue(key2,
+                                    unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0)));
+    sProcessQueueManager->PushQueue(key3,
+                                    unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0)));
     sProcessQueueManager->mCurrentQueueIndex = {1, prev(prev(sProcessQueueManager->mPriorityQueue[1].end()))};
 
     // the item comes from the queue between current index and queue list end
@@ -234,7 +239,8 @@ void ProcessQueueManagerUnittest::TestPopItem() {
     APSARA_TEST_EQUAL(1U, sProcessQueueManager->mCurrentQueueIndex.first);
     APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == sProcessQueueManager->mQueues[key3]);
 
-    sProcessQueueManager->PushQueue(key1, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0)));
+    sProcessQueueManager->PushQueue(key1,
+                                    unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0)));
     // the item comes from queue list other than the one pointed by current index
     APSARA_TEST_TRUE(sProcessQueueManager->PopItem(0, item, configName));
     APSARA_TEST_EQUAL("test_config_1", configName);
