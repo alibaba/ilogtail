@@ -2291,6 +2291,7 @@ LineInfo DockerJsonFileParser::GetLastLine(StringView buffer,
 
     size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
     LineInfo finalLine;
+    finalLine.fullLine = false;
     while (!finalLine.fullLine) {
         LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
             buffer, end, nextProtocolFunctionIndex, needSingleLine, lineParsers);
