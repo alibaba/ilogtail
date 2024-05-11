@@ -189,12 +189,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     static atomic_int s_processLines{0};
     // only thread 0 update metric
     int32_t lastUpdateMetricTime = time(NULL);
-#ifdef LOGTAIL_DEBUG_FLAG
-    int32_t lastPrintTime = time(NULL);
-    uint64_t processCount = 0;
-    uint64_t waitTime = 0;
-    uint64_t waitCount = 0;
-#endif
     while (true) {
         mThreadFlags[threadNo] = false;
 
@@ -237,14 +231,15 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 
         {
             ReadLock lock(mAccessProcessThreadRWL);
-            mThreadFlags[threadNo] = true;
-
+            
             std::unique_ptr<ProcessQueueItem> item;
             std::string configName;
             if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
                 ProcessQueueManager::GetInstance()->Wait(100);
                 continue;
             }
+
+            mThreadFlags[threadNo] = true;
             auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(configName);
             if (!pipeline) {
                 LOG_INFO(sLogger,
