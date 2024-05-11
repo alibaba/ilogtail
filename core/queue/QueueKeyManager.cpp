@@ -51,7 +51,7 @@ void QueueKeyManager::RemoveKey(QueueKey key) {
 void QueueKeyManager::Clear() {
     mNextKey = 0;
     mKeyNameMap.clear();
-    mKeyNameMap.clear();
+    mNameKeyMap.clear();
 }
 #endif
 
