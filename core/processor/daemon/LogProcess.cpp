@@ -135,7 +135,6 @@ bool LogProcess::PushBuffer(QueueKey key, size_t inputIndex, PipelineEventGroup&
 void LogProcess::HoldOn() {
     LOG_INFO(sLogger, ("process daemon pause", "starts"));
     mAccessProcessThreadRWL.lock();
-    ProcessQueueManager::GetInstance()->Lock();
     while (true) {
         bool allThreadWait = true;
         for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
@@ -154,7 +153,6 @@ void LogProcess::HoldOn() {
 
 void LogProcess::Resume() {
     LOG_INFO(sLogger, ("process daemon resume", "starts"));
-    ProcessQueueManager::GetInstance()->UnLock();
     mAccessProcessThreadRWL.unlock();
     LOG_INFO(sLogger, ("process daemon resume", "succeeded"));
 }
@@ -237,17 +235,16 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             DoFuseHandling();
         }
 
-        // if have no data, wait 100 ms for new data or timeout, then continue to check again
-        std::unique_ptr<ProcessQueueItem> item;
-        std::string configName;
-        if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
-            ProcessQueueManager::GetInstance()->Wait(100);
-            continue;
-        }
         {
             ReadLock lock(mAccessProcessThreadRWL);
             mThreadFlags[threadNo] = true;
 
+            std::unique_ptr<ProcessQueueItem> item;
+            std::string configName;
+            if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
+                ProcessQueueManager::GetInstance()->Wait(100);
+                continue;
+            }
             auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(configName);
             if (!pipeline) {
                 LOG_INFO(sLogger,
@@ -256,7 +253,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 continue;
             }
 
-            // record profile
+            // record profile, must be placed here since readbytes info exists only before processing
             auto& processProfile = pipeline->GetContext().GetProcessProfile();
             ProcessProfile profile = processProfile;
             if (item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
@@ -307,9 +304,9 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 
                 const std::string& projectName = pipeline->GetContext().GetProjectName();
                 const std::string& category = pipeline->GetContext().GetLogstoreName();
-                string convertedPath = item->mEventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH).to_string();
+                string convertedPath = eventGroupList[0].GetMetadata(EventGroupMetaKey::LOG_FILE_PATH).to_string();
                 string hostLogPath
-                    = item->mEventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED).to_string();
+                    = eventGroupList[0].GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED).to_string();
 #if defined(_MSC_VER)
                 if (BOOL_FLAG(enable_chinese_tag_path)) {
                     convertedPath = EncodingConverter::GetInstance()->FromACPToUTF8(convertedPath);
@@ -328,12 +325,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                             -1,
                                             false,
                                             false,
-                                            item->mEventGroup.GetExactlyOnceCheckpoint());
+                                            eventGroupList[0].GetExactlyOnceCheckpoint());
                     if (!Sender::Instance()->Send(
                             projectName,
-                            item->mEventGroup.GetMetadata(EventGroupMetaKey::SOURCE_ID).to_string(),
+                            eventGroupList[0].GetMetadata(EventGroupMetaKey::SOURCE_ID).to_string(),
                             *(pLogGroup.get()),
-                            std::stoi(item->mEventGroup.GetMetadata(EventGroupMetaKey::LOGGROUP_KEY).to_string()),
+                            std::stol(eventGroupList[0].GetMetadata(EventGroupMetaKey::LOGGROUP_KEY).to_string()),
                             flusherSLS,
                             flusherSLS->mBatch.mMergeType,
                             (uint32_t)(profile.logGroupSize * DOUBLE_FLAG(loggroup_bytes_inflation)),

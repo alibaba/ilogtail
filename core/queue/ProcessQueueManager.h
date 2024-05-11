@@ -52,10 +52,6 @@ public:
     bool Wait(int64_t secs);
     void Trigger();
 
-    // TODO: should be removed when independent config load is supported
-    void Lock() const { mQueueMux.lock(); }
-    void UnLock() const { mQueueMux.unlock(); }
-
     // TODO: should be removed when self-telemetry is refactored
     uint32_t GetInvalidCnt() const;
     uint32_t GetCnt() const;

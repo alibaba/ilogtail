@@ -22,8 +22,9 @@ namespace logtail {
 class QueueKeyManagerUnittest : public testing::Test {
 public:
     void TestGetKey();
-    void TestGetName();
+    void TestHasKey();
     void TestRemoveKey();
+    void TestGetName();
 
 protected:
     void TearDown() override { QueueKeyManager::GetInstance()->Clear(); }
@@ -35,6 +36,22 @@ void QueueKeyManagerUnittest::TestGetKey() {
     APSARA_TEST_EQUAL(0, QueueKeyManager::GetInstance()->GetKey("key1"));
 }
 
+void QueueKeyManagerUnittest::TestHasKey() {
+    QueueKeyManager::GetInstance()->GetKey("key1");
+
+    APSARA_TEST_TRUE(QueueKeyManager::GetInstance()->HasKey("key1"));
+    APSARA_TEST_FALSE(QueueKeyManager::GetInstance()->HasKey("key2"));
+}
+
+void QueueKeyManagerUnittest::TestRemoveKey() {
+    QueueKeyManager::GetInstance()->GetKey("key1");
+
+    APSARA_TEST_TRUE(QueueKeyManager::GetInstance()->RemoveKey(0));
+    APSARA_TEST_FALSE(QueueKeyManager::GetInstance()->RemoveKey(1));
+    APSARA_TEST_EQUAL("", QueueKeyManager::GetInstance()->GetName(0));
+    APSARA_TEST_EQUAL(1, QueueKeyManager::GetInstance()->GetKey("key1"));
+}
+
 void QueueKeyManagerUnittest::TestGetName() {
     QueueKeyManager::GetInstance()->GetKey("key1");
 
@@ -42,17 +59,10 @@ void QueueKeyManagerUnittest::TestGetName() {
     APSARA_TEST_EQUAL("", QueueKeyManager::GetInstance()->GetName(1));
 }
 
-void QueueKeyManagerUnittest::TestRemoveKey() {
-    QueueKeyManager::GetInstance()->GetKey("key1");
-    QueueKeyManager::GetInstance()->RemoveKey(0);
-
-    APSARA_TEST_EQUAL("", QueueKeyManager::GetInstance()->GetName(0));
-    APSARA_TEST_EQUAL(1, QueueKeyManager::GetInstance()->GetKey("key1"));
-}
-
 UNIT_TEST_CASE(QueueKeyManagerUnittest, TestGetKey)
-UNIT_TEST_CASE(QueueKeyManagerUnittest, TestGetName)
+UNIT_TEST_CASE(QueueKeyManagerUnittest, TestHasKey)
 UNIT_TEST_CASE(QueueKeyManagerUnittest, TestRemoveKey)
+UNIT_TEST_CASE(QueueKeyManagerUnittest, TestGetName)
 
 } // namespace logtail
 

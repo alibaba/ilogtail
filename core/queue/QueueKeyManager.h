@@ -36,8 +36,9 @@ public:
     }
 
     QueueKey GetKey(const std::string& name);
-    std::string GetName(QueueKey key);
-    void RemoveKey(QueueKey key);
+    bool HasKey(const std::string& name);
+    bool RemoveKey(QueueKey key);
+    const std::string& GetName(QueueKey key);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void Clear();

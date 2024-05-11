@@ -29,7 +29,23 @@ QueueKey QueueKeyManager::GetKey(const string& name) {
     return mNextKey - 1;
 }
 
-std::string QueueKeyManager::GetName(QueueKey key) {
+bool QueueKeyManager::HasKey(const std::string& name) {
+    lock_guard<mutex> lock(mMux);
+    return mNameKeyMap.find(name) != mNameKeyMap.end();
+}
+
+bool QueueKeyManager::RemoveKey(QueueKey key) {
+    lock_guard<mutex> lock(mMux);
+    auto iter = mKeyNameMap.find(key);
+    if (iter == mKeyNameMap.end()) {
+        return false;
+    }
+    mNameKeyMap.erase(iter->second);
+    mKeyNameMap.erase(iter);
+    return true;
+}
+
+const std::string& QueueKeyManager::GetName(QueueKey key) {
     lock_guard<mutex> lock(mMux);
     auto iter = mKeyNameMap.find(key);
     if (iter == mKeyNameMap.end()) {
@@ -38,14 +54,6 @@ std::string QueueKeyManager::GetName(QueueKey key) {
     return iter->second;
 }
 
-void QueueKeyManager::RemoveKey(QueueKey key) {
-    lock_guard<mutex> lock(mMux);
-    auto iter = mKeyNameMap.find(key);
-    if (iter != mKeyNameMap.end()) {
-        mNameKeyMap.erase(iter->second);
-        mKeyNameMap.erase(iter);
-    }
-}
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void QueueKeyManager::Clear() {
