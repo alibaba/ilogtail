@@ -176,13 +176,6 @@ bool ProcessQueueManager::IsAllQueueEmpty() const {
     return ExactlyOnceQueueManager::GetInstance()->IsAllProcessQueueEmpty();
 }
 
-bool ProcessQueueManager::Wait(int64_t secs) {
-    unique_lock<mutex> lock(mStateMux);
-    mCond.wait_for(lock, chrono::seconds(secs), [this] { return mValidToPop; });
-    mValidToPop = false;
-    return true;
-}
-
 bool ProcessQueueManager::SetDownStreamQueues(QueueKey key,
                                               vector<SingleLogstoreSenderManager<SenderQueueParam>*>& ques) {
     lock_guard<mutex> lock(mQueueMux);
@@ -195,7 +188,7 @@ bool ProcessQueueManager::SetDownStreamQueues(QueueKey key,
 }
 
 bool ProcessQueueManager::SetFeedbackInterface(QueueKey key, std::vector<FeedbackInterface*>& feedback) {
-    // no need for protection, since no pop is allowed during this call
+    lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter == mQueues.end()) {
         return false;
@@ -204,9 +197,37 @@ bool ProcessQueueManager::SetFeedbackInterface(QueueKey key, std::vector<Feedbac
     return true;
 }
 
-void ProcessQueueManager::ResetCurrentQueueIndex() {
-    mCurrentQueueIndex.first = 0;
-    mCurrentQueueIndex.second = mPriorityQueue[0].begin();
+void ProcessQueueManager::InvalidatePop(const std::string& configName) {
+    if (QueueKeyManager::GetInstance()->HasKey(configName)) {
+        auto key = QueueKeyManager::GetInstance()->GetKey(configName);
+        lock_guard<mutex> lock(mQueueMux);
+        auto iter = mQueues.find(key);
+        if (iter != mQueues.end()) {
+            iter->second->InvalidatePop();
+        }
+    } else {
+        ExactlyOnceQueueManager::GetInstance()->InvalidatePop(configName);
+    }
+}
+
+void ProcessQueueManager::ValidatePop(const std::string& configName) {
+    if (QueueKeyManager::GetInstance()->HasKey(configName)) {
+        auto key = QueueKeyManager::GetInstance()->GetKey(configName);
+        lock_guard<mutex> lock(mQueueMux);
+        auto iter = mQueues.find(key);
+        if (iter != mQueues.end()) {
+            iter->second->ValidatePop();
+        }
+    } else {
+        ExactlyOnceQueueManager::GetInstance()->ValidatePop(configName);
+    }
+}
+
+bool ProcessQueueManager::Wait(uint64_t ms) {
+    unique_lock<mutex> lock(mStateMux);
+    mCond.wait_for(lock, chrono::milliseconds(ms), [this] { return mValidToPop; });
+    mValidToPop = false;
+    return true;
 }
 
 void ProcessQueueManager::Trigger() {
@@ -215,6 +236,11 @@ void ProcessQueueManager::Trigger() {
         mValidToPop = true;
     }
     mCond.notify_one();
+}
+
+void ProcessQueueManager::ResetCurrentQueueIndex() {
+    mCurrentQueueIndex.first = 0;
+    mCurrentQueueIndex.second = mPriorityQueue[0].begin();
 }
 
 uint32_t ProcessQueueManager::GetInvalidCnt() const {
@@ -234,13 +260,13 @@ uint32_t ProcessQueueManager::GetCnt() const {
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void ProcessQueueManager::Clear() {
-        mQueues.clear();
-        for (size_t i = 0; i <= sMaxPriority; ++i) {
-            mPriorityQueue[i].clear();
-        }
-        ResetCurrentQueueIndex();
+void ProcessQueueManager::Clear() {
+    mQueues.clear();
+    for (size_t i = 0; i <= sMaxPriority; ++i) {
+        mPriorityQueue[i].clear();
     }
+    ResetCurrentQueueIndex();
+}
 #endif
 
 } // namespace logtail

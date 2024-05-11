@@ -31,6 +31,7 @@ public:
     void TestDeleteQueue();
     void TestPushProcessQueue();
     void TestIsAllProcessQueueEmpty();
+    void OnPipelineUpdate();
 
 protected:
     static void SetUpTestCase() { sEventGroup.reset(new PipelineEventGroup(make_shared<SourceBuffer>())); }
@@ -46,7 +47,6 @@ private:
 
 unique_ptr<PipelineEventGroup> ExactlyOnceQueueManagerUnittest::sEventGroup;
 ExactlyOnceQueueManager* ExactlyOnceQueueManagerUnittest::sManager = ExactlyOnceQueueManager::GetInstance();
-
 
 void ExactlyOnceQueueManagerUnittest::TestUpdateQueue() {
     // create queue
@@ -142,10 +142,24 @@ void ExactlyOnceQueueManagerUnittest::TestIsAllProcessQueueEmpty() {
     APSARA_TEST_FALSE(sManager->IsAllProcessQueueEmpty());
 }
 
+void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
+    sManager->CreateOrUpdateQueue(0, 0, "test_config", vector<RangeCheckpointPtr>(5));
+    sManager->CreateOrUpdateQueue(1, 0, "test_config", vector<RangeCheckpointPtr>(5));
+
+    sManager->InvalidatePop("test_config");
+    APSARA_TEST_FALSE(sManager->mProcessQueues[0]->mValidToPop);
+    APSARA_TEST_FALSE(sManager->mProcessQueues[1]->mValidToPop);
+
+    sManager->ValidatePop("test_config");
+    APSARA_TEST_TRUE(sManager->mProcessQueues[0]->mValidToPop);
+    APSARA_TEST_TRUE(sManager->mProcessQueues[1]->mValidToPop);
+}
+
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestUpdateQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestPushProcessQueue)
 UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, TestIsAllProcessQueueEmpty)
+UNIT_TEST_CASE(ExactlyOnceQueueManagerUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 

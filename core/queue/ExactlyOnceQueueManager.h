@@ -52,6 +52,8 @@ public:
 
     int PushProcessQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool IsAllProcessQueueEmpty() const;
+    void InvalidatePop(const std::string& configName);
+    void ValidatePop(const std::string& configName);
 
     void ClearTimeoutQueues();
 

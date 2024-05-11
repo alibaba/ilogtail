@@ -96,15 +96,31 @@ int ExactlyOnceQueueManager::PushProcessQueue(QueueKey key, unique_ptr<ProcessQu
 }
 
 bool ExactlyOnceQueueManager::IsAllProcessQueueEmpty() const {
-    {
-        lock_guard<mutex> lock(mProcessQueueMux);
-        for (const auto& q : mProcessQueues) {
-            if (!q.second->Empty()) {
-                return false;
-            }
+    lock_guard<mutex> lock(mProcessQueueMux);
+    for (const auto& q : mProcessQueues) {
+        if (!q.second->Empty()) {
+            return false;
         }
     }
     return true;
+}
+
+void ExactlyOnceQueueManager::InvalidatePop(const std::string& configName) {
+    lock_guard<mutex> lock(mProcessQueueMux);
+    for (auto& iter : mProcessQueues) {
+        if (iter.second->GetConfigName() == configName) {
+            iter.second->InvalidatePop();
+        }
+    }
+}
+
+void ExactlyOnceQueueManager::ValidatePop(const std::string& configName) {
+    lock_guard<mutex> lock(mProcessQueueMux);
+    for (auto& iter : mProcessQueues) {
+        if (iter.second->GetConfigName() == configName) {
+            iter.second->ValidatePop();
+        }
+    }
 }
 
 void ExactlyOnceQueueManager::ClearTimeoutQueues() {

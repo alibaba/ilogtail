@@ -48,8 +48,10 @@ public:
     bool IsAllQueueEmpty() const;
     bool SetDownStreamQueues(QueueKey key, std::vector<SingleLogstoreSenderManager<SenderQueueParam>*>& ques);
     bool SetFeedbackInterface(QueueKey key, std::vector<FeedbackInterface*>& feedback);
+    void InvalidatePop(const std::string& configName);
+    void ValidatePop(const std::string& configName);
 
-    bool Wait(int64_t secs);
+    bool Wait(uint64_t ms);
     void Trigger();
 
     // TODO: should be removed when self-telemetry is refactored

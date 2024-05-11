@@ -31,10 +31,12 @@ public:
     void TestPushQueue();
     void TestPopItem();
     void TestIsAllQueueEmpty();
+    void OnPipelineUpdate();
 
 protected:
     static void SetUpTestCase() { sEventGroup.reset(new PipelineEventGroup(make_shared<SourceBuffer>())); }
     void TearDown() override {
+        QueueKeyManager::GetInstance()->Clear();
         sProcessQueueManager->Clear();
         ExactlyOnceQueueManager::GetInstance()->Clear();
     }
@@ -286,12 +288,34 @@ void ProcessQueueManagerUnittest::TestIsAllQueueEmpty() {
     APSARA_TEST_TRUE(sProcessQueueManager->IsAllQueueEmpty());
 }
 
+void ProcessQueueManagerUnittest::OnPipelineUpdate() {
+    QueueKey key = QueueKeyManager::GetInstance()->GetKey("test_config_1");
+    sProcessQueueManager->CreateOrUpdateQueue(key, 0);
+    ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(1, 0, "test_config_2", vector<RangeCheckpointPtr>(5));
+    ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(2, 0, "test_config_2", vector<RangeCheckpointPtr>(5));
+
+    sProcessQueueManager->InvalidatePop("test_config_1");
+    APSARA_TEST_FALSE(sProcessQueueManager->mQueues[key]->mValidToPop);
+
+    sProcessQueueManager->InvalidatePop("test_config_2");
+    APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPop);
+    APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[2]->mValidToPop);
+
+    sProcessQueueManager->ValidatePop("test_config_1");
+    APSARA_TEST_TRUE(sProcessQueueManager->mQueues[key]->mValidToPop);
+
+    sProcessQueueManager->ValidatePop("test_config_2");
+    APSARA_TEST_TRUE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPop);
+    APSARA_TEST_TRUE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[2]->mValidToPop);
+}
+
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestUpdateQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestSetQueueUpstreamAndDownStream)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestPushQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestPopItem)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestIsAllQueueEmpty)
+UNIT_TEST_CASE(ProcessQueueManagerUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 

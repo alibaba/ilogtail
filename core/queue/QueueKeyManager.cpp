@@ -46,14 +46,14 @@ bool QueueKeyManager::RemoveKey(QueueKey key) {
 }
 
 const std::string& QueueKeyManager::GetName(QueueKey key) {
+    static string sEmpty = "";
     lock_guard<mutex> lock(mMux);
     auto iter = mKeyNameMap.find(key);
     if (iter == mKeyNameMap.end()) {
-        return "";
+        return sEmpty;
     }
     return iter->second;
 }
-
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void QueueKeyManager::Clear() {
