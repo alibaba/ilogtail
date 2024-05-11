@@ -175,6 +175,8 @@ public:
                                               uint32_t exactlyonceConcurrency,
                                               bool forceFromBeginning);
 
+    static PipelineEventGroup GenerateEventGroup(LogFileReaderPtr reader, LogBuffer* logBuffer);
+
     LogFileReader(const std::string& hostLogPathDir,
                   const std::string& hostLogPathFile,
                   const DevInode& devInode,

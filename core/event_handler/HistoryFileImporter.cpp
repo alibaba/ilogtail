@@ -106,29 +106,17 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
                 usleep(1000 * 10);
             }
-            LogBuffer* logBuffer = new LogBuffer;
+            std::unique_ptr<LogBuffer> logBuffer(new LogBuffer);
             readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
 
-                PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
-                readerSharePtr->SetEventGroupMetaAndTag(group);
-
-                LogEvent* event = group.AddLogEvent();
-                time_t logtime = time(nullptr);
-                if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-                    logtime += GetTimeDelta();
-                }
-                event->SetTimestamp(logtime);
-                event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-                event->SetPosition(logBuffer->readOffset, logBuffer->readLength);
+                PipelineEventGroup group = LogFileReader::GenerateEventGroup(readerSharePtr, logBuffer.get());
                 
                 // TODO: currently only 1 input is allowed, so we assume 0 here. It should be the actual input seq after refactorization.
                 logProcess->PushBuffer(
                     readerSharePtr->GetLogstoreKey(), readerSharePtr->GetConfigName(), 0, std::move(group), 100000000);
-                delete logBuffer;
             } else {
-                delete logBuffer;
                 // when ReadLog return false, retry once
                 if (doneFlag) {
                     break;

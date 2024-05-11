@@ -1071,18 +1071,7 @@ int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* lo
                                                               reader->GetFileSize(),
                                                               reader->GetLastFilePos(),
                                                               time(NULL));
-
-        PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
-        reader->SetEventGroupMetaAndTag(group);
-
-        LogEvent* event = group.AddLogEvent();
-        time_t logtime = time(nullptr);
-        if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-            logtime += GetTimeDelta();
-        }
-        event->SetTimestamp(logtime);
-        event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-        event->SetPosition(logBuffer->readOffset, logBuffer->readLength);
+        PipelineEventGroup group = LogFileReader::GenerateEventGroup(reader, logBuffer);
 
         while (!LogProcess::GetInstance()->PushBuffer(reader->GetLogstoreKey(), reader->GetConfigName(), 0, std::move(group))) // 10ms
         {
