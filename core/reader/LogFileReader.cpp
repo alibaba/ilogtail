@@ -2291,7 +2291,8 @@ LineInfo DockerJsonFileParser::GetLastLine(StringView buffer,
     }
 
     size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
-    LineInfo finalLine = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    LineInfo finalLine
+        = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     while (!finalLine.fullLine) {
         LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
             buffer, end, nextProtocolFunctionIndex, needSingleLine, lineParsers);
@@ -2299,7 +2300,8 @@ LineInfo DockerJsonFileParser::GetLastLine(StringView buffer,
             rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
         }
 
-        LineInfo line = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+        LineInfo line
+            = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
         parseLine(rawLine, line);
         finalLine.data = line.data;
         finalLine.fullLine = line.fullLine;
@@ -2367,7 +2369,8 @@ LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
         // 异常情况, DockerJsonFileParse不允许在最后一个解析器
         return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     }
-    LineInfo finalLine = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+    LineInfo finalLine
+        = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     // 跳过最后的连续P
     size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
 
@@ -2378,7 +2381,8 @@ LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
             rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
         }
 
-        LineInfo line = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+        LineInfo line
+            = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
         parseLine(rawLine, line);
         // containerd 不需要外层协议的 dataRaw
         finalLine.data = line.data;
@@ -2412,7 +2416,8 @@ LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
             break;
         }
 
-        LineInfo previousLine = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
+        LineInfo previousLine
+            = {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
         LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
             buffer, finalLine.lineBegin - 1, nextProtocolFunctionIndex, needSingleLine, lineParsers);
         if (rawLine.data.back() == '\n') {
@@ -2506,7 +2511,8 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         default:
             break;
     }
-    if (mFileLogFormat != LogFormat::DOCKER_JSON_FILE && mFileLogFormat != LogFormat::CONTAINERD_TEXT) {
+    bool isContainerLog = mFileLogFormat == LogFormat::DOCKER_JSON_FILE || mFileLogFormat == LogFormat::CONTAINERD_TEXT;
+    if (!isContainerLog) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, GetConvertedPath());
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, GetHostLogPath());
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
@@ -2525,6 +2531,22 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
     for (size_t i = 0; i < extraTags.size(); ++i) {
         group.SetTag(extraTags[i].key(), extraTags[i].value());
     }
+}
+
+PipelineEventGroup LogFileReader::GenerateEventGroup(LogFileReaderPtr reader, LogBuffer* logBuffer) {
+    PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
+    reader->SetEventGroupMetaAndTag(group);
+
+    LogEvent* event = group.AddLogEvent();
+    time_t logtime = time(nullptr);
+    if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
+        logtime += GetTimeDelta();
+    }
+    event->SetTimestamp(logtime);
+    event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
+    event->SetPosition(logBuffer->readOffset, logBuffer->readLength);
+
+    return group;
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
