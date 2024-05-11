@@ -2532,7 +2532,7 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
     }
 }
 
-PipelineEventGroup GenerateEventGroup(LogFileReaderPtr reader, LogBuffer* logBuffer) {
+PipelineEventGroup LogFileReader::GenerateEventGroup(LogFileReaderPtr reader, LogBuffer* logBuffer) {
     PipelineEventGroup group{std::shared_ptr<SourceBuffer>(std::move(logBuffer->sourcebuffer))};
     reader->SetEventGroupMetaAndTag(group);
 
