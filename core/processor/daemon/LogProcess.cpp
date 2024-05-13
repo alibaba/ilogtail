@@ -284,7 +284,9 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             // record profile, must be placed here since readbytes info exists only before processing
             auto& processProfile = pipeline->GetContext().GetProcessProfile();
             ProcessProfile profile = processProfile;
-            if (item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
+            bool isLog = false;
+            if (!item->mEventGroup.GetEvents().empty() && item->mEventGroup.GetEvents()[0].Is<LogEvent>()) {
+                isLog = true;
                 profile.readBytes = item->mEventGroup.GetEvents()[0].Cast<LogEvent>().GetPosition().second
                     + 1; // may not be accurate if input is not utf8
             }
@@ -308,8 +310,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             }
 
             s_processCount++;
-            s_processBytes += profile.readBytes;
-            s_processLines += profile.splitLines;
+            if (isLog) {
+                s_processBytes += profile.readBytes;
+                s_processLines += profile.splitLines;
+            }
 
             // send part
             std::vector<std::unique_ptr<sls_logs::LogGroup>> logGroupList;
@@ -376,27 +380,29 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                     }
                 }
 
-                std::vector<sls_logs::LogTag> logTags;
-                for (auto& item : logGroupList[0]->logtags()) {
-                    logTags.push_back(item);
+                if (isLog) {
+                    std::vector<sls_logs::LogTag> logTags;
+                    for (auto& item : logGroupList[0]->logtags()) {
+                        logTags.push_back(item);
+                    }
+                    LogFileProfiler::GetInstance()->AddProfilingData(
+                        pipeline->Name(),
+                        pipeline->GetContext().GetRegion(),
+                        projectName,
+                        category,
+                        convertedPath,
+                        hostLogPath,
+                        logTags, // warning: this is not the same as reader extra tags!
+                        profile.readBytes,
+                        profile.skipBytes,
+                        profile.splitLines,
+                        profile.parseFailures,
+                        profile.regexMatchFailures,
+                        profile.parseTimeFailures,
+                        profile.historyFailures,
+                        0,
+                        ""); // TODO: I don't think errorLine is useful
                 }
-                LogFileProfiler::GetInstance()->AddProfilingData(
-                    pipeline->Name(),
-                    pipeline->GetContext().GetRegion(),
-                    projectName,
-                    category,
-                    convertedPath,
-                    hostLogPath,
-                    logTags, // warning: this is not the same as reader extra tags!
-                    profile.readBytes,
-                    profile.skipBytes,
-                    profile.splitLines,
-                    profile.parseFailures,
-                    profile.regexMatchFailures,
-                    profile.parseTimeFailures,
-                    profile.historyFailures,
-                    0,
-                    ""); // TODO: I don't think errorLine is useful
             }
             logGroupList.clear();
         }
