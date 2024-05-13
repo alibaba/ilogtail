@@ -24,6 +24,7 @@
 #include "processor/daemon/LogProcess.h"
 #include "queue/ProcessQueueManager.h"
 #include "reader/LogFileReader.h"
+#include "app_config/AppConfig.h"
 
 namespace logtail {
 
