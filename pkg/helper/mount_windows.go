@@ -115,7 +115,7 @@ func GetMountedFilePathWithBasePath(basePath, filePath string) string {
 	}
 	colonPos := strings.Index(filePath, ":")
 	if -1 == colonPos {
-		// Case: containerd, filePath is not start with driver letter. e.g. \\var\\logs\\pods\\xxx\\0.log
+		// Case: containerd, filePath is not start with driver letter. e.g. \\var\\logs\\pods\\xxx\\0.log.
 		return filePath
 	}
 	return basePath + filePath[colonPos+1:]
