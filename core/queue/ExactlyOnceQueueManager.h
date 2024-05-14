@@ -50,6 +50,7 @@ public:
                              const std::vector<RangeCheckpointPtr>& checkpoints);
     bool DeleteQueue(QueueKey key);
 
+    bool IsValidToPushProcessQueue(QueueKey key) const;
     int PushProcessQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool IsAllProcessQueueEmpty() const;
     void InvalidatePop(const std::string& configName);

@@ -117,17 +117,20 @@ void ExactlyOnceQueueManagerUnittest::TestPushProcessQueue() {
     sManager->CreateOrUpdateQueue(0, 0, "test_config", vector<RangeCheckpointPtr>(5));
 
     // queue exists
+    APSARA_TEST_TRUE(sManager->IsValidToPushProcessQueue(0));
     APSARA_TEST_EQUAL(
         0,
         sManager->PushProcessQueue(0, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
 
     // no queue exists
+    APSARA_TEST_FALSE(sManager->IsValidToPushProcessQueue(1));
     APSARA_TEST_EQUAL(
         2,
         sManager->PushProcessQueue(1, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
 
     // invalid to push
     sManager->mProcessQueues[0]->mValidToPush = false;
+    APSARA_TEST_FALSE(sManager->IsValidToPushProcessQueue(0));
     APSARA_TEST_EQUAL(
         1,
         sManager->PushProcessQueue(0, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));

@@ -32,7 +32,7 @@ public:
     virtual bool Push(T&& item) = 0;
     virtual bool Pop(T& item) = 0;
 
-    bool IsValidToPush() const { return mValidToPush && !Full(); }
+    bool IsValidToPush() const { return mValidToPush; }
 
     bool Empty() const { return Size() == 0; }
 

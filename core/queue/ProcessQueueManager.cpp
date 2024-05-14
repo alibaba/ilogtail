@@ -83,6 +83,15 @@ bool ProcessQueueManager::DeleteQueue(QueueKey key) {
     return true;
 }
 
+bool ProcessQueueManager::IsValidToPush(QueueKey key) const {
+    lock_guard<mutex> lock(mQueueMux);
+    auto iter = mQueues.find(key);
+    if (iter != mQueues.end()) {
+        return iter->second->IsValidToPush();
+    }
+    return ExactlyOnceQueueManager::GetInstance()->IsValidToPushProcessQueue(key);
+}
+
 int ProcessQueueManager::PushQueue(QueueKey key, unique_ptr<ProcessQueueItem>&& item) {
     {
         lock_guard<mutex> lock(mQueueMux);

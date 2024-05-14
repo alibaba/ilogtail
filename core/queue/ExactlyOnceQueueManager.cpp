@@ -83,13 +83,22 @@ bool ExactlyOnceQueueManager::DeleteQueue(QueueKey key) {
     return true;
 }
 
+bool ExactlyOnceQueueManager::IsValidToPushProcessQueue(QueueKey key) const {
+    lock_guard<mutex> lock(mProcessQueueMux);
+    auto iter = mProcessQueues.find(key);
+    if (iter == mProcessQueues.end()) {
+        return false;
+    }
+    return iter->second->IsValidToPush();
+}
+
 int ExactlyOnceQueueManager::PushProcessQueue(QueueKey key, unique_ptr<ProcessQueueItem>&& item) {
     lock_guard<mutex> lock(mProcessQueueMux);
     auto iter = mProcessQueues.find(key);
     if (iter == mProcessQueues.end()) {
         return 2;
     }
-    if (!mProcessQueues[key]->Push(std::move(item))) {
+    if (!iter->second->Push(std::move(item))) {
         return 1;
     }
     return 0;

@@ -183,27 +183,32 @@ void ProcessQueueManagerUnittest::TestPushQueue() {
     ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(1, 0, "test_config", vector<RangeCheckpointPtr>(5));
 
     // queue belongs to normal process queue
+    APSARA_TEST_TRUE(sProcessQueueManager->IsValidToPush(0));
     APSARA_TEST_EQUAL(0,
                       sProcessQueueManager->PushQueue(
                           0, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
 
     // queue belongs to exactly once process queue
+    APSARA_TEST_TRUE(sProcessQueueManager->IsValidToPush(1));
     APSARA_TEST_EQUAL(0,
                       sProcessQueueManager->PushQueue(
                           1, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
 
     // no queue exists
+    APSARA_TEST_FALSE(sProcessQueueManager->IsValidToPush(2));
     APSARA_TEST_EQUAL(2,
                       sProcessQueueManager->PushQueue(
                           2, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
 
     // invalid to push
     sProcessQueueManager->mQueues[0]->mValidToPush = false;
+    APSARA_TEST_FALSE(sProcessQueueManager->IsValidToPush(0));
     APSARA_TEST_EQUAL(1,
                       sProcessQueueManager->PushQueue(
                           0, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
 
     ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPush = false;
+    APSARA_TEST_FALSE(sProcessQueueManager->IsValidToPush(1));
     APSARA_TEST_EQUAL(1,
                       sProcessQueueManager->PushQueue(
                           1, unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(*sEventGroup), 0))));
