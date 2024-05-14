@@ -43,7 +43,7 @@ public:
 
     bool CreateOrUpdateQueue(QueueKey key, uint32_t priority);
     bool DeleteQueue(QueueKey key);
-    bool IsValidToPush(QueueKey key) const;
+    bool IsValidToPush(QueueKey key) const override;
     int PushQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool PopItem(int64_t threadNo, std::unique_ptr<ProcessQueueItem>& item, std::string& configName);
     bool IsAllQueueEmpty() const;
