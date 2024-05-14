@@ -35,7 +35,7 @@ struct ProcessQueueParam {
         mHighWatermark = highSize;
     }
 
-    size_t mCapacity = 30;
+    size_t mCapacity = 20;
     size_t mLowWatermark = 10;
     size_t mHighWatermark = 15;
 
