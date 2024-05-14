@@ -158,7 +158,7 @@ func (r *LogFileReader) CheckFileChange() bool {
 					r.CloseFile("open file and dev inode changed")
 				}
 				if r.Config.Tracker != nil {
-					r.Config.Tracker.FileRotatorCounter.Add(1)
+					_ = r.Config.Tracker.FileRotatorCounter.Add(1)
 				}
 				// if file change, force flush last buffer
 				if r.lastBufferSize > 0 {

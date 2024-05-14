@@ -98,33 +98,6 @@ func (p *ContextImp) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMeta(project, logstore, configName)
 }
 
-// func (p *ContextImp) RegisterCounterMetric(metric pipeline.Counter) {
-// 	contextMutex.Lock()
-// 	defer contextMutex.Unlock()
-// 	if p.CounterMetrics == nil {
-// 		p.CounterMetrics = make(map[string]pipeline.Counter)
-// 	}
-// 	p.CounterMetrics[metric.Name()] = metric
-// }
-
-// func (p *ContextImp) RegisterStringMetric(metric pipeline.StrMetric) {
-// 	contextMutex.Lock()
-// 	defer contextMutex.Unlock()
-// 	if p.StringMetrics == nil {
-// 		p.StringMetrics = make(map[string]pipeline.StrMetric)
-// 	}
-// 	p.StringMetrics[metric.Name()] = metric
-// }
-
-// func (p *ContextImp) RegisterLatencyMetric(metric pipeline.Latency) {
-// 	contextMutex.Lock()
-// 	defer contextMutex.Unlock()
-// 	if p.LatencyMetrics == nil {
-// 		p.LatencyMetrics = make(map[string]pipeline.Latency)
-// 	}
-// 	p.LatencyMetrics[metric.Name()] = metric
-// }
-
 func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
 	metricsRecord := &pipeline.MetricsRecord{}
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "project", Value: p.GetProject()})

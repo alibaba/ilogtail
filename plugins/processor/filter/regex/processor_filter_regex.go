@@ -123,9 +123,9 @@ func (p *ProcessorRegexFilter) ProcessLogs(logArray []*protocol.Log) []*protocol
 			}
 			nextIdx++
 		} else {
-			p.filterMetric.Add(1)
+			_ = p.filterMetric.Add(1)
 		}
-		p.processedMetric.Add(1)
+		_ = p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

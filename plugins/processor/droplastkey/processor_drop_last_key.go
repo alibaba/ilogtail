@@ -75,7 +75,7 @@ func (p *ProcessorDropLastKey) process(log *protocol.Log) {
 	for index, content := range log.Contents {
 		if content.Key == p.DropKey {
 			log.Contents = append(log.Contents[:index], log.Contents[index+1:]...)
-			p.filterMetric.Add(1)
+			_ = p.filterMetric.Add(1)
 			break
 		}
 	}

@@ -301,7 +301,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 
 	dockerInfos := sds.matchList
 	logger.Debug(sds.context.GetRuntimeContext(), "match list length", len(dockerInfos))
-	sds.avgInstanceMetric.Add(int64(len(dockerInfos)))
+	_ = sds.avgInstanceMetric.Add(int64(len(dockerInfos)))
 	for id, info := range dockerInfos {
 		if !logDriverSupported(info.ContainerInfo) {
 			continue
@@ -310,7 +310,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 			syner := NewDockerFileSyner(sds, info, sds.checkpointMap)
 			logger.Info(sds.context.GetRuntimeContext(), "docker stdout", "added", "source host path", info.ContainerInfo.LogPath,
 				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-			sds.addMetric.Add(1)
+			_ = sds.addMetric.Add(1)
 			sds.synerMap[id] = syner
 			syner.dockerFileReader.Start()
 		}

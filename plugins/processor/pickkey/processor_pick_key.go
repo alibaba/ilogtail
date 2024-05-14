@@ -94,7 +94,7 @@ func (p *ProcessorPickKey) process(log *protocol.Log) bool {
 		}
 	}
 
-	p.filterMetric.Add(int64(beginLen - len(log.Contents)))
+	_ = p.filterMetric.Add(int64(beginLen - len(log.Contents)))
 
 	return len(log.Contents) != 0
 }
