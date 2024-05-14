@@ -47,9 +47,40 @@ var (
 	}
 )
 
+func NewAndRegisterCounterMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
+	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
+	mr.RegisterMetricVector(v)
+	return v
+}
+
+func NewAndRegisterAverageMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
+	v := NewMetricVector[pipeline.Average](metricName, pipeline.AverageType, constLabels, labelNames)
+	mr.RegisterMetricVector(v)
+	return v
+}
+
+func NewAndRegisterGaugeMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
+	v := NewMetricVector[pipeline.Gauge](metricName, pipeline.GaugeType, constLabels, labelNames)
+	mr.RegisterMetricVector(v)
+	return v
+}
+
+func NewAndRegisterLatencyMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
+	v := NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
+	mr.RegisterMetricVector(v)
+	return v
+}
+
+func NewAndRegisterStringMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
+	v := NewMetricVector[pipeline.StrMetric](metricName, pipeline.StringType, constLabels, labelNames)
+	mr.RegisterMetricVector(v)
+	return v
+}
+
 // MetricVector 是一个泛型接口，定义了所有 MetricVector 实现所需的 WithLabels 方法。
 type MetricVector[T any] interface {
 	WithLabels(labels ...pipeline.Label) T
+	pipeline.MetricCollector
 }
 
 type (
@@ -81,16 +112,20 @@ func (m *MetricVectorImpl[T]) WithLabels(labels ...pipeline.Label) T {
 	return m.MetricMap.WithLabels(labels).(T)
 }
 
+var (
+	_ pipeline.MetricCollector = (*metricVector)(nil)
+)
+
 type metricVector struct {
 	name        string // metric name
 	metricType  pipeline.SelfMetricType
 	constLabels []pipeline.Label // constLabels is the labels that are not changed when the metric is created.
 	labelNames  []string         // labelNames is the names of the labels. The values of the labels can be changed.
 
-	indexPool   GenericPool[string]
-	bytesPool   GenericPool[byte]
-	collector   sync.Map
-	seriesCount int64
+	indexPool   GenericPool[string] // index is []string, which is sorted according to labelNames.
+	bytesPool   GenericPool[byte]   // bytesPool is the bytes pool for the index.
+	collector   sync.Map            // collector is a map[string]pipeline.Metric, key is the index of the metric.
+	seriesCount int64               // the number of metrics in the vector
 }
 
 func newMetricVector(
@@ -108,7 +143,7 @@ func newMetricVector(
 	}
 
 	for k, v := range constLabels {
-		mv.constLabels = append(mv.constLabels, pipeline.Label{Name: k, Value: v})
+		mv.constLabels = append(mv.constLabels, pipeline.Label{Key: k, Value: v})
 	}
 	return mv
 }
@@ -164,6 +199,7 @@ func (v *metricVector) Collect() []pipeline.Metric {
 	return res
 }
 
+// buildIndex return the index
 func (v *metricVector) buildIndex(labels []pipeline.Label) (*[]string, error) {
 	if len(labels) > len(v.labelNames) {
 		return nil, fmt.Errorf("too many labels, expected %d, got %d. defined labels: %v",
@@ -176,7 +212,7 @@ func (v *metricVector) buildIndex(labels []pipeline.Label) (*[]string, error) {
 	}
 
 	for d, tag := range labels {
-		if v.labelNames[d] == tag.Name { // fast path
+		if v.labelNames[d] == tag.Key { // fast path
 			(*index)[d] = tag.Value
 		} else {
 			err := v.slowConstructIndex(index, tag)
@@ -192,10 +228,10 @@ func (v *metricVector) buildIndex(labels []pipeline.Label) (*[]string, error) {
 
 func (v *metricVector) slowConstructIndex(index *[]string, tag pipeline.Label) error {
 	for i, tagName := range v.labelNames {
-		if tagName == tag.Name {
+		if tagName == tag.Key {
 			(*index)[i] = tag.Value
 			return nil
 		}
 	}
-	return fmt.Errorf("undefined label: %s in %v", tag.Name, v.labelNames)
+	return fmt.Errorf("undefined label: %s in %v", tag.Key, v.labelNames)
 }

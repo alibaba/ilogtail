@@ -27,13 +27,13 @@ import (
 )
 
 type ReaderMetricTracker struct {
-	OpenCounter        pipeline.CounterMetric
-	CloseCounter       pipeline.CounterMetric
-	FileSizeCounter    pipeline.CounterMetric
-	FileRotatorCounter pipeline.CounterMetric
-	ReadCounter        pipeline.CounterMetric
-	ReadSizeCounter    pipeline.CounterMetric
-	ProcessLatency     pipeline.LatencyMetric
+	OpenCounter        pipeline.Counter
+	CloseCounter       pipeline.Counter
+	FileSizeCounter    pipeline.Counter
+	FileRotatorCounter pipeline.Counter
+	ReadCounter        pipeline.Counter
+	ReadSizeCounter    pipeline.Counter
+	ProcessLatency     pipeline.Latency
 }
 
 func NewReaderMetricTracker() *ReaderMetricTracker {
@@ -379,9 +379,6 @@ func (r *LogFileReader) Run() {
 	tracker := r.Config.Tracker
 	for {
 		startProcessTime := time.Now()
-		if tracker != nil {
-			tracker.ProcessLatency.Begin()
-		}
 		if r.readWhenStart || r.CheckFileChange() {
 			r.readWhenStart = false
 			r.ReadAndProcess(false)
@@ -394,7 +391,7 @@ func (r *LogFileReader) Run() {
 			}
 		}
 		if tracker != nil {
-			tracker.ProcessLatency.End()
+			tracker.ProcessLatency.Observe(float64(time.Since(startProcessTime)))
 		}
 		endProcessTime := time.Now()
 		sleepDuration := time.Millisecond*time.Duration(r.Config.ReadIntervalMs) - endProcessTime.Sub(startProcessTime)

@@ -24,7 +24,7 @@ import (
 
 func Test_MetricVectorWithEmptyLabel(t *testing.T) {
 	v := NewCounterMetricVector("test", nil, nil)
-	err := v.WithLabels(pipeline.Label{Name: "test_label", Value: "test_value"}).Add(1)
+	err := v.WithLabels(pipeline.Label{Key: "test_label", Value: "test_value"}).Add(1)
 	assert.ErrorContains(t, err, "too many labels, expected 0, got 1")
 
 	err = v.WithLabels().Add(1)
@@ -44,7 +44,7 @@ func Test_MetricVectorWithEmptyLabel(t *testing.T) {
 
 func Test_MetricVectorWithConstLabel(t *testing.T) {
 	v := NewCounterMetricVector("test", map[string]string{"host": "host1", "plugin_id": "2"}, nil)
-	err := v.WithLabels(pipeline.Label{Name: "test_label", Value: "test_value"}).Add(1)
+	err := v.WithLabels(pipeline.Label{Key: "test_label", Value: "test_value"}).Add(1)
 	assert.ErrorContains(t, err, "too many labels, expected 0, got 1")
 
 	err = v.WithLabels().Add(2)
@@ -77,7 +77,7 @@ func Test_CounterMetricVectorWithDynamicLabel(t *testing.T) {
 		[]string{"label1", "label2", "label3", "label5"},
 	)
 
-	err := v.WithLabels(pipeline.Label{Name: "label4", Value: "value4"}).Add(1)
+	err := v.WithLabels(pipeline.Label{Key: "label4", Value: "value4"}).Add(1)
 	assert.ErrorContains(t, err, "undefined label: label4 in [label1 label2 label3 label5]")
 
 	err = v.WithLabels().Add(-1)
@@ -85,7 +85,7 @@ func Test_CounterMetricVectorWithDynamicLabel(t *testing.T) {
 
 	seriesCount := 500
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Add(float64(i))
+		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Add(int64(i))
 		assert.NoError(t, err)
 	}
 
@@ -131,7 +131,7 @@ func Test_AverageMetricVectorWithDynamicLabel(t *testing.T) {
 		[]string{"label1", "label2", "label3", "label5"},
 	)
 
-	err := v.WithLabels(pipeline.Label{Name: "label4", Value: "value4"}).Add(1)
+	err := v.WithLabels(pipeline.Label{Key: "label4", Value: "value4"}).Add(1)
 	assert.ErrorContains(t, err, "undefined label: label4 in [label1 label2 label3 label5]")
 
 	err = v.WithLabels().Add(-1)
@@ -139,7 +139,7 @@ func Test_AverageMetricVectorWithDynamicLabel(t *testing.T) {
 
 	seriesCount := 500
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Add(float64(i))
+		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Add(int64(i))
 		assert.NoError(t, err)
 	}
 
@@ -187,7 +187,7 @@ func Test_LatencyMetricVectorWithDynamicLabel(t *testing.T) {
 		[]string{"label1", "label2", "label3", "label5"},
 	)
 
-	err := v.WithLabels(pipeline.Label{Name: "label4", Value: "value4"}).Observe(0)
+	err := v.WithLabels(pipeline.Label{Key: "label4", Value: "value4"}).Observe(0)
 	assert.ErrorContains(t, err, "undefined label: label4 in [label1 label2 label3 label5]")
 
 	seriesCount := 500
@@ -244,7 +244,7 @@ func Test_GaugeMetricVectorWithDynamicLabel(t *testing.T) {
 		[]string{"label1", "label2", "label3", "label5"},
 	)
 
-	err := v.WithLabels(pipeline.Label{Name: "label4", Value: "value4"}).Set(0)
+	err := v.WithLabels(pipeline.Label{Key: "label4", Value: "value4"}).Set(0)
 	assert.ErrorContains(t, err, "undefined label: label4 in [label1 label2 label3 label5]")
 
 	seriesCount := 500
@@ -301,7 +301,7 @@ func Test_StrMetricVectorWithDynamicLabel(t *testing.T) {
 		[]string{"label1", "label2", "label3", "label5"},
 	)
 
-	err := v.WithLabels(pipeline.Label{Name: "label4", Value: "value4"}).Set("string")
+	err := v.WithLabels(pipeline.Label{Key: "label4", Value: "value4"}).Set("string")
 	assert.ErrorContains(t, err, "undefined label: label4 in [label1 label2 label3 label5]")
 
 	seriesCount := 500

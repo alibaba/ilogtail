@@ -71,13 +71,13 @@ func checkMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
 }
 
 type LogstoreStatistics struct {
-	CollecLatencytMetric pipeline.LatencyMetric
-	RawLogMetric         pipeline.CounterMetric
-	SplitLogMetric       pipeline.CounterMetric
-	FlushLogMetric       pipeline.CounterMetric
-	FlushLogGroupMetric  pipeline.CounterMetric
-	FlushReadyMetric     pipeline.CounterMetric
-	FlushLatencyMetric   pipeline.LatencyMetric
+	CollecLatencytMetric pipeline.Latency
+	RawLogMetric         pipeline.Counter
+	SplitLogMetric       pipeline.Counter
+	FlushLogMetric       pipeline.Counter
+	FlushLogGroupMetric  pipeline.Counter
+	FlushReadyMetric     pipeline.Counter
+	FlushLatencyMetric   pipeline.Latency
 }
 
 type ConfigVersion string
@@ -120,21 +120,14 @@ type LogstoreConfig struct {
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
-	p.CollecLatencytMetric = helper.NewLatencyMetric("collect_latency")
-	p.RawLogMetric = helper.NewCounterMetric("raw_log")
-	p.SplitLogMetric = helper.NewCounterMetric("processed_log")
-	p.FlushLogMetric = helper.NewCounterMetric("flush_log")
-	p.FlushLogGroupMetric = helper.NewCounterMetric("flush_loggroup")
-	p.FlushReadyMetric = helper.NewAverageMetric("flush_ready")
-	p.FlushLatencyMetric = helper.NewLatencyMetric("flush_latency")
-
-	context.RegisterLatencyMetric(p.CollecLatencytMetric)
-	context.RegisterCounterMetric(p.RawLogMetric)
-	context.RegisterCounterMetric(p.SplitLogMetric)
-	context.RegisterCounterMetric(p.FlushLogMetric)
-	context.RegisterCounterMetric(p.FlushLogGroupMetric)
-	context.RegisterCounterMetric(p.FlushReadyMetric)
-	context.RegisterLatencyMetric(p.FlushLatencyMetric)
+	metricsRecord := context.GetMetricRecord()
+	p.CollecLatencytMetric = helper.NewAndRegisterLatencyMetricVector(metricsRecord, "collect_latency", nil, nil).WithLabels()
+	p.RawLogMetric = helper.NewAndRegisterCounterMetricVector(metricsRecord, "raw_log", nil, nil).WithLabels()
+	p.SplitLogMetric = helper.NewAndRegisterCounterMetricVector(metricsRecord, "processed_log", nil, nil).WithLabels()
+	p.FlushLogMetric = helper.NewAndRegisterCounterMetricVector(metricsRecord, "flush_log", nil, nil).WithLabels()
+	p.FlushLogGroupMetric = helper.NewAndRegisterCounterMetricVector(metricsRecord, "flush_loggroup", nil, nil).WithLabels()
+	p.FlushReadyMetric = helper.NewAndRegisterAverageMetricVector(metricsRecord, "flush_ready", nil, nil).WithLabels()
+	p.FlushLatencyMetric = helper.NewAndRegisterLatencyMetricVector(metricsRecord, "flush_latency", nil, nil).WithLabels()
 }
 
 // Start initializes plugin instances in config and starts them.

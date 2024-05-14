@@ -190,42 +190,55 @@ func getNameWithLables(name string, labels []*protocol.Log_Content) string {
 	return n
 }
 
-func NewCounterMetric(n string, lables ...*protocol.Log_Content) pipeline.CounterMetric {
-	return &NormalMetric{name: n, labels: lables}
+func NewCounterMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	return NewCounterMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-func NewAverageMetric(n string, lables ...*protocol.Log_Content) pipeline.CounterMetric {
-	return &AvgMetric{name: n, labels: lables}
+func NewAverageMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	return NewAverageMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-func NewStringMetric(n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
-	return &StrMetric{name: n, labels: lables}
+func NewStringMetric(n string, lables ...*protocol.Log_Content) pipeline.StrMetric {
+	return NewStringMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-func NewLatencyMetric(n string, lables ...*protocol.Log_Content) pipeline.LatencyMetric {
-	return &LatMetric{name: n, labels: lables}
+func NewLatencyMetric(n string, lables ...*protocol.Log_Content) pipeline.Latency {
+	return NewLatencyMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-func NewCounterMetricAndRegister(c pipeline.Context, n string, lables ...*protocol.Log_Content) pipeline.CounterMetric {
-	metric := &NormalMetric{name: n, labels: lables}
-	c.RegisterCounterMetric(metric)
-	return metric
+func NewCounterMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	mv := NewCounterMetricVector(n, convertLabels(lables), nil)
+	c.RegisterMetricVector(mv)
+	return mv.WithLabels()
 }
 
-func NewAverageMetricAndRegister(c pipeline.Context, n string, lables ...*protocol.Log_Content) pipeline.CounterMetric {
-	metric := &AvgMetric{name: n, labels: lables}
-	c.RegisterCounterMetric(metric)
-	return metric
+func NewAverageMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	mv := NewAverageMetricVector(n, convertLabels(lables), nil)
+	c.RegisterMetricVector(mv)
+	return mv.WithLabels()
 }
 
-func NewStringMetricAndRegister(c pipeline.Context, n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
-	metric := &StrMetric{name: n, labels: lables}
-	c.RegisterStringMetric(metric)
-	return metric
+func NewStringMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.StrMetric {
+	mv := NewStringMetricVector(n, convertLabels(lables), nil)
+	c.RegisterMetricVector(mv)
+	return mv.WithLabels()
 }
 
-func NewLatencyMetricAndRegister(c pipeline.Context, n string, lables ...*protocol.Log_Content) pipeline.LatencyMetric {
-	metric := &LatMetric{name: n, labels: lables}
-	c.RegisterLatencyMetric(metric)
-	return metric
+func NewLatencyMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Latency {
+	mv := NewLatencyMetricVector(n, convertLabels(lables), nil)
+	c.RegisterMetricVector(mv)
+	return mv.WithLabels()
+}
+
+func convertLabels(labels []*protocol.Log_Content) map[string]string {
+	if len(labels) == 0 {
+		return nil
+	}
+
+	l := make(map[string]string)
+	for _, label := range labels {
+		l[label.Key] = label.Value
+	}
+
+	return l
 }

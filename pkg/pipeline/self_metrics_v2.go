@@ -21,12 +21,12 @@ const (
 )
 
 type Label struct {
-	Name  string
+	Key   string
 	Value string
 }
 
 type MetricValue[T string | float64] struct {
-	Name  string
+	Name  string // Value Name, e.g. "cpu_usage"
 	Value T
 }
 
@@ -54,13 +54,13 @@ type MetricCollector interface {
 
 type Metric interface {
 	Serialize(log *protocol.Log)
+	Clear()
 }
 
 type Counter interface {
 	Metric
-	Add(float64) error
+	Add(int64) error
 	Get() MetricValue[float64]
-	Clear()
 }
 
 type Average interface {
@@ -71,7 +71,6 @@ type Gauge interface {
 	Metric
 	Set(float64) error
 	Get() MetricValue[float64]
-	Clear()
 }
 
 type Latency interface {

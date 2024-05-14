@@ -15,6 +15,7 @@ package helper
 import (
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -69,8 +70,8 @@ func NewErrorMetric(metricType pipeline.SelfMetricType, err error) pipeline.Metr
 }
 
 type counterImp struct {
-	value float64
-	prev  float64
+	value int64
+	prev  int64
 	Series
 }
 
@@ -81,20 +82,20 @@ func NewCounter(ms pipeline.MetricSet, index *[]string) pipeline.Counter {
 	return c
 }
 
-func (c *counterImp) Add(delta float64) error {
-	AtomicAddFloat64(&c.value, delta)
+func (c *counterImp) Add(delta int64) error {
+	atomic.AddInt64(&c.value, delta)
 	return nil
 }
 
 func (c *counterImp) Get() pipeline.MetricValue[float64] {
-	value := AtomicLoadFloat64(&c.value)
-	AtomicStoreFloat64(&c.prev, value)
-	return pipeline.MetricValue[float64]{Name: c.Name(), Value: value}
+	value := atomic.LoadInt64(&c.value)
+	atomic.StoreInt64(&c.prev, value)
+	return pipeline.MetricValue[float64]{Name: c.Name(), Value: float64(value)}
 }
 
 func (c *counterImp) Clear() {
-	AtomicStoreFloat64(&c.value, 0)
-	AtomicStoreFloat64(&c.prev, 0)
+	atomic.StoreInt64(&c.value, 0)
+	atomic.StoreInt64(&c.prev, 0)
 }
 
 func (c *counterImp) Serialize(log *protocol.Log) {
@@ -134,7 +135,7 @@ func (g *gaugeImp) Serialize(log *protocol.Log) {
 
 type averageImp struct {
 	sync.RWMutex
-	value   float64
+	value   int64
 	count   int64
 	prevAvg float64
 	Series
@@ -147,7 +148,7 @@ func NewAverage(ms pipeline.MetricSet, index *[]string) pipeline.Counter {
 	return a
 }
 
-func (a *averageImp) Add(f float64) error {
+func (a *averageImp) Add(f int64) error {
 	a.Lock()
 	defer a.Unlock()
 	a.value += f
@@ -161,7 +162,7 @@ func (a *averageImp) Get() pipeline.MetricValue[float64] {
 	if a.count == 0 {
 		return pipeline.MetricValue[float64]{Name: a.Name(), Value: a.prevAvg}
 	}
-	avg := a.value / float64(a.count)
+	avg := float64(a.value) / float64(a.count)
 	a.prevAvg, a.value, a.count = avg, 0, 0
 	return pipeline.MetricValue[float64]{Name: a.Name(), Value: avg}
 }
@@ -284,7 +285,7 @@ func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr s
 		&protocol.Log_Content{Key: SelfMetricNameKey, Value: s.Name()})
 
 	for _, v := range s.ConstLabels() {
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Name, Value: v.Value})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Key, Value: v.Value})
 	}
 
 	labelNames := s.LabelNames()
@@ -300,7 +301,7 @@ type errorMetricBase struct {
 	err error
 }
 
-func (e *errorMetricBase) Add(f float64) error {
+func (e *errorMetricBase) Add(f int64) error {
 	return e.err
 }
 
