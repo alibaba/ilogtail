@@ -2,7 +2,7 @@ package trigger
 
 import "os"
 
-const commandTemplate = "go test -v -run ^%s$ github.com/alibaba/ilogtail/test/testhub/trigger"
+const commandTemplate = "/usr/local/go/bin/go test -v -run ^%s$ github.com/alibaba/ilogtail/test/testhub/trigger"
 
 func getEnvOrDefault(env, fallback string) string {
 	if value, ok := os.LookupEnv(env); ok {

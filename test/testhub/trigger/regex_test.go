@@ -7,12 +7,11 @@ import (
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/alibaba/ilogtail/test/config"
 )
 
 // TestGenerateRegexLogSingle will be executed in the environment being collected.
 func TestGenerateRegexLogSingle(t *testing.T) {
+	gneratedLogPath := getEnvOrDefault("GENERATED_LOG_PATH", "/tmp/ilogtail")
 	totalLog, err := strconv.Atoi(getEnvOrDefault("TOTAL_LOG", "100"))
 	if err != nil {
 		panic(err)
@@ -29,7 +28,7 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 		`- file2:3 10.45.26.0 - [2024-01-07T12:40:12.359314] "PUT /index.html HTTP/1.1" 200 913 "curl/7.10" "这是一条消息"`,
 		`- file2:4 192.168.0.3 - [2024-01-07T12:40:13.002661] "PUT /dir/resource.txt HTTP/2.0" 501 355 "go-sdk" "这是一条消息，password:123456"`,
 	}
-	file, err := os.OpenFile(fmt.Sprintf("%s/%s.log", config.TestConfig.GeneratedLogPath, fileName), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(fmt.Sprintf("%s/%s", gneratedLogPath, fileName), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +43,7 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 		}
 		time.Sleep(time.Duration(interval))
 		logIndex++
-		if logIndex > len(testLogConent) {
+		if logIndex >= len(testLogConent) {
 			logIndex = 0
 		}
 	}

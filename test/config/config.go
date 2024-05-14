@@ -23,6 +23,7 @@ type Config struct {
 	SSHUsername       string `mapstructure:"ssh_username" yaml:"ssh_username"`
 	SSHIP             string `mapstructure:"ssh_ip" yaml:"ssh_ip"`
 	SSHPrivateKeyPath string `mapstructure:"ssh_private_key_path" yaml:"ssh_private_key_path"`
+	WorkDir           string `mapstructure:"work_dir" yaml:"work_dir"`
 	// SLS
 	Project         string `mapstructure:"project" yaml:"project"`
 	Logstore        string `mapstructure:"logstore" yaml:"logstore"`
