@@ -35,7 +35,7 @@ struct UntypedSingleValue {
 #endif
 };
 
-using MetricValue = std::variant<UntypedSingleValue>;
+using MetricValue = std::variant<std::monostate, UntypedSingleValue>;
 
 #ifdef APSARA_UNIT_TEST_MAIN
 Json::Value MetricValueToJson(const MetricValue& value);

@@ -16,6 +16,8 @@
 
 #include "models/MetricValue.h"
 
+using namespace std;
+
 namespace logtail {
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -35,7 +37,7 @@ Json::Value MetricValueToJson(const MetricValue& value) {
             if constexpr (std::is_same_v<T, UntypedSingleValue>) {
                 res["type"] = "untyped_single_value";
                 res["detail"] = std::get<UntypedSingleValue>(value).ToJson();
-            } else {
+            } else if constexpr (std::is_same_v<T, std::monostate>){
                 res["type"] = "unknown";
             }
         },
