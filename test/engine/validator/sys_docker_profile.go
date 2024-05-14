@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/test/engine/helper"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"

@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/test/engine/helper"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"

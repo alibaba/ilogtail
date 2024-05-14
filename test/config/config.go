@@ -14,6 +14,25 @@
 
 package config
 
+var TestConfig Config
+
+type Config struct {
+	// Log
+	GeneratedLogPath string `mapstructure:"generated_log_path" yaml:"generated_log_path"`
+	// SSH
+	SSHUsername       string `mapstructure:"ssh_username" yaml:"ssh_username"`
+	SSHIP             string `mapstructure:"ssh_ip" yaml:"ssh_ip"`
+	SSHPrivateKeyPath string `mapstructure:"ssh_private_key_path" yaml:"ssh_private_key_path"`
+	// SLS
+	Project         string `mapstructure:"project" yaml:"project"`
+	Logstore        string `mapstructure:"logstore" yaml:"logstore"`
+	AccessKeyId     string `mapstructure:"access_key_id" yaml:"access_key_id"`
+	AccessKeySecret string `mapstructure:"access_key_secret" yaml:"access_key_secret"`
+	Endpoint        string `mapstructure:"endpoint" yaml:"endpoint"`
+}
+
+// The following is for plugin tests.
+
 // Case declares a procedure for testing a case.
 type Case struct {
 	Boot             Boot       `mapstructure:"boot" yaml:"boot"`

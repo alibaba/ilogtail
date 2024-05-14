@@ -1,0 +1,24 @@
+flushers:
+    - Convert:
+        TagFieldsRename:
+            loki_name: name
+      DynamicLabels:
+        - tag.loki_name
+      MaxBackoff: 1000000000000
+      MaxMessageBytes: 1024
+      MaxMessageWait: 100000000
+      MaxRetries: 10
+      MinBackoff: 100000000000
+      StaticLabels:
+        source: ilogtail
+      TenantID: ilogtail
+      Timeout: 1000000000000
+      Type: flusher_loki
+      URL: http://loki:3100/loki/api/v1/push
+inputs:
+    - Fields:
+        value: log contents
+      IntervalMs: 100
+      Tags:
+        __tag__:name: hello
+      Type: metric_mock

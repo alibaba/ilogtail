@@ -1,0 +1,21 @@
+{
+	"pass": true,
+	"row_log_count": 0,
+	"processed_log_count": 0,
+	"flush_log_count": 0,
+	"flush_log_group": 0,
+	"alarm_logs": {},
+	"log_reports": {
+		"log_content_kv_regex": {
+			"pass": true,
+			"fail_reasons": {}
+		}
+	},
+	"tag_reports": {},
+	"total_reports": {
+		"sys_counter": {
+			"pass": true,
+			"fail_reasons": {}
+		}
+	}
+}
