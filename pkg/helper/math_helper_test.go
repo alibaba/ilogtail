@@ -15,6 +15,7 @@
 package helper
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,4 +36,59 @@ func Test_Max(t *testing.T) {
 
 	assert.Equal(t, float32(20.1), Max(float32(10.1), float32(20.1)))
 	assert.Equal(t, float64(20.1), Max(float64(10.1), float64(20.1)))
+}
+
+func TestAtomicAddFloat64(t *testing.T) {
+	var num float64
+	var wg sync.WaitGroup
+	wg.Add(100)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			AtomicAddFloat64(&num, 1.0)
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+
+	if num != 100.0 {
+		t.Errorf("Expected num to be 100.0, got %f", num)
+	}
+}
+
+func TestAtomicLoadFloat64(t *testing.T) {
+	var num float64 = 42.0
+	result := AtomicLoadFloat64(&num)
+
+	if result != 42.0 {
+		t.Errorf("Expected result to be 42.0, got %f", result)
+	}
+}
+
+func TestAtomicStoreFloat64(t *testing.T) {
+	var num float64
+	AtomicStoreFloat64(&num, 10.5)
+
+	if num != 10.5 {
+		t.Errorf("Expected num to be 10.5, got %f", num)
+	}
+}
+
+func TestAtomicFloatFunctions(t *testing.T) {
+	var num float64
+	AtomicStoreFloat64(&num, 5.5)
+	if num != 5.5 {
+		t.Errorf("Expected num to be 5.5, got %f", num)
+	}
+
+	AtomicAddFloat64(&num, 2.5)
+	if num != 8.0 {
+		t.Errorf("Expected num to be 8.0, got %f", num)
+	}
+
+	result := AtomicLoadFloat64(&num)
+	if result != 8.0 {
+		t.Errorf("Expected result to be 8.0, got %f", result)
+	}
 }
