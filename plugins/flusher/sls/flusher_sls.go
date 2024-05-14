@@ -33,7 +33,7 @@ type SlsFlusher struct { // nolint:revive
 	KeepShardHash   bool
 
 	context    pipeline.Context
-	lenCounter pipeline.CounterMetric
+	lenCounter pipeline.Counter
 }
 
 // Init ...

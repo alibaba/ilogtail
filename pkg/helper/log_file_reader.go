@@ -36,15 +36,15 @@ type ReaderMetricTracker struct {
 	ProcessLatency     pipeline.Latency
 }
 
-func NewReaderMetricTracker() *ReaderMetricTracker {
+func NewReaderMetricTracker(mr *pipeline.MetricsRecord) *ReaderMetricTracker {
 	return &ReaderMetricTracker{
-		OpenCounter:        NewCounterMetric("open_count"),
-		CloseCounter:       NewCounterMetric("close_count"),
-		FileSizeCounter:    NewCounterMetric("file_size"),
-		FileRotatorCounter: NewCounterMetric("file_rotate"),
-		ReadCounter:        NewCounterMetric("read_count"),
-		ReadSizeCounter:    NewCounterMetric("read_size"),
-		ProcessLatency:     NewLatencyMetric("log_process_latency"),
+		OpenCounter:        NewCounterMetricAndRegister(mr, "open_count"),
+		CloseCounter:       NewCounterMetricAndRegister(mr, "close_count"),
+		FileSizeCounter:    NewCounterMetricAndRegister(mr, "file_size"),
+		FileRotatorCounter: NewCounterMetricAndRegister(mr, "file_rotate"),
+		ReadCounter:        NewCounterMetricAndRegister(mr, "read_count"),
+		ReadSizeCounter:    NewCounterMetricAndRegister(mr, "read_size"),
+		ProcessLatency:     NewLatencyMetricAndRegister(mr, "log_process_latency"),
 	}
 }
 

@@ -38,9 +38,9 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 
 type EmptyContext struct {
 	MetricsRecords []*pipeline.MetricsRecord
-	// StringMetrics  map[string]pipeline.StringMetric
-	// CounterMetrics map[string]pipeline.CounterMetric
-	// LatencyMetrics map[string]pipeline.LatencyMetric
+	// StringMetrics  map[string]pipeline.StrMetric
+	// CounterMetrics map[string]pipeline.Counter
+	// LatencyMetrics map[string]pipeline.Latency
 
 	common      *pkg.LogtailContextMeta
 	ctx         context.Context
@@ -72,29 +72,29 @@ func (p *EmptyContext) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
 }
 
-// func (p *EmptyContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
+// func (p *EmptyContext) RegisterCounterMetric(metric pipeline.Counter) {
 // 	contextMutex.Lock()
 // 	defer contextMutex.Unlock()
 // 	if p.CounterMetrics == nil {
-// 		p.CounterMetrics = make(map[string]pipeline.CounterMetric)
+// 		p.CounterMetrics = make(map[string]pipeline.Counter)
 // 	}
 // 	p.CounterMetrics[metric.Name()] = metric
 // }
 
-// func (p *EmptyContext) RegisterStringMetric(metric pipeline.StringMetric) {
+// func (p *EmptyContext) RegisterStringMetric(metric pipeline.StrMetric) {
 // 	contextMutex.Lock()
 // 	defer contextMutex.Unlock()
 // 	if p.StringMetrics == nil {
-// 		p.StringMetrics = make(map[string]pipeline.StringMetric)
+// 		p.StringMetrics = make(map[string]pipeline.StrMetric)
 // 	}
 // 	p.StringMetrics[metric.Name()] = metric
 // }
 
-// func (p *EmptyContext) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
+// func (p *EmptyContext) RegisterLatencyMetric(metric pipeline.Latency) {
 // 	contextMutex.Lock()
 // 	defer contextMutex.Unlock()
 // 	if p.LatencyMetrics == nil {
-// 		p.LatencyMetrics = make(map[string]pipeline.LatencyMetric)
+// 		p.LatencyMetrics = make(map[string]pipeline.Latency)
 // 	}
 // 	p.LatencyMetrics[metric.Name()] = metric
 // }

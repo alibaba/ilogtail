@@ -29,9 +29,9 @@ import (
 type LocalContext struct {
 	MetricsRecords []*pipeline.MetricsRecord
 
-	//StringMetrics  map[string]pipeline.StringMetric
-	//CounterMetrics map[string]pipeline.CounterMetric
-	//LatencyMetrics map[string]pipeline.LatencyMetric
+	//StringMetrics  map[string]pipeline.StrMetric
+	//CounterMetrics map[string]pipeline.Counter
+	//LatencyMetrics map[string]pipeline.Latency
 	AllCheckPoint map[string][]byte
 
 	ctx         context.Context
@@ -74,31 +74,31 @@ func (p *LocalContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 }
 
 // // Deprecated:
-// func (p *LocalContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
+// func (p *LocalContext) RegisterCounterMetric(metric pipeline.Counter) {
 // 	contextMutex.Lock()
 // 	defer contextMutex.Unlock()
 // 	if p.CounterMetrics == nil {
-// 		p.CounterMetrics = make(map[string]pipeline.CounterMetric)
+// 		p.CounterMetrics = make(map[string]pipeline.Counter)
 // 	}
 // 	p.CounterMetrics[metric.Name()] = metric
 // }
 
 // // Deprecated:
-// func (p *LocalContext) RegisterStringMetric(metric pipeline.StringMetric) {
+// func (p *LocalContext) RegisterStringMetric(metric pipeline.StrMetric) {
 // 	contextMutex.Lock()
 // 	defer contextMutex.Unlock()
 // 	if p.StringMetrics == nil {
-// 		p.StringMetrics = make(map[string]pipeline.StringMetric)
+// 		p.StringMetrics = make(map[string]pipeline.StrMetric)
 // 	}
 // 	p.StringMetrics[metric.Name()] = metric
 // }
 
 // // Deprecated:
-// func (p *LocalContext) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
+// func (p *LocalContext) RegisterLatencyMetric(metric pipeline.Latency) {
 // 	contextMutex.Lock()
 // 	defer contextMutex.Unlock()
 // 	if p.LatencyMetrics == nil {
-// 		p.LatencyMetrics = make(map[string]pipeline.LatencyMetric)
+// 		p.LatencyMetrics = make(map[string]pipeline.Latency)
 // 	}
 // 	p.LatencyMetrics[metric.Name()] = metric
 // }

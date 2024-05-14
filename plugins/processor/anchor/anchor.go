@@ -67,7 +67,7 @@ type ProcessorAnchor struct {
 	KeepSource    bool
 
 	context       pipeline.Context
-	logPairMetric pipeline.CounterMetric
+	logPairMetric pipeline.Counter
 }
 
 // Init called for init some system resources, like socket, mutex...
@@ -92,8 +92,9 @@ func (p *ProcessorAnchor) Init(context pipeline.Context) error {
 			p.Anchors[i].innerType = StringType
 		}
 	}
-	p.logPairMetric = helper.NewAverageMetric("anchor_pairs_per_log")
-	p.context.RegisterCounterMetric(p.logPairMetric)
+
+	metricsRecord := p.context.GetMetricRecord()
+	p.logPairMetric = helper.NewAverageMetricAndRegister(metricsRecord, "anchor_pairs_per_log")
 	return nil
 }
 
