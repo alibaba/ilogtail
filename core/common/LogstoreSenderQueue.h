@@ -708,8 +708,8 @@ public:
 
 protected:
     LogstoreFeedBackQueueMap mLogstoreSenderQueueMap;
-    PTMutex mLock;
-    TriggerEvent mTrigger;
+    mutable PTMutex mLock;
+    mutable TriggerEvent mTrigger;
     FeedbackInterface* mFeedBackObj;
     bool mUrgentFlag;
     size_t mSenderQueueBeginIndex;
