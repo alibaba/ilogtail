@@ -182,7 +182,7 @@ func (v *metricVector) WithLabels(labels []pipeline.Label) pipeline.Metric {
 		return metric
 	}
 
-	newMetric := NewMetric(v.metricType, v, index)
+	newMetric := NewMetric(v.metricType, v, *index)
 	acV, loaded = v.collector.LoadOrStore(k, newMetric)
 	if !loaded {
 		atomic.AddInt64(&v.seriesCount, 1)

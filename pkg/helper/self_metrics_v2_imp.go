@@ -35,7 +35,7 @@ var (
 	_ pipeline.StrMetric = (*errorStrMetric)(nil)
 )
 
-func NewMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index *[]string) pipeline.Metric {
+func NewMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
 	switch metricType {
 	case pipeline.CounterType:
 		return NewCounter(metricSet, index)
@@ -75,7 +75,7 @@ type counterImp struct {
 	Series
 }
 
-func NewCounter(ms pipeline.MetricSet, index *[]string) pipeline.Counter {
+func NewCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
 	c := &counterImp{
 		Series: newSeries(ms, index),
 	}
@@ -108,7 +108,7 @@ type gaugeImp struct {
 	Series
 }
 
-func NewGauge(ms pipeline.MetricSet, index *[]string) pipeline.Gauge {
+func NewGauge(ms pipeline.MetricSet, index []string) pipeline.Gauge {
 	g := &gaugeImp{
 		Series: newSeries(ms, index),
 	}
@@ -141,7 +141,7 @@ type averageImp struct {
 	Series
 }
 
-func NewAverage(ms pipeline.MetricSet, index *[]string) pipeline.Counter {
+func NewAverage(ms pipeline.MetricSet, index []string) pipeline.Counter {
 	a := &averageImp{
 		Series: newSeries(ms, index),
 	}
@@ -187,7 +187,7 @@ type latencyImp struct {
 	Series
 }
 
-func NewLatency(ms pipeline.MetricSet, index *[]string) pipeline.Latency {
+func NewLatency(ms pipeline.MetricSet, index []string) pipeline.Latency {
 	l := &latencyImp{
 		Series: newSeries(ms, index),
 	}
@@ -230,7 +230,7 @@ type strMetricImp struct {
 	Series
 }
 
-func NewString(ms pipeline.MetricSet, index *[]string) pipeline.StrMetric {
+func NewString(ms pipeline.MetricSet, index []string) pipeline.StrMetric {
 	s := &strMetricImp{
 		Series: newSeries(ms, index),
 	}
@@ -266,11 +266,11 @@ type Series struct {
 	index []string
 }
 
-func newSeries(ms pipeline.MetricSet, index *[]string) Series {
+func newSeries(ms pipeline.MetricSet, index []string) Series {
 	var indexToStore []string
 	if index != nil {
-		indexToStore = make([]string, len(*index))
-		copy(indexToStore, *index)
+		indexToStore = make([]string, len(index))
+		copy(indexToStore, index)
 	}
 
 	return Series{
