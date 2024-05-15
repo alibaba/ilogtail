@@ -34,12 +34,10 @@ type MetricsRecord struct {
 	MetricCollectors []MetricCollector
 }
 
-func (m *MetricsRecord) NewMetricProtocol() *protocol.Log {
-	log := &protocol.Log{}
-	for _, v := range m.Labels {
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Key, Value: v.Value})
+func (m *MetricsRecord) AppendLabels(log *protocol.Log) {
+	for _, label := range m.Labels {
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: label.Key, Value: label.Value})
 	}
-	return log
 }
 
 func (m *MetricsRecord) RegisterMetricVector(collecter MetricCollector) {

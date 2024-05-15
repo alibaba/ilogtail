@@ -93,10 +93,11 @@ func (p *LocalContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	for _, metricsRecord := range p.MetricsRecords {
 		metrics := metricsRecord.Collect()
 		for _, metric := range metrics {
-			metricsRecord := metricsRecord.NewMetricProtocol()
-			metric.Serialize(metricsRecord)
+			log := &protocol.Log{}
+			metric.Serialize(log)
+			metricsRecord.AppendLabels(log)
 			metric.Clear()
-			logGroup.Logs = append(logGroup.Logs, metricsRecord)
+			logGroup.Logs = append(logGroup.Logs, log)
 		}
 	}
 }
