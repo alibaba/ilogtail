@@ -112,6 +112,10 @@ func (m *MetricVectorImpl[T]) WithLabels(labels ...pipeline.Label) T {
 	return m.MetricMap.WithLabels(labels).(T)
 }
 
+type MetricCache interface {
+	WithLabelValues([]string) pipeline.Metric
+}
+
 var (
 	_ pipeline.MetricCollector = (*metricVector)(nil)
 )
