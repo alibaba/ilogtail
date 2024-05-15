@@ -33,16 +33,17 @@ type MetricValue[T string | float64] struct {
 // MetricSet is a Collector to bundle metrics of the same name that differ in  their label values.
 // A MetricSet has three properties:
 // 1. Metric Name.
-// 2. Constant Labels: for metrics that will always be present in the same value.
-// 3. Label Names: for metrics that may have different label values, but will always have these labels present.
+// 2. Constant Labels: Labels has constant value, e.g., "hostname=localhost", "namespace=default"
+// 3. Label Keys is label Keys that may have different values, e.g., "status_code=200", "status_code=404".
 type MetricSet interface {
 	Name() string
 	ConstLabels() []Label
-	LabelNames() []string
+	LabelKeys() []string
 }
 
 // MetricVector is a Collector to bundle metrics of the same name that differ in  their label values.
 // WithLabels will return a unique Metric that is bound to a set of label values.
+// If the labels has label names that are not in the MetricSet, the Metric will be invalid.
 type MetricVector interface {
 	WithLabels([]Label) Metric
 }
@@ -59,7 +60,7 @@ type Metric interface {
 
 type Counter interface {
 	Metric
-	Add(int64) error
+	Add(int64) error // return error when WithLabels returns an invalid metric.
 	Get() MetricValue[float64]
 }
 
@@ -69,24 +70,24 @@ type Average interface {
 
 type Gauge interface {
 	Metric
-	Set(float64) error
+	Set(float64) error // return error when WithLabels returns an invalid metric instance.
 	Get() MetricValue[float64]
 }
 
 type Latency interface {
 	Metric
-	Observe(float64) error
+	Observe(float64) error // return error when WithLabels returns an invalid metric instance.
 	Get() MetricValue[float64]
 }
 
 type Summary interface {
 	Metric
-	Observe(float64) error
+	Observe(float64) error // return error when WithLabels returns an invalid metric intance.
 	Get() []MetricValue[float64]
 }
 
 type StrMetric interface {
 	Metric
-	Set(v string) error
+	Set(v string) error // return error when WithLabels returns an invalid metric instance.
 	Get() MetricValue[string]
 }

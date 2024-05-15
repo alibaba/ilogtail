@@ -288,7 +288,7 @@ func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr s
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Key, Value: v.Value})
 	}
 
-	labelNames := s.LabelNames()
+	labelNames := s.LabelKeys()
 	for i, v := range s.index {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: labelNames[i], Value: v})
 	}

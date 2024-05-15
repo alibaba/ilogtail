@@ -18,12 +18,13 @@ import (
 	"sync"
 )
 
-// GenericPool 是一个泛型结构体，它包含了sync.Pool，它的类型通过类型参数T指定。
+// GenericPool is a pool for *[]T
 type GenericPool[T any] struct {
 	sync.Pool
 }
 
-// NewGenericPool 创建一个新的 GenericPool 实例，使用构造函数fn来初始化对象。
+// NewGenericPool returns a GenericPool.
+// It accepts a function that returns a new []T. e.g., func() []byte {return make([]byte, 0, 128)}
 func NewGenericPool[T any](fn func() []T) GenericPool[T] {
 	return GenericPool[T]{
 		sync.Pool{
@@ -35,14 +36,12 @@ func NewGenericPool[T any](fn func() []T) GenericPool[T] {
 	}
 }
 
-// Get 从池中检索一个类型为 *T 的对象。
 func (p *GenericPool[T]) Get() *[]T {
 	res := p.Pool.Get().(*[]T)
 	*res = (*res)[:0]
 	return res
 }
 
-// Put 将一个类型为 *T 的对象放回池中。
 func (p *GenericPool[T]) Put(t *[]T) {
 	if t != nil {
 		p.Pool.Put(t)

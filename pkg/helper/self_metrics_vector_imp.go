@@ -47,31 +47,31 @@ var (
 	}
 )
 
-func NewAndRegisterCounterMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
+func NewCounterMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
 	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
 	mr.RegisterMetricVector(v)
 	return v
 }
 
-func NewAndRegisterAverageMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
+func NewAverageMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
 	v := NewMetricVector[pipeline.Average](metricName, pipeline.AverageType, constLabels, labelNames)
 	mr.RegisterMetricVector(v)
 	return v
 }
 
-func NewAndRegisterGaugeMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
+func NewGaugeMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
 	v := NewMetricVector[pipeline.Gauge](metricName, pipeline.GaugeType, constLabels, labelNames)
 	mr.RegisterMetricVector(v)
 	return v
 }
 
-func NewAndRegisterLatencyMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
+func NewLatencyMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
 	v := NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
 	mr.RegisterMetricVector(v)
 	return v
 }
 
-func NewAndRegisterStringMetricVector(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
+func NewStringMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
 	v := NewMetricVector[pipeline.StrMetric](metricName, pipeline.StringType, constLabels, labelNames)
 	mr.RegisterMetricVector(v)
 	return v
@@ -120,7 +120,7 @@ type metricVector struct {
 	name        string // metric name
 	metricType  pipeline.SelfMetricType
 	constLabels []pipeline.Label // constLabels is the labels that are not changed when the metric is created.
-	labelNames  []string         // labelNames is the names of the labels. The values of the labels can be changed.
+	labelKeys   []string         // labelNames is the names of the labels. The values of the labels can be changed.
 
 	indexPool   GenericPool[string] // index is []string, which is sorted according to labelNames.
 	bytesPool   GenericPool[byte]   // bytesPool is the bytes pool for the index.
@@ -137,7 +137,7 @@ func newMetricVector(
 	mv := &metricVector{
 		name:       metricName,
 		metricType: metricType,
-		labelNames: labelNames,
+		labelKeys:  labelNames,
 		indexPool:  NewGenericPool(func() []string { return make([]string, 0, 10) }),
 		bytesPool:  NewGenericPool(func() []byte { return make([]byte, 0, 128) }),
 	}
@@ -156,8 +156,8 @@ func (v *metricVector) ConstLabels() []pipeline.Label {
 	return v.constLabels
 }
 
-func (v *metricVector) LabelNames() []string {
-	return v.labelNames
+func (v *metricVector) LabelKeys() []string {
+	return v.labelKeys
 }
 
 func (v *metricVector) WithLabels(labels []pipeline.Label) pipeline.Metric {
@@ -203,18 +203,18 @@ func (v *metricVector) Collect() []pipeline.Metric {
 
 // buildIndex return the index
 func (v *metricVector) buildIndex(labels []pipeline.Label) (*[]string, error) {
-	if len(labels) > len(v.labelNames) {
+	if len(labels) > len(v.labelKeys) {
 		return nil, fmt.Errorf("too many labels, expected %d, got %d. defined labels: %v",
-			len(v.labelNames), len(labels), v.labelNames)
+			len(v.labelKeys), len(labels), v.labelKeys)
 	}
 
 	index := v.indexPool.Get()
-	for range v.labelNames {
+	for range v.labelKeys {
 		*index = append(*index, defaultTagValue)
 	}
 
 	for d, tag := range labels {
-		if v.labelNames[d] == tag.Key { // fast path
+		if v.labelKeys[d] == tag.Key { // fast path
 			(*index)[d] = tag.Value
 		} else {
 			err := v.slowConstructIndex(index, tag)
@@ -229,11 +229,11 @@ func (v *metricVector) buildIndex(labels []pipeline.Label) (*[]string, error) {
 }
 
 func (v *metricVector) slowConstructIndex(index *[]string, tag pipeline.Label) error {
-	for i, tagName := range v.labelNames {
+	for i, tagName := range v.labelKeys {
 		if tagName == tag.Key {
 			(*index)[i] = tag.Value
 			return nil
 		}
 	}
-	return fmt.Errorf("undefined label: %s in %v", tag.Key, v.labelNames)
+	return fmt.Errorf("undefined label: %s in %v", tag.Key, v.labelKeys)
 }
