@@ -54,7 +54,6 @@ MetricValue JsonToMetricValue(const std::string& type, const Json::Value& detail
         return MetricValue();
     }
 }
-
 #endif
 
 } // namespace logtail
