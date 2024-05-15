@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <string>
 #include <map>
+#include <string>
 
 #include "common/memory/SourceBuffer.h"
 #include "models/MetricValue.h"
