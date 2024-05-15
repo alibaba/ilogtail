@@ -17,9 +17,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_MetricVectorWithEmptyLabel(t *testing.T) {
@@ -85,7 +86,7 @@ func Test_CounterMetricVectorWithDynamicLabel(t *testing.T) {
 
 	seriesCount := 500
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Add(int64(i))
+		err = v.WithLabels(pipeline.Label{Key: "label1", Value: fmt.Sprintf("value_%d", i)}).Add(int64(i))
 		assert.NoError(t, err)
 	}
 
@@ -139,7 +140,7 @@ func Test_AverageMetricVectorWithDynamicLabel(t *testing.T) {
 
 	seriesCount := 500
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Add(int64(i))
+		err = v.WithLabels(pipeline.Label{Key: "label1", Value: fmt.Sprintf("value_%d", i)}).Add(int64(i))
 		assert.NoError(t, err)
 	}
 
@@ -196,7 +197,7 @@ func Test_LatencyMetricVectorWithDynamicLabel(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Observe(float64(i * 1000))
+		err = v.WithLabels(pipeline.Label{Key: "label1", Value: fmt.Sprintf("value_%d", i)}).Observe(float64(i * 1000))
 		assert.NoError(t, err)
 	}
 
@@ -253,7 +254,7 @@ func Test_GaugeMetricVectorWithDynamicLabel(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Set(float64(i))
+		err = v.WithLabels(pipeline.Label{Key: "label1", Value: fmt.Sprintf("value_%d", i)}).Set(float64(i))
 		assert.NoError(t, err)
 	}
 
@@ -310,7 +311,7 @@ func Test_StrMetricVectorWithDynamicLabel(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 0; i < seriesCount; i++ {
-		err = v.WithLabels(pipeline.Label{"label1", fmt.Sprintf("value_%d", i)}).Set(strconv.Itoa(i))
+		err = v.WithLabels(pipeline.Label{Key: "label1", Value: fmt.Sprintf("value_%d", i)}).Set(strconv.Itoa(i))
 		assert.NoError(t, err)
 	}
 

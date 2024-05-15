@@ -125,7 +125,7 @@ func (p *ProcessorAnchor) ProcessLog(log *protocol.Log) {
 	if !findKey && p.NoKeyError {
 		logger.Warning(p.context.GetRuntimeContext(), "ANCHOR_FIND_ALARM", "anchor cannot find key", p.SourceKey)
 	}
-	p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
+	_ = p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
 }
 
 type ExpondParam struct {

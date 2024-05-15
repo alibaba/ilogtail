@@ -322,7 +322,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 			logger.Info(sds.context.GetRuntimeContext(), "docker stdout", "deleted", "id", helper.GetShortID(id), "name", syner.info.ContainerInfo.Name)
 			syner.dockerFileReader.Stop()
 			delete(sds.synerMap, id)
-			sds.deleteMetric.Add(1)
+			_ = sds.deleteMetric.Add(1)
 		}
 	}
 

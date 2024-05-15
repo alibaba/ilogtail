@@ -115,8 +115,8 @@ func (p *ProcessorEncrypt) processLog(log *protocol.Log) {
 			continue
 		}
 
-		p.encryptedCountMetric.Add(1)
-		p.encryptedBytesMetric.Add(int64(len(cont.Value)))
+		_ = p.encryptedCountMetric.Add(1)
+		_ = p.encryptedBytesMetric.Add(int64(len(cont.Value)))
 		ciphertext, err := p.encrypt(cont.Value)
 		if err == nil {
 			cont.Value = hex.EncodeToString(ciphertext)

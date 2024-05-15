@@ -276,7 +276,7 @@ func (m *Mysql) Start(collector pipeline.Collector) error {
 			if err != nil {
 				logger.Error(m.context.GetRuntimeContext(), "MYSQL_QUERY_ALARM", "sql query error", err)
 			}
-			m.collectLatency.Observe(float64(time.Since(startTime)))
+			_ = m.collectLatency.Observe(float64(time.Since(startTime)))
 			endTime := time.Now()
 			if endTime.Sub(startTime) > time.Duration(m.IntervalMs)*time.Millisecond/2 {
 				logger.Warning(m.context.GetRuntimeContext(), "MYSQL_TIMEOUT_ALARM", "sql collect cost very long time, start", startTime, "end", endTime, "intervalMs", m.IntervalMs)
@@ -338,7 +338,7 @@ func (m *Mysql) Collect(collector pipeline.Collector) error {
 		if !m.CheckPointSavePerPage && totalRowCount > 0 {
 			m.SaveCheckPoint(collector)
 		}
-		m.collectTotal.Add(int64(totalRowCount))
+		_ = m.collectTotal.Add(int64(totalRowCount))
 	} else {
 		rows, err := m.dbStatment.Query(params...)
 		if err != nil {
@@ -349,7 +349,7 @@ func (m *Mysql) Collect(collector pipeline.Collector) error {
 			logger.Debug(m.context.GetRuntimeContext(), "syn sql success, data count", rowCount)
 			m.SaveCheckPoint(collector)
 		}
-		m.collectTotal.Add(int64(rowCount))
+		_ = m.collectTotal.Add(int64(rowCount))
 	}
 
 	return nil
@@ -364,7 +364,7 @@ func (m *Mysql) SaveCheckPoint(collector pipeline.Collector) {
 	}
 	err = m.context.SaveCheckPoint(m.CheckPointColumn, buf)
 	if m.checkpointMetric != nil {
-		m.checkpointMetric.Set(m.CheckPointColumn)
+		_ = m.checkpointMetric.Set(m.CheckPointColumn)
 	}
 	if err != nil {
 		logger.Warning(m.context.GetRuntimeContext(), "MYSQL_CHECKPOINT_ALARM", "save checkpoint dump error, checkpoint", cp, "error", err)

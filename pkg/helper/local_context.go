@@ -101,14 +101,6 @@ func (p *LocalContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	}
 }
 
-func newMetricProtocol(mr *pipeline.MetricsRecord) *protocol.Log {
-	log := &protocol.Log{}
-	for _, v := range mr.Labels {
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Key, Value: v.Value})
-	}
-	return log
-}
-
 func (p *LocalContext) SaveCheckPoint(key string, value []byte) error {
 	logger.Debug(p.ctx, "save checkpoint, key", key, "value", string(value))
 	p.AllCheckPoint[key] = value

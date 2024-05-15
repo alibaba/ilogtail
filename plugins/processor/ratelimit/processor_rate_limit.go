@@ -67,9 +67,9 @@ func (p *ProcessorRateLimit) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 			}
 			nextIdx++
 		} else {
-			p.limitMetric.Add(1)
+			_ = p.limitMetric.Add(1)
 		}
-		p.processedMetric.Add(1)
+		_ = p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

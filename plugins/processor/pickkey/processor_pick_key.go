@@ -109,7 +109,7 @@ func (p *ProcessorPickKey) ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 			}
 			nextIdx++
 		}
-		p.processedMetric.Add(1)
+		_ = p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

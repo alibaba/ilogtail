@@ -82,7 +82,7 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 			return fmt.Errorf("loggroup marshal err %v", err)
 		}
 		bufLen := len(buf)
-		p.lenCounter.Add(int64(bufLen))
+		_ = p.lenCounter.Add(int64(bufLen))
 
 		var rst int
 		// TODO: why use logGroup.Category which is usually empty, why not use logstoreName

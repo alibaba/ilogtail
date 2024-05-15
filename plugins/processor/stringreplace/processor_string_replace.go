@@ -122,7 +122,7 @@ func (p *ProcessorStringReplace) ProcessLogs(logArray []*protocol.Log) []*protoc
 			replaceCount++
 		}
 	}
-	p.logPairMetric.Add(int64(replaceCount))
+	_ = p.logPairMetric.Add(int64(replaceCount))
 	return logArray
 }
 

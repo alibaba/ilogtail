@@ -58,7 +58,7 @@ func TestAtomicAddFloat64(t *testing.T) {
 }
 
 func TestAtomicLoadFloat64(t *testing.T) {
-	var num float64 = 42.0
+	var num = 42.0
 	result := AtomicLoadFloat64(&num)
 
 	if result != 42.0 {

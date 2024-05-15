@@ -198,7 +198,7 @@ func (m *Rdb) Start(collector pipeline.Collector, connStr string, rdbFunc RdbFun
 			if err != nil {
 				logger.Error(m.Context.GetRuntimeContext(), queryAlarmName, "collect err", err)
 			}
-			m.collectLatency.Observe(float64(time.Since(startTime)))
+			_ = m.collectLatency.Observe(float64(time.Since(startTime)))
 			endTime := time.Now()
 			if endTime.Sub(startTime) > time.Duration(m.IntervalMs)*time.Millisecond/2 {
 				logger.Warning(m.Context.GetRuntimeContext(), timeoutAlarmName, "sql collect cost very long time, start", startTime, "end", endTime, "intervalMs", m.IntervalMs)
@@ -261,7 +261,7 @@ func (m *Rdb) Collect(collector pipeline.Collector, columnResolverFuncMap map[st
 		if !m.CheckPointSavePerPage && totalRowCount > 0 {
 			m.SaveCheckPoint(collector)
 		}
-		m.collectTotal.Add(int64(totalRowCount))
+		_ = m.collectTotal.Add(int64(totalRowCount))
 	} else {
 		rows, err := m.dbStatment.Query(params...)
 		if err != nil {
@@ -272,7 +272,7 @@ func (m *Rdb) Collect(collector pipeline.Collector, columnResolverFuncMap map[st
 			logger.Debug(m.Context.GetRuntimeContext(), "syn sql success, data count", rowCount)
 			m.SaveCheckPoint(collector)
 		}
-		m.collectTotal.Add(int64(rowCount))
+		_ = m.collectTotal.Add(int64(rowCount))
 	}
 
 	return nil
@@ -294,7 +294,7 @@ func (m *Rdb) SaveCheckPoint(collector pipeline.Collector) {
 	}
 	err = m.Context.SaveCheckPoint(m.CheckPointColumn, buf)
 	if m.checkpointMetric != nil {
-		m.checkpointMetric.Set(m.CheckPointColumn)
+		_ = m.checkpointMetric.Set(m.CheckPointColumn)
 	}
 	if err != nil {
 		logger.Warning(m.Context.GetRuntimeContext(), checkpointAlarmName, "save checkpoint dump error, checkpoint", cp, "error", err)

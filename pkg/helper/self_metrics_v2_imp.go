@@ -208,7 +208,7 @@ func (l *latencyImp) Get() pipeline.MetricValue[float64] {
 	if l.count == 0 {
 		return pipeline.MetricValue[float64]{Name: l.Name(), Value: 0}
 	}
-	avg := float64(l.latencySum) / float64(l.count)
+	avg := l.latencySum / float64(l.count)
 	return pipeline.MetricValue[float64]{Name: l.Name(), Value: avg}
 }
 

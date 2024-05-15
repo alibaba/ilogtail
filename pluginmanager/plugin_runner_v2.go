@@ -233,7 +233,7 @@ func (p *pluginv2Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 				return
 			}
 		case group := <-pipeChan:
-			p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(group.Events)))
+			_ = p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(group.Events)))
 			pipeEvents := []*models.PipelineGroupEvents{group}
 			for _, processor := range p.ProcessorPlugins {
 				for _, in := range pipeEvents {
@@ -252,7 +252,7 @@ func (p *pluginv2Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 					if len(pipeEvent.Events) == 0 {
 						continue
 					}
-					p.LogstoreConfig.Statistics.SplitLogMetric.Add(int64(len(pipeEvent.Events)))
+					_ = p.LogstoreConfig.Statistics.SplitLogMetric.Add(int64(len(pipeEvent.Events)))
 					for tryCount := 1; true; tryCount++ {
 						err := aggregator.Record(pipeEvent, p.AggregatePipeContext)
 						if err == nil {
@@ -320,7 +320,7 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			for i := 1; i < dataSize; i++ {
 				data[i] = <-pipeChan
 			}
-			p.LogstoreConfig.Statistics.FlushLogGroupMetric.Add(int64(len(data)))
+			_ = p.LogstoreConfig.Statistics.FlushLogGroupMetric.Add(int64(len(data)))
 
 			// Add tags for each non-empty LogGroup, includes: default hostname tag,
 			// env tags and global tags in config.
@@ -328,7 +328,7 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 				if len(item.Events) == 0 {
 					continue
 				}
-				p.LogstoreConfig.Statistics.FlushLogMetric.Add(int64(len(item.Events)))
+				_ = p.LogstoreConfig.Statistics.FlushLogMetric.Add(int64(len(item.Events)))
 				item.Group.GetTags().Merge(loadAdditionalTags(p.LogstoreConfig.GlobalConfig))
 			}
 
@@ -346,10 +346,10 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 				}
 				if allReady {
 					for _, flusher := range p.FlusherPlugins {
-						p.LogstoreConfig.Statistics.FlushReadyMetric.Add(1)
+						_ = p.LogstoreConfig.Statistics.FlushReadyMetric.Add(1)
 						begin := time.Now()
 						err := flusher.Export(data, p.FlushPipeContext)
-						p.LogstoreConfig.Statistics.FlushLatencyMetric.Observe(float64(time.Since(begin)))
+						_ = p.LogstoreConfig.Statistics.FlushLatencyMetric.Observe(float64(time.Since(begin)))
 						if err != nil {
 							logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error",
 								p.LogstoreConfig.ProjectName, p.LogstoreConfig.LogstoreName, err)

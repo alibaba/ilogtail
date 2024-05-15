@@ -40,8 +40,10 @@ func Min[T constraints.IntUintFloat](x T, y T) T {
 func AtomicAddFloat64(dst *float64, n float64) {
 	for {
 		i := 0
+		/* #nosec G103 */
 		bits := atomic.LoadUint64((*uint64)(unsafe.Pointer(dst)))
 		now := math.Float64bits(math.Float64frombits(bits) + n)
+		/* #nosec G103 */
 		if atomic.CompareAndSwapUint64((*uint64)(unsafe.Pointer(dst)), bits, now) {
 			return
 		}
@@ -54,9 +56,11 @@ func AtomicAddFloat64(dst *float64, n float64) {
 }
 
 func AtomicLoadFloat64(dst *float64) float64 {
+	/* #nosec G103 */
 	return math.Float64frombits(atomic.LoadUint64((*uint64)(unsafe.Pointer(dst))))
 }
 
 func AtomicStoreFloat64(dst *float64, n float64) {
+	/* #nosec G103 */
 	atomic.StoreUint64((*uint64)(unsafe.Pointer(dst)), math.Float64bits(n))
 }

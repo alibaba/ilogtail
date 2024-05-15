@@ -171,6 +171,8 @@ func (v *metricVector) WithLabels(labels []pipeline.Label) pipeline.Metric {
 		*buffer = append(*buffer, '|')
 		*buffer = append(*buffer, tagValue...)
 	}
+
+	/* #nosec G103 */
 	k := *(*string)(unsafe.Pointer(buffer))
 	acV, loaded := v.collector.Load(k)
 	if loaded {
