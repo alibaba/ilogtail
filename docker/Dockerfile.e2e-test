@@ -1,0 +1,10 @@
+FROM golang:1.19
+
+WORKDIR /workspace
+COPY . .
+
+WORKDIR /workspace/test
+RUN go env -w GOPROXY="https://goproxy.cn,direct"
+RUN go mod download
+
+CMD ["go", "test", "-v", "-run", "^TestRegexSingleOnDaemonSet$", "github.com/alibaba/ilogtail/test/cases/log/core"]
