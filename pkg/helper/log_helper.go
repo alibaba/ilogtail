@@ -376,7 +376,7 @@ func GetMetricName(log *protocol.Log) string {
 	return ""
 }
 
-func LogContentsToMap(contents []protocol.Log_Content) map[string]string {
+func LogContentsToMap(contents []*protocol.Log_Content) map[string]string {
 	result := make(map[string]string)
 	for _, content := range contents {
 		result[content.GetKey()] = content.GetValue()
