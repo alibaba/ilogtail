@@ -45,7 +45,7 @@ private:
 
 void MetricEventUnittest::TestName() {
     mMetricEvent->SetName("test");
-    APSARA_TEST_EQUAL("test", mMetricEvent->GetName());
+    APSARA_TEST_EQUAL("test", mMetricEvent->GetName().to_string());
 }
 
 void MetricEventUnittest::TestValue() {
