@@ -352,3 +352,12 @@ func Test_StrMetricVectorWithDynamicLabel(t *testing.T) {
 		}
 	}
 }
+
+func Test_NewCounterMetricAndRegister(t *testing.T) {
+	metricsRecord := &pipeline.MetricsRecord{}
+	counter := NewCounterMetricAndRegister(metricsRecord, "test_counter")
+	err := counter.Add(1)
+	assert.NoError(t, err)
+	value := counter.Get()
+	assert.Equal(t, 1.0, value.Value)
+}

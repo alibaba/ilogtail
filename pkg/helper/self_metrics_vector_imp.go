@@ -15,7 +15,6 @@ package helper
 import (
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"unsafe"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -24,6 +23,15 @@ import (
 const (
 	defaultTagValue = "-"
 )
+
+var (
+	DefaultCacheFactory = NewMapCahce
+)
+
+// SetMetricVectorCacheFactory alllows you to set the cache factory for the metric vector, like Prometheus SDK.
+func SetMetricVectorCacheFactory(factory func(pipeline.MetricSet) MetricVectorCache) {
+	DefaultCacheFactory = factory
+}
 
 var (
 	NewCounterMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
@@ -95,11 +103,16 @@ var (
 	_ pipeline.MetricVector[pipeline.StringMetric] = (*MetricVectorImpl[pipeline.StringMetric])(nil)
 )
 
+type MetricVectorAndCollector[T pipeline.Metric] interface {
+	pipeline.MetricVector[T]
+	pipeline.MetricCollector
+}
+
 type MetricVectorImpl[T pipeline.Metric] struct {
 	*metricVector
 }
 
-func NewMetricVector[T pipeline.Metric](metricName string, metricType pipeline.SelfMetricType, constLabels map[string]string, labelNames []string) pipeline.MetricVector[T] {
+func NewMetricVector[T pipeline.Metric](metricName string, metricType pipeline.SelfMetricType, constLabels map[string]string, labelNames []string) MetricVectorAndCollector[T] {
 	return &MetricVectorImpl[T]{
 		metricVector: newMetricVector(metricName, metricType, constLabels, labelNames),
 	}
@@ -109,13 +122,14 @@ func (m *MetricVectorImpl[T]) WithLabels(labels ...pipeline.Label) T {
 	return m.metricVector.WithLabels(labels...).(T)
 }
 
-type MetricCache interface {
+// MetricVectorCache is a cache for MetricVector.
+type MetricVectorCache interface {
+	// return a metric with the given label values.
+	// Note that the label values are sorted according to the label keys in MetricSet.
 	WithLabelValues([]string) pipeline.Metric
-}
 
-var (
-	_ pipeline.MetricCollector = (*metricVector)(nil)
-)
+	pipeline.MetricCollector
+}
 
 type metricVector struct {
 	name        string // metric name
@@ -123,10 +137,8 @@ type metricVector struct {
 	constLabels []pipeline.Label // constLabels is the labels that are not changed when the metric is created.
 	labelKeys   []string         // labelNames is the names of the labels. The values of the labels can be changed.
 
-	indexPool   GenericPool[string] // index is []string, which is sorted according to labelNames.
-	bytesPool   GenericPool[byte]   // bytesPool is the bytes pool for the index.
-	collector   sync.Map            // collector is a map[string]pipeline.Metric, key is the index of the metric.
-	seriesCount int64               // the number of metrics in the vector
+	indexPool GenericPool[string] // index is []string, which is sorted according to labelNames.
+	cache     MetricVectorCache   // collector is a map[string]pipeline.Metric, key is the index of the metric.
 }
 
 func newMetricVector(
@@ -140,17 +152,22 @@ func newMetricVector(
 		metricType: metricType,
 		labelKeys:  labelNames,
 		indexPool:  NewGenericPool(func() []string { return make([]string, 0, 10) }),
-		bytesPool:  NewGenericPool(func() []byte { return make([]byte, 0, 128) }),
 	}
 
 	for k, v := range constLabels {
 		mv.constLabels = append(mv.constLabels, pipeline.Label{Key: k, Value: v})
 	}
+
+	mv.cache = DefaultCacheFactory(mv)
 	return mv
 }
 
 func (v *metricVector) Name() string {
 	return v.name
+}
+
+func (v *metricVector) Type() pipeline.SelfMetricType {
+	return v.metricType
 }
 
 func (v *metricVector) ConstLabels() []pipeline.Label {
@@ -166,40 +183,12 @@ func (v *metricVector) WithLabels(labels ...pipeline.Label) pipeline.Metric {
 	if err != nil {
 		return NewErrorMetric(v.metricType, err)
 	}
-
-	buffer := v.bytesPool.Get()
-	for _, tagValue := range *index {
-		*buffer = append(*buffer, '|')
-		*buffer = append(*buffer, tagValue...)
-	}
-
-	/* #nosec G103 */
-	k := *(*string)(unsafe.Pointer(buffer))
-	acV, loaded := v.collector.Load(k)
-	if loaded {
-		metric := acV.(pipeline.Metric)
-		v.indexPool.Put(index)
-		v.bytesPool.Put(buffer)
-		return metric
-	}
-
-	newMetric := NewMetric(v.metricType, v, *index)
-	acV, loaded = v.collector.LoadOrStore(k, newMetric)
-	if !loaded {
-		atomic.AddInt64(&v.seriesCount, 1)
-	} else {
-		v.bytesPool.Put(buffer)
-	}
-	return acV.(pipeline.Metric)
+	defer v.indexPool.Put(index)
+	return v.cache.WithLabelValues(*index)
 }
 
 func (v *metricVector) Collect() []pipeline.Metric {
-	res := make([]pipeline.Metric, 0, 10)
-	v.collector.Range(func(key, value interface{}) bool {
-		res = append(res, value.(pipeline.Metric))
-		return true
-	})
-	return res
+	return v.cache.Collect()
 }
 
 // buildIndex return the index
@@ -237,4 +226,50 @@ func (v *metricVector) slowConstructIndex(index *[]string, tag pipeline.Label) e
 		}
 	}
 	return fmt.Errorf("undefined label: %s in %v", tag.Key, v.labelKeys)
+}
+
+type MapCache struct {
+	pipeline.MetricSet
+	bytesPool GenericPool[byte]
+	sync.Map
+}
+
+func NewMapCahce(metricSet pipeline.MetricSet) MetricVectorCache {
+	return &MapCache{
+		MetricSet: metricSet,
+		bytesPool: NewGenericPool(func() []byte { return make([]byte, 0, 128) }),
+	}
+}
+
+func (v *MapCache) WithLabelValues(index []string) pipeline.Metric {
+	buffer := v.bytesPool.Get()
+	for _, tagValue := range index {
+		*buffer = append(*buffer, '|')
+		*buffer = append(*buffer, tagValue...)
+	}
+
+	/* #nosec G103 */
+	k := *(*string)(unsafe.Pointer(buffer))
+	acV, loaded := v.Load(k)
+	if loaded {
+		metric := acV.(pipeline.Metric)
+		v.bytesPool.Put(buffer)
+		return metric
+	}
+
+	newMetric := NewMetric(v.Type(), v, index)
+	acV, loaded = v.LoadOrStore(k, newMetric)
+	if loaded {
+		v.bytesPool.Put(buffer)
+	}
+	return acV.(pipeline.Metric)
+}
+
+func (v *MapCache) Collect() []pipeline.Metric {
+	res := make([]pipeline.Metric, 0, 10)
+	v.Range(func(key, value interface{}) bool {
+		res = append(res, value.(pipeline.Metric))
+		return true
+	})
+	return res
 }
