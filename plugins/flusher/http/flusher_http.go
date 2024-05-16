@@ -104,12 +104,13 @@ type FlusherHTTP struct {
 	queue       chan *groupEventsWithTimestamp
 	counter     sync.WaitGroup
 
-	matchedEvents   pipeline.Counter
-	unmatchedEvents pipeline.Counter
-	droppedEvents   pipeline.Counter
-	retryCount      pipeline.Counter
-	flushFailure    pipeline.Counter
-	flushLatency    pipeline.Counter
+	matchedEvents        pipeline.Counter
+	unmatchedEvents      pipeline.Counter
+	droppedEvents        pipeline.Counter
+	retryCount           pipeline.Counter
+	flushFailure         pipeline.Counter
+	flushLatency         pipeline.Counter
+	statusCodeStatistics pipeline.MetricVector[pipeline.Counter]
 }
 
 type groupEventsWithTimestamp struct {
@@ -191,7 +192,12 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.droppedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_dropped_events", metricLabels...)
 	f.retryCount = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_retry_count", metricLabels...)
 	f.flushFailure = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_flush_failure_count", metricLabels...)
-	f.flushLatency = helper.NewAverageMetricAndRegister(metricsRecord, "http_flusher_flush_latency_ns", metricLabels...) // cannot use latency metric
+	f.flushLatency = helper.NewAverageMetricAndRegister(metricsRecord, "http_flusher_flush_latency_ns", metricLabels...)
+
+	f.statusCodeStatistics = helper.NewCounterMetricVectorAndRegister(metricsRecord,
+		"http_flusher_status_code_statistics",
+		helper.LogContentsToMap(metricLabels),
+		[]string{"status_code"})
 
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized",
 		"timeout", f.Timeout,
@@ -584,6 +590,9 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher close response body fail, error", err)
 		return false, false, err
 	}
+
+	_ = f.statusCodeStatistics.WithLabels(pipeline.Label{Key: "status_code", Value: strconv.Itoa(response.StatusCode)}).Add(1)
+
 	switch response.StatusCode / 100 {
 	case 2:
 		return true, false, nil
