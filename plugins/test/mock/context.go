@@ -94,14 +94,7 @@ func (p *EmptyContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 	for _, metricsRecord := range p.MetricsRecords {
-		metrics := metricsRecord.Collect()
-		for _, metric := range metrics {
-			log := &protocol.Log{}
-			metric.Serialize(log)
-			metricsRecord.AppendLabels(log)
-			metric.Clear()
-			logGroup.Logs = append(logGroup.Logs, log)
-		}
+		metricsRecord.Serialize(logGroup)
 	}
 }
 

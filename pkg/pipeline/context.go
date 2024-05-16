@@ -16,6 +16,7 @@ package pipeline
 
 import (
 	"context"
+	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -31,25 +32,35 @@ type LabelPair = Label
 type MetricsRecord struct {
 	Labels []LabelPair
 
+	sync.RWMutex
 	MetricCollectors []MetricCollector
 }
 
-func (m *MetricsRecord) AppendLabels(log *protocol.Log) {
+func (m *MetricsRecord) appendLabels(log *protocol.Log) {
 	for _, label := range m.Labels {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: label.Key, Value: label.Value})
 	}
 }
 
 func (m *MetricsRecord) RegisterMetricVector(collecter MetricCollector) {
+	m.Lock()
+	defer m.Unlock()
 	m.MetricCollectors = append(m.MetricCollectors, collecter)
 }
 
-func (m *MetricsRecord) Collect() []Metric {
-	metrics := make([]Metric, 0)
-	for _, counterMetric := range m.MetricCollectors {
-		metrics = append(metrics, counterMetric.Collect()...)
+func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
+	m.RLock()
+	defer m.RUnlock()
+	for _, metricCollector := range m.MetricCollectors {
+		metrics := metricCollector.Collect()
+		for _, metric := range metrics {
+			log := &protocol.Log{}
+			metric.Serialize(log)
+			m.appendLabels(log)
+			metric.Clear()
+			logGroup.Logs = append(logGroup.Logs, log)
+		}
 	}
-	return metrics
 }
 
 func GetCommonLabels(context Context, pluginMeta *PluginMeta) []LabelPair {

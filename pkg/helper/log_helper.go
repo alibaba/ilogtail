@@ -366,3 +366,12 @@ func ReplaceInvalidChars(in *string) {
 		}
 	}
 }
+
+func GetMetricName(log *protocol.Log) string {
+	for _, cnt := range log.Contents {
+		if cnt.GetKey() == SelfMetricNameKey {
+			return cnt.GetValue()
+		}
+	}
+	return ""
+}

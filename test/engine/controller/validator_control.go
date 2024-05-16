@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
@@ -184,10 +185,12 @@ func (c *ValidatorController) flushSummaryReport() {
 // staticLogGroupCheck checks the log contents to find the static logs of the e2e test case.
 func staticLogGroupCheck(logGroup *protocol.LogGroup) (projectMatch bool, typeMatch bool) {
 	for _, log := range logGroup.Logs {
+		if helper.GetMetricName(log) == "raw_log" {
+			typeMatch = true
+		}
+
 		for _, content := range log.Contents {
-			if content.Key == "raw_log" {
-				typeMatch = true
-			} else if content.Key == "project" && content.Value == E2EProjectName {
+			if content.Key == "project" && content.Value == E2EProjectName {
 				projectMatch = true
 			}
 		}
