@@ -46,7 +46,6 @@ require (
 	github.com/prometheus/procfs v0.8.0
 	github.com/pyroscope-io/pyroscope v0.37.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/streadway/handy v0.0.0-20230327021402-6a47ec586270
@@ -176,8 +175,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/juju/errors v0.0.0-20150916125642-1b5e39b83d18 // indirect
-	github.com/juju/testing v0.0.0-20200608005635-e4eedbc6f7aa // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/linkedin/goavro/v2 v2.9.8 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -253,7 +250,6 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
-	gopkg.in/birkirb/loggers.v1 v1.0.3 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
@@ -283,6 +279,5 @@ replace (
 	github.com/pyroscope-io/jfr-parser => github.com/iLogtail/jfr-parser v0.6.0
 	github.com/pyroscope-io/pyroscope => github.com/iLogtail/pyroscope-lib v0.35.2-ilogtail
 	github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
-	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v0.0.0-20180725024449-535abe8f2eba-ilogtail
 	github.com/streadway/handy => github.com/iLogtail/handy v0.0.0-20230327021402-6a47ec586270
 )

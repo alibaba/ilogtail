@@ -24,7 +24,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 
-	"github.com/siddontang/go-mysql/replication"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 func binLogEventToSlsLog(event *replication.BinlogEvent, logData map[string]string, collector pipeline.Collector) error {

@@ -209,7 +209,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [go.uber.org/atomic](https://pkg.go.dev/go.uber.org/atomic?tab=licenses)
 - [go.uber.org/multierr](https://pkg.go.dev/go.uber.org/multierr?tab=licenses)
 - [go.uber.org/zap](https://pkg.go.dev/go.uber.org/zap?tab=licenses)
-- [gopkg.in/birkirb/loggers.v1](https://pkg.go.dev/gopkg.in/birkirb/loggers.v1?tab=licenses)
 - [gopkg.in/natefinch/lumberjack.v2](https://pkg.go.dev/gopkg.in/natefinch/lumberjack.v2?tab=licenses)
 - [github.com/go-ping/ping](https://pkg.go.dev/github.com/go-ping/ping?tab=licenses)
 - [github.com/dlclark/regexp2](https://pkg.go.dev/github.com/dlclark/regexp2?tab=licenses)
@@ -255,7 +254,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 ## iLogtail used or modified source code from these projects
 
 - [github.com/iLogtail/VictoriaMetrics fork from github.com/VictoriaMetrics/VictoriaMetrics](http://github.com/iLogtail/VictoriaMetrics) based on Apache-2.0
-- [github.com/iLogtail/go-mysql fork from github.com/siddontang/go-mysql](http://github.com/iLogtail/go-mysql) based on MIT
 - [github.com/iLogtail/jfr-parser fork from github.com/pyroscope-io/jfr-parser](http://github.com/iLogtail/jfr-parser) based on Apache-2.0
 - [github.com/iLogtail/metrics fork from github.com/VictoriaMetrics/metrics](http://github.com/iLogtail/metrics) based on MIT
 - [github.com/iLogtail/parser fork from github.com/pingcap/parser](http://github.com/iLogtail/parser) based on Apache-2.0
