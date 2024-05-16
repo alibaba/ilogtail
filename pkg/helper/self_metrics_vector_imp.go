@@ -43,7 +43,7 @@ var (
 	}
 
 	NewStringMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
-		return NewMetricVector[pipeline.StrMetric](metricName, pipeline.StringType, constLabels, labelNames)
+		return NewMetricVector[pipeline.StringMetric](metricName, pipeline.StringType, constLabels, labelNames)
 	}
 )
 
@@ -72,44 +72,41 @@ func NewLatencyMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName st
 }
 
 func NewStringMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
-	v := NewMetricVector[pipeline.StrMetric](metricName, pipeline.StringType, constLabels, labelNames)
+	v := NewMetricVector[pipeline.StringMetric](metricName, pipeline.StringType, constLabels, labelNames)
 	mr.RegisterMetricVector(v)
 	return v
 }
 
-// MetricVector 是一个泛型接口，定义了所有 MetricVector 实现所需的 WithLabels 方法。
-type MetricVector[T any] interface {
-	WithLabels(labels ...pipeline.Label) T
-	pipeline.MetricCollector
-}
-
 type (
-	CounterMetricVector = MetricVector[pipeline.Counter]
-	AverageMetricVector = MetricVector[pipeline.Average]
-	GaugeMetricVector   = MetricVector[pipeline.Gauge]
-	LatencyMetricVector = MetricVector[pipeline.Latency]
-	StringMetricVector  = MetricVector[pipeline.StrMetric]
+	CounterMetricVector = pipeline.MetricVector[pipeline.Counter]
+	AverageMetricVector = pipeline.MetricVector[pipeline.Average]
+	GaugeMetricVector   = pipeline.MetricVector[pipeline.Gauge]
+	LatencyMetricVector = pipeline.MetricVector[pipeline.Latency]
+	StringMetricVector  = pipeline.MetricVector[pipeline.StringMetric]
 	Label               = pipeline.Label
 )
 
-type MetricMap interface {
-	pipeline.MetricVector
-	pipeline.MetricCollector
-	pipeline.MetricSet
-}
+var (
+	_ pipeline.MetricCollector                     = (*MetricVectorImpl[pipeline.Counter])(nil)
+	_ pipeline.MetricSet                           = (*MetricVectorImpl[pipeline.StringMetric])(nil)
+	_ pipeline.MetricVector[pipeline.Counter]      = (*MetricVectorImpl[pipeline.Counter])(nil)
+	_ pipeline.MetricVector[pipeline.Average]      = (*MetricVectorImpl[pipeline.Average])(nil)
+	_ pipeline.MetricVector[pipeline.Latency]      = (*MetricVectorImpl[pipeline.Latency])(nil)
+	_ pipeline.MetricVector[pipeline.StringMetric] = (*MetricVectorImpl[pipeline.StringMetric])(nil)
+)
 
 type MetricVectorImpl[T pipeline.Metric] struct {
-	MetricMap
+	*metricVector
 }
 
-func NewMetricVector[T pipeline.Metric](metricName string, metricType pipeline.SelfMetricType, constLabels map[string]string, labelNames []string) MetricVector[T] {
+func NewMetricVector[T pipeline.Metric](metricName string, metricType pipeline.SelfMetricType, constLabels map[string]string, labelNames []string) pipeline.MetricVector[T] {
 	return &MetricVectorImpl[T]{
-		MetricMap: newMetricVector(metricName, metricType, constLabels, labelNames),
+		metricVector: newMetricVector(metricName, metricType, constLabels, labelNames),
 	}
 }
 
 func (m *MetricVectorImpl[T]) WithLabels(labels ...pipeline.Label) T {
-	return m.MetricMap.WithLabels(labels).(T)
+	return m.metricVector.WithLabels(labels...).(T)
 }
 
 type MetricCache interface {
@@ -164,7 +161,7 @@ func (v *metricVector) LabelKeys() []string {
 	return v.labelKeys
 }
 
-func (v *metricVector) WithLabels(labels []pipeline.Label) pipeline.Metric {
+func (v *metricVector) WithLabels(labels ...pipeline.Label) pipeline.Metric {
 	index, err := v.buildIndex(labels)
 	if err != nil {
 		return NewErrorMetric(v.metricType, err)

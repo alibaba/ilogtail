@@ -198,7 +198,7 @@ func NewAverageMetric(n string, lables ...*protocol.Log_Content) pipeline.Counte
 	return NewAverageMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-func NewStringMetric(n string, lables ...*protocol.Log_Content) pipeline.StrMetric {
+func NewStringMetric(n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
 	return NewStringMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
@@ -218,7 +218,7 @@ func NewAverageMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...
 	return mv.WithLabels()
 }
 
-func NewStringMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.StrMetric {
+func NewStringMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
 	mv := NewStringMetricVector(n, convertLabels(lables), nil)
 	c.RegisterMetricVector(mv)
 	return mv.WithLabels()

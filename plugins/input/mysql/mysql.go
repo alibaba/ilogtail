@@ -85,7 +85,7 @@ type Mysql struct {
 	context               pipeline.Context
 	collectLatency        pipeline.Latency
 	collectTotal          pipeline.Counter
-	checkpointMetric      pipeline.StrMetric
+	checkpointMetric      pipeline.StringMetric
 }
 
 func (m *Mysql) Init(context pipeline.Context) (int, error) {

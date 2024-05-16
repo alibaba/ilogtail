@@ -1,6 +1,8 @@
 package pipeline
 
-import "github.com/alibaba/ilogtail/pkg/protocol"
+import (
+	"github.com/alibaba/ilogtail/pkg/protocol"
+)
 
 type SelfMetricType int
 
@@ -41,16 +43,17 @@ type MetricSet interface {
 	LabelKeys() []string
 }
 
-// MetricVector is a Collector to bundle metrics of the same name that differ in  their label values.
-// WithLabels will return a unique Metric that is bound to a set of label values.
-// If the labels has label names that are not in the MetricSet, the Metric will be invalid.
-type MetricVector interface {
-	WithLabels([]Label) Metric
-}
-
 // MetricCollector is the interface implemented by anything that can be used by iLogtail to collect metrics.
 type MetricCollector interface {
 	Collect() []Metric
+}
+
+// MetricVector is a Collector to bundle metrics of the same name that differ in  their label values.
+// WithLabels will return a unique Metric that is bound to a set of label values.
+// If the labels has label names that are not in the MetricSet, the Metric will be invalid.
+type MetricVector[T Metric] interface {
+	WithLabels(labels ...Label) T
+	MetricCollector
 }
 
 type Metric interface {
@@ -86,7 +89,7 @@ type Summary interface {
 	Get() []MetricValue[float64]
 }
 
-type StrMetric interface {
+type StringMetric interface {
 	Metric
 	Set(v string) error // return error when WithLabels returns an invalid metric instance.
 	Get() MetricValue[string]

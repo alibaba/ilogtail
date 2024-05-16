@@ -163,8 +163,8 @@ type ServiceCanal struct {
 	rowCounter        pipeline.Counter
 	xgidCounter       pipeline.Counter
 	checkpointCounter pipeline.Counter
-	lastBinLogMetric  pipeline.StrMetric
-	lastGTIDMetric    pipeline.StrMetric
+	lastBinLogMetric  pipeline.StringMetric
+	lastGTIDMetric    pipeline.StringMetric
 }
 
 func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {

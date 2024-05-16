@@ -38,9 +38,6 @@ func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 
 type EmptyContext struct {
 	MetricsRecords []*pipeline.MetricsRecord
-	// StringMetrics  map[string]pipeline.StrMetric
-	// CounterMetrics map[string]pipeline.Counter
-	// LatencyMetrics map[string]pipeline.Latency
 
 	common      *pkg.LogtailContextMeta
 	ctx         context.Context

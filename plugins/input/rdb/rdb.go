@@ -80,7 +80,7 @@ type Rdb struct {
 	Context               pipeline.Context
 	collectLatency        pipeline.Latency
 	collectTotal          pipeline.Counter
-	checkpointMetric      pipeline.StrMetric
+	checkpointMetric      pipeline.StringMetric
 }
 
 func (m *Rdb) Init(context pipeline.Context, rdbFunc RdbFunc) (int, error) {

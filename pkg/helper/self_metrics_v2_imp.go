@@ -22,17 +22,17 @@ import (
 )
 
 var (
-	_ pipeline.Counter   = (*counterImp)(nil)
-	_ pipeline.Gauge     = (*gaugeImp)(nil)
-	_ pipeline.Average   = (*averageImp)(nil)
-	_ pipeline.Latency   = (*latencyImp)(nil)
-	_ pipeline.StrMetric = (*strMetricImp)(nil)
+	_ pipeline.Counter      = (*counterImp)(nil)
+	_ pipeline.Gauge        = (*gaugeImp)(nil)
+	_ pipeline.Average      = (*averageImp)(nil)
+	_ pipeline.Latency      = (*latencyImp)(nil)
+	_ pipeline.StringMetric = (*strMetricImp)(nil)
 
-	_ pipeline.Counter   = (*errorCounter)(nil)
-	_ pipeline.Gauge     = (*errorGauge)(nil)
-	_ pipeline.Average   = (*errorAverage)(nil)
-	_ pipeline.Latency   = (*errorLatency)(nil)
-	_ pipeline.StrMetric = (*errorStrMetric)(nil)
+	_ pipeline.Counter      = (*errorCounter)(nil)
+	_ pipeline.Gauge        = (*errorGauge)(nil)
+	_ pipeline.Average      = (*errorAverage)(nil)
+	_ pipeline.Latency      = (*errorLatency)(nil)
+	_ pipeline.StringMetric = (*errorStrMetric)(nil)
 )
 
 func NewMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
@@ -230,7 +230,7 @@ type strMetricImp struct {
 	Series
 }
 
-func NewString(ms pipeline.MetricSet, index []string) pipeline.StrMetric {
+func NewString(ms pipeline.MetricSet, index []string) pipeline.StringMetric {
 	s := &strMetricImp{
 		Series: newSeries(ms, index),
 	}
@@ -364,6 +364,6 @@ func (e errorStrMetric) Get() pipeline.MetricValue[string] {
 	return pipeline.MetricValue[string]{Name: "", Value: ""}
 }
 
-func NewErrorString(err error) pipeline.StrMetric {
+func NewErrorString(err error) pipeline.StringMetric {
 	return &errorStrMetric{errorMetricBase: errorMetricBase{err: err}}
 }

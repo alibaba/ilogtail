@@ -678,7 +678,7 @@ func TestNewStringMetric(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want pipeline.StrMetric
+		want pipeline.StringMetric
 	}{
 		// TODO: Add test cases.
 	}
