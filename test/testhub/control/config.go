@@ -10,7 +10,8 @@ import (
 )
 
 const iLogtailLocalConfigDir = "/etc/ilogtail/config/local"
-const SLSFlusherConfigTemplate = `flushers:
+const SLSFlusherConfigTemplate = `
+flushers:
   - Type: flusher_sls
     Aliuid: "{{.Aliuid}}"
     TelemetryType: "logs"
@@ -21,22 +22,7 @@ const SLSFlusherConfigTemplate = `flushers:
 
 var SLSFlusherConfig string
 
-func AddLocalConfig(config string, configName string) {
-	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
-  %s`, iLogtailLocalConfigDir, configName, config)
-	if err := setup.Env.Exec(command); err != nil {
-		panic(err)
-	}
-}
-
-func RemoveAllLocalConfig() {
-	command := fmt.Sprintf("cd %s && rm -rf *.yaml", iLogtailLocalConfigDir)
-	if err := setup.Env.Exec(command); err != nil {
-		panic(err)
-	}
-}
-
-func init() {
+func InitSLSFlusherConfig() {
 	tpl := template.Must(template.New("slsFlusherConfig").Parse(SLSFlusherConfigTemplate))
 	var builder strings.Builder
 	tpl.Execute(&builder, map[string]interface{}{
@@ -47,4 +33,19 @@ func init() {
 		"Logstore": config.TestConfig.Logstore,
 	})
 	SLSFlusherConfig = builder.String()
+}
+
+func AddLocalConfig(c string, configName string) {
+	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
+  %s`, iLogtailLocalConfigDir, configName, c+SLSFlusherConfig)
+	if err := setup.Env.Exec(command); err != nil {
+		panic(err)
+	}
+}
+
+func RemoveAllLocalConfig() {
+	command := fmt.Sprintf("cd %s && rm -rf *.yaml", iLogtailLocalConfigDir)
+	if err := setup.Env.Exec(command); err != nil {
+		panic(err)
+	}
 }

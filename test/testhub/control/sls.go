@@ -15,7 +15,7 @@ import (
 var slsClient *sls.Client
 
 func InitSLSClient() {
-	slsClient = createSLSClient(config.TestConfig.AccessKeyId, config.TestConfig.AccessKeySecret, config.TestConfig.Endpoint)
+	slsClient = createSLSClient(config.TestConfig.AccessKeyId, config.TestConfig.AccessKeySecret, config.TestConfig.QueryEndpoint)
 }
 
 func WaitLog2SLS(from int32, timeout time.Duration) {
@@ -25,6 +25,7 @@ func WaitLog2SLS(from int32, timeout time.Duration) {
 	isValid := false
 	retry.Do(
 		func() error {
+			fmt.Println("wait log from sls")
 			resp, err := GetLogFromSLS(sql, from)
 			if err != nil {
 				return err

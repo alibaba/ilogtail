@@ -24,14 +24,11 @@ func TestMain(m *testing.M) {
 		config.TestConfig.GeneratedLogDir = "/tmp/ilogtail"
 	}
 	config.TestConfig.WorkDir = os.Getenv("WORK_DIR")
-	if len(config.TestConfig.WorkDir) == 0 {
-		config.TestConfig.WorkDir = "/root/ilogtail-e2e/test"
-	}
 
 	// SSH
 	config.TestConfig.SSHUsername = os.Getenv("SSH_USERNAME")
 	config.TestConfig.SSHIP = os.Getenv("SSH_IP")
-	config.TestConfig.SSHPrivateKeyPath = os.Getenv("SSH_PRIVATE_KEY_PATH")
+	config.TestConfig.SSHPassword = os.Getenv("SSH_PASSWORD")
 
 	// K8s
 	config.TestConfig.KubeConfigPath = os.Getenv("KUBE_CONFIG_PATH")
@@ -47,6 +44,7 @@ func TestMain(m *testing.M) {
 	config.TestConfig.Region = os.Getenv("REGION")
 
 	control.InitSLSClient()
+	control.InitSLSFlusherConfig()
 
 	os.Exit(m.Run())
 }

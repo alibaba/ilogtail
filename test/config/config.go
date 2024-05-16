@@ -21,9 +21,9 @@ type Config struct {
 	GeneratedLogDir string `mapstructure:"generated_log_dir" yaml:"generated_log_dir"`
 	WorkDir         string `mapstructure:"work_dir" yaml:"work_dir"`
 	// SSH
-	SSHUsername       string `mapstructure:"ssh_username" yaml:"ssh_username"`
-	SSHIP             string `mapstructure:"ssh_ip" yaml:"ssh_ip"`
-	SSHPrivateKeyPath string `mapstructure:"ssh_private_key_path" yaml:"ssh_private_key_path"`
+	SSHUsername string `mapstructure:"ssh_username" yaml:"ssh_username"`
+	SSHIP       string `mapstructure:"ssh_ip" yaml:"ssh_ip"`
+	SSHPassword string `mapstructure:"ssh_password" yaml:"ssh_password"`
 	// K8s
 	KubeConfigPath string `mapstructure:"kube_config_path" yaml:"kube_config_path"`
 	// SLS
