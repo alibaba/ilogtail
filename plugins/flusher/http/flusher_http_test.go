@@ -17,6 +17,7 @@ package http
 import (
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -985,6 +986,12 @@ func TestHandleResetByPeer(t *testing.T) {
 		logGroup := &protocol.LogGroup{}
 		flusher.context.MetricSerializeToPB(logGroup)
 		assert.Greater(t, len(logGroup.Logs), 0)
+		d, _ := json.Marshal(logGroup)
+		t.Logf("logGroup: %s", string(d))
+		fmt.Println("==============")
+		for i, v := range logGroup.Logs {
+			t.Logf("[%d]log: %s", i, v.String())
+		}
 	})
 }
 
@@ -1019,13 +1026,7 @@ func (p *mockContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	}
 
 	for _, metricsRecord := range p.MetricsRecords {
-		metrics := metricsRecord.Collect()
-		for _, metric := range metrics {
-			metricsRecord := metricsRecord.NewMetricProtocol()
-			metric.Serialize(metricsRecord)
-			metric.Clear()
-			logGroup.Logs = append(logGroup.Logs, metricsRecord)
-		}
+		metricsRecord.Serialize(logGroup)
 	}
 }
 
