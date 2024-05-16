@@ -112,7 +112,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/syndtr/goleveldb](https://pkg.go.dev/github.com/syndtr/goleveldb?tab=licenses)
 - [github.com/rcrowley/go-metrics](https://pkg.go.dev/github.com/rcrowley/go-metrics?tab=licenses)
 - [github.com/cihub/seelog](https://pkg.go.dev/github.com/cihub/seelog?tab=licenses)
-- [github.com/eclipse/paho.mqtt.golang](https://pkg.go.dev/github.com/eclipse/paho.mqtt.golang?tab=licenses)
 - [github.com/fsnotify/fsnotify](https://pkg.go.dev/github.com/fsnotify/fsnotify?tab=licenses)
 - [github.com/gogo/protobuf](https://pkg.go.dev/github.com/gogo/protobuf?tab=licenses)
 - [github.com/golang/protobuf](https://pkg.go.dev/github.com/golang/protobuf?tab=licenses)
@@ -124,7 +123,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/jcmturner/gofork](https://pkg.go.dev/github.com/jcmturner/gofork?tab=licenses)
 - [github.com/pierrec/lz4](https://pkg.go.dev/github.com/pierrec/lz4?tab=licenses)
 - [github.com/shirou/gopsutil](https://pkg.go.dev/github.com/shirou/gopsutil?tab=licenses)
-- [github.com/gosnmp/gosnmp](https://pkg.go.dev/github.com/gosnmp/gosnmp)
+- [github.com/gosnmp/gosnmp](https://pkg.go.dev/github.com/gosnmp/gosnmp#readme-license)
 - [github.com/spf13/pflag](https://pkg.go.dev/github.com/spf13/pflag?tab=licenses)
 - [github.com/tklauser/go-sysconf](https://pkg.go.dev/github.com/tklauser/go-sysconf?tab=licenses)
 - [github.com/DataDog/zstd](https://pkg.go.dev/github.com/DataDog/zstd?tab=licenses)
@@ -146,7 +145,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/grafana/regexp](https://pkg.go.dev/github.com/grafana/regexp?tab=licenses)
 - [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
 - [github.com/pmezard/go-difflib](https://pkg.go.dev/github.com/pmezard/go-difflib?tab=licenses)
-- [github.com/gorilla/websocket](github.com/gorilla/websocket)
+- [github.com/gorilla/websocket](https://github.com/gorilla/websocket?tab=BSD-3-Clause-1-ov-file#readme)
 
 ## MIT licenses
 
@@ -249,11 +248,9 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/hashicorp/go-multierror](https://pkg.go.dev/github.com/hashicorp/go-multierror?tab=licenses)
 - [github.com/hashicorp/errwrap](https://pkg.go.dev/github.com/hashicorp/errwrap?tab=licenses)
 
-## LGPL v3 licenses
-
-- [github.com/juju/errors](https://pkg.go.dev/github.com/juju/errors?tab=licenses)
-
 ## EPL V2 licenses
+
+- [github.com/eclipse/paho.mqtt.golang](https://pkg.go.dev/github.com/eclipse/paho.mqtt.golang?tab=licenses)
 
 ## iLogtail used or modified source code from these projects
 
