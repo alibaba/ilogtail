@@ -1,5 +1,61 @@
 # 发布历史
 
+# 发布历史
+
+## 2.0.4
+
+### 发布记录
+
+发版日期：2024 年 5 月 16 日
+
+优化
+
+* 发送模块日志优化 [#1359](https://github.com/alibaba/ilogtail/pull/1359)
+* 文件删除时，最后一行读取之后等待flush超时而不是立即发送 [#1418](https://github.com/alibaba/ilogtail/pull/1418)
+* 最后一行匹配逻辑重构 [#1426](https://github.com/alibaba/ilogtail/pull/1426)
+* 增加缺失年份信息的时间格式的测试用例 [#1432](https://github.com/alibaba/ilogtail/pull/1432)
+* 聊天群组二维码图片替换 [#1445](https://github.com/alibaba/ilogtail/pull/1445)
+* SourceBuffer数据结构支持move [#1457](https://github.com/alibaba/ilogtail/pull/1457)
+* 开源之夏2024活动信息 [#1461](https://github.com/alibaba/ilogtail/pull/1461)
+* SPL功能开关默认开启 [#1475](https://github.com/alibaba/ilogtail/pull/1475)
+
+问题修复
+
+* 修复dockershim文件存在的情况下,containerd运行时误判的问题 [#1424](https://github.com/alibaba/ilogtail/pull/1424)
+* 修复Golang插件模块Pipeline版本识别错误问题 [#1427](https://github.com/alibaba/ilogtail/pull/1427)
+* 修复多行分割状态错误问题 [#1410](https://github.com/alibaba/ilogtail/pull/1410)
+* 基础镜像更新，修复部分旧CPU型号环境下出现的非法指令集问题 [#1429](https://github.com/alibaba/ilogtail/pull/1429)
+* 修复Golang插件模块与C++核心模块采集配置名不一致问题 [#1437](https://github.com/alibaba/ilogtail/pull/1437)
+* 修复发送请求中UserAgent信息丢失问题 [#1444](https://github.com/alibaba/ilogtail/pull/1444)
+* 修复Golang插件模块告警信息版本不一致问题 [#1443](https://github.com/alibaba/ilogtail/pull/1443)
+* 修复LOGTAIL_LOG_LEVEL环境变量配置对ilogtail.LOG不生效的问题 [#1440](https://github.com/alibaba/ilogtail/pull/1440)
+* 修复容器信息预览功能开关字段错误问题 [#1430](https://github.com/alibaba/ilogtail/pull/1430)
+* 修复iLogtail启动阶段告警信息缺失问题 [#1455](https://github.com/alibaba/ilogtail/pull/1455)
+* 修复uuid缺失问题和instance id错误问题 [#1476](https://github.com/alibaba/ilogtail/pull/1476)
+* flusher_sls插件允许空endpoint配置 [#1486](https://github.com/alibaba/ilogtail/pull/1486)
+
+文档优化
+
+* flusher_pulsar文档优化 [#1460](https://github.com/alibaba/ilogtail/pull/1460)
+
+
+[详情和源代码](https://github.com/alibaba/ilogtail/blob/main/changes/v2.0.4.md)
+
+### 下载
+
+| 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
+| [ilogtail-2.0.4.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.4/ilogtail-2.0.4.linux-amd64.tar.gz) | Linux | x86-64 | 144b20e4dd4e20b517e49c04c745d2f6a64747ab40c0f4aefc7dcadad5803104 |
+| [ilogtail-2.0.4.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.4/ilogtail-2.0.4.linux-arm64.tar.gz) | Linux | arm64  | 4a54a7b11fb4cae0cea17f0f9bfbff95dea4a2163e9a925d6728ef8c8d720392 |
+
+### Docker 镜像
+
+**Docker Pull 命令**&#x20;
+
+``` bash
+docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:2.0.4
+```
+
 ## 2.0.0
 
 ### 发布记录
