@@ -6,6 +6,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/testhub/control"
 )
 
 func TestMain(m *testing.M) {
@@ -18,19 +19,22 @@ func TestMain(m *testing.M) {
 
 	config.TestConfig = config.Config{}
 	// Log
-	config.TestConfig.GeneratedLogPath = os.Getenv("GENERATED_LOG_PATH")
-	if len(config.TestConfig.GeneratedLogPath) == 0 {
-		config.TestConfig.GeneratedLogPath = "/tmp/ilogtail"
+	config.TestConfig.GeneratedLogDir = os.Getenv("GENERATED_LOG_DIR")
+	if len(config.TestConfig.GeneratedLogDir) == 0 {
+		config.TestConfig.GeneratedLogDir = "/tmp/ilogtail"
+	}
+	config.TestConfig.WorkDir = os.Getenv("WORK_DIR")
+	if len(config.TestConfig.WorkDir) == 0 {
+		config.TestConfig.WorkDir = "/root/ilogtail-e2e/test"
 	}
 
 	// SSH
 	config.TestConfig.SSHUsername = os.Getenv("SSH_USERNAME")
 	config.TestConfig.SSHIP = os.Getenv("SSH_IP")
 	config.TestConfig.SSHPrivateKeyPath = os.Getenv("SSH_PRIVATE_KEY_PATH")
-	config.TestConfig.WorkDir = os.Getenv("WORK_DIR")
-	if len(config.TestConfig.WorkDir) == 0 {
-		config.TestConfig.WorkDir = "/root/ilogtail/test"
-	}
+
+	// K8s
+	config.TestConfig.KubeConfigPath = os.Getenv("KUBE_CONFIG_PATH")
 
 	// SLS
 	config.TestConfig.Project = os.Getenv("PROJECT")
@@ -38,6 +42,11 @@ func TestMain(m *testing.M) {
 	config.TestConfig.AccessKeyId = os.Getenv("ACCESS_KEY_ID")
 	config.TestConfig.AccessKeySecret = os.Getenv("ACCESS_KEY_SECRET")
 	config.TestConfig.Endpoint = os.Getenv("ENDPOINT")
+	config.TestConfig.Aliuid = os.Getenv("ALIUID")
+	config.TestConfig.QueryEndpoint = os.Getenv("QUERY_ENDPOINT")
+	config.TestConfig.Region = os.Getenv("REGION")
+
+	control.InitSLSClient()
 
 	os.Exit(m.Run())
 }

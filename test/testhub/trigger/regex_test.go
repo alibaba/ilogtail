@@ -1,8 +1,8 @@
 package trigger
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"testing"
@@ -11,7 +11,7 @@ import (
 
 // TestGenerateRegexLogSingle will be executed in the environment being collected.
 func TestGenerateRegexLogSingle(t *testing.T) {
-	gneratedLogPath := getEnvOrDefault("GENERATED_LOG_PATH", "/tmp/ilogtail")
+	gneratedLogDir := getEnvOrDefault("GENERATED_LOG_DIR", "/tmp/ilogtail")
 	totalLog, err := strconv.Atoi(getEnvOrDefault("TOTAL_LOG", "100"))
 	if err != nil {
 		panic(err)
@@ -28,16 +28,15 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 		`- file2:3 10.45.26.0 - [2024-01-07T12:40:12.359314] "PUT /index.html HTTP/1.1" 200 913 "curl/7.10" "这是一条消息"`,
 		`- file2:4 192.168.0.3 - [2024-01-07T12:40:13.002661] "PUT /dir/resource.txt HTTP/2.0" 501 355 "go-sdk" "这是一条消息，password:123456"`,
 	}
-	file, err := os.OpenFile(fmt.Sprintf("%s/%s", gneratedLogPath, fileName), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	file, err := os.OpenFile(fmt.Sprintf("%s/%s", gneratedLogDir, fileName), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	writer := bufio.NewWriter(file)
 
 	logIndex := 0
 	for i := 0; i < totalLog; i++ {
-		_, err := writer.WriteString(testLogConent[logIndex] + "\n")
+		_, err := io.WriteString(file, testLogConent[logIndex]+"\n")
 		if err != nil {
 			panic(err)
 		}

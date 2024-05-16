@@ -2,22 +2,49 @@ package control
 
 import (
 	"fmt"
+	"strings"
+	"text/template"
+
+	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/testhub/setup"
 )
 
 const iLogtailLocalConfigDir = "/etc/ilogtail/config/local"
-const SLSFlusherConfig = `flushers:
+const SLSFlusherConfigTemplate = `flushers:
   - Type: flusher_sls
-    Region: ap-southeast-7
-    Endpoint: ap-southeast-7.log.aliyuncs.com
-    Project: logtail-e2e-bangkok
-    Logstore: e2e-test`
+    Aliuid: "{{.Aliuid}}"
+    TelemetryType: "logs"
+    Region: {{.Region}}
+    Endpoint: {{.Endpoint}}
+    Project: {{.Project}}
+    Logstore: {{.Logstore}}`
 
-func AddLocalConfig(config string, configName string) string {
-	return fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
-%s
-`, iLogtailLocalConfigDir, configName, config)
+var SLSFlusherConfig string
+
+func AddLocalConfig(config string, configName string) {
+	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
+  %s`, iLogtailLocalConfigDir, configName, config)
+	if err := setup.Env.Exec(command); err != nil {
+		panic(err)
+	}
 }
 
-func RemoveLocalConfig(configName string) string {
-	return fmt.Sprintf("cd %s && rm -rf %s.yaml", iLogtailLocalConfigDir, configName)
+func RemoveAllLocalConfig() {
+	command := fmt.Sprintf("cd %s && rm -rf *.yaml", iLogtailLocalConfigDir)
+	if err := setup.Env.Exec(command); err != nil {
+		panic(err)
+	}
+}
+
+func init() {
+	tpl := template.Must(template.New("slsFlusherConfig").Parse(SLSFlusherConfigTemplate))
+	var builder strings.Builder
+	tpl.Execute(&builder, map[string]interface{}{
+		"Aliuid":   config.TestConfig.Aliuid,
+		"Region":   config.TestConfig.Region,
+		"Endpoint": config.TestConfig.Endpoint,
+		"Project":  config.TestConfig.Project,
+		"Logstore": config.TestConfig.Logstore,
+	})
+	SLSFlusherConfig = builder.String()
 }

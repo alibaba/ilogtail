@@ -1,15 +1,15 @@
 package cleanup
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/testhub/setup"
 )
 
-func CleanupGeneratedLog() error {
-	err := os.RemoveAll(config.TestConfig.GeneratedLogPath)
-	if err != nil {
-		return err
+func CleanupAllGeneratedLog() {
+	command := fmt.Sprintf("rm -rf %s/*", config.TestConfig.GeneratedLogDir)
+	if err := setup.Env.Exec(command); err != nil {
+		panic(err)
 	}
-	return nil
 }

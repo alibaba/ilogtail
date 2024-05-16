@@ -18,18 +18,23 @@ var TestConfig Config
 
 type Config struct {
 	// Log
-	GeneratedLogPath string `mapstructure:"generated_log_path" yaml:"generated_log_path"`
+	GeneratedLogDir string `mapstructure:"generated_log_dir" yaml:"generated_log_dir"`
+	WorkDir         string `mapstructure:"work_dir" yaml:"work_dir"`
 	// SSH
 	SSHUsername       string `mapstructure:"ssh_username" yaml:"ssh_username"`
 	SSHIP             string `mapstructure:"ssh_ip" yaml:"ssh_ip"`
 	SSHPrivateKeyPath string `mapstructure:"ssh_private_key_path" yaml:"ssh_private_key_path"`
-	WorkDir           string `mapstructure:"work_dir" yaml:"work_dir"`
+	// K8s
+	KubeConfigPath string `mapstructure:"kube_config_path" yaml:"kube_config_path"`
 	// SLS
 	Project         string `mapstructure:"project" yaml:"project"`
 	Logstore        string `mapstructure:"logstore" yaml:"logstore"`
 	AccessKeyId     string `mapstructure:"access_key_id" yaml:"access_key_id"`
 	AccessKeySecret string `mapstructure:"access_key_secret" yaml:"access_key_secret"`
 	Endpoint        string `mapstructure:"endpoint" yaml:"endpoint"`
+	Aliuid          string `mapstructure:"aliuid" yaml:"aliuid"`
+	QueryEndpoint   string `mapstructure:"query_endpoint" yaml:"query_endpoint"`
+	Region          string `mapstructure:"region" yaml:"region"`
 }
 
 // The following is for plugin tests.

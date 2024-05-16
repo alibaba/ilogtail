@@ -2,20 +2,24 @@ package verify
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/alibaba/ilogtail/test/testhub/control"
 )
 
-const queryCountSql = "SELECT COUNT(*) as count FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < from_unixtime(%v)"
+const queryCountSql = "* | SELECT COUNT(1) as count FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
 
-func VerifyLogCount(count int, from, to int32) error {
-	sql := fmt.Sprintf(queryCountSql, from, to)
-	resp, err := control.GetLogFromSLS(sql, from, to)
+func VerifyLogCount(expect int, from int32) {
+	sql := fmt.Sprintf(queryCountSql, from)
+	resp, err := control.GetLogFromSLS(sql, from)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	if resp.Body[0]["count"] != count {
-		return fmt.Errorf("log count not match, expect %d, got %d", count, resp.Body[0]["count"])
+	count, err := strconv.Atoi(resp.Body[0]["count"].(string))
+	if err != nil {
+		panic(err)
 	}
-	return nil
+	if count != expect {
+		panic(fmt.Errorf("log count not match, expect %d, got %d", expect, count))
+	}
 }
