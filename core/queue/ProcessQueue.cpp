@@ -40,6 +40,7 @@ bool ProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
 }
 
 bool ProcessQueue::IsDownStreamQueuesValidToPush() const {
+    // TODO: support other strategy
     for (const auto& q : mDownStreamQueues) {
         // TODO: replace IsValid with IsValidToPush
         if (!q->IsValid()) {

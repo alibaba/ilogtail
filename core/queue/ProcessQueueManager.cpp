@@ -270,6 +270,7 @@ uint32_t ProcessQueueManager::GetCnt() const {
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void ProcessQueueManager::Clear() {
+    lock_guard<mutex> lock(mQueueMux);
     mQueues.clear();
     for (size_t i = 0; i <= sMaxPriority; ++i) {
         mPriorityQueue[i].clear();

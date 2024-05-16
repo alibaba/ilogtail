@@ -24,8 +24,9 @@ QueueKey QueueKeyManager::GetKey(const string& name) {
     if (iter != mNameKeyMap.end()) {
         return iter->second;
     }
-    mNameKeyMap[name] = mNextKey++;
-    mKeyNameMap[mNextKey - 1] = name;
+    mNameKeyMap[name] = mNextKey;
+    mKeyNameMap[mNextKey] = name;
+    ++mNextKey;
     return mNextKey - 1;
 }
 
@@ -57,6 +58,7 @@ const std::string& QueueKeyManager::GetName(QueueKey key) {
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void QueueKeyManager::Clear() {
+    lock_guard<mutex> lock(mMux);
     mNextKey = 0;
     mKeyNameMap.clear();
     mNameKeyMap.clear();

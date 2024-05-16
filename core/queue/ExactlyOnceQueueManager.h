@@ -51,6 +51,7 @@ public:
     bool DeleteQueue(QueueKey key);
 
     bool IsValidToPushProcessQueue(QueueKey key) const;
+    // 0: success, 1: queue is full, 2: queue not found
     int PushProcessQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool IsAllProcessQueueEmpty() const;
     void InvalidatePop(const std::string& configName);

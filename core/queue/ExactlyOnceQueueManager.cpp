@@ -187,6 +187,7 @@ uint32_t ExactlyOnceQueueManager::GetProcessQueueCnt() const {
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void ExactlyOnceQueueManager::Clear() {
+    lock_guard<mutex> lock(mProcessQueueMux);
     mProcessQueues.clear();
     for (size_t i = 0; i <= ProcessQueueManager::sMaxPriority; ++i) {
         mProcessPriorityQueue[i].clear();
