@@ -17,8 +17,6 @@ package mysqlbinlog
 import (
 	"encoding/hex"
 	"fmt"
-	"reflect"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -151,70 +149,4 @@ func binLogEventToSlsLog(event *replication.BinlogEvent, logData map[string]stri
 	collector.AddData(nil, logData, time.Unix(int64(event.Header.Timestamp), 0))
 
 	return nil
-}
-
-type Err struct {
-	message  string
-	cause    error
-	previous error
-	file     string
-	line     int
-}
-
-func (e *Err) SetLocation(callDepth int) {
-	_, file, line, _ := runtime.Caller(callDepth + 1)
-	e.file = file
-	e.line = line
-}
-
-func (e *Err) Cause() error {
-	return e.cause
-}
-
-func (e *Err) Error() string {
-	err := e.previous
-	if !sameError(Cause(err), e.cause) && e.cause != nil {
-		err = e.cause
-	}
-	switch {
-	case err == nil:
-		return e.message
-	case e.message == "":
-		return err.Error()
-	}
-	return fmt.Sprintf("%s: %v", e.message, err)
-}
-
-func sameError(e1, e2 error) bool {
-	return reflect.DeepEqual(e1, e2)
-}
-
-type causer interface {
-	Cause() error
-}
-
-func Cause(err error) error {
-	var diag error
-	if err, ok := err.(causer); ok {
-		diag = err.Cause()
-	}
-	if diag != nil {
-		return diag
-	}
-	return err
-}
-
-func mysqlBinlogErrorTrace(other error) error {
-	if other == nil {
-		return nil
-	}
-	err := &Err{previous: other, cause: Cause(other)}
-	err.SetLocation(1)
-	return err
-}
-
-func mysqlBinlogErrorf(format string, args ...interface{}) error {
-	err := &Err{message: fmt.Sprintf(format, args...)}
-	err.SetLocation(1)
-	return err
 }
