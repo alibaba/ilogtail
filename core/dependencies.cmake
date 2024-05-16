@@ -114,11 +114,7 @@ macro(link_protobuf target_name)
     if (protobuf_${LINK_OPTION_SUFFIX})
         target_link_libraries(${target_name} "${protobuf_${LINK_OPTION_SUFFIX}}")
     elseif (UNIX)
-        if (WITHOUTSPL)
-            target_link_libraries(${target_name} "${protobuf_${LIBRARY_DIR_SUFFIX}}/libprotobuf.so")
-        else ()
-            target_link_libraries(${target_name} "${protobuf_${LIBRARY_DIR_SUFFIX}}/libprotobuf.a")
-        endif ()
+        target_link_libraries(${target_name} "${protobuf_${LIBRARY_DIR_SUFFIX}}/libprotobuf.a")
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "libprotobufd"
