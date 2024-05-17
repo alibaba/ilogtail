@@ -173,6 +173,9 @@ void SpanEvent::InnerEvent::FromJson(const Json::Value& value) {
 }
 #endif
 
+const string SpanEvent::scopeName = "otlp.scope.name";
+const string SpanEvent::scopeVersion = "otlp.scope.version";
+
 SpanEvent::SpanEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::SPAN, ptr) {
 }
 

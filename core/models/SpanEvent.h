@@ -25,6 +25,11 @@
 
 namespace logtail {
 
+// SpanEvent follows the definition of Span in otlp, except for the followings:
+// 1. Field SchemaURL and all DroppedxxxCount are ignored
+// 2. Attributes value only supports string
+// 3. Field InstrumentedScope in ScopeSpan is stored in mScopeTags
+// Besides, PipelineEventGroup is equivalent to ResourceSpan in otlp, with Resource Attributes stored in mTags
 class SpanEvent : public PipelineEvent {
     friend class PipelineEventGroup;
 
@@ -106,6 +111,9 @@ public:
 
     enum class Kind { Unspecified, Internal, Server, Client, Producer, Consumer };
     enum class StatusCode { Unset, Ok, Error };
+
+    static const std::string scopeName;
+    static const std::string scopeVersion;
 
     StringView GetTraceId() const { return mTraceId; }
     void SetTraceId(const std::string& traceId);
