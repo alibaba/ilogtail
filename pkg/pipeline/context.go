@@ -42,10 +42,10 @@ func (m *MetricsRecord) appendLabels(log *protocol.Log) {
 	}
 }
 
-func (m *MetricsRecord) RegisterMetricVector(collecter MetricCollector) {
+func (m *MetricsRecord) RegisterMetricCollector(collector MetricCollector) {
 	m.Lock()
 	defer m.Unlock()
-	m.MetricCollectors = append(m.MetricCollectors, collecter)
+	m.MetricCollectors = append(m.MetricCollectors, collector)
 }
 
 func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {

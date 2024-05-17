@@ -208,25 +208,25 @@ func NewLatencyMetric(n string, lables ...*protocol.Log_Content) pipeline.Latenc
 
 func NewCounterMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
 	mv := NewCounterMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricVector(mv.(pipeline.MetricCollector))
+	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
 	return mv.WithLabels()
 }
 
 func NewAverageMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
 	mv := NewAverageMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricVector(mv.(pipeline.MetricCollector))
+	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
 	return mv.WithLabels()
 }
 
 func NewStringMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
 	mv := NewStringMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricVector(mv.(pipeline.MetricCollector))
+	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
 	return mv.WithLabels()
 }
 
 func NewLatencyMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Latency {
 	mv := NewLatencyMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricVector(mv.(pipeline.MetricCollector))
+	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
 	return mv.WithLabels()
 }
 

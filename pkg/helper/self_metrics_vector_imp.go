@@ -28,61 +28,9 @@ var (
 	DefaultCacheFactory = NewMapCahce
 )
 
-// SetMetricVectorCacheFactory alllows you to set the cache factory for the metric vector, like Prometheus SDK.
+// SetMetricVectorCacheFactory allows users to set the cache factory for the metric vector, like Prometheus SDK.
 func SetMetricVectorCacheFactory(factory func(pipeline.MetricSet) MetricVectorCache) {
 	DefaultCacheFactory = factory
-}
-
-var (
-	NewCounterMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
-		return NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
-	}
-
-	NewAverageMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
-		return NewMetricVector[pipeline.Average](metricName, pipeline.AverageType, constLabels, labelNames)
-	}
-
-	NewGaugeMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
-		return NewMetricVector[pipeline.Gauge](metricName, pipeline.GaugeType, constLabels, labelNames)
-	}
-
-	NewLatencyMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
-		return NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
-	}
-
-	NewStringMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
-		return NewMetricVector[pipeline.StringMetric](metricName, pipeline.StringType, constLabels, labelNames)
-	}
-)
-
-func NewCounterMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
-	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
-	mr.RegisterMetricVector(v)
-	return v
-}
-
-func NewAverageMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
-	v := NewMetricVector[pipeline.Average](metricName, pipeline.AverageType, constLabels, labelNames)
-	mr.RegisterMetricVector(v)
-	return v
-}
-
-func NewGaugeMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
-	v := NewMetricVector[pipeline.Gauge](metricName, pipeline.GaugeType, constLabels, labelNames)
-	mr.RegisterMetricVector(v)
-	return v
-}
-
-func NewLatencyMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
-	v := NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
-	mr.RegisterMetricVector(v)
-	return v
-}
-
-func NewStringMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
-	v := NewMetricVector[pipeline.StringMetric](metricName, pipeline.StringType, constLabels, labelNames)
-	mr.RegisterMetricVector(v)
-	return v
 }
 
 type (
@@ -93,6 +41,73 @@ type (
 	StringMetricVector  = pipeline.MetricVector[pipeline.StringMetric]
 	Label               = pipeline.Label
 )
+
+var (
+	// NewCounterMetricVector creates a new CounterMetricVector.
+	// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
+	NewCounterMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
+		return NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
+	}
+
+	// NewAverageMetricVector creates a new AverageMetricVector.
+	// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
+	NewAverageMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
+		return NewMetricVector[pipeline.Average](metricName, pipeline.AverageType, constLabels, labelNames)
+	}
+
+	// NewGaugeMetricVector creates a new GaugeMetricVector.
+	// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
+	NewGaugeMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
+		return NewMetricVector[pipeline.Gauge](metricName, pipeline.GaugeType, constLabels, labelNames)
+	}
+
+	// NewLatencyMetricVector creates a new LatencyMetricVector.
+	// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
+	NewLatencyMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
+		return NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
+	}
+
+	// NewStringMetricVector creates a new StringMetricVector.
+	// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
+	NewStringMetricVector = func(metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
+		return NewMetricVector[pipeline.StringMetric](metricName, pipeline.StringType, constLabels, labelNames)
+	}
+)
+
+// NewCounterMetricVectorAndRegister creates a new CounterMetricVector and register it to the MetricsRecord.
+func NewCounterMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
+	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
+	mr.RegisterMetricCollector(v)
+	return v
+}
+
+// NewAverageMetricVectorAndRegister creates a new AverageMetricVector and register it to the MetricsRecord.
+func NewAverageMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) AverageMetricVector {
+	v := NewMetricVector[pipeline.Average](metricName, pipeline.AverageType, constLabels, labelNames)
+	mr.RegisterMetricCollector(v)
+	return v
+}
+
+// NewGaugeMetricVectorAndRegister creates a new GaugeMetricVector and register it to the MetricsRecord.
+func NewGaugeMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) GaugeMetricVector {
+	v := NewMetricVector[pipeline.Gauge](metricName, pipeline.GaugeType, constLabels, labelNames)
+	mr.RegisterMetricCollector(v)
+	return v
+}
+
+// NewLatencyMetricVectorAndRegister creates a new LatencyMetricVector and register it to the MetricsRecord.
+func NewLatencyMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) LatencyMetricVector {
+	v := NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
+	mr.RegisterMetricCollector(v)
+	return v
+}
+
+// NewStringMetricVectorAndRegister creates a new StringMetricVector and register it to the MetricsRecord.
+func NewStringMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) StringMetricVector {
+	v := NewMetricVector[pipeline.StringMetric](metricName, pipeline.StringType, constLabels, labelNames)
+	mr.RegisterMetricCollector(v)
+	return v
+}
 
 var (
 	_ pipeline.MetricCollector                     = (*MetricVectorImpl[pipeline.Counter])(nil)
@@ -112,6 +127,10 @@ type MetricVectorImpl[T pipeline.Metric] struct {
 	*metricVector
 }
 
+// NewMetricVector creates a new MetricVector.
+// It returns a MetricVectorAndCollector, which is a MetricVector and a MetricCollector.
+// For plugin developers, they should use MetricVector APIs to create metrics.
+// For agent itself, it uses MetricCollector APIs to collect metrics.
 func NewMetricVector[T pipeline.Metric](metricName string, metricType pipeline.SelfMetricType, constLabels map[string]string, labelNames []string) MetricVectorAndCollector[T] {
 	return &MetricVectorImpl[T]{
 		metricVector: newMetricVector(metricName, metricType, constLabels, labelNames),
