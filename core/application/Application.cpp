@@ -66,7 +66,7 @@ DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
 DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
 DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
-DEFINE_FLAG_INT32(logtail_queue_check_gc_interval_sec, "30s", 30);
+DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(global_network_success);
@@ -268,7 +268,7 @@ void Application::Start() {
             lastTcmallocReleaseMemTime = curTime;
         }
 #endif
-        if (curTime - lastQueueGCTime >= INT32_FLAG(logtail_queue_check_gc_interval_sec)) {
+        if (curTime - lastQueueGCTime >= INT32_FLAG(queue_check_gc_interval_sec)) {
             ExactlyOnceQueueManager::GetInstance()->ClearTimeoutQueues();
             lastQueueGCTime = curTime;
         }

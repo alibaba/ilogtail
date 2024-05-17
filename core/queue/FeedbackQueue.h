@@ -44,10 +44,12 @@ public:
 protected:
     bool IsValidToPop() const { return mValidToPop && !Empty() && IsDownStreamQueuesValidToPush(); }
 
-    void ChangeStateIfNeededAfterPush() {
+    bool ChangeStateIfNeededAfterPush() {
         if (Size() == mHighWatermark) {
             mValidToPush = false;
+            return true;
         }
+        return false;
     }
 
     bool ChangeStateIfNeededAfterPop() {
