@@ -112,8 +112,8 @@ public:
     enum class Kind { Unspecified, Internal, Server, Client, Producer, Consumer };
     enum class StatusCode { Unset, Ok, Error };
 
-    static const std::string scopeName;
-    static const std::string scopeVersion;
+    static const std::string OTLP_SCOPE_NAME;
+    static const std::string OTLP_SCOPE_VERSION;
 
     StringView GetTraceId() const { return mTraceId; }
     void SetTraceId(const std::string& traceId);
