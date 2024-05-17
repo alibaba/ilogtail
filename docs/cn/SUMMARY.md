@@ -8,7 +8,7 @@
 * [开源协议](about/license.md)
 * [社区版和企业版的对比说明](about/compare-editions.md)
 
-## 社区活动 <a href="#events" id="event">></a>
+## 社区活动 <a href="#events" id="event"></a>
 
 * [开源之夏 2024](events/summer-ospp-2024/README.md)
   * [iLogtail 社区项目介绍](events/summer-ospp-2024/projects/README.md)
