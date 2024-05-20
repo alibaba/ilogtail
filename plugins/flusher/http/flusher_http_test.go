@@ -695,7 +695,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			Concurrency:    1,
 			queue:          make(chan *groupEventsWithTimestamp, 10),
 		}
-		flusher.broadcaster = NewBroadcaster(flusher.Concurrency)
+		flusher.broadcaster = helper.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
@@ -735,7 +735,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			Concurrency:    1,
 			queue:          make(chan *groupEventsWithTimestamp, 10),
 		}
-		flusher.broadcaster = NewBroadcaster(flusher.Concurrency)
+		flusher.broadcaster = helper.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
@@ -781,7 +781,7 @@ func TestHttpFlusherDropEvents(t *testing.T) {
 			queue:                  make(chan *groupEventsWithTimestamp, 1),
 			DropEventWhenQueueFull: true,
 		}
-		flusher.broadcaster = NewBroadcaster(flusher.Concurrency)
+		flusher.broadcaster = helper.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
