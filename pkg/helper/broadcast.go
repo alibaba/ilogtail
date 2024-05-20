@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package helper
 
 import (
 	"sync"
 )
 
 type broadcaster struct {
-	input chan interface{}
-	reg   chan chan<- interface{}
-	unreg chan chan<- interface{}
+	input chan any
+	reg   chan chan<- any
+	unreg chan chan<- any
 
-	outputs   map[chan<- interface{}]bool
+	outputs   map[chan<- any]bool
 	stopCh    chan struct{}
 	wg        sync.WaitGroup
 	sync.Once // close once
@@ -33,18 +33,18 @@ type broadcaster struct {
 // broadcasters.
 type Broadcaster interface {
 	// Register a new channel to receive broadcasts
-	Register(chan<- interface{})
+	Register(chan<- any)
 	// Unregister a channel so that it no longer receives broadcasts.
-	Unregister(chan<- interface{})
+	Unregister(chan<- any)
 	// Shut this broadcaster down.
 	Close() error
 	// Submit a new object to all subscribers
-	Submit(interface{})
+	Submit(any)
 	// Try Submit a new object to all subscribers return false if input chan is fill
-	TrySubmit(interface{}) bool
+	TrySubmit(any) bool
 }
 
-func (b *broadcaster) broadcast(m interface{}) {
+func (b *broadcaster) broadcast(m any) {
 	for ch := range b.outputs {
 		select {
 		case ch <- m:
@@ -75,10 +75,10 @@ func (b *broadcaster) run() {
 // channel buffer length.
 func NewBroadcaster(buflen int) Broadcaster {
 	b := &broadcaster{
-		input:   make(chan interface{}, buflen),
-		reg:     make(chan chan<- interface{}),
-		unreg:   make(chan chan<- interface{}),
-		outputs: make(map[chan<- interface{}]bool),
+		input:   make(chan any, buflen),
+		reg:     make(chan chan<- any),
+		unreg:   make(chan chan<- any),
+		outputs: make(map[chan<- any]bool),
 		stopCh:  make(chan struct{}),
 	}
 
@@ -88,11 +88,11 @@ func NewBroadcaster(buflen int) Broadcaster {
 	return b
 }
 
-func (b *broadcaster) Register(newch chan<- interface{}) {
+func (b *broadcaster) Register(newch chan<- any) {
 	b.reg <- newch
 }
 
-func (b *broadcaster) Unregister(newch chan<- interface{}) {
+func (b *broadcaster) Unregister(newch chan<- any) {
 	b.unreg <- newch
 }
 
@@ -100,10 +100,10 @@ func (b *broadcaster) Close() error {
 	b.Do(func() {
 		close(b.stopCh)
 		b.wg.Wait()
-		close(b.reg)               // not allowed to register anymore
-		close(b.unreg)             // not allowed to unregister anymore
-		close(b.input)             // not allowed to submit anymore
-		for v := range b.outputs { // close all registered channeld
+		close(b.reg)               // not allowed to register anymore.
+		close(b.unreg)             // not allowed to unregister anymore.
+		close(b.input)             // not allowed to submit anymore.
+		for v := range b.outputs { // close all registered channel.
 			close(v)
 		}
 	})
@@ -111,7 +111,7 @@ func (b *broadcaster) Close() error {
 }
 
 // Submit an item to be broadcast to all listeners.
-func (b *broadcaster) Submit(m interface{}) {
+func (b *broadcaster) Submit(m any) {
 	if b != nil {
 		b.input <- m
 	}
@@ -119,7 +119,7 @@ func (b *broadcaster) Submit(m interface{}) {
 
 // TrySubmit attempts to submit an item to be broadcast, returning
 // true iff it the item was broadcast, else false.
-func (b *broadcaster) TrySubmit(m interface{}) bool {
+func (b *broadcaster) TrySubmit(m any) bool {
 	if b == nil {
 		return false
 	}

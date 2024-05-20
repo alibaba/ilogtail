@@ -100,7 +100,7 @@ type FlusherHTTP struct {
 	client      *http.Client
 	interceptor extensions.FlushInterceptor
 
-	broadcaster Broadcaster
+	broadcaster helper.Broadcaster
 	queue       chan *groupEventsWithTimestamp
 	counter     sync.WaitGroup
 
@@ -171,7 +171,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.queue = make(chan *groupEventsWithTimestamp, f.QueueCapacity)
 
 	if f.JitterInSec > 0 {
-		f.broadcaster = NewBroadcaster(f.Concurrency)
+		f.broadcaster = helper.NewBroadcaster(f.Concurrency)
 	}
 
 	for i := 0; i < f.Concurrency; i++ {
@@ -195,7 +195,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.flushLatency = helper.NewAverageMetricAndRegister(metricsRecord, "http_flusher_flush_latency_ns", metricLabels...)
 
 	f.statusCodeStatistics = helper.NewCounterMetricVectorAndRegister(metricsRecord,
-		"http_flusher_status_code_statistics",
+		"http_flusher_status_code_count",
 		helper.LogContentsToMap(metricLabels),
 		[]string{"status_code"})
 
