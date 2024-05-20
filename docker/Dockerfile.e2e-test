@@ -1,10 +1,13 @@
 FROM golang:1.19-alpine
 
-WORKDIR /ilogtail
-COPY . .
-
-WORKDIR /ilogtail/test
+RUN apk add build-base
 RUN go env -w GOPROXY="https://goproxy.cn,direct"
 RUN go mod download
+
+WORKDIR /root
+COPY . ./ilogtail
+
+WORKDIR /root/ilogtail/test
+RUN mkdir -p /tmp/ilogtail
 
 CMD ["sh", "-c", "while true; do sleep 3600; done"]

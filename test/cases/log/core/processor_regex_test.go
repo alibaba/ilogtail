@@ -85,9 +85,9 @@ processors:
 %s`, config.TestConfig.GeneratedLogDir, control.SLSFlusherConfig)
 	control.AddLocalConfig(c, "regex_single")
 	// // Trigger
-	// startTime := time.Now().Unix()
-	// trigger.TriggerRegexSingle(100, 100, "simple.log")
-	// control.WaitLog2SLS(int32(startTime), 30*time.Second)
+	startTime := time.Now().Unix()
+	trigger.TriggerRegexSingle(100, 100, "simple.log")
+	control.WaitLog2SLS(int32(startTime), 30*time.Second)
 	// // Verify
 	// verify.VerifyLogCount(100, int32(startTime))
 	// verify.VerifyRegexSingle(int32(startTime))

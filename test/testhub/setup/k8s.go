@@ -30,24 +30,35 @@ func NewDaemonSetEnv() *K8sEnv {
 }
 
 func (k *K8sEnv) ExecOnLogtail(command string) error {
-	return k.exec(command, "logtail-ds", "kube-system")
-}
-
-func (k *K8sEnv) ExecOnSource(command string) error {
-	return k.exec(command, "e2e-generator", "default")
-}
-
-func (k *K8sEnv) exec(command, dsName, dsNamespace string) error {
+	fmt.Println(command)
 	if k.k8sClient == nil {
 		return fmt.Errorf("k8s client init failed")
 	}
-	pods, err := k.getPods(dsName, dsNamespace)
+	pods, err := k.getDaemonSetPods("logtail-ds", "kube-system")
 	if err != nil {
 		return err
 	}
 	for _, pod := range pods.Items {
 		fmt.Println(pod.Name)
 		if err := k.execInPod(k.config, pod.Namespace, pod.Name, pod.Spec.Containers[0].Name, []string{"bash", "-c", command}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k *K8sEnv) ExecOnSource(command string) error {
+	fmt.Println(command)
+	if k.k8sClient == nil {
+		return fmt.Errorf("k8s client init failed")
+	}
+	pods, err := k.getDeploymentPods("e2e-generator", "default")
+	if err != nil {
+		return err
+	}
+	for _, pod := range pods.Items {
+		fmt.Println(pod.Name)
+		if err := k.execInPod(k.config, pod.Namespace, pod.Name, pod.Spec.Containers[0].Name, []string{"sh", "-c", command}); err != nil {
 			return err
 		}
 	}
@@ -67,7 +78,7 @@ func (k *K8sEnv) initK8sClient() {
 	k.k8sClient = k8sClient
 }
 
-func (k *K8sEnv) getPods(dsName, dsNamespace string) (*corev1.PodList, error) {
+func (k *K8sEnv) getDaemonSetPods(dsName, dsNamespace string) (*corev1.PodList, error) {
 	daemonSet, err := k.k8sClient.AppsV1().DaemonSets(dsNamespace).Get(context.TODO(), dsName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -76,6 +87,21 @@ func (k *K8sEnv) getPods(dsName, dsNamespace string) (*corev1.PodList, error) {
 	listOptions := metav1.ListOptions{LabelSelector: selector}
 
 	pods, err := k.k8sClient.CoreV1().Pods(dsNamespace).List(context.TODO(), listOptions)
+	if err != nil {
+		return nil, err
+	}
+	return pods, nil
+}
+
+func (k *K8sEnv) getDeploymentPods(deploymentName, deploymentNamespace string) (*corev1.PodList, error) {
+	deployment, err := k.k8sClient.AppsV1().Deployments(deploymentNamespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	selector := metav1.FormatLabelSelector(deployment.Spec.Selector)
+	listOptions := metav1.ListOptions{LabelSelector: selector}
+
+	pods, err := k.k8sClient.CoreV1().Pods(deploymentNamespace).List(context.TODO(), listOptions)
 	if err != nil {
 		return nil, err
 	}

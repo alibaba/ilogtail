@@ -37,7 +37,7 @@ func InitSLSFlusherConfig() {
 
 func AddLocalConfig(c string, configName string) {
 	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
-  %s`, iLogtailLocalConfigDir, configName, c+SLSFlusherConfig)
+  %s`, iLogtailLocalConfigDir, configName, c)
 	if err := setup.Env.ExecOnLogtail(command); err != nil {
 		panic(err)
 	}
