@@ -89,6 +89,6 @@ processors:
 	trigger.TriggerRegexSingle(100, 100, "simple.log")
 	control.WaitLog2SLS(int32(startTime), 30*time.Second)
 	// // Verify
-	// verify.VerifyLogCount(100, int32(startTime))
-	// verify.VerifyRegexSingle(int32(startTime))
+	verify.VerifyLogCount(100, int32(startTime))
+	verify.VerifyRegexSingle(int32(startTime))
 }
