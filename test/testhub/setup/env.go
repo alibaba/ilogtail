@@ -3,7 +3,8 @@ package setup
 var Env TestEnv
 
 type TestEnv interface {
-	Exec(command string) error
+	ExecOnLogtail(command string) error
+	ExecOnSource(command string) error
 }
 
 func InitEnv(envType string) {

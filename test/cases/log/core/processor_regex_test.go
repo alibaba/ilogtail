@@ -54,7 +54,7 @@ processors:
 
 func TestRegexSingleOnDaemonSet(t *testing.T) {
 	// Cleanup
-	// defer cleanup.CleanupAll()
+	defer cleanup.CleanupAll()
 	// Setup
 	setup.InitEnv("daemonset")
 	c := fmt.Sprintf(`
@@ -67,6 +67,7 @@ inputs:
 processors:
   - Type: processor_parse_regex_native
     SourceKey: content
+    K8sNamespaceRegex: default
     Regex: (\S+)\s(\w+):(\d+)\s(\S+)\s-\s\[([^]]+)]\s"(\w+)\s(\S+)\s([^"]+)"\s(\d+)\s(\d+)\s"([^"]+)"\s(.*)
     Keys:
       - mark

@@ -9,7 +9,7 @@ import (
 
 func CleanupAllGeneratedLog() {
 	command := fmt.Sprintf("rm -rf %s/*", config.TestConfig.GeneratedLogDir)
-	if err := setup.Env.Exec(command); err != nil {
+	if err := setup.Env.ExecOnSource(command); err != nil {
 		panic(err)
 	}
 }

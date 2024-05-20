@@ -1,10 +1,10 @@
-FROM golang:1.19
+FROM golang:1.19-alpine
 
-WORKDIR /workspace
+WORKDIR /ilogtail
 COPY . .
 
-WORKDIR /workspace/test
+WORKDIR /ilogtail/test
 RUN go env -w GOPROXY="https://goproxy.cn,direct"
 RUN go mod download
 
-CMD ["go", "test", "-v", "-run", "^TestRegexSingleOnDaemonSet$", "github.com/alibaba/ilogtail/test/cases/log/core"]
+CMD ["sh", "-c", "while true; do sleep 3600; done"]

@@ -38,14 +38,14 @@ func InitSLSFlusherConfig() {
 func AddLocalConfig(c string, configName string) {
 	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
   %s`, iLogtailLocalConfigDir, configName, c+SLSFlusherConfig)
-	if err := setup.Env.Exec(command); err != nil {
+	if err := setup.Env.ExecOnLogtail(command); err != nil {
 		panic(err)
 	}
 }
 
 func RemoveAllLocalConfig() {
 	command := fmt.Sprintf("cd %s && rm -rf *.yaml", iLogtailLocalConfigDir)
-	if err := setup.Env.Exec(command); err != nil {
+	if err := setup.Env.ExecOnLogtail(command); err != nil {
 		panic(err)
 	}
 }

@@ -20,7 +20,15 @@ func NewHostEnv() *HostEnv {
 	return env
 }
 
-func (h *HostEnv) Exec(command string) error {
+func (h *HostEnv) ExecOnLogtail(command string) error {
+	return h.exec(command)
+}
+
+func (h *HostEnv) ExecOnSource(command string) error {
+	return h.exec(command)
+}
+
+func (h *HostEnv) exec(command string) error {
 	if h.sshClient == nil {
 		return fmt.Errorf("ssh client init failed")
 	}

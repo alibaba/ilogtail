@@ -23,7 +23,7 @@ func TriggerRegexSingle(totalLog, interval int, filename string) {
 	}); err != nil {
 		panic(err)
 	}
-	if err := setup.Env.Exec(triggerRegexCommand.String()); err != nil {
+	if err := setup.Env.ExecOnSource(triggerRegexCommand.String()); err != nil {
 		panic(err)
 	}
 }

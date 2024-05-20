@@ -1,14 +1,15 @@
 package setup
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/alibaba/ilogtail/test/config"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
@@ -28,15 +29,24 @@ func NewDaemonSetEnv() *K8sEnv {
 	return env
 }
 
-func (k *K8sEnv) Exec(command string) error {
+func (k *K8sEnv) ExecOnLogtail(command string) error {
+	return k.exec(command, "logtail-ds", "kube-system")
+}
+
+func (k *K8sEnv) ExecOnSource(command string) error {
+	return k.exec(command, "e2e-generator", "default")
+}
+
+func (k *K8sEnv) exec(command, dsName, dsNamespace string) error {
 	if k.k8sClient == nil {
 		return fmt.Errorf("k8s client init failed")
 	}
-	pods, err := k.getLogtailPods()
+	pods, err := k.getPods(dsName, dsNamespace)
 	if err != nil {
 		return err
 	}
 	for _, pod := range pods.Items {
+		fmt.Println(pod.Name)
 		if err := k.execInPod(k.config, pod.Namespace, pod.Name, pod.Spec.Containers[0].Name, []string{"bash", "-c", command}); err != nil {
 			return err
 		}
@@ -57,9 +67,7 @@ func (k *K8sEnv) initK8sClient() {
 	k.k8sClient = k8sClient
 }
 
-func (k *K8sEnv) getLogtailPods() (*corev1.PodList, error) {
-	dsName := "logtail-ds"
-	dsNamespace := "kube-system"
+func (k *K8sEnv) getPods(dsName, dsNamespace string) (*corev1.PodList, error) {
 	daemonSet, err := k.k8sClient.AppsV1().DaemonSets(dsNamespace).Get(context.TODO(), dsName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -88,17 +96,17 @@ func (k *K8sEnv) execInPod(config *rest.Config, namespace, podName, containerNam
 			Stdout:    true,
 			Stderr:    true,
 			TTY:       false,
-		}, metav1.ParameterCodec)
-
+		}, scheme.ParameterCodec)
 	executor, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
 	if err != nil {
 		return err
 	}
 
+	var stdout, stderr bytes.Buffer
 	err = executor.Stream(remotecommand.StreamOptions{
 		Stdin:  nil,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
+		Stdout: &stdout,
+		Stderr: &stderr,
 	})
 	if err != nil {
 		fmt.Println(err)
