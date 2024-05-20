@@ -38,7 +38,7 @@ ip 和 port 为 ConfigServer 的 ip 和接收端口，默认为127.0.0.1和8899�
 | agent_type | string | Agent 的类型 |
 | agent_id | string | Agent 的唯一标识 |
 | attributes | AgentAttributes | Agent 的运行信息 |
-| string | string[] | Agent 的标签 |
+| tags | string[] | Agent 的标签 |
 | running_status | string | Agent 的运行状态 |
 | startup_time | int64 | Agent 的启动时间 |
 | interval | int32 | Agent 的心跳间隔 |
