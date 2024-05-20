@@ -39,6 +39,7 @@ type MetricValue[T string | float64] struct {
 // 3. Label Keys is label Keys that may have different values, e.g., "status_code=200", "status_code=404".
 type MetricSet interface {
 	Name() string
+	Type() SelfMetricType
 	ConstLabels() []Label
 	LabelKeys() []string
 }
@@ -53,7 +54,6 @@ type MetricCollector interface {
 // If the labels has label names that are not in the MetricSet, the Metric will be invalid.
 type MetricVector[T Metric] interface {
 	WithLabels(labels ...Label) T
-	MetricCollector
 }
 
 type Metric interface {
