@@ -66,15 +66,21 @@ func (k *K8sEnv) ExecOnSource(command string) error {
 }
 
 func (k *K8sEnv) initK8sClient() {
-	config, err := clientcmd.BuildConfigFromFlags("", config.TestConfig.KubeConfigPath)
+	var c *rest.Config
+	var err error
+	if len(config.TestConfig.KubeConfigPath) == 0 {
+		c, err = rest.InClusterConfig()
+	} else {
+		c, err = clientcmd.BuildConfigFromFlags("", config.TestConfig.KubeConfigPath)
+	}
 	if err != nil {
 		panic(err)
 	}
-	k8sClient, err := kubernetes.NewForConfig(config)
+	k8sClient, err := kubernetes.NewForConfig(c)
 	if err != nil {
 		panic(err)
 	}
-	k.config = config
+	k.config = c
 	k.k8sClient = k8sClient
 }
 
