@@ -28,6 +28,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dustin/go-broadcast"
 	"github.com/jarcoal/httpmock"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
@@ -695,7 +696,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			Concurrency:    1,
 			queue:          make(chan *groupEventsWithTimestamp, 10),
 		}
-		flusher.broadcaster = helper.NewBroadcaster(flusher.Concurrency)
+		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
@@ -735,7 +736,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			Concurrency:    1,
 			queue:          make(chan *groupEventsWithTimestamp, 10),
 		}
-		flusher.broadcaster = helper.NewBroadcaster(flusher.Concurrency)
+		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
@@ -781,7 +782,7 @@ func TestHttpFlusherDropEvents(t *testing.T) {
 			queue:                  make(chan *groupEventsWithTimestamp, 1),
 			DropEventWhenQueueFull: true,
 		}
-		flusher.broadcaster = helper.NewBroadcaster(flusher.Concurrency)
+		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
@@ -1155,7 +1156,7 @@ func TestFlusherHTTP_StopWithJitter(t *testing.T) {
 				Encoding: converter.EncodingCustom,
 			},
 			Timeout:     defaultTimeout,
-			Concurrency: 1,
+			Concurrency: 10,
 			JitterInSec: 3,
 			Query: map[string]string{
 				"db": "%{tag.db}",
@@ -1562,9 +1563,10 @@ func TestBroadcast(t *testing.T) {
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 
+		ctx := mock.NewEmptyContext("p", "l", "c")
 		receivedNum := int64(0)
 		httpmock.RegisterResponder("POST", "http://testeof.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
-			fmt.Println("recieved count:", atomic.AddInt64(&receivedNum, 1))
+			logger.Info(ctx.GetRuntimeContext(), "recieved count", atomic.AddInt64(&receivedNum, 1))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
 
@@ -1585,10 +1587,10 @@ func TestBroadcast(t *testing.T) {
 			Query: map[string]string{
 				"db": "%{metadata.db}",
 			},
-			JitterInSec: 10,
+			JitterInSec: 30,
 		}
 
-		err := flusher.Init(mock.NewEmptyContext("p", "l", "c"))
+		err := flusher.Init(ctx)
 		So(err, ShouldBeNil)
 
 		mockMetric1 := "cpu.load.short,host=server01,region=cn value=0.6 1672321328000000000"
@@ -1597,8 +1599,8 @@ func TestBroadcast(t *testing.T) {
 
 		Convey("Export a single byte events each GroupEvents with Metadata {db: mydb}", func() {
 			groupEventsArray := []*models.PipelineGroupEvents{}
-			count := 1024
-			for i := 0; i < count; i++ {
+			flushCount := 1024
+			for i := 0; i < flushCount; i++ {
 				groupEventsArray = append(groupEventsArray,
 					&models.PipelineGroupEvents{
 						Group:  models.NewGroup(mockMetadata, nil),
@@ -1613,10 +1615,13 @@ func TestBroadcast(t *testing.T) {
 			httpmock.ZeroCallCounters()
 			err := flusher.Export(groupEventsArray, nil)
 			So(err, ShouldBeNil)
-			flusher.Stop()
+			start := time.Now()
+			err = flusher.Stop()
+			So(err, ShouldBeNil)
+			So(time.Since(start), ShouldBeLessThan, time.Second)
 
 			Convey("each GroupEvents should send in a single request", func() {
-				So(httpmock.GetTotalCallCount(), ShouldEqual, count*2)
+				So(httpmock.GetTotalCallCount(), ShouldEqual, flushCount*2)
 			})
 
 			Convey("retry count is should be 2", func() {
