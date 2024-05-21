@@ -14,7 +14,7 @@ import (
 
 func TestNewConvertToJsonlineLogs(t *testing.T) {
 	Convey("When constructing converter with unsupported encoding", t, func() {
-		_, err := NewConverter(ProtocolJsonline, EncodingNone, nil, nil)
+		_, err := NewConverter(ProtocolJsonline, EncodingNone, nil, nil, &config.GlobalConfig{})
 		So(err, ShouldNotBeNil)
 	})
 
