@@ -30,6 +30,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/dustin/go-broadcast"
 	"github.com/golang/snappy"
 	"k8s.io/apimachinery/pkg/util/net"
 
@@ -89,9 +90,9 @@ type FlusherHTTP struct {
 	RequestInterceptors    []extensions.ExtensionConfig // custom request interceptor settings
 	QueueCapacity          int                          // capacity of channel
 	DropEventWhenQueueFull bool                         // If true, pipeline events will be dropped when the queue is full
-	DebugMetrics           []string
-	JitterInSec            int
-	Compression            string
+	JitterInSec            int                          // JitterInSec is the jitter time in seconds to prevent peek traffic , default is 0
+	Compression            string                       // Compression type, support gzip and snappy
+	ExemplarEvents         []string                     // log some event details for debug purpose
 
 	varKeys []string
 
@@ -100,7 +101,7 @@ type FlusherHTTP struct {
 	client      *http.Client
 	interceptor extensions.FlushInterceptor
 
-	broadcaster helper.Broadcaster
+	broadcaster broadcast.Broadcaster
 	queue       chan *groupEventsWithTimestamp
 	counter     sync.WaitGroup
 
@@ -113,6 +114,8 @@ type FlusherHTTP struct {
 	statusCodeStatistics pipeline.MetricVector[pipeline.Counter]
 }
 
+// groupEventsWithTimestamp is a struct that contains the data and the time it was enqueued.
+// it is used for compute the jitter.
 type groupEventsWithTimestamp struct {
 	data        any
 	enqueueTime time.Time
@@ -171,15 +174,15 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.queue = make(chan *groupEventsWithTimestamp, f.QueueCapacity)
 
 	if f.JitterInSec > 0 {
-		f.broadcaster = helper.NewBroadcaster(f.Concurrency)
+		f.broadcaster = broadcast.NewBroadcaster(f.Concurrency)
 	}
 
 	for i := 0; i < f.Concurrency; i++ {
-		ch := make(chan interface{}, 1)
+		subscribeChan := make(chan interface{}, 1)
 		if f.JitterInSec > 0 {
-			f.broadcaster.Register(ch)
+			f.broadcaster.Register(subscribeChan)
 		}
-		go f.runFlushTask(ch)
+		go f.runFlushTask(subscribeChan)
 	}
 
 	f.buildVarKeys()
@@ -203,7 +206,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 		"timeout", f.Timeout,
 		"jitter", time.Duration(f.JitterInSec)*time.Second,
 		"compression", f.Compression,
-		"debug metrics", f.DebugMetrics)
+		"sample_events", f.ExemplarEvents)
 	return nil
 }
 
@@ -245,7 +248,7 @@ func (f *FlusherHTTP) IsReady(projectName string, logstoreName string, logstoreK
 
 func (f *FlusherHTTP) Stop() error {
 	if f.broadcaster != nil {
-		f.broadcaster.Close() // close the broadcaster to flush all the data in the queue
+		_ = f.broadcaster.Close() // close the broadcaster to flush all the data in the queue
 	}
 
 	f.counter.Wait()
@@ -331,19 +334,19 @@ func (f *FlusherHTTP) addTask(log interface{}, enqueueTime time.Time) {
 		f.broadcaster.TrySubmit(nil)
 	}
 
-	evts := &groupEventsWithTimestamp{
+	groupWithTs := &groupEventsWithTimestamp{
 		data:        log,
 		enqueueTime: enqueueTime,
 	}
 
 	if f.DropEventWhenQueueFull {
 		select {
-		case f.queue <- evts:
+		case f.queue <- groupWithTs:
 		default:
 			f.handleDroppedEvent(log)
 		}
 	} else {
-		f.queue <- evts
+		f.queue <- groupWithTs
 	}
 }
 
@@ -369,17 +372,16 @@ func (f *FlusherHTTP) countDownTask() {
 	f.counter.Done()
 }
 
-func (f *FlusherHTTP) runFlushTask(broadcastCh chan interface{}) {
+func (f *FlusherHTTP) runFlushTask(subscribeChan chan interface{}) {
 	jitterDuration := time.Duration(f.JitterInSec) * time.Second
 
 	for event := range f.queue {
 		eventWaitTime := time.Since(event.enqueueTime)
 
-		if eventWaitTime < jitterDuration {
-			if len(f.queue) < f.Concurrency {
-				maxSleepDuration := jitterDuration - eventWaitTime
-				randomSleep(maxSleepDuration, broadcastCh)
-			}
+		// if queue is under low pressure and that there are some idle workers, sleep randomly.
+		if eventWaitTime < jitterDuration && len(f.queue) < f.Concurrency {
+			maxSleepDuration := jitterDuration - eventWaitTime
+			randomSleep(maxSleepDuration, subscribeChan)
 		}
 
 		err := f.convertAndFlush(event.data)
@@ -407,10 +409,10 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 			}
 		}
 		f.matchedEvents.Add(int64(len(v.Events)))
-		if len(f.DebugMetrics) > 0 {
-			for _, target := range f.DebugMetrics {
+		if len(f.ExemplarEvents) > 0 {
+			for _, target := range f.ExemplarEvents {
 				for _, m := range v.Events {
-					if m.GetName() == target {
+					if m.GetName() == target && m.GetType() == models.EventTypeMetric {
 						logger.Infof(f.context.GetRuntimeContext(), "http flusher found target metric: %s: details: %v", target, m.(*models.Metric).String())
 					}
 				}
