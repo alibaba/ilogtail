@@ -1,0 +1,858 @@
+# iLogtail SPL Cookbook
+
+随着流式处理的发展，出现了越来越多的工具和语言，使得数据处理变得更加高效、灵活和易用。在此背景下，SLS 推出了 SPL(SLS Processing Language) 语法，以此统一查询、端上处理、数据加工等的语法，保证了数据处理的灵活性。iLogtail 作为日志、时序数据采集器，在 2.0 版本中，全面支持了 SPL 。本文对 1.X 版本的处理插件进行了梳理，介绍了如何编写 SPL 语句，从 1.X 版本插件迁移到 2.0 版本的 SPL 处理插件，帮助用户实现更加灵活的端上数据处理。
+
+## SPL vs iLogtail 1.X
+
+iLogtail 1.X 流水线主要可以分为两个部分，一部分是由 C++实现的原生插件，性能最强，但支持的格式有限。另一部分是 Go 实现的拓展插件，足够灵活，但资源消耗较大、性能有所损耗。
+
+而随着 iLogtail 2.0 带来了 SPL 处理能力，兼顾性能与灵活性。用户不需要配置复杂的插件，只需要编写 SPL 语句，即可以利用 SPL 的计算能力，完成对数据的处理。SPL 语法可以参考[文档](https://help.aliyun.com/zh/sls/user-guide/spl-syntax/?spm=a2c4g.11186623.0.0.2bb67eeaChOwLy)。
+
+![image](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/spl.png)
+
+总的来说，iLogtail 2.0 + SPL 主要有以下的优势：
+
+1.  统一数据处理语言：原来同样一个格式的数据，数据加工和 ilogtail 采集的配置是完全不同的，可能会导致客户需要有两个配置。现在 SPL 语法统一之后，同样的配置基本可以无缝在 ilogtail 和实时消费中转换。
+
+2.  查询处理更高效：SPL 对弱结构化数据友好，同时 SPL 主要算子由 C++实现，接近 iLogtail 1.X 版本的原生性能，远高于拓展插件的性能
+
+3.  丰富的工具和函数：SPL 提供了丰富的内置函数和算子，用户可以更加灵活地进行组合
+
+4.  简单易学：SPL 属于一种低代码语言，用户可以快速上手，日志搜索、处理一气呵成
+
+
+接下来，本文将介绍如何用灵活的 SPL 语句，实现与 1.X 版本插件相同的处理能力。
+
+## 原生插件
+
+### 正则解析
+
+**输入**
+```
+127.0.0.1 - - [07/Jul/2022:10:43:30 +0800] "POST /PutData?Category=YunOsAccountOpLog" 0.024 18204 200 37 "-" "aliyun-sdk-java"
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths: 
+    - /workspaces/ilogtal/debug/simple.log
+processors:
+  - Type: processor_parse_regex_native
+    SourceKey: content
+    Regex: ([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"
+    Keys:
+    - ip
+    - time
+    - method
+    - url
+    - request_time
+    - request_length
+    - status
+    - length
+    - ref_url
+    - browser
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-regexp content, '([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"' as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
+    | project-away content
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "ip": "127.0.0.1",
+    "time": "07/Jul/2022:10:43:30",
+    "method": "POST",
+    "url": "/PutData?Category=YunOsAccountOpLog",
+    "request_time": "0.024",
+    "request_length": "18204",
+    "status": "200",
+    "length": "37",
+    "ref_url": "-",
+    "browser": "aliyun-sdk-java",
+    "__time__": "1713184059"
+}
+```
+
+### 分隔符解析
+
+**输入**
+```
+127.0.0.1,07/Jul/2022:10:43:30 +0800,POST,PutData Category=YunOsAccountOpLog,0.024,18204,200,37,-,aliyun-sdk-java
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_delimiter_native
+    SourceKey: content
+    Separator: ","
+    Quote: '"'
+    Keys:
+    - ip
+    - time
+    - method
+    - url
+    - request_time
+    - request_length
+    - status
+    - length
+    - ref_url
+    - browser
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+SPL模式
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-csv content as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
+    | project-away content
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "ip": "127.0.0.1",
+    "time": "07/Jul/2022:10:43:30 +0800",
+    "method": "POST",
+    "url": "PutData?Category=YunOsAccountOpLog",
+    "request_time": "0.024",
+    "request_length": "18204",
+    "status": "200",
+    "length": "37",
+    "ref_url": "-",
+    "browser": "aliyun-sdk-java",
+    "__time__": "1713231487"
+}
+```
+
+### Json 解析
+
+**输入**
+```
+127.0.0.1,07/Jul/2022:10:43:30 +0800,POST,PutData Category=YunOsAccountOpLog,0.024,18204,200,37,-,aliyun-sdk-java
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_json_native
+    SourceKey: content
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-json content
+    | project-away content
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "url": "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1",
+    "ip": "10.200.98.220",
+    "user-agent": "aliyun-sdk-java",
+    "request": "{\"status\":\"200\",\"latency\":\"18204\"}",
+    "time": "07/Jul/2022:10:30:28",
+    "__time__": "1713237315"
+}
+```
+
+### 正则解析+时间解析
+
+**输入**
+```
+127.0.0.1,07/Jul/2022:10:43:30 +0800,POST,PutData Category=YunOsAccountOpLog,0.024,18204,200,37,-,aliyun-sdk-java
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_regex_native
+    SourceKey: content
+    Regex: ([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"
+    Keys:
+    - ip
+    - time
+    - method
+    - url
+    - request_time
+    - request_length
+    - status
+    - length
+    - ref_url
+    - browser
+  - Type: processor_parse_timestamp_native
+    SourceKey: time
+    SourceFormat: '%Y-%m-%dT%H:%M:%S'
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    * 
+    | parse-regexp content, '([\d\.]+) \S+ \S+ \[(\S+)\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"' as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
+    | extend ts=date_parse(time, '%Y-%m-%d %H:%i:%S')
+    | extend __time__=cast(to_unixtime(ts) as INTEGER)
+    | project-away ts
+    | project-away content
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "ip": "127.0.0.1",
+    "time": "07/Jul/2022:10:43:30 +0800",
+    "method": "POST",
+    "url": "PutData?Category=YunOsAccountOpLog",
+    "request_time": "0.024",
+    "request_length": "18204",
+    "status": "200",
+    "length": "37",
+    "ref_url": "-",
+    "browser": "aliyun-sdk-java",
+    "__time__": "1713231487"
+}
+```
+
+### 正则解析+过滤
+
+**输入**
+```
+127.0.0.1 - - [07/Jul/2022:10:43:30 +0800] "POST /PutData?Category=YunOsAccountOpLog" 0.024 18204 200 37 "-" "aliyun-sdk-java"
+127.0.0.1 - - [07/Jul/2022:10:44:30 +0800] "Get /PutData?Category=YunOsAccountOpLog" 0.024 18204 200 37 "-" "aliyun-sdk-java"
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_regex_native
+    SourceKey: content
+    Regex: ([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"
+    Keys:
+    - ip
+    - time
+    - method
+    - url
+    - request_time
+    - request_length
+    - status
+    - length
+    - ref_url
+    - browser
+    - Type: processor_filter_regex_native
+    FilterKey:
+    - method
+    - status
+    FilterRegex:
+    - ^(POST|PUT)$
+    - ^200$
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-regexp content, '([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"' as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
+    | project-away content
+    | where regexp_like(method, '^(POST|PUT)$') and regexp_like(status, '^200$')
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "ip": "127.0.0.1",
+    "time": "07/Jul/2022:10:43:30",
+    "method": "POST",
+    "url": "/PutData?Category=YunOsAccountOpLog",
+    "request_time": "0.024",
+    "request_length": "18204",
+    "status": "200",
+    "length": "37",
+    "ref_url": "-",
+    "browser": "aliyun-sdk-java",
+    "__time__": "1713238839"
+}
+```
+
+### 脱敏
+
+**输入**
+```
+{"account":"1812213231432969","password":"04a23f38"}
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_desensitize_native
+    SourceKey: content
+    Method: const
+    ReplacingString: "******"
+    ContentPatternBeforeReplacedString: 'password":"'
+    ReplacedContentPattern: '[^"]+'
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-regexp content, 'password":"(\S+)"' as password
+    | extend content=replace(content, password, '******')
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "content": "{\"account\":\"1812213231432969\",\"password\":\"******\"}",
+    "__time__": "1713239305"
+}
+```
+
+## 拓展插件
+
+### 添加字段
+
+**输入**
+```
+this is a test log
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_add_fields
+    Fields:
+    service: A
+    IgnoreIfExist: false
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | extend service='A'
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "content": "this is a test log",
+    "service": "A",
+    "__time__": "1713240293"
+}
+```
+
+### Json 解析+丢弃字段
+
+**输入**
+```
+{"key1": 123456, "key2": "abcd"}
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_json_native
+    SourceKey: content
+    - Type: processor_drop
+    DropKeys: 
+    - key1
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-json content
+    | project-away content
+    | project-away key1
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+"key2": "abcd",
+"__time__": "1713245944"
+}
+```
+
+### Json 解析+重命名字段
+
+**输入**
+```
+{"key1": 123456, "key2": "abcd"}
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_json_native
+    SourceKey: content
+    - Type: processor_rename
+    SourceKeys:
+    - key1
+    DestKeys:
+    - new_key1
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-json content
+    | project-away content
+    | project-rename new_key1=key1
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "new_key1": "123456",
+    "key2": "abcd",
+    "__time__": "1713249130"
+}
+```
+
+### Json 解析+过滤日志
+
+**输入**
+```
+{"ip": "10.**.**.**", "method": "POST", "browser": "aliyun-sdk-java"}
+{"ip": "10.**.**.**", "method": "POST", "browser": "chrome"}
+{"ip": "192.168.**.**", "method": "POST", "browser": "aliyun-sls-ilogtail"}
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_json_native
+    SourceKey: content
+    - Type: processor_filter_regex
+    Include:
+    ip: "10\..*"
+    method: POST
+    Exclude:
+    browser: "aliyun.*"
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-json content
+    | project-away content
+    | where regexp_like(ip, '10\..*') and regexp_like(method, 'POST') and not regexp_like(browser, 'aliyun.*')
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "ip": "10.**.**.**",
+    "method": "POST",
+    "browser": "chrome",
+    "__time__": "1713246645"
+}
+```
+
+### Json 解析+字段值映射处理
+
+**输入**
+```
+{"_ip_":"192.168.0.1","Index":"900000003"}
+{"_ip_":"255.255.255.255","Index":"3"}
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_parse_json_native
+    SourceKey: content
+    - Type: processor_dict_map
+    MapDict:
+    "127.0.0.1": "LocalHost-LocalHost"
+    "192.168.0.1": "default login"
+    SourceKey: "_ip_"
+    DestKey: "_processed_ip_"
+    Mode: "overwrite"
+    HandleMissing": true
+    Missing: "Not Detected"
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | parse-json content
+    | project-away content
+    | extend _processed_ip_= 
+    CASE 
+    WHEN _ip_ = '127.0.0.1' THEN 'LocalHost-LocalHost' 
+    WHEN _ip_ = '192.168.0.1' THEN 'default login' 
+    ELSE 'Not Detected'
+    END
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "_ip_": "192.168.0.1",
+    "Index": "900000003",
+    "_processed_ip_": "default login",
+    "__time__": "1713259557"
+}
+```
+
+### 字符串替换
+
+**输入**
+```
+hello,how old are you? nice to meet you
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_string_replace
+    SourceKey: content
+    Method: const
+    Match: "how old are you?"
+    ReplaceString: ""
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | extend content=replace(content, 'how old are you?', '')
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "content": "hello, nice to meet you",
+    "__time__": "1713260499"
+}
+```
+
+### 数据编码与解码
+
+#### Base64
+
+**输入**
+```
+this is a test log
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_base64_encoding
+    SourceKey: content
+    NewKey: content1
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | extend content1=to_base64(cast(content as varbinary))
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "content": "this is a test log",
+    "content1": "dGhpcyBpcyBhIHRlc3QgbG9n",
+    "__time__": "1713318724"
+}
+```
+
+#### MD5
+
+**输入**
+```
+hello,how old are you? nice to meet you
+```
+
+**处理插件模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_string_replace
+    SourceKey: content
+    Method: const
+    Match: "how old are you?"
+    ReplaceString: ""
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**SPL模式**
+```
+enable: true
+inputs:
+  - Type: input_file
+    FilePaths:
+    - /workspaces/ilogtail/debug/simple.log
+processors:
+  - Type: processor_spl
+    Script: |
+    *
+    | extend content1=lower(to_hex(md5(cast(content as varbinary))))
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+**输出**
+```
+{
+    "content": "this is a test log",
+    "content1": "4f3c93e010f366eca78e00dc1ed08984",
+    "__time__": "1713319673"
+}
+```

@@ -21,7 +21,9 @@ The core advantages of **iLogtail**:
 * High stability, used in the production of Alibaba and tens of thousands of Alibaba Cloud customers,  and collecting dozens of petabytes of observable data every day with nearly tens of millions deployments.
 * Support plugin expansion, such as collection, processing, aggregation, and sending modules.
 * Support configuration remote management and provide a variety of ways, such as SLS console, SDK, K8s Operator, etc.
-* Supports multiple advanced features such as self-monitoring, flow control, resource control, alarms, and statistics collection.
+* Support multiple advanced features such as self-monitoring, flow control, resource control, alarms, and statistics collection.
+* Support processing data on the client side using the Stream Processing Language (SPL), providing a wealth of built-in functions and operators.
+
 
 **iLogtail** supports the collection of a variety of telemetry data and transmission to a variety of different backends, such as [SLS observable platform](https://www.aliyun.com/product/sls). The data supported for collection are mainly as follows:
 
