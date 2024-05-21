@@ -112,7 +112,7 @@ func Test_checkPointManager_keyMatch(t *testing.T) {
 		if got := CheckPointManager.keyMatch([]byte("texst_1^xxx")); got {
 			t.Errorf("checkPointManager.Test_checkPointManager_keyMatch()")
 		}
-		delete(LogtailConfig, "test_1")
-		delete(LogtailConfig, "test_2")
+		delete(LogtailConfig, "test_1/1")
+		delete(LogtailConfig, "test_2/1")
 	})
 }
