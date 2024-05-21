@@ -7,6 +7,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -27,7 +28,7 @@ func TestNewConvertToJsonlineLogs(t *testing.T) {
 		protocolKeyRenameMap := map[string]string{
 			"time": "@timestamp",
 		}
-		c, err := NewConverter(ProtocolJsonline, EncodingJSON, keyRenameMap, protocolKeyRenameMap)
+		c, err := NewConverter(ProtocolJsonline, EncodingJSON, keyRenameMap, protocolKeyRenameMap, &config.GlobalConfig{})
 		So(err, ShouldBeNil)
 
 		Convey("When the logGroup is generated from files and from k8s daemonset environment", func() {
@@ -112,7 +113,7 @@ func TestNewConvertToJsonlineLogs(t *testing.T) {
 			"label":       "",
 			"env":         "",
 		}
-		c, err := NewConverter(ProtocolJsonline, EncodingJSON, keyRenameMap, nil)
+		c, err := NewConverter(ProtocolJsonline, EncodingJSON, keyRenameMap, nil, &config.GlobalConfig{})
 		So(err, ShouldBeNil)
 
 		Convey("When the logGroup is generated from files and from k8s daemonset environment", func() {
