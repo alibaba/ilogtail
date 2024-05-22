@@ -228,7 +228,7 @@ func (f *FlusherHTTP) Export(groupEventsArray []*models.PipelineGroupEvents, ctx
 		if !f.AsyncIntercept && f.interceptor != nil {
 			originCount := int64(len(groupEvents.Events))
 			groupEvents = f.interceptor.Intercept(groupEvents)
-			f.unmatchedEvents.Add(getInterceptedEventCount(originCount, groupEvents))
+			_ = f.unmatchedEvents.Add(getInterceptedEventCount(originCount, groupEvents))
 			// skip groupEvents that is nil or empty.
 			if groupEvents == nil || len(groupEvents.Events) == 0 {
 				continue
@@ -358,11 +358,11 @@ func (f *FlusherHTTP) handleDroppedEvent(log interface{}) {
 	switch v := log.(type) {
 	case *protocol.LogGroup:
 		if v != nil {
-			f.droppedEvents.Add(int64(len(v.Logs)))
+			_ = f.droppedEvents.Add(int64(len(v.Logs)))
 		}
 	case *models.PipelineGroupEvents:
 		if v != nil {
-			f.droppedEvents.Add(int64(len(v.Events)))
+			_ = f.droppedEvents.Add(int64(len(v.Events)))
 		}
 	}
 	logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a group event since the queue is full")
@@ -403,12 +403,12 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 		if f.AsyncIntercept && f.interceptor != nil {
 			originCount := int64(len(v.Events))
 			v = f.interceptor.Intercept(v)
-			f.unmatchedEvents.Add(getInterceptedEventCount(originCount, v))
+			_ = f.unmatchedEvents.Add(getInterceptedEventCount(originCount, v))
 			if v == nil || len(v.Events) == 0 {
 				return nil
 			}
 		}
-		f.matchedEvents.Add(int64(len(v.Events)))
+		_ = f.matchedEvents.Add(int64(len(v.Events)))
 		if len(f.ExemplarEvents) > 0 {
 			for _, target := range f.ExemplarEvents {
 				for _, m := range v.Events {
@@ -434,7 +434,7 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 			body, values := data, varValues[idx]
 			err = f.flushWithRetry(body, values)
 			if err != nil {
-				f.flushFailure.Add(1)
+				_ = f.flushFailure.Add(1)
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed flush data after retry, data dropped, error", err,
 					"remote url", f.RemoteURL, "headers", f.getInsensitiveMap(f.Headers), "query", f.getInsensitiveMap(f.Query))
 			}
@@ -443,7 +443,7 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 	case []byte:
 		err = f.flushWithRetry(rows, nil)
 		if err != nil {
-			f.flushFailure.Add(1)
+			_ = f.flushFailure.Add(1)
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed flush data after retry, data dropped, error", err,
 				"remote url", f.RemoteURL, "headers", f.getInsensitiveMap(f.Headers), "query", f.getInsensitiveMap(f.Query))
 		}
@@ -461,7 +461,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
 		if i > 0 { // first flush is not retry
-			f.retryCount.Add(1)
+			_ = f.retryCount.Add(1)
 		}
 
 		ok, retryable, e := f.flush(data, varValues)
@@ -480,7 +480,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 		<-time.After(f.getNextRetryDelay(i))
 	}
 	converter.PutPooledByteBuf(&data)
-	f.flushLatency.Add(time.Since(start).Nanoseconds())
+	_ = f.flushLatency.Add(time.Since(start).Nanoseconds())
 	return err
 }
 
@@ -593,7 +593,10 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 		return false, false, err
 	}
 
-	_ = f.statusCodeStatistics.WithLabels(pipeline.Label{Key: "status_code", Value: strconv.Itoa(response.StatusCode)}).Add(1)
+	err = f.statusCodeStatistics.WithLabels(pipeline.Label{Key: "status_code", Value: strconv.Itoa(response.StatusCode)}).Add(1)
+	if err != nil {
+		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher add status code metrics fail, error", err)
+	}
 
 	switch response.StatusCode / 100 {
 	case 2:

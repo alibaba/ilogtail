@@ -28,9 +28,13 @@
 | Convert.IgnoreUnExpectedData | Boolean            | 否       | ilogtail数据转换时，遇到非预期的数据的行为，true 跳过，false 报错。默认值 true                                                                                                                                      |
 | Convert.TagFieldsRename      | Map<String,String> | 否       | 对日志中tags中的json字段重命名                                                                                                                                                                      |
 | Convert.ProtocolFieldsRename | Map<String,String> | 否       | ilogtail日志协议字段重命名，可当前可重命名的字段：`contents`,`tags`和`time`                                                                                                                                    |
-| Concurrency                  | Int                | 否       | 向url发起请求的并发数，默认为`1`                                                                                                                                                                      |
-| QueueCapacity                  | Int                | 否       | 内部channel的缓存大小，默认为1024
-| AsyncIntercept                  | Boolean                | 否       | 异步过滤数据，默认为否
+| Concurrency                  | Int                | 否       | 向url发起请求的并发数，默认为`1`    ｜                                                                                                                                                                 |
+| QueueCapacity                ｜  Int              ｜   否       ｜   内部channel的缓存大小，默认为1024  
+| AsyncIntercept                  | Boolean                | 否       | 异步过滤数据，默认为否   
+| JitterInSec | Int | 否 | 发送的 Jitter，默认为 0|
+| Compression |  String  |否|  压缩策略，支持gzip和snappy，默认不打开，|
+|ExemplarEvents |   []string|  否| 将一些样本的详情打印出来，用于 debug，默认为空|
+
 
 ## 样例
 

@@ -1014,19 +1014,19 @@ func (c *mockContext) GetExtension(name string, cfg any) (pipeline.Extension, er
 	return nil, fmt.Errorf("basicAuth not set")
 }
 
-func (p *mockContext) GetMetricRecord() *pipeline.MetricsRecord {
+func (c *mockContext) GetMetricRecord() *pipeline.MetricsRecord {
 	metricsRecord := &pipeline.MetricsRecord{}
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "plugins", Value: "flusher_http"})
-	p.MetricsRecords = append(p.MetricsRecords, metricsRecord)
+	c.MetricsRecords = append(c.MetricsRecords, metricsRecord)
 	return metricsRecord
 }
 
-func (p *mockContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
+func (c *mockContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	if logGroup == nil {
 		return
 	}
 
-	for _, metricsRecord := range p.MetricsRecords {
+	for _, metricsRecord := range c.MetricsRecords {
 		metricsRecord.Serialize(logGroup)
 	}
 }
@@ -1566,7 +1566,7 @@ func TestBroadcast(t *testing.T) {
 		ctx := mock.NewEmptyContext("p", "l", "c")
 		receivedNum := int64(0)
 		httpmock.RegisterResponder("POST", "http://testeof.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
-			logger.Info(ctx.GetRuntimeContext(), "recieved count", atomic.AddInt64(&receivedNum, 1))
+			logger.Info(ctx.GetRuntimeContext(), "received count", atomic.AddInt64(&receivedNum, 1))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
 
