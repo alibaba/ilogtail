@@ -35,7 +35,7 @@ type Context interface {
 	GetProject() string
 	GetLogstore() string
 	GetRuntimeContext() context.Context
-	GetGlobalConfig() *config.GlobalConfig
+	GetPipelineScopeConfig() *config.GlobalConfig
 	GetExtension(name string, cfg any) (Extension, error)
 	RegisterCounterMetric(metric CounterMetric)
 	RegisterStringMetric(metric StringMetric)

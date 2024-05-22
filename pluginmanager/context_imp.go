@@ -85,7 +85,7 @@ func (p *ContextImp) GetLogstore() string {
 	return p.common.GetLogStore()
 }
 
-func (p *ContextImp) GetGlobalConfig() *config.GlobalConfig {
+func (p *ContextImp) GetPipelineScopeConfig() *config.GlobalConfig {
 	return p.logstoreC.GlobalConfig
 }
 

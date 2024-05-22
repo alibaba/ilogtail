@@ -132,7 +132,7 @@ func (p *ProcessorGotime) processLog(log *protocol.Log) {
 				parsedTime = parsedStringTime
 			}
 			if p.SetTime {
-				if p.context.GetGlobalConfig().EnableTimestampNanosecond {
+				if p.context.GetPipelineScopeConfig().EnableTimestampNanosecond {
 					protocol.SetLogTimeWithNano(log, uint32(parsedTime.Unix()), uint32(parsedTime.Nanosecond()))
 				} else {
 					protocol.SetLogTime(log, uint32(parsedTime.Unix()))

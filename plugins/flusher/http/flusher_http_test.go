@@ -760,7 +760,7 @@ func (c mockContext) GetRuntimeContext() context.Context {
 	return context.Background()
 }
 
-func (c mockContext) GetGlobalConfig() *config.GlobalConfig {
+func (c mockContext) GetPipelineScopeConfig() *config.GlobalConfig {
 	return &config.GlobalConfig{}
 }
 

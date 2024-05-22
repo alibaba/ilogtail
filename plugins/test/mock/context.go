@@ -63,7 +63,7 @@ func (p *EmptyContext) GetLogstore() string {
 	return p.common.GetLogStore()
 }
 
-func (p *EmptyContext) GetGlobalConfig() *config.GlobalConfig {
+func (p *EmptyContext) GetPipelineScopeConfig() *config.GlobalConfig {
 	return &config.GlobalConfig{}
 }
 
