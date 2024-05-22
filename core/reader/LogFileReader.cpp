@@ -1662,7 +1662,8 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         if (READ_BYTE < lastCacheSize) {
             READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
         }
-        StringBuffer stringMemory = logBuffer.sourcebuffer->AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
+        StringBuffer stringMemory
+            = logBuffer.sourcebuffer->AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
         if (lastCacheSize) {
             READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
         }
@@ -1737,9 +1738,10 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
 
     // cache is sealed, nbytes should no change any more
     size_t stringLen = nbytes;
-    if (stringBuffer[stringLen - 1] == '\n'
-        || stringBuffer[stringLen - 1]
-            == '\0') { // \0 is for json, such behavior make ilogtail not able to collect binary log
+    if (stringLen > 0
+        && (stringBuffer[stringLen - 1] == '\n'
+            || stringBuffer[stringLen - 1]
+                == '\0')) { // \0 is for json, such behavior make ilogtail not able to collect binary log
         --stringLen;
     }
     stringBuffer[stringLen] = '\0';
@@ -1887,9 +1889,10 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     }
     // cache is sealed, readCharCount should not change any more
     size_t stringLen = resultCharCount;
-    if (stringBuffer[stringLen - 1] == '\n'
-        || stringBuffer[stringLen - 1]
-            == '\0') { // \0 is for json, such behavior make ilogtail not able to collect binary log
+    if (stringLen > 0
+        && (stringBuffer[stringLen - 1] == '\n'
+            || stringBuffer[stringLen - 1]
+                == '\0')) { // \0 is for json, such behavior make ilogtail not able to collect binary log
         --stringLen;
     }
     stringBuffer[stringLen] = '\0';
@@ -2032,7 +2035,7 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
 */
 int32_t
 LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& rollbackLineFeedCount, bool allowRollback) {
-    if (!allowRollback) {
+    if (!allowRollback || size == 0) {
         return size;
     }
     int32_t endPs; // the position of \n or \0
@@ -2087,7 +2090,7 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
 */
 StringView LogFileReader::GetLastLine(StringView buffer, size_t end) {
     if (end == 0) {
-        return buffer;
+        return StringView(buffer.data(), 0);
     }
 
     for (size_t begin = end; begin > 0; --begin) {
