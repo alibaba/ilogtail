@@ -22,7 +22,7 @@ The core advantages of **iLogtail**:
 * Support plugin expansion, such as collection, processing, aggregation, and sending modules.
 * Support configuration remote management and provide a variety of ways, such as SLS console, SDK, K8s Operator, etc.
 * Support multiple advanced features such as self-monitoring, flow control, resource control, alarms, and statistics collection.
-* Support processing data on the client side using the Stream Processing Language (SPL), providing a wealth of built-in functions and operators.
+* Support processing data on the client side using stream processing language SPL, providing a wealth of built-in functions and operators.
 
 
 **iLogtail** supports the collection of a variety of telemetry data and transmission to a variety of different backends, such as [SLS observable platform](https://www.aliyun.com/product/sls). The data supported for collection are mainly as follows:

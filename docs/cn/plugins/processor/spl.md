@@ -1,8 +1,12 @@
-# iLogtail SPL Cookbook
+# SPL处理插件
+
+## 简介
+
+`processor_spl`插件使用SPL语言处理数据，支持对数据进行解析、过滤、加工等操作。
 
 随着流式处理的发展，出现了越来越多的工具和语言，使得数据处理变得更加高效、灵活和易用。在此背景下，SLS 推出了 SPL(SLS Processing Language) 语法，以此统一查询、端上处理、数据加工等的语法，保证了数据处理的灵活性。iLogtail 作为日志、时序数据采集器，在 2.0 版本中，全面支持了 SPL 。本文对 1.X 版本的处理插件进行了梳理，介绍了如何编写 SPL 语句，从 1.X 版本插件迁移到 2.0 版本的 SPL 处理插件，帮助用户实现更加灵活的端上数据处理。
 
-## SPL vs iLogtail 1.X
+### SPL vs iLogtail 1.X
 
 iLogtail 1.X 流水线主要可以分为两个部分，一部分是由 C++实现的原生插件，性能最强，但支持的格式有限。另一部分是 Go 实现的拓展插件，足够灵活，但资源消耗较大、性能有所损耗。
 
@@ -20,10 +24,14 @@ iLogtail 1.X 流水线主要可以分为两个部分，一部分是由 C++实
 
 4.  简单易学：SPL 属于一种低代码语言，用户可以快速上手，日志搜索、处理一气呵成
 
+## 配置参数
 
-接下来，本文将介绍如何用灵活的 SPL 语句，实现与 1.X 版本插件相同的处理能力。
+|  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
+| --- | --- | --- | --- | --- |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为processor\_spl。  |
+|  Script  |  string  |  是  |  /  |  SPL语句。  |
 
-## 原生插件
+## 样例
 
 ### 正则解析
 
@@ -34,11 +42,6 @@ iLogtail 1.X 流水线主要可以分为两个部分，一部分是由 C++实
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths: 
-    - /workspaces/ilogtal/debug/simple.log
 processors:
   - Type: processor_parse_regex_native
     SourceKey: content
@@ -54,27 +57,16 @@ processors:
     - length
     - ref_url
     - browser
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | parse-regexp content, '([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"' as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
     | project-away content
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -103,11 +95,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_delimiter_native
     SourceKey: content
@@ -124,27 +111,16 @@ processors:
     - length
     - ref_url
     - browser
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 SPL模式
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | parse-csv content as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
     | project-away content
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -173,35 +149,19 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_json_native
     SourceKey: content
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | parse-json content
     | project-away content
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -225,11 +185,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_regex_native
     SourceKey: content
@@ -248,18 +203,10 @@ processors:
   - Type: processor_parse_timestamp_native
     SourceKey: time
     SourceFormat: '%Y-%m-%dT%H:%M:%S'
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
@@ -269,9 +216,6 @@ processors:
     | extend __time__=cast(to_unixtime(ts) as INTEGER)
     | project-away ts
     | project-away content
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -301,11 +245,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_regex_native
     SourceKey: content
@@ -328,18 +267,10 @@ processors:
     FilterRegex:
     - ^(POST|PUT)$
     - ^200$
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
@@ -347,9 +278,6 @@ processors:
     | parse-regexp content, '([\d\.]+) \S+ \S+ \[(\S+) \S+\] \"(\w+) ([^\"]*)\" ([\d\.]+) (\d+) (\d+) (\d+|-) \"([^\"]*)\" \"([^\"]*)\"' as ip, time, method, url, request_time, request_length, status, length, ref_url, browser
     | project-away content
     | where regexp_like(method, '^(POST|PUT)$') and regexp_like(status, '^200$')
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -378,11 +306,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_desensitize_native
     SourceKey: content
@@ -390,27 +313,16 @@ processors:
     ReplacingString: "******"
     ContentPatternBeforeReplacedString: 'password":"'
     ReplacedContentPattern: '[^"]+'
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | parse-regexp content, 'password":"(\S+)"' as password
     | extend content=replace(content, password, '******')
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -421,8 +333,6 @@ flushers:
 }
 ```
 
-## 拓展插件
-
 ### 添加字段
 
 **输入**
@@ -432,36 +342,20 @@ this is a test log
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_add_fields
     Fields:
     service: A
     IgnoreIfExist: false
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | extend service='A'
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -482,29 +376,16 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_json_native
     SourceKey: content
     - Type: processor_drop
     DropKeys: 
     - key1
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
@@ -512,9 +393,6 @@ processors:
     | parse-json content
     | project-away content
     | project-away key1
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -534,11 +412,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_json_native
     SourceKey: content
@@ -547,18 +420,10 @@ processors:
     - key1
     DestKeys:
     - new_key1
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
@@ -566,9 +431,6 @@ processors:
     | parse-json content
     | project-away content
     | project-rename new_key1=key1
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -591,11 +453,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_json_native
     SourceKey: content
@@ -605,18 +462,10 @@ processors:
     method: POST
     Exclude:
     browser: "aliyun.*"
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
@@ -624,9 +473,6 @@ processors:
     | parse-json content
     | project-away content
     | where regexp_like(ip, '10\..*') and regexp_like(method, 'POST') and not regexp_like(browser, 'aliyun.*')
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -649,11 +495,6 @@ flushers:
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_parse_json_native
     SourceKey: content
@@ -666,18 +507,10 @@ processors:
     Mode: "overwrite"
     HandleMissing": true
     Missing: "Not Detected"
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
@@ -690,9 +523,6 @@ processors:
     WHEN _ip_ = '192.168.0.1' THEN 'default login' 
     ELSE 'Not Detected'
     END
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -714,37 +544,21 @@ hello,how old are you? nice to meet you
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_string_replace
     SourceKey: content
     Method: const
     Match: "how old are you?"
     ReplaceString: ""
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | extend content=replace(content, 'how old are you?', '')
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -766,35 +580,19 @@ this is a test log
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_base64_encoding
     SourceKey: content
     NewKey: content1
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | extend content1=to_base64(cast(content as varbinary))
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
@@ -815,37 +613,21 @@ hello,how old are you? nice to meet you
 
 **处理插件模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_string_replace
     SourceKey: content
     Method: const
     Match: "how old are you?"
     ReplaceString: ""
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **SPL模式**
 ```
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths:
-    - /workspaces/ilogtail/debug/simple.log
 processors:
   - Type: processor_spl
     Script: |
     *
     | extend content1=lower(to_hex(md5(cast(content as varbinary))))
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true
 ```
 
 **输出**
