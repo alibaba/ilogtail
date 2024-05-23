@@ -1688,6 +1688,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
             logBuffer.readOffset = mLastFilePos;
             --nbytes;
         }
+        mLastForceRead = !allowRollback;
         mCache.clear();
         moreData = false;
     } else {
@@ -1730,6 +1731,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
             logBuffer.readOffset = mLastFilePos;
             --nbytes;
         }
+        mLastForceRead = !allowRollback;
         const size_t stringBufferLen = nbytes;
         logBuffer.truncateInfo.reset(truncateInfo);
         lastReadPos = mLastFilePos + nbytes; // this doesn't seem right when ulogfs is used and a hole is skipped
@@ -1793,7 +1795,6 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     setExactlyOnceCheckpointAfterRead(nbytes);
     mLastFilePos += nbytes;
 
-    mLastForceRead = !allowRollback;
     LOG_DEBUG(sLogger, ("read size", nbytes)("last file pos", mLastFilePos));
 }
 
@@ -1818,6 +1819,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             logBuffer.readOffset = mLastFilePos;
             --readCharCount;
         }
+        mLastForceRead = !allowRollback;
         lastReadPos = mLastFilePos + readCharCount;
         originReadCount = readCharCount;
         moreData = false;
@@ -1854,6 +1856,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             ++mLastFilePos;
             logBuffer.readOffset = mLastFilePos;
         }
+        mLastForceRead = !allowRollback;
         logBuffer.truncateInfo.reset(truncateInfo);
         lastReadPos = mLastFilePos + readCharCount;
         originReadCount = readCharCount;
@@ -1960,7 +1963,6 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         LogtailAlarm::GetInstance()->SendAlarm(
             SPLIT_LOG_FAIL_ALARM, oss.str(), GetProject(), GetLogstore(), GetRegion());
     }
-    mLastForceRead = !allowRollback;
     LOG_DEBUG(sLogger,
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
