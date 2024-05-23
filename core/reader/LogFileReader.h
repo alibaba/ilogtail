@@ -591,6 +591,7 @@ private:
     friend class LogSplitNoDiscardUnmatchUnittest;
     friend class RemoveLastIncompleteLogMultilineUnittest;
     friend class LogFileReaderCheckpointUnittest;
+    friend class GetLastLineUnittest;
 
 protected:
     void UpdateReaderManual();

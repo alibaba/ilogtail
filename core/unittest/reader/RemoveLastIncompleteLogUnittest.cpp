@@ -446,6 +446,37 @@ void RemoveLastIncompleteLogMultilineUnittest::TestRemoveLastIncompleteLogWithEn
     }
 }
 
+class GetLastLineUnittest : public ::testing::Test {
+public:
+    void TestGetLastLine();
+    void TestGetLastLineEmpty();
+
+private:
+    FileReaderOptions readerOpts;
+    PipelineContext ctx;
+};
+
+UNIT_TEST_CASE(GetLastLineUnittest, TestGetLastLine);
+UNIT_TEST_CASE(GetLastLineUnittest, TestGetLastLineEmpty);
+
+void GetLastLineUnittest::TestGetLastLine() {
+    std::string testLog = "first line\nsecond line\nthird line";
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(nullptr, &ctx));
+    auto lastLine = logFileReader.GetLastLine(const_cast<char*>(testLog.data()), testLog.size());
+    std::string expectLog = "third line";
+    APSARA_TEST_EQUAL_FATAL(expectLog, std::string(lastLine.data(), lastLine.size()));
+}
+
+void GetLastLineUnittest::TestGetLastLineEmpty() {
+    std::string testLog = "";
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(nullptr, &ctx));
+    auto lastLine = logFileReader.GetLastLine(const_cast<char*>(testLog.data()), testLog.size());
+    APSARA_TEST_EQUAL_FATAL(0, lastLine.size());
+    APSARA_TEST_EQUAL_FATAL("", std::string(lastLine.data(), lastLine.size()));
+}
+
 } // namespace logtail
 
 UNIT_TEST_MAIN
