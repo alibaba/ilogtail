@@ -475,6 +475,7 @@ void GetLastLineUnittest::TestGetLastLineEmpty() {
     auto lastLine = logFileReader.GetLastLine(const_cast<char*>(testLog.data()), testLog.size());
     APSARA_TEST_EQUAL_FATAL(0, lastLine.size());
     APSARA_TEST_EQUAL_FATAL("", std::string(lastLine.data(), lastLine.size()));
+    APSARA_TEST_EQUAL_FATAL(testLog.data(), lastLine.data());
 }
 
 } // namespace logtail
