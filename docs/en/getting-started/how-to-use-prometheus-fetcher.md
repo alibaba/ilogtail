@@ -1,20 +1,20 @@
-# 如何采集Prometheus Exporter数据
+# How do I collect Prometheus Exporter data?
 
-## 前言
+## Preface
 
-阿里已经正式开源了可观测数据采集器iLogtail。作为阿里内部可观测数据采集的基础设施，iLogtail承载了阿里巴巴集团、蚂蚁的日志、监控、Trace、事件等多种可观测数据的采集工作。本文将介绍iLogtail 如何采集Prometheus exporter 数据。
+Alibaba has officially opened the observable data collector iLogtail. As an internal observable data collection infrastructure of Alibaba, iLogtail collects various observable data such as logs, monitoring, Trace, and events from Alibaba Group and Ant Financial. This topic describes how iLogtail collect Prometheus exporter data.
 
-## 采集配置
+## Collection configuration
 
-iLogtail 的采集配置全面兼容Prometheus[配置文件](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)（以下介绍为1.0.30版本+）。
+The collection configuration of the iLogtail is fully compatible with the Prometheus [configuration file](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)(the following introduction is 1.0.30 +).
 
-| 参数 | 描述 | 默认值 |
+| Parameter | Description | Default value |
 | --- | --- | --- |
-| Yaml | yaml格式的采集配置 |  |
-| ConfigFilePath | 采集配置文件路径，当Yaml参数生效时，此字段被忽略。 |  |
-| AuthorizationPath | 鉴权路径，如 consul_sd_config 配置中authorization 参数生效时的鉴权文件查找路径。 | 当Yaml 参数生效时，默认路径为程序运行目录；当ConfigFilePath参数生效时，默认路径为其配置文件所在路径。 |
+| Yaml | Collection configuration in yaml format | |
+| ConfigFilePath | The path of the collection configuration file. This field is ignored when the Yaml parameter takes effect. | |
+| AuthorizationPath | The authentication path, such as the authentication file search path when authorization parameter in the consul_sd_config configuration takes effect. | When the Yaml parameter takes effect, the default path is the program running directory. When the ConfigFilePath parameter takes effect, the default path is the path where the configuration file is located. |
 
-以下是一个简单的prometheus 采集配置。
+The following is a simple prometheus collection configuration.
 
 ```json
 {
@@ -35,21 +35,21 @@ scrape_configs:
 }
 ```
 
-## 采集数据格式
+## Data collection format
 
-iLogtail Prometheus 采集的Metrics 数据与日志同样遵循[iLogtail 的传输层协议](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto) ，目前传输数据字段为以下格式。
+iLogtail Prometheus data and logs collected by Metrics also follow the [iLogtail transport layer protocol](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto), the current data transmission field is in the following format.
 
-| 传输字段 | 含义 |
+| Transfer field | Meaning |
 | --- | --- |
-| __name__ | 指标名，与Prometheus exporter 指标名相同。 |
-| __labels__ | 指标Label属性，数据格式为{label_a_nane}\#\$\#{label_a_value}\|{label_b_nane}\#\$\#{label_b_value}，例如instance\#\$\#exporter:18080\|job\#\$\#prometheus |
-| __time_nano__ | 采集时间 |
-| __value__ | 指标值 |
+| \_\_name__ | Metric name, which is the same as the Prometheus exporter metric name. |
+| \_\_labels__ | Metric Label，format is \{label_a_nane\}\#\$\#\{label_a_value}\|\{label_b_nane}\#\$\#\{label_b_value}，such as instance\#\$\#exporter:18080\|job\#\$\#prometheus |
+| \_\_time_nano__ | Collection time |
+| \_\_value__ | Metric value |
 
-## E2E 快速上手
+## E2E quick start
 
-目前iLogtail 已经集成了prometheus 的E2E测试，可以在iLogtail 的根路径快速进行上手验证。
-测试命令：TEST_SCOPE=input_prometheus  TEST_DEBUG=true   make e2e（开启DEBUG 选项可以查看传输数据明细）_
+Currently, iLogtail has integrated the E2E test of prometheus, which can be quickly verified in the root path of the iLogtail.
+Test Command: TEST_SCOPE = input_prometheus TEST_DEBUG = true make e2e (enable the DEBUG option to view the transmission data details)_
 
 ```bash
 TEST_DEBUG=true TEST_PROFILE=false  ./scripts/e2e.sh behavior input_prometheus
@@ -140,46 +140,44 @@ All testing cases are passed
 ========================================
 ```
 
-​
+## Local Node Exporter collection
 
-## 本地Node Exporter 采集实战
+1\. Prepare the Linux environment.
 
-1\. 准备Linux 环境。
+2\. Download NodeExporter, download address: [https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter), and start. After startup, you can view the metrics Metrics of the NodeExporter through curl 127.0.0.1:9100/metrics.
 
-2\. 下载NodeExporter，下载地址：[https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter) ，并进行启动，启动后可以通过curl 127.0.0.1:9100/metrics 查看NodeExporter 的Metrics指标。
-
-3\. [下载](https://github.com/alibaba/ilogtail/releases)最新的ilogtail版本进行安装。
+3\. [Download](https://github.com/alibaba/ilogtail/releases) install the latest ilogtail version.
 
 ```bash
-# 解压tar包
+# Decompress the tar package
 $ tar zxvf logtail-linux64.tar.gz
 
-# 查看目录结构
+# View the directory structure
 $ ll logtail-linux64
 drwxr-xr-x   3 500 500  4096 bin
 drwxr-xr-x 184 500 500 12288 conf
 -rw-r--r--   1 500 500   597 README
 drwxr-xr-x   2 500 500  4096 resources
 
-# 进入bin目录
+# Enter the bin directory
 $ cd logtail-linux64/bin
 $ ll
--rwxr-xr-x 1 500 500 10052072 ilogtail_1.0.28 # ilogtail可执行文件
+-rwxr-xr-x 1 500 500 10052072 ilogtail_1.0.28 # ilogtail executable file
 -rwxr-xr-x 1 500 500     4191 ilogtaild  
 -rwxr-xr-x 1 500 500     5976 libPluginAdapter.so
 -rw-r--r-- 1 500 500 89560656 libPluginBase.so
 -rwxr-xr-x 1 500 500  2333024 LogtailInsight
 ```
 
-4\. 创建采集配置目录。
+4\. Create a collection configuration directory.
 
 ```bash
-# 1. 创建sys_conf_dir
+# 1. Create sys_conf_dir
 $ mkdir sys_conf_dir
 
-# 2. 创建ilogtail_config.json并完成配置。
-##### logtail_sys_conf_dir取值为：$pwd/sys_conf_dir/
-##### config_server_address固定取值，保持不变。
+#2. Create ilogtail_config.json and complete the configuration.
+##### logtail_sys_conf_dir：$pwd/sys_conf_dir/
+##### config_server_address is fixed and remains unchanged.
 $ pwd
 /root/bin/logtail-linux64/bin
 $ cat ilogtail_config.json
@@ -189,7 +187,7 @@ $ cat ilogtail_config.json
      "config_server_address" : "http://logtail.cn-zhangjiakou.log.aliyuncs.com"
 }
 
-# 3. 此时的目录结构
+#3. The directory structure at this time
 $ ll
 -rwxr-xr-x 1  500  500 ilogtail_1.0.28
 -rw-r--r-- 1 root root ilogtail_config.json
@@ -200,7 +198,7 @@ $ ll
 drwxr-xr-x 2 root root sys_conf_dir
 ```
 
-5\. 设置采集配置文件，将下列内如写入sys_conf_dir/user_local_config.json文件，上述核心配置为plugin部分，配置说明我们启动了Prometheus 采集插件，采集端口为9100，并且我们将采集到的数据保存于node_exporter.log 文件。
+5\. Set the collection configuration file and write the following files into the sys_conf_dir/user_local_config.json file. The above core configuration is the plugin section. The configuration shows that we have started the Prometheus collection plug-in with the collection Port 9100,And we save the collected data in the node_exporter.log file.
 
 ```json
 {
@@ -261,16 +259,16 @@ drwxr-xr-x 2 root root sys_conf_dir
 }
 ```
 
-6\. 启动iLogtail，查看采集数据。
+6\. Start the iLogtail to view the collected data.
 
 ```bash
-# 启动采集
+# Start collection
 $ ./ilogtail_1.0.28
 $ ps -ef|grep logtail
 root       48453       1   ./ilogtail_1.0.28
 root       48454   48453   ./ilogtail_1.0.28
 
-# 查看采集数据
+# View collected data
 tailf node_exporter.json
 2022-01-20 11:38:52 {"__name__":"promhttp_metric_handler_errors_total","__labels__":"cause#$#gathering|instance#$#localhost:9100|job#$#prometheus","__time_nano__":"1642649932033","__value__":"0","__time__":"1642649932"}
 2022-01-20 11:38:52 {"__name__":"promhttp_metric_handler_requests_in_flight","__labels__":"instance#$#localhost:9100|job#$#prometheus","__time_nano__":"1642649932033","__value__":"1","__time__":"1642649932"}
@@ -284,40 +282,39 @@ tailf node_exporter.json
 2022-01-20 11:38:52 {"__name__":"scrape_series_added","__labels__":"instance#$#localhost:9100|job#$#prometheus","__time_nano__":"1642649932033","__value__":"0","__time__":"1642649932"}
 ```
 
-## 日志服务NodeExporter 采集实战
+## Log service NodeExporter collection
 
-### iLogtail 采集Prometheus数据
+### iLogtail data collected Prometheus
 
-1. 参考[主机环境日志采集到SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md) 建立主机iLogtail与阿里云日志服务的链接。
-2. 主机下载NodeExporter，下载地址：[https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter) ，并进行启动，启动后可以通过curl 127.0.0.1:9100/metrics 查看NodeExporter 的Metrics指标。
-3. 创建日志服务MetricStore。![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045436-540723d4-9ec8-40b2-a823-395d8f4b9f14.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=899&id=u397c0ba6&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1798&originWidth=5078&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1687136&status=done&style=none&taskId=uf5326ee3-9abf-4992-a1b9-995f1b4dbbb&title=&width=2539)
-4. 创建Prometheus采集配置。![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941046161-d05cae9e-78ef-4868-b9eb-fc9d03933afa.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1327&id=uc5d8d99f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2654&originWidth=5104&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1619794&status=done&style=none&taskId=u7590c247-e470-4f14-849c-a2f87ffd181&title=&width=2552) ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045019-d9e639e1-af34-4b1f-b493-9e907d401021.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1016&id=YrIom&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2032&originWidth=5110&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1157627&status=done&style=none&taskId=u83af2842-a512-46e5-aeb5-cca81d292bf&title=&width=2555)
-5. 查看采集数据
+1. Refer to [server environment log collection to SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md) establish a link between the host iLogtail and Alibaba Cloud log service.
+2. Host download NodeExporter, download address: [https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter), and start. After startup, you can view the metrics Metrics of the NodeExporter through curl 127.0.0.1:9100/metrics.
+3. Create a log service MetricStore.! [Image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045436-540723d4-9ec8-40b2-a823-395d8f4b9f14.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=899&id=u397c0ba6&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1798&originWidth=5078&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1687136&status=done&style=none&taskId=uf5326ee3-9abf-4992-a1b9-995f1b4dbbb&title=&width=2539)
+4. Create Prometheus collection configuration.! [Image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941046161-d05cae9e-78ef-4868-b9eb-fc9d03933afa.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1327&id=uc5d8d99f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2654&originWidth=5104&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1619794&status=done&style=none&taskId=u7590c247-e470-4f14-849c-a2f87ffd181&title=&width=2552) ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045019-d9e639e1-af34-4b1f-b493-9e907d401021.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1016&id=YrIom&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2032&originWidth=5110&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1157627&status=done&style=none&taskId=u83af2842-a512-46e5-aeb5-cca81d292bf&title=&width=2555)
+5. View collected data
 
-如下图所知，iLogtail 采集的NodeExporter 指标采用图表化展现，日志服务Metrics查询语言全面兼容PromQL，更多可视化用户请参考[https://help.aliyun.com/document_detail/252810.html](https://help.aliyun.com/document_detail/252810.html)。
+As shown in the following figure, the iLogtail Metrics collected by the NodeExporter are displayed in graphs. The query language Metrics log service is fully compatible with PromQL. For more visualization users, see [https://help.aliyun.com/document_detail/252810.html](https://help.aliyun.com/document_detail/252810.html)。
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045099-18a4e7f8-7b15-4b65-80d1-5ba482033f7e.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=688&id=u692a8d64&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1376&originWidth=5118&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1242472&status=done&style=none&taskId=u29f1caad-1026-412c-b72f-f19b4dad06f&title=&width=2559)
-如计算5分钟内SysLoad：
+For example, calculate the SysLoad within 5 minutes:
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045122-01b62b41-7591-4942-bc93-6ba8b5945472.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=685&id=Jittg&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1370&originWidth=5116&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1453969&status=done&style=none&taskId=u8549f40c-102f-4b55-8b76-20381f5a75d&title=&width=2558)
 
-### 使用Grafana 对接日志服务MetricStore
+### Use Grafana to connect to log service MetricStore
 
-1. 安装Grafana，参考[Grafana安装指南](https://grafana.com/docs/grafana/latest/installation/)。
-1. 使用Grafana Prometheus 数据源对接日志服务，参考[时序数据对接Grafana](https://help.aliyun.com/document_detail/173903.html)。
-1. 下载NodeExporter 看板Json文件，如[Node Exporter Full 看板](https://grafana.com/grafana/dashboards/1860)。
-1. 导入看板。
+1. For installation Grafana, see [Grafana Installation Guide](https://grafana.com/docs/grafana/latest/installation/).
+1. Use Grafana Prometheus data sources to connect to log service. For more information, see [time series data connection Grafana](https://help.aliyun.com/document_detail/173903.html).
+1. Download NodeExporter Kanban Json file, such as [Node Exporter Full Kanban](https://grafana.com/grafana/dashboards/1860).
+1. Import the Kanban.
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941050539-053853c7-b41e-4878-9025-747bfeb4dbca.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=993&id=u50fa9b1d&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1986&originWidth=3582&originalType=binary&ratio=1&rotation=0&showTitle=false&size=485985&status=done&style=none&taskId=uda685e33-85bd-42a5-b971-f6bc5258f80&title=&width=1791)
-1. 查看指标数据，如下图所示，Grafana 展示了iLogtail 采集的指标数据。
+1. View the metric data, as shown in the following figure, Grafana shows the metric data collected by the iLogtail.
 
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941051766-a7480574-2ed3-4045-bd4a-527814075117.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1006&id=u3f66e6fb&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2012&originWidth=3580&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1799336&status=done&style=none&taskId=uddc25eaf-ca05-4e3c-a728-a525af4efe7&title=&width=1790)
 
-## 总结
+## Summary
 
-iLogtail 提供了完整Prometheus 指标采集能力，无需改造Exporter 指标，即可完成Prometheus 指标的采集。而通过日志服务MetricStore的能力，用户也可以使用其作为Prometheus 替代选项，通过的Grafana 商店丰富的看板模板快速构建自己的监控大盘。
+iLogtail provides a complete collection Prometheus metrics. You can collect Exporter metrics without modifying Prometheus metrics. You can also use log service to MetricStore capabilities as an alternative to Prometheus,Quickly build your own monitoring dashboard through the rich Kanban templates of the Grafana store.
 
-## 参考文档
+## Reference
 
-- [Grafana安装指南](https://grafana.com/docs/grafana/latest/installation/)
-- [时序数据对接Grafana](https://help.aliyun.com/document_detail/173903.html)
-- [iLogtail 的传输层协议](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto)
-- [主机环境日志采集到SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md)
-​
+- [Grafana Installation Guide](https://grafana.com/docs/grafana/latest/installation/)
+- [Time series data docking Grafana](https://help.aliyun.com/document_detail/173903.html)
+- [iLogtail transport layer protocol](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto)
+- [Server environment log collection to SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md)
