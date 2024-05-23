@@ -18,6 +18,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -92,6 +93,7 @@ type Context interface {
 	GetProject() string
 	GetLogstore() string
 	GetRuntimeContext() context.Context
+	GetPipelineScopeConfig() *config.GlobalConfig
 	GetExtension(name string, cfg any) (Extension, error)
 	// RegisterCounterMetric(metric CounterMetric)
 	// RegisterStringMetric(metric StringMetric)
