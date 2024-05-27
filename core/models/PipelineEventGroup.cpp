@@ -153,11 +153,7 @@ size_t PipelineEventGroup::SizeOf() const {
     for (const auto& item : mEvents) {
         eventsSize += item->SizeOf();
     }
-    size_t tagsSize = sizeof(decltype(mTags));
-    for (const auto& item : mMetadata) {
-        tagsSize += item.second.size();
-    }
-    return eventsSize + tagsSize;
+    return eventsSize + mTags.SizeOf();
 }
 
 bool PipelineEventGroup::IsReplay() const {
