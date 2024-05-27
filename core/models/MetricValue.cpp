@@ -20,6 +20,19 @@ using namespace std;
 
 namespace logtail {
 
+size_t SizeOf(const MetricValue& value) {
+    return std::visit(
+        [](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, monostate>) {
+                return 0;
+            } else {
+                return arg.SizeOf();
+            }
+        },
+        value);
+}
+
 #ifdef APSARA_UNIT_TEST_MAIN
 Json::Value UntypedSingleValue::ToJson() const {
     return Json::Value(mValue);
@@ -37,7 +50,7 @@ Json::Value MetricValueToJson(const MetricValue& value) {
             if constexpr (std::is_same_v<T, UntypedSingleValue>) {
                 res["type"] = "untyped_single_value";
                 res["detail"] = std::get<UntypedSingleValue>(value).ToJson();
-            } else if constexpr (std::is_same_v<T, std::monostate>){
+            } else if constexpr (std::is_same_v<T, std::monostate>) {
                 res["type"] = "unknown";
             }
         },

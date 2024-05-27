@@ -20,38 +20,38 @@ using namespace std;
 
 namespace logtail {
 
-void SpanEvent::SpanLink::SetTraceId(const std::string& traceId) {
+void SpanEvent::SpanLink::SetTraceId(const string& traceId) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(traceId);
     mTraceId = StringView(b.data, b.size);
 }
 
-void SpanEvent::SpanLink::SetSpanId(const std::string& spanId) {
+void SpanEvent::SpanLink::SetSpanId(const string& spanId) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(spanId);
     mSpanId = StringView(b.data, b.size);
 }
 
-void SpanEvent::SpanLink::SetTraceState(const std::string& traceState) {
+void SpanEvent::SpanLink::SetTraceState(const string& traceState) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(traceState);
     mTraceState = StringView(b.data, b.size);
 }
 
 StringView SpanEvent::SpanLink::GetTag(StringView key) const {
-    auto it = mTags.find(key);
-    if (it != mTags.end()) {
+    auto it = mTags.mInner.find(key);
+    if (it != mTags.mInner.end()) {
         return it->second;
     }
     return gEmptyStringView;
 }
 
 bool SpanEvent::SpanLink::HasTag(StringView key) const {
-    return mTags.find(key) != mTags.end();
+    return mTags.mInner.find(key) != mTags.mInner.end();
 }
 
 void SpanEvent::SpanLink::SetTag(StringView key, StringView val) {
     SetTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
-void SpanEvent::SpanLink::SetTag(const std::string& key, const std::string& val) {
+void SpanEvent::SpanLink::SetTag(const string& key, const string& val) {
     SetTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
@@ -60,15 +60,21 @@ void SpanEvent::SpanLink::SetTagNoCopy(const StringBuffer& key, const StringBuff
 }
 
 void SpanEvent::SpanLink::SetTagNoCopy(StringView key, StringView val) {
-    mTags[key] = val;
+    mTags.Insert(key, val);
 }
 
 void SpanEvent::SpanLink::DelTag(StringView key) {
-    mTags.erase(key);
+    size_t sizeBefore = mTags.SizeOf();
+    mTags.Erase(key);
+    size_t sizeAfter = mTags.SizeOf();
 }
 
-std::shared_ptr<SourceBuffer>& SpanEvent::SpanLink::GetSourceBuffer() {
+shared_ptr<SourceBuffer>& SpanEvent::SpanLink::GetSourceBuffer() {
     return mParent->GetSourceBuffer();
+}
+
+size_t SpanEvent::SpanLink::SizeOf() const {
+    return mTraceId.size() + mSpanId.size() + mTraceState.size() + mTags.SizeOf();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -106,28 +112,28 @@ void SpanEvent::SpanLink::FromJson(const Json::Value& value) {
 }
 #endif
 
-void SpanEvent::InnerEvent::SetName(const std::string& name) {
+void SpanEvent::InnerEvent::SetName(const string& name) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(name);
     mName = StringView(b.data, b.size);
 }
 
 StringView SpanEvent::InnerEvent::GetTag(StringView key) const {
-    auto it = mTags.find(key);
-    if (it != mTags.end()) {
+    auto it = mTags.mInner.find(key);
+    if (it != mTags.mInner.end()) {
         return it->second;
     }
     return gEmptyStringView;
 }
 
 bool SpanEvent::InnerEvent::HasTag(StringView key) const {
-    return mTags.find(key) != mTags.end();
+    return mTags.mInner.find(key) != mTags.mInner.end();
 }
 
 void SpanEvent::InnerEvent::SetTag(StringView key, StringView val) {
     SetTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
-void SpanEvent::InnerEvent::SetTag(const std::string& key, const std::string& val) {
+void SpanEvent::InnerEvent::SetTag(const string& key, const string& val) {
     SetTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
@@ -136,15 +142,19 @@ void SpanEvent::InnerEvent::SetTagNoCopy(const StringBuffer& key, const StringBu
 }
 
 void SpanEvent::InnerEvent::SetTagNoCopy(StringView key, StringView val) {
-    mTags[key] = val;
+    mTags.Insert(key, val);
 }
 
 void SpanEvent::InnerEvent::DelTag(StringView key) {
-    mTags.erase(key);
+    mTags.Erase(key);
 }
 
-std::shared_ptr<SourceBuffer>& SpanEvent::InnerEvent::GetSourceBuffer() {
+shared_ptr<SourceBuffer>& SpanEvent::InnerEvent::GetSourceBuffer() {
     return mParent->GetSourceBuffer();
+}
+
+size_t SpanEvent::InnerEvent::SizeOf() const {
+    return sizeof(decltype(mTimestampNs)) + mName.size() + mTags.SizeOf();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -179,48 +189,48 @@ const string SpanEvent::OTLP_SCOPE_VERSION = "otlp.scope.version";
 SpanEvent::SpanEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::SPAN, ptr) {
 }
 
-void SpanEvent::SetTraceId(const std::string& traceId) {
+void SpanEvent::SetTraceId(const string& traceId) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(traceId);
     mTraceId = StringView(b.data, b.size);
 }
 
-void SpanEvent::SetSpanId(const std::string& spanId) {
+void SpanEvent::SetSpanId(const string& spanId) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(spanId);
     mSpanId = StringView(b.data, b.size);
 }
 
-void SpanEvent::SetTraceState(const std::string& traceState) {
+void SpanEvent::SetTraceState(const string& traceState) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(traceState);
     mTraceState = StringView(b.data, b.size);
 }
 
-void SpanEvent::SetParentSpanId(const std::string& parentSpanId) {
+void SpanEvent::SetParentSpanId(const string& parentSpanId) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(parentSpanId);
     mParentSpanId = StringView(b.data, b.size);
 }
 
-void SpanEvent::SetName(const std::string& name) {
+void SpanEvent::SetName(const string& name) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(name);
     mName = StringView(b.data, b.size);
 }
 
 StringView SpanEvent::GetTag(StringView key) const {
-    auto it = mTags.find(key);
-    if (it != mTags.end()) {
+    auto it = mTags.mInner.find(key);
+    if (it != mTags.mInner.end()) {
         return it->second;
     }
     return gEmptyStringView;
 }
 
 bool SpanEvent::HasTag(StringView key) const {
-    return mTags.find(key) != mTags.end();
+    return mTags.mInner.find(key) != mTags.mInner.end();
 }
 
 void SpanEvent::SetTag(StringView key, StringView val) {
     SetTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
-void SpanEvent::SetTag(const std::string& key, const std::string& val) {
+void SpanEvent::SetTag(const string& key, const string& val) {
     SetTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
@@ -229,11 +239,11 @@ void SpanEvent::SetTagNoCopy(const StringBuffer& key, const StringBuffer& val) {
 }
 
 void SpanEvent::SetTagNoCopy(StringView key, StringView val) {
-    mTags[key] = val;
+    mTags.Insert(key, val);
 }
 
 void SpanEvent::DelTag(StringView key) {
-    mTags.erase(key);
+    mTags.Erase(key);
 }
 
 SpanEvent::InnerEvent* SpanEvent::AddEvent() {
@@ -249,22 +259,22 @@ SpanEvent::SpanLink* SpanEvent::AddLink() {
 }
 
 StringView SpanEvent::GetScopeTag(StringView key) const {
-    auto it = mScopeTags.find(key);
-    if (it != mScopeTags.end()) {
+    auto it = mScopeTags.mInner.find(key);
+    if (it != mScopeTags.mInner.end()) {
         return it->second;
     }
     return gEmptyStringView;
 }
 
 bool SpanEvent::HasScopeTag(StringView key) const {
-    return mScopeTags.find(key) != mScopeTags.end();
+    return mScopeTags.mInner.find(key) != mScopeTags.mInner.end();
 }
 
 void SpanEvent::SetScopeTag(StringView key, StringView val) {
     SetScopeTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
-void SpanEvent::SetScopeTag(const std::string& key, const std::string& val) {
+void SpanEvent::SetScopeTag(const string& key, const string& val) {
     SetScopeTagNoCopy(GetSourceBuffer()->CopyString(key), GetSourceBuffer()->CopyString(val));
 }
 
@@ -273,16 +283,27 @@ void SpanEvent::SetScopeTagNoCopy(const StringBuffer& key, const StringBuffer& v
 }
 
 void SpanEvent::SetScopeTagNoCopy(StringView key, StringView val) {
-    mScopeTags[key] = val;
+    mScopeTags.Insert(key, val);
 }
 
 void SpanEvent::DelScopeTag(StringView key) {
-    mScopeTags.erase(key);
+    mScopeTags.Erase(key);
 }
 
-uint64_t SpanEvent::EventsSizeBytes() {
-    // TODO
-    return 0;
+size_t SpanEvent::SizeOf() const {
+    // TODO: this is not O(1), however, these two fields are not frequently used, so it can thought of O(1)
+    size_t eventsSize = sizeof(decltype(mEvents));
+    for (const auto& item : mEvents) {
+        eventsSize += item.SizeOf();
+    }
+    size_t linksSize = sizeof(decltype(mLinks));
+    for (const auto& item : mLinks) {
+        linksSize += item.SizeOf();
+    }
+    // TODO: for enum, it seems more reasonable to use actual string size instead of size of enum
+    return mTraceId.size() + mSpanId.size() + mTraceState.size() + mParentSpanId.size() + mName.size()
+        + sizeof(decltype(mKind)) + sizeof(decltype(mStartTimeNs)) + sizeof(decltype(mEndTimeNs)) + mTags.SizeOf()
+        + eventsSize + linksSize + sizeof(decltype(mStatus)) + mScopeTags.SizeOf();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
