@@ -248,9 +248,9 @@ Json::Value PipelineEventGroup::ToJson(bool enableEventMeta) const {
         }
         root["metadata"] = metadata;
     }
-    if (!mTags.empty()) {
+    if (!mTags.mInner.empty()) {
         Json::Value tags;
-        for (const auto& tag : mTags) {
+        for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
         root["tags"] = tags;

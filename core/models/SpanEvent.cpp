@@ -83,9 +83,9 @@ Json::Value SpanEvent::SpanLink::ToJson() const {
     if (!mTraceState.empty()) {
         root["traceState"] = mTraceState.to_string();
     }
-    if (!mTags.empty()) {
+    if (!mTags.mInner.empty()) {
         Json::Value& tags = root["tags"];
-        for (const auto& tag : mTags) {
+        for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
     }
@@ -160,9 +160,9 @@ Json::Value SpanEvent::InnerEvent::ToJson() const {
     Json::Value root;
     root["name"] = mName.to_string();
     root["timestampNs"] = static_cast<int64_t>(mTimestampNs);
-    if (!mTags.empty()) {
+    if (!mTags.mInner.empty()) {
         Json::Value& tags = root["tags"];
-        for (const auto& tag : mTags) {
+        for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
     }
@@ -299,7 +299,7 @@ size_t SpanEvent::SizeOf() const {
         linksSize += item.SizeOf();
     }
     // TODO: for enum, it seems more reasonable to use actual string size instead of size of enum
-    return mTraceId.size() + mSpanId.size() + mTraceState.size() + mParentSpanId.size() + mName.size()
+    return PipelineEvent::SizeOf() + mTraceId.size() + mSpanId.size() + mTraceState.size() + mParentSpanId.size() + mName.size()
         + sizeof(decltype(mKind)) + sizeof(decltype(mStartTimeNs)) + sizeof(decltype(mEndTimeNs)) + mTags.SizeOf()
         + eventsSize + linksSize + sizeof(decltype(mStatus)) + mScopeTags.SizeOf();
 }
@@ -326,9 +326,9 @@ Json::Value SpanEvent::ToJson(bool enableEventMeta) const {
     // will lead to inequality on json comparison
     root["startTimeNs"] = static_cast<int64_t>(mStartTimeNs);
     root["endTimeNs"] = static_cast<int64_t>(mEndTimeNs);
-    if (!mTags.empty()) {
+    if (!mTags.mInner.empty()) {
         Json::Value& tags = root["tags"];
-        for (const auto& tag : mTags) {
+        for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
     }
@@ -347,9 +347,9 @@ Json::Value SpanEvent::ToJson(bool enableEventMeta) const {
     if (mStatus != StatusCode::Unset) {
         root["status"] = static_cast<int>(mStatus);
     }
-    if (!mScopeTags.empty()) {
+    if (!mScopeTags.mInner.empty()) {
         Json::Value& tags = root["scopeTags"];
-        for (const auto& tag : mScopeTags) {
+        for (const auto& tag : mScopeTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
     }

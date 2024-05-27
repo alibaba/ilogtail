@@ -72,9 +72,9 @@ Json::Value MetricEvent::ToJson(bool enableEventMeta) const {
     root["timestampNanosecond"] = GetTimestampNanosecond();
     root["name"] = mName.to_string();
     root["value"] = MetricValueToJson(mValue);
-    if (!mTags.empty()) {
+    if (!mTags.mInner.empty()) {
         Json::Value& tags = root["tags"];
-        for (const auto& tag : mTags) {
+        for (const auto& tag : mTags.mInner) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
     }

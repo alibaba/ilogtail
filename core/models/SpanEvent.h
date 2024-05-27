@@ -192,6 +192,10 @@ private:
     std::vector<SpanLink> mLinks;
     StatusCode mStatus = StatusCode::Unset;
     SizedMap mScopeTags; // store InstrumentedScope info in otlp
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class SpanEventUnittest;
+#endif
 };
 
 } // namespace logtail
