@@ -64,9 +64,7 @@ void SpanEvent::SpanLink::SetTagNoCopy(StringView key, StringView val) {
 }
 
 void SpanEvent::SpanLink::DelTag(StringView key) {
-    size_t sizeBefore = mTags.SizeOf();
     mTags.Erase(key);
-    size_t sizeAfter = mTags.SizeOf();
 }
 
 shared_ptr<SourceBuffer>& SpanEvent::SpanLink::GetSourceBuffer() {

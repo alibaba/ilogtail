@@ -49,15 +49,18 @@ PipelineEventGroup& PipelineEventGroup::operator=(PipelineEventGroup&& rhs) noex
 }
 
 unique_ptr<LogEvent> PipelineEventGroup::CreateLogEvent() {
-    return make_unique<LogEvent>(this);
+    // cannot use make_unique here because the private constructor is friend only to PipelineEventGroup
+    return unique_ptr<LogEvent>(new LogEvent(this));
 }
 
 unique_ptr<MetricEvent> PipelineEventGroup::CreateMetricEvent() {
-    return make_unique<MetricEvent>(this);
+    // cannot use make_unique here because the private constructor is friend only to PipelineEventGroup
+    return unique_ptr<MetricEvent>(new MetricEvent(this));
 }
 
 unique_ptr<SpanEvent> PipelineEventGroup::CreateSpanEvent() {
-    return make_unique<SpanEvent>(this);
+    // cannot use make_unique here because the private constructor is friend only to PipelineEventGroup
+    return unique_ptr<SpanEvent>(new SpanEvent(this));
 }
 
 LogEvent* PipelineEventGroup::AddLogEvent() {
