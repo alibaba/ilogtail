@@ -1006,18 +1006,20 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
         // If flush timeout event, we should filter whether the event is legacy.
         if (event->GetLastReadPos() == GetLastReadPos() && event->GetLastFilePos() == mLastFilePos
             && event->GetInode() == mDevInode.inode) {
-            // For the scenario: log rotation, the last line needs to be read by timeout, which is a normal situation.
-            // So here only local warning is given, don't raise alarm.
-            LOG_WARNING(sLogger,
-                        ("read timeout", "force to read")("last read pos", event->GetLastReadPos())(
-                            "last file pos", event->GetLastFilePos())("last file size",
-                                                                      mLastFileSize)("file inode", mDevInode.inode));
             allowRollback = false;
         } else {
             return false;
         }
     }
     bool moreData = GetRawData(logBuffer, mLastFileSize, allowRollback);
+    if (!allowRollback) {
+        // For the scenario: log rotation, the last line needs to be read by timeout, which is a normal situation.
+        // So here only local warning is given, don't raise alarm.
+        LOG_WARNING(sLogger,
+                    ("timeout force read", mRealLogPath)("last read pos", event->GetLastReadPos())(
+                        "last file pos", event->GetLastFilePos())("last file size", mLastFileSize)(
+                        "file inode", mDevInode.inode)("log", logBuffer.rawBuffer));
+    }
     if (!logBuffer.rawBuffer.empty() > 0) {
         if (mEOOption) {
             // This read was replayed by checkpoint, adjust mLastFilePos to skip hole.
