@@ -141,6 +141,8 @@ type ServiceCanal struct {
 	Charset           string
 	// Pack values into two fields: new_data and old_data. False by default.
 	PackValues bool
+	// binlog解析输出原格式而非科学计数法
+	UseDecimal bool
 
 	shutdown  chan struct{}
 	waitGroup sync.WaitGroup
@@ -189,6 +191,7 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 	sc.config.DiscardNoMetaRowEvent = true
 	sc.config.IncludeTableRegex = sc.IncludeTables
 	sc.config.ExcludeTableRegex = sc.ExcludeTables
+	sc.config.UseDecimal = sc.UseDecimal
 
 	sc.lastErrorChan = make(chan error, 1)
 
