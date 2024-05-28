@@ -141,7 +141,7 @@ type ServiceCanal struct {
 	Charset           string
 	// Pack values into two fields: new_data and old_data. False by default.
 	PackValues bool
-	// binlog解析输出原格式而非科学计数法
+	// True时 binlog解析DECIMAL输出原格式而非科学计数法, like:https://github.com/go-mysql-org/go-mysql/blob/6c99b4bff931a5aced0978b78aadb5867afcdcd3/canal/dump.go#L85
 	UseDecimal bool
 
 	shutdown  chan struct{}
