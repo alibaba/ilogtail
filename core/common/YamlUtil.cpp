@@ -112,15 +112,10 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                 // Change type file_log to input_file
                 input["Type"] = "input_file";
                 
-                if (input["MaxDepth"]) {
-                    errorMsg = "MaxDepth is not supported to upgrade to new config, please manually check it";
-                    return false;
-                }
-
                 // Update the 'FilePaths' field
                 if (input["LogPath"] && input["FilePattern"]) {
                     string dirPath = input["LogPath"].as<string>();
-                    string filePathern =  input["FilePattern"].as<string>();
+                    string filePattern =  input["FilePattern"].as<string>();
 
                     string filePath = dirPath;
                     // if filePath ends not with "/", add it
@@ -128,16 +123,22 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                         filePath += '/';
                     }
 
-                    filePath += filePathern;
+                    if (input["MaxDepth"] && input["MaxDepth"].as<int>() > 0) {
+                        filePath += "**/";
+                        input["MaxDirSearchDepth"] = input["MaxDepth"];
+                    }
+
+                    filePath += filePattern;
                     input["FilePaths"] = std::vector<std::string>{filePath};
                 } else {
                     errorMsg = "LogPath or FilePattern not found in file_log input";
                     return false;
                 }
                 
-                // delete LogPath and FilePattern
+                // delete LogPath, FilePattern, and MaxDepth
                 input.remove("LogPath");
                 input.remove("FilePattern");
+                input.remove("MaxDepth");
 
                 if (input["TopicFormat"]) {
                     yamlContent["global"]["TopicType"] = input["TopicFormat"]; 
