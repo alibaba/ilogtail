@@ -18,13 +18,16 @@
 #include <chrono>
 #include <string>
 #include <cmath>
+#include <boost/algorithm/string.hpp>
 #include "re2/re2.h"
 #include "models/MetricEvent.h"
 #include "prom/TextParser.h"
 
 using namespace std;
 
-namespace prom {
+namespace logtail {
+
+const std::string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
 
 unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content) {
     auto now = std::chrono::system_clock::now();
@@ -41,8 +44,7 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
     auto eGroup = make_unique<PipelineEventGroup>(mSourceBuffer);
     while (getline(iss, line)) {
         // trim line
-        line.erase(0, line.find_first_not_of(" \n\r\t"));
-        line.erase(line.find_last_not_of(" \n\r\t")+1);
+        boost::algorithm::trim(line);
 
         // skip any empty line
         if (line.empty()) {
@@ -93,25 +95,22 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
             }
         }
 
-        auto e = eGroup->AddMetricEvent();
+        MetricEvent* e = eGroup->AddMetricEvent();
         e->SetName(argName);
         e->SetTimestamp(timestamp);
-        auto singleValue = UntypedSingleValue{ value };
-        e->SetValue(singleValue);
+        e->SetValue<UntypedSingleValue>(value);
 
         if (!argUnwrappedLabels.empty()) {
             string kvPair;
             istringstream iss(argUnwrappedLabels);
             while (getline(iss, kvPair, ',')) {
-                kvPair.erase(0, kvPair.find_first_not_of(" "));
-                kvPair.erase(kvPair.find_last_not_of(" ")+1);
+                boost::algorithm::trim(kvPair);
 
                 size_t equalsPos = kvPair.find('=');
                 if (equalsPos != string::npos) {
                     string key = kvPair.substr(0, equalsPos);
                     string value = kvPair.substr(equalsPos + 1);
-                    value.erase(0, value.find_first_not_of("\""));
-                    value.erase(value.find_last_not_of("\"")+1);
+                    boost::trim_if(value, boost::is_any_of("\""));
                     e->SetTag(key, value);
                 }
             }
@@ -119,6 +118,14 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
     }
 
     return eGroup;
+}
+
+bool TextParser::Ok() const {
+    return mErr == nullptr;
+}
+
+std::shared_ptr<std::exception> TextParser::Err() const {
+    return mErr;
 }
 
 }

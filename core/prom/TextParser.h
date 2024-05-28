@@ -16,30 +16,30 @@
 
 #pragma once
 
-#include <optional>
 #include <re2/re2.h>
 #include "models/PipelineEventGroup.h"
 #include "models/MetricEvent.h"
 
-using namespace std;
-using namespace logtail;
-
-namespace prom
+namespace logtail
 {
 
-const string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
+extern const std::string SAMPLE_RE;
 
 class TextParser {
     public:
-        TextParser(shared_ptr<SourceBuffer> sourceBuffer): mSourceBuffer(sourceBuffer), mSampleRegex(SAMPLE_RE) {
+        TextParser(const std::shared_ptr<SourceBuffer>& sourceBuffer): mSourceBuffer(sourceBuffer), mSampleRegex(SAMPLE_RE) {
             if (!mSampleRegex.ok()) {
-                throw runtime_error("Invalid regex");
+                mErr = std::make_shared<std::exception>(std::invalid_argument("invalid regex"));
             }
         }
-        unique_ptr<PipelineEventGroup> Parse(const string& content);
-        unique_ptr<PipelineEventGroup> Parse(const string& content, const time_t defaultTs);
+        std::unique_ptr<PipelineEventGroup> Parse(const std::string& content);
+        std::unique_ptr<PipelineEventGroup> Parse(const std::string& content, std::time_t defaultTs);
+
+        bool Ok() const;
+        std::shared_ptr<std::exception> Err() const;
     private:
-        shared_ptr<SourceBuffer> mSourceBuffer;
+        std::shared_ptr<std::exception> mErr;
+        std::shared_ptr<SourceBuffer> mSourceBuffer;
         RE2 mSampleRegex;
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -47,4 +47,4 @@ class TextParser {
 #endif
 };
 
-} // namespace prom
+} // namespace logtail
