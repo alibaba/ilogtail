@@ -19,6 +19,8 @@
 
 using namespace std;
 
+DEFINE_FLAG_INT32(config_update_interval, "second", 10);
+
 namespace logtail {
     
 void ConfigProvider::Init(const string& dir) {

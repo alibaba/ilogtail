@@ -90,4 +90,86 @@ Json::Value ConvertYamlToJson(const YAML::Node& rootNode) {
     return result;
 }
 
+bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
+// if is not linux, return false    
+#ifndef __linux__
+    errorMsg = "UpdateLegacyConfigYaml is not supported on non-linux platform";
+    return false;
+#endif
+
+    // Check if 'version' field exists, then update it to 'global.StructuctureType'
+    if (yamlContent["version"]) {
+        yamlContent["global"]["StructureType"] = yamlContent["version"];
+        yamlContent.remove("version"); // Remove the old 'version' field
+    }
+
+    // rename "file_log" to "input_file"
+    if (yamlContent["inputs"]) {
+        YAML::Node inputsNode = yamlContent["inputs"];
+        for (std::size_t i = 0; i < inputsNode.size(); ++i) {
+            YAML::Node input = inputsNode[i]; // Make a copy of the YAML::Node object
+            if (input["Type"] && input["Type"].as<string>() == "file_log") {
+                // Change type file_log to input_file
+                input["Type"] = "input_file";
+                
+                if (input["MaxDepth"]) {
+                    errorMsg = "MaxDepth is not supported to upgrade to new config, please manually check it";
+                    return false;
+                }
+
+                // Update the 'FilePaths' field
+                if (input["LogPath"] && input["FilePattern"]) {
+                    string dirPath = input["LogPath"].as<string>();
+                    string filePathern =  input["FilePattern"].as<string>();
+
+                    string filePath = dirPath;
+                    // if filePath ends not with "/", add it
+                    if (filePath.back() != '/') {
+                        filePath += '/';
+                    }
+
+                    filePath += filePathern;
+                    input["FilePaths"] = std::vector<std::string>{filePath};
+                } else {
+                    errorMsg = "LogPath or FilePattern not found in file_log input";
+                    return false;
+                }
+                
+                // delete LogPath and FilePattern
+                input.remove("LogPath");
+                input.remove("FilePattern");
+
+                if (input["TopicFormat"]) {
+                    yamlContent["global"]["TopicType"] = input["TopicFormat"]; 
+                }
+            }
+            // Update the original node in the YAML content
+            inputsNode[i] = input;            
+        }
+        // Update the 'inputs' section in the YAML content
+        yamlContent["inputs"] = inputsNode;
+    }
+
+
+    // rename processor_regex_accelerate to processor_parse_regex_native
+    // rename processor_json_accelerate to processor_parse_json_native
+    if (yamlContent["processors"]) {
+        YAML::Node processorsNode = yamlContent["processors"];
+        for (std::size_t i = 0; i < processorsNode.size(); ++i) {
+            YAML::Node processor = processorsNode[i]; // Make a copy of the YAML::Node object
+            if (processor["Type"] && processor["Type"].as<string>() == "processor_regex_accelerate") {
+                // Change type processor_regex_accelerate to processor_parse_regex_native
+                processor["Type"] = "processor_parse_regex_native";
+            } else if (processor["Type"] && processor["Type"].as<string>() == "processor_json_accelerate") {
+                // Change type processor_json_accelerate to processor_parse_json_native
+                processor["Type"] = "processor_parse_json_native";
+            }
+            // Update the original node in the YAML content
+            processorsNode[i] = processor;
+        }
+    }
+
+    return true;
+}
+
 } // namespace logtail
