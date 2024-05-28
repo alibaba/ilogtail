@@ -29,7 +29,7 @@
 
 namespace logtail {
 
-bool ends_with(const std::string& value, const std::string& ending);
+bool EndsWith(const std::string& value, const std::string& ending);
 
 void ConvertLegacyYamlAndStore(const std::string& inputFilePath, const std::string& outputFilePath);
 
@@ -66,7 +66,6 @@ private:
     std::unordered_map<std::string, int64_t> mConfigNameTimestampMap;
 
     std::filesystem::path mLegacySourceDir; 
-    bool mLegacyConfigDirExisted = false; // todo: check if it is necessary
 };
 
 } // namespace logtail

@@ -143,7 +143,6 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                     yamlContent["global"]["TopicType"] = input["TopicFormat"]; 
                 }
             }
-            // Update the original node in the YAML content
             inputsNode[i] = input;            
         }
         // Update the 'inputs' section in the YAML content
@@ -164,9 +163,10 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                 // Change type processor_json_accelerate to processor_parse_json_native
                 processor["Type"] = "processor_parse_json_native";
             }
-            // Update the original node in the YAML content
             processorsNode[i] = processor;
         }
+        // Update the 'processors' section in the YAML content
+        yamlContent["processors"] = processorsNode;
     }
 
     return true;

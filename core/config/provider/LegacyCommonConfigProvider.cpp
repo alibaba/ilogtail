@@ -89,7 +89,7 @@ void LegacyCommonConfigProvider::GetConfigUpdate() {
             if (entry.is_regular_file() || entry.is_symlink()) { 
                 string filename = entry.path().filename().string();
                 // skip non-yaml files                
-                if (!ends_with(filename,".yaml") && !ends_with(filename, ".yml")) {
+                if (!EndsWith(filename,".yaml") && !EndsWith(filename, ".yml")) {
                     continue;
                 }
 
@@ -118,7 +118,7 @@ void LegacyCommonConfigProvider::GetConfigUpdate() {
     }
 }
 
-bool ends_with(const std::string& value, const std::string& ending) {
+bool EndsWith(const std::string& value, const std::string& ending) {
     if (ending.size() > value.size()) {
         return false;
     }
