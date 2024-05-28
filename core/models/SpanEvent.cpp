@@ -71,8 +71,8 @@ shared_ptr<SourceBuffer>& SpanEvent::SpanLink::GetSourceBuffer() {
     return mParent->GetSourceBuffer();
 }
 
-size_t SpanEvent::SpanLink::SizeOf() const {
-    return mTraceId.size() + mSpanId.size() + mTraceState.size() + mTags.SizeOf();
+size_t SpanEvent::SpanLink::DataSize() const {
+    return mTraceId.size() + mSpanId.size() + mTraceState.size() + mTags.DataSize();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -151,8 +151,8 @@ shared_ptr<SourceBuffer>& SpanEvent::InnerEvent::GetSourceBuffer() {
     return mParent->GetSourceBuffer();
 }
 
-size_t SpanEvent::InnerEvent::SizeOf() const {
-    return sizeof(decltype(mTimestampNs)) + mName.size() + mTags.SizeOf();
+size_t SpanEvent::InnerEvent::DataSize() const {
+    return sizeof(decltype(mTimestampNs)) + mName.size() + mTags.DataSize();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -288,20 +288,20 @@ void SpanEvent::DelScopeTag(StringView key) {
     mScopeTags.Erase(key);
 }
 
-size_t SpanEvent::SizeOf() const {
+size_t SpanEvent::DataSize() const {
     // TODO: this is not O(1), however, these two fields are not frequently used, so it can thought of O(1)
     size_t eventsSize = sizeof(decltype(mEvents));
     for (const auto& item : mEvents) {
-        eventsSize += item.SizeOf();
+        eventsSize += item.DataSize();
     }
     size_t linksSize = sizeof(decltype(mLinks));
     for (const auto& item : mLinks) {
-        linksSize += item.SizeOf();
+        linksSize += item.DataSize();
     }
     // TODO: for enum, it seems more reasonable to use actual string size instead of size of enum
-    return PipelineEvent::SizeOf() + mTraceId.size() + mSpanId.size() + mTraceState.size() + mParentSpanId.size() + mName.size()
-        + sizeof(decltype(mKind)) + sizeof(decltype(mStartTimeNs)) + sizeof(decltype(mEndTimeNs)) + mTags.SizeOf()
-        + eventsSize + linksSize + sizeof(decltype(mStatus)) + mScopeTags.SizeOf();
+    return PipelineEvent::DataSize() + mTraceId.size() + mSpanId.size() + mTraceState.size() + mParentSpanId.size() + mName.size()
+        + sizeof(decltype(mKind)) + sizeof(decltype(mStartTimeNs)) + sizeof(decltype(mEndTimeNs)) + mTags.DataSize()
+        + eventsSize + linksSize + sizeof(decltype(mStatus)) + mScopeTags.DataSize();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN

@@ -29,7 +29,7 @@ namespace logtail {
 struct UntypedSingleValue {
     double mValue;
 
-    constexpr size_t SizeOf() const { return sizeof(UntypedSingleValue); }
+    constexpr size_t DataSize() const { return sizeof(UntypedSingleValue); }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson() const;
@@ -39,7 +39,7 @@ struct UntypedSingleValue {
 
 using MetricValue = std::variant<std::monostate, UntypedSingleValue>;
 
-size_t SizeOf(const MetricValue& value);
+size_t DataSize(const MetricValue& value);
 
 #ifdef APSARA_UNIT_TEST_MAIN
 Json::Value MetricValueToJson(const MetricValue& value);

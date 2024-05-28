@@ -46,7 +46,7 @@ public:
         }
     }
 
-    size_t SizeOf() const { return sizeof(decltype(mInner)) + mAllocatedSize; }
+    size_t DataSize() const { return sizeof(decltype(mInner)) + mAllocatedSize; }
 
     std::map<StringView, StringView> mInner;
 

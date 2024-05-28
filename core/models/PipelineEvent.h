@@ -50,7 +50,7 @@ public:
     void ResetPipelineEventGroup(PipelineEventGroup* ptr) { mPipelineEventGroupPtr = ptr; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
-    virtual size_t SizeOf() const { return sizeof(decltype(mTimestamp)) + sizeof(decltype(mTimestampNanosecond)); };
+    virtual size_t DataSize() const { return sizeof(decltype(mTimestamp)) + sizeof(decltype(mTimestampNanosecond)); };
 
 #ifdef APSARA_UNIT_TEST_MAIN
     virtual Json::Value ToJson(bool enableEventMeta = false) const = 0;

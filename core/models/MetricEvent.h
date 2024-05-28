@@ -61,7 +61,7 @@ public:
     void SetTagNoCopy(StringView key, StringView val);
     void DelTag(StringView key);
 
-    size_t SizeOf() const override;
+    size_t DataSize() const override;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson(bool enableEventMeta = false) const override;

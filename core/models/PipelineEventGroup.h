@@ -107,7 +107,7 @@ public:
     RangeCheckpointPtr GetExactlyOnceCheckpoint() const { return mExactlyOnceCheckpoint; }
     bool IsReplay() const;
 
-    size_t SizeOf() const;
+    size_t DataSize() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     // for debug and test

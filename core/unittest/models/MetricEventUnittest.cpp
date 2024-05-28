@@ -113,15 +113,15 @@ void MetricEventUnittest::TestSize() {
 
     // add tag, and key not existed
     mMetricEvent->SetTag(string("key1"), string("a"));
-    APSARA_TEST_EQUAL(basicSize + 5U, mMetricEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 5U, mMetricEvent->DataSize());
 
     // add tag, and key existed
     mMetricEvent->SetTag(string("key1"), string("bb"));
-    APSARA_TEST_EQUAL(basicSize + 6U, mMetricEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 6U, mMetricEvent->DataSize());
 
     // delete tag
     mMetricEvent->DelTag(string("key1"));
-    APSARA_TEST_EQUAL(basicSize, mMetricEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
 }
 
 void MetricEventUnittest::TestToJson() {

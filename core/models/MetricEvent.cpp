@@ -60,8 +60,8 @@ void MetricEvent::DelTag(StringView key) {
     mTags.Erase(key);
 }
 
-size_t MetricEvent::SizeOf() const {
-    return PipelineEvent::SizeOf() + mName.size() + logtail::SizeOf(mValue) + mTags.SizeOf();
+size_t MetricEvent::DataSize() const {
+    return PipelineEvent::DataSize() + mName.size() + logtail::DataSize(mValue) + mTags.DataSize();
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN

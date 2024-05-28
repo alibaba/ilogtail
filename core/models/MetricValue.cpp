@@ -20,14 +20,14 @@ using namespace std;
 
 namespace logtail {
 
-size_t SizeOf(const MetricValue& value) {
+size_t DataSize(const MetricValue& value) {
     return visit(
         [](auto&& arg) {
             using T = decay_t<decltype(arg)>;
             if constexpr (is_same_v<T, monostate>) {
                 return 0UL;
             } else {
-                return arg.SizeOf();
+                return arg.DataSize();
             }
         },
         value);

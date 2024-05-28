@@ -61,7 +61,7 @@ public:
 
         std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
-        size_t SizeOf() const;
+        size_t DataSize() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
         Json::Value ToJson() const;
@@ -98,7 +98,7 @@ public:
 
         std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
-        size_t SizeOf() const;
+        size_t DataSize() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
         Json::Value ToJson() const;
@@ -169,7 +169,7 @@ public:
     void SetScopeTagNoCopy(StringView key, StringView val);
     void DelScopeTag(StringView key);
 
-    size_t SizeOf() const override;
+    size_t DataSize() const override;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson(bool enableEventMeta = false) const override;

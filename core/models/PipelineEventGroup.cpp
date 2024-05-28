@@ -148,12 +148,12 @@ void PipelineEventGroup::DelTag(StringView key) {
     mTags.Erase(key);
 }
 
-size_t PipelineEventGroup::SizeOf() const {
+size_t PipelineEventGroup::DataSize() const {
     size_t eventsSize = sizeof(decltype(mEvents));
     for (const auto& item : mEvents) {
-        eventsSize += item->SizeOf();
+        eventsSize += item->DataSize();
     }
-    return eventsSize + mTags.SizeOf();
+    return eventsSize + mTags.DataSize();
 }
 
 bool PipelineEventGroup::IsReplay() const {

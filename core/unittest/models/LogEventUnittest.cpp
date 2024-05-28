@@ -165,15 +165,15 @@ void LogEventUnittest::TestSize() {
     size_t basicSize = sizeof(time_t) + sizeof(long) + sizeof(vector<pair<LogContent, bool>>);
     // add content, and key not existed
     mLogEvent->SetContent(string("key1"), string("a"));
-    APSARA_TEST_EQUAL(basicSize + 5U, mLogEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 5U, mLogEvent->DataSize());
 
     // add content, and key existed
     mLogEvent->SetContent(string("key1"), string("bb"));
-    APSARA_TEST_EQUAL(basicSize + 6U, mLogEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 6U, mLogEvent->DataSize());
 
     // delete content
     mLogEvent->DelContent(string("key1"));
-    APSARA_TEST_EQUAL(basicSize, mLogEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize, mLogEvent->DataSize());
 }
 
 void LogEventUnittest::TestFromJsonToJson() {

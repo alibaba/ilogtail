@@ -195,28 +195,28 @@ void SpanEventUnittest::TestSize() {
     {
         // add tag, key not existed
         mSpanEvent->SetTag(string("key1"), string("a"));
-        APSARA_TEST_EQUAL(basicSize + 5U, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(basicSize + 5U, mSpanEvent->DataSize());
 
         // add tag, key existed
         mSpanEvent->SetTag(string("key1"), string("bb"));
-        APSARA_TEST_EQUAL(basicSize + 6U, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(basicSize + 6U, mSpanEvent->DataSize());
 
         // delete tag
         mSpanEvent->DelTag(string("key1"));
-        APSARA_TEST_EQUAL(basicSize, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(basicSize, mSpanEvent->DataSize());
     }
     {
         // add scope tag, key not existed
         mSpanEvent->SetScopeTag(string("key1"), string("a"));
-        APSARA_TEST_EQUAL(basicSize + 5U, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(basicSize + 5U, mSpanEvent->DataSize());
 
         // add scope tag, key existed
         mSpanEvent->SetScopeTag(string("key1"), string("bb"));
-        APSARA_TEST_EQUAL(basicSize + 6U, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(basicSize + 6U, mSpanEvent->DataSize());
 
         // delete scope tag
         mSpanEvent->DelScopeTag(string("key1"));
-        APSARA_TEST_EQUAL(basicSize, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(basicSize, mSpanEvent->DataSize());
     }
     {
         SpanEvent::InnerEvent* e = mSpanEvent->AddEvent();
@@ -226,7 +226,7 @@ void SpanEventUnittest::TestSize() {
         newBasicSize += strlen("test_event");
 
         e->SetTag(string("key1"), string("a"));
-        APSARA_TEST_EQUAL(newBasicSize + 5U, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(newBasicSize + 5U, mSpanEvent->DataSize());
 
         mSpanEvent->mEvents.clear();
     }
@@ -240,7 +240,7 @@ void SpanEventUnittest::TestSize() {
         newBasicSize += strlen("other_trace_id") + strlen("other_span_id") + strlen("normal");
 
         l->SetTag(string("key1"), string("a"));
-        APSARA_TEST_EQUAL(newBasicSize + 5U, mSpanEvent->SizeOf());
+        APSARA_TEST_EQUAL(newBasicSize + 5U, mSpanEvent->DataSize());
 
         mSpanEvent->mLinks.clear();
     }
@@ -451,15 +451,15 @@ void InnerEventUnittest::TestSize() {
 
     // add tag, and key not existed
     mInnerEvent->SetTag(string("key1"), string("a"));
-    APSARA_TEST_EQUAL(basicSize + 5U, mInnerEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 5U, mInnerEvent->DataSize());
 
     // add tag, and key existed
     mInnerEvent->SetTag(string("key1"), string("bb"));
-    APSARA_TEST_EQUAL(basicSize + 6U, mInnerEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 6U, mInnerEvent->DataSize());
 
     // delete tag
     mInnerEvent->DelTag(string("key1"));
-    APSARA_TEST_EQUAL(basicSize, mInnerEvent->SizeOf());
+    APSARA_TEST_EQUAL(basicSize, mInnerEvent->DataSize());
 }
 
 void InnerEventUnittest::TestToJson() {
@@ -594,15 +594,15 @@ void SpanLinkUnittest::TestSize() {
 
     // add tag, and key not existed
     mLink->SetTag(string("key1"), string("a"));
-    APSARA_TEST_EQUAL(basicSize + 5U, mLink->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 5U, mLink->DataSize());
 
     // add tag, and key existed
     mLink->SetTag(string("key1"), string("bb"));
-    APSARA_TEST_EQUAL(basicSize + 6U, mLink->SizeOf());
+    APSARA_TEST_EQUAL(basicSize + 6U, mLink->DataSize());
 
     // delete tag
     mLink->DelTag(string("key1"));
-    APSARA_TEST_EQUAL(basicSize, mLink->SizeOf());
+    APSARA_TEST_EQUAL(basicSize, mLink->DataSize());
 }
 
 void SpanLinkUnittest::TestToJson() {
