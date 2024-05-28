@@ -48,6 +48,11 @@ public:
 
     size_t DataSize() const { return sizeof(decltype(mInner)) + mAllocatedSize; }
 
+    void Clear() {
+        mInner.clear();
+        mAllocatedSize = 0;
+    }
+
     std::map<StringView, StringView> mInner;
 
 private:
