@@ -40,7 +40,6 @@ DECLARE_FLAG_STRING(ilogtail_local_yaml_config_dir);
 
 namespace logtail {
 
-
 void LegacyCommonConfigProvider::Init(const string& dir) {
     ConfigProvider::Init(dir);
     mLegacySourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
@@ -87,7 +86,7 @@ void LegacyCommonConfigProvider::GetConfigUpdate() {
             if (entry.is_regular_file() || entry.is_symlink()) { 
                 string filename = entry.path().filename().string();
                 // skip non-yaml files                
-                if (!EndsWith(filename,".yaml") && !EndsWith(filename, ".yml")) {
+                if (!EndWith(filename,".yaml") && !EndWith(filename, ".yml")) {
                     continue;
                 }
 
@@ -116,12 +115,6 @@ void LegacyCommonConfigProvider::GetConfigUpdate() {
     }
 }
 
-bool EndsWith(const std::string& value, const std::string& ending) {
-    if (ending.size() > value.size()) {
-        return false;
-    }
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
 
 
 void ConvertLegacyYamlAndStore(const string& inputFilePath, const string& outputFilePath) {

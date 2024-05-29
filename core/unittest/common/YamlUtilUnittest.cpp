@@ -38,6 +38,7 @@ public:
     void TestTimeAndDateYaml();
     void TestUnicodeYaml();
     void TestAnchorAndAliasYaml();
+    void TestCycleDependenciesYaml();
     void TestUpgradeLegacyYaml();
 };
 
@@ -445,6 +446,38 @@ void YamlUtilUnittest::TestAnchorAndAliasYaml() {
     APSARA_TEST_EQUAL_FATAL(json["d"]["c"].asInt(), 2);
 }
 
+void YamlUtilUnittest::TestCycleDependenciesYaml() {
+    std::string yaml = R"(
+            global:
+              EnableTimestampNanosecond: false
+            inputs:
+            - Type: input_file
+              FilePaths:
+              - /root/zhl/als/testjson.log
+              MaxDirSearchDepth: 5
+              ExcludeFilePaths: []
+              TailSizeKB: 0
+              AllowingIncludedByMultiConfigs: &id004
+                enable: *id004
+                global:
+                  EnableTimestampNanosecond: false
+                  inputs:
+                  - Type: input_file
+                    FilePaths:
+                    - /root/zhl/als/duohangzhengze.log
+                    MaxDirSearchDepth: 5
+                    ExcludeFilePaths: []
+                    TailSizeKB: 0
+                    AllowingIncludedByMultiConfigs: *id004
+        )";
+    Json::Value json;
+    std::string errorMsg;
+    YAML::Node yamlRoot;
+    bool ret = ParseYamlTable(yaml, yamlRoot, errorMsg);
+    EXPECT_FALSE(ret);
+    APSARA_TEST_EQUAL_FATAL(errorMsg, "yaml file contains cycle dependencies.");
+}
+
 void YamlUtilUnittest::TestUpgradeLegacyYaml() {
     {
         std::string yaml = "";
@@ -455,10 +488,11 @@ void YamlUtilUnittest::TestUpgradeLegacyYaml() {
         APSARA_TEST_TRUE_FATAL(ret);
         bool ret2 = UpdateLegacyConfigYaml(yamlRoot, errorMsg);
         APSARA_TEST_TRUE_FATAL(ret2);
+        APSARA_TEST_TRUE_FATAL(yamlRoot.IsNull()||!yamlRoot.IsDefined() );
         std::stringstream ss;
         ss << yamlRoot;
         std::string yamlString = ss.str();
-        APSARA_TEST_EQUAL_FATAL(yamlString, "");
+        APSARA_TEST_EQUAL_FATAL(yamlString, "{}");
     }
     {
         std::string yaml = R"(
@@ -484,6 +518,7 @@ void YamlUtilUnittest::TestUpgradeLegacyYaml() {
     }
 }
 
+
 UNIT_TEST_CASE(YamlUtilUnittest, TestEmptyYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestInvalidYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestNestedYaml);
@@ -501,6 +536,7 @@ UNIT_TEST_CASE(YamlUtilUnittest, TestTimeAndDateYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestUnicodeYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestAnchorAndAliasYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestUpgradeLegacyYaml);
+UNIT_TEST_CASE(YamlUtilUnittest, TestCycleDependenciesYaml);
 } // namespace logtail
 
 UNIT_TEST_MAIN
