@@ -40,7 +40,7 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(time.Duration(interval))
+		time.Sleep(time.Duration(interval * int(time.Millisecond)))
 		logIndex++
 		if logIndex >= len(testLogConent) {
 			logIndex = 0

@@ -1,8 +1,10 @@
 package control
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/alibaba/ilogtail/test/config"
@@ -21,31 +23,38 @@ flushers:
     Logstore: {{.Logstore}}`
 
 var SLSFlusherConfig string
+var SLSFlusherConfigOnce sync.Once
 
-func InitSLSFlusherConfig() {
-	tpl := template.Must(template.New("slsFlusherConfig").Parse(SLSFlusherConfigTemplate))
-	var builder strings.Builder
-	tpl.Execute(&builder, map[string]interface{}{
-		"Aliuid":   config.TestConfig.Aliuid,
-		"Region":   config.TestConfig.Region,
-		"Endpoint": config.TestConfig.Endpoint,
-		"Project":  config.TestConfig.Project,
-		"Logstore": config.TestConfig.Logstore,
-	})
-	SLSFlusherConfig = builder.String()
-}
-
-func AddLocalConfig(c string, configName string) {
+func AddLocalConfig(ctx context.Context, configName, c string) (context.Context, error) {
+	c = completeConfigWithFlusher(c)
 	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
-  %s`, iLogtailLocalConfigDir, configName, c)
+%s`, iLogtailLocalConfigDir, configName, c)
 	if err := setup.Env.ExecOnLogtail(command); err != nil {
-		panic(err)
+		return ctx, err
 	}
+	return ctx, nil
 }
 
-func RemoveAllLocalConfig() {
+func RemoveAllLocalConfig(ctx context.Context) (context.Context, error) {
 	command := fmt.Sprintf("cd %s && rm -rf *.yaml", iLogtailLocalConfigDir)
 	if err := setup.Env.ExecOnLogtail(command); err != nil {
-		panic(err)
+		return ctx, err
 	}
+	return ctx, nil
+}
+
+func completeConfigWithFlusher(c string) string {
+	SLSFlusherConfigOnce.Do(func() {
+		tpl := template.Must(template.New("slsFlusherConfig").Parse(SLSFlusherConfigTemplate))
+		var builder strings.Builder
+		tpl.Execute(&builder, map[string]interface{}{
+			"Aliuid":   config.TestConfig.Aliuid,
+			"Region":   config.TestConfig.Region,
+			"Endpoint": config.TestConfig.Endpoint,
+			"Project":  config.TestConfig.Project,
+			"Logstore": config.TestConfig.Logstore,
+		})
+		SLSFlusherConfig = builder.String()
+	})
+	return c + SLSFlusherConfig
 }

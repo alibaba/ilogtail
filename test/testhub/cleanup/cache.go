@@ -1,10 +1,15 @@
 package cleanup
 
-import "github.com/alibaba/ilogtail/test/testhub/setup"
+import (
+	"context"
 
-func CleanupGoTestCache() {
+	"github.com/alibaba/ilogtail/test/testhub/setup"
+)
+
+func CleanupGoTestCache(ctx context.Context) (context.Context, error) {
 	command := "/usr/local/go/bin/go clean -testcache"
 	if err := setup.Env.ExecOnSource(command); err != nil {
-		panic(err)
+		return ctx, err
 	}
+	return ctx, nil
 }

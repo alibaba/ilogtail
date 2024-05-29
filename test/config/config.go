@@ -14,6 +14,8 @@
 
 package config
 
+import "time"
+
 var TestConfig Config
 
 type Config struct {
@@ -27,14 +29,15 @@ type Config struct {
 	// K8s
 	KubeConfigPath string `mapstructure:"kube_config_path" yaml:"kube_config_path"`
 	// SLS
-	Project         string `mapstructure:"project" yaml:"project"`
-	Logstore        string `mapstructure:"logstore" yaml:"logstore"`
-	AccessKeyId     string `mapstructure:"access_key_id" yaml:"access_key_id"`
-	AccessKeySecret string `mapstructure:"access_key_secret" yaml:"access_key_secret"`
-	Endpoint        string `mapstructure:"endpoint" yaml:"endpoint"`
-	Aliuid          string `mapstructure:"aliuid" yaml:"aliuid"`
-	QueryEndpoint   string `mapstructure:"query_endpoint" yaml:"query_endpoint"`
-	Region          string `mapstructure:"region" yaml:"region"`
+	Project         string        `mapstructure:"project" yaml:"project"`
+	Logstore        string        `mapstructure:"logstore" yaml:"logstore"`
+	AccessKeyId     string        `mapstructure:"access_key_id" yaml:"access_key_id"`
+	AccessKeySecret string        `mapstructure:"access_key_secret" yaml:"access_key_secret"`
+	Endpoint        string        `mapstructure:"endpoint" yaml:"endpoint"`
+	Aliuid          string        `mapstructure:"aliuid" yaml:"aliuid"`
+	QueryEndpoint   string        `mapstructure:"query_endpoint" yaml:"query_endpoint"`
+	Region          string        `mapstructure:"region" yaml:"region"`
+	RetryTimeout    time.Duration `mapstructure:"retry_timeout" yaml:"retry_timeout"`
 }
 
 // The following is for plugin tests.

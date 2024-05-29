@@ -2,11 +2,12 @@ package core
 
 import (
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
-	"github.com/alibaba/ilogtail/test/testhub/control"
 )
 
 func TestMain(m *testing.M) {
@@ -42,9 +43,11 @@ func TestMain(m *testing.M) {
 	config.TestConfig.Aliuid = os.Getenv("ALIUID")
 	config.TestConfig.QueryEndpoint = os.Getenv("QUERY_ENDPOINT")
 	config.TestConfig.Region = os.Getenv("REGION")
-
-	control.InitSLSClient()
-	control.InitSLSFlusherConfig()
+	timeout, err := strconv.ParseInt(os.Getenv("RETRY_TIMEOUT"), 10, 64)
+	if err != nil {
+		timeout = 30
+	}
+	config.TestConfig.RetryTimeout = time.Duration(timeout) * time.Second
 
 	os.Exit(m.Run())
 }

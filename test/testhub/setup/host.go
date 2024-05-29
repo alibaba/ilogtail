@@ -28,11 +28,18 @@ func (h *HostEnv) ExecOnSource(command string) error {
 	return h.exec(command)
 }
 
+func (h *HostEnv) AddFilter(filter ContainerFilter) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (h *HostEnv) RemoveFilter(filter ContainerFilter) error {
+	return fmt.Errorf("not implemented")
+}
+
 func (h *HostEnv) exec(command string) error {
 	if h.sshClient == nil {
 		return fmt.Errorf("ssh client init failed")
 	}
-	fmt.Println(command)
 	_, err := h.sshClient.Run(command)
 	return err
 }

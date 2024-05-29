@@ -11,21 +11,22 @@ import (
 	"github.com/cucumber/godog"
 )
 
-func TestRegexSingle(t *testing.T) {
+func TestContainerFilterByLabel(t *testing.T) {
 	defer cleanup.CleanupAll()
 	suite := godog.TestSuite{
-		Name: "TestRegexSingle",
+		Name: "TestContainerFilterByLabel",
 		ScenarioInitializer: func(ctx *godog.ScenarioContext) {
 			ctx.Given(`^(\S+) environment$`, setup.InitEnv)
 			ctx.Given(`^(\S+) config as below`, control.AddLocalConfig)
+			ctx.When(`add k8s label (.*)`, control.AddLabel)
+			ctx.When(`remove k8s label (.*)`, control.RemoveLabel)
 			ctx.When(`^generate (\d+) regex logs, with interval (\d+)ms$`, trigger.TriggerRegexSingle)
 			ctx.Then(`^there is (\d+) logs$`, verify.VerifyLogCount)
-			ctx.Then(`^the log contents match regex single`, verify.VerifyRegexSingle)
 		},
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"scenarios"},
-			Tags:     "@e2e",
+			Tags:     "@regression",
 			TestingT: t,
 		},
 	}
