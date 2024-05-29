@@ -29,12 +29,10 @@
 
 namespace logtail {
 
-bool EndsWith(const std::string& value, const std::string& ending);
-
 void ConvertLegacyYamlAndStore(const std::string& inputFilePath, const std::string& outputFilePath);
 
-// LegacyCommonConfigProvider is used to convert yaml config for ilogtail 1.0 in user_yaml_config.d/
-// and copy to config/local/.
+// LegacyCommonConfigProvider is used to convert yaml config for ilogtail 1.0.
+// It detects file changes in user_yaml_config.d/ and copy changed files to config/local/.
 class LegacyCommonConfigProvider : public ConfigProvider {
 public:
     LegacyCommonConfigProvider(const LegacyCommonConfigProvider&) = delete;
@@ -61,10 +59,8 @@ private:
     mutable std::mutex mThreadRunningMux;
     bool mIsThreadRunning = true;
     mutable std::condition_variable mStopCV;
-    
     // key is config name, value is modification timestamp.
     std::unordered_map<std::string, int64_t> mConfigNameTimestampMap;
-
     std::filesystem::path mLegacySourceDir; 
 };
 
