@@ -453,8 +453,8 @@ void YamlUtilUnittest::TestUpgradeLegacyYaml() {
         YAML::Node yamlRoot;
         bool ret = ParseYamlTable(yaml, yamlRoot, errorMsg);
         APSARA_TEST_TRUE_FATAL(ret);
-        bool ret2 = UpdateLegacyConfigYaml(yamlRoot, json);
-        APSARA_TEST_TRUE_FATAL(ret);
+        bool ret2 = UpdateLegacyConfigYaml(yamlRoot, errorMsg);
+        APSARA_TEST_TRUE_FATAL(ret2);
         std::stringstream ss;
         ss << yamlRoot;
         std::string yamlString = ss.str();
@@ -477,9 +477,10 @@ void YamlUtilUnittest::TestUpgradeLegacyYaml() {
         YAML::Node yamlRoot;
         bool ret = ParseYamlTable(yaml, yamlRoot, errorMsg);
         APSARA_TEST_TRUE_FATAL(ret);
-        bool ret2 = UpdateLegacyConfigYaml(yamlRoot, json);
-        APSARA_TEST_TRUE_FATAL(ret);
-        APSARA_TEST_EQUAL_FATAL(yamlRoot["inputs"][0]["Type"].as<string>(), "input_file");
+        bool ret2 = UpdateLegacyConfigYaml(yamlRoot, errorMsg);
+        APSARA_TEST_TRUE_FATAL(ret2);
+        APSARA_TEST_EQUAL_FATAL(yamlRoot["inputs"][0]["Type"].as<std::string>(), "input_file");
+        APSARA_TEST_EQUAL_FATAL(yamlRoot["inputs"][0]["FilePaths"][0].as<std::string>(), "./**/simple.log");
     }
 }
 
