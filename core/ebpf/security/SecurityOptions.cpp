@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/ParamExtractor.h"
-#include "ebpf/security/SecurityServer.h"
+#include "ebpf/security/SecurityOptions.h"
 
-
+using namespace std;
 namespace logtail {
 
 bool SecurityOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
