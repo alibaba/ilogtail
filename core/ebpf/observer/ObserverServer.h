@@ -17,21 +17,32 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
+#include <utility>
 
-#include "plugin/interface/Input.h"
+#include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
-class InputEbpfNetworkSecurity : public Input {
+class ObserverServer {
 public:
-    static const std::string sName;
+    ObserverServer(const ObserverServer&) = delete;
+    ObserverServer& operator=(const ObserverServer&) = delete;
 
-    const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
-    bool Start() override;
-    bool Stop(bool isPipelineRemoving) override;
-    std::string mDetail;
+    static ObserverServer* GetInstance() {
+        static ObserverServer instance;
+        return &instance;
+    }
 
+    void Start();
+    void Stop(bool isConfigUpdate = true);
+
+    // todo 其他函数注册：配置注册、注销等
+
+private:
+    ObserverServer() = default;
+    ~ObserverServer() = default;
+
+    void PauseInner();
 };
-
 }

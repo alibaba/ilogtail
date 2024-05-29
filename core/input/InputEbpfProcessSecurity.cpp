@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "input/InputEbpfProcessSecurity.h"
-#include "observer/network/NetworkConfig.h"
 
 using namespace std;
 
@@ -22,6 +21,7 @@ namespace logtail {
 const std::string InputEbpfProcessSecurity::sName = "input_ebpf_processprobe_security";
 
 bool InputEbpfProcessSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    // todo config string解析成定义的param
     mDetail = config.toStyledString();
     return true;
 }
