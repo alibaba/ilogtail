@@ -38,6 +38,7 @@ public:
     void TestTimeAndDateYaml();
     void TestUnicodeYaml();
     void TestAnchorAndAliasYaml();
+    void TestUpgradeLegacyYaml();
 };
 
 void YamlUtilUnittest::TestEmptyYaml() {
@@ -444,6 +445,44 @@ void YamlUtilUnittest::TestAnchorAndAliasYaml() {
     APSARA_TEST_EQUAL_FATAL(json["d"]["c"].asInt(), 2);
 }
 
+void YamlUtilUnittest::TestUpgradeLegacyYaml() {
+    {
+        std::string yaml = "";
+        Json::Value json;
+        std::string errorMsg;
+        YAML::Node yamlRoot;
+        bool ret = ParseYamlTable(yaml, yamlRoot, errorMsg);
+        APSARA_TEST_TRUE_FATAL(ret);
+        bool ret2 = UpdateLegacyConfigYaml(yamlRoot, json);
+        APSARA_TEST_TRUE_FATAL(ret);
+        std::stringstream ss;
+        ss << yamlRoot;
+        std::string yamlString = ss.str();
+        APSARA_TEST_EQUAL_FATAL(yamlString, "");
+    }
+    {
+        std::string yaml = R"(
+            enable: true
+            inputs:
+            - Type: file_log         
+              LogPath: .             
+              FilePattern: simple.log
+              MaxDepth: 10
+            flushers:
+            - Type: flusher_stdout
+              OnlyStdout: true
+        )";
+        Json::Value json;
+        std::string errorMsg;
+        YAML::Node yamlRoot;
+        bool ret = ParseYamlTable(yaml, yamlRoot, errorMsg);
+        APSARA_TEST_TRUE_FATAL(ret);
+        bool ret2 = UpdateLegacyConfigYaml(yamlRoot, json);
+        APSARA_TEST_TRUE_FATAL(ret);
+        APSARA_TEST_EQUAL_FATAL(yamlRoot["inputs"][0]["Type"].as<string>(), "input_file");
+    }
+}
+
 UNIT_TEST_CASE(YamlUtilUnittest, TestEmptyYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestInvalidYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestNestedYaml);
@@ -460,6 +499,7 @@ UNIT_TEST_CASE(YamlUtilUnittest, TestVariousNumberYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestTimeAndDateYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestUnicodeYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestAnchorAndAliasYaml);
+UNIT_TEST_CASE(YamlUtilUnittest, TestUpgradeLegacyYaml);
 } // namespace logtail
 
 UNIT_TEST_MAIN

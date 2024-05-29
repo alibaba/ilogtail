@@ -34,23 +34,17 @@
 
 using namespace std;
 
-// DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 DECLARE_FLAG_INT32(config_update_interval);
-
-DEFINE_FLAG_STRING(legacy_config_dir, "legacy config directory", "user_yaml_config.d");
+DECLARE_FLAG_STRING(ilogtail_local_yaml_config_dir);
 
 namespace logtail {
 
-void LegacyCommonConfigProvider::Init(const string& dir) {
-// if is not linux, return false    
-#ifndef __linux__
-    return;
-#endif
 
+void LegacyCommonConfigProvider::Init(const string& dir) {
     ConfigProvider::Init(dir);
     mLegacySourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
-    mLegacySourceDir /= STRING_FLAG(legacy_config_dir);
+    mLegacySourceDir /= STRING_FLAG(ilogtail_local_yaml_config_dir);
 
     mThreadRes = async(launch::async, &LegacyCommonConfigProvider::CheckUpdateThread, this);
 }

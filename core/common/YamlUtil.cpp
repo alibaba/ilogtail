@@ -17,6 +17,7 @@
 #include <string>
 
 #include "common/ExceptionBase.h"
+#include <filesystem>
 
 using namespace std;
 
@@ -91,12 +92,6 @@ Json::Value ConvertYamlToJson(const YAML::Node& rootNode) {
 }
 
 bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
-// if is not linux, return false    
-#ifndef __linux__
-    errorMsg = "UpdateLegacyConfigYaml is not supported on non-linux platform";
-    return false;
-#endif
-
     // Check if 'version' field exists, then update it to 'global.StructuctureType'
     if (yamlContent["version"]) {
         yamlContent["global"]["StructureType"] = yamlContent["version"];
@@ -104,6 +99,7 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
     }
 
     // rename "file_log" to "input_file"
+    // combine LogPath and FilePattern to FilePaths
     if (yamlContent["inputs"]) {
         YAML::Node inputsNode = yamlContent["inputs"];
         for (std::size_t i = 0; i < inputsNode.size(); ++i) {
@@ -117,19 +113,16 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                     string dirPath = input["LogPath"].as<string>();
                     string filePattern =  input["FilePattern"].as<string>();
 
-                    string filePath = dirPath;
-                    // if filePath ends not with "/", add it
-                    if (filePath.back() != '/') {
-                        filePath += '/';
-                    }
-
+                    filesystem::path filePath = dirPath;
+                    // Append directory search depth if MaxDepth is specified
                     if (input["MaxDepth"] && input["MaxDepth"].as<int>() > 0) {
-                        filePath += "**/";
+                        filePath /= "**";
                         input["MaxDirSearchDepth"] = input["MaxDepth"];
                     }
 
-                    filePath += filePattern;
-                    input["FilePaths"] = std::vector<std::string>{filePath};
+                    filePath /= filePattern;
+                    string finalPath = filePath.string();
+                    input["FilePaths"] = std::vector<std::string>{finalPath};
                 } else {
                     errorMsg = "LogPath or FilePattern not found in file_log input";
                     return false;
