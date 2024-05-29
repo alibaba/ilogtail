@@ -14,7 +14,6 @@
 
 #include "input/InputEbpfProcessObserver.h"
 
-#include "observer/network/NetworkConfig.h"
 
 using namespace std;
 
@@ -23,6 +22,7 @@ namespace logtail {
 const std::string InputEbpfProcessObserver::sName = "input_ebpf_processprobe_observer";
 
 bool InputEbpfProcessObserver::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    // todo config string解析成定义的param
     mDetail = config.toStyledString();
     return true;
 }

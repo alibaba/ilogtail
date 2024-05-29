@@ -31,5 +31,6 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
+    std::string mDetail;
 };
 }
