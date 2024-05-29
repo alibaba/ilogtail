@@ -55,6 +55,7 @@
 #endif
 #else
 #include "config/provider/CommonConfigProvider.h"
+#include "config/provider/LegacyCommonConfigProvider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
 
@@ -210,6 +211,7 @@ void Application::Start() {
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
     CommonConfigProvider::GetInstance()->Init("common");
+    LegacyCommonConfigProvider::GetInstance()->Init("legacy");
 #endif
 
     LogtailAlarm::GetInstance()->Init();

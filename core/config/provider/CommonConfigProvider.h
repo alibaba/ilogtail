@@ -26,6 +26,7 @@
 #include "config/provider/ConfigProvider.h"
 #include "config_server_pb/agent.pb.h"
 
+
 namespace logtail {
 
 class CommonConfigProvider : public ConfigProvider {
