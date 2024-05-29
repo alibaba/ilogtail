@@ -28,12 +28,14 @@ bool InputEbpfFileSecurity::Init(const Json::Value& config, Json::Value& optiona
 }
 
 bool InputEbpfFileSecurity::Start() {
-    NetworkConfig::GetInstance()->mAllNetworkConfigs[mContext->GetConfigName()] = &mContext->GetPipeline();
+    // todo 1、security ebpf采集总线程未启动，调用SecurityServer的start启动
+    // todo 2、插件相关配置注册到SecurityServer
     return true;
 }
 
 bool InputEbpfFileSecurity::Stop(bool isPipelineRemoving) {
-    NetworkConfig::GetInstance()->mAllNetworkConfigs.erase(mContext->GetConfigName());
+    // todo 1、该ebpf类型的 security采集线程未暂停，调用SecurityServer的stop暂停
+    // todo 2、插件相关配置从SecurityServer移除
     return true;
 }
 
