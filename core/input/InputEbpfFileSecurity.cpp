@@ -14,7 +14,6 @@
 
 #include "input/InputEbpfFileSecurity.h"
 
-#include "observer/network/NetworkConfig.h"
 
 using namespace std;
 
@@ -23,6 +22,7 @@ namespace logtail {
 const std::string InputEbpfFileSecurity::sName = "input_ebpf_fileprobe_security";
 
 bool InputEbpfFileSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    mDetail = config.toStyledString();
     // todo config string解析成定义的param
     return true;
 }

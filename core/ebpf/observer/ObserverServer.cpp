@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ebpf/security/SecurityServer.h"
+#include "ebpf/observer/ObserverServer.h"
 
 
 namespace logtail {
 
-void SecurityServer::Start() {
-    // todo security ebpf采集线程启动相关操作，包含ebpf_init启动
+void ObserverServer::Start() {
+    // todo observer ebpf采集线程启动相关操作，包含ebpf_init启动
     LOG_INFO(sLogger, ("security ebpf server", "started"));
 }
 
-void SecurityServer::Stop(bool isConfigUpdate) {
+void ObserverServer::Stop(bool isConfigUpdate) {
     // todo 暂停特定类型的ebpf的 security采集线程，包含ebpf_stop
 }
 

@@ -14,7 +14,6 @@
 
 #include "input/InputEbpfNetworkSecurity.h"
 
-#include "observer/network/NetworkConfig.h"
 
 using namespace std;
 
@@ -23,6 +22,8 @@ namespace logtail {
 const std::string InputEbpfNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
 
 bool InputEbpfNetworkSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    // todo config string解析成定义的param
+    mDetail = config.toStyledString();
     return true;
 }
 
