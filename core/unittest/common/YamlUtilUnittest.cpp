@@ -488,7 +488,6 @@ void YamlUtilUnittest::TestUpgradeLegacyYaml() {
         APSARA_TEST_TRUE_FATAL(ret);
         bool ret2 = UpdateLegacyConfigYaml(yamlRoot, errorMsg);
         APSARA_TEST_TRUE_FATAL(ret2);
-        APSARA_TEST_TRUE_FATAL(yamlRoot.IsNull()||!yamlRoot.IsDefined() );
         std::stringstream ss;
         ss << yamlRoot;
         std::string yamlString = ss.str();

@@ -14,6 +14,7 @@
 
 #include "common/YamlUtil.h"
 #include "common/ExceptionBase.h"
+#include "common/StringTools.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -170,7 +171,13 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                 input.remove("MaxDepth");
 
                 if (input["TopicFormat"]) {
-                    yamlContent["global"]["TopicType"] = input["TopicFormat"]; 
+                    string topicFormat = input["TopicFormat"].as<string>();
+                    string prefix = "costomized://";
+                    if (StartWith(topicFormat, prefix)) {
+                        // remove "customized://"
+                        input["TopicFormat"] = topicFormat.substr(prefix.size());
+                        yamlContent["global"]["TopicType"] = "customized";                        
+                    }
                 }
             }
             inputsNode[i] = input;            
@@ -182,6 +189,7 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
 
     // rename processor_regex_accelerate to processor_parse_regex_native
     // rename processor_json_accelerate to processor_parse_json_native
+    // rename processor_delimiter_accelerate to processor_parse_delimiter_native
     if (yamlContent["processors"]) {
         YAML::Node processorsNode = yamlContent["processors"];
         for (std::size_t i = 0; i < processorsNode.size(); ++i) {
@@ -190,6 +198,8 @@ bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
                 processor["Type"] = "processor_parse_regex_native";
             } else if (processor["Type"] && processor["Type"].as<string>() == "processor_json_accelerate") {
                 processor["Type"] = "processor_parse_json_native";
+            } else if (processor["Type"] && processor["Type"].as<string>() == "processor_delimiter_accelerate") {
+                processor["Type"] = "processor_parse_delimiter_native";
             }
             processorsNode[i] = processor;
         }
