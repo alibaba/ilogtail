@@ -14,10 +14,10 @@ iLogtail提供了一个完整的E2E测试引擎，方便您快速开展各类插
 
 ### 目录组织
 
-对于每一种测试场景，您都需要在./test/case/behavior目录下创建一个新的文件夹，并在文件夹中放置测试所需的文件，其中必须包含名为ilogtail-e2e.yaml的测试引擎配置文件。目前，我们已经提供了部分测试用例，您只需在此基础上进行添加即可，目录组织格式如下：
+对于每一种测试场景，您都需要在./test/cases/plugin/scenarios/behavior目录下创建一个新的文件夹，并在文件夹中放置测试所需的文件，其中必须包含名为ilogtail-e2e.yaml的测试引擎配置文件。目前，我们已经提供了部分测试用例，您只需在此基础上进行添加即可，目录组织格式如下：
 
 ```plain
-./test/case/
+./test/cases/plugin/scenarios/
 ├── behavior
 │   ├── <your_test_case_name>
 │       ├── ilogtail-e2e.yaml
