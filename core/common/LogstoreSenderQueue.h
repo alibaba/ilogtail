@@ -492,6 +492,9 @@ public:
 
     bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
+        if (mLogstoreSenderQueueMap.find(key) == mLogstoreSenderQueueMap.end()) { // fix crash caused by invalid key.
+            return false; 
+        }
         const auto& singleQueue = mLogstoreSenderQueueMap.at(key);
 
         // For correctness, exactly once queue should ignore mUrgentFlag.
