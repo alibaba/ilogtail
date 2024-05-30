@@ -687,7 +687,7 @@ func getDockerCenterInstance() *DockerCenter {
 				time.Sleep(time.Second * 1)
 			}
 			containerFindingManager.TimerFetch()
-			containerFindingManager.SyncContainers()
+			containerFindingManager.StartSyncContainers()
 		}()
 	})
 	return dockerCenterInstance

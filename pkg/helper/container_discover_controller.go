@@ -125,7 +125,7 @@ func (c *ContainerDiscoverManager) fetchCRI() error {
 	return criRuntimeWrapper.fetchAll()
 }
 
-func (c *ContainerDiscoverManager) SyncContainers() {
+func (c *ContainerDiscoverManager) StartSyncContainers() {
 	if c.enableCRIDiscover {
 		logger.Debug(context.Background(), "discover manager start sync containers goroutine", "cri")
 		go criRuntimeWrapper.loopSyncContainers()
