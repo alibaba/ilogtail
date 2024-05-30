@@ -24,11 +24,9 @@ namespace logtail {
 struct ProcessQueueItem {
     PipelineEventGroup mEventGroup;
     std::shared_ptr<Pipeline> mPipeline; // not null only during pipeline update
-    std::string mConfigName; // TODO: remove later, can be obtained from queue name
-    size_t mInputIndex = 0;
+    size_t mInputIndex = 0; // index of the input in the pipeline
 
-    ProcessQueueItem(PipelineEventGroup&& group, const std::string& configName, size_t index)
-        : mEventGroup(std::move(group)), mConfigName(configName), mInputIndex(index) {}
+    ProcessQueueItem(PipelineEventGroup&& group, size_t index) : mEventGroup(std::move(group)), mInputIndex(index) {}
 };
 
 } // namespace logtail
