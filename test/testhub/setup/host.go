@@ -40,8 +40,11 @@ func (h *HostEnv) exec(command string) error {
 	if h.sshClient == nil {
 		return fmt.Errorf("ssh client init failed")
 	}
-	_, err := h.sshClient.Run(command)
-	return err
+	result, err := h.sshClient.Run(command)
+	if err != nil {
+		return fmt.Errorf("%v, %v", string(result), err)
+	}
+	return nil
 }
 
 func (h *HostEnv) initSSHClient() {

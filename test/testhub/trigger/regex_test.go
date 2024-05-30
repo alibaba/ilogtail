@@ -14,11 +14,13 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 	gneratedLogDir := getEnvOrDefault("GENERATED_LOG_DIR", "/tmp/ilogtail")
 	totalLog, err := strconv.Atoi(getEnvOrDefault("TOTAL_LOG", "100"))
 	if err != nil {
-		panic(err)
+		t.Fatalf("parse TOTAL_LOG failed: %v", err)
+		return
 	}
 	interval, err := strconv.Atoi(getEnvOrDefault("INTERVAL", "1"))
 	if err != nil {
-		panic(err)
+		t.Fatalf("parse INTERVAL failed: %v", err)
+		return
 	}
 	fileName := getEnvOrDefault("FILENAME", "regex_single")
 
@@ -30,7 +32,8 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 	}
 	file, err := os.OpenFile(fmt.Sprintf("%s/%s", gneratedLogDir, fileName), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
-		panic(err)
+		t.Fatalf("open file failed: %v", err)
+		return
 	}
 	defer file.Close()
 
@@ -38,7 +41,8 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 	for i := 0; i < totalLog; i++ {
 		_, err := io.WriteString(file, testLogConent[logIndex]+"\n")
 		if err != nil {
-			panic(err)
+			t.Fatalf("write log failed: %v", err)
+			return
 		}
 		time.Sleep(time.Duration(interval * int(time.Millisecond)))
 		logIndex++
