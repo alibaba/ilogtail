@@ -15,20 +15,22 @@
  */
 
 #pragma once
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <iostream>
 #include <atomic>
-#include "common/LogstoreSenderQueue.h"
-#include "common/WaitObject.h"
-#include "common/Lock.h"
-#include "common/Thread.h"
-#include "sdk/Closure.h"
-#include "log_pb/sls_logs.pb.h"
-#include "log_pb/logtail_buffer_meta.pb.h"
-#include "aggregator/Aggregator.h"
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "SenderQueueParam.h"
+#include "aggregator/Aggregator.h"
+#include "common/Lock.h"
+#include "common/LogstoreSenderQueue.h"
+#include "common/Thread.h"
+#include "common/WaitObject.h"
+#include "log_pb/logtail_buffer_meta.pb.h"
+#include "log_pb/sls_logs.pb.h"
+#include "sdk/Closure.h"
+#include "common/LogstoreFeedbackQueue.h"
 
 namespace logtail {
 
@@ -353,7 +355,6 @@ private:
     void CleanTimeoutSendStatistic();
 
     // bool CheckBatchMapFull(int64_t key);
-    static bool IsProfileData(const std::string& region, const std::string& project, const std::string& logstore);
 
     std::string GetRegionCurrentEndpoint(const std::string& region);
     std::string GetRegionFromEndpoint(const std::string& endpoint);
@@ -362,6 +363,7 @@ private:
 
 public:
     static Sender* Instance();
+    static bool IsProfileData(const std::string& region, const std::string& project, const std::string& logstore);
     // void ResetProfileSender();
     bool Init(); // Backward compatible
     // from collector to batchmap
@@ -437,8 +439,8 @@ public:
                           const std::string& endpoint,
                           bool isDefault = false,
                           bool isProxy = false);
-    LogstoreFeedBackInterface* GetSenderFeedBackInterface();
-    void SetFeedBackInterface(LogstoreFeedBackInterface* pProcessInterface);
+    FeedbackInterface* GetSenderFeedBackInterface();
+    void SetFeedBackInterface(FeedbackInterface* pProcessInterface);
     void OnSendDone(LoggroupTimeValue* mDataPtr, LogstoreSenderInfo::SendResult sendRst);
 
     bool IsFlush();
@@ -500,6 +502,8 @@ public:
 
     const std::string& GetDefaultRegion() const;
     void SetDefaultRegion(const std::string& region);
+
+    SingleLogstoreSenderManager<SenderQueueParam>* GetSenderQueue(QueueKey key);
 
     friend class SendClosure;
 

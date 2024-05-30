@@ -16,16 +16,18 @@
 
 #pragma once
 
-#include <json/json.h>
-
 #include <cstdint>
 #include <ctime>
 #include <map>
 #include <memory>
 #include <string>
 
+#include "common/memory/SourceBuffer.h"
 #include "models/StringView.h"
-#include "reader/SourceBuffer.h"
+
+#ifdef APSARA_UNIT_TEST_MAIN
+#include <json/json.h>
+#endif
 
 namespace logtail {
 
@@ -34,7 +36,7 @@ class PipelineEventGroup;
 class PipelineEvent {
 public:
     enum class Type { NONE, LOG, METRIC, SPAN };
-    
+
     virtual ~PipelineEvent() = default;
 
     Type GetType() const { return mType; }
@@ -51,9 +53,9 @@ public:
     virtual uint64_t EventsSizeBytes() = 0;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    virtual Json::Value ToJson() const = 0;
+    virtual Json::Value ToJson(bool enableEventMeta = false) const = 0;
     virtual bool FromJson(const Json::Value&) = 0;
-    std::string ToJsonString() const;
+    std::string ToJsonString(bool enableEventMeta = false) const;
     bool FromJsonString(const std::string&);
 #endif
 

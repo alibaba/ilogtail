@@ -30,6 +30,7 @@ option(ENABLE_ENTERPRISE "enable enterprise feature")
 cmake_dependent_option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" OFF "LINUX" OFF)
 cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" OFF "LINUX" OFF)
 option(WITHOUTGDB "Build Logtail without gdb")
+option(WITHOUTSPL "Build Logtail and UT without SPL")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
 
 if (ENABLE_ENTERPRISE)
@@ -39,6 +40,10 @@ if (ENABLE_ENTERPRISE)
 else ()
     include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 endif ()
+
+if (WITHOUTSPL)
+    add_definitions(-D__EXCLUDE_SPL__)
+endif()
 
 # Default C/CXX flags.
 if (UNIX)
@@ -84,11 +89,14 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 set(SUB_DIRECTORIES_LIST
         aggregator application app_config checkpoint common config config/provider config/watcher config_manager config_server_pb 
         container_manager controller event event_handler event_listener file_server flusher go_pipeline helper input log_pb logger 
-        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon 
-        profile_sender reader sdk sender sls_control fuse
+        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon processor/inner
+        profile_sender queue reader sdk sender sls_control fuse
         )
 if (LINUX)
-    set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} observer spl)
+    set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} observer)
+    if (NOT WITHOUTSPL)
+        set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} spl)
+    endif()
     if (ENABLE_ENTERPRISE)
         set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} shennong streamlog)
     endif()

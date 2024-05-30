@@ -127,11 +127,15 @@ uint64_t LogEvent::EventsSizeBytes() {
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
-Json::Value LogEvent::ToJson() const {
+Json::Value LogEvent::ToJson(bool enableEventMeta) const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
     root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (enableEventMeta) {
+        root["fileOffset"] = GetPosition().first;
+        root["rawSize"] = GetPosition().second;
+    }
     if (!Empty()) {
         Json::Value contents;
         for (const auto& content : *this) {
@@ -148,10 +152,14 @@ bool LogEvent::FromJson(const Json::Value& root) {
     } else {
         SetTimestamp(root["timestamp"].asInt64());
     }
+    if (root.isMember("fileOffset") && root.isMember("rawSize")) {
+        SetPosition(root["fileOffset"].asUInt64(), root["rawSize"].asUInt64());
+    }
     if (root.isMember("contents")) {
         Json::Value contents = root["contents"];
         for (const auto& key : contents.getMemberNames()) {
-            SetContent(key, contents[key].asString());
+            // 单测需要，每个key需要独立的内存空间
+            SetContent(GetSourceBuffer()->CopyString(key), contents[key].asString());
         }
     }
     return true;

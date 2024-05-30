@@ -13,14 +13,18 @@
 // limitations under the License.
 
 #include "HistoryFileImporter.h"
+
+#include "app_config/AppConfig.h"
+#include "common/FileSystemUtil.h"
+#include "common/RuntimeUtil.h"
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
-#include "common/RuntimeUtil.h"
-#include "common/FileSystemUtil.h"
 #include "config_manager/ConfigManager.h"
-#include "processor/daemon/LogProcess.h"
 #include "logger/Logger.h"
+#include "processor/daemon/LogProcess.h"
+#include "queue/ProcessQueueManager.h"
 #include "reader/LogFileReader.h"
+#include "app_config/AppConfig.h"
 
 namespace logtail {
 
@@ -101,16 +105,19 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
 
         bool doneFlag = false;
         while (true) {
-            while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
+            while (!ProcessQueueManager::GetInstance()->IsValidToPush(readerSharePtr->GetQueueKey())) {
                 usleep(1000 * 10);
             }
-            LogBuffer* logBuffer = new LogBuffer;
+            std::unique_ptr<LogBuffer> logBuffer(new LogBuffer);
             readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
-                logProcess->PushBuffer(logBuffer, 100000000);
+
+                PipelineEventGroup group = LogFileReader::GenerateEventGroup(readerSharePtr, logBuffer.get());
+                
+                // TODO: currently only 1 input is allowed, so we assume 0 here. It should be the actual input seq after refactorization.
+                logProcess->PushBuffer(readerSharePtr->GetQueueKey(), 0, std::move(group), 100000000);
             } else {
-                delete logBuffer;
                 // when ReadLog return false, retry once
                 if (doneFlag) {
                     break;

@@ -24,14 +24,17 @@ target_link_libraries(file_reader_options_unittest unittest_base)
 add_executable(json_log_file_reader_unittest JsonLogFileReaderUnittest.cpp)
 target_link_libraries(json_log_file_reader_unittest unittest_base)
 
-add_executable(last_matched_line_unittest RemoveLastIncompleteLogUnittest.cpp)
-target_link_libraries(last_matched_line_unittest unittest_base)
+add_executable(remove_last_incomplete_log_unittest RemoveLastIncompleteLogUnittest.cpp)
+target_link_libraries(remove_last_incomplete_log_unittest unittest_base)
 
 add_executable(log_file_reader_unittest LogFileReaderUnittest.cpp)
 target_link_libraries(log_file_reader_unittest unittest_base)
 
 add_executable(source_buffer_unittest SourceBufferUnittest.cpp)
 target_link_libraries(source_buffer_unittest unittest_base)
+
+add_executable(get_last_line_data_unittest GetLastLineDataUnittest.cpp)
+target_link_libraries(get_last_line_data_unittest unittest_base)
 
 if (UNIX)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testDataSet)
@@ -45,6 +48,7 @@ include(GoogleTest)
 gtest_discover_tests(log_file_reader_deleted_file_unittest)
 gtest_discover_tests(file_reader_options_unittest)
 gtest_discover_tests(json_log_file_reader_unittest)
-gtest_discover_tests(last_matched_line_unittest)
+gtest_discover_tests(remove_last_incomplete_log_unittest)
 gtest_discover_tests(log_file_reader_unittest)
 gtest_discover_tests(source_buffer_unittest)
+gtest_discover_tests(get_last_line_data_unittest)

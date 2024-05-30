@@ -101,6 +101,7 @@ LogtailAlarm::LogtailAlarm() {
     mMessageType[OBSERVER_INIT_ALARM] = "OBSERVER_INIT_ALARM";
     mMessageType[OBSERVER_RUNTIME_ALARM] = "OBSERVER_RUNTIME_ALARM";
     mMessageType[OBSERVER_STOP_ALARM] = "OBSERVER_STOP_ALARM";
+    mMessageType[INVALID_CONTAINER_PATH_ALARM] = "INVALID_CONTAINER_PATH_ALARM";
 }
 
 void LogtailAlarm::Init() {
@@ -294,9 +295,8 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
         return;
     }
 
-    // ignore logtail self alarm
-    string profileProject = ProfileSender::GetInstance()->GetProfileProjectName(region);
-    if (!profileProject.empty() && profileProject == projectName) {
+    // ignore alarm for profile data
+    if (Sender::IsProfileData(region, projectName, category)) {
         return;
     }
     // LOG_DEBUG(sLogger, ("Add Alarm", region)("projectName", projectName)("alarm index",

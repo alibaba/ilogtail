@@ -37,6 +37,7 @@
 #include "event_handler/LogInput.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "input/InputFeedbackInterfaceRegistry.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
@@ -55,6 +56,7 @@
 #else
 #include "config/provider/CommonConfigProvider.h"
 #endif
+#include "queue/ExactlyOnceQueueManager.h"
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
 DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
@@ -64,6 +66,7 @@ DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
 DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
 DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
+DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(global_network_success);
@@ -73,7 +76,6 @@ using namespace std;
 namespace logtail {
 
 Application::Application() : mStartTime(time(nullptr)) {
-    mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
 }
 
 void Application::Init() {
@@ -147,6 +149,9 @@ void Application::Init() {
         LogtailMonitor::GetInstance()->UpdateConstMetric("logtail_hostname", GetHostName());
     }
 
+    GenerateInstanceId();
+    TryGetUUID();
+
     int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
     LogFileProfiler::mSystemBootTime = systemBootTime > 0 ? systemBootTime : GetSystemBootTime();
 
@@ -188,9 +193,6 @@ void Application::Start() {
     // flusher_sls should always be loaded, since profiling will rely on this.
     Sender::Instance()->Init();
 
-    LogtailAlarm::GetInstance()->Init();
-    LogtailMonitor::GetInstance()->Init();
-
     // add local config dir
     filesystem::path localConfigPath
         = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
@@ -210,7 +212,11 @@ void Application::Start() {
     CommonConfigProvider::GetInstance()->Init("common");
 #endif
 
+    LogtailAlarm::GetInstance()->Init();
+    LogtailMonitor::GetInstance()->Init();
+
     PluginRegistry::GetInstance()->LoadPlugins();
+    InputFeedbackInterfaceRegistry::GetInstance()->LoadFeedbackInterfaces();
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
@@ -233,8 +239,11 @@ void Application::Start() {
 
     LogProcess::GetInstance()->Start();
 
-    time_t curTime = 0, lastProfilingCheckTime = 0, lastTcmallocReleaseMemTime = 0, lastConfigCheckTime = 0,
-           lastUpdateMetricTime = 0, lastCheckTagsTime = 0;
+    time_t curTime = 0, lastProfilingCheckTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
+           lastCheckTagsTime = 0, lastQueueGCTime = 0;
+#ifndef LOGTAIL_NO_TC_MALLOC
+    time_t lastTcmallocReleaseMemTime = 0;
+#endif
     while (true) {
         curTime = time(NULL);
         if (curTime - lastCheckTagsTime >= INT32_FLAG(file_tags_update_interval)) {
@@ -259,6 +268,10 @@ void Application::Start() {
             lastTcmallocReleaseMemTime = curTime;
         }
 #endif
+        if (curTime - lastQueueGCTime >= INT32_FLAG(queue_check_gc_interval_sec)) {
+            ExactlyOnceQueueManager::GetInstance()->ClearTimeoutQueues();
+            lastQueueGCTime = curTime;
+        }
         if (curTime - lastUpdateMetricTime >= 40) {
             CheckCriticalCondition(curTime);
             lastUpdateMetricTime = curTime;
@@ -285,8 +298,12 @@ void Application::Start() {
     }
 }
 
+void Application::GenerateInstanceId() {
+    mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(mStartTime);
+}
+
 bool Application::TryGetUUID() {
-    mUUIDThread = thread([this] { GetUUID(); });
+    mUUIDThread = thread([this] { GetUUIDThread(); });
     // wait 1000 ms
     for (int i = 0; i < 100; ++i) {
         this_thread::sleep_for(chrono::milliseconds(10));
@@ -382,12 +399,7 @@ void Application::CheckCriticalCondition(int32_t curTime) {
 }
 
 bool Application::GetUUIDThread() {
-    string uuid;
-#if defined(__aarch64__) || defined(__sw_64__)
-    // DMI can not work on such platforms but might crash Logtail, disable.
-#else
-    uuid = CalculateRandomUUID();
-#endif
+    string uuid = CalculateRandomUUID();
     SetUUID(uuid);
     return true;
 }

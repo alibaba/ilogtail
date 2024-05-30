@@ -12,16 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build linux
-// +build linux
-
 package helper
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/url"
 	"os"
 	"path"
@@ -45,8 +41,6 @@ const (
 	kubeRuntimeAPIVersion = "0.1.0"
 	maxMsgSize            = 1024 * 1024 * 16
 )
-
-var containerdUnixSocket = "/run/containerd/containerd.sock"
 
 var criRuntimeWrapper *CRIRuntimeWrapper
 
@@ -86,7 +80,7 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 }
 
 func IsCRIStatusValid(criRuntimeEndpoint string) bool {
-	addr, dailer, err := GetAddressAndDialer("unix://" + criRuntimeEndpoint)
+	addr, dailer, err := GetAddressAndDialer(criRuntimeEndpoint)
 	if err != nil {
 		return false
 	}
@@ -115,23 +109,6 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 	}
 	logger.Debug(context.Background(), "ListContainers failed", err)
 	return false
-}
-
-// GetAddressAndDialer returns the address parsed from the given endpoint and a dialer.
-func GetAddressAndDialer(endpoint string) (string, func(addr string, timeout time.Duration) (net.Conn, error), error) {
-	protocol, addr, err := parseEndpointWithFallbackProtocol(endpoint, "unix")
-	if err != nil {
-		return "", nil, err
-	}
-	if protocol != "unix" {
-		return "", nil, fmt.Errorf("only support unix socket endpoint")
-	}
-
-	return addr, dial, nil
-}
-
-func dial(addr string, timeout time.Duration) (net.Conn, error) {
-	return net.DialTimeout("unix", addr, timeout)
 }
 
 func parseEndpointWithFallbackProtocol(endpoint string, fallbackProtocol string) (protocol string, addr string, err error) {
@@ -167,7 +144,7 @@ func parseEndpoint(endpoint string) (string, string, error) {
 }
 
 func newRuntimeServiceClient() (cri.RuntimeServiceClient, error) {
-	addr, dailer, err := GetAddressAndDialer("unix://" + containerdUnixSocket)
+	addr, dailer, err := GetAddressAndDialer(containerdUnixSocket)
 	if err != nil {
 		return nil, err
 	}
@@ -266,15 +243,17 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 	if state == cri.ContainerState_CONTAINER_RUNNING && ContainerProcessAlive(int(ci.Pid)) {
 		stateStatus = ContainerStatusRunning
 	}
-
+	finishedTime := status.GetStatus().GetFinishedAt()
+	finishedAt := time.Unix(0, finishedTime).Format(time.RFC3339Nano)
 	dockerContainer := types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
 			ID:      containerID,
 			Created: time.Unix(0, status.GetStatus().CreatedAt).Format(time.RFC3339Nano),
 			LogPath: status.GetStatus().GetLogPath(),
 			State: &types.ContainerState{
-				Status: stateStatus,
-				Pid:    int(ci.Pid),
+				Status:     stateStatus,
+				Pid:        int(ci.Pid),
+				FinishedAt: finishedAt,
 			},
 			HostConfig: &container.HostConfig{
 				VolumeDriver: ci.Snapshotter,
@@ -385,7 +364,13 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 			continue
 		}
 		if dockerContainer.Status() != ContainerStatusRunning {
-			continue
+			finishedAt := dockerContainer.FinishedAt()
+			finishedAtTime, _ := time.Parse(time.RFC3339, finishedAt)
+			now := time.Now()
+			duration := now.Sub(finishedAtTime)
+			if duration >= ContainerInfoDeletedTimeout {
+				continue
+			}
 		}
 		cw.containers[c.GetId()] = &innerContainerInfo{
 			State:  c.State,

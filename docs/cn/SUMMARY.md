@@ -8,6 +8,13 @@
 * [开源协议](about/license.md)
 * [社区版和企业版的对比说明](about/compare-editions.md)
 
+## 社区活动 <a href="#events" id="event">></a>
+
+* [开源之夏 2024](events/summer-ospp-2024/README.md)
+  * [iLogtail 社区项目介绍](events/summer-ospp-2024/projects/README.md)
+    * [iLogtail 数据吞吐性能优化](events/summer-ospp-2024/projects/ilogtail-io.md)
+    * [ConfigServer 能力升级 + 体验优化（全栈）](events/summer-ospp-2024/projects/config-server.md)
+
 ## 安装 <a href="#installation" id="installation"></a>
 
 * [快速开始](installation/quick-start.md)
@@ -40,12 +47,12 @@
 * [版本管理](plugins/stability-level.md)
 * [输入](plugins/input/README.md)
   * [文本日志](plugins/input/input-file.md)
+  * [容器标准输出（原生插件）](plugins/input/input-container-stdlog.md)
   * [脚本执行数据](plugins/input/input-command.md)
   * [容器标准输出](plugins/input/service-docker-stdout.md)
   * [文本日志（debug）](plugins/input/metric-debug-file.md)
   * [MetricInput示例插件](plugins/input/metric-input-example.md)
   * [主机Meta数据](plugins/input/metric-meta-host.md)
-  * [主机监控数据](plugins/input/metric-system.md)
   * [Mock数据-Metric](plugins/input/metric-mock.md)
   * [eBPF网络调用数据](plugins/input/metric-observer.md)
   * [主机监控数据](plugins/input/metric-system.md)

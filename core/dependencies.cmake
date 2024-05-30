@@ -242,7 +242,11 @@ macro(link_lz4 target_name)
     if (lz4_${LINK_OPTION_SUFFIX})
         target_link_libraries(${target_name} "${lz4_${LINK_OPTION_SUFFIX}}")
     elseif (UNIX)
-        target_link_libraries(${target_name} "${lz4_${LIBRARY_DIR_SUFFIX}}/liblz4.a")
+        if (WITHOUTSPL)
+            target_link_libraries(${target_name} "${lz4_${LIBRARY_DIR_SUFFIX}}/liblz4.so")
+        else ()
+            target_link_libraries(${target_name} "${lz4_${LIBRARY_DIR_SUFFIX}}/liblz4.a")
+        endif ()
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "liblz4_staticd"
@@ -283,7 +287,6 @@ macro(link_curl target_name)
         target_link_libraries(${target_name} "${curl_${LINK_OPTION_SUFFIX}}")
     elseif (UNIX)
         target_link_libraries(${target_name} "${curl_${LIBRARY_DIR_SUFFIX}}/libcurl.a")
-        target_link_libraries(${target_name} ssl crypto)
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "libcurl-d"
@@ -307,7 +310,11 @@ macro(link_unwind target_name)
     elseif (ANDROID)
         # target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwindstack.a")
     elseif (UNIX)
-        target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwind.a")
+        if (WITHOUTSPL)
+            target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwind.so")
+        else ()
+            target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwind.a")
+        endif ()
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "breakpad_commond.lib"
@@ -336,7 +343,7 @@ endmacro()
 
 # crypto
 macro(link_crypto target_name)
-    if (ssl_${LINK_OPTION_SUFFIX})
+    if (crypto_${LINK_OPTION_SUFFIX})
         target_link_libraries(${target_name} "${crypto_${LINK_OPTION_SUFFIX}}")
     elseif (UNIX)
         target_link_libraries(${target_name} "${crypto_${LIBRARY_DIR_SUFFIX}}/libcrypto.a")
