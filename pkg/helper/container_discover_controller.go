@@ -159,7 +159,7 @@ func (c *ContainerDiscoverManager) LogAlarm(err error, msg string) {
 	}
 }
 
-func (c *ContainerDiscoverManager) Init(initTryTimes int) {
+func (c *ContainerDiscoverManager) Init() bool {
 	defer dockerCenterRecover()
 	logger.Info(context.Background(), "input", "param", "docker discover", c.enableDockerDiscover, "cri discover", c.enableCRIDiscover, "static discover", c.enableStaticDiscover)
 	listenLoopIntervalSec := 0
@@ -222,31 +222,22 @@ func (c *ContainerDiscoverManager) Init(initTryTimes int) {
 
 	var err error
 	if c.enableDockerDiscover {
-		for i := 0; i < initTryTimes; i++ {
-			if err = c.fetchDocker(); err == nil {
-				break
-			}
-		}
-		if err != nil {
+		if err = c.fetchDocker(); err != nil {
 			c.enableDockerDiscover = false
-			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch docker containers error in %d times, close docker discover", initTryTimes)
+			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch docker containers error, close docker discover, will retry")
 		}
 	}
 	if c.enableCRIDiscover {
-		for i := 0; i < initTryTimes; i++ {
-			if err = c.fetchCRI(); err == nil {
-				break
-			}
-		}
-		if err != nil {
+		if err = c.fetchCRI(); err != nil {
 			c.enableCRIDiscover = false
-			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch cri containers error in %d times, close cri discover", initTryTimes)
+			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch cri containers error, close cri discover, will retry")
 		}
 	}
 	if c.enableStaticDiscover {
 		c.fetchStatic()
 	}
 	logger.Info(context.Background(), "final", "param", "docker discover", c.enableDockerDiscover, "cri discover", c.enableCRIDiscover, "static discover", c.enableStaticDiscover)
+	return c.enableCRIDiscover || c.enableDockerDiscover || c.enableStaticDiscover
 }
 
 func (c *ContainerDiscoverManager) TimerFetch() {

@@ -633,9 +633,12 @@ func getDockerCenterInstance() *DockerCenter {
 		dockerCenterInstance = &DockerCenter{}
 		dockerCenterInstance.imageCache = make(map[string]string)
 		dockerCenterInstance.containerMap = make(map[string]*DockerInfoDetail)
+		// containerFindingManager works in a producer-consumer model
+		// so even manager is not initialized, it will not affect consumers like service_stdout
 		go func() {
 			var enableCriFinding, enableDocker, enableStatic bool
 			retryCount := 0
+			containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
 			for {
 				if IsCRIRuntimeValid(containerdUnixSocket) {
 					var err error
@@ -658,12 +661,17 @@ func getDockerCenterInstance() *DockerCenter {
 				enableCriFinding = criRuntimeWrapper != nil
 				enableDocker = dockerCenterInstance.initClient() == nil
 				enableStatic = isStaticContainerInfoEnabled()
+				discoverdRuntime := false
 				if len(os.Getenv("USE_CONTAINERD")) > 0 {
-					if enableCriFinding {
-						break
-					}
+					discoverdRuntime = enableCriFinding
 				} else {
-					if enableCriFinding || enableDocker || enableStatic {
+					discoverdRuntime = enableCriFinding || enableDocker || enableStatic
+				}
+				if discoverdRuntime {
+					containerFindingManager.enableCRIDiscover = enableCriFinding
+					containerFindingManager.enableDockerDiscover = enableDocker
+					containerFindingManager.enableStaticDiscover = enableStatic
+					if containerFindingManager.Init() {
 						break
 					}
 				}
@@ -673,8 +681,6 @@ func getDockerCenterInstance() *DockerCenter {
 				retryCount++
 				time.Sleep(time.Second * 1)
 			}
-			containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
-			containerFindingManager.Init(3)
 			containerFindingManager.TimerFetch()
 			containerFindingManager.SyncContainers()
 		}()
