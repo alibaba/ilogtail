@@ -2,10 +2,10 @@
 Feature: processor regex
   Test processor regex
 
-  @e2e
+  @e2e @host
   Scenario: TestRegexSingle
-    Given host environment
-    Given regex_single config as below
+    Given {host} environment
+    Given {regex_single} config as below
     """
   enable: true
   inputs:
@@ -30,6 +30,6 @@ Feature: processor regex
         - userAgent
         - msg
     """
-    When generate 100 regex logs, with interval 100ms
-    Then there is 100 logs
+    When generate {100} regex logs, with interval {100}ms
+    Then there is {100} logs
     Then the log contents match regex single
