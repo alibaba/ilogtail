@@ -26,7 +26,7 @@ func VerifyRegexSingle(ctx context.Context) (context.Context, error) {
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
 	var err error
-	retry.Do(
+	err = retry.Do(
 		func() error {
 			if _, err = control.GetLogFromSLS(sql, from); err != nil {
 				return err

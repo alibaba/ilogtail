@@ -28,7 +28,7 @@ func VerifyLogCount(ctx context.Context, expect int) (context.Context, error) {
 	defer cancel()
 	var resp *sls.GetLogsResponse
 	var err error
-	retry.Do(
+	err = retry.Do(
 		func() error {
 			resp, err = control.GetLogFromSLS(sql, from)
 			if err != nil {

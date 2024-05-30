@@ -2,8 +2,11 @@ package setup
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/alibaba/ilogtail/test/config"
+	"github.com/avast/retry-go/v4"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -38,6 +41,14 @@ func (c *DeploymentController) GetDeploymentPods(deploymentName, deploymentNames
 	if err != nil {
 		return nil, err
 	}
+	// Only return running pods, terminating pods will be excluded
+	runningPods := make([]corev1.Pod, 0)
+	for _, pod := range pods.Items {
+		if pod.DeletionTimestamp == nil {
+			runningPods = append(runningPods, pod)
+		}
+	}
+	pods.Items = runningPods
 	return pods, nil
 }
 
@@ -69,8 +80,7 @@ func (c *DeploymentController) AddFilter(deploymentName string, filter Container
 	if err != nil {
 		return err
 	}
-	time.Sleep(5 * time.Second)
-	return nil
+	return c.waitDeploymentAvailable(deploymentName, filter.K8sNamespace)
 }
 
 func (c *DeploymentController) RemoveFilter(deploymentName string, filter ContainerFilter) error {
@@ -99,8 +109,31 @@ func (c *DeploymentController) RemoveFilter(deploymentName string, filter Contai
 	if err != nil {
 		return err
 	}
-	time.Sleep(5 * time.Second)
-	return nil
+	return c.waitDeploymentAvailable(deploymentName, filter.K8sNamespace)
+}
+
+func (c *DeploymentController) waitDeploymentAvailable(deploymentName, deploymentNamespace string) error {
+	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
+	defer cancel()
+	return retry.Do(
+		func() error {
+			deployment, err := c.k8sClient.AppsV1().Deployments(deploymentNamespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			pods, err := c.GetDeploymentPods(deploymentName, deploymentNamespace)
+			if err != nil {
+				return err
+			}
+			if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas && pods != nil && len(pods.Items) == int(*deployment.Spec.Replicas) {
+				return nil
+			}
+			return fmt.Errorf("deployment %s/%s not available yet", deploymentNamespace, deploymentName)
+		},
+		retry.Context(timeoutCtx),
+		retry.Delay(5*time.Second),
+		retry.DelayType(retry.FixedDelay),
+	)
 }
 
 func (c *DeploymentController) DeleteDeployment(deploymentName, deploymentNamespace string) error {
