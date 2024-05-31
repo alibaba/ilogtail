@@ -1,4 +1,4 @@
-# Copyright 2023 iLogtail Authors
+# Copyright 2022 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +13,10 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.22)
-project(input_unittest)
+project(prometheus_unittest)
 
-add_executable(input_file_unittest InputFileUnittest.cpp)
-target_link_libraries(input_file_unittest unittest_base)
-
-add_executable(input_container_stdio_unittest InputContainerStdioUnittest.cpp)
-target_link_libraries(input_container_stdio_unittest unittest_base)
-
-add_executable(input_prometheus_unittest InputPrometheusUnittest.cpp)
-target_link_libraries(input_prometheus_unittest unittest_base)
+add_executable(prometheus_input_runner_unittest PrometheusInputRunnerUnittest.cpp)
+target_link_libraries(prometheus_input_runner_unittest unittest_base)
 
 include(GoogleTest)
-gtest_discover_tests(input_file_unittest)
-gtest_discover_tests(input_container_stdio_unittest)
+gtest_discover_tests(prometheus_input_runner_unittest)

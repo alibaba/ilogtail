@@ -13,17 +13,11 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.22)
-project(input_unittest)
+project(prometheus)
 
-add_executable(input_file_unittest InputFileUnittest.cpp)
-target_link_libraries(input_file_unittest unittest_base)
-
-add_executable(input_container_stdio_unittest InputContainerStdioUnittest.cpp)
-target_link_libraries(input_container_stdio_unittest unittest_base)
-
-add_executable(input_prometheus_unittest InputPrometheusUnittest.cpp)
-target_link_libraries(input_prometheus_unittest unittest_base)
-
-include(GoogleTest)
-gtest_discover_tests(input_file_unittest)
-gtest_discover_tests(input_container_stdio_unittest)
+file(GLOB LIB_SOURCE_FILES *.cpp *.h)
+append_source_files(LIB_SOURCE_FILES)
+add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME} checkpoint)
+target_link_libraries(${PROJECT_NAME} common)
+target_link_libraries(${PROJECT_NAME} pipeline)
