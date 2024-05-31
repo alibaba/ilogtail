@@ -49,10 +49,11 @@ func (h *HostEnv) exec(command string) error {
 
 func (h *HostEnv) initSSHClient() {
 	client, err := goph.NewConn(&goph.Config{
-		User:     config.TestConfig.SSHUsername,
-		Addr:     config.TestConfig.SSHIP,
-		Port:     22,
-		Auth:     goph.Password(config.TestConfig.SSHPassword),
+		User: config.TestConfig.SSHUsername,
+		Addr: config.TestConfig.SSHIP,
+		Port: 22,
+		Auth: goph.Password(config.TestConfig.SSHPassword),
+		// #nosec G106
 		Callback: ssh.InsecureIgnoreHostKey(),
 	})
 	if err != nil {

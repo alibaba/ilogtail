@@ -12,7 +12,7 @@ import (
 
 const triggerRegexTemplate = "cd {{.WorkDir}} && TOTAL_LOG={{.TotalLog}} INTERVAL={{.Interval}} FILENAME={{.Filename}} {{.Command}}"
 
-func TriggerRegexSingle(ctx context.Context, totalLog, interval int) (context.Context, error) {
+func RegexSingle(ctx context.Context, totalLog, interval int) (context.Context, error) {
 	command := getRunTriggerCommand("TestGenerateRegexLogSingle")
 	var triggerRegexCommand strings.Builder
 	template := template.Must(template.New("triggerRegexSingle").Parse(triggerRegexTemplate))
@@ -29,5 +29,5 @@ func TriggerRegexSingle(ctx context.Context, totalLog, interval int) (context.Co
 	if err := setup.Env.ExecOnSource(triggerRegexCommand.String()); err != nil {
 		return ctx, err
 	}
-	return context.WithValue(ctx, "startTime", int32(startTime)), nil
+	return context.WithValue(ctx, config.StartTimeContextKey, int32(startTime)), nil
 }

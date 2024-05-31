@@ -2,17 +2,18 @@ package setup
 
 import (
 	"bytes"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
-	"time"
+	"math/big"
 
-	"github.com/alibaba/ilogtail/test/config"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
+
+	"github.com/alibaba/ilogtail/test/config"
 )
 
 type K8sEnv struct {
@@ -55,9 +56,11 @@ func (k *K8sEnv) ExecOnSource(command string) error {
 	if err != nil {
 		return err
 	}
-	rand.Seed(time.Now().UnixNano())
-	randomIndex := rand.Intn(len(pods.Items))
-	pod := pods.Items[randomIndex]
+	randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(pods.Items))))
+	if err != nil {
+		return err
+	}
+	pod := pods.Items[randomIndex.Int64()]
 	if err := k.execInPod(k.config, pod.Namespace, pod.Name, pod.Spec.Containers[0].Name, []string{"sh", "-c", command}); err != nil {
 		return err
 	}

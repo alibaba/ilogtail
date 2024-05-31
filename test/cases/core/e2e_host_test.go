@@ -12,15 +12,15 @@ import (
 )
 
 func TestE2EOnHost(t *testing.T) {
-	defer cleanup.CleanupAll()
+	defer cleanup.All()
 	suite := godog.TestSuite{
 		Name: "E2EOnHost",
 		ScenarioInitializer: func(ctx *godog.ScenarioContext) {
 			ctx.Given(`^\{(\S+)\} environment$`, setup.InitEnv)
 			ctx.Given(`^\{(\S+)\} config as below`, control.AddLocalConfig)
-			ctx.When(`^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$`, trigger.TriggerRegexSingle)
-			ctx.Then(`^there is \{(\d+)\} logs$`, verify.VerifyLogCount)
-			ctx.Then(`^the log contents match regex single`, verify.VerifyRegexSingle)
+			ctx.When(`^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
+			ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)
+			ctx.Then(`^the log contents match regex single`, verify.RegexSingle)
 		},
 		Options: &godog.Options{
 			Format:   "pretty",

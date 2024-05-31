@@ -18,6 +18,8 @@ import "time"
 
 var TestConfig Config
 
+const StartTimeContextKey = "startTime"
+
 type Config struct {
 	// Log
 	GeneratedLogDir string `mapstructure:"generated_log_dir" yaml:"generated_log_dir"`
@@ -31,7 +33,7 @@ type Config struct {
 	// SLS
 	Project         string        `mapstructure:"project" yaml:"project"`
 	Logstore        string        `mapstructure:"logstore" yaml:"logstore"`
-	AccessKeyId     string        `mapstructure:"access_key_id" yaml:"access_key_id"`
+	AccessKeyID     string        `mapstructure:"access_key_id" yaml:"access_key_id"`
 	AccessKeySecret string        `mapstructure:"access_key_secret" yaml:"access_key_secret"`
 	Endpoint        string        `mapstructure:"endpoint" yaml:"endpoint"`
 	Aliuid          string        `mapstructure:"aliuid" yaml:"aliuid"`

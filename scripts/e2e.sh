@@ -62,11 +62,11 @@ if [ "$TEST_PROFILE" = "true" ]; then
 fi
 
 if [ "$TEST_SCOPE" = "all" ]; then
-  ls "$TESTDIR"/cases/log/plugin/scenarios/"$TYPE" | while read case
+  ls "$TESTDIR"/cases/plugin/scenarios/"$TYPE" | while read case
   do
     # currently, latest github runner cannot run ebpf program, skip it.
     if [ "$case" != "input_observer_dns" -a "$case" != "input_observer_http" ]; then
-      command=$prefix" -c $TESTDIR/cases/log/plugin/scenarios/$TYPE/$case"
+      command=$prefix" -c $TESTDIR/cases/plugin/scenarios/$TYPE/$case"
       run "$case" "$command" "$TEST_HOME"
       if [ $? = 1 ]; then
         exit 1
@@ -74,7 +74,7 @@ if [ "$TEST_SCOPE" = "all" ]; then
     fi
   done
 else
-  command=$prefix" -c $TESTDIR/cases/log/plugin/scenarios/$TYPE/$TEST_SCOPE"
+  command=$prefix" -c $TESTDIR/cases/plugin/scenarios/$TYPE/$TEST_SCOPE"
   run "$TEST_SCOPE" "$command" "$TEST_HOME"
 fi
 

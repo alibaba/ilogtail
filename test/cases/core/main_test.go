@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 	// SLS
 	config.TestConfig.Project = os.Getenv("PROJECT")
 	config.TestConfig.Logstore = os.Getenv("LOGSTORE")
-	config.TestConfig.AccessKeyId = os.Getenv("ACCESS_KEY_ID")
+	config.TestConfig.AccessKeyID = os.Getenv("ACCESS_KEY_ID")
 	config.TestConfig.AccessKeySecret = os.Getenv("ACCESS_KEY_SECRET")
 	config.TestConfig.Endpoint = os.Getenv("ENDPOINT")
 	config.TestConfig.Aliuid = os.Getenv("ALIUID")

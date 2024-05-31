@@ -11,18 +11,18 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-const queryRegexSql = "* | SELECT %s FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
+const queryRegexSQL = "* | SELECT %s FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
 
-func VerifyRegexSingle(ctx context.Context) (context.Context, error) {
+func RegexSingle(ctx context.Context) (context.Context, error) {
 	var from int32
-	value := ctx.Value("startTime")
+	value := ctx.Value(config.StartTimeContextKey)
 	if value != nil {
 		from = value.(int32)
 	} else {
 		return ctx, fmt.Errorf("no start time")
 	}
 	fields := []string{"mark", "file", "logNo", "ip", "time", "method", "url", "http", "status", "size", "userAgent", "msg"}
-	sql := fmt.Sprintf(queryRegexSql, strings.Join(fields, ", "), from)
+	sql := fmt.Sprintf(queryRegexSQL, strings.Join(fields, ", "), from)
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
 	var err error

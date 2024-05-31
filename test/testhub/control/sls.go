@@ -16,7 +16,7 @@ var slsClientOnce sync.Once
 
 func GetLogFromSLS(sql string, from int32) (*sls.GetLogsResponse, error) {
 	slsClientOnce.Do(func() {
-		slsClient = createSLSClient(config.TestConfig.AccessKeyId, config.TestConfig.AccessKeySecret, config.TestConfig.QueryEndpoint)
+		slsClient = createSLSClient(config.TestConfig.AccessKeyID, config.TestConfig.AccessKeySecret, config.TestConfig.QueryEndpoint)
 	})
 	now := int32(time.Now().Unix())
 	if now == from {
@@ -37,9 +37,9 @@ func GetLogFromSLS(sql string, from int32) (*sls.GetLogsResponse, error) {
 	return resp, nil
 }
 
-func createSLSClient(accessKeyId, accessKeySecret, endpoint string) *sls.Client {
+func createSLSClient(accessKeyID, accessKeySecret, endpoint string) *sls.Client {
 	config := &openapi.Config{
-		AccessKeyId:     tea.String(accessKeyId),
+		AccessKeyId:     tea.String(accessKeyID),
 		AccessKeySecret: tea.String(accessKeySecret),
 		Endpoint:        tea.String(endpoint),
 	}

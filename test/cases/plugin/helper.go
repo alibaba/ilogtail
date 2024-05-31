@@ -56,5 +56,5 @@ func getConfigPathByName(configName string, testType string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Cannot get current working directory")
 	}
-	return fmt.Sprintf("%s/case/%s/%s", wd, testType, configName), nil
+	return fmt.Sprintf("%s/scenarios/%s/%s", wd, testType, configName), nil
 }

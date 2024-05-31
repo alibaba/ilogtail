@@ -47,7 +47,7 @@ func completeConfigWithFlusher(c string) string {
 	SLSFlusherConfigOnce.Do(func() {
 		tpl := template.Must(template.New("slsFlusherConfig").Parse(SLSFlusherConfigTemplate))
 		var builder strings.Builder
-		tpl.Execute(&builder, map[string]interface{}{
+		_ = tpl.Execute(&builder, map[string]interface{}{
 			"Aliuid":   config.TestConfig.Aliuid,
 			"Region":   config.TestConfig.Region,
 			"Endpoint": config.TestConfig.Endpoint,

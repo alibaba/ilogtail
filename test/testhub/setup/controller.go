@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alibaba/ilogtail/test/config"
 	"github.com/avast/retry-go/v4"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/alibaba/ilogtail/test/config"
 )
 
 type ContainerFilter struct {
@@ -88,6 +89,9 @@ func (c *DeploymentController) RemoveFilter(deploymentName string, filter Contai
 		filter.K8sNamespace = "default"
 	}
 	existingDeployment, err := c.k8sClient.AppsV1().Deployments(filter.K8sNamespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
 	// K8s label
 	if filter.K8sLabel != nil {
 		for k := range filter.K8sLabel {

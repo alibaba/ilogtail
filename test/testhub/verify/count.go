@@ -12,17 +12,17 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-const queryCountSql = "* | SELECT COUNT(1) as count FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
+const queryCountSQL = "* | SELECT COUNT(1) as count FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
 
-func VerifyLogCount(ctx context.Context, expect int) (context.Context, error) {
+func LogCount(ctx context.Context, expect int) (context.Context, error) {
 	var from int32
-	value := ctx.Value("startTime")
+	value := ctx.Value(config.StartTimeContextKey)
 	if value != nil {
 		from = value.(int32)
 	} else {
 		return ctx, fmt.Errorf("no start time")
 	}
-	sql := fmt.Sprintf(queryCountSql, from)
+	sql := fmt.Sprintf(queryCountSQL, from)
 
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()

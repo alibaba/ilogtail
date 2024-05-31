@@ -6,9 +6,9 @@ import (
 	"github.com/alibaba/ilogtail/test/testhub/control"
 )
 
-func CleanupAll() {
+func All() {
 	ctx := context.TODO()
-	control.RemoveAllLocalConfig(ctx)
-	CleanupAllGeneratedLog(ctx)
-	CleanupGoTestCache(ctx)
+	_, _ = control.RemoveAllLocalConfig(ctx)
+	_, _ = AllGeneratedLog(ctx)
+	_, _ = GoTestCache(ctx)
 }
