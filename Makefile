@@ -189,14 +189,14 @@ e2e-performance: clean docker gocdocker
 
 .PHONY: unittest_e2e_engine
 unittest_e2e_engine: clean gocdocker
-	cd test && go test  ./... -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
+	cd test && go test  $$(go list ./... | grep -Ev "testhub|cases") -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
 
 .PHONY: unittest_plugin
 unittest_plugin: clean import_plugins
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
-	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager|testhub|cases") -coverprofile .testCoverage.txt
+	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 	rm -rf plugins/input/jmxfetch/test/
 

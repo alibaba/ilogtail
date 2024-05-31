@@ -16,12 +16,13 @@ package core
 import (
 	"testing"
 
+	"github.com/cucumber/godog"
+
 	"github.com/alibaba/ilogtail/test/testhub/cleanup"
 	"github.com/alibaba/ilogtail/test/testhub/control"
 	"github.com/alibaba/ilogtail/test/testhub/setup"
 	"github.com/alibaba/ilogtail/test/testhub/trigger"
 	"github.com/alibaba/ilogtail/test/testhub/verify"
-	"github.com/cucumber/godog"
 )
 
 func TestRegressionOnK8s(t *testing.T) {

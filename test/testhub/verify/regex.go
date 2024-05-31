@@ -19,9 +19,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go/v4"
+
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/testhub/control"
-	"github.com/avast/retry-go/v4"
 )
 
 const queryRegexSQL = "* | SELECT %s FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
