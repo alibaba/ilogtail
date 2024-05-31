@@ -1,4 +1,4 @@
-// Copyright 2024 iLogtail Authors
+// Copyright 2021 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,17 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package cleanup
+package config
 
-import (
-	"context"
+type ContextKey string
 
-	"github.com/alibaba/ilogtail/test/testhub/control"
+const (
+	StartTimeContextKey ContextKey = "startTime"
 )
-
-func All() {
-	ctx := context.TODO()
-	_, _ = control.RemoveAllLocalConfig(ctx)
-	_, _ = AllGeneratedLog(ctx)
-	_, _ = GoTestCache(ctx)
-}
