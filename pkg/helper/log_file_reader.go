@@ -38,12 +38,12 @@ type ReaderMetricTracker struct {
 
 func NewReaderMetricTracker(mr *pipeline.MetricsRecord) *ReaderMetricTracker {
 	return &ReaderMetricTracker{
-		OpenCounter:        NewCounterMetricAndRegister(mr, "open_count"),
-		CloseCounter:       NewCounterMetricAndRegister(mr, "close_count"),
-		FileSizeCounter:    NewCounterMetricAndRegister(mr, "file_size"),
-		FileRotatorCounter: NewCounterMetricAndRegister(mr, "file_rotate"),
-		ReadCounter:        NewCounterMetricAndRegister(mr, "read_count"),
-		ReadSizeCounter:    NewCounterMetricAndRegister(mr, "read_size"),
+		OpenCounter:        NewDeltaMetricAndRegister(mr, "open_count"),
+		CloseCounter:       NewDeltaMetricAndRegister(mr, "close_count"),
+		FileSizeCounter:    NewDeltaMetricAndRegister(mr, "file_size"),
+		FileRotatorCounter: NewDeltaMetricAndRegister(mr, "file_rotate"),
+		ReadCounter:        NewDeltaMetricAndRegister(mr, "read_count"),
+		ReadSizeCounter:    NewDeltaMetricAndRegister(mr, "read_size"),
 		ProcessLatency:     NewLatencyMetricAndRegister(mr, "log_process_latency"),
 	}
 }

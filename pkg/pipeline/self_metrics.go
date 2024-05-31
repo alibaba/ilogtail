@@ -13,6 +13,7 @@ const (
 	LatencyType
 	StringType
 	GaugeType
+	DeltaType // replace counter
 
 	/*
 		Following Type are not used and not implemented yet.
@@ -61,14 +62,14 @@ type Metric interface {
 	Clear()
 }
 
+// Counter has threae implementations:
+// counter: a cumulative counter metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart.
+// delta: the increased value in the last window.
+// average: the cumulative average value.
 type Counter interface {
 	Metric
 	Add(int64) error // return error when WithLabels returns an invalid metric.
 	Get() MetricValue[float64]
-}
-
-type Average interface {
-	Counter
 }
 
 type Gauge interface {

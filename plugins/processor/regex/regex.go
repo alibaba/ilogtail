@@ -60,7 +60,7 @@ func (p *ProcessorRegex) Init(context pipeline.Context) error {
 		return err
 	}
 
-	metricsRecord := p.context.GetMetricRecord()
+	metricsRecord := p.context.RegisterMetricRecord(nil)()
 	p.logPairMetric = helper.NewAverageMetricAndRegister(metricsRecord, "anchor_pairs_per_log")
 	return nil
 }

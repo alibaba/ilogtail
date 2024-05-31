@@ -74,18 +74,29 @@ func (p *LocalContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 	return nil, nil
 }
 
-func (p *LocalContext) GetMetricRecord() *pipeline.MetricsRecord {
+func (p *LocalContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
+	contextMutex.Lock()
+	defer contextMutex.Unlock()
+
 	metricsRecord := &pipeline.MetricsRecord{}
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "project", Value: p.GetProject()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "config_name", Value: p.GetConfigName()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "plugins", Value: p.pluginNames})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "category", Value: p.GetProject()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "source_ip", Value: util.GetIPAddress()})
+	for _, label := range labels {
+		metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: label.Key, Value: label.Value})
+	}
 
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
 	p.MetricsRecords = append(p.MetricsRecords, metricsRecord)
 	return metricsRecord
+}
+
+func (p *LocalContext) GetMetricRecord() *pipeline.MetricsRecord {
+	if len(p.MetricsRecords) > 0 {
+		return p.MetricsRecords[len(p.MetricsRecords)-1]
+	}
+	return nil
 }
 
 func (p *LocalContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {

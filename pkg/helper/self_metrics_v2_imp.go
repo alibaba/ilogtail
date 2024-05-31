@@ -13,6 +13,7 @@
 package helper
 
 import (
+	"math"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -23,59 +24,52 @@ import (
 
 var (
 	_ pipeline.Counter      = (*counterImp)(nil)
+	_ pipeline.Counter      = (*averageImp)(nil)
+	_ pipeline.Counter      = (*deltaImp)(nil)
 	_ pipeline.Gauge        = (*gaugeImp)(nil)
-	_ pipeline.Average      = (*averageImp)(nil)
 	_ pipeline.Latency      = (*latencyImp)(nil)
 	_ pipeline.StringMetric = (*strMetricImp)(nil)
 
-	_ pipeline.Counter      = (*errorCounter)(nil)
-	_ pipeline.Gauge        = (*errorGauge)(nil)
-	_ pipeline.Average      = (*errorAverage)(nil)
-	_ pipeline.Latency      = (*errorLatency)(nil)
+	_ pipeline.Counter      = (*errorNumericMetric)(nil)
+	_ pipeline.Gauge        = (*errorNumericMetric)(nil)
+	_ pipeline.Latency      = (*errorNumericMetric)(nil)
 	_ pipeline.StringMetric = (*errorStrMetric)(nil)
 )
 
-func NewMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
+func newMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
 	switch metricType {
 	case pipeline.CounterType:
-		return NewCounter(metricSet, index)
+		return newCounter(metricSet, index)
 	case pipeline.AverageType:
-		return NewAverage(metricSet, index)
+		return newAverage(metricSet, index)
+	case pipeline.DeltaType:
+		return newDelta(metricSet, index)
 	case pipeline.GaugeType:
-		return NewGauge(metricSet, index)
+		return newGauge(metricSet, index)
 	case pipeline.StringType:
-		return NewString(metricSet, index)
+		return newStringMetric(metricSet, index)
 	case pipeline.LatencyType:
-		return NewLatency(metricSet, index)
+		return newLatency(metricSet, index)
 	}
-	return NewErrorMetric(metricType, nil)
+	return newErrorMetric(metricType, nil)
 }
 
 // ErrorMetrics always return error.
-func NewErrorMetric(metricType pipeline.SelfMetricType, err error) pipeline.Metric {
+func newErrorMetric(metricType pipeline.SelfMetricType, err error) pipeline.Metric {
 	switch metricType {
-	case pipeline.CounterType:
-		return NewErrorCounter(err)
-	case pipeline.AverageType:
-		return NewErrorAverage(err)
-	case pipeline.GaugeType:
-		return NewErrorGauge(err)
 	case pipeline.StringType:
-		return NewErrorString(err)
-	case pipeline.LatencyType:
-		return NewErrorLatency(err)
+		return newErrorStringMetric(err)
 	default:
-		return NewErrorCounter(err)
+		return newErrorNumericMetric(err)
 	}
 }
 
 type counterImp struct {
 	value int64
-	prev  int64
 	Series
 }
 
-func NewCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
+func newCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
 	c := &counterImp{
 		Series: newSeries(ms, index),
 	}
@@ -89,13 +83,11 @@ func (c *counterImp) Add(delta int64) error {
 
 func (c *counterImp) Get() pipeline.MetricValue[float64] {
 	value := atomic.LoadInt64(&c.value)
-	atomic.StoreInt64(&c.prev, value)
 	return pipeline.MetricValue[float64]{Name: c.Name(), Value: float64(value)}
 }
 
 func (c *counterImp) Clear() {
 	atomic.StoreInt64(&c.value, 0)
-	atomic.StoreInt64(&c.prev, 0)
 }
 
 func (c *counterImp) Serialize(log *protocol.Log) {
@@ -103,12 +95,43 @@ func (c *counterImp) Serialize(log *protocol.Log) {
 	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+type deltaImp struct {
+	value int64
+	Series
+}
+
+func newDelta(ms pipeline.MetricSet, index []string) pipeline.Counter {
+	d := &deltaImp{
+		Series: newSeries(ms, index),
+	}
+	return d
+}
+
+func (d *deltaImp) Add(delta int64) error {
+	atomic.AddInt64(&d.value, delta)
+	return nil
+}
+
+func (d *deltaImp) Get() pipeline.MetricValue[float64] {
+	value := atomic.SwapInt64(&d.value, 0)
+	return pipeline.MetricValue[float64]{Name: d.Name(), Value: float64(value)}
+}
+
+func (d *deltaImp) Clear() {
+	atomic.StoreInt64(&d.value, 0)
+}
+
+func (d *deltaImp) Serialize(log *protocol.Log) {
+	metricValue := d.Get()
+	d.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+}
+
 type gaugeImp struct {
 	value float64
 	Series
 }
 
-func NewGauge(ms pipeline.MetricSet, index []string) pipeline.Gauge {
+func newGauge(ms pipeline.MetricSet, index []string) pipeline.Gauge {
 	g := &gaugeImp{
 		Series: newSeries(ms, index),
 	}
@@ -130,6 +153,9 @@ func (g *gaugeImp) Clear() {
 
 func (g *gaugeImp) Serialize(log *protocol.Log) {
 	metricValue := g.Get()
+	if math.IsNaN(metricValue.Value) {
+		return
+	}
 	g.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
@@ -141,7 +167,7 @@ type averageImp struct {
 	Series
 }
 
-func NewAverage(ms pipeline.MetricSet, index []string) pipeline.Counter {
+func newAverage(ms pipeline.MetricSet, index []string) pipeline.Counter {
 	a := &averageImp{
 		Series: newSeries(ms, index),
 	}
@@ -187,7 +213,7 @@ type latencyImp struct {
 	Series
 }
 
-func NewLatency(ms pipeline.MetricSet, index []string) pipeline.Latency {
+func newLatency(ms pipeline.MetricSet, index []string) pipeline.Latency {
 	l := &latencyImp{
 		Series: newSeries(ms, index),
 	}
@@ -230,7 +256,7 @@ type strMetricImp struct {
 	Series
 }
 
-func NewString(ms pipeline.MetricSet, index []string) pipeline.StringMetric {
+func newStringMetric(ms pipeline.MetricSet, index []string) pipeline.StringMetric {
 	s := &strMetricImp{
 		Series: newSeries(ms, index),
 	}
@@ -297,63 +323,35 @@ func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr s
 /*
 Following are the metrics returned when WithLabel encountered an error.
 */
-type errorMetricBase struct {
+type errorNumericMetric struct {
 	err error
 }
 
-func (e *errorMetricBase) Add(f int64) error {
+func (e *errorNumericMetric) Add(f int64) error {
 	return e.err
 }
 
-func (e *errorMetricBase) Set(f float64) error {
+func (e *errorNumericMetric) Set(f float64) error {
 	return e.err
 }
 
-func (e *errorMetricBase) Observe(f float64) error {
+func (e *errorNumericMetric) Observe(f float64) error {
 	return e.err
 }
 
-func (e *errorMetricBase) Serialize(log *protocol.Log) {}
+func (e *errorNumericMetric) Serialize(log *protocol.Log) {}
 
-func (e *errorMetricBase) Get() pipeline.MetricValue[float64] {
+func (e *errorNumericMetric) Get() pipeline.MetricValue[float64] {
 	return pipeline.MetricValue[float64]{Name: "", Value: 0}
 }
-func (e *errorMetricBase) Clear() {}
+func (e *errorNumericMetric) Clear() {}
 
-type errorCounter struct {
-	errorMetricBase
-}
-
-func NewErrorCounter(err error) pipeline.Counter {
-	return &errorCounter{errorMetricBase: errorMetricBase{err: err}}
-}
-
-type errorGauge struct {
-	errorMetricBase
-}
-
-func NewErrorGauge(err error) pipeline.Gauge {
-	return &errorGauge{errorMetricBase: errorMetricBase{err: err}}
-}
-
-type errorAverage struct {
-	errorMetricBase
-}
-
-func NewErrorAverage(err error) pipeline.Average {
-	return &errorAverage{errorMetricBase: errorMetricBase{err: err}}
-}
-
-type errorLatency struct {
-	errorMetricBase
-}
-
-func NewErrorLatency(err error) pipeline.Latency {
-	return &errorLatency{errorMetricBase: errorMetricBase{err: err}}
+func newErrorNumericMetric(err error) *errorNumericMetric {
+	return &errorNumericMetric{err: err}
 }
 
 type errorStrMetric struct {
-	errorMetricBase
+	errorNumericMetric
 }
 
 func (e errorStrMetric) Set(s string) error {
@@ -364,6 +362,6 @@ func (e errorStrMetric) Get() pipeline.MetricValue[string] {
 	return pipeline.MetricValue[string]{Name: "", Value: ""}
 }
 
-func NewErrorString(err error) pipeline.StringMetric {
-	return &errorStrMetric{errorMetricBase: errorMetricBase{err: err}}
+func newErrorStringMetric(err error) pipeline.StringMetric {
+	return &errorStrMetric{errorNumericMetric: errorNumericMetric{err: err}}
 }

@@ -74,7 +74,7 @@ func (p *ProcessorStringReplace) Init(context pipeline.Context) error {
 		return errNoMethod
 	}
 
-	metricsRecord := p.context.GetMetricRecord()
+	metricsRecord := p.context.RegisterMetricRecord(nil)()
 	p.logPairMetric = helper.NewAverageMetricAndRegister(metricsRecord, "regex_replace_pairs_per_log")
 	return nil
 }

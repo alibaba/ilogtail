@@ -102,10 +102,10 @@ func (m *Rdb) Init(context pipeline.Context, rdbFunc RdbFunc) (int, error) {
 		logger.Warning(m.Context.GetRuntimeContext(), initAlarmName, "init rdbFunc error", err)
 	}
 
-	metricsRecord := m.Context.GetMetricRecord()
+	metricsRecord := m.context.RegisterMetricRecord(nil)()
 
 	m.collectLatency = helper.NewLatencyMetricAndRegister(metricsRecord, fmt.Sprintf("%s_collect_avg_cost", m.Driver))
-	m.collectTotal = helper.NewCounterMetricAndRegister(metricsRecord, fmt.Sprintf("%s_collect_total", m.Driver))
+	m.collectTotal = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%s_collect_total", m.Driver))
 	if m.CheckPoint {
 		m.checkpointMetric = helper.NewStringMetricAndRegister(metricsRecord, fmt.Sprintf("%s_checkpoint", m.Driver))
 	}
