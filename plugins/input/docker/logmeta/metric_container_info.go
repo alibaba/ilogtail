@@ -160,7 +160,7 @@ func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 	}
 	idf.updateEmptyFlag = true
 
-	metricsRecord := idf.context.RegisterMetricRecord(nil)()
+	metricsRecord := idf.context.GetMetricRecord()
 	idf.avgInstanceMetric = helper.NewAverageMetricAndRegister(metricsRecord, "container_count")
 	idf.addMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "add_container")
 	idf.deleteMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "remove_container")

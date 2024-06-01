@@ -63,7 +63,7 @@ func (p *ProcessorKeyFilter) Init(context pipeline.Context) error {
 		}
 	}
 
-	metricsRecord := p.context.RegisterMetricRecord(nil)()
+	metricsRecord := p.context.GetMetricRecord()
 	p.filterMetric = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%v_filtered", pluginName))
 	p.processedMetric = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%v_processed", pluginName))
 	return nil

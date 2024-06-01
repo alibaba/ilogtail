@@ -194,7 +194,7 @@ func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 		sds.MaxLogSize = 1024 * 1024 * 20
 	}
 
-	metricsRecord := sds.context.RegisterMetricRecord(nil)()
+	metricsRecord := sds.context.GetMetricRecord()
 	sds.tracker = helper.NewReaderMetricTracker(metricsRecord)
 
 	sds.avgInstanceMetric = helper.NewAverageMetricAndRegister(metricsRecord, "container_count")

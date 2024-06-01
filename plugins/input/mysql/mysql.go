@@ -105,7 +105,7 @@ func (m *Mysql) Init(context pipeline.Context) (int, error) {
 		m.StateMent += " limit ?, " + strconv.Itoa(m.PageSize)
 	}
 
-	metricsRecord := m.context.RegisterMetricRecord(nil)()
+	metricsRecord := m.context.GetMetricRecord()
 	m.collectLatency = helper.NewLatencyMetricAndRegister(metricsRecord, "mysql_collect_avg_cost")
 	m.collectTotal = helper.NewDeltaMetricAndRegister(metricsRecord, "mysql_collect_total")
 

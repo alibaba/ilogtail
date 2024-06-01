@@ -45,7 +45,7 @@ func (p *ProcessorRateLimit) Init(context pipeline.Context) error {
 	}
 	p.Algorithm = newTokenBucket(limit)
 
-	metricsRecord := p.context.RegisterMetricRecord(nil)()
+	metricsRecord := p.context.GetMetricRecord()
 	p.limitMetric = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%v_limited", pluginName))
 	p.processedMetric = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%v_processed", pluginName))
 	return nil

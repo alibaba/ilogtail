@@ -37,7 +37,7 @@ type ProcessorDropLastKey struct {
 func (p *ProcessorDropLastKey) Init(context pipeline.Context) error {
 	p.context = context
 
-	metricsRecord := p.context.RegisterMetricRecord(nil)()
+	metricsRecord := p.context.GetMetricRecord()
 	p.filterMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "drop_key_count")
 
 	if len(p.DropKey) == 0 {

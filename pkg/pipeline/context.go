@@ -57,7 +57,7 @@ func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
 		for _, metric := range metrics {
 			log := &protocol.Log{}
 			metric.Serialize(log)
-			m.appendLabels(log)
+			m.appendLabels(log) // append metrics record labels
 			// metric.Clear() no clear any more
 			logGroup.Logs = append(logGroup.Logs, log)
 		}
@@ -105,7 +105,7 @@ type Context interface {
 	GetCheckPointObject(key string, obj interface{}) (exist bool)
 
 	// APIs for self monitor
-	RegisterMetricRecord(labels []LabelPair) *MetricsRecord
-	GetMetricRecord() *MetricsRecord // for v1.8.8 compatible
+	RegisterMetricRecord(labels []LabelPair) *MetricsRecord // for v1.8.8 compatible
+	GetMetricRecord() *MetricsRecord                        // for v1.8.8 compatible
 	MetricSerializeToPB(logGroup *protocol.LogGroup)
 }

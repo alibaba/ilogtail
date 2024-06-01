@@ -192,7 +192,7 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 
 	sc.lastErrorChan = make(chan error, 1)
 
-	metricsRecord := context.RegisterMetricRecord(nil)
+	metricsRecord := context.GetMetricRecord()
 	sc.rotateCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_rotate")
 	sc.syncCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_sync")
 	sc.ddlCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_ddl")

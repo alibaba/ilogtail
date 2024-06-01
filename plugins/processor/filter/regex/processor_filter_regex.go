@@ -67,7 +67,7 @@ func (p *ProcessorRegexFilter) Init(context pipeline.Context) error {
 			p.excludeRegex[key] = reg
 		}
 	}
-	metricsRecord := p.context.RegisterMetricRecord(nil)()
+	metricsRecord := p.context.GetMetricRecord()
 	p.filterMetric = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%v_filtered", pluginName))
 	p.processedMetric = helper.NewDeltaMetricAndRegister(metricsRecord, fmt.Sprintf("%v_processed", pluginName))
 	return nil

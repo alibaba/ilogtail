@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -207,7 +208,7 @@ func (a *averageImp) Serialize(log *protocol.Log) {
 }
 
 type latencyImp struct {
-	sync.RWMutex
+	sync.Mutex
 	count      int64
 	latencySum float64
 	Series
@@ -220,6 +221,10 @@ func newLatency(ms pipeline.MetricSet, index []string) pipeline.Latency {
 	return l
 }
 
+func (l *latencyImp) Record(d time.Duration) error {
+	return l.Observe(float64(d))
+}
+
 func (l *latencyImp) Observe(f float64) error {
 	l.Lock()
 	defer l.Unlock()
@@ -229,12 +234,13 @@ func (l *latencyImp) Observe(f float64) error {
 }
 
 func (l *latencyImp) Get() pipeline.MetricValue[float64] {
-	l.RLock()
-	defer l.RUnlock()
+	l.Lock()
+	defer l.Unlock()
 	if l.count == 0 {
 		return pipeline.MetricValue[float64]{Name: l.Name(), Value: 0}
 	}
 	avg := l.latencySum / float64(l.count)
+	l.count, l.latencySum = 0, 0
 	return pipeline.MetricValue[float64]{Name: l.Name(), Value: avg}
 }
 

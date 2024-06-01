@@ -93,10 +93,13 @@ func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 }
 
 func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
+	contextMutex.Lock()
+	defer contextMutex.Unlock()
+
 	if len(p.MetricsRecords) > 0 {
 		return p.MetricsRecords[len(p.MetricsRecords)-1]
 	}
-	return nil
+	return p.RegisterMetricRecord(nil)
 }
 
 func (p *EmptyContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
