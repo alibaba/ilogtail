@@ -35,26 +35,26 @@ func SetMetricVectorCacheFactory(factory func(pipeline.MetricSet) MetricVectorCa
 }
 
 type (
-	CounterMetricVector = pipeline.MetricVector[pipeline.Counter]
-	AverageMetricVector = pipeline.MetricVector[pipeline.Counter]
-	DeltaMetricVector   = pipeline.MetricVector[pipeline.Counter]
-	GaugeMetricVector   = pipeline.MetricVector[pipeline.Gauge]
-	LatencyMetricVector = pipeline.MetricVector[pipeline.Latency]
-	StringMetricVector  = pipeline.MetricVector[pipeline.StringMetric]
-	Label               = pipeline.Label
+	CumulativeCounterMetricVector = pipeline.MetricVector[pipeline.Counter]
+	AverageMetricVector           = pipeline.MetricVector[pipeline.Counter]
+	CounterMetricVector           = pipeline.MetricVector[pipeline.Counter]
+	GaugeMetricVector             = pipeline.MetricVector[pipeline.Gauge]
+	LatencyMetricVector           = pipeline.MetricVector[pipeline.Latency]
+	StringMetricVector            = pipeline.MetricVector[pipeline.StringMetric]
+	Label                         = pipeline.Label
 )
 
-// Deprecated: use NewDeltaMetricVector instead.
-// NewCounterMetricVector creates a new CounterMetricVector.
+// Deprecated: use NewCounterMetricVector instead.
+// NewCumulativeCounterMetricVector creates a new CounterMetricVector.
+// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
+func NewCumulativeCounterMetricVector(metricName string, constLabels map[string]string, labelNames []string) CumulativeCounterMetricVector {
+	return NewMetricVector[pipeline.Counter](metricName, pipeline.CumulativeCounterType, constLabels, labelNames)
+}
+
+// NewCounterMetricVector creates a new DeltaMetricVector.
 // Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
 func NewCounterMetricVector(metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
 	return NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
-}
-
-// NewDeltaMetricVector creates a new DeltaMetricVector.
-// Note that MetricVector doesn't expose Collect API by default. Plugins Developers should be careful to collect metrics manually.
-func NewDeltaMetricVector(metricName string, constLabels map[string]string, labelNames []string) DeltaMetricVector {
-	return NewMetricVector[pipeline.Counter](metricName, pipeline.DeltaType, constLabels, labelNames)
 }
 
 // NewAverageMetricVector creates a new AverageMetricVector.
@@ -81,9 +81,9 @@ func NewLatencyMetricVector(metricName string, constLabels map[string]string, la
 	return NewMetricVector[pipeline.Latency](metricName, pipeline.LatencyType, constLabels, labelNames)
 }
 
-// NewCounterMetricVectorAndRegister creates a new CounterMetricVector and register it to the MetricsRecord.
-func NewCounterMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
-	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
+// NewCumulativeCounterMetricVectorAndRegister creates a new CounterMetricVector and register it to the MetricsRecord.
+func NewCumulativeCounterMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CumulativeCounterMetricVector {
+	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CumulativeCounterType, constLabels, labelNames)
 	mr.RegisterMetricCollector(v)
 	return v
 }
@@ -95,9 +95,9 @@ func NewAverageMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName st
 	return v
 }
 
-// NewDeltaMetricVectorAndRegister creates a new DeltaMetricVector and register it to the MetricsRecord.
-func NewDeltaMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) DeltaMetricVector {
-	v := NewMetricVector[pipeline.Counter](metricName, pipeline.DeltaType, constLabels, labelNames)
+// NewCounterMetricVectorAndRegister creates a new DeltaMetricVector and register it to the MetricsRecord.
+func NewCounterMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName string, constLabels map[string]string, labelNames []string) CounterMetricVector {
+	v := NewMetricVector[pipeline.Counter](metricName, pipeline.CounterType, constLabels, labelNames)
 	mr.RegisterMetricCollector(v)
 	return v
 }
@@ -123,9 +123,9 @@ func NewStringMetricVectorAndRegister(mr *pipeline.MetricsRecord, metricName str
 	return v
 }
 
-// NewCounterMetric creates a new CounterMetric.
-func NewCounterMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	return NewCounterMetricVector(n, convertLabels(lables), nil).WithLabels()
+// NewCumulativeCounterMetric creates a new CounterMetric.
+func NewCumulativeCounterMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	return NewCumulativeCounterMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
 // NewAverageMetric creates a new AverageMetric.
@@ -133,9 +133,9 @@ func NewAverageMetric(n string, lables ...*protocol.Log_Content) pipeline.Counte
 	return NewAverageMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-// NewDeltaMetric creates a new DeltaMetric.
-func NewDeltaMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	return NewDeltaMetricVector(n, convertLabels(lables), nil).WithLabels()
+// NewCounterMetric creates a new DeltaMetric.
+func NewCounterMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	return NewCounterMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
 // NewGaugeMetric creates a new GaugeMetric.
@@ -153,16 +153,16 @@ func NewLatencyMetric(n string, lables ...*protocol.Log_Content) pipeline.Latenc
 	return NewLatencyMetricVector(n, convertLabels(lables), nil).WithLabels()
 }
 
-// NewCounterMetricAndRegister creates a new CounterMetric and register it's metricVector to the MetricsRecord.
-func NewCounterMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	mv := NewCounterMetricVector(n, convertLabels(lables), nil)
+// NewCumulativeCounterMetricAndRegister creates a new CounterMetric and register it's metricVector to the MetricsRecord.
+func NewCumulativeCounterMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	mv := NewCumulativeCounterMetricVector(n, convertLabels(lables), nil)
 	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
 	return mv.WithLabels()
 }
 
-// NewDeltaMetricAndRegister creates a new DeltaMetric and register it's metricVector to the MetricsRecord.
-func NewDeltaMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	mv := NewDeltaMetricVector(n, convertLabels(lables), nil)
+// NewCounterMetricAndRegister creates a new DeltaMetric and register it's metricVector to the MetricsRecord.
+func NewCounterMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
+	mv := NewCounterMetricVector(n, convertLabels(lables), nil)
 	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
 	return mv.WithLabels()
 }

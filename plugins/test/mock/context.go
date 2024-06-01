@@ -46,7 +46,7 @@ type EmptyContext struct {
 	pluginNames string
 }
 
-var contextMutex sync.Mutex
+var contextMutex sync.RWMutex
 
 func (p *EmptyContext) GetConfigName() string {
 	return p.common.GetConfigName()
@@ -93,12 +93,12 @@ func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 }
 
 func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-
+	contextMutex.RLock()
 	if len(p.MetricsRecords) > 0 {
+		defer contextMutex.RUnlock()
 		return p.MetricsRecords[len(p.MetricsRecords)-1]
 	}
+	contextMutex.RUnlock()
 	return p.RegisterMetricRecord(nil)
 }
 

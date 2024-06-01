@@ -36,7 +36,7 @@ type LocalContext struct {
 	common      *pkg.LogtailContextMeta
 }
 
-var contextMutex sync.Mutex
+var contextMutex sync.RWMutex
 
 func (p *LocalContext) GetConfigName() string {
 	return p.common.GetConfigName()
@@ -93,12 +93,12 @@ func (p *LocalContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 }
 
 func (p *LocalContext) GetMetricRecord() *pipeline.MetricsRecord {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-
+	contextMutex.RLock()
 	if len(p.MetricsRecords) > 0 {
+		defer contextMutex.RUnlock()
 		return p.MetricsRecords[len(p.MetricsRecords)-1]
 	}
+	contextMutex.RUnlock()
 	return p.RegisterMetricRecord(nil)
 }
 

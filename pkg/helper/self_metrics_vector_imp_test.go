@@ -24,7 +24,7 @@ import (
 )
 
 func Test_MetricVectorWithEmptyLabel(t *testing.T) {
-	v := NewCounterMetricVector("test", nil, nil)
+	v := NewCumulativeCounterMetricVector("test", nil, nil)
 	err := v.WithLabels(pipeline.Label{Key: "test_label", Value: "test_value"}).Add(1)
 	assert.ErrorContains(t, err, "too many labels, expected 0, got 1")
 
@@ -36,7 +36,7 @@ func Test_MetricVectorWithEmptyLabel(t *testing.T) {
 	assert.Equal(t, 1, len(collectedMetrics))
 
 	for _, v := range collectedMetrics {
-		counter, ok := v.(*counterImp)
+		counter, ok := v.(*cumulativeCounterImp)
 		assert.True(t, ok)
 		assert.Equal(t, "test", counter.Name())
 		assert.Equal(t, 1.0, counter.Get().Value)
@@ -44,7 +44,7 @@ func Test_MetricVectorWithEmptyLabel(t *testing.T) {
 }
 
 func Test_MetricVectorWithConstLabel(t *testing.T) {
-	v := NewCounterMetricVector("test", map[string]string{"host": "host1", "plugin_id": "2"}, nil)
+	v := NewCumulativeCounterMetricVector("test", map[string]string{"host": "host1", "plugin_id": "2"}, nil)
 	err := v.WithLabels(pipeline.Label{Key: "test_label", Value: "test_value"}).Add(1)
 	assert.ErrorContains(t, err, "too many labels, expected 0, got 1")
 
@@ -59,7 +59,7 @@ func Test_MetricVectorWithConstLabel(t *testing.T) {
 		{"host": "host1", "plugin_id": "2", "test_label": "test_value", "__name__": "test", "test": "2.0000"},
 	}
 	for i, v := range collectedMetrics {
-		counter, ok := v.(*counterImp)
+		counter, ok := v.(*cumulativeCounterImp)
 		assert.True(t, ok)
 		assert.Equal(t, "test", counter.Name())
 		assert.Equal(t, 2.0, counter.Get().Value)
@@ -73,7 +73,7 @@ func Test_MetricVectorWithConstLabel(t *testing.T) {
 
 func Test_CounterMetricVectorWithDynamicLabel(t *testing.T) {
 	metricName := "test_counter_vector"
-	v := NewCounterMetricVector(metricName,
+	v := NewCumulativeCounterMetricVector(metricName,
 		map[string]string{"host": "host1", "plugin_id": "3"},
 		[]string{"label1", "label2", "label3", "label5"},
 	)
@@ -111,7 +111,7 @@ func Test_CounterMetricVectorWithDynamicLabel(t *testing.T) {
 	}
 
 	for _, metric := range collectedMetrics {
-		counter, ok := metric.(*counterImp)
+		counter, ok := metric.(*cumulativeCounterImp)
 		assert.True(t, ok)
 		assert.Equal(t, metricName, counter.Name())
 		valueAsIndex := int(counter.Get().Value)
@@ -355,7 +355,7 @@ func Test_StrMetricVectorWithDynamicLabel(t *testing.T) {
 
 func Test_NewCounterMetricAndRegister(t *testing.T) {
 	metricsRecord := &pipeline.MetricsRecord{}
-	counter := NewCounterMetricAndRegister(metricsRecord, "test_counter")
+	counter := NewCumulativeCounterMetricAndRegister(metricsRecord, "test_counter")
 	err := counter.Add(1)
 	assert.NoError(t, err)
 	value := counter.Get()

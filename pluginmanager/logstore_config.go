@@ -122,10 +122,10 @@ type LogstoreConfig struct {
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
 	metricsRecord := context.RegisterMetricRecord(nil)
 	p.CollecLatencytMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "collect_latency")
-	p.RawLogMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "raw_log")
-	p.SplitLogMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "processed_log")
-	p.FlushLogMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "flush_log")
-	p.FlushLogGroupMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "flush_loggroup")
+	p.RawLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "raw_log")
+	p.SplitLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "processed_log")
+	p.FlushLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "flush_log")
+	p.FlushLogGroupMetric = helper.NewCounterMetricAndRegister(metricsRecord, "flush_loggroup")
 	p.FlushReadyMetric = helper.NewAverageMetricAndRegister(metricsRecord, "flush_ready")
 	p.FlushLatencyMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "flush_latency")
 }

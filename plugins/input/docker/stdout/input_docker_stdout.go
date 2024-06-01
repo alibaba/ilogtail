@@ -198,8 +198,8 @@ func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 	sds.tracker = helper.NewReaderMetricTracker(metricsRecord)
 
 	sds.avgInstanceMetric = helper.NewAverageMetricAndRegister(metricsRecord, "container_count")
-	sds.addMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "add_container")
-	sds.deleteMetric = helper.NewDeltaMetricAndRegister(metricsRecord, "remove_container")
+	sds.addMetric = helper.NewCounterMetricAndRegister(metricsRecord, "add_container")
+	sds.deleteMetric = helper.NewCounterMetricAndRegister(metricsRecord, "remove_container")
 
 	var err error
 	sds.IncludeEnv, sds.IncludeEnvRegex, err = helper.SplitRegexFromMap(sds.IncludeEnv)

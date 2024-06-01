@@ -7,18 +7,18 @@ import (
 type SelfMetricType int
 
 const (
-	_ SelfMetricType = iota
-	CounterType
-	AverageType
-	LatencyType
-	StringType
-	GaugeType
-	DeltaType // replace counter
+	_                     SelfMetricType = iota
+	CounterType                          // counter in the last window.
+	CumulativeCounterType                // cumulative counter.
+	AverageType                          // average value in the last window.
+	LatencyType                          // average latency in the last window.
+	StringType                           // string value.
+	GaugeType                            // gauge value in the last window.
 
 	/*
 		Following Type are not used and not implemented yet.
 	*/
-	RateType
+	RateType // qps in the last window.
 	SummaryType
 	HistogramType
 )
@@ -63,8 +63,8 @@ type Metric interface {
 }
 
 // Counter has threae implementations:
-// counter: a cumulative counter metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart.
-// delta: the increased value in the last window.
+// cumulativeCounter: a cumulative counter metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart.
+// counter: the increased value in the last window.
 // average: the cumulative average value.
 type Counter interface {
 	Metric

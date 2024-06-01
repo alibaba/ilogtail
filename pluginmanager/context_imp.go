@@ -37,7 +37,7 @@ type ContextImp struct {
 	logstoreC   *LogstoreConfig
 }
 
-var contextMutex sync.Mutex
+var contextMutex sync.RWMutex
 
 func (p *ContextImp) GetRuntimeContext() context.Context {
 	return p.ctx
@@ -119,12 +119,12 @@ func (p *ContextImp) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline
 }
 
 func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-
+	contextMutex.RLock()
 	if len(p.MetricsRecords) > 0 {
+		defer contextMutex.RUnlock()
 		return p.MetricsRecords[len(p.MetricsRecords)-1]
 	}
+	contextMutex.RUnlock()
 	return p.RegisterMetricRecord(nil)
 }
 

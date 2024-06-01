@@ -24,9 +24,9 @@ import (
 )
 
 var (
+	_ pipeline.Counter      = (*cumulativeCounterImp)(nil)
 	_ pipeline.Counter      = (*counterImp)(nil)
 	_ pipeline.Counter      = (*averageImp)(nil)
-	_ pipeline.Counter      = (*deltaImp)(nil)
 	_ pipeline.Gauge        = (*gaugeImp)(nil)
 	_ pipeline.Latency      = (*latencyImp)(nil)
 	_ pipeline.StringMetric = (*strMetricImp)(nil)
@@ -39,12 +39,12 @@ var (
 
 func newMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
 	switch metricType {
-	case pipeline.CounterType:
-		return newCounter(metricSet, index)
+	case pipeline.CumulativeCounterType:
+		return newCumulativeCounter(metricSet, index)
 	case pipeline.AverageType:
 		return newAverage(metricSet, index)
-	case pipeline.DeltaType:
-		return newDelta(metricSet, index)
+	case pipeline.CounterType:
+		return newDeltaCounter(metricSet, index)
 	case pipeline.GaugeType:
 		return newGauge(metricSet, index)
 	case pipeline.StringType:
@@ -66,68 +66,68 @@ func newErrorMetric(metricType pipeline.SelfMetricType, err error) pipeline.Metr
 }
 
 // Deprecated: Use deltaImp instead.
-// counterImp is a counter metric that can be incremented or decremented.
+// cumulativeCounterImp is a counter metric that can be incremented or decremented.
 // It gets the cumulative value of the counter.
-type counterImp struct {
+type cumulativeCounterImp struct {
 	value int64
 	Series
 }
 
-func newCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
-	c := &counterImp{
+func newCumulativeCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
+	c := &cumulativeCounterImp{
 		Series: newSeries(ms, index),
 	}
 	return c
 }
 
-func (c *counterImp) Add(delta int64) error {
+func (c *cumulativeCounterImp) Add(delta int64) error {
 	atomic.AddInt64(&c.value, delta)
 	return nil
 }
 
-func (c *counterImp) Get() pipeline.MetricValue[float64] {
+func (c *cumulativeCounterImp) Get() pipeline.MetricValue[float64] {
 	value := atomic.LoadInt64(&c.value)
 	return pipeline.MetricValue[float64]{Name: c.Name(), Value: float64(value)}
 }
 
-func (c *counterImp) Clear() {
+func (c *cumulativeCounterImp) Clear() {
 	atomic.StoreInt64(&c.value, 0)
 }
 
-func (c *counterImp) Serialize(log *protocol.Log) {
+func (c *cumulativeCounterImp) Serialize(log *protocol.Log) {
 	metricValue := c.Get()
 	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 // delta is a counter metric that can be incremented or decremented.
 // It gets the increased value in the last window.
-type deltaImp struct {
+type counterImp struct {
 	value int64
 	Series
 }
 
-func newDelta(ms pipeline.MetricSet, index []string) pipeline.Counter {
-	d := &deltaImp{
+func newDeltaCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
+	d := &counterImp{
 		Series: newSeries(ms, index),
 	}
 	return d
 }
 
-func (d *deltaImp) Add(delta int64) error {
+func (d *counterImp) Add(delta int64) error {
 	atomic.AddInt64(&d.value, delta)
 	return nil
 }
 
-func (d *deltaImp) Get() pipeline.MetricValue[float64] {
+func (d *counterImp) Get() pipeline.MetricValue[float64] {
 	value := atomic.SwapInt64(&d.value, 0)
 	return pipeline.MetricValue[float64]{Name: d.Name(), Value: float64(value)}
 }
 
-func (d *deltaImp) Clear() {
+func (d *counterImp) Clear() {
 	atomic.StoreInt64(&d.value, 0)
 }
 
-func (d *deltaImp) Serialize(log *protocol.Log) {
+func (d *counterImp) Serialize(log *protocol.Log) {
 	metricValue := d.Get()
 	d.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }

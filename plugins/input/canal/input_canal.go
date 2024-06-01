@@ -193,12 +193,12 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 	sc.lastErrorChan = make(chan error, 1)
 
 	metricsRecord := context.GetMetricRecord()
-	sc.rotateCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_rotate")
-	sc.syncCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_sync")
-	sc.ddlCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_ddl")
-	sc.rowCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_row")
-	sc.xgidCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_xgid")
-	sc.checkpointCounter = helper.NewDeltaMetricAndRegister(metricsRecord, "binlog_checkpoint")
+	sc.rotateCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_rotate")
+	sc.syncCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_sync")
+	sc.ddlCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_ddl")
+	sc.rowCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_row")
+	sc.xgidCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_xgid")
+	sc.checkpointCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_checkpoint")
 	sc.lastBinLogMetric = helper.NewStringMetricAndRegister(metricsRecord, "binlog_filename")
 	sc.lastGTIDMetric = helper.NewStringMetricAndRegister(metricsRecord, "binlog_gtid")
 

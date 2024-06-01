@@ -110,8 +110,8 @@ func TestStrMetricV2_Set(t *testing.T) {
 }
 
 func TestDelta(t *testing.T) {
-	ms := newMetricVector("test", pipeline.DeltaType, nil, nil)
-	delta := newDelta(ms, nil)
+	ms := newMetricVector("test", pipeline.CounterType, nil, nil)
+	delta := newDeltaCounter(ms, nil)
 
 	for i := 0; i < 1000; i++ {
 		delta.Add(int64(1))
