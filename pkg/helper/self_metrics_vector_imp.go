@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	DefaultCacheFactory = NewMapCahce
+	DefaultCacheFactory = NewMapCache
 )
 
 // SetMetricVectorCacheFactory allows users to set the cache factory for the metric vector, like Prometheus SDK.
@@ -339,7 +339,7 @@ type MapCache struct {
 	sync.Map
 }
 
-func NewMapCahce(metricSet pipeline.MetricSet) MetricVectorCache {
+func NewMapCache(metricSet pipeline.MetricSet) MetricVectorCache {
 	return &MapCache{
 		MetricSet: metricSet,
 		bytesPool: NewGenericPool(func() []byte { return make([]byte, 0, 128) }),

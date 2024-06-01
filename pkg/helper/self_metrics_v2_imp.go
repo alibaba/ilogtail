@@ -65,6 +65,9 @@ func newErrorMetric(metricType pipeline.SelfMetricType, err error) pipeline.Metr
 	}
 }
 
+// Deprecated: Use deltaImp instead.
+// counterImp is a counter metric that can be incremented or decremented.
+// It gets the cumulative value of the counter.
 type counterImp struct {
 	value int64
 	Series
@@ -96,6 +99,8 @@ func (c *counterImp) Serialize(log *protocol.Log) {
 	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+// delta is a counter metric that can be incremented or decremented.
+// It gets the increased value in the last window.
 type deltaImp struct {
 	value int64
 	Series
@@ -127,6 +132,7 @@ func (d *deltaImp) Serialize(log *protocol.Log) {
 	d.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+// gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
 type gaugeImp struct {
 	value float64
 	Series
@@ -160,6 +166,8 @@ func (g *gaugeImp) Serialize(log *protocol.Log) {
 	g.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+// averageImp is a metric to compute the average value of a series of values in the last window.
+// if there is no value added in the last window, the previous average value will be returned.
 type averageImp struct {
 	sync.RWMutex
 	value   int64
@@ -207,6 +215,7 @@ func (a *averageImp) Serialize(log *protocol.Log) {
 	a.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+// latencyImp is a metric to compute the average latency of a series of values in the last window.
 type latencyImp struct {
 	sync.Mutex
 	count      int64
@@ -256,6 +265,7 @@ func (l *latencyImp) Serialize(log *protocol.Log) {
 	l.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64))
 }
 
+// strMetricImp is a metric that represents a single string value.
 type strMetricImp struct {
 	sync.RWMutex
 	value string
