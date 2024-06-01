@@ -383,7 +383,7 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	for _, service := range p.ServicePlugins {
 		_ = service.Stop()
 	}
-	//set flusher flag first to ignore logschain/aggregator queue full and flusher isready is always false
+	// set flusher flag first in case of logschain/aggregator queue full and flusher isready is always false
 	p.LogstoreConfig.FlushOutFlag = true
 	
 	p.InputControl.WaitCancel()
