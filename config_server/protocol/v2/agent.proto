@@ -59,12 +59,15 @@ enum RequestFlags {
     RequestFlagsUnspecified = 0;
 
     // Flags is a bit mask. Values below define individual bits.
+
+    // Must be set if this request contains full state
+    FullState               = 0x00000001;
 }
 
-// API: /Agent/HeartBeat/
+// API: /Agent/GetAgentConfig
 
-// Agent sends requests to the ConfigServer to send heartbeats, get config updates and receive commands.
-message HeartBeatRequest {
+// Agent sends requests to the ConfigServer to get config updates and receive commands.
+message AgentConfigRequest {
     string request_id = 1;
     uint64 sequence_num = 2;                   // Increment every request, for server to check sync status
     uint64 capabilities = 3;                   // Bitmask of flags defined by AgentCapabilities enum
@@ -126,8 +129,8 @@ enum ResponseFlags {
     FetchProcessConfigDetail  = 0x00000004;
 }
 
-// ConfigServer's response to Agent's heartbeats
-message HeartBeatResponse {
+// ConfigServer's response to Agent's request
+message AgentConfigResponse {
     string request_id = 1;  
     int32 code = 2;      
     string message = 3;     
@@ -139,11 +142,11 @@ message HeartBeatResponse {
 
 // API: /Agent/FetchPipelineConfig/
 // API: /Agent/FetchProcessConfig/
-// Agent request to ConfigServer, pulling details of the PIPELINE_CONFIG
+// Agent request to ConfigServer, pulling details of the config
 message FetchConfigRequest {
     string request_id = 1; 
-    string instance_id = 2;                 // Required, Agent's unique identification
-    repeated ConfigInfo req_configs = 3;    // PIPELINE_CONFIGs that Agent requires for full information
+    string instance_id = 2;                 // Agent's unique identification
+    repeated ConfigInfo req_configs = 3;    // Config's name and version
 }
 
 // ConfigServer response to Agent's request
@@ -151,5 +154,5 @@ message FetchConfigResponse {
     string request_id = 1;                     
     int32 code = 2;      
     string message = 3;     
-    repeated ConfigDetail config_details = 4;   // PIPELINE_CONFIGs' detail
+    repeated ConfigDetail config_details = 4;   // config detail
 }

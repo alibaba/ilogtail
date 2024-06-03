@@ -7,7 +7,7 @@
 
 ## 管控协议
 
-$endpoint/GetAgentConfig?InstanceId=$instance\_id&WaitForChange=(true|false)
+/Agent/GetAgentConfig?InstanceId=$instance\_id&WaitForChange=(true|false)
 
 ### HeartBeatRequest 消息
 
