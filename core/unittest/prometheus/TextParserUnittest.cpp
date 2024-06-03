@@ -17,7 +17,7 @@
 #include <string>
 #include "unittest/Unittest.h"
 #include "models/PipelineEventGroup.h"
-#include "prom/TextParser.h"
+#include "prometheus/TextParser.h"
 
 using namespace std;
 
