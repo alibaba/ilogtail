@@ -63,11 +63,10 @@ func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
 		metrics := metricCollector.Collect()
 		for _, metric := range metrics {
 			log := &protocol.Log{}
+			metric.Serialize(log)
 			if len(log.Contents) == 0 {
 				continue
 			}
-
-			metric.Serialize(log)
 			m.appendLabels(log) // append metrics record labels
 			logGroup.Logs = append(logGroup.Logs, log)
 		}
