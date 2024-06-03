@@ -24,6 +24,7 @@ message ConfigInfo {
     string name = 1;         // Required, Config's unique identification
     int64 version = 2;       // Required, Config's version number or hash code
     ConfigStatus status = 3; // Config's status
+    string message = 4;      // Optional error message
 }
 
 // Define the Command information carried in the request
@@ -31,6 +32,7 @@ message CommandInfo {
     string type = 1;         // Command's type
     string name = 2;         // Required, Command's unique identification
     ConfigStatus status = 3; // Command's status
+    string message = 4;      // Optional error message
 }
 
 // Define Agent's basic attributes
