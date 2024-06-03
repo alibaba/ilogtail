@@ -172,9 +172,9 @@ func (g *gaugeImp) Serialize(log *protocol.Log) {
 	g.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
-func (c *gaugeImp) Export() map[string]string {
-	metricValue := c.Get()
-	return c.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+func (g *gaugeImp) Export() map[string]string {
+	metricValue := g.Get()
+	return g.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 // averageImp is a metric to compute the average value of a series of values in the last window.
