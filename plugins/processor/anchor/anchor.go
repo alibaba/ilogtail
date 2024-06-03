@@ -67,7 +67,7 @@ type ProcessorAnchor struct {
 	KeepSource    bool
 
 	context       pipeline.Context
-	logPairMetric pipeline.Counter
+	logPairMetric pipeline.CounterMetric
 }
 
 // Init called for init some system resources, like socket, mutex...
@@ -125,7 +125,7 @@ func (p *ProcessorAnchor) ProcessLog(log *protocol.Log) {
 	if !findKey && p.NoKeyError {
 		logger.Warning(p.context.GetRuntimeContext(), "ANCHOR_FIND_ALARM", "anchor cannot find key", p.SourceKey)
 	}
-	_ = p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
+	p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
 }
 
 type ExpondParam struct {

@@ -44,8 +44,8 @@ type ProcessorFieldsWithCondition struct {
 	DropIfNotMatchCondition bool        `comment:"Optional. When the case condition is not met, whether the log is discarded (true) or retained (false)"`
 	Switch                  []Condition `comment:"The switch-case conditions"`
 
-	filterMetric    pipeline.Counter
-	processedMetric pipeline.Counter
+	filterMetric    pipeline.CounterMetric
+	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
 }
 
@@ -287,9 +287,9 @@ func (p *ProcessorFieldsWithCondition) ProcessLogs(logArray []*protocol.Log) []*
 			}
 			nextIdx++
 		} else {
-			_ = p.filterMetric.Add(1)
+			p.filterMetric.Add(1)
 		}
-		_ = p.processedMetric.Add(1)
+		p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

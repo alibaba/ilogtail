@@ -67,8 +67,8 @@ type ProcessorEncrypt struct {
 	key       []byte
 	iv        []byte
 
-	encryptedCountMetric pipeline.Counter
-	encryptedBytesMetric pipeline.Counter
+	encryptedCountMetric pipeline.CounterMetric
+	encryptedBytesMetric pipeline.CounterMetric
 }
 
 func (p *ProcessorEncrypt) Init(context pipeline.Context) error {
@@ -115,8 +115,8 @@ func (p *ProcessorEncrypt) processLog(log *protocol.Log) {
 			continue
 		}
 
-		_ = p.encryptedCountMetric.Add(1)
-		_ = p.encryptedBytesMetric.Add(int64(len(cont.Value)))
+		p.encryptedCountMetric.Add(1)
+		p.encryptedBytesMetric.Add(int64(len(cont.Value)))
 		ciphertext, err := p.encrypt(cont.Value)
 		if err == nil {
 			cont.Value = hex.EncodeToString(ciphertext)

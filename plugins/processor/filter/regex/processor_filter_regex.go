@@ -37,8 +37,8 @@ type ProcessorRegexFilter struct {
 
 	includeRegex    map[string]*regexp.Regexp
 	excludeRegex    map[string]*regexp.Regexp
-	filterMetric    pipeline.Counter
-	processedMetric pipeline.Counter
+	filterMetric    pipeline.CounterMetric
+	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
 }
 
@@ -123,9 +123,9 @@ func (p *ProcessorRegexFilter) ProcessLogs(logArray []*protocol.Log) []*protocol
 			}
 			nextIdx++
 		} else {
-			_ = p.filterMetric.Add(1)
+			p.filterMetric.Add(1)
 		}
-		_ = p.processedMetric.Add(1)
+		p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

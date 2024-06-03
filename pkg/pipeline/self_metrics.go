@@ -52,46 +52,54 @@ type MetricCollector interface {
 
 // MetricVector is a Collector to bundle metrics of the same name that differ in  their label values.
 // WithLabels will return a unique Metric that is bound to a set of label values.
-// If the labels has label names that are not in the MetricSet, the Metric will be invalid.
+// If the labels contain label names that are not in the MetricSet, the Metric will be invalid.
 type MetricVector[T Metric] interface {
 	WithLabels(labels ...Label) T
 }
 
 type Metric interface {
 	Serialize(log *protocol.Log)
-	Clear()
+	Export() map[string]string // Export as a map[string]string, It will replace Serialize in the future.
 }
 
-// Counter has threae implementations:
+// CounterMetric has three implementations:
 // cumulativeCounter: a cumulative counter metric that represents a single monotonically increasing counter whose value can only increase or be reset to zero on restart.
 // counter: the increased value in the last window.
 // average: the cumulative average value.
-type Counter interface {
+type CounterMetric interface {
 	Metric
-	Add(int64) error // return error when WithLabels returns an invalid metric.
+	Add(int64)
 	Get() MetricValue[float64]
 }
 
-type Gauge interface {
+type GaugeMetric interface {
 	Metric
-	Set(float64) error // return error when WithLabels returns an invalid metric instance.
+	Set(float64)
 	Get() MetricValue[float64]
 }
 
-type Latency interface {
+type LatencyMetric interface {
 	Metric
-	Observe(float64) error // return error when WithLabels returns an invalid metric instance.
+	Observe(float64)
 	Get() MetricValue[float64]
 }
 
-type Summary interface {
+// SummaryMetric is used to compute pctXX for a batch of data
+type SummaryMetric interface {
 	Metric
-	Observe(float64) error // return error when WithLabels returns an invalid metric intance.
+	Observe(float64)
+	Get() []MetricValue[float64]
+}
+
+// HistogramMetric is used to compute distribution of a batch of data.
+type HistogramMetric interface {
+	Metric
+	Observe(float64)
 	Get() []MetricValue[float64]
 }
 
 type StringMetric interface {
 	Metric
-	Set(v string) error // return error when WithLabels returns an invalid metric instance.
+	Set(v string)
 	Get() MetricValue[string]
 }

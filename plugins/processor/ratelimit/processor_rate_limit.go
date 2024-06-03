@@ -28,8 +28,8 @@ type ProcessorRateLimit struct {
 	Limit  string   `comment:"Optional. Limit rate in the format of (number)/(time unit). Supported time unit: 's' (per second), 'm' (per minute), and 'h' (per hour)."`
 
 	Algorithm       algorithm
-	limitMetric     pipeline.Counter
-	processedMetric pipeline.Counter
+	limitMetric     pipeline.CounterMetric
+	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
 }
 
@@ -67,9 +67,9 @@ func (p *ProcessorRateLimit) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 			}
 			nextIdx++
 		} else {
-			_ = p.limitMetric.Add(1)
+			p.limitMetric.Add(1)
 		}
-		_ = p.processedMetric.Add(1)
+		p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

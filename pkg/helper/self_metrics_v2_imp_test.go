@@ -62,8 +62,7 @@ func TestStrMetricV2_Name(t *testing.T) {
 				constLabels[v.Key] = v.Value
 			}
 			metric := NewStringMetricVector(tt.fields.name, constLabels, nil).WithLabels()
-			err := metric.Set(tt.fields.value)
-			assert.NoError(t, err)
+			metric.Set(tt.fields.value)
 
 			if got := metric.(*strMetricImp).Name(); got != tt.want {
 				t.Errorf("StrMetric.Name() = %v, want %v", got, tt.want)
@@ -100,8 +99,7 @@ func TestStrMetricV2_Set(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			constLabels := map[string]string{}
 			s := NewStringMetricVector(tt.fields.name, constLabels, nil).WithLabels()
-			err := s.Set(tt.args.v)
-			assert.NoError(t, err)
+			s.Set(tt.args.v)
 			if s.Get().Value != tt.args.v {
 				t.Errorf("fail %s != %s\n", s.Get(), tt.args.v)
 			}

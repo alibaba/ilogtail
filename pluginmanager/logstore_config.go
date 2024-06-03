@@ -71,13 +71,13 @@ func checkMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
 }
 
 type LogstoreStatistics struct {
-	CollecLatencytMetric pipeline.Latency
-	RawLogMetric         pipeline.Counter
-	SplitLogMetric       pipeline.Counter
-	FlushLogMetric       pipeline.Counter
-	FlushLogGroupMetric  pipeline.Counter
-	FlushReadyMetric     pipeline.Counter
-	FlushLatencyMetric   pipeline.Latency
+	CollecLatencytMetric pipeline.LatencyMetric
+	RawLogMetric         pipeline.CounterMetric
+	SplitLogMetric       pipeline.CounterMetric
+	FlushLogMetric       pipeline.CounterMetric
+	FlushLogGroupMetric  pipeline.CounterMetric
+	FlushReadyMetric     pipeline.CounterMetric
+	FlushLatencyMetric   pipeline.LatencyMetric
 }
 
 type ConfigVersion string

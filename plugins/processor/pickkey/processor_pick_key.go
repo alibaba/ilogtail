@@ -34,8 +34,8 @@ type ProcessorPickKey struct {
 	includeLen int
 	excludeLen int
 
-	filterMetric    pipeline.Counter
-	processedMetric pipeline.Counter
+	filterMetric    pipeline.CounterMetric
+	processedMetric pipeline.CounterMetric
 	context         pipeline.Context
 }
 
@@ -94,7 +94,7 @@ func (p *ProcessorPickKey) process(log *protocol.Log) bool {
 		}
 	}
 
-	_ = p.filterMetric.Add(int64(beginLen - len(log.Contents)))
+	p.filterMetric.Add(int64(beginLen - len(log.Contents)))
 
 	return len(log.Contents) != 0
 }
@@ -109,7 +109,7 @@ func (p *ProcessorPickKey) ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 			}
 			nextIdx++
 		}
-		_ = p.processedMetric.Add(1)
+		p.processedMetric.Add(1)
 	}
 	logArray = logArray[:nextIdx]
 	return logArray

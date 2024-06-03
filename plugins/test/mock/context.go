@@ -78,7 +78,7 @@ func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
-	metricsRecord := &pipeline.MetricsRecord{}
+	metricsRecord := &pipeline.MetricsRecord{Context: p}
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "project", Value: p.GetProject()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "config_name", Value: p.GetConfigName()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "plugins", Value: p.pluginNames})
@@ -112,6 +112,19 @@ func (p *EmptyContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	for _, metricsRecord := range p.MetricsRecords {
 		metricsRecord.Serialize(logGroup)
 	}
+}
+
+// ExportMetricRecords is used for exporting metrics records.
+// Each metric is a map[string]string
+func (p *EmptyContext) ExportMetricRecords() []map[string]string {
+	contextMutex.RLock()
+	defer contextMutex.RUnlock()
+
+	records := make([]map[string]string, 0)
+	for _, metricsRecord := range p.MetricsRecords {
+		records = append(records, metricsRecord.ExportMetricRecords()...)
+	}
+	return records
 }
 
 func (p *EmptyContext) SaveCheckPoint(key string, value []byte) error {

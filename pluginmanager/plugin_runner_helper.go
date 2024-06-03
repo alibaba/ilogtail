@@ -30,7 +30,7 @@ import (
 type timerRunner struct {
 	interval      time.Duration
 	context       pipeline.Context
-	latencyMetric pipeline.Latency
+	latencyMetric pipeline.LatencyMetric
 	state         interface{}
 }
 
@@ -47,7 +47,7 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 			logger.Error(p.context.GetRuntimeContext(), "PLUGIN_RUN_ALARM", "task run", "error", err, "plugin", "state", fmt.Sprintf("%T", p.state))
 		}
 		if p.latencyMetric != nil {
-			_ = p.latencyMetric.Observe(float64(time.Since(begin)))
+			p.latencyMetric.Observe(float64(time.Since(begin)))
 		}
 		if exitFlag {
 			logger.Info(p.context.GetRuntimeContext(), "task run", "exit", "state", fmt.Sprintf("%T", p.state))
@@ -63,16 +63,16 @@ func flushOutStore[T FlushData, F pipeline.Flusher](lc *LogstoreConfig, store *F
 				logger.Error(lc.Context.GetRuntimeContext(), "DROP_DATA_ALARM", "flush out data timeout, drop data", store.Len())
 				return false
 			}
-			_ = lc.Statistics.FlushReadyMetric.Add(0)
+			lc.Statistics.FlushReadyMetric.Add(0)
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
-		_ = lc.Statistics.FlushReadyMetric.Add(1)
+		lc.Statistics.FlushReadyMetric.Add(1)
 		startTime := time.Now()
 		err := flushFunc(lc, flusher, store)
 		if err != nil {
 			logger.Error(lc.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error", lc.ProjectName, lc.LogstoreName, err)
 		}
-		_ = lc.Statistics.FlushLatencyMetric.Observe(float64(time.Since(startTime).Nanoseconds()))
+		lc.Statistics.FlushLatencyMetric.Observe(float64(time.Since(startTime).Nanoseconds()))
 	}
 	store.Reset()
 	return true

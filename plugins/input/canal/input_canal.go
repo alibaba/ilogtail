@@ -157,12 +157,12 @@ type ServiceCanal struct {
 	lastErrorCount     int
 	lastErrorChan      chan error
 
-	rotateCounter     pipeline.Counter
-	syncCounter       pipeline.Counter
-	ddlCounter        pipeline.Counter
-	rowCounter        pipeline.Counter
-	xgidCounter       pipeline.Counter
-	checkpointCounter pipeline.Counter
+	rotateCounter     pipeline.CounterMetric
+	syncCounter       pipeline.CounterMetric
+	ddlCounter        pipeline.CounterMetric
+	rowCounter        pipeline.CounterMetric
+	xgidCounter       pipeline.CounterMetric
+	checkpointCounter pipeline.CounterMetric
 	lastBinLogMetric  pipeline.StringMetric
 	lastGTIDMetric    pipeline.StringMetric
 }
@@ -263,8 +263,8 @@ ValueLoop:
 
 func (sc *ServiceCanal) OnRotate(r *replication.RotateEvent) error {
 	logger.Info(sc.context.GetRuntimeContext(), "bin log file rotate", string(r.NextLogName), "pos", r.Position)
-	_ = sc.lastBinLogMetric.Set(string(r.NextLogName))
-	_ = sc.rotateCounter.Add(1)
+	sc.lastBinLogMetric.Set(string(r.NextLogName))
+	sc.rotateCounter.Add(1)
 	sc.checkpoint.FileName = string(r.NextLogName)
 	sc.checkpoint.Offset = int(r.Position)
 	sc.lastOffsetString = strconv.Itoa(int(r.Position))
@@ -275,7 +275,7 @@ func (sc *ServiceCanal) OnRotate(r *replication.RotateEvent) error {
 // OnDDL...
 func (sc *ServiceCanal) OnDDL(pos mysql.Position, e *replication.QueryEvent) error {
 	// logger.Debug("on ddl event", *e)
-	_ = sc.ddlCounter.Add(1)
+	sc.ddlCounter.Add(1)
 	if !sc.EnableDDL {
 		sc.syncCheckpointWithCanal()
 		return nil
@@ -348,7 +348,7 @@ func (sc *ServiceCanal) columnValueToString(column *schema.TableColumn, rowVal i
 // OnRow processes the row event, according user's config, constructs data to send.
 func (sc *ServiceCanal) OnRow(e *canal.RowsEvent) error {
 	// logger.Debug("OnRow", *e, "GTID", sc.nextRowEventGTID)
-	_ = sc.rowCounter.Add(1)
+	sc.rowCounter.Add(1)
 	values := map[string]string{"_host_": sc.Host, "_db_": e.Table.Schema, "_table_": e.Table.Name, "_event_": "row_" + e.Action, "_id_": strconv.Itoa(sc.checkpoint.ID)}
 	if sc.EnableGTID {
 		values["_gtid_"] = sc.nextRowEventGTID
@@ -466,7 +466,7 @@ func (sc *ServiceCanal) OnRow(e *canal.RowsEvent) error {
 
 func (sc *ServiceCanal) OnXID(p mysql.Position) error {
 	// logger.Debug("OnXID", p)
-	_ = sc.xgidCounter.Add(1)
+	sc.xgidCounter.Add(1)
 	return nil
 }
 
@@ -480,14 +480,14 @@ func (sc *ServiceCanal) OnXID(p mysql.Position) error {
 // But this should be trivial for cases that valid data comes continuously.
 func (sc *ServiceCanal) OnGTID(s mysql.GTIDSet) error {
 	// logger.Debug("OnGTID", s)
-	_ = sc.xgidCounter.Add(1)
+	sc.xgidCounter.Add(1)
 	sc.nextRowEventGTID = s.String()
 	return nil
 }
 
 func (sc *ServiceCanal) OnPosSynced(pos mysql.Position, _ mysql.GTIDSet, force bool) error {
 	// logger.Debug("OnPosSynced", pos, force)
-	_ = sc.syncCounter.Add(1)
+	sc.syncCounter.Add(1)
 	sc.checkpoint.FileName = pos.Name
 	sc.checkpoint.Offset = int(pos.Pos)
 	sc.lastOffsetString = strconv.Itoa(int(pos.Pos))
@@ -524,7 +524,7 @@ func (sc *ServiceCanal) initCheckPoint() {
 }
 
 func (sc *ServiceCanal) saveCheckPoint() {
-	_ = sc.checkpointCounter.Add(1)
+	sc.checkpointCounter.Add(1)
 	_ = sc.context.SaveCheckPointObject("mysql_canal", &sc.checkpoint)
 }
 
@@ -544,14 +544,14 @@ func (sc *ServiceCanal) Collect(pipeline.Collector) error {
 func (sc *ServiceCanal) runCanal(pos mysql.Position) {
 	logger.Infof(sc.context.GetRuntimeContext(), "start canal from %v with binlog-file mode", pos)
 	sc.canal.SetEventHandler(sc)
-	_ = sc.lastBinLogMetric.Set(pos.String())
+	sc.lastBinLogMetric.Set(pos.String())
 	sc.lastErrorChan <- sc.canal.RunFrom(pos)
 }
 
 func (sc *ServiceCanal) runCanalByGTID(gtid mysql.GTIDSet) {
 	logger.Infof(sc.context.GetRuntimeContext(), "start canal from %v with GTID mode", gtid)
 	sc.canal.SetEventHandler(sc)
-	_ = sc.lastGTIDMetric.Set(gtid.String())
+	sc.lastGTIDMetric.Set(gtid.String())
 	sc.checkpoint.GTID = gtid.String()
 	sc.lastErrorChan <- sc.canal.StartFromGTID(gtid)
 }

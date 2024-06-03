@@ -100,10 +100,10 @@ type InputDockerFile struct {
 	context           pipeline.Context
 	lastClearTime     time.Time
 	updateEmptyFlag   bool
-	avgInstanceMetric pipeline.Counter
-	addMetric         pipeline.Counter
-	updateMetric      pipeline.Counter
-	deleteMetric      pipeline.Counter
+	avgInstanceMetric pipeline.CounterMetric
+	addMetric         pipeline.CounterMetric
+	updateMetric      pipeline.CounterMetric
+	deleteMetric      pipeline.CounterMetric
 	lastUpdateTime    int64
 
 	// Last return of GetAllAcceptedInfoV2
@@ -332,7 +332,7 @@ func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, allCmd 
 	}
 
 	if changed {
-		_ = idf.updateMetric.Add(1)
+		idf.updateMetric.Add(1)
 		newContainerInfoCache := ContainerInfoCache{
 			Mounts:   mounts,
 			UpperDir: upperDir,
@@ -399,7 +399,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 
 	dockerInfoDetails := idf.matchList
 	logger.Debug(idf.context.GetRuntimeContext(), "match list length", len(dockerInfoDetails))
-	_ = idf.avgInstanceMetric.Add(int64(len(dockerInfoDetails)))
+	idf.avgInstanceMetric.Add(int64(len(dockerInfoDetails)))
 
 	for k, info := range dockerInfoDetails {
 		if len(idf.LogPath) > 0 && info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
@@ -473,7 +473,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 
 	for id := range idf.lastContainerInfoCache {
 		if c, ok := dockerInfoDetails[id]; !ok {
-			_ = idf.deleteMetric.Add(1)
+			idf.deleteMetric.Add(1)
 			idf.notifyStop(id)
 			idf.deleteMapping(id)
 		} else if c.Status() != helper.ContainerStatusRunning && len(idf.LogPath) > 0 {
