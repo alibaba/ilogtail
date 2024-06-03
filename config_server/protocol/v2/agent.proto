@@ -77,7 +77,7 @@ message HeartBeatRequest {
     repeated ConfigInfo pipeline_configs = 10;   // Information about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo process_configs = 11;     // Information about the current AGENT_CONFIG held by the Agent
     repeated CommandInfo custom_commands = 12;  // Information about command history
-    uint64 flags = 13;                          // Predefined command flag，这是新增的字段
+    uint64 flags = 13;                          // Predefined command flag
     // 14-99 reserved for future official fields
 }
 
