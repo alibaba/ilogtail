@@ -106,7 +106,6 @@ func (p *EmptyContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	if logGroup == nil {
 		return
 	}
-
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 	for _, metricsRecord := range p.MetricsRecords {
