@@ -492,10 +492,7 @@ public:
 
     bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
-        if (mLogstoreSenderQueueMap.find(key) == mLogstoreSenderQueueMap.end()) {
-                return false;
-        }
-        const auto& singleQueue = mLogstoreSenderQueueMap.at(key);
+        const auto& singleQueue = mLogstoreSenderQueueMap[key]; // avoid crash for unexpected key.
 
         // For correctness, exactly once queue should ignore mUrgentFlag.
         if (singleQueue.GetQueueType() == QueueType::ExactlyOnce) {
