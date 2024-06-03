@@ -37,7 +37,7 @@ type ContextImp struct {
 	logstoreC   *LogstoreConfig
 }
 
-var contextMutex sync.Mutex
+var contextMutex sync.RWMutex
 
 func (p *ContextImp) GetRuntimeContext() context.Context {
 	return p.ctx
@@ -100,18 +100,32 @@ func (p *ContextImp) InitContext(project, logstore, configName string) {
 	p.ctx, p.common = pkg.NewLogtailContextMeta(project, logstore, configName)
 }
 
-func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
+func (p *ContextImp) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
+	contextMutex.Lock()
+	defer contextMutex.Unlock()
+
 	metricsRecord := &pipeline.MetricsRecord{}
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "project", Value: p.GetProject()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "config_name", Value: p.GetConfigName()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "plugins", Value: p.pluginNames})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "category", Value: p.GetProject()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "source_ip", Value: util.GetIPAddress()})
+	for _, label := range labels {
+		metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: label.Key, Value: label.Value})
+	}
 
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
 	p.MetricsRecords = append(p.MetricsRecords, metricsRecord)
 	return metricsRecord
+}
+
+func (p *ContextImp) GetMetricRecord() *pipeline.MetricsRecord {
+	contextMutex.RLock()
+	if len(p.MetricsRecords) > 0 {
+		defer contextMutex.RUnlock()
+		return p.MetricsRecords[len(p.MetricsRecords)-1]
+	}
+	contextMutex.RUnlock()
+	return p.RegisterMetricRecord(nil)
 }
 
 func (p *ContextImp) MetricSerializeToPB(logGroup *protocol.LogGroup) {

@@ -15,6 +15,7 @@
 package helper
 
 import (
+	"math"
 	"sync"
 	"testing"
 
@@ -90,5 +91,11 @@ func TestAtomicFloatFunctions(t *testing.T) {
 	result := AtomicLoadFloat64(&num)
 	if result != 8.0 {
 		t.Errorf("Expected result to be 8.0, got %f", result)
+	}
+
+	AtomicStoreFloat64(&num, math.NaN())
+	result = AtomicLoadFloat64(&num)
+	if !math.IsNaN(result) {
+		t.Errorf("Expected result to be NaN, got %f", result)
 	}
 }

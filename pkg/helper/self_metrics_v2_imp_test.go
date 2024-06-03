@@ -17,6 +17,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -106,4 +107,23 @@ func TestStrMetricV2_Set(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDelta(t *testing.T) {
+	ms := newMetricVector("test", pipeline.CounterType, nil, nil)
+	delta := newDeltaCounter(ms, nil)
+
+	for i := 0; i < 1000; i++ {
+		delta.Add(int64(1))
+	}
+
+	assert.Equal(t, float64(1000), delta.Get().Value)
+	assert.Equal(t, float64(0), delta.Get().Value)
+
+	for i := 0; i < 100000; i++ {
+		delta.Add(int64(1))
+	}
+
+	assert.Equal(t, float64(100000), delta.Get().Value)
+	assert.Equal(t, float64(0), delta.Get().Value)
 }

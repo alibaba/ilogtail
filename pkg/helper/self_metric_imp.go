@@ -15,7 +15,6 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"strconv"
@@ -188,57 +187,4 @@ func getNameWithLables(name string, labels []*protocol.Log_Content) string {
 		n = n + "#" + lable.Key + "=" + lable.Value
 	}
 	return n
-}
-
-func NewCounterMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	return NewCounterMetricVector(n, convertLabels(lables), nil).WithLabels()
-}
-
-func NewAverageMetric(n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	return NewAverageMetricVector(n, convertLabels(lables), nil).WithLabels()
-}
-
-func NewStringMetric(n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
-	return NewStringMetricVector(n, convertLabels(lables), nil).WithLabels()
-}
-
-func NewLatencyMetric(n string, lables ...*protocol.Log_Content) pipeline.Latency {
-	return NewLatencyMetricVector(n, convertLabels(lables), nil).WithLabels()
-}
-
-func NewCounterMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	mv := NewCounterMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
-	return mv.WithLabels()
-}
-
-func NewAverageMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Counter {
-	mv := NewAverageMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
-	return mv.WithLabels()
-}
-
-func NewStringMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.StringMetric {
-	mv := NewStringMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
-	return mv.WithLabels()
-}
-
-func NewLatencyMetricAndRegister(c *pipeline.MetricsRecord, n string, lables ...*protocol.Log_Content) pipeline.Latency {
-	mv := NewLatencyMetricVector(n, convertLabels(lables), nil)
-	c.RegisterMetricCollector(mv.(pipeline.MetricCollector))
-	return mv.WithLabels()
-}
-
-func convertLabels(labels []*protocol.Log_Content) map[string]string {
-	if len(labels) == 0 {
-		return nil
-	}
-
-	l := make(map[string]string)
-	for _, label := range labels {
-		l[label.Key] = label.Value
-	}
-
-	return l
 }
