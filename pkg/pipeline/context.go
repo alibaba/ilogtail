@@ -44,6 +44,12 @@ func (m *MetricsRecord) appendLabels(log *protocol.Log) {
 	}
 }
 
+func (m *MetricsRecord) insertLabels(record map[string]string) {
+	for _, label := range m.Labels {
+		record[label.Key] = label.Value
+	}
+}
+
 func (m *MetricsRecord) RegisterMetricCollector(collector MetricCollector) {
 	m.Lock()
 	defer m.Unlock()
@@ -57,12 +63,37 @@ func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
 		metrics := metricCollector.Collect()
 		for _, metric := range metrics {
 			log := &protocol.Log{}
+			if len(log.Contents) == 0 {
+				continue
+			}
+
 			metric.Serialize(log)
 			m.appendLabels(log) // append metrics record labels
-			// metric.Clear() no clear any more
 			logGroup.Logs = append(logGroup.Logs, log)
 		}
 	}
+}
+
+// ExportMetricRecords is used for exporting metrics records.
+// It will replace Serialize in the future.
+func (m *MetricsRecord) ExportMetricRecords() []map[string]string {
+	m.RLock()
+	defer m.RUnlock()
+
+	records := make([]map[string]string, 0)
+	for _, metricCollector := range m.MetricCollectors {
+		metrics := metricCollector.Collect()
+		for _, metric := range metrics {
+			record := metric.Export()
+			if len(record) == 0 {
+				continue
+			}
+
+			m.insertLabels(record)
+			records = append(records, record)
+		}
+	}
+	return records
 }
 
 func GetCommonLabels(context Context, pluginMeta *PluginMeta) []LabelPair {
@@ -108,5 +139,6 @@ type Context interface {
 	// APIs for self monitor
 	RegisterMetricRecord(labels []LabelPair) *MetricsRecord // for v1.8.8 compatible
 	GetMetricRecord() *MetricsRecord                        // for v1.8.8 compatible
+	ExportMetricRecords() []map[string]string               // for v1.8.8 compatible
 	MetricSerializeToPB(logGroup *protocol.LogGroup)
 }
