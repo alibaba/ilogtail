@@ -1,0 +1,155 @@
+syntax = "proto3";
+package configserver.proto.v2;
+option go_package = ".;configserver_proto_v2";
+
+message AgentGroupTag {
+    string name = 1;
+    string value = 2;
+}
+
+enum ConfigStatus {
+    // The value of status field is not set.
+    UNSET = 0;
+    // Agent is currently applying the remote config that it received earlier.
+    APPLYING = 1;
+    // Remote config was successfully applied by the Agent.
+    APPLIED = 2;
+    // Agent tried to apply the config received earlier, but it failed.
+    // See error_message for more details.
+    FAILED = 3;
+}
+
+// Define the Config information carried in the request
+message ConfigInfo {
+    string name = 1;         // Required, Config's unique identification
+    int64 version = 2;       // Required, Config's version number or hash code
+    ConfigStatus status = 3; // Config's status
+}
+
+// Define the Command information carried in the request
+message CommandInfo {
+    string type = 1;         // Command's type
+    string name = 2;         // Required, Command's unique identification
+    ConfigStatus status = 3; // Command's status
+}
+
+// Define Agent's basic attributes
+message AgentAttributes {
+    string version = 1;                 // Agent's version
+    string ip = 2;                      // Agent's ip
+    string hostname = 3;                // Agent's hostname
+    // 4-99 reserved for future official fields
+    map<string, string> extras = 100;   // Agent's other attributes
+}
+
+enum AgentCapabilities {
+    // The capabilities field is unspecified.
+    UnspecifiedAgentCapability = 0;
+    // The Agent can accept pipeline configuration from the Server.
+    AcceptsPipelineConfig          = 0x00000001;
+    // The Agent can accept process configuration from the Server.
+    AcceptsProcessConfig           = 0x00000002;
+    // The Agent can accept custom command from the Server.
+    AcceptsCustomCommand           = 0x00000004;
+
+    // Add new capabilities here, continuing with the least significant unused bit.
+}
+
+enum RequestFlags {
+    RequestFlagsUnspecified = 0;
+
+    // Flags is a bit mask. Values below define individual bits.
+}
+
+// API: /Agent/HeartBeat/
+
+// Agent sends requests to the ConfigServer to send heartbeats, get config updates and receive commands.
+message HeartBeatRequest {
+    string request_id = 1;
+    uint64 sequence_num = 2;                   // Increment every request, for server to check sync status
+    uint64 capabilities = 3;                   // Bitmask of flags defined by AgentCapabilities enum
+    string instance_id = 4;                     // Required, Agent's unique identification, consistent throughout the process lifecycle
+    string agent_type = 5;                      // Required, Agent's type(ilogtail, ..)
+    AgentAttributes attributes = 6;             // Agent's basic attributes
+    repeated AgentGroupTag tags =  7;           // Agent's tags
+    string running_status = 8;                  // Agent's running status
+    int64 startup_time = 9;                     // Required, Agent's startup time
+    repeated ConfigInfo pipeline_configs = 10;   // Information about the current PIPELINE_CONFIG held by the Agent
+    repeated ConfigInfo process_configs = 11;     // Information about the current AGENT_CONFIG held by the Agent
+    repeated CommandInfo custom_commands = 12;  // Information about command history
+    uint64 flags = 13;                          // Predefined command flag，这是新增的字段
+    // 14-99 reserved for future official fields
+}
+
+// Define Config's detail
+message ConfigDetail {
+    string name = 1;        // Required, Config's unique identification
+    int64 version = 2;      // Required, Config's version number
+    string detail = 3;      // Required, Config's detail
+    string context = 4;     // Config's context
+}
+
+message CommandDetail {
+    string type = 1;                // Required, Command type
+    string name = 2;                // Required, Command name
+    map<string, string> args = 3;   // Command's parameter arrays
+    int64 expire_time = 4;          // After which the command can be safely removed from history
+    string context = 5;     // Command's context
+}
+
+enum ServerCapabilities {
+    // The capabilities field is unspecified.
+    UnspecifiedServerCapability = 0;
+    // The Server can remember agent attributes.
+    RembersAttribute                   = 0x00000001;
+    // The Server can remember pipeline config status.
+    RembersPipelineConfigStatus        = 0x00000002;
+    // The Server can remember process config status.
+    RembersProcessConfigStatus         = 0x00000004;
+    // The Server can remember custom command status.
+    RembersCustomCommandStatus         = 0x00000008;
+
+    // Add new capabilities here, continuing with the least significant unused bit.
+}
+
+enum ResponseFlags {
+    ResponseFlagsUnspecified = 0;
+
+    // Flags is a bit mask. Values below define individual bits.
+
+    // ReportFullState flag can be used by the Server if the Client did not include
+    // some sub-message in the last AgentToServer message (which is an allowed
+    // optimization) but the Server detects that it does not have it (e.g. was
+    // restarted and lost state).
+    ReportFullState           = 0x00000001;
+    FetchPipelineConfigDetail = 0x00000002;
+    FetchProcessConfigDetail  = 0x00000004;
+}
+
+// ConfigServer's response to Agent's heartbeats
+message HeartBeatResponse {
+    string request_id = 1;  
+    int32 code = 2;      
+    string message = 3;     
+
+    repeated ConfigDetail pipeline_config_updates = 4;  // Agent's pipeline config update status
+    repeated ConfigDetail process_config_updates = 5;   // Agent's process config update status
+    repeated CommandDetail custom_command_updates = 6;  // Agent's commands updates
+}
+
+// API: /Agent/FetchPipelineConfig/
+// API: /Agent/FetchProcessConfig/
+// Agent request to ConfigServer, pulling details of the PIPELINE_CONFIG
+message FetchConfigRequest {
+    string request_id = 1; 
+    string instance_id = 2;                 // Required, Agent's unique identification
+    repeated ConfigInfo req_configs = 3;    // PIPELINE_CONFIGs that Agent requires for full information
+}
+
+// ConfigServer response to Agent's request
+message FetchConfigResponse {
+    string request_id = 1;                     
+    int32 code = 2;      
+    string message = 3;     
+    repeated ConfigDetail config_details = 4;   // PIPELINE_CONFIGs' detail
+}
