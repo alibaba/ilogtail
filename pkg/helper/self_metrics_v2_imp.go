@@ -15,7 +15,6 @@ package helper
 import (
 	"context"
 	"errors"
-	"math"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -101,6 +100,11 @@ func (c *cumulativeCounterImp) Serialize(log *protocol.Log) {
 	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+func (c *cumulativeCounterImp) Export() map[string]string {
+	metricValue := c.Get()
+	return c.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+}
+
 // delta is a counter metric that can be incremented or decremented.
 // It gets the increased value in the last window.
 type counterImp struct {
@@ -109,28 +113,33 @@ type counterImp struct {
 }
 
 func newDeltaCounter(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
-	d := &counterImp{
+	c := &counterImp{
 		Series: newSeries(ms, index),
 	}
-	return d
+	return c
 }
 
-func (d *counterImp) Add(delta int64) {
-	atomic.AddInt64(&d.value, delta)
+func (c *counterImp) Add(delta int64) {
+	atomic.AddInt64(&c.value, delta)
 }
 
-func (d *counterImp) Get() pipeline.MetricValue[float64] {
-	value := atomic.SwapInt64(&d.value, 0)
-	return pipeline.MetricValue[float64]{Name: d.Name(), Value: float64(value)}
+func (c *counterImp) Get() pipeline.MetricValue[float64] {
+	value := atomic.SwapInt64(&c.value, 0)
+	return pipeline.MetricValue[float64]{Name: c.Name(), Value: float64(value)}
 }
 
-func (d *counterImp) Clear() {
-	atomic.StoreInt64(&d.value, 0)
+func (c *counterImp) Clear() {
+	atomic.StoreInt64(&c.value, 0)
 }
 
-func (d *counterImp) Serialize(log *protocol.Log) {
-	metricValue := d.Get()
-	d.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+func (c *counterImp) Serialize(log *protocol.Log) {
+	metricValue := c.Get()
+	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+}
+
+func (c *counterImp) Export() map[string]string {
+	metricValue := c.Get()
+	return c.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 // gauge is a metric that represents a single numerical value that can arbitrarily go up and down.
@@ -160,10 +169,12 @@ func (g *gaugeImp) Clear() {
 
 func (g *gaugeImp) Serialize(log *protocol.Log) {
 	metricValue := g.Get()
-	if math.IsNaN(metricValue.Value) {
-		return
-	}
 	g.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+}
+
+func (c *gaugeImp) Export() map[string]string {
+	metricValue := c.Get()
+	return c.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 // averageImp is a metric to compute the average value of a series of values in the last window.
@@ -214,6 +225,11 @@ func (a *averageImp) Serialize(log *protocol.Log) {
 	a.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
+func (a *averageImp) Export() map[string]string {
+	metricValue := a.Get()
+	return a.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
+}
+
 // latencyImp is a metric to compute the average latency of a series of values in the last window.
 type latencyImp struct {
 	sync.Mutex
@@ -260,7 +276,12 @@ func (l *latencyImp) Clear() {
 
 func (l *latencyImp) Serialize(log *protocol.Log) {
 	metricValue := l.Get()
-	l.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64))
+	l.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64)) // ns to us
+}
+
+func (l *latencyImp) Export() map[string]string {
+	metricValue := l.Get()
+	return l.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64)) // ns to us
 }
 
 // strMetricImp is a metric that represents a single string value.
@@ -300,6 +321,11 @@ func (s *strMetricImp) Serialize(log *protocol.Log) {
 	s.Series.SerializeWithStr(log, metricValue.Name, metricValue.Value)
 }
 
+func (s *strMetricImp) Export() map[string]string {
+	metricValue := s.Get()
+	return s.Series.Export(metricValue.Name, metricValue.Value)
+}
+
 type Series struct {
 	pipeline.MetricSet
 	index []string
@@ -333,6 +359,22 @@ func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr s
 	}
 }
 
+func (s Series) Export(metricName, metricValue string) map[string]string {
+	ret := make(map[string]string, len(s.ConstLabels())+len(s.index)+2)
+	ret[metricName] = metricValue
+	ret[SelfMetricNameKey] = metricName
+
+	for _, v := range s.ConstLabels() {
+		ret[v.Key] = v.Value
+	}
+
+	for i, v := range s.index {
+		ret[s.LabelKeys()[i]] = v
+	}
+
+	return ret
+}
+
 /*
 Following are the metrics returned when WithLabel encountered an error.
 */
@@ -353,6 +395,10 @@ func (e *errorNumericMetric) Observe(f float64) {
 }
 
 func (e *errorNumericMetric) Serialize(log *protocol.Log) {}
+
+func (e *errorNumericMetric) Export() map[string]string {
+	return nil
+}
 
 func (e *errorNumericMetric) Get() pipeline.MetricValue[float64] {
 	return pipeline.MetricValue[float64]{Name: "", Value: 0}

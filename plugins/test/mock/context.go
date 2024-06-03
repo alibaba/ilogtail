@@ -114,6 +114,19 @@ func (p *EmptyContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
 	}
 }
 
+// ExportMetricRecords is used for exporting metrics records.
+// Each metric is a map[string]string
+func (p *EmptyContext) ExportMetricRecords() []map[string]string {
+	contextMutex.RLock()
+	defer contextMutex.RUnlock()
+
+	records := make([]map[string]string, 0)
+	for _, metricsRecord := range p.MetricsRecords {
+		records = append(records, metricsRecord.ExportMetricRecords()...)
+	}
+	return records
+}
+
 func (p *EmptyContext) SaveCheckPoint(key string, value []byte) error {
 	logger.Debug(p.ctx, "save checkpoint, key", key, "value", string(value))
 	p.checkpoint[key] = value

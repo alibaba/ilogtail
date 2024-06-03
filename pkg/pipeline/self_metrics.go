@@ -59,6 +59,7 @@ type MetricVector[T Metric] interface {
 
 type Metric interface {
 	Serialize(log *protocol.Log)
+	Export() map[string]string // Export as a map[string]string, It will replace Serialize in the future.
 }
 
 // CounterMetric has three implementations:
