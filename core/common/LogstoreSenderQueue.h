@@ -490,9 +490,14 @@ public:
 
     void Feedback(int64_t key) override { mTrigger.Trigger(); }
 
-    bool IsValidToPush(int64_t key) override {
+    bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
-        auto& singleQueue = mLogstoreSenderQueueMap[key]; // avoid crash for unexpected key.
+
+        // fix crash caused by unexpected key like flusher_sls for go plugin statistics metrics
+        if (mLogstoreSenderQueueMap.find(key) == mLogstoreSenderQueueMap.end()) {
+            return true; 
+        }
+        const auto& singleQueue = mLogstoreSenderQueueMap.at(key);
 
         // For correctness, exactly once queue should ignore mUrgentFlag.
         if (singleQueue.GetQueueType() == QueueType::ExactlyOnce) {
