@@ -9,9 +9,9 @@
 
 /Agent/GetAgentConfig?InstanceId=$instance\_id&WaitForChange=(true|false)
 
-### HeartBeatRequest 消息
+### AgentConfigRequest 消息
 
-    message HeartBeatRequest {
+    message AgentConfigRequest {
         string request_id = 1;
         uint64 sequence_num = 2;                   // Increment every request, for server to check sync status
         uint64 capabilities = 3;                   // Bitmask of flags defined by AgentCapabilities enum
@@ -85,11 +85,14 @@
         RequestFlagsUnspecified = 0;
 
         // Flags is a bit mask. Values below define individual bits.
+
+        // Must be set if this request contains full state
+        FullState               = 0x00000001;
     }
 
-### HeartBeatResponse 消息
+### AgentConfigResponse 消息
 
-    message HeartBeatResponse {
+    message AgentConfigResponse {
         string request_id = 1;  
         int32 code = 2;      
         string message = 3;     
