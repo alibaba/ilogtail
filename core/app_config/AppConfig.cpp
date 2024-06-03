@@ -69,10 +69,10 @@ DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-
 // DEFINE_FLAG_STRING(ilogtail_local_config_dir,
 //                    "local ilogtail config file dir",
 //                    DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
-// DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
-//                    "local ilogtail yaml config file dir",
-//                    DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
+const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
+DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
+                   "legacy local ilogtail 1.0 yaml config file dir",
+                   DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
 // const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
 // DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
 //                    "remote ilogtail yaml config file dir",

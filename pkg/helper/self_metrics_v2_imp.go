@@ -282,7 +282,7 @@ func newSeries(ms pipeline.MetricSet, index []string) Series {
 func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr string) {
 	log.Contents = append(log.Contents,
 		&protocol.Log_Content{Key: metricName, Value: metricValueStr},
-		&protocol.Log_Content{Key: SelfMetricNameKey, Value: s.Name()})
+		&protocol.Log_Content{Key: SelfMetricNameKey, Value: metricName})
 
 	for _, v := range s.ConstLabels() {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Key, Value: v.Value})
