@@ -36,7 +36,7 @@ type ProcessorStringReplace struct {
 
 	re            *regexp2.Regexp
 	context       pipeline.Context
-	logPairMetric pipeline.Counter
+	logPairMetric pipeline.CounterMetric
 }
 
 const (
@@ -122,7 +122,7 @@ func (p *ProcessorStringReplace) ProcessLogs(logArray []*protocol.Log) []*protoc
 			replaceCount++
 		}
 	}
-	_ = p.logPairMetric.Add(int64(replaceCount))
+	p.logPairMetric.Add(int64(replaceCount))
 	return logArray
 }
 

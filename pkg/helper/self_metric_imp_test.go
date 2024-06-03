@@ -638,7 +638,7 @@ func TestNewCounterMetric(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want pipeline.Counter
+		want pipeline.CounterMetric
 	}{
 		// TODO: Add test cases.
 	}
@@ -658,7 +658,7 @@ func TestNewAverageMetric(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want pipeline.Counter
+		want pipeline.CounterMetric
 	}{
 		// TODO: Add test cases.
 	}
@@ -698,7 +698,7 @@ func TestNewLatencyMetric(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want pipeline.Latency
+		want pipeline.LatencyMetric
 	}{
 		// TODO: Add test cases.
 	}

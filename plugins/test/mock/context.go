@@ -78,7 +78,7 @@ func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
-	metricsRecord := &pipeline.MetricsRecord{}
+	metricsRecord := &pipeline.MetricsRecord{Context: p}
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "project", Value: p.GetProject()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "config_name", Value: p.GetConfigName()})
 	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "plugins", Value: p.pluginNames})

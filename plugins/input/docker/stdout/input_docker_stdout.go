@@ -161,9 +161,9 @@ type ServiceDockerStdout struct {
 
 	// for tracker
 	tracker           *helper.ReaderMetricTracker
-	avgInstanceMetric pipeline.Counter
-	addMetric         pipeline.Counter
-	deleteMetric      pipeline.Counter
+	avgInstanceMetric pipeline.CounterMetric
+	addMetric         pipeline.CounterMetric
+	deleteMetric      pipeline.CounterMetric
 
 	synerMap      map[string]*DockerFileSyner
 	checkpointMap map[string]helper.LogFileReaderCheckPoint
@@ -301,7 +301,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 
 	dockerInfos := sds.matchList
 	logger.Debug(sds.context.GetRuntimeContext(), "match list length", len(dockerInfos))
-	_ = sds.avgInstanceMetric.Add(int64(len(dockerInfos)))
+	sds.avgInstanceMetric.Add(int64(len(dockerInfos)))
 	for id, info := range dockerInfos {
 		if !logDriverSupported(info.ContainerInfo) {
 			continue
@@ -310,7 +310,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 			syner := NewDockerFileSyner(sds, info, sds.checkpointMap)
 			logger.Info(sds.context.GetRuntimeContext(), "docker stdout", "added", "source host path", info.ContainerInfo.LogPath,
 				"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
-			_ = sds.addMetric.Add(1)
+			sds.addMetric.Add(1)
 			sds.synerMap[id] = syner
 			syner.dockerFileReader.Start()
 		}
@@ -322,7 +322,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 			logger.Info(sds.context.GetRuntimeContext(), "docker stdout", "deleted", "id", helper.GetShortID(id), "name", syner.info.ContainerInfo.Name)
 			syner.dockerFileReader.Stop()
 			delete(sds.synerMap, id)
-			_ = sds.deleteMetric.Add(1)
+			sds.deleteMetric.Add(1)
 		}
 	}
 

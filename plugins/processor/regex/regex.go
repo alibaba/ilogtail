@@ -40,7 +40,7 @@ type ProcessorRegex struct {
 	SourceKey              string
 
 	context       pipeline.Context
-	logPairMetric pipeline.Counter
+	logPairMetric pipeline.CounterMetric
 	re            *regexp.Regexp
 }
 
@@ -95,7 +95,7 @@ func (p *ProcessorRegex) ProcessLog(log *protocol.Log) {
 	if !findKey && p.NoKeyError {
 		logger.Warning(p.context.GetRuntimeContext(), "REGEX_FIND_ALARM", "anchor cannot find key", p.SourceKey)
 	}
-	_ = p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
+	p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
 }
 
 func (p *ProcessorRegex) shouldKeepSource(parseResult bool) bool {

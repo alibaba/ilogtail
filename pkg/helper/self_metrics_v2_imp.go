@@ -13,28 +13,31 @@
 package helper
 
 import (
+	"context"
+	"errors"
 	"math"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 var (
-	_ pipeline.Counter      = (*cumulativeCounterImp)(nil)
-	_ pipeline.Counter      = (*counterImp)(nil)
-	_ pipeline.Counter      = (*averageImp)(nil)
-	_ pipeline.Gauge        = (*gaugeImp)(nil)
-	_ pipeline.Latency      = (*latencyImp)(nil)
-	_ pipeline.StringMetric = (*strMetricImp)(nil)
+	_ pipeline.CounterMetric = (*cumulativeCounterImp)(nil)
+	_ pipeline.CounterMetric = (*counterImp)(nil)
+	_ pipeline.CounterMetric = (*averageImp)(nil)
+	_ pipeline.GaugeMetric   = (*gaugeImp)(nil)
+	_ pipeline.LatencyMetric = (*latencyImp)(nil)
+	_ pipeline.StringMetric  = (*strMetricImp)(nil)
 
-	_ pipeline.Counter      = (*errorNumericMetric)(nil)
-	_ pipeline.Gauge        = (*errorNumericMetric)(nil)
-	_ pipeline.Latency      = (*errorNumericMetric)(nil)
-	_ pipeline.StringMetric = (*errorStrMetric)(nil)
+	_ pipeline.CounterMetric = (*errorNumericMetric)(nil)
+	_ pipeline.GaugeMetric   = (*errorNumericMetric)(nil)
+	_ pipeline.LatencyMetric = (*errorNumericMetric)(nil)
+	_ pipeline.StringMetric  = (*errorStrMetric)(nil)
 )
 
 func newMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
@@ -52,7 +55,7 @@ func newMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet,
 	case pipeline.LatencyType:
 		return newLatency(metricSet, index)
 	}
-	return newErrorMetric(metricType, nil)
+	return newErrorMetric(metricType, errors.New("invalid metric type"))
 }
 
 // ErrorMetrics always return error.
@@ -73,16 +76,15 @@ type cumulativeCounterImp struct {
 	Series
 }
 
-func newCumulativeCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
+func newCumulativeCounter(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
 	c := &cumulativeCounterImp{
 		Series: newSeries(ms, index),
 	}
 	return c
 }
 
-func (c *cumulativeCounterImp) Add(delta int64) error {
+func (c *cumulativeCounterImp) Add(delta int64) {
 	atomic.AddInt64(&c.value, delta)
-	return nil
 }
 
 func (c *cumulativeCounterImp) Get() pipeline.MetricValue[float64] {
@@ -106,16 +108,15 @@ type counterImp struct {
 	Series
 }
 
-func newDeltaCounter(ms pipeline.MetricSet, index []string) pipeline.Counter {
+func newDeltaCounter(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
 	d := &counterImp{
 		Series: newSeries(ms, index),
 	}
 	return d
 }
 
-func (d *counterImp) Add(delta int64) error {
+func (d *counterImp) Add(delta int64) {
 	atomic.AddInt64(&d.value, delta)
-	return nil
 }
 
 func (d *counterImp) Get() pipeline.MetricValue[float64] {
@@ -138,16 +139,15 @@ type gaugeImp struct {
 	Series
 }
 
-func newGauge(ms pipeline.MetricSet, index []string) pipeline.Gauge {
+func newGauge(ms pipeline.MetricSet, index []string) pipeline.GaugeMetric {
 	g := &gaugeImp{
 		Series: newSeries(ms, index),
 	}
 	return g
 }
 
-func (g *gaugeImp) Set(f float64) error {
+func (g *gaugeImp) Set(f float64) {
 	AtomicStoreFloat64(&g.value, f)
-	return nil
 }
 
 func (g *gaugeImp) Get() pipeline.MetricValue[float64] {
@@ -176,19 +176,18 @@ type averageImp struct {
 	Series
 }
 
-func newAverage(ms pipeline.MetricSet, index []string) pipeline.Counter {
+func newAverage(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
 	a := &averageImp{
 		Series: newSeries(ms, index),
 	}
 	return a
 }
 
-func (a *averageImp) Add(f int64) error {
+func (a *averageImp) Add(f int64) {
 	a.Lock()
 	defer a.Unlock()
 	a.value += f
 	a.count++
-	return nil
 }
 
 func (a *averageImp) Get() pipeline.MetricValue[float64] {
@@ -223,23 +222,22 @@ type latencyImp struct {
 	Series
 }
 
-func newLatency(ms pipeline.MetricSet, index []string) pipeline.Latency {
+func newLatency(ms pipeline.MetricSet, index []string) pipeline.LatencyMetric {
 	l := &latencyImp{
 		Series: newSeries(ms, index),
 	}
 	return l
 }
 
-func (l *latencyImp) Record(d time.Duration) error {
-	return l.Observe(float64(d))
-}
-
-func (l *latencyImp) Observe(f float64) error {
+func (l *latencyImp) Observe(f float64) {
 	l.Lock()
 	defer l.Unlock()
 	l.count++
 	l.latencySum += f
-	return nil
+}
+
+func (l *latencyImp) Record(d time.Duration) {
+	l.Observe(float64(d))
 }
 
 func (l *latencyImp) Get() pipeline.MetricValue[float64] {
@@ -279,11 +277,10 @@ func newStringMetric(ms pipeline.MetricSet, index []string) pipeline.StringMetri
 	return s
 }
 
-func (s *strMetricImp) Set(str string) error {
+func (s *strMetricImp) Set(str string) {
 	s.Lock()
 	defer s.Unlock()
 	s.value = str
-	return nil
 }
 
 func (s *strMetricImp) Get() pipeline.MetricValue[string] {
@@ -343,16 +340,16 @@ type errorNumericMetric struct {
 	err error
 }
 
-func (e *errorNumericMetric) Add(f int64) error {
-	return e.err
+func (e *errorNumericMetric) Add(f int64) {
+	logger.Warning(context.Background(), "METRIC_WITH_LABEL_ALARM", "add", e.err)
 }
 
-func (e *errorNumericMetric) Set(f float64) error {
-	return e.err
+func (e *errorNumericMetric) Set(f float64) {
+	logger.Warning(context.Background(), "METRIC_WITH_LABEL_ALARM", "set", e.err)
 }
 
-func (e *errorNumericMetric) Observe(f float64) error {
-	return e.err
+func (e *errorNumericMetric) Observe(f float64) {
+	logger.Warning(context.Background(), "METRIC_WITH_LABEL_ALARM", "observe", e.err)
 }
 
 func (e *errorNumericMetric) Serialize(log *protocol.Log) {}
@@ -370,8 +367,8 @@ type errorStrMetric struct {
 	errorNumericMetric
 }
 
-func (e errorStrMetric) Set(s string) error {
-	return e.err
+func (e errorStrMetric) Set(s string) {
+	logger.Warning(context.Background(), "METRIC_WITH_LABEL_ALARM", "set", e.err)
 }
 
 func (e errorStrMetric) Get() pipeline.MetricValue[string] {

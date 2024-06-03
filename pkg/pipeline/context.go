@@ -31,7 +31,8 @@ type CommonContext struct {
 type LabelPair = Label
 
 type MetricsRecord struct {
-	Labels []LabelPair
+	Context Context
+	Labels  []LabelPair
 
 	sync.RWMutex
 	MetricCollectors []MetricCollector

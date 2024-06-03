@@ -33,7 +33,7 @@ type SlsFlusher struct { // nolint:revive
 	KeepShardHash   bool
 
 	context    pipeline.Context
-	lenCounter pipeline.Counter
+	lenCounter pipeline.CounterMetric
 }
 
 // Init ...
@@ -83,7 +83,7 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 			return fmt.Errorf("loggroup marshal err %v", err)
 		}
 		bufLen := len(buf)
-		_ = p.lenCounter.Add(int64(bufLen))
+		p.lenCounter.Add(int64(bufLen))
 
 		var rst int
 		// TODO: why use logGroup.Category which is usually empty, why not use logstoreName

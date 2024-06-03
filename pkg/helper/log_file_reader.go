@@ -27,13 +27,13 @@ import (
 )
 
 type ReaderMetricTracker struct {
-	OpenCounter        pipeline.Counter
-	CloseCounter       pipeline.Counter
-	FileSizeCounter    pipeline.Counter
-	FileRotatorCounter pipeline.Counter
-	ReadCounter        pipeline.Counter
-	ReadSizeCounter    pipeline.Counter
-	ProcessLatency     pipeline.Latency
+	OpenCounter        pipeline.CounterMetric
+	CloseCounter       pipeline.CounterMetric
+	FileSizeCounter    pipeline.CounterMetric
+	FileRotatorCounter pipeline.CounterMetric
+	ReadCounter        pipeline.CounterMetric
+	ReadSizeCounter    pipeline.CounterMetric
+	ProcessLatency     pipeline.LatencyMetric
 }
 
 func NewReaderMetricTracker(mr *pipeline.MetricsRecord) *ReaderMetricTracker {
@@ -158,7 +158,7 @@ func (r *LogFileReader) CheckFileChange() bool {
 					r.CloseFile("open file and dev inode changed")
 				}
 				if r.Config.Tracker != nil {
-					_ = r.Config.Tracker.FileRotatorCounter.Add(1)
+					r.Config.Tracker.FileRotatorCounter.Add(1)
 				}
 				// if file change, force flush last buffer
 				if r.lastBufferSize > 0 {
@@ -249,7 +249,7 @@ func (r *LogFileReader) ReadOpen() error {
 		var err error
 		r.file, err = ReadOpen(r.checkpoint.Path)
 		if r.Config.Tracker != nil {
-			_ = r.Config.Tracker.OpenCounter.Add(1)
+			r.Config.Tracker.OpenCounter.Add(1)
 		}
 		logger.Debug(r.logContext, "open file for read, file", r.checkpoint.Path, "offset", r.checkpoint.Offset, "status", r.checkpoint.State)
 		return err
@@ -283,7 +283,7 @@ func (r *LogFileReader) ReadAndProcess(once bool) {
 					r.UpdateProcessResult(0, processSize)
 				}
 				if r.Config.Tracker != nil {
-					_ = r.Config.Tracker.FileRotatorCounter.Add(1)
+					r.Config.Tracker.FileRotatorCounter.Add(1)
 				}
 				r.checkpointLock.Lock()
 				r.checkpoint.Offset = 0
@@ -302,7 +302,7 @@ func (r *LogFileReader) ReadAndProcess(once bool) {
 					r.UpdateProcessResult(0, processSize)
 				}
 				if r.Config.Tracker != nil {
-					_ = r.Config.Tracker.FileRotatorCounter.Add(1)
+					r.Config.Tracker.FileRotatorCounter.Add(1)
 				}
 				r.checkpointLock.Lock()
 				if newOsStat.Size < 10*1024*1024 {
@@ -322,8 +322,8 @@ func (r *LogFileReader) ReadAndProcess(once bool) {
 			n, readErr := file.ReadAt(r.nowBlock[r.lastBufferSize:], int64(r.lastBufferSize)+r.checkpoint.Offset)
 			needBreak := false
 			if r.Config.Tracker != nil {
-				_ = r.Config.Tracker.ReadCounter.Add(1)
-				_ = r.Config.Tracker.ReadSizeCounter.Add(int64(n))
+				r.Config.Tracker.ReadCounter.Add(1)
+				r.Config.Tracker.ReadSizeCounter.Add(int64(n))
 			}
 			if once || n < r.Config.MaxReadBlockSize-r.lastBufferSize {
 				needBreak = true
@@ -363,7 +363,7 @@ func (r *LogFileReader) CloseFile(reason string) {
 		_ = r.file.Close()
 		r.file = nil
 		if r.Config.Tracker != nil {
-			_ = r.Config.Tracker.CloseCounter.Add(1)
+			r.Config.Tracker.CloseCounter.Add(1)
 		}
 		logger.Debug(r.logContext, "close file, reason", reason, "file", r.checkpoint.Path, "offset", r.checkpoint.Offset, "status", r.checkpoint.State)
 	}
@@ -391,7 +391,7 @@ func (r *LogFileReader) Run() {
 			}
 		}
 		if tracker != nil {
-			_ = tracker.ProcessLatency.Observe(float64(time.Since(startProcessTime)))
+			tracker.ProcessLatency.Observe(float64(time.Since(startProcessTime)))
 		}
 		endProcessTime := time.Now()
 		sleepDuration := time.Millisecond*time.Duration(r.Config.ReadIntervalMs) - endProcessTime.Sub(startProcessTime)

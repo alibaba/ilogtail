@@ -31,7 +31,7 @@ type MetricWrapper struct {
 	Interval time.Duration
 
 	LogsChan      chan *pipeline.LogWithContext
-	LatencyMetric pipeline.Latency
+	LatencyMetric pipeline.LatencyMetric
 }
 
 func (p *MetricWrapper) Run(control *pipeline.AsyncControl) {
@@ -41,7 +41,7 @@ func (p *MetricWrapper) Run(control *pipeline.AsyncControl) {
 		exitFlag := util.RandomSleep(p.Interval, 0.1, control.CancelToken())
 		startTime := time.Now()
 		err := p.Input.Collect(p)
-		_ = p.LatencyMetric.Observe(float64(time.Since(startTime)))
+		p.LatencyMetric.Observe(float64(time.Since(startTime)))
 		if err != nil {
 			logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
 		}
