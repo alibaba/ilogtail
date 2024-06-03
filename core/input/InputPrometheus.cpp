@@ -1,6 +1,7 @@
 #include "input/InputPrometheus.h"
 
 #include "common/ParamExtractor.h"
+#include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
 
 using namespace std;
@@ -18,6 +19,16 @@ bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPip
     // 服务发现
 
     // 根据config参数构造ScrapeJobs
+
+    // 为每个job设置queueKey、inputIndex
+    for (ScrapeJob& job : scrapeJobs) {
+        job.queueKey = mContext->GetProcessQueueKey();
+        job.inputIndex = 0;
+        for (ScrapeTarget& target : job.scrapeTargets) {
+            target.queueKey = mContext->GetProcessQueueKey();
+            target.inputIndex = 0;
+        }
+    }
 
     return true;
 }

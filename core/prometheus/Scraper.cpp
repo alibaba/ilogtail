@@ -1,6 +1,8 @@
 #include "Scraper.h"
 
 
+using namespace std;
+
 logtail::ScraperGroup::ScraperGroup() {
 }
 
@@ -9,7 +11,7 @@ void logtail::ScraperGroup::UpdateScrapeJob(const ScrapeJob& job) {
         // target级别更新，先全部清理之前的work，然后开启新的work
         RemoveScrapeJob(job);
     }
-    scrapeJobTargetsMap[job.jobName] = job.scrapeTargetsSet;
+    scrapeJobTargetsMap[job.jobName] = set(job.scrapeTargets.begin(), job.scrapeTargets.end());
     for (const ScrapeTarget& target : scrapeJobTargetsMap[job.jobName]) {
         scrapeIdWorkMap[target.targetId] = std::make_unique<ScrapeWork>(target);
         scrapeIdWorkMap[target.targetId]->StartScrapeLoop();
@@ -18,7 +20,7 @@ void logtail::ScraperGroup::UpdateScrapeJob(const ScrapeJob& job) {
 
 void logtail::ScraperGroup::RemoveScrapeJob(const ScrapeJob& job) {
     for (auto target : scrapeJobTargetsMap[job.jobName]) {
-        // 根据key找到对应的线程（协程）并停止
+        // 找到对应的线程（协程）并停止
         auto work = scrapeIdWorkMap.find(target.targetId);
         if (work != scrapeIdWorkMap.end()) {
             work->second->StopScrapeLoop();

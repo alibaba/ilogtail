@@ -6,6 +6,7 @@
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
+#include "queue/ProcessQueueManager.h"
 #include "sdk/Client.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
@@ -83,11 +84,11 @@ public:
 
 protected:
     // static void SetUpTestCase() { AppConfig::GetInstance()->mPurageContainerMode = true; }
-    // void SetUp() override {
-    //     p.mName = "test_config";
-    //     ctx.SetConfigName("test_config");
-    //     ctx.SetPipeline(p);
-    // }
+    void SetUp() override {
+        p.mName = "test_config";
+        ctx.SetConfigName("test_config");
+        ctx.SetPipeline(p);
+    }
 
 private:
     Pipeline p;
@@ -98,15 +99,28 @@ private:
 void PrometheusInputRunnerUnittest::OnSuccessfulInit() {
     // MockHttpClient* client = new MockHttpClient();
     // PrometheusInputRunner::GetInstance()->client.reset(client);
-    auto scrapeTargets = std::set<ScrapeTarget>();
-    scrapeTargets.insert(ScrapeTarget{"jonName", 3, 3, "http", "/metrics", "172.17.0.1:9100", 9100, "target_id1"});
-    scrapeTargets.insert(ScrapeTarget{"jonName", 5, 5, "http", "/metrics", "172.17.0.1:9100", 9100, "target_id2"});
+    auto scrapeTargets = std::vector<ScrapeTarget>();
+    scrapeTargets.push_back(
+        ScrapeTarget{"jonName", 3, 3, "http", "/metrics", "172.17.0.1:9100", 9100, 0, 0, "target_id1"});
+    scrapeTargets.push_back(
+        ScrapeTarget{"jonName", 5, 5, "http", "/metrics", "172.17.0.1:9100", 9100, 0, 0, "target_id2"});
     auto scrapeJobs = std::vector<ScrapeJob>();
-    scrapeJobs.push_back(ScrapeJob{"test_job", "/metrics", "http", 15, 15, scrapeTargets});
+    scrapeJobs.push_back(ScrapeJob{"test_job", "/metrics", "http", 15, 15, scrapeTargets, 0, 0});
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test", scrapeJobs);
     PrometheusInputRunner::GetInstance()->Start();
-    sleep(7);
+    sleep(10);
     PrometheusInputRunner::GetInstance()->Stop();
+    // std::unique_ptr<logtail::ProcessQueueItem> item;
+    // string configName = "test_config";
+    // cout << "queue size" << ProcessQueueManager::GetInstance()->mQueues.size() << endl;
+    // ProcessQueueManager::GetInstance()->PopItem(0, item, configName);
+    // APSARA_TEST_NOT_EQUAL(nullptr, item);
+    // const auto& res = item->mEventGroup.GetEvents();
+    // cout << res.size() << endl;
+    // for (const PipelineEventPtr& r : res) {
+    //     auto tmp = r.Cast<MetricEvent>();
+    //     printf("%s\n", tmp.GetName().data());
+    // }
 }
 
 

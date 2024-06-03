@@ -3,6 +3,7 @@
 #include <string>
 
 #include "ScrapeWork.h"
+#include "queue/FeedbackQueueKey.h"
 
 namespace logtail {
 
@@ -16,7 +17,9 @@ struct ScrapeJob {
     int scrapeInterval;
     int scrapeTimeout;
     // target需要根据ConfigServer的情况调整
-    std::set<ScrapeTarget> scrapeTargetsSet;
+    std::vector<ScrapeTarget> scrapeTargets;
+    QueueKey queueKey;
+    size_t inputIndex;
     bool operator<(const ScrapeJob& other) const { return jobName < other.jobName; }
 };
 
@@ -45,7 +48,7 @@ public:
 
 private:
     std::unordered_map<std::string, std::set<ScrapeTarget>> scrapeJobTargetsMap;
-    std::unordered_map<std::string, std::unique_ptr< ScrapeWork>> scrapeIdWorkMap;
+    std::unordered_map<std::string, std::unique_ptr<ScrapeWork>> scrapeIdWorkMap;
 };
 
 } // namespace logtail
