@@ -16,7 +16,12 @@ cmake_minimum_required(VERSION 3.22)
 project(prometheus_unittest)
 
 add_executable(prometheus_input_runner_unittest PrometheusInputRunnerUnittest.cpp)
+add_executable(textparser_unittest TextParserUnittest.cpp)
+
 target_link_libraries(prometheus_input_runner_unittest unittest_base)
+target_link_libraries(textparser_unittest unittest_base)
 
 include(GoogleTest)
+
 gtest_discover_tests(prometheus_input_runner_unittest)
+gtest_discover_tests(textparser_unittest)

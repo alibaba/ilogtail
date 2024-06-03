@@ -21,7 +21,7 @@
 #include <boost/algorithm/string.hpp>
 #include "re2/re2.h"
 #include "models/MetricEvent.h"
-#include "prom/TextParser.h"
+#include "prometheus/TextParser.h"
 
 using namespace std;
 
