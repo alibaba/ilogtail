@@ -34,7 +34,9 @@ namespace logtail {
 // TODO: In ConfigManager.cpp, some places use / to concat path, which might fail on Windows,
 // replace them with PATH_SEPARATOR.
 std::string GetProcessExecutionDir(void) {
-#if defined(__linux__)
+#if defined(__ANDROID__)
+    return "/data/data/com.example.logtail_for_android/files/";
+#elif defined(__linux__)
     char exePath[PATH_MAX + 1] = "";
     readlink("/proc/self/exe", exePath, sizeof(exePath));
     std::string fullPath(exePath);
