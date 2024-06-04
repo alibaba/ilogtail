@@ -1,4 +1,4 @@
-// Copyright 2023 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
                     "metricsPath": "/metrics",
                     "scheme": "http",
                     "scrapeInterval": 15,
-                    "scrapeTimeout": 16,
+                    "scrapeTimeout": 15,
                     "scrapeTargets": [
                         {
                             "host": "172.17.0.3:9100",
@@ -95,7 +95,7 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->scrapeJobs[0].jobName);
     APSARA_TEST_EQUAL("/metrics", input->scrapeJobs[0].metricsPath);
     APSARA_TEST_EQUAL(15, input->scrapeJobs[0].scrapeInterval);
-    APSARA_TEST_EQUAL(16, input->scrapeJobs[0].scrapeTimeout);
+    APSARA_TEST_EQUAL(15, input->scrapeJobs[0].scrapeTimeout);
     APSARA_TEST_EQUAL("172.17.0.3:9100", input->scrapeJobs[0].scrapeTargets[0].host);
     APSARA_TEST_EQUAL(9100, input->scrapeJobs[0].scrapeTargets[0].port);
 }

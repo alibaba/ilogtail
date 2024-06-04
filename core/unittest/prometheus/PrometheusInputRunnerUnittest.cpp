@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 iLogtail Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <json/json.h>
 
 #include "app_config/AppConfig.h"
@@ -6,6 +22,7 @@
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
+#include "prometheus/Scraper.h"
 #include "queue/ProcessQueueManager.h"
 #include "sdk/Client.h"
 #include "sdk/Common.h"
@@ -17,114 +34,78 @@ using namespace std;
 
 namespace logtail {
 
-// MockHttpClient
-class MockHttpClient : public sdk::HTTPClient {
-public:
-    MockHttpClient();
-
-    virtual void Send(const std::string& httpMethod,
-                      const std::string& host,
-                      const int32_t port,
-                      const std::string& url,
-                      const std::string& queryString,
-                      const std::map<std::string, std::string>& header,
-                      const std::string& body,
-                      const int32_t timeout,
-                      sdk::HttpMessage& httpMessage,
-                      const std::string& intf,
-                      const bool httpsFlag);
-    virtual void AsynSend(sdk::AsynRequest* request);
-};
-
-MockHttpClient::MockHttpClient() {
-}
-
-void MockHttpClient::Send(const std::string& httpMethod,
-                          const std::string& host,
-                          const int32_t port,
-                          const std::string& url,
-                          const std::string& queryString,
-                          const std::map<std::string, std::string>& header,
-                          const std::string& body,
-                          const int32_t timeout,
-                          sdk::HttpMessage& httpMessage,
-                          const std::string& intf,
-                          const bool httpsFlag) {
-    printf("%s %s %d %s %s\n", httpMethod.c_str(), host.c_str(), port, url.c_str(), queryString.c_str());
-    httpMessage.content
-        = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
-          "# TYPE go_gc_duration_seconds summary\n"
-          "go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.25\"} 3.9357e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.5\"} 4.1114e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.75\"} 4.3372e-05\n"
-          "go_gc_duration_seconds{quantile=\"1\"} 0.000112326\n"
-          "go_gc_duration_seconds_sum 0.034885631\n"
-          "go_gc_duration_seconds_count 850\n"
-          "# HELP go_goroutines Number of goroutines that currently exist.\n"
-          "# TYPE go_goroutines gauge\n"
-          "go_goroutines 7\n"
-          "# HELP go_info Information about the Go environment.\n"
-          "# TYPE go_info gauge\n"
-          "go_info{version=\"go1.22.3\"} 1\n"
-          "# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.\n"
-          "# TYPE go_memstats_alloc_bytes gauge\n"
-          "go_memstats_alloc_bytes 6.742688e+06\n"
-          "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
-          "# TYPE go_memstats_alloc_bytes_total counter\n"
-          "go_memstats_alloc_bytes_total 1.5159292e+08";
-}
-
-void MockHttpClient::AsynSend(sdk::AsynRequest* request) {
-}
-
 class PrometheusInputRunnerUnittest : public testing::Test {
 public:
-    void OnSuccessfulInit();
+    void OnUpdateScrapeInput();
+    void OnRemoveScrapeInput();
+    void OnSuccessfulStartAndStop();
 
 protected:
-    // static void SetUpTestCase() { AppConfig::GetInstance()->mPurageContainerMode = true; }
-    void SetUp() override {
-        p.mName = "test_config";
-        ctx.SetConfigName("test_config");
-        ctx.SetPipeline(p);
-    }
-
 private:
-    Pipeline p;
-    PipelineContext ctx;
 };
 
 
-void PrometheusInputRunnerUnittest::OnSuccessfulInit() {
-    // MockHttpClient* client = new MockHttpClient();
-    // PrometheusInputRunner::GetInstance()->client.reset(client);
+void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
+    // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(
-        ScrapeTarget{"jonName", 3, 3, "http", "/metrics", "172.17.0.1:9100", 9100, 0, 0, "target_id1"});
-    scrapeTargets.push_back(
-        ScrapeTarget{"jonName", 5, 5, "http", "/metrics", "172.17.0.1:9100", 9100, 0, 0, "target_id2"});
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
+    scrapeTargets[0].targetId = "index-0";
     auto scrapeJobs = std::vector<ScrapeJob>();
-    scrapeJobs.push_back(ScrapeJob{"test_job", "/metrics", "http", 15, 15, scrapeTargets, 0, 0});
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test", scrapeJobs);
+    scrapeJobs.push_back(ScrapeJob("test_job", "/metrics", "http", 3, 3));
+    scrapeJobs[0].scrapeTargets = scrapeTargets;
+
+    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    // 代替插件手动注册scrapeJob
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
+    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
+    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
+}
+
+void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
+    // 手动构造插件的scrape job 和 target
+    auto scrapeTargets = std::vector<ScrapeTarget>();
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
+    scrapeTargets[0].targetId = "index-0";
+    auto scrapeJobs = std::vector<ScrapeJob>();
+    scrapeJobs.push_back(ScrapeJob("test_job", "/metrics", "http", 3, 3));
+    scrapeJobs[0].scrapeTargets = scrapeTargets;
+
+    // 代替插件手动注册scrapeJob
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
+    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("testInputName");
+    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+}
+
+void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
+    // 手动构造插件的scrape job 和 target
+    auto scrapeTargets = std::vector<ScrapeTarget>();
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
+    scrapeTargets[0].targetId = "index-0";
+    auto scrapeJobs = std::vector<ScrapeJob>();
+    scrapeJobs.push_back(ScrapeJob("test_job", "/metrics", "http", 3, 3));
+    scrapeJobs[0].scrapeTargets = scrapeTargets;
+
+    // 代替插件手动注册scrapeJob
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
+    // start
     PrometheusInputRunner::GetInstance()->Start();
+    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
+    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
+
     sleep(10);
+
+    // stop
     PrometheusInputRunner::GetInstance()->Stop();
-    // std::unique_ptr<logtail::ProcessQueueItem> item;
-    // string configName = "test_config";
-    // cout << "queue size" << ProcessQueueManager::GetInstance()->mQueues.size() << endl;
-    // ProcessQueueManager::GetInstance()->PopItem(0, item, configName);
-    // APSARA_TEST_NOT_EQUAL(nullptr, item);
-    // const auto& res = item->mEventGroup.GetEvents();
-    // cout << res.size() << endl;
-    // for (const PipelineEventPtr& r : res) {
-    //     auto tmp = r.Cast<MetricEvent>();
-    //     printf("%s\n", tmp.GetName().data());
-    // }
+    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap.size());
 }
 
 
-UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnUpdateScrapeInput)
+UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnRemoveScrapeInput)
+UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnSuccessfulStartAndStop)
 
 
 } // namespace logtail
