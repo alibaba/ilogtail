@@ -12,17 +12,17 @@
 ### AgentConfigRequest 消息
 
     message AgentConfigRequest {
-        string request_id = 1;
-        uint64 sequence_num = 2;                   // Increment every request, for server to check sync status
-        uint64 capabilities = 3;                   // Bitmask of flags defined by AgentCapabilities enum
-        string instance_id = 4;                     // Required, Agent's unique identification, consistent throughout the process lifecycle
+        bytes request_id = 1;
+        uint64 sequence_num = 2;                    // Increment every request, for server to check sync status
+        uint64 capabilities = 3;                    // Bitmask of flags defined by AgentCapabilities enum
+        bytes instance_id = 4;                      // Required, Agent's unique identification, consistent throughout the process lifecycle
         string agent_type = 5;                      // Required, Agent's type(ilogtail, ..)
         AgentAttributes attributes = 6;             // Agent's basic attributes
         repeated AgentGroupTag tags =  7;           // Agent's tags
-        string running_status = 8;                  // Agent's running status
+        string running_status = 8;                  // Human readable running status
         int64 startup_time = 9;                     // Required, Agent's startup time
-        repeated ConfigInfo pipeline_configs = 10;   // Information about the current PIPELINE_CONFIG held by the Agent
-        repeated ConfigInfo process_configs = 11;     // Information about the current AGENT_CONFIG held by the Agent
+        repeated ConfigInfo pipeline_configs = 10;  // Information about the current PIPELINE_CONFIG held by the Agent
+        repeated ConfigInfo process_configs = 11;   // Information about the current AGENT_CONFIG held by the Agent
         repeated CommandInfo custom_commands = 12;  // Information about command history
         uint64 flags = 13;                          // Predefined command flag
         // 14-99 reserved for future official fields
@@ -61,11 +61,11 @@
 
     // Define Agent's basic attributes
     message AgentAttributes {
-        string version = 1;                 // Agent's version
-        string ip = 2;                      // Agent's ip
-        string hostname = 3;                // Agent's hostname
+        bytes version = 1;                 // Agent's version
+        bytes ip = 2;                      // Agent's ip
+        bytes hostname = 3;                // Agent's hostname
         // 4-99 reserved for future official fields
-        map<string, string> extras = 100;   // Agent's other attributes
+        map<string, bytes> extras = 100;   // Agent's other attributes
     }
 
     enum AgentCapabilities {
@@ -93,7 +93,7 @@
 ### AgentConfigResponse 消息
 
     message AgentConfigResponse {
-        string request_id = 1;  
+        bytes request_id = 1;  
         int32 code = 2;      
         string message = 3;     
 
@@ -105,16 +105,14 @@
     message ConfigDetail {
         string name = 1;        // Required, Config's unique identification
         int64 version = 2;      // Required, Config's version number
-        string detail = 3;      // Required, Config's detail
-        string context = 4;     // Config's context
+        bytes detail = 3;       // Required, Config's detail
     }
 
     message CommandDetail {
         string type = 1;                // Required, Command type
         string name = 2;                // Required, Command name
-        map<string, string> args = 3;   // Command's parameter arrays
+        bytes detail = 3;               // Required, Command's detail
         int64 expire_time = 4;          // After which the command can be safely removed from history
-        string context = 5;     // Command's context
     }
 
     enum ServerCapabilities {
