@@ -1,8 +1,24 @@
+/*
+ * Copyright 2024 iLogtail Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "ScrapeWork.h"
 
+#include "TextParser.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
-#include "prom/TextParser.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
 #include "sdk/CurlImp.h"
@@ -30,6 +46,8 @@ void ScrapeWork::StartScrapeLoop() {
 
 void ScrapeWork::StopScrapeLoop() {
     finished = true;
+    // 清理线程
+    mScrapeLoopThread.reset();
 }
 
 /// @brief scrape target loop
@@ -55,15 +73,17 @@ void ScrapeWork::scrapeLoop() {
         // 发送到对应的处理队列
         pushEventGroup(std::move(*eventGroup));
 
+        // 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
-        uint64_t timeToWait = target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL - elapsedTime;
+        uint64_t timeToWait = (uint64_t)target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL
+            - elapsedTime % ((uint64_t)target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL);
         printf("time to wait: %llums\n", timeToWait / 1000ULL / 1000ULL);
         std::this_thread::sleep_for(std::chrono::nanoseconds(timeToWait));
     }
     printf("stop loop\n");
 }
 
-inline uint64_t ScrapeWork::getRandSleep() {
+uint64_t ScrapeWork::getRandSleep() {
     // 根据target信息构造hash输入
     string key = string(target.jobName + target.scheme + target.host + target.metricsPath);
     // 遇到性能问题可以考虑使用xxhash代替Boost.hash优化

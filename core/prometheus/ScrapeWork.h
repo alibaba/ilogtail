@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 iLogtail Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #pragma once
 
 #include <stdint.h>
@@ -16,12 +32,14 @@ namespace logtail {
 
 struct ScrapeTarget {
     std::string jobName;
+    std::string metricsPath;
+    std::string scheme;
     int scrapeInterval;
     int scrapeTimeout;
-    std::string scheme;
-    std::string metricsPath;
+
     std::string host;
     int port;
+
     QueueKey queueKey;
     size_t inputIndex;
     std::string targetId;
@@ -40,12 +58,34 @@ struct ScrapeTarget {
             return host < other.host;
         if (port != other.port)
             return port < other.port;
-        if (queueKey != other.queueKey)
-            return queueKey < other.queueKey;
-        if (inputIndex != other.inputIndex)
-            return inputIndex < other.inputIndex;
         return targetId < other.targetId;
     }
+    ScrapeTarget() {}
+    ScrapeTarget(Json::Value target) {
+        host = target["host"].asString();
+        if (host.find(':') != std::string::npos) {
+            port = stoi(host.substr(host.find(':') + 1));
+        } else {
+            port = 8080;
+        }
+    }
+#ifdef APSARA_UNIT_TEST_MAIN
+    ScrapeTarget(std::string jobName,
+                 std::string metricsPath,
+                 std::string scheme,
+                 int interval,
+                 int timeout,
+                 std::string host,
+                 int port)
+        : jobName(jobName),
+          metricsPath(metricsPath),
+          scheme(scheme),
+          scrapeInterval(interval),
+          scrapeTimeout(timeout),
+          host(host),
+          port(port) {}
+
+#endif
 };
 
 
@@ -76,10 +116,12 @@ private:
     std::atomic<bool> finished;
     std::unique_ptr<sdk::HTTPClient> client;
     ThreadPtr mScrapeLoopThread;
-    ReadWriteLock mScrapeLoopThreadRWL;
+    // ReadWriteLock mScrapeLoopThreadRWL;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeWorkUnittest;
+    friend class PrometheusInputRunnerUnittest;
+    friend class InputPrometheusUnittest;
 #endif
 };
 
