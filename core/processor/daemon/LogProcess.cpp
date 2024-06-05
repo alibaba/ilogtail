@@ -407,8 +407,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                       "project", projectName)("logstore", category)("filename", convertedPath));
                     }
                 }
-
-                LogFileProfiler::GetInstance()->AddProfilingData(pipeline->Name(),
+            }
+            LogFileProfiler::GetInstance()->AddProfilingData(pipeline->Name(),
                                                                  pipeline->GetContext().GetRegion(),
                                                                  projectName,
                                                                  category,
@@ -424,14 +424,13 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                                  profile.historyFailures,
                                                                  0,
                                                                  ""); // TODO: I don't think errorLine is useful
-                LOG_DEBUG(
-                    sLogger,
-                    ("project", projectName)("logstore", category)("filename", convertedPath)("read_bytes", readBytes)(
-                        "split_lines", profile.splitLines)("parse_failures", profile.parseFailures)(
-                        "parse_time_failures", profile.parseTimeFailures)(
-                        "regex_match_failures", profile.regexMatchFailures)("history_failures",
-                                                                            profile.historyFailures));
-            }
+            LOG_DEBUG(
+                sLogger,
+                ("project", projectName)("logstore", category)("filename", convertedPath)("read_bytes", readBytes)(
+                    "split_lines", profile.splitLines)("parse_failures", profile.parseFailures)(
+                    "parse_time_failures", profile.parseTimeFailures)(
+                    "regex_match_failures", profile.regexMatchFailures)("history_failures",
+                                                                        profile.historyFailures));
             logGroupList.clear();
         }
     }
