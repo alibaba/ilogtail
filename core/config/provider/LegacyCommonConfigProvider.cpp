@@ -142,6 +142,9 @@ void ConvertLegacyYamlAndStore(const string& inputFilePath, const string& output
         return;
     }
 
+    YAML::Emitter out;
+    EmitYamlWithQuotes(yamlContent, out);
+
     // Store the YAML content to the tmp output file
     string tempOutputFilePath = outputFilePath + ".new";
     ofstream tempOutputFile(tempOutputFilePath);
@@ -151,7 +154,7 @@ void ConvertLegacyYamlAndStore(const string& inputFilePath, const string& output
         return;
     }
 
-    tempOutputFile << yamlContent;
+    tempOutputFile <<  out.c_str();
     tempOutputFile.close();
 
     // Rename the tmp output file to the final output file
