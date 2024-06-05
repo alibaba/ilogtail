@@ -408,6 +408,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                     }
                 }
             }
+
+            // 统计信息需要放在最外面，确保Pipeline在各种条件下，都能统计到
             LogFileProfiler::GetInstance()->AddProfilingData(pipeline->Name(),
                                                                  pipeline->GetContext().GetRegion(),
                                                                  projectName,
