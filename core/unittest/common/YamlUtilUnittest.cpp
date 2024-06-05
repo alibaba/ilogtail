@@ -533,7 +533,7 @@ void YamlUtilUnittest::TestEmitYamlWithQuotes() {
         YAML::Emitter out;
         EmitYamlWithQuotes(yamlRoot, out);
         std::string yamlString = out.c_str();
-        APSARA_TEST_EQUAL_FATAL(yamlString, "enable: true\ninputs:\n- Type: file_log\n  Enable: \"True\"\n");
+        APSARA_TEST_EQUAL_FATAL(yamlString, "enable: true\ninputs:\n  - Type: file_log\n    Enable: \"True\"");
     }
 }
 
