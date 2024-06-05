@@ -160,6 +160,8 @@ void EmitYamlWithQuotes(const YAML::Node& node, YAML::Emitter& out) {
             }
             out << YAML::EndMap;
             break;
+        default:
+            break;
     }
 }
 
