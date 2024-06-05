@@ -40,6 +40,7 @@ public:
     void TestAnchorAndAliasYaml();
     void TestCycleDependenciesYaml();
     void TestUpgradeLegacyYaml();
+    void TestEmitYamlWithQuotes();
 };
 
 void YamlUtilUnittest::TestEmptyYaml() {
@@ -517,6 +518,24 @@ void YamlUtilUnittest::TestUpgradeLegacyYaml() {
     }
 }
 
+void YamlUtilUnittest::TestEmitYamlWithQuotes() {
+    {
+        std::string yaml = R"(
+            enable: true
+            inputs:
+            - Type: file_log         
+              Enable: "True"           
+        )";
+        std::string errorMsg;
+        YAML::Node yamlRoot;
+        bool ret = ParseYamlTable(yaml, yamlRoot, errorMsg);
+        APSARA_TEST_TRUE_FATAL(ret);
+        YAML::Emitter out;
+        EmitYamlWithQuotes(yamlRoot, out);
+        std::string yamlString = out.c_str();
+        APSARA_TEST_EQUAL_FATAL(yamlString, "enable: true\ninputs:\n- Type: file_log\n  Enable: \"True\"\n");
+    }
+}
 
 UNIT_TEST_CASE(YamlUtilUnittest, TestEmptyYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestInvalidYaml);
@@ -534,8 +553,9 @@ UNIT_TEST_CASE(YamlUtilUnittest, TestVariousNumberYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestTimeAndDateYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestUnicodeYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestAnchorAndAliasYaml);
-UNIT_TEST_CASE(YamlUtilUnittest, TestUpgradeLegacyYaml);
 UNIT_TEST_CASE(YamlUtilUnittest, TestCycleDependenciesYaml);
+UNIT_TEST_CASE(YamlUtilUnittest, TestUpgradeLegacyYaml);
+UNIT_TEST_CASE(YamlUtilUnittest, TestEmitYamlWithQuotes);
 } // namespace logtail
 
 UNIT_TEST_MAIN

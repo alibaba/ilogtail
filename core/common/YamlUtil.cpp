@@ -128,8 +128,43 @@ Json::Value ConvertYamlToJson(const YAML::Node& rootNode) {
     return result;
 }
 
+void EmitYamlWithQuotes(const YAML::Node& node, YAML::Emitter& out) {
+    switch (node.Type()) {
+        case YAML::NodeType::Null:
+            out << YAML::Null;
+            break;
+        case YAML::NodeType::Scalar:
+            {
+                std::string value = node.Scalar();
+                if (node.Tag() == "!") { // check ""
+                    out << YAML::DoubleQuoted << value;
+                } else {
+                    out << value;
+                }
+            }
+            break;
+        case YAML::NodeType::Sequence:
+            out << YAML::BeginSeq;
+            for (const auto& subNode : node) {
+                EmitYamlWithQuotes(subNode, out);
+            }
+            out << YAML::EndSeq;
+            break;
+        case YAML::NodeType::Map:
+            out << YAML::BeginMap;
+            for (const auto& it : node) {
+                out << YAML::Key;
+                EmitYamlWithQuotes(it.first, out);
+                out << YAML::Value;
+                EmitYamlWithQuotes(it.second, out);
+            }
+            out << YAML::EndMap;
+            break;
+    }
+}
+
 bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
-    // Check if 'version' field exists, then update it to 'global.StructuctureType'
+    // Check if 'version' field exists, then update it to 'global.StructureType'
     if (yamlContent["version"]) {
         yamlContent["global"]["StructureType"] = yamlContent["version"];
         yamlContent.remove("version"); // Remove the old 'version' field

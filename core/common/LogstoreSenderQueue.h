@@ -492,7 +492,6 @@ public:
 
     bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
-
         // fix crash caused by unexpected key like flusher_sls for go plugin statistics metrics
         if (mLogstoreSenderQueueMap.find(key) == mLogstoreSenderQueueMap.end()) {
             return true; 
