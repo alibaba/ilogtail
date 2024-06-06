@@ -19,11 +19,15 @@ add_executable(prometheus_input_runner_unittest PrometheusInputRunnerUnittest.cp
 add_executable(textparser_unittest TextParserUnittest.cpp)
 add_executable(scrape_work_unittest ScrapeWorkUnittest.cpp)
 add_executable(scraper_unittest ScraperUnittest.cpp)
+add_executable(labels_unittest LabelsUnittest.cpp)
+add_executable(relabel_unittest RelabelUnittest.cpp)
 
 target_link_libraries(prometheus_input_runner_unittest unittest_base)
 target_link_libraries(textparser_unittest unittest_base)
 target_link_libraries(scrape_work_unittest unittest_base)
 target_link_libraries(scraper_unittest unittest_base)
+target_link_libraries(labels_unittest unittest_base)
+target_link_libraries(relabel_unittest unittest_base)
 
 include(GoogleTest)
 
@@ -31,3 +35,5 @@ gtest_discover_tests(prometheus_input_runner_unittest)
 gtest_discover_tests(textparser_unittest)
 gtest_discover_tests(scrape_work_unittest)
 gtest_discover_tests(scraper_unittest)
+gtest_discover_tests(labels_unittest)
+gtest_discover_tests(relabel_unittest)
