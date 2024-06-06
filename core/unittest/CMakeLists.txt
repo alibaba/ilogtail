@@ -52,6 +52,8 @@ endif ()
 link_curl(${PROJECT_NAME})
 link_ssl(${PROJECT_NAME}) # must after link_spl
 link_crypto(${PROJECT_NAME}) # must after link_spl
+
+link_argus(${PROJECT_NAME})
 link_tcmalloc(${PROJECT_NAME})
 
 if (UNIX)
@@ -93,6 +95,8 @@ add_subdirectory(queue)
 add_subdirectory(reader)
 add_subdirectory(sdk)
 add_subdirectory(sender)
+add_subdirectory(argus)
+
 
 if (LINUX)
     if (NOT WITHOUTSPL)

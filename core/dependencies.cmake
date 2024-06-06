@@ -512,3 +512,10 @@ macro(link_spl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_pthreads.a")
 
 endmacro()
+
+
+macro(link_argus target_name)
+    target_link_libraries(${target_name} "/opt/logtail/deps/lib/libapr-1.a")
+    target_link_libraries(${target_name} "/opt/logtail/deps/lib/libbacktrace.a")
+    target_link_libraries(${target_name} "/opt/logtail/deps/lib/libsigar.a")
+endmacro()
