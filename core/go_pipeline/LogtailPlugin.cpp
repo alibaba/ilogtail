@@ -425,13 +425,14 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
         return;
     }
     std::string realConfigName = configName + "/2";
+    std::string packIdPrefix = ToHexString(HashString(packId));
     GoString goConfigName;
     GoSlice goLog;
     GoString goPackId;
     goConfigName.n = realConfigName.size();
     goConfigName.p = realConfigName.c_str();
-    goPackId.n = packId.size();
-    goPackId.p = packId.c_str();
+    goPackId.n = packIdPrefix.size();
+    goPackId.p = packIdPrefix.c_str();
     goLog.len = goLog.cap = logGroup.length();
     goLog.data = (void*)logGroup.c_str();
     GoInt rst = mProcessLogGroupFun(goConfigName, goLog, goPackId);
