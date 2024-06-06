@@ -202,16 +202,16 @@ public:
 
     bool IsPluginOpened() { return mPluginValid; }
 
-    void ProcessRawLog(const std::string& configName,
-                       logtail::StringView rawLog,
-                       const std::string& packId,
-                       const std::string& topic);
+    // void ProcessRawLog(const std::string& configName,
+    //                    logtail::StringView rawLog,
+    //                    const std::string& packId,
+    //                    const std::string& topic);
 
-    void ProcessRawLogV2(const std::string& configName,
-                         logtail::StringView rawLog,
-                         const std::string& packId,
-                         const std::string& topic,
-                         const std::string& tags);
+    // void ProcessRawLogV2(const std::string& configName,
+    //                      logtail::StringView rawLog,
+    //                      const std::string& packId,
+    //                      const std::string& topic,
+    //                      const std::string& tags);
 
     void ProcessLog(const std::string& configName,
                     sls_logs::Log& log,

@@ -93,8 +93,8 @@ void InputFileUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputFile::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
-    APSARA_TEST_EQUAL(1, input->mMaxCheckpointDirSearchDepth);
-    APSARA_TEST_EQUAL(1, input->mExactlyOnceConcurrency);
+    APSARA_TEST_EQUAL(1U, input->mMaxCheckpointDirSearchDepth);
+    APSARA_TEST_EQUAL(1U, input->mExactlyOnceConcurrency);
 
     // invalid optional param
     configStr = R"(
