@@ -64,7 +64,7 @@ protected:
 
     Type mType = Type::NONE;
     time_t mTimestamp = 0;
-    long mTimestampNanosecond = 0;
+    long mTimestampNanosecond = -1;
     PipelineEventGroup* mPipelineEventGroupPtr = nullptr;
 };
 

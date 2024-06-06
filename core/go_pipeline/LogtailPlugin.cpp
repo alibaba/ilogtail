@@ -260,7 +260,7 @@ int LogtailPlugin::SendPbV2(const char* configName,
     if (shardHashSize > 0) {
         shardHashStr.assign(shardHash, static_cast<size_t>(shardHashSize));
     }
-    return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr) ? 0 : -1;
+    return pConfig->Send(std::string(pbBuffer, pbSize), shardHash, logstore) ? 0 : -1;
 }
 
 int LogtailPlugin::ExecPluginCmd(
@@ -484,9 +484,9 @@ void LogtailPlugin::ProcessLog(const std::string& configName,
 }
 
 void LogtailPlugin::ProcessLogGroup(const std::string& configName,
-                                    sls_logs::LogGroup& logGroup,
+                                    const std::string& logGroup,
                                     const std::string& packId) {
-    if (!logGroup.logs_size() || !(mPluginValid && mProcessLogsFun != NULL)) {
+    if (logGroup.empty() || !(mPluginValid && mProcessLogsFun != NULL)) {
         return;
     }
     std::string realConfigName = configName + "/2";
@@ -497,9 +497,8 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     goConfigName.p = realConfigName.c_str();
     goPackId.n = packId.size();
     goPackId.p = packId.c_str();
-    std::string sLog = logGroup.SerializeAsString();
-    goLog.len = goLog.cap = sLog.length();
-    goLog.data = (void*)sLog.c_str();
+    goLog.len = goLog.cap = logGroup.length();
+    goLog.data = (void*)logGroup.c_str();
     GoInt rst = mProcessLogGroupFun(goConfigName, goLog, goPackId);
     if (rst != (GoInt)0) {
         LOG_WARNING(sLogger, ("process loggroup error", configName)("result", rst));

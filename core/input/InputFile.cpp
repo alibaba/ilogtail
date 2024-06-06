@@ -142,6 +142,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
                               mContext->GetRegion());
     } else {
         mExactlyOnceConcurrency = exactlyOnceConcurrency;
+        mContext->SetExactlyOnceFlag(true);
     }
 
     return true;

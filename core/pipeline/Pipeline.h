@@ -39,8 +39,10 @@ public:
     // copy/move control functions are deleted because of mContext
     bool Init(Config&& config);
     void Start();
-    void Process(std::vector<PipelineEventGroup>& logGroupList);
     void Stop(bool isRemoving);
+    void Process(std::vector<PipelineEventGroup>& logGroupList);
+    void Send(std::vector<PipelineEventGroup>&& groupList);
+    void FlushBatch();
     void RemoveProcessQueue() const;
 
     const std::string& Name() const { return mName; }

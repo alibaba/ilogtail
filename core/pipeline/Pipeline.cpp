@@ -19,14 +19,15 @@
 #include <cstdint>
 #include <utility>
 
+#include "aggregator/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "flusher/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
@@ -92,8 +93,8 @@ bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
 }
 
 bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerStdio* inputContainerStdio,
-                                                int16_t& pluginIndex,
-                                                const Config& config) {
+                                                  int16_t& pluginIndex,
+                                                  const Config& config) {
     unique_ptr<ProcessorInstance> processor;
     // ProcessorSplitLogStringNative
     {
@@ -174,7 +175,7 @@ bool Pipeline::Init(Config&& config) {
     const InputFile* inputFile = nullptr;
     const InputContainerStdio* inputContainerStdio = nullptr;
     bool hasFlusherSLS = false;
-    
+
 #ifdef __ENTERPRISE__
     // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
     unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
@@ -352,17 +353,6 @@ bool Pipeline::Init(Config&& config) {
                                mContext.GetLogstoreName(),
                                mContext.GetRegion());
         }
-        // flusher_sls is guaranteed to exist here.
-        if (mContext.GetSLSInfo()->mBatch.mMergeType != FlusherSLS::Batch::MergeType::TOPIC) {
-            PARAM_ERROR_RETURN(mContext.GetLogger(),
-                               mContext.GetAlarm(),
-                               "exactly once enabled when flusher_sls.MergeType is not topic",
-                               noModule,
-                               mName,
-                               mContext.GetProjectName(),
-                               mContext.GetLogstoreName(),
-                               mContext.GetRegion());
-        }
     }
 
 #ifndef APSARA_UNIT_TEST_MAIN
@@ -431,6 +421,20 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList) {
     }
 }
 
+void Pipeline::Send(std::vector<PipelineEventGroup>&& groupList) {
+    for (auto& group : groupList) {
+        // TODO: support route
+        mFlushers[0]->Send(std::move(group));
+    }
+}
+
+void Pipeline::FlushBatch() {
+    for (auto& flusher : mFlushers) {
+        flusher->FlushAll();
+    }
+    TimeoutFlushManager::GetInstance()->ClearRecords(mName);
+}
+
 void Pipeline::Stop(bool isRemoving) {
     // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入stopDisabled里
     for (const auto& input : mInputs) {
@@ -442,6 +446,10 @@ void Pipeline::Stop(bool isRemoving) {
     }
 
     // TODO: 禁用Process中改流水线对应的输入队列
+
+    if (!isRemoving) {
+        FlushBatch();
+    }
 
     if (!mGoPipelineWithoutInput.isNull()) {
         // TODO: 卸载该Go流水线

@@ -22,6 +22,7 @@
 #include "common/Flags.h"
 #include "log_pb/sls_logs.pb.h"
 #include "pipeline/Pipeline.h"
+#include "application/Application.h"
 
 DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
 
@@ -60,11 +61,11 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
     if (mContext->GetPipeline().IsFlushingThroughGoPipeline()) {
         return;
     }
-
-    // group level
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, LogFileProfiler::mHostname);
-
+    
     // process level
+    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, LogFileProfiler::mHostname);
+    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_SOURCE, LogFileProfiler::mIpAddr);
+    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_MACHINE_UUID, Application::GetInstance()->GetUUID());
     static const std::vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
     if (!sEnvTags.empty()) {
         for (size_t i = 0; i < sEnvTags.size(); ++i) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,167 +15,208 @@
  */
 
 #pragma once
-#include <string>
-#include "log_pb/sls_logs.pb.h"
-#include <unordered_map>
-#include <vector>
-#include "common/Lock.h"
-#include "common/LogGroupContext.h"
-#include "common/Flags.h"
-#include "flusher/FlusherSLS.h"
 
-DECLARE_FLAG_INT32(batch_send_interval);
+#include <json/json.h>
+
+#include <cstdint>
+#include <map>
+#include <mutex>
+#include <optional>
+#include <vector>
+
+#include "aggregator/BatchItem.h"
+#include "aggregator/BatchStatus.h"
+#include "aggregator/FlushStrategy.h"
+#include "aggregator/TimeoutFlushManager.h"
+#include "common/Flags.h"
+#include "common/ParamExtractor.h"
+#include "models/PipelineEventGroup.h"
+#include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
-struct MergeItem {
-    int32_t mLastUpdateTime;
-    int32_t mRawBytes;
-    int32_t mLines;
-    std::string mProjectName;
-    std::string mConfigName;
-    std::string mFilename;
-    sls_logs::LogGroup mLogGroup;
-    std::string mShardHashKey;
-    bool mBufferOrNot;
-    std::string mAliuid;
-    std::string mRegion;
-    int64_t mKey; // for batchmap
-    FlusherSLS::Batch::MergeType mMergeType;
-    LogstoreFeedBackKey mLogstoreKey;
-    int32_t mLogTimeInMinute;
-    int32_t mBatchSendInterval;
-
-    LogGroupContext mLogGroupContext;
-
-    bool IsReady();
-    MergeItem(const std::string& projectName,
-              const std::string& configName,
-              const std::string& filename,
-              const bool bufferOrNot,
-              const std::string& aliuid,
-              const std::string& region,
-              int64_t key,
-              FlusherSLS::Batch::MergeType mergeType,
-              const std::string& shardHashKey,
-              const LogstoreFeedBackKey& logstoreKey,
-              int32_t batchSendInterval = INT32_FLAG(batch_send_interval),
-              const LogGroupContext& context = LogGroupContext()) {
-        mProjectName = projectName;
-        mConfigName = configName;
-        mFilename = filename;
-        mBufferOrNot = bufferOrNot;
-        mAliuid = aliuid;
-        mRegion = region;
-        mKey = key;
-        mMergeType = mergeType;
-        mLastUpdateTime = -1;
-        mRawBytes = 0;
-        mLines = 0;
-        mShardHashKey = shardHashKey;
-        mLogstoreKey = logstoreKey;
-        mLogTimeInMinute = -1;
-        mBatchSendInterval = batchSendInterval;
-        mLogGroupContext = context;
-    }
-};
-
-struct PackageListMergeBuffer {
-    int32_t mTotalRawBytes;
-    int32_t mFirstItemTime;
-    int32_t mItemCount;
-    std::vector<MergeItem*> mMergeItems;
-
-    PackageListMergeBuffer() {
-        mTotalRawBytes = 0;
-        mItemCount = 0;
-        mFirstItemTime = 0;
-    }
-
-    void AddMergeItem(MergeItem* item) {
-        mMergeItems.push_back(item);
-        mTotalRawBytes += item->mRawBytes;
-        mItemCount++;
-        if (item->mLastUpdateTime < mFirstItemTime || mFirstItemTime == 0)
-            mFirstItemTime = item->mLastUpdateTime;
-    }
-
-    bool IsReady(int32_t curTime);
-
-    MergeItem* GetFirstItem() {
-        if (!mMergeItems.empty()) {
-            return mMergeItems[0];
-        }
-        return NULL;
-    }
-};
-
+template <typename T = EventBatchStatus>
 class Aggregator {
 public:
-    static Aggregator* GetInstance() {
-        static Aggregator* instance = new Aggregator();
-        return instance;
+    bool Init(const Json::Value& config,
+              Flusher* flusher,
+              const DefaultFlushStrategy& strategy,
+              bool enableGroupBatch = false) {
+        std::string errorMsg;
+        PipelineContext& ctx = flusher->GetContext();
+
+        uint32_t maxSizeBytes = strategy.mMaxSizeBytes;
+        if (!GetOptionalUIntParam(config, "MaxSizeBytes", maxSizeBytes, errorMsg)) {
+            PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                                  ctx.GetAlarm(),
+                                  errorMsg,
+                                  maxSizeBytes,
+                                  flusher->Name(),
+                                  ctx.GetConfigName(),
+                                  ctx.GetProjectName(),
+                                  ctx.GetLogstoreName(),
+                                  ctx.GetRegion());
+        }
+
+        uint32_t maxCnt = strategy.mMaxCnt;
+        if (!GetOptionalUIntParam(config, "MaxCnt", maxCnt, errorMsg)) {
+            PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                                  ctx.GetAlarm(),
+                                  errorMsg,
+                                  maxCnt,
+                                  flusher->Name(),
+                                  ctx.GetConfigName(),
+                                  ctx.GetProjectName(),
+                                  ctx.GetLogstoreName(),
+                                  ctx.GetRegion());
+        }
+
+        uint32_t timeoutSecs = strategy.mTimeoutSecs;
+        if (!GetOptionalUIntParam(config, "TimeoutSecs", timeoutSecs, errorMsg)) {
+            PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                                  ctx.GetAlarm(),
+                                  errorMsg,
+                                  timeoutSecs,
+                                  flusher->Name(),
+                                  ctx.GetConfigName(),
+                                  ctx.GetProjectName(),
+                                  ctx.GetLogstoreName(),
+                                  ctx.GetRegion());
+        }
+
+        if (enableGroupBatch) {
+            uint32_t groupTimeout = timeoutSecs / 2;
+            mGroupFlushStrategy = GroupFlushStrategy(maxSizeBytes * 2, groupTimeout);
+            mGroupQueue = GroupBatchItem();
+            mEventFlushStrategy.SetTimeoutSecs(timeoutSecs - groupTimeout);
+        } else {
+            mEventFlushStrategy.SetTimeoutSecs(timeoutSecs);
+        }
+        mEventFlushStrategy.SetMaxSizeBytes(maxSizeBytes);
+        mEventFlushStrategy.SetMaxCnt(maxCnt);
+
+        mFlusher = flusher;
+
+        return true;
     }
 
-    bool FlushReadyBuffer();
-    bool IsMergeMapEmpty();
+    // when group level batch is disabled, there should be only 1 element in BatchedEventsList
+    void Add(PipelineEventGroup&& g, std::vector<BatchedEventsList>& res) {
+        std::lock_guard<std::mutex> lock(mMux);
+        size_t key = g.GetTagsHash();
+        EventBatchItem<T>& item = mEventQueueMap[key];
 
-    std::string
-    CalPostRequestShardHashKey(const std::string& source, const std::string& topic, const FlusherSLS* config);
+        size_t eventsSize = g.GetEvents().size();
+        for (size_t i = 0; i < eventsSize; ++i) {
+            PipelineEventPtr& e = g.MutableEvents()[i];
+            if (!item.IsEmpty() && mEventFlushStrategy.NeedFlushByTime(item.GetStatus(), e)) {
+                if (!mGroupQueue) {
+                    item.Flush(res);
+                } else {
+                    if (!mGroupQueue->IsEmpty() && mGroupFlushStrategy->NeedFlushByTime(mGroupQueue->GetStatus())) {
+                        mGroupQueue->Flush(res);
+                    }
+                    if (mGroupQueue->IsEmpty()) {
+                        TimeoutFlushManager::GetInstance()->UpdateRecord(mFlusher->GetContext().GetConfigName(),
+                                                                         0,
+                                                                         0,
+                                                                         mGroupFlushStrategy->GetTimeoutSecs(),
+                                                                         mFlusher);
+                    }
+                    item.Flush(mGroupQueue.value());
+                    if (mGroupFlushStrategy->NeedFlushBySize(mGroupQueue->GetStatus())) {
+                        mGroupQueue->Flush(res);
+                    }
+                }
+            }
+            if (item.IsEmpty()) {
+                item.Reset(g.GetSizedTags(),
+                           g.GetSourceBuffer(),
+                           g.GetExactlyOnceCheckpoint(),
+                           g.GetMetadata(EventGroupMetaKey::SOURCE_ID));
+                TimeoutFlushManager::GetInstance()->UpdateRecord(
+                    mFlusher->GetContext().GetConfigName(), 0, key, mEventFlushStrategy.GetTimeoutSecs(), mFlusher);
+            } else if (i == 0) {
+                item.AddSourceBuffer(g.GetSourceBuffer());
+            }
+            item.Add(std::move(e));
+            if (mEventFlushStrategy.NeedFlushBySize(item.GetStatus())
+                || mEventFlushStrategy.NeedFlushByCnt(item.GetStatus())) {
+                item.Flush(res);
+            }
+        }
+    }
 
-    bool Add(const std::string& projectName,
-             const std::string& sourceId,
-             sls_logs::LogGroup& logGroup,
-             int64_t logGroupKey,
-             const FlusherSLS* config,
-             FlusherSLS::Batch::MergeType mergeType,
-             uint32_t logGroupSize,
-             const std::string& defaultRegion = "",
-             const std::string& filename = "",
-             const LogGroupContext& context = LogGroupContext());
-
-    void CleanLogPackSeqMap();
-    void CleanTimeoutLogPackSeq();
-
-private:
-    struct LogPackSeqInfo {
-    public:
-        int64_t mSeq;
-        int32_t mLastUpdateTime;
-
-        LogPackSeqInfo(int64_t seq) {
-            mSeq = seq;
-            mLastUpdateTime = time(NULL);
+    // key != 0: event level queue
+    // key = 0: group level queue
+    void FlushQueue(size_t key, BatchedEventsList& res) {
+        std::lock_guard<std::mutex> lock(mMux);
+        if (key == 0) {
+            if (!mGroupQueue) {
+                return;
+            }
+            return mGroupQueue->Flush(res);
         }
 
-        void IncPackSeq() {
-            ++mSeq;
-            mLastUpdateTime = time(NULL);
+        auto iter = mEventQueueMap.find(key);
+        if (iter == mEventQueueMap.end()) {
+            return;
         }
-    };
 
-    void MergeTruncateInfo(const sls_logs::LogGroup& logGroup, MergeItem* mergeItem);
+        if (!mGroupQueue) {
+            iter->second.Flush(res);
+            mEventQueueMap.erase(iter);
+            return;
+        }
 
-    int64_t GetAndIncLogPackSeq(int64_t key);
+        if (!mGroupQueue->IsEmpty() && mGroupFlushStrategy->NeedFlushByTime(mGroupQueue->GetStatus())) {
+            mGroupQueue->Flush(res);
+        }
+        if (mGroupQueue->IsEmpty()) {
+            TimeoutFlushManager::GetInstance()->UpdateRecord(
+                mFlusher->GetContext().GetConfigName(), 0, 0, mGroupFlushStrategy->GetTimeoutSecs(), mFlusher);
+        }
+        iter->second.Flush(mGroupQueue.value());
+        mEventQueueMap.erase(iter);
+        if (mGroupFlushStrategy->NeedFlushBySize(mGroupQueue->GetStatus())) {
+            mGroupQueue->Flush(res);
+        }
+    }
 
-    void AddPackIDForLogGroup(const std::string& packIDPrefix, int64_t logGroupKey, sls_logs::LogGroup& logGroup);
+    void FlushAll(std::vector<BatchedEventsList>& res) {
+        std::lock_guard<std::mutex> lock(mMux);
+        for (auto& item : mEventQueueMap) {
+            if (!mGroupQueue) {
+                item.second.Flush(res);
+            } else {
+                if (!mGroupQueue->IsEmpty() && mGroupFlushStrategy->NeedFlushByTime(mGroupQueue->GetStatus())) {
+                    mGroupQueue->Flush(res);
+                }
+                item.second.Flush(mGroupQueue.value());
+                if (mGroupFlushStrategy->NeedFlushBySize(mGroupQueue->GetStatus())) {
+                    mGroupQueue->Flush(res);
+                }
+            }
+        }
+        if (mGroupQueue) {
+            mGroupQueue->Flush(res);
+        }
+        mEventQueueMap.clear();
+    }
 
 private:
-    Aggregator() = default;
-    ~Aggregator() = default;
+    std::mutex mMux;
+    std::map<size_t, EventBatchItem<T>> mEventQueueMap;
+    EventFlushStrategy<T> mEventFlushStrategy;
 
-private:
-    std::unordered_map<int64_t, LogPackSeqInfo*> mLogPackSeqMap;
-    PTMutex mLogPackSeqMapLock;
+    std::optional<GroupBatchItem> mGroupQueue;
+    std::optional<GroupFlushStrategy> mGroupFlushStrategy;
 
-    std::unordered_map<int64_t, MergeItem*> mMergeMap;
-    std::unordered_map<int64_t, PackageListMergeBuffer*> mPackageListMergeMap;
-    PTMutex mMergeLock;
+    Flusher* mFlusher = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    int mSendVectorSize = 0;
-    friend class SenderUnittest;
     friend class AggregatorUnittest;
+    friend class FlusherSLSUnittest;
 #endif
 };
 

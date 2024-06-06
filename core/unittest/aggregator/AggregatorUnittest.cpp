@@ -1,4 +1,4 @@
-// Copyright 2023 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,377 +12,576 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstdlib>
+
+#include "aggregator/Aggregator.h"
+#include "common/JsonUtil.h"
 #include "unittest/Unittest.h"
-#include "Aggregator.h"
-#include "flusher/FlusherSLS.h"
-#include "app_config/AppConfig.h"
+#include "unittest/plugin/PluginMock.h"
 
-
-DECLARE_FLAG_INT32(batch_send_interval);
-DECLARE_FLAG_INT32(merge_log_count_limit);
-DECLARE_FLAG_DOUBLE(loggroup_bytes_inflation);
+using namespace std;
 
 namespace logtail {
+
 class AggregatorUnittest : public ::testing::Test {
 public:
+    void TestParamInit();
+    void TestInitWithoutGroupBatch();
+    void TestInitWithGroupBatch();
+    void TestAddWithoutGroupBatch();
+    void TestAddWithGroupBatch();
+    void TestFlushEventQueueWithoutGroupBatch();
+    void TestFlushEventQueueWithGroupBatch();
+    void TestFlushGroupQueue();
+    void TestFlushAllWithoutGroupBatch();
+    void TestFlushAllWithGroupBatch();
 
-    
+protected:
+    static void SetUpTestCase() { sFlusher = make_unique<FlusherMock>(); }
 
     void SetUp() override {
-        AppConfig::GetInstance()->mMaxHoldedDataSize = 20 * 1024 * 1024;
+        mCtx.SetConfigName("test_config");
+        sFlusher->SetContext(mCtx);
+        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1");
     }
 
-    void TearDown() override {
-        Aggregator* aggregator = Aggregator::GetInstance();
-        aggregator->mPackageListMergeMap.clear();
-        aggregator->mMergeMap.clear();
-        aggregator->mSendVectorSize = 0;
-    }
-    void TestLogstoreMergeTypeAdd();
-    void TestLogstoreMergeTypeAddLargeGroup();
-    void TestTopicMergeTypeAdd();
+    void TearDown() override { TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear(); }
+
 private:
+    PipelineEventGroup CreateEventGroup(size_t cnt);
+
+    static unique_ptr<FlusherMock> sFlusher;
+
+    PipelineContext mCtx;
 };
 
-APSARA_UNIT_TEST_CASE(AggregatorUnittest, TestLogstoreMergeTypeAdd, 0);
-APSARA_UNIT_TEST_CASE(AggregatorUnittest, TestLogstoreMergeTypeAddLargeGroup, 1);
-APSARA_UNIT_TEST_CASE(AggregatorUnittest, TestTopicMergeTypeAdd, 2);
+unique_ptr<FlusherMock> AggregatorUnittest::sFlusher;
 
-
-void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
-
-    std::string projectName = "testProject";
-    std::string sourceId = "test";
-    std::string logstore = "testLogstore";
-    
-    INT32_FLAG(batch_send_interval) = 2;
-    DOUBLE_FLAG(loggroup_bytes_inflation) = 1.2;
-
-    int64_t logGroupKey = 123;
-    
-    std::unique_ptr<FlusherSLS> flusher;
+void AggregatorUnittest::TestParamInit() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 1;
+    strategy.mMaxSizeBytes = 100;
+    strategy.mTimeoutSecs = 3;
     {
-        PipelineContext ctx;
-        ctx.SetConfigName("test_config");
-        flusher.reset(new FlusherSLS());
-        flusher->SetContext(ctx);
-        flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
+        // empty config
+        Aggregator<> aggregator;
+        aggregator.Init(Json::Value(), sFlusher.get(), strategy);
+        APSARA_TEST_EQUAL(1U, aggregator.mEventFlushStrategy.GetMaxCnt());
+        APSARA_TEST_EQUAL(100U, aggregator.mEventFlushStrategy.GetMaxSizeBytes());
+        APSARA_TEST_EQUAL(3U, aggregator.mEventFlushStrategy.GetTimeoutSecs());
     }
-
-    FlusherSLS::Batch::MergeType mergeType = FlusherSLS::Batch::MergeType::LOGSTORE;
-    std::string defaultRegion = "testRegion";
-    std::string filename = "testFile";
-    LogGroupContext context = LogGroupContext();
-
-    Aggregator* aggregator = Aggregator::GetInstance();
-    int count = 10;
-    for (int i = 0; i < count; i ++) {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        sls_logs::Log* log = logGroup.add_logs();
-        log->set_time(time(NULL));
-        sls_logs::Log_Content* content = nullptr;
-        content = log->add_contents();
-        std::string key = "testKey";
-        std::string value = "testValue";
-        content->set_key(key);
-        content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5)*DOUBLE_FLAG(loggroup_bytes_inflation);
-
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-        APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 0);
-        APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 1);
-        APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 0);
-    }
-
-    // mPackageListMergeMap key
-    int64_t logstoreKey = HashString(projectName + "_" + logstore);
-    std::unordered_map<int64_t, PackageListMergeBuffer*>::iterator pIter;
-    pIter = aggregator->mPackageListMergeMap.find(logstoreKey); 
-    APSARA_TEST_NOT_EQUAL(pIter, aggregator->mPackageListMergeMap.end());
-    if (pIter != aggregator->mPackageListMergeMap.end()) {
-        APSARA_TEST_EQUAL((pIter->second)->mMergeItems.size(), 10);
-    }
-
-    APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 1);
-    APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 0);
-
-    // sleep until PackageListMergeBuffer::IsReady
-    sleep(5);
-
     {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        sls_logs::Log* log = logGroup.add_logs();
-        log->set_time(time(NULL));
-        sls_logs::Log_Content* content = nullptr;
-        content = log->add_contents();
-        std::string key = "testKey";
-        std::string value = "testValue";
-        content->set_key(key);
-        content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5)*DOUBLE_FLAG(loggroup_bytes_inflation);
-        
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-    }
-    // the 10 old logs and 1 new log will be added to sendDataVec
-    APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 11);
-    APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 0);
-    APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 0);
+        // invalid param
+        Json::Value configJson;
+        string configStr, errorMsg;
+        configStr = R"(
+            {
+                "MaxSizeBytes": "1000",
+                "MaxCnt": "10",
+                "TimeoutSecs": "5"
+            }
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
 
-    for (int i = 0; i < count; i ++) {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        sls_logs::Log* log = logGroup.add_logs();
-        log->set_time(time(NULL));
-        sls_logs::Log_Content* content = nullptr;
-        content = log->add_contents();
-        std::string key = "testKey";
-        std::string value = "testValue";
-        content->set_key(key);
-        content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5)*DOUBLE_FLAG(loggroup_bytes_inflation);
-        
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-        APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 0);
-        APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 1);
-        APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 0);
-    }
-
-    pIter = aggregator->mPackageListMergeMap.find(logstoreKey); 
-    APSARA_TEST_NOT_EQUAL(pIter, aggregator->mPackageListMergeMap.end());
-    if (pIter != aggregator->mPackageListMergeMap.end()) {
-        APSARA_TEST_EQUAL((pIter->second)->mMergeItems.size(), 10);
+        Aggregator<> aggregator;
+        aggregator.Init(configJson, sFlusher.get(), strategy);
+        APSARA_TEST_EQUAL(1U, aggregator.mEventFlushStrategy.GetMaxCnt());
+        APSARA_TEST_EQUAL(100U, aggregator.mEventFlushStrategy.GetMaxSizeBytes());
+        APSARA_TEST_EQUAL(3U, aggregator.mEventFlushStrategy.GetTimeoutSecs());
     }
 }
 
-void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
-    std::string projectName = "testProject";
-    std::string sourceId = "test";
-    std::string logstore = "testLogstore";
-    
-    INT32_FLAG(batch_send_interval) = 2;
-    DOUBLE_FLAG(loggroup_bytes_inflation) = 1.2;
-
-    int64_t logGroupKey = 123;
-    
-    std::unique_ptr<FlusherSLS> flusher;
-    {
-        PipelineContext ctx;
-        ctx.SetConfigName("test_config");
-        flusher.reset(new FlusherSLS());
-        flusher->SetContext(ctx);
-        flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
-    }
-
-    FlusherSLS::Batch::MergeType mergeType = FlusherSLS::Batch::MergeType::LOGSTORE;
-    std::string defaultRegion = "testRegion";
-    std::string filename = "testFile";
-    LogGroupContext context = LogGroupContext();
-
-    // mPackageListMergeMap key
-    int64_t logstoreKey = HashString(projectName + "_" + logstore);
-
-    Aggregator* aggregator = Aggregator::GetInstance();
-
-    {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        
-        std::string key = "testKey";
-        std::string value = "testValue";
-        // 7 + 9 + 5 = 21
-        uint32_t logByteSize = key.size() + value.size() + 5;
-
-        AppConfig::GetInstance()->mMaxHoldedDataSize = 1024;
-
-        int count = 1024/logByteSize + 1;
-
-        uint32_t logGroupSize = 0;
-
-        // int32_t logSize = (int32_t)logGroup.logs_size();
-        // int32_t logByteSize = logGroupSize / logSize;
-        // value->mRawBytes > logGroupByteMin
-        // int32_t logGroupByteMin = AppConfig::GetInstance()->GetMaxHoldedDataSize() > logByteSize
-        //    ? (AppConfig::GetInstance()->GetMaxHoldedDataSize() - logByteSize)
-        //    : 0;
-        for (int i = 0; i < count; i ++) {
-            sls_logs::Log* log = logGroup.add_logs();
-            log->set_time(time(NULL));
-            sls_logs::Log_Content* content = nullptr;
-            content = log->add_contents();
-            
-            content->set_key(key);
-            content->set_value(value);
-
-            logGroupSize += logByteSize;
-        }        
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-        
-        std::unordered_map<int64_t, PackageListMergeBuffer*>::iterator pIter;
-        pIter = aggregator->mPackageListMergeMap.find(logstoreKey); 
-        APSARA_TEST_NOT_EQUAL(pIter, aggregator->mPackageListMergeMap.end());
-        if (pIter != aggregator->mPackageListMergeMap.end()) {
-            APSARA_TEST_EQUAL((pIter->second)->mMergeItems.size(), 2);
+void AggregatorUnittest::TestInitWithoutGroupBatch() {
+    Json::Value configJson;
+    string configStr, errorMsg;
+    configStr = R"(
+        {
+            "MaxSizeBytes": 1000,
+            "MaxCnt": 10,
+            "TimeoutSecs": 5
         }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
 
-        int logCount = 0;
-        for (auto item : (pIter->second)->mMergeItems) {
-            logCount += (item->mLogGroup).logs_size();
-        }
-        APSARA_TEST_EQUAL(logCount, count);
-    }
-
+    Aggregator<> aggregator;
+    aggregator.Init(configJson, sFlusher.get(), DefaultFlushStrategy());
+    APSARA_TEST_EQUAL(10U, aggregator.mEventFlushStrategy.GetMaxCnt());
+    APSARA_TEST_EQUAL(1000U, aggregator.mEventFlushStrategy.GetMaxSizeBytes());
+    APSARA_TEST_EQUAL(5U, aggregator.mEventFlushStrategy.GetTimeoutSecs());
+    APSARA_TEST_EQUAL(sFlusher.get(), aggregator.mFlusher);
 }
 
+void AggregatorUnittest::TestInitWithGroupBatch() {
+    Json::Value configJson;
+    string configStr, errorMsg;
+    configStr = R"(
+            {
+                "MaxSizeBytes": 1000,
+                "MaxCnt": 10,
+                "TimeoutSecs": 5
+            }
+        )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
 
-void AggregatorUnittest::TestTopicMergeTypeAdd() {
+    Aggregator<> aggregator;
+    aggregator.Init(configJson, sFlusher.get(), DefaultFlushStrategy(), true);
+    APSARA_TEST_EQUAL(10U, aggregator.mEventFlushStrategy.GetMaxCnt());
+    APSARA_TEST_EQUAL(1000U, aggregator.mEventFlushStrategy.GetMaxSizeBytes());
+    APSARA_TEST_EQUAL(3U, aggregator.mEventFlushStrategy.GetTimeoutSecs());
+    APSARA_TEST_TRUE(aggregator.mGroupFlushStrategy);
+    APSARA_TEST_EQUAL(2000U, aggregator.mGroupFlushStrategy->GetMaxSizeBytes());
+    APSARA_TEST_EQUAL(2U, aggregator.mGroupFlushStrategy->GetTimeoutSecs());
+    APSARA_TEST_TRUE(aggregator.mGroupQueue);
+    APSARA_TEST_EQUAL(sFlusher.get(), aggregator.mFlusher);
+}
 
-    std::string projectName = "testProject";
-    std::string sourceId = "test";
-    std::string logstore = "testLogstore";
+void AggregatorUnittest::TestAddWithoutGroupBatch() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 3;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
 
+    Aggregator<> aggregator;
+    aggregator.Init(Json::Value(), sFlusher.get(), strategy);
 
-    int64_t logGroupKey = 123;
-    INT32_FLAG(merge_log_count_limit) = 10;
-    
-    std::unique_ptr<FlusherSLS> flusher;
+    // add to empty batch item
+    vector<BatchedEventsList> res;
+    PipelineEventGroup group1 = CreateEventGroup(2);
+    size_t key = group1.GetTagsHash();
+    SourceBuffer* buffer1 = group1.GetSourceBuffer().get();
+    RangeCheckpoint* eoo1 = group1.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group1), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(2U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(0U, res.size());
+    APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords.size());
+    APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].size());
+    TimeoutRecord& record = TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key));
+    time_t updateTime = record.mUpdateTime;
+    APSARA_TEST_EQUAL(3U, record.mTimeoutSecs);
+    APSARA_TEST_EQUAL(sFlusher.get(), record.mFlusher);
+    APSARA_TEST_EQUAL(key, record.mKey);
+    APSARA_TEST_GT(updateTime, 0);
+
+    // flush by cnt && one batch item contains more than 1 original event group
+    PipelineEventGroup group2 = CreateEventGroup(2);
+    SourceBuffer* buffer2 = group2.GetSourceBuffer().get();
+    RangeCheckpoint* eoo2 = group2.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group2), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(3U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(2U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer1, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(buffer2, res[0][0].mSourceBuffers[1].get());
+    APSARA_TEST_EQUAL(eoo1, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+
+    // flush by time then by size
+    res.clear();
+    aggregator.mEventFlushStrategy.SetTimeoutSecs(0);
+    aggregator.mEventFlushStrategy.SetMaxSizeBytes(10);
+    PipelineEventGroup group3 = CreateEventGroup(1);
+    SourceBuffer* buffer3 = group3.GetSourceBuffer().get();
+    RangeCheckpoint* eoo3 = group3.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group3), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(2U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer2, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo2, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+    APSARA_TEST_EQUAL(1U, res[1].size());
+    APSARA_TEST_EQUAL(1U, res[1][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[1][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[1][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[1][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer3, res[1][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo3, res[1][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[1][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+}
+
+void AggregatorUnittest::TestAddWithGroupBatch() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 3;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
+
+    Aggregator<> aggregator;
+    aggregator.Init(Json::Value(), sFlusher.get(), strategy, true);
+
+    // add to empty batch item
+    vector<BatchedEventsList> res;
+    PipelineEventGroup group1 = CreateEventGroup(2);
+    size_t key = group1.GetTagsHash();
+    SourceBuffer* buffer1 = group1.GetSourceBuffer().get();
+    RangeCheckpoint* eoo1 = group1.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group1), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(2U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(0U, res.size());
+    APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords.size());
+    APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].size());
+    TimeoutRecord& record = TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key));
+    time_t updateTime = record.mUpdateTime;
+    APSARA_TEST_EQUAL(2U, record.mTimeoutSecs);
+    APSARA_TEST_EQUAL(sFlusher.get(), record.mFlusher);
+    APSARA_TEST_EQUAL(key, record.mKey);
+    APSARA_TEST_GT(updateTime, 0);
+
+    // flush by cnt && one batch item contains more than 1 original event group
+    PipelineEventGroup group2 = CreateEventGroup(2);
+    SourceBuffer* buffer2 = group2.GetSourceBuffer().get();
+    RangeCheckpoint* eoo2 = group2.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group2), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(3U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(2U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer1, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(buffer2, res[0][0].mSourceBuffers[1].get());
+    APSARA_TEST_EQUAL(eoo1, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+
+    // flush by time to group batch
+    res.clear();
+    aggregator.mEventFlushStrategy.SetTimeoutSecs(0);
+    PipelineEventGroup group3 = CreateEventGroup(1);
+    SourceBuffer* buffer3 = group3.GetSourceBuffer().get();
+    RangeCheckpoint* eoo3 = group3.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group3), res);
+    APSARA_TEST_EQUAL(0U, res.size());
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+
+    // flush by time to group batch, and then group flush by time
+    aggregator.mGroupFlushStrategy->SetTimeoutSecs(0);
+    PipelineEventGroup group4 = CreateEventGroup(1);
+    SourceBuffer* buffer4 = group4.GetSourceBuffer().get();
+    RangeCheckpoint* eoo4 = group4.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group4), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer2, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo2, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+
+    // flush by time to group batch, and then group flush by size
+    res.clear();
+    aggregator.mGroupFlushStrategy->SetTimeoutSecs(3);
+    aggregator.mGroupFlushStrategy->SetMaxSizeBytes(10);
+    PipelineEventGroup group5 = CreateEventGroup(1);
+    SourceBuffer* buffer5 = group5.GetSourceBuffer().get();
+    RangeCheckpoint* eoo5 = group5.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group5), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(2U, res[0].size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer3, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo3, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+    APSARA_TEST_EQUAL(1U, res[0][1].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][1].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][1].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0][1].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer4, res[0][1].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo4, res[0][1].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][1].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+
+    // flush by size
+    res.clear();
+    aggregator.mEventFlushStrategy.SetMaxSizeBytes(10);
+    aggregator.mEventFlushStrategy.SetTimeoutSecs(3);
+    PipelineEventGroup group6 = CreateEventGroup(1);
+    SourceBuffer* buffer6 = group6.GetSourceBuffer().get();
+    aggregator.Add(std::move(group6), res);
+    APSARA_TEST_EQUAL(1U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap[key].mBatch.mEvents.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(2U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(2U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer5, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(buffer6, res[0][0].mSourceBuffers[1].get());
+    APSARA_TEST_EQUAL(eoo5, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_GT(TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, key)).mUpdateTime,
+                   updateTime - 1);
+}
+
+void AggregatorUnittest::TestFlushEventQueueWithoutGroupBatch() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 3;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
+
+    Aggregator<> aggregator;
+    aggregator.Init(Json::Value(), sFlusher.get(), strategy);
+
+    PipelineEventGroup group = CreateEventGroup(2);
+    size_t key = group.GetTagsHash();
+    SourceBuffer* buffer = group.GetSourceBuffer().get();
+    RangeCheckpoint* eoo = group.GetExactlyOnceCheckpoint().get();
+    vector<BatchedEventsList> tmp;
+    aggregator.Add(std::move(group), tmp);
+
+    BatchedEventsList res;
+    // key not existed
+    aggregator.FlushQueue(key + 1, res);
+    APSARA_TEST_EQUAL(0U, res.size());
+
+    // key existed
+    aggregator.FlushQueue(key, res);
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(2U, res[0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer, res[0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo, res[0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0].mPackIdPrefix.data());
+}
+
+void AggregatorUnittest::TestFlushEventQueueWithGroupBatch() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 10;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
+
+    Aggregator<> aggregator;
+    aggregator.Init(Json::Value(), sFlusher.get(), strategy, true);
+
+    BatchedEventsList res;
+    vector<BatchedEventsList> tmp;
+    // flush to group item, but no actual output
+    PipelineEventGroup group1 = CreateEventGroup(2);
+    size_t key = group1.GetTagsHash();
+    SourceBuffer* buffer1 = group1.GetSourceBuffer().get();
+    RangeCheckpoint* eoo1 = group1.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group1), tmp);
+    aggregator.FlushQueue(key, res);
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(0U, res.size());
+    APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords.size());
+    APSARA_TEST_EQUAL(2U, TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].size());
+    TimeoutRecord& record = TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].at(make_pair(0, 0));
+    time_t updateTime = record.mUpdateTime;
+    APSARA_TEST_EQUAL(1U, record.mTimeoutSecs);
+    APSARA_TEST_EQUAL(sFlusher.get(), record.mFlusher);
+    APSARA_TEST_EQUAL(0U, record.mKey);
+    APSARA_TEST_GT(updateTime, 0);
+    APSARA_TEST_EQUAL(1U, aggregator.mGroupQueue->mGroups.size());
+
+    // flush to group item, and group is flushed by time then by size
+    aggregator.mGroupFlushStrategy->SetTimeoutSecs(0);
+    aggregator.mGroupFlushStrategy->SetMaxSizeBytes(10);
+    PipelineEventGroup group2 = CreateEventGroup(2);
+    SourceBuffer* buffer2 = group2.GetSourceBuffer().get();
+    RangeCheckpoint* eoo2 = group2.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group2), tmp);
+    aggregator.FlushQueue(key, res);
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(2U, res.size());
+    APSARA_TEST_EQUAL(2U, res[0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer1, res[0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo1, res[0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0].mPackIdPrefix.data());
+    APSARA_TEST_EQUAL(2U, res[1].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[1].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[1].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[1].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer2, res[1].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo2, res[1].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[1].mPackIdPrefix.data());
+}
+
+void AggregatorUnittest::TestFlushGroupQueue() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 3;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
     {
-        PipelineContext ctx;
-        ctx.SetConfigName("test_config");
-        flusher.reset(new FlusherSLS());
-        flusher->SetContext(ctx);
-        flusher->SetMetricsRecordRef(FlusherSLS::sName, "1");
+        // no group item
+        Aggregator<> aggregator;
+        aggregator.Init(Json::Value(), sFlusher.get(), strategy);
+        BatchedEventsList res;
+        aggregator.FlushQueue(0, res);
+        APSARA_TEST_TRUE(res.empty());
     }
-
-    FlusherSLS::Batch::MergeType mergeType = FlusherSLS::Batch::MergeType::TOPIC;
-    std::string defaultRegion = "testRegion";
-    std::string filename = "testFile";
-    LogGroupContext context = LogGroupContext();
-
-    Aggregator* aggregator = Aggregator::GetInstance();
-    int count = 10;
-
-    int32_t curTime = time(NULL);
-    for (int i = 0; i < count; i ++) {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        sls_logs::Log* log = logGroup.add_logs();
-        log->set_time(curTime);
-        sls_logs::Log_Content* content = nullptr;
-        content = log->add_contents();
-        std::string key = "testKey";
-        std::string value = "testValue";
-        content->set_key(key);
-        content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5)*DOUBLE_FLAG(loggroup_bytes_inflation);
-        
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-        APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 0);
-        APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 0);
-        APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 1);
-    }
-    std::unordered_map<int64_t, MergeItem*>::iterator itr = aggregator->mMergeMap.find(logGroupKey);
-    APSARA_TEST_NOT_EQUAL(itr, aggregator->mMergeMap.end());
-    if (itr != aggregator->mMergeMap.end()) {
-        APSARA_TEST_EQUAL((itr->second)->mLogGroup.logs_size(), 10);
-    }
-
     {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        sls_logs::Log* log = logGroup.add_logs();
-        log->set_time(time(NULL));
-        sls_logs::Log_Content* content = nullptr;
-        content = log->add_contents();
-        std::string key = "testKey";
-        std::string value = "testValue";
-        content->set_key(key);
-        content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5)*DOUBLE_FLAG(loggroup_bytes_inflation);
-        
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-    }
-    // the 10 old logs will merge to 1, and will be added to sendDataVec
-    APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 1);
-    APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 0);
+        // with group item
+        Aggregator<> aggregator;
+        aggregator.Init(Json::Value(), sFlusher.get(), strategy, true);
 
-    // the 1 new log will keey in mMergeMap
-    APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 1);
-    itr = aggregator->mMergeMap.find(logGroupKey);
-    APSARA_TEST_NOT_EQUAL(itr, aggregator->mMergeMap.end());
-    if (itr != aggregator->mMergeMap.end()) {
-        APSARA_TEST_EQUAL((itr->second)->mLogGroup.logs_size(), 1);
-    }
+        BatchedEventsList res;
+        vector<BatchedEventsList> tmp;
+        PipelineEventGroup group = CreateEventGroup(2);
+        size_t key = group.GetTagsHash();
+        SourceBuffer* buffer = group.GetSourceBuffer().get();
+        RangeCheckpoint* eoo = group.GetExactlyOnceCheckpoint().get();
+        aggregator.Add(std::move(group), tmp);
+        aggregator.FlushQueue(key, res);
+        APSARA_TEST_TRUE(res.empty());
 
-    // add 9 more log 
-    curTime = time(NULL);
-    for (int i = 0; i < 9; i ++) {
-        sls_logs::LogGroup logGroup;
-        logGroup.set_category(logstore);
-        
-        sls_logs::LogTag* logTag = logGroup.add_logtags();
-        logTag->set_key("testKey");
-        logTag->set_value("testValue");
-        sls_logs::Log* log = logGroup.add_logs();
-        log->set_time(curTime);
-        sls_logs::Log_Content* content = nullptr;
-        content = log->add_contents();
-        std::string key = "testKey";
-        std::string value = "testValue";
-        content->set_key(key);
-        content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5)*DOUBLE_FLAG(loggroup_bytes_inflation);
-        
-        aggregator->Add(
-            projectName, sourceId, logGroup, logGroupKey, flusher.get(), mergeType, logGroupSize, defaultRegion, filename, context);
-        APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 0);
-        APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 0);
-        APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 1);
-    }
-    itr = aggregator->mMergeMap.find(logGroupKey);
-    APSARA_TEST_NOT_EQUAL(itr, aggregator->mMergeMap.end());
-
-    // mMergeMap should keep 10 logs
-    if (itr != aggregator->mMergeMap.end()) {
-        APSARA_TEST_EQUAL((itr->second)->mLogGroup.logs_size(), 10);
+        aggregator.FlushQueue(0, res);
+        APSARA_TEST_EQUAL(1U, res.size());
+        APSARA_TEST_EQUAL(2U, res[0].mEvents.size());
+        APSARA_TEST_EQUAL(1U, res[0].mTags.mInner.size());
+        APSARA_TEST_STREQ("val", res[0].mTags.mInner["key"].data());
+        APSARA_TEST_EQUAL(1U, res[0].mSourceBuffers.size());
+        APSARA_TEST_EQUAL(buffer, res[0].mSourceBuffers[0].get());
+        APSARA_TEST_EQUAL(eoo, res[0].mExactlyOnceCheckpoint.get());
+        APSARA_TEST_STREQ("pack_id", res[0].mPackIdPrefix.data());
     }
 }
+
+void AggregatorUnittest::TestFlushAllWithoutGroupBatch() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 3;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
+
+    Aggregator<> aggregator;
+    aggregator.Init(Json::Value(), sFlusher.get(), strategy);
+    PipelineEventGroup group = CreateEventGroup(2);
+    SourceBuffer* buffer = group.GetSourceBuffer().get();
+    RangeCheckpoint* eoo = group.GetExactlyOnceCheckpoint().get();
+    vector<BatchedEventsList> tmp;
+    aggregator.Add(std::move(group), tmp);
+
+    vector<BatchedEventsList> res;
+    aggregator.FlushAll(res);
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(1U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(2U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
 }
 
-int main(int argc, char** argv) {
-    logtail::Logger::Instance().InitGlobalLoggers();
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+void AggregatorUnittest::TestFlushAllWithGroupBatch() {
+    DefaultFlushStrategy strategy;
+    strategy.mMaxCnt = 3;
+    strategy.mMaxSizeBytes = 1000;
+    strategy.mTimeoutSecs = 3;
+
+    Aggregator<> aggregator;
+    aggregator.Init(Json::Value(), sFlusher.get(), strategy, true);
+
+    BatchedEventsList tmp1;
+    vector<BatchedEventsList> tmp2;
+    // flush to group item, but no actual output
+    PipelineEventGroup group1 = CreateEventGroup(2);
+    size_t key = group1.GetTagsHash();
+    SourceBuffer* buffer1 = group1.GetSourceBuffer().get();
+    RangeCheckpoint* eoo1 = group1.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group1), tmp2);
+    aggregator.FlushQueue(key, tmp1);
+    APSARA_TEST_TRUE(tmp1.empty());
+    APSARA_TEST_TRUE(tmp2.empty());
+
+    // add another group to event batch
+    PipelineEventGroup group2 = CreateEventGroup(2);
+    SourceBuffer* buffer2 = group2.GetSourceBuffer().get();
+    RangeCheckpoint* eoo2 = group2.GetExactlyOnceCheckpoint().get();
+    aggregator.Add(std::move(group2), tmp2);
+    APSARA_TEST_TRUE(tmp2.empty());
+
+    // flush all by time then by size
+    aggregator.mGroupFlushStrategy->SetTimeoutSecs(0);
+    aggregator.mGroupFlushStrategy->SetMaxSizeBytes(10);
+    vector<BatchedEventsList> res;
+    aggregator.FlushAll(res);
+    APSARA_TEST_EQUAL(0U, aggregator.mEventQueueMap.size());
+    APSARA_TEST_EQUAL(2U, res.size());
+    APSARA_TEST_EQUAL(1U, res[0].size());
+    APSARA_TEST_EQUAL(2U, res[0][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[0][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[0][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[0][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer1, res[0][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo1, res[0][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[0][0].mPackIdPrefix.data());
+    APSARA_TEST_EQUAL(1U, res[1].size());
+    APSARA_TEST_EQUAL(2U, res[1][0].mEvents.size());
+    APSARA_TEST_EQUAL(1U, res[1][0].mTags.mInner.size());
+    APSARA_TEST_STREQ("val", res[1][0].mTags.mInner["key"].data());
+    APSARA_TEST_EQUAL(1U, res[1][0].mSourceBuffers.size());
+    APSARA_TEST_EQUAL(buffer2, res[1][0].mSourceBuffers[0].get());
+    APSARA_TEST_EQUAL(eoo2, res[1][0].mExactlyOnceCheckpoint.get());
+    APSARA_TEST_STREQ("pack_id", res[1][0].mPackIdPrefix.data());
 }
+
+PipelineEventGroup AggregatorUnittest::CreateEventGroup(size_t cnt) {
+    PipelineEventGroup group(make_shared<SourceBuffer>());
+    group.SetTag(string("key"), string("val"));
+    StringBuffer b = group.GetSourceBuffer()->CopyString(string("pack_id"));
+    group.SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(b.data, b.size));
+    group.SetExactlyOnceCheckpoint(RangeCheckpointPtr(new RangeCheckpoint));
+    for (size_t i = 0; i < cnt; ++i) {
+        group.AddLogEvent();
+    }
+    return group;
+}
+
+UNIT_TEST_CASE(AggregatorUnittest, TestParamInit)
+UNIT_TEST_CASE(AggregatorUnittest, TestInitWithoutGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestInitWithGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestAddWithoutGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestAddWithGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestFlushEventQueueWithoutGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestFlushEventQueueWithGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestFlushGroupQueue)
+UNIT_TEST_CASE(AggregatorUnittest, TestFlushAllWithoutGroupBatch)
+UNIT_TEST_CASE(AggregatorUnittest, TestFlushAllWithGroupBatch)
+
+} // namespace logtail
+
+UNIT_TEST_MAIN
