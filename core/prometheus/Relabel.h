@@ -58,7 +58,7 @@ private:
 class RelabelConfig {
 public:
     RelabelConfig();
-    RelabelConfig(Json::Value);
+    RelabelConfig(const Json::Value&);
 
     bool Validate();
 
@@ -84,7 +84,7 @@ private:
 
 
 namespace relabel {
-    bool Process(Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret);
+    bool Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret);
     bool ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>& cfgs);
     bool Relabel(const RelabelConfig& cfg, LabelsBuilder& lb);
 } // namespace relabel

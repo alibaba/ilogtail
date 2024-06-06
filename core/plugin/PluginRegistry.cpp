@@ -49,6 +49,7 @@
 #include "processor/ProcessorParseTimestampNative.h"
 #include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorRelabelMetricNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
@@ -126,6 +127,7 @@ void PluginRegistry::LoadStaticPlugins() {
 #endif
 #endif
 
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorRelabelMetricNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitMultilineLogStringNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMergeMultilineLogNative>());

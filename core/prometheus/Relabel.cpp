@@ -79,7 +79,7 @@ std::string ActionToString(Action action) {
 RelabelConfig::RelabelConfig() {
 }
 
-RelabelConfig::RelabelConfig(Json::Value config) {
+RelabelConfig::RelabelConfig(const Json::Value& config) {
     string errorMsg;
     // Json::Value sourceLabelsJson = config["source_labels"];
     // if (sourceLabelsJson.isArray() && sourceLabelsJson.size() > 0) {
@@ -88,18 +88,35 @@ RelabelConfig::RelabelConfig(Json::Value config) {
     //     }
     // }
 
-    GetOptionalListParam<string>(config, "source_labels", sourceLabels, errorMsg);
+    if (config.isMember("source_labels") && config["source_labels"].isArray()) {
+        GetOptionalListParam<string>(config, "source_labels", sourceLabels, errorMsg);
+    }
 
-    GetOptionalStringParam(config, "separator", separator, errorMsg);
-    string re;
-    GetOptionalStringParam(config, "regex", re, errorMsg);
-    regex = boost::regex(re);
-    GetOptionalUInt64Param(config, "modulus", modulus, errorMsg);
-    GetOptionalStringParam(config, "target_label", targetLabel, errorMsg);
-    GetOptionalStringParam(config, "replacement", replacement, errorMsg);
-    string actionString;
-    GetOptionalStringParam(config, "action", actionString, errorMsg);
-    action = StringToAction(actionString);
+    if (config.isMember("separator") && config["separator"].isString()) {
+        separator = config["separator"].asString();
+    }
+
+    if (config.isMember("target_label") && config["target_label"].isString()) {
+        targetLabel = config["target_label"].asString();
+    }
+
+    if (config.isMember("regex") && config["regex"].isString()) {
+        string re = config["regex"].asString();
+        regex = boost::regex(re);
+    }
+
+    if (config.isMember("replacement") && config["replacement"].isString()) {
+        replacement = config["replacement"].asString();
+    }
+
+    if (config.isMember("action") && config["action"].isString()) {
+        string actionString = config["action"].asString();
+        action = StringToAction(actionString);
+    }
+
+    if (config.isMember("modulus") && config["modulus"].isUInt64()) {
+        modulus = config["modulus"].asUInt64();
+    }
 }
 
 bool RelabelConfig::Validate() {
@@ -113,7 +130,7 @@ bool RelabelConfig::Validate() {
 // If you want to avoid issues with the input label set being modified, at the cost of
 // higher memory usage, you can use lbls.Copy().
 // If a label set is dropped, EmptyLabels and false is returned.
-bool relabel::Process(Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret) {
+bool relabel::Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret) {
     auto lb = LabelsBuilder();
     lb.Reset(lbls);
     if (!ProcessBuilder(lb, cfgs)) {
