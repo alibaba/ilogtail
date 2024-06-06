@@ -266,6 +266,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
 void InputFileUnittest::OnPipelineUpdate() {
     Json::Value configJson, optionalGoPipeline;
     InputFile input;
+    input.SetContext(ctx);
     string configStr, errorMsg;
     filesystem::path filePath = filesystem::absolute("*.log");
 
@@ -279,7 +280,6 @@ void InputFileUnittest::OnPipelineUpdate() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     APSARA_TEST_TRUE(input.Init(configJson, optionalGoPipeline));
-    input.SetContext(ctx);
 
     APSARA_TEST_TRUE(input.Start());
     APSARA_TEST_NOT_EQUAL(nullptr, FileServer::GetInstance()->GetFileDiscoveryConfig("test_config").first);
