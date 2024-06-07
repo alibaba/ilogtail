@@ -31,7 +31,9 @@ Json::Value SpanEvent::ToJson() const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (GetTimestampNanosecond()) {
+        root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
+    }
     return root;
 }
 
