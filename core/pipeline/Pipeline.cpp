@@ -24,10 +24,12 @@
 #include "flusher/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
+#include "input/InputPrometheus.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorRelabelMetricNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
@@ -92,8 +94,8 @@ bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
 }
 
 bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerStdio* inputContainerStdio,
-                                                int16_t& pluginIndex,
-                                                const Config& config) {
+                                                  int16_t& pluginIndex,
+                                                  const Config& config) {
     unique_ptr<ProcessorInstance> processor;
     // ProcessorSplitLogStringNative
     {
@@ -163,6 +165,25 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
     return true;
 }
 
+bool Pipeline::handleInputPrometheusProcessor(const logtail::InputPrometheus* inputPrometheus,
+                                              int16_t& pluginIndex,
+                                              const Config& config) {
+    // ProcessorRelabelMetricNative
+    unique_ptr<ProcessorInstance> processor;
+    const Json::Value* detail = config.mInputs.back();
+    // return true when detail["metric_relabel_config"].size()==0
+    if (!detail->isMember("metric_relabel_config") || detail->get("metric_relabel_config", Json::Value()).size() == 0) {
+        return true;
+    }
+    // build processor when detail["metric_relabel_config"] has value
+    processor
+        = PluginRegistry::GetInstance()->CreateProcessor(ProcessorRelabelMetricNative::sName, to_string(++pluginIndex));
+    if (!processor->Init(*detail, mContext)) {
+        return false;
+    }
+    mProcessorLine.emplace_back(std::move(processor));
+    return true;
+}
 bool Pipeline::Init(Config&& config) {
     mName = config.mName;
     mConfig = std::move(config.mDetail);
@@ -173,8 +194,9 @@ bool Pipeline::Init(Config&& config) {
     // for special treatment below
     const InputFile* inputFile = nullptr;
     const InputContainerStdio* inputContainerStdio = nullptr;
+    const InputPrometheus* inputPrometheus = nullptr;
     bool hasFlusherSLS = false;
-    
+
 #ifdef __ENTERPRISE__
     // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
     unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
@@ -202,6 +224,8 @@ bool Pipeline::Init(Config&& config) {
                 inputFile = static_cast<const InputFile*>(mInputs[0]->GetPlugin());
             } else if (name == InputContainerStdio::sName) {
                 inputContainerStdio = static_cast<const InputContainerStdio*>(mInputs[0]->GetPlugin());
+            } else if (name == InputPrometheus::sName) {
+                inputPrometheus = static_cast<const InputPrometheus*>(mInputs[0]->GetPlugin());
             }
         } else {
             AddPluginToGoPipeline(*detail, "inputs", mGoPipelineWithInput);
@@ -225,6 +249,11 @@ bool Pipeline::Init(Config&& config) {
         return false;
     }
     if (inputContainerStdio && !handleInputContainerStdioProcessor(inputContainerStdio, pluginIndex, config)) {
+        return false;
+    }
+
+    // add metric relabel processor for input_prometheus
+    if (inputPrometheus && !handleInputPrometheusProcessor(inputPrometheus, pluginIndex, config)) {
         return false;
     }
 
