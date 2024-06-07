@@ -20,6 +20,7 @@
 #include <ctime>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "common/memory/SourceBuffer.h"
@@ -41,12 +42,17 @@ public:
 
     Type GetType() const { return mType; }
     time_t GetTimestamp() const { return mTimestamp; }
-    long GetTimestampNanosecond() const { return mTimestampNanosecond; }
+    std::optional<uint32_t> GetTimestampNanosecond() const { return mTimestampNanosecond; }
     void SetTimestamp(time_t t) { mTimestamp = t; }
-    void SetTimestamp(time_t t, long ns) {
+    void SetTimestamp(time_t t, uint32_t ns) {
         mTimestamp = t;
         mTimestampNanosecond = ns; // Only nanosecond part
     }
+    void SetTimestamp(time_t t, std::optional<uint32_t> ns) {
+        mTimestamp = t;
+        mTimestampNanosecond = ns; // Only nanosecond part
+    }
+    bool IsTimestampNanosecondEnabled() const { return mTimestampNanosecond.has_value(); }
     void ResetPipelineEventGroup(PipelineEventGroup* ptr) { mPipelineEventGroupPtr = ptr; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
@@ -64,7 +70,7 @@ protected:
 
     Type mType = Type::NONE;
     time_t mTimestamp = 0;
-    long mTimestampNanosecond = 0;
+    std::optional<uint32_t> mTimestampNanosecond;
     PipelineEventGroup* mPipelineEventGroupPtr = nullptr;
 };
 

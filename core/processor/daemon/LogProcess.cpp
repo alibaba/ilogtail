@@ -231,7 +231,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 
         {
             ReadLock lock(mAccessProcessThreadRWL);
-            
+
             std::unique_ptr<ProcessQueueItem> item;
             std::string configName;
             if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
@@ -408,8 +408,8 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
         }
         sls_logs::Log* log = resultGroup.add_logs();
         auto& logEvent = event.Cast<LogEvent>();
-        if (enableTimestampNanosecond) {
-            SetLogTimeWithNano(log, logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond());
+        if (enableTimestampNanosecond && logEvent.IsTimestampNanosecondEnabled()) {
+            SetLogTimeWithNano(log, logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond().value());
         } else {
             SetLogTime(log, logEvent.GetTimestamp());
         }
