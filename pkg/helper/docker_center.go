@@ -17,7 +17,6 @@ package helper
 import (
 	"context"
 	"hash/fnv"
-	"os"
 	"path"
 	"regexp"
 	"runtime"
@@ -641,44 +640,11 @@ func getDockerCenterInstance() *DockerCenter {
 		// containerFindingManager works in a producer-consumer model
 		// so even manager is not initialized, it will not affect consumers like service_stdout
 		go func() {
-			var enableCriFinding, enableDocker, enableStatic bool
 			retryCount := 0
-			containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
+			containerFindingManager = NewContainerDiscoverManager(false, false, false)
 			for {
-				if IsCRIRuntimeValid(containerdUnixSocket) {
-					var err error
-					criRuntimeWrapper, err = NewCRIRuntimeWrapper(dockerCenterInstance)
-					if err != nil {
-						logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] creare cri-runtime client error: %v", err)
-						criRuntimeWrapper = nil
-					} else {
-						logger.Infof(context.Background(), "[CRIRuntime] create cri-runtime client successfully")
-					}
-				}
-				if ok, err := util.PathExists(DefaultLogtailMountPath); err == nil {
-					if !ok {
-						logger.Info(context.Background(), "no docker mount path", "set empty")
-						DefaultLogtailMountPath = ""
-					}
-				} else {
-					logger.Warning(context.Background(), "check docker mount path error", err.Error())
-				}
-				enableCriFinding = criRuntimeWrapper != nil
-				enableDocker = dockerCenterInstance.initClient() == nil
-				enableStatic = isStaticContainerInfoEnabled()
-				discoverdRuntime := false
-				if len(os.Getenv("USE_CONTAINERD")) > 0 {
-					discoverdRuntime = enableCriFinding
-				} else {
-					discoverdRuntime = enableCriFinding || enableDocker || enableStatic
-				}
-				if discoverdRuntime {
-					containerFindingManager.enableCRIDiscover = enableCriFinding
-					containerFindingManager.enableDockerDiscover = enableDocker
-					containerFindingManager.enableStaticDiscover = enableStatic
-					if containerFindingManager.Init() {
-						break
-					}
+				if containerFindingManager.Init() {
+					break
 				}
 				if retryCount%10 == 0 {
 					logger.Error(context.Background(), "DOCKER_CENTER_ALARM", "docker center init failed", "retry count", retryCount)

@@ -161,6 +161,40 @@ func (c *ContainerDiscoverManager) LogAlarm(err error, msg string) {
 
 func (c *ContainerDiscoverManager) Init() bool {
 	defer dockerCenterRecover()
+
+	// discover which runtime is valid
+	if IsCRIRuntimeValid(containerdUnixSocket) {
+		var err error
+		criRuntimeWrapper, err = NewCRIRuntimeWrapper(dockerCenterInstance)
+		if err != nil {
+			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] creare cri-runtime client error: %v", err)
+			criRuntimeWrapper = nil
+		} else {
+			logger.Infof(context.Background(), "[CRIRuntime] create cri-runtime client successfully")
+		}
+	}
+	if ok, err := util.PathExists(DefaultLogtailMountPath); err == nil {
+		if !ok {
+			logger.Info(context.Background(), "no docker mount path", "set empty")
+			DefaultLogtailMountPath = ""
+		}
+	} else {
+		logger.Warning(context.Background(), "check docker mount path error", err.Error())
+	}
+	c.enableCRIDiscover = criRuntimeWrapper != nil
+	c.enableDockerDiscover = dockerCenterInstance.initClient() == nil
+	c.enableStaticDiscover = isStaticContainerInfoEnabled()
+	discoverdRuntime := false
+	if len(os.Getenv("USE_CONTAINERD")) > 0 {
+		discoverdRuntime = c.enableCRIDiscover
+	} else {
+		discoverdRuntime = c.enableCRIDiscover || c.enableDockerDiscover || c.enableStaticDiscover
+	}
+	if !discoverdRuntime {
+		return false
+	}
+
+	// try to connect to runtime
 	logger.Info(context.Background(), "input", "param", "docker discover", c.enableDockerDiscover, "cri discover", c.enableCRIDiscover, "static discover", c.enableStaticDiscover)
 	listenLoopIntervalSec := 0
 	// Get env in the same order as in C Logtail
