@@ -38,7 +38,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, std::string& res,
             }
             log->set_time(logEvent.GetTimestamp());
             if (mFlusher->GetContext().GetGlobalConfig().mEnableTimestampNanosecond
-                && logEvent.GetTimestampNanosecond() != -1) {
+                && logEvent.GetTimestampNanosecond()) {
                 log->set_time_ns(logEvent.GetTimestampNanosecond());
             }
         } else {

@@ -303,7 +303,7 @@ bool LogProcess::Serialize(const PipelineEventGroup& group, bool enableNanosecon
                 contPtr->set_value(kv.second.to_string());
             }
             log->set_time(logEvent.GetTimestamp());
-            if (enableNanosecond && logEvent.GetTimestampNanosecond() != -1) {
+            if (enableNanosecond && logEvent.GetTimestampNanosecond()) {
                 log->set_time_ns(logEvent.GetTimestampNanosecond());
             }
         } else {
