@@ -641,7 +641,7 @@ func getDockerCenterInstance() *DockerCenter {
 		// so even manager is not initialized, it will not affect consumers like service_stdout
 		go func() {
 			retryCount := 0
-			containerFindingManager = NewContainerDiscoverManager(false, false, false)
+			containerFindingManager = NewContainerDiscoverManager()
 			for {
 				if containerFindingManager.Init() {
 					break

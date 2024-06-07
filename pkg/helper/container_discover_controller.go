@@ -45,11 +45,11 @@ type ContainerDiscoverManager struct {
 	fetchOneLock     sync.Mutex
 }
 
-func NewContainerDiscoverManager(enableDockerDiscover, enableCRIDiscover, enableStaticDiscover bool) *ContainerDiscoverManager {
+func NewContainerDiscoverManager() *ContainerDiscoverManager {
 	return &ContainerDiscoverManager{
-		enableDockerDiscover: enableDockerDiscover,
-		enableCRIDiscover:    enableCRIDiscover,
-		enableStaticDiscover: enableStaticDiscover,
+		enableDockerDiscover: false,
+		enableCRIDiscover:    false,
+		enableStaticDiscover: false,
 	}
 }
 
