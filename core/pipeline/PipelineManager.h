@@ -61,7 +61,8 @@ private:
                              bool& isInputObserverChanged,
                              bool& isInputFileChanged,
                              bool& isInputStreamChanged,
-                             bool& isInputContainerStdioChanged);
+                             bool& isInputContainerStdioChanged,
+                             bool& isInputPrometheusChanged);
 
     std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineNameEntityMap;
     mutable SpinLock mPluginCntMapLock;

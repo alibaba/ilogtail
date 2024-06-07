@@ -64,6 +64,10 @@ void ScrapeWork::scrapeLoop() {
 
         // scrape target by CurlClient
         auto httpResponse = scrape();
+        if (httpResponse.statusCode != 200) {
+            printf("scrape failed, status code: %d\n", httpResponse.statusCode);
+            continue;
+        }
 
         // text parser
         const auto& sourceBuffer = make_shared<SourceBuffer>();
@@ -132,5 +136,36 @@ void ScrapeWork::pushEventGroup(PipelineEventGroup eGroup) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
+
+bool ScrapeTarget::operator<(const ScrapeTarget& other) const {
+    if (jobName != other.jobName)
+        return jobName < other.jobName;
+    if (scrapeInterval != other.scrapeInterval)
+        return scrapeInterval < other.scrapeInterval;
+    if (scrapeTimeout != other.scrapeTimeout)
+        return scrapeTimeout < other.scrapeTimeout;
+    if (scheme != other.scheme)
+        return scheme < other.scheme;
+    if (metricsPath != other.metricsPath)
+        return metricsPath < other.metricsPath;
+    if (host != other.host)
+        return host < other.host;
+    if (port != other.port)
+        return port < other.port;
+    return targetId < other.targetId;
+}
+
+ScrapeTarget::ScrapeTarget() {
+}
+
+ScrapeTarget::ScrapeTarget(const Json::Value& target) {
+    host = target["host"].asString();
+    if (host.find(':') != std::string::npos) {
+        port = stoi(host.substr(host.find(':') + 1));
+    } else {
+        port = 8080;
+    }
+}
+
 
 } // namespace logtail

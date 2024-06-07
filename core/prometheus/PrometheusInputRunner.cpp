@@ -28,7 +28,7 @@ namespace logtail {
 PrometheusInputRunner::PrometheusInputRunner() {
 }
 
-/// @brief 接收并更新插件注册的每个ScrapeJob
+/// @brief receive scrape jobs from input plugin and update scrape jobs
 void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, const vector<ScrapeJob>& jobs) {
     for (const ScrapeJob& job : scrapeInputsMap[inputName]) {
         ScraperGroup::GetInstance()->RemoveScrapeJob(job);
@@ -49,13 +49,13 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
     scrapeInputsMap.erase(inputName);
 }
 
-/// @brief 初始化管理类
+/// @brief targets discovery and start scrape work
 void PrometheusInputRunner::Start() {
     ScraperGroup::GetInstance()->Start();
 }
 
 
-/// @brief 停止管理类，资源回收
+/// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
     ScraperGroup::GetInstance()->Stop();
     scrapeInputsMap.clear();

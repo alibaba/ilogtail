@@ -17,6 +17,9 @@
 #pragma once
 #include <json/json.h>
 
+#include <condition_variable>
+#include <mutex>
+#include <queue>
 #include <string>
 
 #include "ScrapeWork.h"
@@ -24,7 +27,16 @@
 
 namespace logtail {
 
-struct ScrapeJob {
+class ScrapeJob {
+public:
+    ScrapeJob();
+    ScrapeJob(const Json::Value& job);
+
+    bool isValid() const;
+    bool operator<(const ScrapeJob& other) const;
+
+    std::vector<ScrapeTarget> TargetsDiscovery() const;
+
     // jobName作为id，有待商榷
     std::string jobName;
     // std::string serviceDiscover;
@@ -33,19 +45,20 @@ struct ScrapeJob {
     std::string scheme;
     int scrapeInterval;
     int scrapeTimeout;
-    // target需要根据ConfigServer的情况调整
-    std::vector<ScrapeTarget> scrapeTargets;
+
+    bool enableHttp2 = false;
+    bool followRedirects = false;
+    bool honorTimestamps = false;
+    // std::string k8sSdConfig;
+    // std::string relabelConfigs;
+    // std::string metricRelabelConfigs;
+
     QueueKey queueKey;
     size_t inputIndex;
-    bool operator<(const ScrapeJob& other) const { return jobName < other.jobName; }
-    ScrapeJob() {}
-    ScrapeJob(Json::Value job) {
-        jobName = job["jobName"].asString();
-        metricsPath = job["metricsPath"].asString();
-        scheme = job["scheme"].asString();
-        scrapeInterval = job["scrapeInterval"].asInt();
-        scrapeTimeout = job["scrapeTimeout"].asInt();
-    }
+
+    // target需要根据ConfigServer的情况调整
+    std::vector<ScrapeTarget> scrapeTargets;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     ScrapeJob(std::string jobName, std::string metricsPath, std::string scheme, int interval, int timeout)
         : jobName(jobName),
@@ -53,17 +66,12 @@ struct ScrapeJob {
           scheme(scheme),
           scrapeInterval(interval),
           scrapeTimeout(timeout) {}
-
 #endif
+
+private:
 };
 
-
-/// @brief 对scrape的包装类
-// class Scraper {
-// private:
-// public:
-//     Scraper();
-// };
+using JobEvent = std::function<void()>;
 
 /// @brief 管理所有的ScrapeJob
 class ScraperGroup {
@@ -83,6 +91,16 @@ public:
 private:
     std::unordered_map<std::string, std::set<ScrapeTarget>> scrapeJobTargetsMap;
     std::unordered_map<std::string, std::unique_ptr<ScrapeWork>> scrapeIdWorkMap;
+
+    std::atomic<bool> runningState = false;
+    ThreadPtr scraperThread;
+    std::condition_variable scraperThreadCondition;
+
+    std::mutex eventMutex;
+    std::queue<JobEvent> jobEventQueue;
+
+    void ProcessEvents();
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;
     friend class InputPrometheusUnittest;

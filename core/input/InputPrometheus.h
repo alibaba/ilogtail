@@ -16,10 +16,14 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    // sample
-    std::vector<ScrapeJob> scrapeJobs;
-
 private:
+    // only one job is supported
+    // std::vector<ScrapeJob> scrapeJobs;
+    ScrapeJob scrapeJob;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class InputPrometheusUnittest;
+#endif
 };
 
 } // namespace logtail

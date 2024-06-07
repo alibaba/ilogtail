@@ -58,8 +58,7 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     // 代替插件手动注册scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
     APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
-    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
-    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
+    PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
@@ -76,6 +75,7 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput("testInputName");
     APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
@@ -88,12 +88,10 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     scrapeJobs[0].scrapeTargets = scrapeTargets;
 
     // 代替插件手动注册scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test_input_name", scrapeJobs);
     // start
     PrometheusInputRunner::GetInstance()->Start();
-    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
-    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
-    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
+    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["test_input_name"].size());
 
     sleep(10);
 

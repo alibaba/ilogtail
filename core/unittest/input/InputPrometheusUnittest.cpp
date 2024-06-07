@@ -54,37 +54,30 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_prometheus",
-            "PrometheusGlobalConfig": [],
-            "PrometheusScrapeConfig": [
-            ]
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(input->scrapeJobs.empty());
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
     // with scrape job
     configStr = R"(
         {
             "Type": "input_prometheus",
-            "PrometheusGlobalConfig": [],
-            "PrometheusScrapeConfig": [
-                {
-                    "jobName": "_arms-prom/node-exporter/0",
-                    "metricsPath": "/metrics",
-                    "scheme": "http",
-                    "scrapeInterval": 15,
-                    "scrapeTimeout": 15,
-                    "scrapeTargets": [
-                        {
-                            "host": "172.17.0.3:9100",
-                        }
-                    ]
-                }
-            ]
+            "ScrapeConfig": {
+                "job_name": "_arms-prom/node-exporter/0",
+                "metrics_path": "/metrics",
+                "scheme": "http",
+                "scrape_interval": 15,
+                "scrape_timeout": 15,
+                "scrape_targets": [
+                    {
+                        "host": "172.17.0.3:9100",
+                    }
+                ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -92,12 +85,11 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->scrapeJobs[0].jobName);
-    APSARA_TEST_EQUAL("/metrics", input->scrapeJobs[0].metricsPath);
-    APSARA_TEST_EQUAL(15, input->scrapeJobs[0].scrapeInterval);
-    APSARA_TEST_EQUAL(15, input->scrapeJobs[0].scrapeTimeout);
-    APSARA_TEST_EQUAL("172.17.0.3:9100", input->scrapeJobs[0].scrapeTargets[0].host);
-    APSARA_TEST_EQUAL(9100, input->scrapeJobs[0].scrapeTargets[0].port);
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->scrapeJob.jobName);
+    APSARA_TEST_EQUAL("/metrics", input->scrapeJob.metricsPath);
+    APSARA_TEST_EQUAL(15, input->scrapeJob.scrapeInterval);
+    APSARA_TEST_EQUAL(15, input->scrapeJob.scrapeTimeout);
+    APSARA_TEST_EQUAL(9100, input->scrapeJob.scrapeTargets[0].port);
 }
 
 void InputPrometheusUnittest::OnPipelineUpdate() {
@@ -107,21 +99,18 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     configStr = R"(
         {
             "Type": "input_prometheus",
-            "PrometheusGlobalConfig": [],
-            "PrometheusScrapeConfig": [
-                {
-                    "jobName": "_arms-prom/node-exporter/0",
-                    "metricsPath": "/metrics",
-                    "scheme": "http",
-                    "scrapeInterval": 15,
-                    "scrapeTimeout": 16,
-                    "scrapeTargets": [
-                        {
-                            "host": "172.17.0.3:9100",
-                        }
-                    ]
-                }
-            ]
+            "ScrapeConfig": {
+                "job_name": "_arms-prom/node-exporter/0",
+                "metrics_path": "/metrics",
+                "scheme": "http",
+                "scrape_interval": 15,
+                "scrape_timeout": 15,
+                "scrape_targets": [
+                    {
+                        "host": "172.17.0.3:9100",
+                    }
+                ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));

@@ -19,6 +19,7 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "observer/ObserverManager.h"
 #endif
@@ -40,31 +41,36 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
+    static bool isPrometheusInputRunnerStarted = false;
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     static bool isInputStreamStarted = false;
 #endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
          isInputContainerStdioChanged = false;
+    bool isInputPrometheusChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged);
     }
     for (const auto& config : diff.mModified) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged);
     }
     for (const auto& config : diff.mAdded) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -159,6 +165,9 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
             isFileServerStarted = true;
         }
     }
+    if (isInputPrometheusChanged) {
+        PrometheusInputRunner::GetInstance()->Start();
+    }
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {
@@ -227,6 +236,7 @@ void PipelineManager::StopAllPipelines() {
     ObserverManager::GetInstance()->HoldOn(true);
 #endif
     FileServer::GetInstance()->Stop();
+    PrometheusInputRunner::GetInstance()->Stop();
 
     Sender::Instance()->SetQueueUrgent();
     bool logProcessFlushFlag = false;
@@ -275,7 +285,8 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
                                           bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged) {
+                                          bool& isInputContainerStdioChanged,
+                                          bool& isInputPrometheusChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -285,6 +296,8 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
+    } else if (inputType == "input_prometheus") {
+        isInputPrometheusChanged = true;
     }
 }
 

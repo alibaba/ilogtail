@@ -35,6 +35,8 @@ private:
 
 
 void ScraperUnittest::OnUpdateScrapeJob() {
+    // start scraper group first
+    ScraperGroup::GetInstance()->Start();
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
@@ -44,12 +46,21 @@ void ScraperUnittest::OnUpdateScrapeJob() {
 
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
     ScraperGroup::GetInstance()->UpdateScrapeJob(scrapeJob);
+
+    // sleep 1s
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
     APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
     ScraperGroup::GetInstance()->RemoveScrapeJob(scrapeJob);
+
+    // stop scraper group to clean up
+    ScraperGroup::GetInstance()->Stop();
 }
 
 void ScraperUnittest::OnRemoveScrapeJob() {
+    // start scraper group first
+    ScraperGroup::GetInstance()->Start();
+
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
@@ -59,11 +70,20 @@ void ScraperUnittest::OnRemoveScrapeJob() {
 
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
     ScraperGroup::GetInstance()->UpdateScrapeJob(scrapeJob);
+
+    // sleep 1s
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
     APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
     ScraperGroup::GetInstance()->RemoveScrapeJob(scrapeJob);
+
+    // sleep 1s
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeIdWorkMap.empty());
+
+    // stop scraper group to clean up
+    ScraperGroup::GetInstance()->Stop();
 }
 
 UNIT_TEST_CASE(ScraperUnittest, OnUpdateScrapeJob)
