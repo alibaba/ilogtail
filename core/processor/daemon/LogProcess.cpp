@@ -408,8 +408,8 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
         }
         sls_logs::Log* log = resultGroup.add_logs();
         auto& logEvent = event.Cast<LogEvent>();
-        if (enableTimestampNanosecond && logEvent.IsTimestampNanosecondEnabled()) {
-            SetLogTimeWithNano(log, logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond().value());
+        if (enableTimestampNanosecond) {
+            SetLogTimeWithNano(log, logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond());
         } else {
             SetLogTime(log, logEvent.GetTimestamp());
         }
