@@ -309,7 +309,7 @@ Json::Value SpanEvent::ToJson(bool enableEventMeta) const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    if (IsTimestampNanosecondEnabled()) {
+    if (GetTimestampNanosecond()) {
         root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
     }
     root["traceId"] = mTraceId.to_string();

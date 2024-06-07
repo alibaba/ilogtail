@@ -52,7 +52,6 @@ public:
         mTimestamp = t;
         mTimestampNanosecond = ns; // Only nanosecond part
     }
-    bool IsTimestampNanosecondEnabled() const { return mTimestampNanosecond.has_value(); }
     void ResetPipelineEventGroup(PipelineEventGroup* ptr) { mPipelineEventGroupPtr = ptr; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
