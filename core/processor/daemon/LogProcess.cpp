@@ -304,7 +304,7 @@ bool LogProcess::Serialize(const PipelineEventGroup& group, bool enableNanosecon
             }
             log->set_time(logEvent.GetTimestamp());
             if (enableNanosecond && logEvent.GetTimestampNanosecond()) {
-                log->set_time_ns(logEvent.GetTimestampNanosecond());
+                log->set_time_ns(logEvent.GetTimestampNanosecond().value());
             }
         } else {
             errorMsg = "unsupported event type in event group";

@@ -39,7 +39,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, std::string& res,
             log->set_time(logEvent.GetTimestamp());
             if (mFlusher->GetContext().GetGlobalConfig().mEnableTimestampNanosecond
                 && logEvent.GetTimestampNanosecond()) {
-                log->set_time_ns(logEvent.GetTimestampNanosecond());
+                log->set_time_ns(logEvent.GetTimestampNanosecond().value());
             }
         } else {
             errorMsg = "unsupported event type in event group";

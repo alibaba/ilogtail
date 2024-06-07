@@ -42,6 +42,10 @@ private:
 
     std::unordered_map<int64_t, std::pair<uint32_t, time_t>> mPackIdSeq;
     std::mutex mMux;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PackIdManagerUnittest;
+#endif
 };
 
 } // namespace logtail
