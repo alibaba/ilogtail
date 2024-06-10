@@ -42,7 +42,7 @@ const string InputFile::sName = "input_file";
 bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
                                              const FileDiscoveryOptions* fileDiscovery) {
-    std::string logPath = GetLogPath(fileDiscovery);
+    string logPath = GetLogPath(fileDiscovery);
     return SetContainerBaseDir(containerInfo, logPath);
 }
 
@@ -228,8 +228,8 @@ bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
     return true;
 }
 
-std::string InputFile::GetLogPath(const FileDiscoveryOptions* fileDiscovery) {
-    std::string logPath;
+string InputFile::GetLogPath(const FileDiscoveryOptions* fileDiscovery) {
+    string logPath;
     if (!fileDiscovery->GetWildcardPaths().empty()) {
         logPath = fileDiscovery->GetWildcardPaths()[0];
     } else {
@@ -238,7 +238,7 @@ std::string InputFile::GetLogPath(const FileDiscoveryOptions* fileDiscovery) {
     return logPath;
 }
 
-bool InputFile::SetContainerBaseDir(ContainerInfo& containerInfo, const std::string& logPath) {
+bool InputFile::SetContainerBaseDir(ContainerInfo& containerInfo, const string& logPath) {
     if (!containerInfo.mRealBaseDir.empty()) {
         return true;
     }
