@@ -421,7 +421,7 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList) {
     }
 }
 
-void Pipeline::Send(std::vector<PipelineEventGroup>&& groupList) {
+void Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
     for (auto& group : groupList) {
         // TODO: support route
         mFlushers[0]->Send(std::move(group));

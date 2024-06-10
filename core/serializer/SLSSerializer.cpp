@@ -25,7 +25,7 @@ using namespace std;
 
 namespace logtail {
 
-bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, std::string& res, std::string& errorMsg) {
+bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, string& errorMsg) {
     sls_logs::LogGroup logGroup;
     for (const auto& e : group.mEvents) {
         if (e.Is<LogEvent>()) {
@@ -70,9 +70,9 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, std::string& res,
     return true;
 }
 
-bool SLSEventGroupListSerializer::Serialize(std::vector<CompressedLogGroup>&& v,
-                                            std::string& res,
-                                            std::string& errorMsg) {
+bool SLSEventGroupListSerializer::Serialize(vector<CompressedLogGroup>&& v,
+                                            string& res,
+                                            string& errorMsg) {
     sls_logs::SlsLogPackageList logPackageList;
     for (const auto& item : v) {
         auto package = logPackageList.add_packages();

@@ -22,9 +22,9 @@ using namespace std;
 
 namespace logtail {
 
-std::unique_ptr<Compressor> CompressorFactory::Create(const Json::Value& config,
+unique_ptr<Compressor> CompressorFactory::Create(const Json::Value& config,
                                                       const PipelineContext& ctx,
-                                                      const std::string& pluginName,
+                                                      const string& pluginName,
                                                       CompressType defaultType) {
     string compressType, errorMsg;
     if (!GetOptionalStringParam(config, "CompressType", compressType, errorMsg)) {
@@ -60,12 +60,12 @@ std::unique_ptr<Compressor> CompressorFactory::Create(const Json::Value& config,
     }
 }
 
-std::unique_ptr<Compressor> CompressorFactory::Create(CompressType type) {
+unique_ptr<Compressor> CompressorFactory::Create(CompressType type) {
     switch (type) {
         case CompressType::LZ4:
-            return std::make_unique<LZ4Compressor>(type);
+            return make_unique<LZ4Compressor>(type);
         case CompressType::ZSTD:
-            return std::make_unique<ZstdCompressor>(type);
+            return make_unique<ZstdCompressor>(type);
         default:
             return nullptr;
     }

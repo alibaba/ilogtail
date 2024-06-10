@@ -44,7 +44,7 @@ bool LZ4Compressor::Compress(const string& input, string& output, string& errorM
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
-bool LZ4Compressor::UnCompress(const std::string& input, std::string& output, std::string& errorMsg) {
+bool LZ4Compressor::UnCompress(const string& input, string& output, string& errorMsg) {
     try {
         int length = LZ4_decompress_safe(input.c_str(), const_cast<char*>(output.c_str()), input.size(), output.size());
         if (length <= 0) {
