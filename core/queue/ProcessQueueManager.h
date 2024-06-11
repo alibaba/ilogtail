@@ -81,6 +81,7 @@ private:
     void Clear();
     friend class ProcessQueueManagerUnittest;
     friend class PipelineUnittest;
+    friend class InputPrometheusUnittest;
 #endif
 };
 

@@ -83,6 +83,7 @@ void MockHttpClient::Send(const std::string& httpMethod,
           "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
           "# TYPE go_memstats_alloc_bytes_total counter\n"
           "go_memstats_alloc_bytes_total 1.5159292e+08";
+    httpMessage.statusCode = 200;
 }
 
 void MockHttpClient::AsynSend(sdk::AsynRequest* request) {

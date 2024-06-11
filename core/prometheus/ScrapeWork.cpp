@@ -38,6 +38,7 @@ ScrapeWork::ScrapeWork(const ScrapeTarget& target) : target(target), finished(fa
 }
 
 void ScrapeWork::StartScrapeLoop() {
+    finished = false;
     // 以线程的方式实现
     if (!mScrapeLoopThread) {
         mScrapeLoopThread = CreateThread([this]() { scrapeLoop(); });

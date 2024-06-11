@@ -69,7 +69,7 @@ void ScraperGroup::UpdateScrapeJob(const ScrapeJob& job) {
 
     // 注意解决多个jobs请求targets时的阻塞问题，relabel阻塞
     // 和master交互时 targets更新而config没变的过程
-    auto updateJobEvnet = [this, &job]() {
+    auto updateJobEvnet = [this, job]() {
         // 进行targets发现
         vector<ScrapeTarget> targets = job.TargetsDiscovery();
 
@@ -87,7 +87,7 @@ void ScraperGroup::UpdateScrapeJob(const ScrapeJob& job) {
 }
 
 void ScraperGroup::RemoveScrapeJob(const ScrapeJob& job) {
-    auto removeJobEvent = [this, &job]() {
+    auto removeJobEvent = [this, job]() {
         for (auto target : scrapeJobTargetsMap[job.jobName]) {
             // 找到对应的线程（协程）并停止
             auto work = scrapeIdWorkMap.find(target.targetId);
