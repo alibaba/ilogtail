@@ -25,8 +25,8 @@
 #include "LogGroupContext.h"
 #include "common/FeedbackInterface.h"
 #include "common/LogstoreFeedbackKey.h"
-#include "logger/Logger.h"
 #include "common/LogstoreFeedbackQueue.h"
+#include "logger/Logger.h"
 #include "sender/SenderQueueParam.h"
 
 namespace logtail {
@@ -492,6 +492,9 @@ public:
 
     bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
+        if (mLogstoreSenderQueueMap.find(key) == mLogstoreSenderQueueMap.end()) {
+            mLogstoreSenderQueueMap[key];
+        }
         const auto& singleQueue = mLogstoreSenderQueueMap.at(key);
 
         // For correctness, exactly once queue should ignore mUrgentFlag.
