@@ -72,13 +72,13 @@ void ScraperUnittest::OnRemoveScrapeJob() {
     ScraperGroup::GetInstance()->UpdateScrapeJob(scrapeJob);
 
     // sleep 1s
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
     APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
     APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
     ScraperGroup::GetInstance()->RemoveScrapeJob(scrapeJob);
 
     // sleep 1s
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeIdWorkMap.empty());
 

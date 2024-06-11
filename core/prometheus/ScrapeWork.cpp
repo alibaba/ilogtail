@@ -47,6 +47,7 @@ void ScrapeWork::StartScrapeLoop() {
 void ScrapeWork::StopScrapeLoop() {
     finished = true;
     // 清理线程
+    mScrapeLoopThread->Wait(0ULL);
     mScrapeLoopThread.reset();
 }
 
@@ -63,19 +64,26 @@ void ScrapeWork::scrapeLoop() {
         printf("scrape time %llus\n", lastProfilingTime / 1000ULL / 1000ULL / 1000ULL);
 
         // scrape target by CurlClient
+        // TODO: scrape超时处理逻辑，和出错处理
         auto httpResponse = scrape();
-        if (httpResponse.statusCode != 200) {
+        if (httpResponse.statusCode == 200) {
+            // TODO: 生成自监控指标，但走下面pushEventGroup链路的指标 up指标
+
+            // text parser
+            const auto& sourceBuffer = make_shared<SourceBuffer>();
+            auto parser = TextParser(sourceBuffer);
+            auto eventGroup = parser.Parse(httpResponse.content);
+
+            // 发送到对应的处理队列
+            // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
+            pushEventGroup(std::move(*eventGroup));
+        } else {
+            // scrape failed
+            // TODO: scrape超时处理逻辑，和出错处理
             printf("scrape failed, status code: %d\n", httpResponse.statusCode);
-            continue;
+            // continue;
         }
 
-        // text parser
-        const auto& sourceBuffer = make_shared<SourceBuffer>();
-        auto parser = TextParser(sourceBuffer);
-        auto eventGroup = parser.Parse(httpResponse.content);
-
-        // 发送到对应的处理队列
-        pushEventGroup(std::move(*eventGroup));
 
         // 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;

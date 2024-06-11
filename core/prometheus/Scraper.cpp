@@ -66,9 +66,14 @@ void ScraperGroup::UpdateScrapeJob(const ScrapeJob& job) {
         // target级别更新，先全部清理之前的work，然后开启新的work
         RemoveScrapeJob(job);
     }
+
+    // 注意解决多个jobs请求targets时的阻塞问题，relabel阻塞
+    // 和master交互时 targets更新而config没变的过程
     auto updateJobEvnet = [this, &job]() {
         // 进行targets发现
         vector<ScrapeTarget> targets = job.TargetsDiscovery();
+
+        // targets relabel 逻辑
 
         scrapeJobTargetsMap[job.jobName] = set(targets.begin(), targets.end());
         for (const ScrapeTarget& target : scrapeJobTargetsMap[job.jobName]) {

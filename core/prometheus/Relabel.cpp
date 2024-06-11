@@ -227,6 +227,7 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             lb.Set(cfg.targetLabel, to_string(mod));
             break;
         }
+        // labelmap单测要验证
         case Action::labelmap: {
             lb.Range([&cfg, &lb](Label label) {
                 if (boost::regex_match(label.name, cfg.regex)) {
