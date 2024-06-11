@@ -24,7 +24,7 @@ func (m *metadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the metadata
-	metadata := m.watchClient.GetPodMetadata(rBody.Keys)
+	metadata := m.watchClient.getPodMetadata(rBody.Keys)
 	// Convert metadata to JSON
 	metadataJSON, err := json.Marshal(metadata)
 	if err != nil {

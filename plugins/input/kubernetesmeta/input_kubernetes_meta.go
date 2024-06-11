@@ -62,7 +62,7 @@ type InputKubernetesMeta struct {
 	LabelSelectors         string
 	IntervalMs             int
 	EnableOpenKruise       bool
-	EnableHttpServer       bool
+	EnableHTTPServer       bool
 	Labels                 map[string]string
 	context                pipeline.Context
 	informerFactory        informers.SharedInformerFactory
@@ -138,7 +138,7 @@ func (in *InputKubernetesMeta) Init(context pipeline.Context) (int, error) {
 	in.ingressMapping = make(map[string]string, 16)
 
 	// http server
-	if in.EnableHttpServer {
+	if in.EnableHTTPServer {
 		portEnv := os.Getenv("KUBERNETES_METADATA_PORT")
 		if len(portEnv) == 0 {
 			return 0, fmt.Errorf("KUBERNETES_METADATA_PORT is not set")
@@ -293,7 +293,7 @@ func init() {
 			Configmap:             true,
 			Secret:                true,
 			IntervalMs:            defaultIntervalMs,
-			EnableHttpServer:      false,
+			EnableHTTPServer:      false,
 		}
 	}
 }
