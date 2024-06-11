@@ -48,16 +48,19 @@ func NewWatchClient(factory informers.SharedInformerFactory, gracePeriod time.Du
 		deleteQueue: make([]deleteRequest, 0),
 		deleteMutex: sync.Mutex{},
 	}
-	client.informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, err := client.informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    client.handlePodAdd,
 		UpdateFunc: client.handlePodUpdate,
 		DeleteFunc: client.handlePodDelete,
 	})
+	if err != nil {
+		logger.Error(context.Background(), "Failed to add event handler to informer", err)
+	}
 	go client.deleteLoop(30*time.Second, gracePeriod)
 	return client
 }
 
-func (w *WatchClient) GetPodMetadata(identifiers []string) map[string]*podMetadata {
+func (w *WatchClient) getPodMetadata(identifiers []string) map[string]*podMetadata {
 	metadatas := make(map[string]*podMetadata)
 	w.cacheMutex.RLock()
 	defer w.cacheMutex.RUnlock()
