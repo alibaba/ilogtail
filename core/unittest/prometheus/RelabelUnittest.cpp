@@ -168,6 +168,23 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_EQUAL((size_t)0, result.size());
     APSARA_TEST_EQUAL("", result.Get("__meta_kubernetes_pod_label_app"));
 
+    configStr.clear();
+    // single relabel labelmap
+    configStr = configStr + R"(
+        {
+                "action": "labelmap",
+                "regex": "__meta_kubernetes_pod_label_(.+)"
+        + ")\"," + R"("replacement": "k8s_$1"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config = RelabelConfig(configJson);
+    cfgs.clear();
+    cfgs.push_back(config);
+    relabel::Process(labels, cfgs, result);
+    APSARA_TEST_EQUAL((size_t)3, result.size());
+    APSARA_TEST_EQUAL("node-exporter", result.Get("k8s_app"));
+
     // multi relabel
     string configStr1, configStr2;
     configStr1 = configStr1 + R"(
