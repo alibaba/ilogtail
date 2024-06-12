@@ -19,30 +19,100 @@
 #include <json/json.h>
 
 #include <string>
-#include <utility>
+#include <vector>
 
-#include "boost/regex.hpp"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
-class SecurityOptions {
+enum class SecurityFilterType { PROCESS, FILE, NETWORK };
+
+class SecurityFilter {
 public:
-    // todo security input的三种类型定义
-    enum class Mode { xxx };
-
-    bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
-  
-
-    Mode mMode = Mode::xxx;
-    // todo 不同ebpf input 参数的定义
-    // 除了input配置参数，还需定义进程级别配置，从appconfig处赋值
-
-private:
-    
+    // type of filter: process, file, network
+    SecurityFilterType mFilterType;
+    virtual ~SecurityFilter() = default;
 };
 
+// file
+class SecurityFileFilterItem {
+public:
+    std::string mFilePath;
+    std::string mFileName;
+};
+class SecurityFileFilter : public SecurityFilter {
+public:
+    std::vector<SecurityFileFilterItem*> mFileFilterItem;
 
-using SecurityConfig = std::pair<const SecurityOptions*, const PipelineContext*>;
+private:
+    ~SecurityFileFilter() override {
+        for (auto item : mFileFilterItem) {
+            delete item;
+        }
+    }
+};
+
+// process
+class SecurityProcessNamespaceFilter {
+public:
+    // type of securityNamespaceFilter
+    std::string mType;
+    std::vector<std::string> mValueList;
+};
+class SecurityProcessFilter : public SecurityFilter {
+public:
+    std::vector<SecurityProcessNamespaceFilter*> mNamespaceFilter;
+    std::vector<SecurityProcessNamespaceFilter*> mNamespaceBlackFilter;
+    // std::vector<std::string> mIp;
+private:
+    ~SecurityProcessFilter() override {
+        for (auto ns : mNamespaceFilter) {
+            delete ns;
+        }
+        for (auto ns : mNamespaceBlackFilter) {
+            delete ns;
+        }
+    }
+};
+
+// network
+class SecurityNetworkFilter : public SecurityFilter {
+public:
+    std::vector<std::string> mDestAddrList;
+    std::vector<uint32_t> mDestPortList;
+    std::vector<std::string> mDestAddrBlackList;
+    std::vector<uint32_t> mDestPortBlackList;
+    std::vector<std::string> mSourceAddrList;
+    std::vector<uint32_t> mSourcePortList;
+    std::vector<std::string> mSourceAddrBlackList;
+    std::vector<uint32_t> mSourcePortBlackList;
+};
+
+class SecurityOption {
+public:
+    bool Init(SecurityFilterType filterType,
+              const Json::Value& config,
+              const PipelineContext* mContext,
+              const std::string& sName);
+    // todo app_config中定义的进程级别配置获取
+
+    std::vector<std::string> mCallName;
+    SecurityFilter* mFilter;
+    // std::vector<SecurityReturnType> mReturnType;
+    ~SecurityOption() { delete mFilter; }
+    bool IsProcessNamespaceFilterTypeValid(std::string type);
+};
+
+// class SecurityReturnType{};
+
+class SecurityOptions {
+public:
+    bool Init(SecurityFilterType filterType,
+              const Json::Value& config,
+              const PipelineContext* mContext,
+              const std::string& sName);
+
+    std::vector<SecurityOption*> mOptionList;
+};
 
 } // namespace logtail

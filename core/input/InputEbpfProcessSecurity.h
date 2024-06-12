@@ -18,7 +18,9 @@
 
 #include <string>
 
+#include "ebpf/security/SecurityOptions.h"
 #include "plugin/interface/Input.h"
+
 
 namespace logtail {
 
@@ -30,7 +32,12 @@ public:
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
-    std::string mDetail;
+
+private:
+    SecurityOptions mSecurityOptions;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class InputEbpfProcessSecurityUnittest;
+#endif
 };
 
-}
+} // namespace logtail
