@@ -14,6 +14,8 @@
 
 #include "input/InputEbpfNetworkSecurity.h"
 
+#include "ebpf/security/SecurityServer.h"
+
 
 using namespace std;
 
@@ -22,20 +24,21 @@ namespace logtail {
 const std::string InputEbpfNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
 
 bool InputEbpfNetworkSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
-    // todo config string解析成定义的param
-    mDetail = config.toStyledString();
-    return true;
+    // config string解析成定义的param
+    return mSecurityOptions.Init(SecurityFilterType::NETWORK, config, mContext, sName);
 }
 
 bool InputEbpfNetworkSecurity::Start() {
-    // todo 1、security ebpf采集总线程未启动，调用SecurityServer的start启动
-    // todo 2、插件相关配置注册到SecurityServer
+    SecurityServer::GetInstance()->AddSecurityOptions(mContext->GetConfigName(), &mSecurityOptions);
+    SecurityServer::GetInstance()->Start();
     return true;
 }
 
 bool InputEbpfNetworkSecurity::Stop(bool isPipelineRemoving) {
-    // todo 1、该ebpf类型的 security采集线程未暂停，调用SecurityServer的stop暂停
-    // todo 2、插件相关配置从SecurityServer移除
+    if (!isPipelineRemoving) {
+        // TODO: ?
+    }
+    SecurityServer::GetInstance()->RemoveSecurityOptions(mContext->GetConfigName());
     return true;
 }
 

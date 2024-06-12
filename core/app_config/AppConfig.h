@@ -161,6 +161,46 @@ private:
 
     std::string mBindInterface;
 
+    // ebpf
+    int32_t mReceiveEventChanCap = 4096;
+
+    struct AdminConfig {
+        bool mDebugMode = false;
+        std::string mLogLevel = "warn";
+        bool mPushAllSpan = false;
+    } mAdminConfig;
+
+    struct AggregationConfig {
+        int mAggWindowSecond = 15;
+    } mAggregationConfig;
+
+    struct ConverageConfig {
+        std::string mStrategy = "combine";
+    } mConverageConfig;
+
+    struct SampleConfig {
+        std::string mStrategy = "fixedRate";
+        struct Config {
+            double mRate = 0.01;
+        } mConfig;
+    } mSampleConfig;
+
+    struct SocketProbeConfig {
+        int mSlowRequestThresholdMs = 500;
+        int mMaxConnTrackers = 10000;
+        int mMaxBandWidthMbPerSec = 30;
+        int mMaxRawRecordPerSec = 100000;
+    } mSocketProbeConfig;
+
+    struct ProfileProbeConfig {
+        int mProfileSampleRate = 10;
+        int mProfileUploadDuration = 10;
+    } mProfileProbeConfig;
+
+    struct ProcessProbeConfig {
+        bool mEnableOOMDetect = false;
+    } mProcessProbeConfig;
+
     // /**
     //  * @brief Load ConfigServer, DataServer and network interface
     //  *
@@ -398,6 +438,25 @@ public:
     std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
 
     void UpdateFileTags();
+
+    // ebpf
+    void LoadEbpfConfig(const Json::Value& confJson);
+
+    int32_t GetReceiveEventChanCap() const { return mReceiveEventChanCap; }
+
+    const AdminConfig& GetAdminConfig() const { return mAdminConfig; }
+
+    const AggregationConfig& GetAggregationConfig() const { return mAggregationConfig; }
+
+    const ConverageConfig& GetConverageConfig() const { return mConverageConfig; }
+
+    const SampleConfig& GetSampleConfig() const { return mSampleConfig; }
+
+    const SocketProbeConfig& GetSocketProbeConfig() const { return mSocketProbeConfig; }
+
+    const ProfileProbeConfig& GetProfileProbeConfig() const { return mProfileProbeConfig; }
+
+    const ProcessProbeConfig& GetProcessProbeConfig() const { return mProcessProbeConfig; }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

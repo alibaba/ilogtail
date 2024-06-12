@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "ebpf/security/SecurityOptions.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -35,14 +36,18 @@ public:
     }
 
     void Start();
-    void Stop(bool isConfigUpdate = true);
+    void Stop();
 
-    // todo 其他函数注册：配置注册、注销等
+    // 其他函数注册：配置注册、注销等
+    void AddSecurityOptions(const std::string& name, const SecurityOptions* options);
+    void RemoveSecurityOptions(const std::string& name);
 
 private:
     SecurityServer() = default;
     ~SecurityServer() = default;
 
-    void PauseInner();
+    // void PauseInner();
+    std::unordered_map<std::string, const SecurityOptions*> mInputMap;
 };
-}
+
+} // namespace logtail

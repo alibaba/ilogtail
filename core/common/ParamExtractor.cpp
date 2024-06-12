@@ -84,6 +84,20 @@ bool GetOptionalStringParam(const Json::Value& config, const string& key, string
     return true;
 }
 
+bool GetOptionalDoubleParam(const Json::Value& config, const string& key, double& param, string& errorMsg) {
+    errorMsg.clear();
+    string curKey = ExtractCurrentKey(key);
+    const Json::Value* itr = config.find(curKey.c_str(), curKey.c_str() + curKey.length());
+    if (itr != nullptr) {
+        if (!itr->isDouble()) {
+            errorMsg = "param " + key + " is not of type double";
+            return false;
+        }
+        param = itr->asDouble();
+    }
+    return true;
+}
+
 bool GetMandatoryBoolParam(const Json::Value& config, const string& key, bool& param, string& errorMsg) {
     errorMsg.clear();
     if (!config.isMember(ExtractCurrentKey(key))) {
@@ -134,6 +148,32 @@ bool IsRegexValid(const string& regStr) {
     try {
         boost::regex reg(regStr);
     } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool IsListValid(const Json::Value& config, const string& key, string& errorMsg) {
+    errorMsg.clear();
+    if (!config.isMember(ExtractCurrentKey(key))) {
+        errorMsg = "param " + key + " is missing";
+        return false;
+    }
+    if (!config[ExtractCurrentKey(key)].isArray()) {
+        errorMsg = "param " + key + " is not of type list";
+        return false;
+    }
+    return true;
+}
+
+bool IsMapValid(const Json::Value& config, const string& key, string& errorMsg) {
+    errorMsg.clear();
+    if (!config.isMember(ExtractCurrentKey(key))) {
+        errorMsg = "param " + key + " is missing";
+        return false;
+    }
+    if (!config[ExtractCurrentKey(key)].isObject()) {
+        errorMsg = "param " + key + " is not of type map";
         return false;
     }
     return true;

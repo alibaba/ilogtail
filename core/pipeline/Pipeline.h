@@ -77,6 +77,12 @@ private:
     friend class PipelineUnittest;
     friend class InputFileUnittest;
     friend class ProcessorTagNativeUnittest;
+    friend class InputEbpfFileSecurityUnittest;
+    friend class InputEbpfProcessSecurityUnittest;
+    friend class InputEbpfNetworkSecurityUnittest;
+    friend class InputEbpfFileObserverUnittest;
+    friend class InputEbpfProcessObserverUnittest;
+    friend class InputEbpfNetworkObserverUnittest;
 #endif
 };
 

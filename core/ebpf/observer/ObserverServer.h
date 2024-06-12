@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "ebpf/observer/ObserverOptions.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -35,14 +36,19 @@ public:
     }
 
     void Start();
-    void Stop(bool isConfigUpdate = true);
+    void Stop();
 
-    // todo 其他函数注册：配置注册、注销等
+    // 其他函数注册：配置注册、注销等
+    void AddObserverOption(const std::string& name, const ObserverOptions* option);
+    void RemoveObserverOption(const std::string& name);
+
 
 private:
     ObserverServer() = default;
     ~ObserverServer() = default;
 
-    void PauseInner();
+    // void PauseInner();
+    std::unordered_map<std::string, const ObserverOptions*> mInputMap;
 };
-}
+
+} // namespace logtail
