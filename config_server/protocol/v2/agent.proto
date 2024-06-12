@@ -148,7 +148,7 @@ message AgentConfigResponse {
 message FetchConfigRequest {
     bytes request_id = 1; 
     bytes instance_id = 2;                 // Agent's unique identification
-    repeated ConfigInfo req_configs = 3;    // Config's name and version/hash
+    repeated ConfigInfo req_configs = 3;   // Config's name and version/hash
 }
 
 // ConfigServer response to Agent's request

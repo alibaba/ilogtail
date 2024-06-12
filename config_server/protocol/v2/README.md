@@ -106,7 +106,7 @@
     
     message ConfigDetail {
         string name = 1;        // Required, Config's unique identification
-        int64 version = 2;      // Required, Config's version number
+        int64 version = 2;      // Required, Config's version number or hash code
         bytes detail = 3;       // Required, Config's detail
     }
 
