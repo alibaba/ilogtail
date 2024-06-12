@@ -1,6 +1,6 @@
 syntax = "proto3";
 package configserver.proto.v2;
-option go_package = ".;configserver_proto_v2";
+option go_package = "/config_server/service/protov2;configserver_proto_v2";
 
 message AgentGroupTag {
     string name = 1;
@@ -66,7 +66,7 @@ enum RequestFlags {
     FullState               = 0x00000001;
 }
 
-// API: /Agent/GetAgentConfig
+// API: /Agent/Heartbeat
 
 // Agent sends requests to the ConfigServer to get config updates and receive commands.
 message AgentConfigRequest {
@@ -134,10 +134,12 @@ message AgentConfigResponse {
     bytes request_id = 1;  
     int32 code = 2;      
     string message = 3;     
+    uint64 capabilities = 4;                            // Bitmask of flags defined by ServerCapabilities enum
 
-    repeated ConfigDetail pipeline_config_updates = 4;  // Agent's pipeline config update status
-    repeated ConfigDetail process_config_updates = 5;   // Agent's process config update status
-    repeated CommandDetail custom_command_updates = 6;  // Agent's commands updates
+    repeated ConfigDetail pipeline_config_updates = 5;  // Agent's pipeline config update status
+    repeated ConfigDetail process_config_updates = 6;   // Agent's process config update status
+    repeated CommandDetail custom_command_updates = 7;  // Agent's commands updates
+    uint64 flags = 7;                                   // Predefined command flag
 }
 
 // API: /Agent/FetchPipelineConfig/

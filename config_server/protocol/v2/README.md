@@ -1,13 +1,13 @@
 # 统一管控协议
 
-本规范定义了 Agent 管控网络协议以及 iLogtail 和 Config Server 的预期行为。
+本规范定义了 Agent 管控网络协议以及 iLogtail 和 ConfigServer 的预期行为。
 
 1. 只要XxxConfigServer实现了协议，那么就可以管控Agent做Yyy事情。
 2. 只要Agent实现了协议，那么任何XxxConfigServer就能过管控该Agent做Yyy事情。
 
 ## 管控协议
 
-/Agent/GetAgentConfig?InstanceId=$instance\_id&WaitForChange=(true|false)
+/Agent/Heartbeat?InstanceId=$instance\_id&WaitForChange=(true|false)
 
 ### AgentConfigRequest 消息
 
@@ -96,10 +96,12 @@
         bytes request_id = 1;  
         int32 code = 2;      
         string message = 3;     
+        uint64 capabilities = 4;                            // Bitmask of flags defined by ServerCapabilities enum
 
-        repeated ConfigDetail pipeline_config_updates = 4;  // Agent's pipeline config update status
-        repeated ConfigDetail process_config_updates = 5;   // Agent's process config update status
-        repeated CommandDetail custom_command_updates = 6;  // Agent's commands updates
+        repeated ConfigDetail pipeline_config_updates = 5;  // Agent's pipeline config update status
+        repeated ConfigDetail process_config_updates = 6;   // Agent's process config update status
+        repeated CommandDetail custom_command_updates = 7;  // Agent's commands updates
+        uint64 flags = 7;                                   // Predefined command flag
     }
     
     message ConfigDetail {
@@ -224,12 +226,18 @@ Server：这些信息是Agent状态的一部分，可选保存。与通过Event�
 
 ### 预定义命令
 
-Client: 通过request的flag传递，尚未定义
+Client: 通过request的flag传递，定义了FullStatus，表明本条信息为全量状态
 
-Server: 通过response的flag传递，定义了ReportFullStatus
+Server: 通过response的flag传递，定义了ReportFullStatus，表明要求Client上报全量状态信息
 
 ### 自定义命令
 
 Client: 为了防止服务端重复下发命令以及感知命令执行结果，在command expire前，Client始终应具备向服务端上报command执行状态的能力，实际是否上报取决于心跳压缩机制。在expire\_time超过后，client不应该再上报超时的command状态。
 
 Server: 如果上报+已知的Agent状态中，缺少应下发的custom\_command\_updates（通过name识别），那么server应该在响应中下发缺少的custom\_command\_updates。
+
+### 异常处理
+
+Server: 服务端正常返回时AgentConfigResponse中的code应始终设置为0，而当服务端异常时，必须将AgentConfigResponse中的code设置为非0，AgentConfigResponse中的message应包含错误信息，此时Response中的其他字段必须为空。
+
+Client: 当AgentConfigResponse中的code为0时，Agent应该正常处理下发的配置。当AgentConfigResponse中的code不为0时，Agent必须忽略除code和message外的其他字段，并择机重试。
