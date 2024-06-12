@@ -69,7 +69,7 @@ enum RequestFlags {
 // API: /Agent/Heartbeat
 
 // Agent sends requests to the ConfigServer to get config updates and receive commands.
-message AgentConfigRequest {
+message HearbeatRequest {
     bytes request_id = 1;
     uint64 sequence_num = 2;                    // Increment every request, for server to check sync status
     uint64 capabilities = 3;                    // Bitmask of flags defined by AgentCapabilities enum
@@ -130,7 +130,7 @@ enum ResponseFlags {
 }
 
 // ConfigServer's response to Agent's request
-message AgentConfigResponse {
+message HeartbeatResponse {
     bytes request_id = 1;  
     int32 code = 2;      
     string message = 3;     

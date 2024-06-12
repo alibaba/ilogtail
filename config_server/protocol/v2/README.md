@@ -9,9 +9,9 @@
 
 /Agent/Heartbeat?InstanceId=$instance\_id&WaitForChange=(true|false)
 
-### AgentConfigRequest 消息
+### HeartbeatRequest 消息
 
-    message AgentConfigRequest {
+    message HeartbeatRequest {
         bytes request_id = 1;
         uint64 sequence_num = 2;                    // Increment every request, for server to check sync status
         uint64 capabilities = 3;                    // Bitmask of flags defined by AgentCapabilities enum
@@ -90,9 +90,9 @@
         FullState               = 0x00000001;
     }
 
-### AgentConfigResponse 消息
+### HeartbeatResponse 消息
 
-    message AgentConfigResponse {
+    message HeartbeatResponse {
         bytes request_id = 1;  
         int32 code = 2;      
         string message = 3;     
@@ -238,6 +238,6 @@ Server: 如果上报+已知的Agent状态中，缺少应下发的custom\_comman
 
 ### 异常处理
 
-Server: 服务端正常返回时AgentConfigResponse中的code应始终设置为0，而当服务端异常时，必须将AgentConfigResponse中的code设置为非0，AgentConfigResponse中的message应包含错误信息，此时Response中的其他字段必须为空。
+Server: 服务端正常返回时HeartbeatResponse中的code应始终设置为0，而当服务端异常时，必须将HeartbeatResponse中的code设置为非0，HeartbeatResponse中的message应包含错误信息，此时Response中的其他字段必须为空。
 
-Client: 当AgentConfigResponse中的code为0时，Agent应该正常处理下发的配置。当AgentConfigResponse中的code不为0时，Agent必须忽略除code和message外的其他字段，并择机重试。
+Client: 当HeartbeatResponse中的code为0时，Agent应该正常处理下发的配置。当HeartbeatResponse中的code不为0时，Agent必须忽略除code和message外的其他字段，并择机重试。
