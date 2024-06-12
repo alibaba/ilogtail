@@ -89,7 +89,7 @@ message AgentConfigRequest {
 // Define Config's detail
 message ConfigDetail {
     string name = 1;        // Required, Config's unique identification
-    int64 version = 2;      // Required, Config's version number
+    int64 version = 2;      // Required, Config's version number or hash code
     bytes detail = 3;       // Required, Config's detail
 }
 
@@ -148,7 +148,7 @@ message AgentConfigResponse {
 message FetchConfigRequest {
     bytes request_id = 1; 
     bytes instance_id = 2;                 // Agent's unique identification
-    repeated ConfigInfo req_configs = 3;    // Config's name and version
+    repeated ConfigInfo req_configs = 3;    // Config's name and version/hash
 }
 
 // ConfigServer response to Agent's request
