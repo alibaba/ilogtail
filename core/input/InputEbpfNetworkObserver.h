@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "ebpf/observer/ObserverOptions.h"
 #include "plugin/interface/Input.h"
 
 namespace logtail {
@@ -30,7 +31,12 @@ public:
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
-    std::string mDetail;
+
+private:
+    ObserverOptions mObserverOption;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class InputEbpfNetworkObserverUnittest;
+#endif
 };
 
-}
+} // namespace logtail

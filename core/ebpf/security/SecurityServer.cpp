@@ -18,15 +18,44 @@
 namespace logtail {
 
 void SecurityServer::Start() {
-    // todo security ebpf采集线程启动相关操作，包含ebpf_init启动
+    // security ebpf采集线程启动相关操作，包含ebpf_init启动
+
+    // static bool initialized = false;
+    // if (!initialized) {
+    //     initialized = true;
+    //     // init global funcs
+    //     ebpf_init();
+    //     for (auto& input : mInputMap) {
+    //         // TODO: 启动一个线程
+    //         ebpf_init(input);
+    //     }
+    //     ebpf_start();
+    // } else {
+    //     ebpf_stop();
+    //     // init global funcs
+    //     ebpf_init();
+    //     for (auto& input : mInputMap) {
+    //         // TODO: 启动一个线程
+    //         ebpf_init(input);
+    //     }
+    //     ebpf_start();
+    // }
+
     LOG_INFO(sLogger, ("security ebpf server", "started"));
 }
 
-void SecurityServer::Stop(bool isConfigUpdate) {
+void SecurityServer::Stop() {
     // todo 暂停特定类型的ebpf的 security采集线程，包含ebpf_stop
+    // ebpf_stop();
 }
 
-// todo function1 插件配置注册逻辑
-
-// todo function2 插件配置注销逻辑
+// 插件配置注册逻辑
+void SecurityServer::AddSecurityOptions(const std::string& name, const SecurityOptions* options) {
+    mInputMap[name] = options;
 }
+// 插件配置注销逻辑
+void SecurityServer::RemoveSecurityOptions(const std::string& name) {
+    mInputMap.erase(name);
+}
+
+} // namespace logtail

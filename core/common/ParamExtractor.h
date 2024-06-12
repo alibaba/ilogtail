@@ -98,6 +98,8 @@ bool GetOptionalStringParam(const Json::Value& config,
                             std::string& param,
                             std::string& errorMsg);
 
+bool GetOptionalDoubleParam(const Json::Value& config, const std::string& key, double& param, std::string& errorMsg);
+
 template <class T>
 bool GetOptionalListParam(const Json::Value& config,
                           const std::string& key,
@@ -224,5 +226,9 @@ bool GetMandatoryListParam(const Json::Value& config,
 }
 
 bool IsRegexValid(const std::string& regStr);
+
+bool IsListValid(const Json::Value& config, const std::string& key, std::string& errorMsg);
+
+bool IsMapValid(const Json::Value& config, const std::string& key, std::string& errorMsg);
 
 } // namespace logtail

@@ -18,11 +18,12 @@
 
 #include <string>
 
+#include "ebpf/observer/ObserverOptions.h"
 #include "plugin/interface/Input.h"
 
 namespace logtail {
 
-class InputEbpfProfilingOberver : public Input {
+class InputEbpfFileObserver : public Input {
 public:
     static const std::string sName;
 
@@ -31,6 +32,10 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    std::string mDetail;
+private:
+    ObserverOptions mObserverOption;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class InputEbpfFileObserverUnittest;
+#endif
 };
-}
+} // namespace logtail
