@@ -19,13 +19,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cucumber/godog"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/testhub/control"
 	"github.com/alibaba/ilogtail/test/testhub/setup"
 	"github.com/alibaba/ilogtail/test/testhub/trigger"
 	"github.com/alibaba/ilogtail/test/testhub/verify"
-	"github.com/cucumber/godog"
 )
 
 func TestMain(m *testing.M) {
