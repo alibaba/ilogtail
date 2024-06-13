@@ -1,6 +1,5 @@
-FROM golang:1.19-alpine
+FROM golang:1.19
 
-RUN apk add build-base
 RUN go env -w GOPROXY="https://goproxy.cn,direct"
 RUN mkdir -p /tmp/ilogtail
 
