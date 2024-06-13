@@ -21,6 +21,11 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/testhub/control"
+	"github.com/alibaba/ilogtail/test/testhub/setup"
+	"github.com/alibaba/ilogtail/test/testhub/trigger"
+	"github.com/alibaba/ilogtail/test/testhub/verify"
+	"github.com/cucumber/godog"
 )
 
 func TestMain(m *testing.M) {
@@ -63,4 +68,19 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	logger.Flush()
 	os.Exit(code)
+}
+
+func scenarioInitializer(ctx *godog.ScenarioContext) {
+	// Given
+	ctx.Given(`^\{(\S+)\} environment$`, setup.InitEnv)
+	ctx.Given(`^\{(\S+)\} config as below`, control.AddLocalConfig)
+
+	// When
+	ctx.When(`^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
+	ctx.When(`add k8s label \{(.*)\}`, control.AddLabel)
+	ctx.When(`remove k8s label \{(.*)\}`, control.RemoveLabel)
+
+	// Then
+	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)
+	ctx.Then(`^the log contents match regex single`, verify.RegexSingle)
 }

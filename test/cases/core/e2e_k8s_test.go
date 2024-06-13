@@ -21,15 +21,15 @@ import (
 	"github.com/alibaba/ilogtail/test/testhub/cleanup"
 )
 
-func TestRegressionOnK8s(t *testing.T) {
+func TestE2EOnK8s(t *testing.T) {
 	defer cleanup.All()
 	suite := godog.TestSuite{
-		Name:                "RegressionOnK8s",
+		Name:                "E2EOnK8s",
 		ScenarioInitializer: scenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"scenarios"},
-			Tags:     "@regression && @k8s",
+			Tags:     "@e2e && @k8s",
 			TestingT: t,
 		},
 	}
