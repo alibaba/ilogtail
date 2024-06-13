@@ -14,9 +14,10 @@ Feature: container filter
       EnableContainerDiscovery: true
       FilePaths:
         - /tmp/ilogtail/regex_single.log
-      IncludeK8sLabel:
-        - rel: e2e
-        - tag: v3.0.1
+      ContainerFilters:
+        IncludeK8sLabel:
+          rel: e2e
+          tag: v3.0.1
   processors: []
     """
     When generate {100} regex logs, with interval {100}ms

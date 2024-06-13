@@ -78,8 +78,8 @@ func scenarioInitializer(ctx *godog.ScenarioContext) {
 
 	// When
 	ctx.When(`^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
-	ctx.When(`add k8s label \{(.*)\}`, control.AddLabel)
-	ctx.When(`remove k8s label \{(.*)\}`, control.RemoveLabel)
+	ctx.When(`^add k8s label \{(.*)\}`, control.AddLabel)
+	ctx.When(`^remove k8s label \{(.*)\}`, control.RemoveLabel)
 
 	// Then
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)

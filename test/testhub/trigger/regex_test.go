@@ -35,7 +35,7 @@ func TestGenerateRegexLogSingle(t *testing.T) {
 		t.Fatalf("parse INTERVAL failed: %v", err)
 		return
 	}
-	fileName := getEnvOrDefault("FILENAME", "regex_single")
+	fileName := getEnvOrDefault("FILENAME", "regex_single.log")
 
 	testLogConent := []string{
 		`- file2:1 127.0.0.1 - [2024-01-07T12:40:10.505120] "HEAD / HTTP/2.0" 302 809 "未知" "这是一条消息，password:123456"`,
