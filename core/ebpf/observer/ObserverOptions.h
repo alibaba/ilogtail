@@ -19,6 +19,7 @@
 #include <json/json.h>
 
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "pipeline/PipelineContext.h"
@@ -27,27 +28,20 @@ namespace logtail {
 
 enum class ObserverType { PROCESS, FILE, NETWORK };
 
-class Observer {
-public:
-    // type of observer: process, profile, socket
-    ObserverType mType;
-    virtual ~Observer() = default;
-};
-
-class ObserverProcess : public Observer {
+class ObserverProcess {
 public:
     std::vector<std::string> mIncludeCmdRegex;
     std::vector<std::string> mExcludeCmdRegex;
 };
 
-class ObserverFile : public Observer {
+class ObserverFile {
 public:
     std::string mProfileRemoteServer;
     bool mCpuSkipUpload;
     bool mMemSkipUpload;
 };
 
-class ObserverNetwork : public Observer {
+class ObserverNetwork {
 public:
     std::vector<std::string> mEnableProtocols;
     bool mDisableProtocolParse;
@@ -59,9 +53,9 @@ public:
 class ObserverOptions {
 public:
     bool Init(ObserverType type, const Json::Value& config, const PipelineContext* mContext, const std::string& sName);
-    // todo app_config中定义的进程级别配置获取
 
-    Observer* mObserver;
+    std::variant<ObserverProcess, ObserverFile, ObserverNetwork> mObserver;
+    ObserverType mType;
 };
 
 } // namespace logtail

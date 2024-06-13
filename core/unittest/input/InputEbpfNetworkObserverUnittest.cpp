@@ -49,6 +49,7 @@ void InputEbpfNetworkObserverUnittest::OnSuccessfulInit() {
     unique_ptr<InputEbpfNetworkObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // valid optional param
     configStr = R"(
@@ -68,21 +69,22 @@ void InputEbpfNetworkObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfNetworkObserver());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
-    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOption.mObserver->mType);
-    ObserverNetwork* thisObserver = dynamic_cast<ObserverNetwork*>(input->mObserverOption.mObserver);
-    APSARA_TEST_EQUAL(thisObserver->mEnableProtocols.size(), 1);
-    APSARA_TEST_EQUAL(thisObserver->mEnableProtocols[0], "http");
-    APSARA_TEST_EQUAL(false, thisObserver->mDisableProtocolParse);
-    APSARA_TEST_EQUAL(false, thisObserver->mDisableConnStats);
-    APSARA_TEST_EQUAL(false, thisObserver->mEnableConnTrackerDump);
+    ObserverNetwork thisObserver = std::get<ObserverNetwork>(input->mObserverOption.mObserver);
+    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOption.mType);
+    APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
+    APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
+    APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);
+    APSARA_TEST_EQUAL(false, thisObserver.mDisableConnStats);
+    APSARA_TEST_EQUAL(false, thisObserver.mEnableConnTrackerDump);
 }
 
 void InputEbpfNetworkObserverUnittest::OnFailedInit() {
     unique_ptr<InputEbpfNetworkObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // invalid optional param
     configStr = R"(
@@ -102,7 +104,7 @@ void InputEbpfNetworkObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfNetworkObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
@@ -119,7 +121,7 @@ void InputEbpfNetworkObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfNetworkObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 

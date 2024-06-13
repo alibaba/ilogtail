@@ -49,6 +49,7 @@ void InputEbpfFileObserverUnittest::OnSuccessfulInit() {
     unique_ptr<InputEbpfFileObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // valid optional param
     configStr = R"(
@@ -65,19 +66,20 @@ void InputEbpfFileObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileObserver());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
-    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOption.mObserver->mType);
-    ObserverFile* thisObserver = dynamic_cast<ObserverFile*>(input->mObserverOption.mObserver);
-    APSARA_TEST_EQUAL("", thisObserver->mProfileRemoteServer);
-    APSARA_TEST_EQUAL(false, thisObserver->mCpuSkipUpload);
-    APSARA_TEST_EQUAL(false, thisObserver->mMemSkipUpload);
+    ObserverFile thisObserver = std::get<ObserverFile>(input->mObserverOption.mObserver);
+    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOption.mType);
+    APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
+    APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
+    APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);
 }
 
 void InputEbpfFileObserverUnittest::OnFailedInit() {
     unique_ptr<InputEbpfFileObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // invalid optional param
     configStr = R"(
@@ -94,7 +96,7 @@ void InputEbpfFileObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
@@ -108,7 +110,7 @@ void InputEbpfFileObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 

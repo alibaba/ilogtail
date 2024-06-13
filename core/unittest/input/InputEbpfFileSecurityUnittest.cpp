@@ -14,6 +14,8 @@
 
 #include <json/json.h>
 
+#include <variant>
+
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/security/SecurityOptions.h"
@@ -49,6 +51,7 @@ void InputEbpfFileSecurityUnittest::OnSuccessfulInit() {
     unique_ptr<InputEbpfFileSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // only mandatory param
     configStr = R"(
@@ -72,14 +75,13 @@ void InputEbpfFileSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    SecurityFilter* thisFilterBase1 = input->mSecurityOptions.mOptionList[0]->mFilter;
-    SecurityFileFilter* thisFilter1 = dynamic_cast<SecurityFileFilter*>(thisFilterBase1);
-    APSARA_TEST_EQUAL(SecurityFilterType::FILE, thisFilter1->mFilterType);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0]->mCallName[0]);
-    APSARA_TEST_EQUAL("/etc", thisFilter1->mFileFilterItem[0]->mFilePath);
-    APSARA_TEST_EQUAL("/bin", thisFilter1->mFileFilterItem[1]->mFilePath);
+    SecurityFileFilter thisFilter1 = std::get<SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::FILE, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    APSARA_TEST_EQUAL("/etc", thisFilter1.mFileFilterItem[0].mFilePath);
+    APSARA_TEST_EQUAL("/bin", thisFilter1.mFileFilterItem[1].mFilePath);
 
     // valid optional param
     configStr = R"(
@@ -108,23 +110,23 @@ void InputEbpfFileSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    SecurityFilter* thisFilterBase2 = input->mSecurityOptions.mOptionList[0]->mFilter;
-    SecurityFileFilter* thisFilter2 = dynamic_cast<SecurityFileFilter*>(thisFilterBase2);
-    APSARA_TEST_EQUAL(SecurityFilterType::FILE, thisFilter2->mFilterType);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0]->mCallName[0]);
-    APSARA_TEST_EQUAL("/etc", thisFilter2->mFileFilterItem[0]->mFilePath);
-    APSARA_TEST_EQUAL("passwd", thisFilter2->mFileFilterItem[0]->mFileName);
-    APSARA_TEST_EQUAL("/etc", thisFilter2->mFileFilterItem[1]->mFilePath);
-    APSARA_TEST_EQUAL("shadow", thisFilter2->mFileFilterItem[1]->mFileName);
-    APSARA_TEST_EQUAL("/bin", thisFilter2->mFileFilterItem[2]->mFilePath);
+    SecurityFileFilter thisFilter2 = std::get<SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::FILE, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    APSARA_TEST_EQUAL("/etc", thisFilter2.mFileFilterItem[0].mFilePath);
+    APSARA_TEST_EQUAL("passwd", thisFilter2.mFileFilterItem[0].mFileName);
+    APSARA_TEST_EQUAL("/etc", thisFilter2.mFileFilterItem[1].mFilePath);
+    APSARA_TEST_EQUAL("shadow", thisFilter2.mFileFilterItem[1].mFileName);
+    APSARA_TEST_EQUAL("/bin", thisFilter2.mFileFilterItem[2].mFilePath);
 }
 
 void InputEbpfFileSecurityUnittest::OnFailedInit() {
     unique_ptr<InputEbpfFileSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // invalid optional param
     configStr = R"(
@@ -146,7 +148,7 @@ void InputEbpfFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // lose mandatory param
     configStr = R"(
@@ -167,7 +169,7 @@ void InputEbpfFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
@@ -184,7 +186,7 @@ void InputEbpfFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 

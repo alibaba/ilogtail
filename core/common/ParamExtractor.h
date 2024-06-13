@@ -205,6 +205,8 @@ bool GetMandatoryStringParam(const Json::Value& config,
                              std::string& param,
                              std::string& errorMsg);
 
+bool GetMandatoryDoubleParam(const Json::Value& config, const std::string& key, double& param, std::string& errorMsg);
+
 template <class T>
 bool GetMandatoryListParam(const Json::Value& config,
                            const std::string& key,
@@ -227,8 +229,8 @@ bool GetMandatoryListParam(const Json::Value& config,
 
 bool IsRegexValid(const std::string& regStr);
 
-bool IsListValid(const Json::Value& config, const std::string& key, std::string& errorMsg);
+bool IsValidList(const Json::Value& config, const std::string& key, std::string& errorMsg);
 
-bool IsMapValid(const Json::Value& config, const std::string& key, std::string& errorMsg);
+bool IsValidMap(const Json::Value& config, const std::string& key, std::string& errorMsg);
 
 } // namespace logtail

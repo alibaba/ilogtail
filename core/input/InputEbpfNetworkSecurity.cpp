@@ -23,13 +23,13 @@ namespace logtail {
 
 const std::string InputEbpfNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
 
-bool InputEbpfNetworkSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputEbpfNetworkSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
     return mSecurityOptions.Init(SecurityFilterType::NETWORK, config, mContext, sName);
 }
 
 bool InputEbpfNetworkSecurity::Start() {
-    SecurityServer::GetInstance()->AddSecurityOptions(mContext->GetConfigName(), &mSecurityOptions);
+    SecurityServer::GetInstance()->AddSecurityOptions(mContext, mIndex, &mSecurityOptions);
     SecurityServer::GetInstance()->Start();
     return true;
 }
@@ -38,7 +38,7 @@ bool InputEbpfNetworkSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    SecurityServer::GetInstance()->RemoveSecurityOptions(mContext->GetConfigName());
+    SecurityServer::GetInstance()->RemoveSecurityOptions(mContext->GetConfigName(), mIndex);
     return true;
 }
 

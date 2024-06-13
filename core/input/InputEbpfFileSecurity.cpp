@@ -23,13 +23,13 @@ namespace logtail {
 
 const std::string InputEbpfFileSecurity::sName = "input_ebpf_fileprobe_security";
 
-bool InputEbpfFileSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputEbpfFileSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
     return mSecurityOptions.Init(SecurityFilterType::FILE, config, mContext, sName);
 }
 
 bool InputEbpfFileSecurity::Start() {
-    SecurityServer::GetInstance()->AddSecurityOptions(mContext->GetConfigName(), &mSecurityOptions);
+    SecurityServer::GetInstance()->AddSecurityOptions(mContext, mIndex, &mSecurityOptions);
     SecurityServer::GetInstance()->Start();
     return true;
 }
@@ -38,7 +38,7 @@ bool InputEbpfFileSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    SecurityServer::GetInstance()->RemoveSecurityOptions(mContext->GetConfigName());
+    SecurityServer::GetInstance()->RemoveSecurityOptions(mContext->GetConfigName(), mIndex);
     return true;
 }
 
