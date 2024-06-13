@@ -35,7 +35,7 @@ namespace logtail {
 // replace them with PATH_SEPARATOR.
 std::string GetProcessExecutionDir(void) {
 #if defined(__ANDROID__)
-    return "/data/data/com.example.logtail_for_android/files/";
+    return STRING_FLAG(logtail_sys_conf_dir);
 #elif defined(__linux__)
     char exePath[PATH_MAX + 1] = "";
     readlink("/proc/self/exe", exePath, sizeof(exePath));

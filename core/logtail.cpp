@@ -73,9 +73,7 @@ void enable_core(void) {
 
 static void overwrite_community_edition_flags() {
     // support run in installation dir on default
-#if defined(__ANDROID__)
-    STRING_FLAG(logtail_sys_conf_dir) = "/data/data/com.example.logtail_for_android/files";
-#else
+#if !defined(__ANDROID__)
     STRING_FLAG(logtail_sys_conf_dir) = ".";
 #endif
     STRING_FLAG(check_point_filename) = "checkpoint/logtail_check_point";

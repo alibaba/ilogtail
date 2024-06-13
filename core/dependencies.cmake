@@ -19,9 +19,7 @@
 #	- bin: DEPS_BINARY_ROOT
 # You can set your own ${DEPS_ROOT} when calling cmake, sub-directories can also be set with
 # corresponding variables.
-if (ANDROID)
-    set(DEFAULT_DEPS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../../deps")
-elseif (UNIX)
+if (UNIX)
     set(DEFAULT_DEPS_ROOT "/opt/logtail/deps")
 elseif (MSVC)
     set(DEFAULT_DEPS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../logtail_deps")
@@ -364,15 +362,13 @@ macro(link_leveldb target_name)
     endif ()
 endmacro()
 
-if(NOT ANDROID)
-    # asan for debug
-    macro(link_asan target_name)
+# asan for debug
+macro(link_asan target_name)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         target_compile_options(${target_name} PUBLIC -fsanitize=address)
         target_link_options(${target_name} PUBLIC -fsanitize=address -static-libasan)
     endif()
-    endmacro()
-endif()
+endmacro()
 
 # uuid
 macro(link_uuid target_name)
