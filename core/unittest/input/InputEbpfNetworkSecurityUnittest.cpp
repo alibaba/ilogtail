@@ -49,6 +49,7 @@ void InputEbpfNetworkSecurityUnittest::OnSuccessfulInit() {
     unique_ptr<InputEbpfNetworkSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // valid optional param
     configStr = R"(
@@ -77,31 +78,30 @@ void InputEbpfNetworkSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfNetworkSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
-    SecurityFilter* thisFilterBase1 = input->mSecurityOptions.mOptionList[0]->mFilter;
-    SecurityNetworkFilter* thisFilter1 = dynamic_cast<SecurityNetworkFilter*>(thisFilterBase1);
-    APSARA_TEST_EQUAL(SecurityFilterType::NETWORK, thisFilter1->mFilterType);
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0]->mCallName[0]);
-    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0]->mCallName[1]);
-    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1->mDestAddrList[0]);
-    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1->mDestAddrList[1]);
-    APSARA_TEST_EQUAL(80, thisFilter1->mDestPortList[0]);
-    APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1->mSourceAddrBlackList[0]);
-    APSARA_TEST_EQUAL(9300, thisFilter1->mSourcePortBlackList[0]);
+    SecurityNetworkFilter thisFilter1 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::NETWORK, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].mCallName[1]);
+    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
+    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1.mDestAddrList[1]);
+    APSARA_TEST_EQUAL(80, thisFilter1.mDestPortList[0]);
+    APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1.mSourceAddrBlackList[0]);
+    APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
 
-    SecurityFilter* thisFilterBase2 = input->mSecurityOptions.mOptionList[1]->mFilter;
-    SecurityNetworkFilter* thisFilter2 = dynamic_cast<SecurityNetworkFilter*>(thisFilterBase2);
-    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1]->mCallName[0]);
-    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2->mDestAddrList[0]);
-    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2->mDestAddrList[1]);
-    APSARA_TEST_EQUAL(80, thisFilter2->mDestPortList[0]);
+    SecurityNetworkFilter thisFilter2 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].mCallName[0]);
+    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2.mDestAddrList[0]);
+    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2.mDestAddrList[1]);
+    APSARA_TEST_EQUAL(80, thisFilter2.mDestPortList[0]);
 }
 
 void InputEbpfNetworkSecurityUnittest::OnFailedInit() {
     unique_ptr<InputEbpfNetworkSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // invalid optional param
     configStr = R"(
@@ -130,7 +130,7 @@ void InputEbpfNetworkSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfNetworkSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
@@ -150,7 +150,7 @@ void InputEbpfNetworkSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfNetworkSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 

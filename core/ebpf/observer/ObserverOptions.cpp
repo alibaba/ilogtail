@@ -24,7 +24,8 @@ bool ObserverOptions::Init(ObserverType type,
                            const PipelineContext* mContext,
                            const string& sName) {
     string errorMsg;
-    if (!IsMapValid(config, "ProbeConfig", errorMsg)) {
+    mType = type;
+    if (!IsValidMap(config, "ProbeConfig", errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            errorMsg,
@@ -37,13 +38,9 @@ bool ObserverOptions::Init(ObserverType type,
     const Json::Value& probeConfig = config["ProbeConfig"];
     switch (type) {
         case ObserverType::NETWORK: {
-            ObserverNetwork* thisObserverNetwork = new ObserverNetwork();
-            mObserver = thisObserverNetwork;
-            // Type
-            thisObserverNetwork->mType = ObserverType::NETWORK;
+            ObserverNetwork thisObserverNetwork;
             // EnableProtocols (Mandatory)
-            if (!GetOptionalListParam(
-                    probeConfig, "EnableProtocols", thisObserverNetwork->mEnableProtocols, errorMsg)) {
+            if (!GetOptionalListParam(probeConfig, "EnableProtocols", thisObserverNetwork.mEnableProtocols, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -55,7 +52,7 @@ bool ObserverOptions::Init(ObserverType type,
             }
             // EnableProtocols (Mandatory)
             if (!GetOptionalBoolParam(
-                    probeConfig, "DisableProtocolParse", thisObserverNetwork->mDisableProtocolParse, errorMsg)) {
+                    probeConfig, "DisableProtocolParse", thisObserverNetwork.mDisableProtocolParse, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -67,7 +64,7 @@ bool ObserverOptions::Init(ObserverType type,
             }
             // DisableConnStats (Mandatory)
             if (!GetOptionalBoolParam(
-                    probeConfig, "DisableConnStats", thisObserverNetwork->mDisableConnStats, errorMsg)) {
+                    probeConfig, "DisableConnStats", thisObserverNetwork.mDisableConnStats, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -79,7 +76,7 @@ bool ObserverOptions::Init(ObserverType type,
             }
             // EnableConnTrackerDump (Mandatory)
             if (!GetOptionalBoolParam(
-                    probeConfig, "EnableConnTrackerDump", thisObserverNetwork->mEnableConnTrackerDump, errorMsg)) {
+                    probeConfig, "EnableConnTrackerDump", thisObserverNetwork.mEnableConnTrackerDump, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -89,16 +86,14 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
+            mObserver.emplace<ObserverNetwork>(thisObserverNetwork);
             break;
         }
         case ObserverType::FILE: {
-            ObserverFile* thisObserverFile = new ObserverFile();
-            mObserver = thisObserverFile;
-            // Type
-            thisObserverFile->mType = ObserverType::FILE;
+            ObserverFile thisObserverFile;
             // ProfileRemoteServer (Mandatory)
             if (!GetOptionalStringParam(
-                    probeConfig, "ProfileRemoteServer", thisObserverFile->mProfileRemoteServer, errorMsg)) {
+                    probeConfig, "ProfileRemoteServer", thisObserverFile.mProfileRemoteServer, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -109,7 +104,7 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetRegion());
             }
             // CpuSkipUpload (Mandatory)
-            if (!GetOptionalBoolParam(probeConfig, "CpuSkipUpload", thisObserverFile->mCpuSkipUpload, errorMsg)) {
+            if (!GetOptionalBoolParam(probeConfig, "CpuSkipUpload", thisObserverFile.mCpuSkipUpload, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -120,7 +115,7 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetRegion());
             }
             // MemSkipUpload (Mandatory)
-            if (!GetOptionalBoolParam(probeConfig, "MemSkipUpload", thisObserverFile->mMemSkipUpload, errorMsg)) {
+            if (!GetOptionalBoolParam(probeConfig, "MemSkipUpload", thisObserverFile.mMemSkipUpload, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -130,16 +125,13 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
+            mObserver.emplace<ObserverFile>(thisObserverFile);
             break;
         }
         case ObserverType::PROCESS: {
-            ObserverProcess* thisObserverProcess = new ObserverProcess();
-            mObserver = thisObserverProcess;
-            // Type
-            thisObserverProcess->mType = ObserverType::PROCESS;
+            ObserverProcess thisObserverProcess;
             // IncludeCmdRegex (Mandatory)
-            if (!GetOptionalListParam(
-                    probeConfig, "IncludeCmdRegex", thisObserverProcess->mIncludeCmdRegex, errorMsg)) {
+            if (!GetOptionalListParam(probeConfig, "IncludeCmdRegex", thisObserverProcess.mIncludeCmdRegex, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -150,8 +142,7 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetRegion());
             }
             // ExcludeCmdRegex (Mandatory)
-            if (!GetOptionalListParam(
-                    probeConfig, "ExcludeCmdRegex", thisObserverProcess->mExcludeCmdRegex, errorMsg)) {
+            if (!GetOptionalListParam(probeConfig, "ExcludeCmdRegex", thisObserverProcess.mExcludeCmdRegex, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -161,6 +152,7 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
+            mObserver.emplace<ObserverProcess>(thisObserverProcess);
             break;
         }
         default:
@@ -168,7 +160,5 @@ bool ObserverOptions::Init(ObserverType type,
     }
     return true;
 }
-
-// todo app_config中定义的进程级别配置获取
 
 } // namespace logtail

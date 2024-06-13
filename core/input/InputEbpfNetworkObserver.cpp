@@ -22,13 +22,13 @@ namespace logtail {
 
 const std::string InputEbpfNetworkObserver::sName = "input_ebpf_sockettraceprobe_observer";
 
-bool InputEbpfNetworkObserver::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputEbpfNetworkObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
     return mObserverOption.Init(ObserverType::NETWORK, config, mContext, sName);
 }
 
 bool InputEbpfNetworkObserver::Start() {
-    ObserverServer::GetInstance()->AddObserverOption(mContext->GetConfigName(), &mObserverOption);
+    ObserverServer::GetInstance()->AddObserverOption(mContext, mIndex, &mObserverOption);
     ObserverServer::GetInstance()->Start();
     return true;
 }
@@ -37,7 +37,7 @@ bool InputEbpfNetworkObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    ObserverServer::GetInstance()->RemoveObserverOption(mContext->GetConfigName());
+    ObserverServer::GetInstance()->RemoveObserverOption(mContext->GetConfigName(), mIndex);
     return true;
 }
 

@@ -22,13 +22,13 @@ namespace logtail {
 
 const std::string InputEbpfProcessObserver::sName = "input_ebpf_processprobe_observer";
 
-bool InputEbpfProcessObserver::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputEbpfProcessObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
     return mObserverOption.Init(ObserverType::PROCESS, config, mContext, sName);
 }
 
 bool InputEbpfProcessObserver::Start() {
-    ObserverServer::GetInstance()->AddObserverOption(mContext->GetConfigName(), &mObserverOption);
+    ObserverServer::GetInstance()->AddObserverOption(mContext, mIndex, &mObserverOption);
     ObserverServer::GetInstance()->Start();
     return true;
 }
@@ -37,7 +37,7 @@ bool InputEbpfProcessObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    ObserverServer::GetInstance()->RemoveObserverOption(mContext->GetConfigName());
+    ObserverServer::GetInstance()->RemoveObserverOption(mContext->GetConfigName(), mIndex);
     return true;
 }
 

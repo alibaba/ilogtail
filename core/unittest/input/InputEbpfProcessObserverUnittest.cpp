@@ -49,6 +49,7 @@ void InputEbpfProcessObserverUnittest::OnSuccessfulInit() {
     unique_ptr<InputEbpfProcessObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // valid optional param
     configStr = R"(
@@ -64,21 +65,22 @@ void InputEbpfProcessObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessObserver());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
-    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOption.mObserver->mType);
-    ObserverProcess* thisObserver = dynamic_cast<ObserverProcess*>(input->mObserverOption.mObserver);
-    APSARA_TEST_EQUAL(thisObserver->mIncludeCmdRegex.size(), 1);
-    APSARA_TEST_EQUAL("h", thisObserver->mIncludeCmdRegex[0]);
-    APSARA_TEST_EQUAL(thisObserver->mExcludeCmdRegex.size(), 2);
-    APSARA_TEST_EQUAL("m", thisObserver->mExcludeCmdRegex[0]);
-    APSARA_TEST_EQUAL("n", thisObserver->mExcludeCmdRegex[1]);
+    ObserverProcess thisObserver = std::get<ObserverProcess>(input->mObserverOption.mObserver);
+    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOption.mType);
+    APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 1);
+    APSARA_TEST_EQUAL("h", thisObserver.mIncludeCmdRegex[0]);
+    APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
+    APSARA_TEST_EQUAL("m", thisObserver.mExcludeCmdRegex[0]);
+    APSARA_TEST_EQUAL("n", thisObserver.mExcludeCmdRegex[1]);
 }
 
 void InputEbpfProcessObserverUnittest::OnFailedInit() {
     unique_ptr<InputEbpfProcessObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // invalid optional param
     configStr = R"(
@@ -94,7 +96,7 @@ void InputEbpfProcessObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
@@ -107,7 +109,7 @@ void InputEbpfProcessObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 

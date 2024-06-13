@@ -50,6 +50,7 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
     unique_ptr<InputEbpfProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // only NamespaceFilter
     configStr = R"(
@@ -81,15 +82,14 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityFilter* thisFilterBase1 = input->mSecurityOptions.mOptionList[0]->mFilter;
-    SecurityProcessFilter* thisFilter1 = dynamic_cast<SecurityProcessFilter*>(thisFilterBase1);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, thisFilter1->mFilterType);
-    APSARA_TEST_EQUAL("4026531833", thisFilter1->mNamespaceFilter[0]->mValueList[0]);
-    APSARA_TEST_EQUAL("Pid", thisFilter1->mNamespaceFilter[0]->mType);
-    APSARA_TEST_EQUAL("4026531834", thisFilter1->mNamespaceFilter[1]->mValueList[0]);
-    APSARA_TEST_EQUAL("Mnt", thisFilter1->mNamespaceFilter[1]->mType);
+    SecurityProcessFilter thisFilter1 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL("4026531833", thisFilter1.mNamespaceFilter[0].mValueList[0]);
+    APSARA_TEST_EQUAL("Pid", thisFilter1.mNamespaceFilter[0].mType);
+    APSARA_TEST_EQUAL("4026531834", thisFilter1.mNamespaceFilter[1].mValueList[0]);
+    APSARA_TEST_EQUAL("Mnt", thisFilter1.mNamespaceFilter[1].mType);
 
     // only NamespaceBlackFilter
     configStr = R"(
@@ -121,15 +121,14 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityFilter* thisFilterBase2 = input->mSecurityOptions.mOptionList[0]->mFilter;
-    SecurityProcessFilter* thisFilter2 = dynamic_cast<SecurityProcessFilter*>(thisFilterBase2);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, thisFilter2->mFilterType);
-    APSARA_TEST_EQUAL("4026531833", thisFilter2->mNamespaceBlackFilter[0]->mValueList[0]);
-    APSARA_TEST_EQUAL("Pid", thisFilter2->mNamespaceBlackFilter[0]->mType);
-    APSARA_TEST_EQUAL("4026531834", thisFilter2->mNamespaceBlackFilter[1]->mValueList[0]);
-    APSARA_TEST_EQUAL("Mnt", thisFilter2->mNamespaceBlackFilter[1]->mType);
+    SecurityProcessFilter thisFilter2 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL("4026531833", thisFilter2.mNamespaceBlackFilter[0].mValueList[0]);
+    APSARA_TEST_EQUAL("Pid", thisFilter2.mNamespaceBlackFilter[0].mType);
+    APSARA_TEST_EQUAL("4026531834", thisFilter2.mNamespaceBlackFilter[1].mValueList[0]);
+    APSARA_TEST_EQUAL("Mnt", thisFilter2.mNamespaceBlackFilter[1].mType);
 
     // no NamespaceFilter and NamespaceBlackFilter
     configStr = R"(
@@ -147,17 +146,16 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityFilter* thisFilterBase3 = input->mSecurityOptions.mOptionList[0]->mFilter;
-    SecurityProcessFilter* thisFilter3 = dynamic_cast<SecurityProcessFilter*>(thisFilterBase3);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, thisFilter3->mFilterType);
+    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
 }
 
 void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     unique_ptr<InputEbpfProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
+    uint32_t pluginIdx = 0;
 
     // invalid param
     configStr = R"(
@@ -181,7 +179,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // invalid param: 1 NamespaceFilter and 1 NamespaceBlackFilter
     configStr = R"(
@@ -211,7 +209,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // // invalid param: 2 NamespaceFilter
     // configStr = R"(
@@ -241,7 +239,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     // APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     // input.reset(new InputEbpfProcessSecurity());
     // input->SetContext(ctx);
-    // APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    // APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
@@ -270,7 +268,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEbpfProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 
