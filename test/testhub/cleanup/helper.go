@@ -17,9 +17,13 @@ import (
 	"context"
 
 	"github.com/alibaba/ilogtail/test/testhub/control"
+	"github.com/alibaba/ilogtail/test/testhub/setup"
 )
 
 func All() {
+	if setup.Env == nil {
+		return
+	}
 	ctx := context.TODO()
 	_, _ = control.RemoveAllLocalConfig(ctx)
 	_, _ = AllGeneratedLog(ctx)
