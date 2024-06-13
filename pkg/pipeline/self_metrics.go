@@ -69,19 +69,19 @@ type Metric interface {
 type CounterMetric interface {
 	Metric
 	Add(int64)
-	Get() MetricValue[float64]
+	Collect() MetricValue[float64]
 }
 
 type GaugeMetric interface {
 	Metric
 	Set(float64)
-	Get() MetricValue[float64]
+	Collect() MetricValue[float64]
 }
 
 type LatencyMetric interface {
 	Metric
 	Observe(float64)
-	Get() MetricValue[float64]
+	Collect() MetricValue[float64]
 }
 
 // SummaryMetric is used to compute pctXX for a batch of data
@@ -101,5 +101,5 @@ type HistogramMetric interface {
 type StringMetric interface {
 	Metric
 	Set(v string)
-	Get() MetricValue[string]
+	Collect() MetricValue[string]
 }

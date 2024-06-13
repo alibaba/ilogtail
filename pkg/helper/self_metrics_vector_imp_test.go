@@ -37,7 +37,7 @@ func Test_MetricVectorWithEmptyLabel(t *testing.T) {
 		counter, ok := v.(*cumulativeCounterImp)
 		assert.True(t, ok)
 		assert.Equal(t, "test", counter.Name())
-		assert.Equal(t, 1.0, counter.Get().Value)
+		assert.Equal(t, 1.0, counter.Collect().Value)
 	}
 }
 
@@ -58,7 +58,7 @@ func Test_MetricVectorWithConstLabel(t *testing.T) {
 		counter, ok := v.(*cumulativeCounterImp)
 		assert.True(t, ok)
 		assert.Equal(t, "test", counter.Name())
-		assert.Equal(t, 2.0, counter.Get().Value)
+		assert.Equal(t, 2.0, counter.Collect().Value)
 		log := &protocol.Log{}
 		v.Serialize(log)
 		for _, v := range log.Contents {
@@ -105,7 +105,7 @@ func Test_CounterMetricVectorWithDynamicLabel(t *testing.T) {
 		counter, ok := metric.(*cumulativeCounterImp)
 		assert.True(t, ok)
 		assert.Equal(t, metricName, counter.Name())
-		valueAsIndex := int(counter.Get().Value)
+		valueAsIndex := int(counter.Collect().Value)
 		log := &protocol.Log{}
 		metric.Serialize(log)
 		if valueAsIndex >= 0 {
@@ -154,7 +154,7 @@ func Test_AverageMetricVectorWithDynamicLabel(t *testing.T) {
 		counter, ok := metric.(*averageImp)
 		assert.True(t, ok)
 		assert.Equal(t, metricName, counter.Name())
-		valueAsIndex := int(counter.Get().Value)
+		valueAsIndex := int(counter.Collect().Value)
 		log := &protocol.Log{}
 		metric.Serialize(log)
 		if valueAsIndex >= 0 {
@@ -208,7 +208,7 @@ func Test_LatencyMetricVectorWithDynamicLabel(t *testing.T) {
 		assert.Equal(t, metricName, latency.Name())
 		log := &protocol.Log{}
 		metric.Serialize(log)
-		valueAsIndex := 0 // int(latency.Get().Value / 1000)
+		valueAsIndex := 0 // int(latency.Collect().Value / 1000)
 		metricName := GetMetricName(log)
 		for _, v := range log.Contents {
 			if v.Key == metricName {
@@ -266,7 +266,7 @@ func Test_GaugeMetricVectorWithDynamicLabel(t *testing.T) {
 		counter, ok := metric.(*gaugeImp)
 		assert.True(t, ok)
 		assert.Equal(t, metricName, counter.Name())
-		valueAsIndex := int(counter.Get().Value)
+		valueAsIndex := int(counter.Collect().Value)
 		log := &protocol.Log{}
 		metric.Serialize(log)
 		if valueAsIndex >= 0 && valueAsIndex < len(expectedContents) {
@@ -319,7 +319,7 @@ func Test_StrMetricVectorWithDynamicLabel(t *testing.T) {
 		counter, ok := metric.(*strMetricImp)
 		assert.True(t, ok)
 		assert.Equal(t, metricName, counter.Name())
-		valueAsIndex, err := strconv.Atoi(counter.Get().Value)
+		valueAsIndex, err := strconv.Atoi(counter.Collect().Value)
 		assert.NoError(t, err)
 		log := &protocol.Log{}
 		metric.Serialize(log)
@@ -337,6 +337,6 @@ func Test_NewCounterMetricAndRegister(t *testing.T) {
 	metricsRecord := &pipeline.MetricsRecord{Context: nil}
 	counter := NewCumulativeCounterMetricAndRegister(metricsRecord, "test_counter")
 	counter.Add(1)
-	value := counter.Get()
+	value := counter.Collect()
 	assert.Equal(t, 1.0, value.Value)
 }

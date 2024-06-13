@@ -86,7 +86,7 @@ func (c *cumulativeCounterImp) Add(delta int64) {
 	atomic.AddInt64(&c.value, delta)
 }
 
-func (c *cumulativeCounterImp) Get() pipeline.MetricValue[float64] {
+func (c *cumulativeCounterImp) Collect() pipeline.MetricValue[float64] {
 	value := atomic.LoadInt64(&c.value)
 	return pipeline.MetricValue[float64]{Name: c.Name(), Value: float64(value)}
 }
@@ -96,12 +96,12 @@ func (c *cumulativeCounterImp) Clear() {
 }
 
 func (c *cumulativeCounterImp) Serialize(log *protocol.Log) {
-	metricValue := c.Get()
+	metricValue := c.Collect()
 	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 func (c *cumulativeCounterImp) Export() map[string]string {
-	metricValue := c.Get()
+	metricValue := c.Collect()
 	return c.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
@@ -123,7 +123,7 @@ func (c *counterImp) Add(delta int64) {
 	atomic.AddInt64(&c.value, delta)
 }
 
-func (c *counterImp) Get() pipeline.MetricValue[float64] {
+func (c *counterImp) Collect() pipeline.MetricValue[float64] {
 	value := atomic.SwapInt64(&c.value, 0)
 	return pipeline.MetricValue[float64]{Name: c.Name(), Value: float64(value)}
 }
@@ -133,12 +133,12 @@ func (c *counterImp) Clear() {
 }
 
 func (c *counterImp) Serialize(log *protocol.Log) {
-	metricValue := c.Get()
+	metricValue := c.Collect()
 	c.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 func (c *counterImp) Export() map[string]string {
-	metricValue := c.Get()
+	metricValue := c.Collect()
 	return c.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
@@ -159,7 +159,7 @@ func (g *gaugeImp) Set(f float64) {
 	AtomicStoreFloat64(&g.value, f)
 }
 
-func (g *gaugeImp) Get() pipeline.MetricValue[float64] {
+func (g *gaugeImp) Collect() pipeline.MetricValue[float64] {
 	return pipeline.MetricValue[float64]{Name: g.Name(), Value: AtomicLoadFloat64(&g.value)}
 }
 
@@ -168,12 +168,12 @@ func (g *gaugeImp) Clear() {
 }
 
 func (g *gaugeImp) Serialize(log *protocol.Log) {
-	metricValue := g.Get()
+	metricValue := g.Collect()
 	g.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 func (g *gaugeImp) Export() map[string]string {
-	metricValue := g.Get()
+	metricValue := g.Collect()
 	return g.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
@@ -201,7 +201,7 @@ func (a *averageImp) Add(f int64) {
 	a.count++
 }
 
-func (a *averageImp) Get() pipeline.MetricValue[float64] {
+func (a *averageImp) Collect() pipeline.MetricValue[float64] {
 	a.RLock()
 	defer a.RUnlock()
 	if a.count == 0 {
@@ -221,12 +221,12 @@ func (a *averageImp) Clear() {
 }
 
 func (a *averageImp) Serialize(log *protocol.Log) {
-	metricValue := a.Get()
+	metricValue := a.Collect()
 	a.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
 func (a *averageImp) Export() map[string]string {
-	metricValue := a.Get()
+	metricValue := a.Collect()
 	return a.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value, 'f', 4, 64))
 }
 
@@ -256,7 +256,7 @@ func (l *latencyImp) Record(d time.Duration) {
 	l.Observe(float64(d))
 }
 
-func (l *latencyImp) Get() pipeline.MetricValue[float64] {
+func (l *latencyImp) Collect() pipeline.MetricValue[float64] {
 	l.Lock()
 	defer l.Unlock()
 	if l.count == 0 {
@@ -275,12 +275,12 @@ func (l *latencyImp) Clear() {
 }
 
 func (l *latencyImp) Serialize(log *protocol.Log) {
-	metricValue := l.Get()
+	metricValue := l.Collect()
 	l.Series.SerializeWithStr(log, metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64)) // ns to us
 }
 
 func (l *latencyImp) Export() map[string]string {
-	metricValue := l.Get()
+	metricValue := l.Collect()
 	return l.Series.Export(metricValue.Name, strconv.FormatFloat(metricValue.Value/1000, 'f', 4, 64)) // ns to us
 }
 
@@ -304,7 +304,7 @@ func (s *strMetricImp) Set(str string) {
 	s.value = str
 }
 
-func (s *strMetricImp) Get() pipeline.MetricValue[string] {
+func (s *strMetricImp) Collect() pipeline.MetricValue[string] {
 	s.RLock()
 	defer s.RUnlock()
 	return pipeline.MetricValue[string]{Name: s.Name(), Value: s.value}
@@ -317,12 +317,12 @@ func (s *strMetricImp) Clear() {
 }
 
 func (s *strMetricImp) Serialize(log *protocol.Log) {
-	metricValue := s.Get()
+	metricValue := s.Collect()
 	s.Series.SerializeWithStr(log, metricValue.Name, metricValue.Value)
 }
 
 func (s *strMetricImp) Export() map[string]string {
-	metricValue := s.Get()
+	metricValue := s.Collect()
 	return s.Series.Export(metricValue.Name, metricValue.Value)
 }
 
@@ -400,7 +400,7 @@ func (e *errorNumericMetric) Export() map[string]string {
 	return nil
 }
 
-func (e *errorNumericMetric) Get() pipeline.MetricValue[float64] {
+func (e *errorNumericMetric) Collect() pipeline.MetricValue[float64] {
 	return pipeline.MetricValue[float64]{Name: "", Value: 0}
 }
 func (e *errorNumericMetric) Clear() {}
@@ -417,7 +417,7 @@ func (e errorStrMetric) Set(s string) {
 	logger.Warning(context.Background(), "METRIC_WITH_LABEL_ALARM", "set", e.err)
 }
 
-func (e errorStrMetric) Get() pipeline.MetricValue[string] {
+func (e errorStrMetric) Collect() pipeline.MetricValue[string] {
 	return pipeline.MetricValue[string]{Name: "", Value: ""}
 }
 

@@ -100,8 +100,8 @@ func TestStrMetricV2_Set(t *testing.T) {
 			constLabels := map[string]string{}
 			s := NewStringMetricVector(tt.fields.name, constLabels, nil).WithLabels()
 			s.Set(tt.args.v)
-			if s.Get().Value != tt.args.v {
-				t.Errorf("fail %s != %s\n", s.Get(), tt.args.v)
+			if s.Collect().Value != tt.args.v {
+				t.Errorf("fail %s != %s\n", s.Collect(), tt.args.v)
 			}
 		})
 	}
@@ -115,13 +115,13 @@ func TestDelta(t *testing.T) {
 		delta.Add(int64(1))
 	}
 
-	assert.Equal(t, float64(1000), delta.Get().Value)
-	assert.Equal(t, float64(0), delta.Get().Value)
+	assert.Equal(t, float64(1000), delta.Collect().Value)
+	assert.Equal(t, float64(0), delta.Collect().Value)
 
 	for i := 0; i < 100000; i++ {
 		delta.Add(int64(1))
 	}
 
-	assert.Equal(t, float64(100000), delta.Get().Value)
-	assert.Equal(t, float64(0), delta.Get().Value)
+	assert.Equal(t, float64(100000), delta.Collect().Value)
+	assert.Equal(t, float64(0), delta.Collect().Value)
 }
