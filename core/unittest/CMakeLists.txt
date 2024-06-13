@@ -93,6 +93,7 @@ add_subdirectory(queue)
 add_subdirectory(reader)
 add_subdirectory(sdk)
 add_subdirectory(sender)
+add_subdirectory(target_allocator)
 
 if (LINUX)
     if (NOT WITHOUTSPL)
