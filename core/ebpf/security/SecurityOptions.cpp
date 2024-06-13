@@ -39,7 +39,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
     // Filter
     switch (filterType) {
         case SecurityFilterType::FILE: {
-            if (!IsListValid(config, "Filter", errorMsg)) {
+            if (!IsValidList(config, "Filter", errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -49,14 +49,11 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
-            SecurityFileFilter* thisFileFilter = new SecurityFileFilter();
-            mFilter = thisFileFilter;
-            // FilterType
-            mFilter->mFilterType = filterType;
+            SecurityFileFilter thisFileFilter;
             for (auto& fileFilterItem : config["Filter"]) {
-                SecurityFileFilterItem* thisFileFilterItem = new SecurityFileFilterItem();
+                SecurityFileFilterItem thisFileFilterItem;
                 // FilePath (Mandatory)
-                if (!GetMandatoryStringParam(fileFilterItem, "FilePath", thisFileFilterItem->mFilePath, errorMsg)) {
+                if (!GetMandatoryStringParam(fileFilterItem, "FilePath", thisFileFilterItem.mFilePath, errorMsg)) {
                     PARAM_ERROR_RETURN(mContext->GetLogger(),
                                        mContext->GetAlarm(),
                                        errorMsg,
@@ -67,7 +64,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                        mContext->GetRegion());
                 }
                 // FileName (Optional)
-                if (!GetOptionalStringParam(fileFilterItem, "FileName", thisFileFilterItem->mFileName, errorMsg)) {
+                if (!GetOptionalStringParam(fileFilterItem, "FileName", thisFileFilterItem.mFileName, errorMsg)) {
                     PARAM_ERROR_RETURN(mContext->GetLogger(),
                                        mContext->GetAlarm(),
                                        errorMsg,
@@ -77,16 +74,14 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                        mContext->GetLogstoreName(),
                                        mContext->GetRegion());
                 }
-                thisFileFilter->mFileFilterItem.emplace_back(thisFileFilterItem);
+                thisFileFilter.mFileFilterItem.emplace_back(thisFileFilterItem);
             }
+            mFilter.emplace<SecurityFileFilter>(thisFileFilter);
             break;
         }
         case SecurityFilterType::PROCESS: {
-            SecurityProcessFilter* thisProcessFilter = new SecurityProcessFilter();
-            mFilter = thisProcessFilter;
-            // FilterType
-            mFilter->mFilterType = filterType;
-            if (!IsMapValid(config, "Filter", errorMsg)) {
+            SecurityProcessFilter thisProcessFilter;
+            if (!IsValidMap(config, "Filter", errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -110,11 +105,11 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                        mContext->GetRegion());
                 }
                 for (auto& namespaceFilterConfig : filterConfig["NamespaceFilter"]) {
-                    SecurityProcessNamespaceFilter* thisProcessNamespaceFilter = new SecurityProcessNamespaceFilter();
+                    SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
                     // Type (Mandatory)
                     if (!GetMandatoryStringParam(
-                            namespaceFilterConfig, "Type", thisProcessNamespaceFilter->mType, errorMsg)
-                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter->mType)) {
+                            namespaceFilterConfig, "Type", thisProcessNamespaceFilter.mType, errorMsg)
+                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mType)) {
                         PARAM_ERROR_RETURN(mContext->GetLogger(),
                                            mContext->GetAlarm(),
                                            errorMsg,
@@ -126,7 +121,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                     }
                     // ValueList (Mandatory)
                     if (!GetMandatoryListParam<string>(
-                            namespaceFilterConfig, "ValueList", thisProcessNamespaceFilter->mValueList, errorMsg)) {
+                            namespaceFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
                         PARAM_ERROR_RETURN(mContext->GetLogger(),
                                            mContext->GetAlarm(),
                                            errorMsg,
@@ -136,7 +131,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                            mContext->GetLogstoreName(),
                                            mContext->GetRegion());
                     }
-                    thisProcessFilter->mNamespaceFilter.emplace_back(thisProcessNamespaceFilter);
+                    thisProcessFilter.mNamespaceFilter.emplace_back(thisProcessNamespaceFilter);
                 }
                 if (filterConfig.isMember("NamespaceBlackFilter")) {
                     PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -163,11 +158,11 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                        mContext->GetRegion());
                 }
                 for (auto& namespaceBlackFilterConfig : filterConfig["NamespaceBlackFilter"]) {
-                    SecurityProcessNamespaceFilter* thisProcessNamespaceFilter = new SecurityProcessNamespaceFilter();
+                    SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
                     // Type (Mandatory)
                     if (!GetMandatoryStringParam(
-                            namespaceBlackFilterConfig, "Type", thisProcessNamespaceFilter->mType, errorMsg)
-                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter->mType)) {
+                            namespaceBlackFilterConfig, "Type", thisProcessNamespaceFilter.mType, errorMsg)
+                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mType)) {
                         PARAM_ERROR_RETURN(mContext->GetLogger(),
                                            mContext->GetAlarm(),
                                            errorMsg,
@@ -178,10 +173,8 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                            mContext->GetRegion());
                     }
                     // ValueList (Mandatory)
-                    if (!GetMandatoryListParam<string>(namespaceBlackFilterConfig,
-                                                       "ValueList",
-                                                       thisProcessNamespaceFilter->mValueList,
-                                                       errorMsg)) {
+                    if (!GetMandatoryListParam<string>(
+                            namespaceBlackFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
                         PARAM_ERROR_RETURN(mContext->GetLogger(),
                                            mContext->GetAlarm(),
                                            errorMsg,
@@ -191,18 +184,15 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                            mContext->GetLogstoreName(),
                                            mContext->GetRegion());
                     }
-                    thisProcessFilter->mNamespaceBlackFilter.emplace_back(thisProcessNamespaceFilter);
+                    thisProcessFilter.mNamespaceBlackFilter.emplace_back(thisProcessNamespaceFilter);
                 }
             }
+            mFilter.emplace<SecurityProcessFilter>(thisProcessFilter);
             break;
         }
         case SecurityFilterType::NETWORK: {
-            SecurityNetworkFilter* thisNetWorkFilter = new SecurityNetworkFilter();
-            mFilter = thisNetWorkFilter;
-            // FilterType
-            mFilter->mFilterType = filterType;
-
-            if (!IsMapValid(config, "Filter", errorMsg)) {
+            SecurityNetworkFilter thisNetWorkFilter;
+            if (!IsValidMap(config, "Filter", errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -215,7 +205,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             const Json::Value& filterConfig = config["Filter"];
             // DestAddrList (Optional)
             if (!GetOptionalListParam<string>(
-                    filterConfig, "DestAddrList", thisNetWorkFilter->mDestAddrList, errorMsg)) {
+                    filterConfig, "DestAddrList", thisNetWorkFilter.mDestAddrList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -227,7 +217,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // DestPortList (Optional)
             if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "DestPortList", thisNetWorkFilter->mDestPortList, errorMsg)) {
+                    filterConfig, "DestPortList", thisNetWorkFilter.mDestPortList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -239,7 +229,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // DestAddrBlackList (Optional)
             if (!GetOptionalListParam<string>(
-                    filterConfig, "DestAddrBlackList", thisNetWorkFilter->mDestAddrBlackList, errorMsg)) {
+                    filterConfig, "DestAddrBlackList", thisNetWorkFilter.mDestAddrBlackList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -251,7 +241,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // DestPortBlackList (Optional)
             if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "DestPortBlackList", thisNetWorkFilter->mDestPortBlackList, errorMsg)) {
+                    filterConfig, "DestPortBlackList", thisNetWorkFilter.mDestPortBlackList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -263,7 +253,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // SourceAddrList (Optional)
             if (!GetOptionalListParam<string>(
-                    filterConfig, "SourceAddrList", thisNetWorkFilter->mSourceAddrList, errorMsg)) {
+                    filterConfig, "SourceAddrList", thisNetWorkFilter.mSourceAddrList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -275,7 +265,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // SourcePortList (Optional)
             if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "SourcePortList", thisNetWorkFilter->mSourcePortList, errorMsg)) {
+                    filterConfig, "SourcePortList", thisNetWorkFilter.mSourcePortList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -287,7 +277,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // SourceAddrBlackList (Optional)
             if (!GetOptionalListParam<string>(
-                    filterConfig, "SourceAddrBlackList", thisNetWorkFilter->mSourceAddrBlackList, errorMsg)) {
+                    filterConfig, "SourceAddrBlackList", thisNetWorkFilter.mSourceAddrBlackList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -299,7 +289,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
             }
             // SourcePortBlackList (Optional)
             if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "SourcePortBlackList", thisNetWorkFilter->mSourcePortBlackList, errorMsg)) {
+                    filterConfig, "SourcePortBlackList", thisNetWorkFilter.mSourcePortBlackList, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
                                    errorMsg,
@@ -309,6 +299,7 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
+            mFilter.emplace<SecurityNetworkFilter>(thisNetWorkFilter);
             break;
         }
         default:
@@ -338,7 +329,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                            const string& sName) {
     string errorMsg;
     // ConfigList (Mandatory)
-    if (!IsListValid(config, "ConfigList", errorMsg)) {
+    if (!IsValidList(config, "ConfigList", errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            errorMsg,
@@ -349,12 +340,13 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                            mContext->GetRegion());
     }
     for (auto& innerConfig : config["ConfigList"]) {
-        SecurityOption* thisSecurityOption = new SecurityOption();
-        if (!thisSecurityOption->Init(filterType, innerConfig, mContext, sName)) {
+        SecurityOption thisSecurityOption;
+        if (!thisSecurityOption.Init(filterType, innerConfig, mContext, sName)) {
             return false;
         }
         mOptionList.emplace_back(thisSecurityOption);
     }
+    mFilterType = filterType;
     return true;
 }
 

@@ -141,6 +141,16 @@ bool GetMandatoryStringParam(const Json::Value& config, const string& key, strin
     return true;
 }
 
+bool GetMandatoryDoubleParam(const Json::Value& config, const std::string& key, double& param, std::string& errorMsg) {
+    errorMsg.clear();
+    if (!config.isMember(ExtractCurrentKey(key))) {
+        errorMsg = "madatory param " + key + " is missing";
+        return false;
+    }
+    return GetOptionalDoubleParam(config, key, param, errorMsg);
+}
+
+
 bool IsRegexValid(const string& regStr) {
     if (regStr.empty()) {
         return true;
@@ -153,7 +163,7 @@ bool IsRegexValid(const string& regStr) {
     return true;
 }
 
-bool IsListValid(const Json::Value& config, const string& key, string& errorMsg) {
+bool IsValidList(const Json::Value& config, const string& key, string& errorMsg) {
     errorMsg.clear();
     if (!config.isMember(ExtractCurrentKey(key))) {
         errorMsg = "param " + key + " is missing";
@@ -166,7 +176,7 @@ bool IsListValid(const Json::Value& config, const string& key, string& errorMsg)
     return true;
 }
 
-bool IsMapValid(const Json::Value& config, const string& key, string& errorMsg) {
+bool IsValidMap(const Json::Value& config, const string& key, string& errorMsg) {
     errorMsg.clear();
     if (!config.isMember(ExtractCurrentKey(key))) {
         errorMsg = "param " + key + " is missing";

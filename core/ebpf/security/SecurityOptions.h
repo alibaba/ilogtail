@@ -19,6 +19,7 @@
 #include <json/json.h>
 
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "pipeline/PipelineContext.h"
@@ -27,29 +28,15 @@ namespace logtail {
 
 enum class SecurityFilterType { PROCESS, FILE, NETWORK };
 
-class SecurityFilter {
-public:
-    // type of filter: process, file, network
-    SecurityFilterType mFilterType;
-    virtual ~SecurityFilter() = default;
-};
-
 // file
 class SecurityFileFilterItem {
 public:
     std::string mFilePath;
     std::string mFileName;
 };
-class SecurityFileFilter : public SecurityFilter {
+class SecurityFileFilter {
 public:
-    std::vector<SecurityFileFilterItem*> mFileFilterItem;
-
-private:
-    ~SecurityFileFilter() override {
-        for (auto item : mFileFilterItem) {
-            delete item;
-        }
-    }
+    std::vector<SecurityFileFilterItem> mFileFilterItem;
 };
 
 // process
@@ -59,24 +46,15 @@ public:
     std::string mType;
     std::vector<std::string> mValueList;
 };
-class SecurityProcessFilter : public SecurityFilter {
+class SecurityProcessFilter {
 public:
-    std::vector<SecurityProcessNamespaceFilter*> mNamespaceFilter;
-    std::vector<SecurityProcessNamespaceFilter*> mNamespaceBlackFilter;
+    std::vector<SecurityProcessNamespaceFilter> mNamespaceFilter;
+    std::vector<SecurityProcessNamespaceFilter> mNamespaceBlackFilter;
     // std::vector<std::string> mIp;
-private:
-    ~SecurityProcessFilter() override {
-        for (auto ns : mNamespaceFilter) {
-            delete ns;
-        }
-        for (auto ns : mNamespaceBlackFilter) {
-            delete ns;
-        }
-    }
 };
 
 // network
-class SecurityNetworkFilter : public SecurityFilter {
+class SecurityNetworkFilter {
 public:
     std::vector<std::string> mDestAddrList;
     std::vector<uint32_t> mDestPortList;
@@ -94,16 +72,11 @@ public:
               const Json::Value& config,
               const PipelineContext* mContext,
               const std::string& sName);
-    // todo app_config中定义的进程级别配置获取
 
     std::vector<std::string> mCallName;
-    SecurityFilter* mFilter;
-    // std::vector<SecurityReturnType> mReturnType;
-    ~SecurityOption() { delete mFilter; }
+    std::variant<SecurityFileFilter, SecurityNetworkFilter, SecurityProcessFilter> mFilter;
     bool IsProcessNamespaceFilterTypeValid(std::string type);
 };
-
-// class SecurityReturnType{};
 
 class SecurityOptions {
 public:
@@ -112,7 +85,8 @@ public:
               const PipelineContext* mContext,
               const std::string& sName);
 
-    std::vector<SecurityOption*> mOptionList;
+    std::vector<SecurityOption> mOptionList;
+    SecurityFilterType mFilterType;
 };
 
 } // namespace logtail

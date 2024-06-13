@@ -17,42 +17,71 @@
 
 namespace logtail {
 
+// 负责接收ebpf返回的数据，然后将数据推送到对应的队列中
 void ObserverServer::Start() {
-    // observer ebpf采集线程启动相关操作，包含ebpf_init启动
-
-    // static bool initialized = false;
-    // if (!initialized) {
-    //     initialized = true;
-    //     // init global funcs
-    //     ebpf_init();
-    //     for (auto& input : mInputMap) {
-    //         // TODO: 启动一个线程
-    //         ebpf_init(input);
-    //     }
-    //     ebpf_start();
-    // } else {
-    //     ebpf_stop();
-    //     // init global funcs
-    //     ebpf_init();
-    //     for (auto& input : mInputMap) {
-    //         // TODO: 启动一个线程
-    //         ebpf_init(input);
-    //     }
-    //     ebpf_start();
-    // }
-    LOG_INFO(sLogger, ("observer ebpf server", "started"));
+    static bool initialized = false;
+    if (initialized) {
+        return;
+    } else {
+        mStop = false;
+        initialized = true;
+        // TODO: 创建一个线程，用于接收ebpf返回的数据，并将数据推送到对应的队列中
+        LOG_INFO(sLogger, ("observer ebpf server", "started"));
+    }
 }
 
 void ObserverServer::Stop() {
-    // todo 暂停特定类型的ebpf的 security采集线程，包含ebpf_stop
-    // ebpf_stop();
+    // TODO: ebpf_stop(); 停止所有类型的ebpf探针
+    mStop = true;
 }
 
-void ObserverServer::AddObserverOption(const std::string& name, const ObserverOptions* option) {
-    mInputMap[name] = option;
+// 插件配置注册逻辑
+// 负责启动对应的ebpf程序
+void ObserverServer::AddObserverOption(const PipelineContext* context, size_t index, const ObserverOptions* option) {
+    std::string key = context->GetConfigName() + "#" + std::to_string(index);
+    mInputMap[key] = option;
+    mInputContextMap[key] = context;
+    // TODO: 目前一种类型的input只能处理一个，后续需要修改
+    switch (option->mType) {
+        case ObserverType::FILE: {
+            // TODO: ebpf_start(type);
+            break;
+        }
+        case ObserverType::PROCESS: {
+            // TODO: ebpf_start(type);
+            break;
+        }
+        case ObserverType::NETWORK: {
+            // TODO: ebpf_start(type);
+            break;
+        }
+        default:
+            break;
+    }
 }
-void ObserverServer::RemoveObserverOption(const std::string& name) {
-    mInputMap.erase(name);
+
+// 插件配置注销逻辑
+void ObserverServer::RemoveObserverOption(const std::string& name, size_t index) {
+    std::string key = name + "#" + std::to_string(index);
+    // TODO: 目前一种类型的input只能处理一个，后续需要修改
+    switch (mInputMap[key]->mType) {
+        case ObserverType::FILE: {
+            // TODO: ebpf_stop(type);
+            break;
+        }
+        case ObserverType::PROCESS: {
+            // TODO: ebpf_stop(type);
+            break;
+        }
+        case ObserverType::NETWORK: {
+            // TODO: ebpf_stop(type);
+            break;
+        }
+        default:
+            break;
+    }
+    mInputMap.erase(key);
+    mInputContextMap.erase(key);
 }
 
 } // namespace logtail
