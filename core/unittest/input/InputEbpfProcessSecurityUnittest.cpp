@@ -62,13 +62,13 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
                     {
                         "NamespaceFilter": [
                             {
-                                "Type": "Pid",
+                                "NamespaceType": "Pid",
                                 "ValueList": [
                                     "4026531833"
                                 ]
                             },
                             {
-                                "Type": "Mnt",
+                                "NamespaceType": "Mnt",
                                 "ValueList": [
                                     "4026531834"
                                 ]
@@ -87,9 +87,9 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
     SecurityProcessFilter thisFilter1 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
     APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
     APSARA_TEST_EQUAL("4026531833", thisFilter1.mNamespaceFilter[0].mValueList[0]);
-    APSARA_TEST_EQUAL("Pid", thisFilter1.mNamespaceFilter[0].mType);
+    APSARA_TEST_EQUAL("Pid", thisFilter1.mNamespaceFilter[0].mNamespaceType);
     APSARA_TEST_EQUAL("4026531834", thisFilter1.mNamespaceFilter[1].mValueList[0]);
-    APSARA_TEST_EQUAL("Mnt", thisFilter1.mNamespaceFilter[1].mType);
+    APSARA_TEST_EQUAL("Mnt", thisFilter1.mNamespaceFilter[1].mNamespaceType);
 
     // only NamespaceBlackFilter
     configStr = R"(
@@ -101,13 +101,13 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
                     {
                         "NamespaceBlackFilter": [
                             {
-                                "Type": "Pid",
+                                "NamespaceType": "Pid",
                                 "ValueList": [
                                     "4026531833"
                                 ]
                             },
                             {
-                                "Type": "Mnt",
+                                "NamespaceType": "Mnt",
                                 "ValueList": [
                                     "4026531834"
                                 ]
@@ -126,9 +126,9 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
     SecurityProcessFilter thisFilter2 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
     APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
     APSARA_TEST_EQUAL("4026531833", thisFilter2.mNamespaceBlackFilter[0].mValueList[0]);
-    APSARA_TEST_EQUAL("Pid", thisFilter2.mNamespaceBlackFilter[0].mType);
+    APSARA_TEST_EQUAL("Pid", thisFilter2.mNamespaceBlackFilter[0].mNamespaceType);
     APSARA_TEST_EQUAL("4026531834", thisFilter2.mNamespaceBlackFilter[1].mValueList[0]);
-    APSARA_TEST_EQUAL("Mnt", thisFilter2.mNamespaceBlackFilter[1].mType);
+    APSARA_TEST_EQUAL("Mnt", thisFilter2.mNamespaceBlackFilter[1].mNamespaceType);
 
     // no NamespaceFilter and NamespaceBlackFilter
     configStr = R"(
@@ -167,7 +167,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
                     {
                         "NamespaceBlackFilter": [
                             {
-                                "Type": "Pid",
+                                "NamespaceType": "Pid",
                                 "ValueList": "4026531833"
                             }
                         ]
@@ -191,13 +191,13 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
                     {
                         "NamespaceBlackFilter": [
                             {
-                                "Type": "Pid",
+                                "NamespaceType": "Pid",
                                 "ValueList": ["4026531833"]
                             }
                         ],
                         "NamespaceFilter": [
                             {
-                                "Type": "Pid",
+                                "NamespaceType": "Pid",
                                 "ValueList": ["4026531833"]
                             }
                         ]
@@ -221,13 +221,13 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     //                 {
     //                     "NamespaceFilter": [
     //                         {
-    //                             "Type": "Pid",
+    //                             "NamespaceType": "Pid",
     //                             "ValueList": ["4026531833"]
     //                         }
     //                     ],
     //                     "NamespaceFilter": [
     //                         {
-    //                             "Type": "Pid",
+    //                             "NamespaceType": "Pid",
     //                             "ValueList": ["4026531833"]
     //                         }
     //                     ]
@@ -249,13 +249,13 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
                 {   
                     "NamespaceFilter": [
                         {
-                            "Type": "Pid",
+                            "NamespaceType": "Pid",
                             "ValueList": [
                                 "4026531833"
                             ]
                         },
                         {
-                            "Type": "Mnt",
+                            "NamespaceType": "Mnt",
                             "ValueList": [
                                 "4026531834"
                             ]
