@@ -128,7 +128,7 @@ void BatcherUnittest::TestInitWithGroupBatch() {
     APSARA_TEST_EQUAL(1000U, batch.mEventFlushStrategy.GetMaxSizeBytes());
     APSARA_TEST_EQUAL(3U, batch.mEventFlushStrategy.GetTimeoutSecs());
     APSARA_TEST_TRUE(batch.mGroupFlushStrategy);
-    APSARA_TEST_EQUAL(2000U, batch.mGroupFlushStrategy->GetMaxSizeBytes());
+    APSARA_TEST_EQUAL(1000U, batch.mGroupFlushStrategy->GetMaxSizeBytes());
     APSARA_TEST_EQUAL(2U, batch.mGroupFlushStrategy->GetTimeoutSecs());
     APSARA_TEST_TRUE(batch.mGroupQueue);
     APSARA_TEST_EQUAL(sFlusher.get(), batch.mFlusher);
