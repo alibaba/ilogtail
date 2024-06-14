@@ -485,17 +485,21 @@ public:
 
     bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
-        const auto& singleQueue = mLogstoreSenderQueueMap.at(key);
+        auto iter = mLogstoreSenderQueueMap.find(key);
+        if (iter == mLogstoreSenderQueueMap.end()) {
+            // this only happens when go self telemetry is sent to sls
+            return true;
+        }
 
         // For correctness, exactly once queue should ignore mUrgentFlag.
-        if (singleQueue.GetQueueType() == QueueType::ExactlyOnce) {
-            return singleQueue.IsValid();
+        if (iter->second.GetQueueType() == QueueType::ExactlyOnce) {
+            return iter->second.IsValid();
         }
 
         if (mUrgentFlag) {
             return true;
         }
-        return singleQueue.IsValid();
+        return iter->second.IsValid();
     }
 
     void SetLogstoreFlowControl(const LogstoreFeedBackKey& key, int32_t maxBytes, int32_t expireTime) {
