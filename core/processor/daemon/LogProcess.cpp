@@ -239,10 +239,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                        res,
                                        errorMsg)) {
                             LOG_WARNING(pipeline->GetContext().GetLogger(),
-                                        ("failed to serialize event group", errorMsg)("config", configName));
+                                        ("failed to serialize event group",
+                                         errorMsg)("action", "discard data")("config", configName));
                             pipeline->GetContext().GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
                                                                         "failed to serialize event group: " + errorMsg
-                                                                            + "\tconfig: " + configName,
+                                                                            + "\taction: discard data\tconfig: "
+                                                                            + configName,
                                                                         pipeline->GetContext().GetProjectName(),
                                                                         pipeline->GetContext().GetLogstoreName(),
                                                                         pipeline->GetContext().GetRegion());

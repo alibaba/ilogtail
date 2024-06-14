@@ -313,10 +313,11 @@ bool FlusherSLS::Send(string&& data, const string& shardHashKey, const string& l
         string errorMsg;
         if (!mCompressor->Compress(data, compressedData, errorMsg)) {
             LOG_WARNING(mContext->GetLogger(),
-                        ("failed to compress data", errorMsg)("plugin", sName)("config", mContext->GetConfigName()));
+                        ("failed to compress data",
+                         errorMsg)("action", "discard data")("plugin", sName)("config", mContext->GetConfigName()));
             mContext->GetAlarm().SendAlarm(COMPRESS_FAIL_ALARM,
-                                           "failed to compress data: " + errorMsg + "\tplugin: " + sName
-                                               + "\tconfig: " + mContext->GetConfigName(),
+                                           "failed to compress data: " + errorMsg + "\taction: discard data\tplugin: "
+                                               + sName + "\tconfig: " + mContext->GetConfigName(),
                                            mContext->GetProjectName(),
                                            mContext->GetLogstoreName(),
                                            mContext->GetRegion());
@@ -354,11 +355,12 @@ void FlusherSLS::SerializeAndPush(PipelineEventGroup&& group) {
     AddPackId(g);
     string errorMsg;
     if (!mGroupSerializer->Serialize(std::move(g), serializedData, errorMsg)) {
-        LOG_WARNING(
-            mContext->GetLogger(),
-            ("failed to serialize event group", errorMsg)("plugin", sName)("config", mContext->GetConfigName()));
+        LOG_WARNING(mContext->GetLogger(),
+                    ("failed to serialize event group",
+                     errorMsg)("action", "discard data")("plugin", sName)("config", mContext->GetConfigName()));
         mContext->GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
-                                       "failed to serialize event group: " + errorMsg + "\tplugin: " + sName
+                                       "failed to serialize event group: " + errorMsg
+                                           + "\taction: discard data\tplugin: " + sName
                                            + "\tconfig: " + mContext->GetConfigName(),
                                        mContext->GetProjectName(),
                                        mContext->GetLogstoreName(),
@@ -367,11 +369,12 @@ void FlusherSLS::SerializeAndPush(PipelineEventGroup&& group) {
     }
     if (mCompressor) {
         if (!mCompressor->Compress(serializedData, compressedData, errorMsg)) {
-            LOG_WARNING(
-                mContext->GetLogger(),
-                ("failed to compress event group", errorMsg)("plugin", sName)("config", mContext->GetConfigName()));
+            LOG_WARNING(mContext->GetLogger(),
+                        ("failed to compress event group",
+                         errorMsg)("action", "discard data")("plugin", sName)("config", mContext->GetConfigName()));
             mContext->GetAlarm().SendAlarm(COMPRESS_FAIL_ALARM,
-                                           "failed to compress event group: " + errorMsg + "\tplugin: " + sName
+                                           "failed to compress event group: " + errorMsg
+                                               + "\taction: discard data\tplugin: " + sName
                                                + "\tconfig: " + mContext->GetConfigName(),
                                            mContext->GetProjectName(),
                                            mContext->GetLogstoreName(),
@@ -405,11 +408,12 @@ void FlusherSLS::SerializeAndPush(BatchedEventsList&& groupList) {
         AddPackId(group);
         string errorMsg;
         if (!mGroupSerializer->Serialize(std::move(group), serializedData, errorMsg)) {
-            LOG_WARNING(
-                mContext->GetLogger(),
-                ("failed to serialize event group", errorMsg)("plugin", sName)("config", mContext->GetConfigName()));
+            LOG_WARNING(mContext->GetLogger(),
+                        ("failed to serialize event group",
+                         errorMsg)("action", "discard data")("plugin", sName)("config", mContext->GetConfigName()));
             mContext->GetAlarm().SendAlarm(SERIALIZE_FAIL_ALARM,
-                                           "failed to serialize event group: " + errorMsg + "\tplugin: " + sName
+                                           "failed to serialize event group: " + errorMsg
+                                               + "\taction: discard data\tplugin: " + sName
                                                + "\tconfig: " + mContext->GetConfigName(),
                                            mContext->GetProjectName(),
                                            mContext->GetLogstoreName(),
@@ -418,11 +422,12 @@ void FlusherSLS::SerializeAndPush(BatchedEventsList&& groupList) {
         }
         if (mCompressor) {
             if (!mCompressor->Compress(serializedData, compressedData, errorMsg)) {
-                LOG_WARNING(
-                    mContext->GetLogger(),
-                    ("failed to compress event group", errorMsg)("plugin", sName)("config", mContext->GetConfigName()));
+                LOG_WARNING(mContext->GetLogger(),
+                            ("failed to compress event group",
+                             errorMsg)("action", "discard data")("plugin", sName)("config", mContext->GetConfigName()));
                 mContext->GetAlarm().SendAlarm(COMPRESS_FAIL_ALARM,
-                                               "failed to compress event group: " + errorMsg + "\tplugin: " + sName
+                                               "failed to compress event group: " + errorMsg
+                                                   + "\taction: discard data\tplugin: " + sName
                                                    + "\tconfig: " + mContext->GetConfigName(),
                                                mContext->GetProjectName(),
                                                mContext->GetLogstoreName(),
