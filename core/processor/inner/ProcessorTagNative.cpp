@@ -24,7 +24,7 @@
 #include "log_pb/sls_logs.pb.h"
 #include "pipeline/Pipeline.h"
 #ifdef __ENTERPRISE__
-#include "enterprise/EnterpriseConfigProvider.h"
+#include "config/provider/EnterpriseConfigProvider.h"
 #endif
 
 DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
