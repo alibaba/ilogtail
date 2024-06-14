@@ -106,10 +106,10 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                 }
                 for (auto& namespaceFilterConfig : filterConfig["NamespaceFilter"]) {
                     SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
-                    // Type (Mandatory)
+                    // NamespaceType (Mandatory)
                     if (!GetMandatoryStringParam(
-                            namespaceFilterConfig, "Type", thisProcessNamespaceFilter.mType, errorMsg)
-                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mType)) {
+                            namespaceFilterConfig, "NamespaceType", thisProcessNamespaceFilter.mNamespaceType, errorMsg)
+                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
                         PARAM_ERROR_RETURN(mContext->GetLogger(),
                                            mContext->GetAlarm(),
                                            errorMsg,
@@ -159,10 +159,12 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                 }
                 for (auto& namespaceBlackFilterConfig : filterConfig["NamespaceBlackFilter"]) {
                     SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
-                    // Type (Mandatory)
-                    if (!GetMandatoryStringParam(
-                            namespaceBlackFilterConfig, "Type", thisProcessNamespaceFilter.mType, errorMsg)
-                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mType)) {
+                    // NamespaceType (Mandatory)
+                    if (!GetMandatoryStringParam(namespaceBlackFilterConfig,
+                                                 "NamespaceType",
+                                                 thisProcessNamespaceFilter.mNamespaceType,
+                                                 errorMsg)
+                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
                         PARAM_ERROR_RETURN(mContext->GetLogger(),
                                            mContext->GetAlarm(),
                                            errorMsg,

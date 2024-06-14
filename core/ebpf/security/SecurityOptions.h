@@ -43,7 +43,7 @@ public:
 class SecurityProcessNamespaceFilter {
 public:
     // type of securityNamespaceFilter
-    std::string mType;
+    std::string mNamespaceType;
     std::vector<std::string> mValueList;
 };
 class SecurityProcessFilter {
