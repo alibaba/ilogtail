@@ -164,94 +164,6 @@ LogIntegrity::~LogIntegrity() {
     mRegionOutDatedFileMap.clear();
 }
 
-// void LogIntegrity::RecordIntegrityInfo(MergeItem* item) {
-//     IntegrityConfigPtr integrityConfigPtr = item->mLogGroupContext.mIntegrityConfigPtr;
-//     if (integrityConfigPtr.get() == NULL || !integrityConfigPtr->mIntegritySwitch)
-//         return;
-
-//     const string& region = item->mRegion;
-//     const string& projectName = item->mProjectName;
-//     const string& logstore = item->mLogGroup.category();
-//     const string& filename = item->mFilename;
-//     int64_t seqNum = item->mLogGroupContext.mSeqNum;
-
-//     // lock
-//     PTScopedLock lock(mLogIntegrityMapLock);
-//     // find region
-//     RegionLogIntegrityInfoMap::iterator regionIter = mRegionLogIntegrityInfoMap.find(region);
-//     if (regionIter == mRegionLogIntegrityInfoMap.end()) {
-//         LogIntegrityInfoMap* logIntegrityInfoMap = new LogIntegrityInfoMap;
-//         regionIter = mRegionLogIntegrityInfoMap.insert(std::make_pair(region, logIntegrityInfoMap)).first;
-//     }
-//     LogIntegrityInfoMap* logIntegrityInfoMap = regionIter->second;
-
-//     // parse log time
-//     LogtailTime logTime;
-//     bool parseSucceeded = false;
-//     // if time pos is -1, use regex
-//     // if config->mTimePos is invalid, use regex
-//     std::string lastLogLine = GetLastLogLine(item);
-//     if (lastLogLine.empty()) {
-//         LOG_DEBUG(
-//             sLogger,
-//             ("empty log line, region", region)("project", projectName)("log store", logstore)("filename", filename));
-//         return;
-//     }
-
-//     if (integrityConfigPtr->mTimePos <= INT32_FLAG(data_integrity_regex_time_pos)
-//         || integrityConfigPtr->mTimePos >= (int32_t)lastLogLine.size())
-//         parseSucceeded = LogFileReader::ParseLogTime(lastLogLine.c_str(),
-//                                                      integrityConfigPtr->mCompiledTimeReg,
-//                                                      logTime,
-//                                                      integrityConfigPtr->mTimeFormat,
-//                                                      region,
-//                                                      projectName,
-//                                                      logstore,
-//                                                      filename);
-//     else
-//         parseSucceeded = LogFileReader::GetLogTimeByOffset(lastLogLine.c_str(),
-//                                                            integrityConfigPtr->mTimePos,
-//                                                            logTime,
-//                                                            integrityConfigPtr->mTimeFormat,
-//                                                            region,
-//                                                            projectName,
-//                                                            logstore,
-//                                                            filename);
-
-//     // find log time info
-//     string key = GetIntegrityInfoKey(projectName, logstore, filename);
-//     LogIntegrityInfoMap::iterator projectLogStoreFilenameIter = logIntegrityInfoMap->find(key);
-//     if (projectLogStoreFilenameIter == logIntegrityInfoMap->end()) {
-//         // erase item in out-dated file map
-//         // get last update time from out-dated map
-//         time_t lastUpdateTime = EraseItemInOutDatedFileMap(region, projectName, logstore, filename);
-//         // if file existed in out-dated map, get last update time from the map
-//         // if it's a new file, last update time is -1
-//         LogIntegrityInfo* logIntegrityInfo = new LogIntegrityInfo(region,
-//                                                                   projectName,
-//                                                                   logstore,
-//                                                                   filename,
-//                                                                   integrityConfigPtr->mAliuid,
-//                                                                   integrityConfigPtr->mIntegrityProjectName,
-//                                                                   integrityConfigPtr->mIntegrityLogstore,
-//                                                                   lastUpdateTime);
-//         projectLogStoreFilenameIter = logIntegrityInfoMap->insert(std::make_pair(key, logIntegrityInfo)).first;
-//     }
-//     LogIntegrityInfo* logIntegrityInfo = projectLogStoreFilenameIter->second;
-//     // initial succeeded lines is 0, will modify afterwards
-//     LogTimeInfo logTimeInfo(seqNum,
-//                             parseSucceeded ? logTime.tv_sec : -1,
-//                             0,
-//                             parseSucceeded ? LogTimeInfo::LogIntegrityStatus_ParseFail
-//                                            : LogTimeInfo::LogIntegrityStatus_ParseOK);
-//     // append log time info in list
-//     logIntegrityInfo->mLogTimeInfoList.push_back(logTimeInfo);
-
-//     LOG_DEBUG(sLogger,
-//               ("insert log time info into map, region", region)("project", projectName)("log store", logstore)(
-//                   "filename", filename)("log time", logTime.tv_sec)("sequence num", seqNum));
-// }
-
 void LogIntegrity::Notify(LoggroupTimeValue* data, bool flag) {
     const string& region = data->mRegion;
     const string& projectName = data->mProjectName;
@@ -797,23 +709,6 @@ void LogIntegrity::FillLogTimeInfo(LogIntegrityInfo* info, const std::string& na
     else
         LOG_ERROR(sLogger, ("invalid field name", name));
 }
-
-// std::string LogIntegrity::GetLastLogLine(MergeItem* item) {
-//     const LogGroup& logGroup = item->mLogGroup;
-//     if (logGroup.logs_size() < 1) {
-//         LOG_ERROR(sLogger, ("invalid log group, size", logGroup.logs_size()));
-//         return "";
-//     }
-
-//     const Log& lastLogLine = logGroup.logs(logGroup.logs_size() - 1);
-//     if (lastLogLine.contents_size() != 1) {
-//         LOG_ERROR(sLogger, ("invalid log group, content size", lastLogLine.contents_size()));
-//         return "";
-//     }
-
-//     const Log_Content& logContent = lastLogLine.contents(0);
-//     return logContent.value();
-// }
 
 void LogIntegrity::InsertItemIntoOutDatedFileMap(LogIntegrityInfo* info) {
     // find region
