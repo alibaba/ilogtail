@@ -29,6 +29,8 @@
 #include "LogtailCommonFlags.h"
 #include "FileSystemUtil.h"
 
+DECLARE_FLAG_STRING(logtail_sys_conf_dir);
+
 namespace logtail {
 
 // TODO: In ConfigManager.cpp, some places use / to concat path, which might fail on Windows,
