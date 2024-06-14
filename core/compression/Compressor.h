@@ -25,6 +25,7 @@ namespace logtail {
 class Compressor {
 public:
     Compressor(CompressType type) : mType(type) {}
+    virtual ~Compressor() = default;
 
     virtual bool Compress(const std::string& input, std::string& output, std::string& errorMsg) = 0;
 

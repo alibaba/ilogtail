@@ -40,7 +40,7 @@ class Aggregator {
 public:
     bool Init(const Json::Value& config,
               Flusher* flusher,
-              const DefaultFlushStrategy& strategy,
+              const DefaultFlushStrategyOptions& strategy,
               bool enableGroupBatch = false) {
         std::string errorMsg;
         PipelineContext& ctx = flusher->GetContext();
@@ -86,7 +86,7 @@ public:
 
         if (enableGroupBatch) {
             uint32_t groupTimeout = timeoutSecs / 2;
-            mGroupFlushStrategy = GroupFlushStrategy(maxSizeBytes * 2, groupTimeout);
+            mGroupFlushStrategy = GroupFlushStrategy(maxSizeBytes, groupTimeout);
             mGroupQueue = GroupBatchItem();
             mEventFlushStrategy.SetTimeoutSecs(timeoutSecs - groupTimeout);
         } else {

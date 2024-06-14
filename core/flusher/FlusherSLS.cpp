@@ -230,9 +230,9 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         }
     }
 
-    DefaultFlushStrategy strategy{static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
-                                  static_cast<uint32_t>(INT32_FLAG(merge_log_count_limit)),
-                                  static_cast<uint32_t>(INT32_FLAG(batch_send_interval))};
+    DefaultFlushStrategyOptions strategy{static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
+                                         static_cast<uint32_t>(INT32_FLAG(merge_log_count_limit)),
+                                         static_cast<uint32_t>(INT32_FLAG(batch_send_interval))};
     if (!mAggregator.Init(
             itr ? *itr : Json::Value(), this, strategy, !mContext->IsExactlyOnceEnabled() && mShardHashKeys.empty())) {
         // when either exactly once is enabled or ShardHashKeys is not empty, we don't enable group batch

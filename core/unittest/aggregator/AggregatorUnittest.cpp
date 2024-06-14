@@ -57,7 +57,7 @@ private:
 unique_ptr<FlusherMock> AggregatorUnittest::sFlusher;
 
 void AggregatorUnittest::TestParamInit() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 1;
     strategy.mMaxSizeBytes = 100;
     strategy.mTimeoutSecs = 3;
@@ -103,7 +103,7 @@ void AggregatorUnittest::TestInitWithoutGroupBatch() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
 
     Aggregator<> aggregator;
-    aggregator.Init(configJson, sFlusher.get(), DefaultFlushStrategy());
+    aggregator.Init(configJson, sFlusher.get(), DefaultFlushStrategyOptions());
     APSARA_TEST_EQUAL(10U, aggregator.mEventFlushStrategy.GetMaxCnt());
     APSARA_TEST_EQUAL(1000U, aggregator.mEventFlushStrategy.GetMaxSizeBytes());
     APSARA_TEST_EQUAL(5U, aggregator.mEventFlushStrategy.GetTimeoutSecs());
@@ -123,7 +123,7 @@ void AggregatorUnittest::TestInitWithGroupBatch() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
 
     Aggregator<> aggregator;
-    aggregator.Init(configJson, sFlusher.get(), DefaultFlushStrategy(), true);
+    aggregator.Init(configJson, sFlusher.get(), DefaultFlushStrategyOptions(), true);
     APSARA_TEST_EQUAL(10U, aggregator.mEventFlushStrategy.GetMaxCnt());
     APSARA_TEST_EQUAL(1000U, aggregator.mEventFlushStrategy.GetMaxSizeBytes());
     APSARA_TEST_EQUAL(3U, aggregator.mEventFlushStrategy.GetTimeoutSecs());
@@ -135,7 +135,7 @@ void AggregatorUnittest::TestInitWithGroupBatch() {
 }
 
 void AggregatorUnittest::TestAddWithoutGroupBatch() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 3;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;
@@ -216,7 +216,7 @@ void AggregatorUnittest::TestAddWithoutGroupBatch() {
 }
 
 void AggregatorUnittest::TestAddWithGroupBatch() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 3;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;
@@ -349,7 +349,7 @@ void AggregatorUnittest::TestAddWithGroupBatch() {
 }
 
 void AggregatorUnittest::TestFlushEventQueueWithoutGroupBatch() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 3;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;
@@ -383,7 +383,7 @@ void AggregatorUnittest::TestFlushEventQueueWithoutGroupBatch() {
 }
 
 void AggregatorUnittest::TestFlushEventQueueWithGroupBatch() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 10;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;
@@ -439,7 +439,7 @@ void AggregatorUnittest::TestFlushEventQueueWithGroupBatch() {
 }
 
 void AggregatorUnittest::TestFlushGroupQueue() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 3;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;
@@ -479,7 +479,7 @@ void AggregatorUnittest::TestFlushGroupQueue() {
 }
 
 void AggregatorUnittest::TestFlushAllWithoutGroupBatch() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 3;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;
@@ -507,7 +507,7 @@ void AggregatorUnittest::TestFlushAllWithoutGroupBatch() {
 }
 
 void AggregatorUnittest::TestFlushAllWithGroupBatch() {
-    DefaultFlushStrategy strategy;
+    DefaultFlushStrategyOptions strategy;
     strategy.mMaxCnt = 3;
     strategy.mMaxSizeBytes = 1000;
     strategy.mTimeoutSecs = 3;

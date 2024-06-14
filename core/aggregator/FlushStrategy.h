@@ -26,7 +26,7 @@
 
 namespace logtail {
 
-struct DefaultFlushStrategy {
+struct DefaultFlushStrategyOptions {
     uint32_t mMaxSizeBytes = 0;
     uint32_t mMaxCnt = 0;
     uint32_t mTimeoutSecs = 0;

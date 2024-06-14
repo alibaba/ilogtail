@@ -30,6 +30,7 @@ class Serializer {
 public:
     Serializer() = default;
     Serializer(Flusher* f) : mFlusher(f) {}
+    virtual ~Serializer() = default;
 
     virtual bool Serialize(T&& p, std::string& res, std::string& errorMsg) = 0;
 

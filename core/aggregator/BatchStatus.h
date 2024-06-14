@@ -26,6 +26,8 @@ namespace logtail {
 
 class EventBatchStatus {
 public:
+    virtual ~EventBatchStatus() = default;
+    
     virtual void Reset() {
         mCnt = 0;
         mSizeBytes = 0;
