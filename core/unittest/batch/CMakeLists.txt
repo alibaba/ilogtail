@@ -13,7 +13,7 @@
 # limitations under the License.
  
 cmake_minimum_required(VERSION 3.22)
-project(aggregator_unittest)
+project(batch_unittest)
 
 add_executable(flush_strategy_unittest FlushStrategyUnittest.cpp)
 target_link_libraries(flush_strategy_unittest unittest_base)
@@ -24,8 +24,8 @@ target_link_libraries(batch_status_unittest unittest_base)
 add_executable(batch_item_unittest BatchItemUnittest.cpp)
 target_link_libraries(batch_item_unittest unittest_base)
 
-add_executable(aggregator_unittest AggregatorUnittest.cpp)
-target_link_libraries(aggregator_unittest unittest_base)
+add_executable(batch_unittest BatcherUnittest.cpp)
+target_link_libraries(batch_unittest unittest_base)
 
 add_executable(timeout_flush_manager_unittest TimeoutFlushManagerUnittest.cpp)
 target_link_libraries(timeout_flush_manager_unittest unittest_base)
@@ -34,5 +34,5 @@ include(GoogleTest)
 gtest_discover_tests(flush_strategy_unittest)
 gtest_discover_tests(batch_status_unittest)
 gtest_discover_tests(batch_item_unittest)
-gtest_discover_tests(aggregator_unittest)
+gtest_discover_tests(batch_unittest)
 gtest_discover_tests(timeout_flush_manager_unittest)
