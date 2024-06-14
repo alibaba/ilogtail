@@ -14,7 +14,7 @@
 
 #include "processor/daemon/LogProcess.h"
 
-#include "aggregator/TimeoutFlushManager.h"
+#include "batch/TimeoutFlushManager.h"
 #include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"

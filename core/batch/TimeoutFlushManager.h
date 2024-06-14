@@ -62,7 +62,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TimeoutFlushManagerUnittest;
-    friend class AggregatorUnittest;
+    friend class BatcherUnittest;
 #endif
 };
 

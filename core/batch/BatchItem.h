@@ -20,9 +20,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "aggregator/BatchStatus.h"
-#include "aggregator/BatchedEvents.h"
-#include "aggregator/FlushStrategy.h"
+#include "batch/BatchStatus.h"
+#include "batch/BatchedEvents.h"
+#include "batch/FlushStrategy.h"
 #include "models/PipelineEventGroup.h"
 #include "models/StringView.h"
 
@@ -72,7 +72,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventBatchItemUnittest;
     friend class GroupBatchItemUnittest;
-    friend class AggregatorUnittest;
+    friend class BatcherUnittest;
 #endif
 };
 
@@ -162,7 +162,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventBatchItemUnittest;
-    friend class AggregatorUnittest;
+    friend class BatcherUnittest;
 #endif
 };
 

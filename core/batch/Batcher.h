@@ -24,10 +24,10 @@
 #include <optional>
 #include <vector>
 
-#include "aggregator/BatchItem.h"
-#include "aggregator/BatchStatus.h"
-#include "aggregator/FlushStrategy.h"
-#include "aggregator/TimeoutFlushManager.h"
+#include "batch/BatchItem.h"
+#include "batch/BatchStatus.h"
+#include "batch/FlushStrategy.h"
+#include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "models/PipelineEventGroup.h"
@@ -36,7 +36,7 @@
 namespace logtail {
 
 template <typename T = EventBatchStatus>
-class Aggregator {
+class Batcher {
 public:
     bool Init(const Json::Value& config,
               Flusher* flusher,
@@ -215,7 +215,7 @@ private:
     Flusher* mFlusher = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class AggregatorUnittest;
+    friend class BatcherUnittest;
     friend class FlusherSLSUnittest;
 #endif
 };

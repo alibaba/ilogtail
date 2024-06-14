@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <ctime>
 
-#include "aggregator/BatchedEvents.h"
+#include "batch/BatchedEvents.h"
 #include "models/PipelineEventPtr.h"
 
 namespace logtail {

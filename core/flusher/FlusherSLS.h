@@ -24,8 +24,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "aggregator/Aggregator.h"
-#include "aggregator/BatchStatus.h"
+#include "batch/Batcher.h"
+#include "batch/BatchStatus.h"
 #include "common/LogstoreFeedbackKey.h"
 #include "compression/Compressor.h"
 #include "models/PipelineEventGroup.h"
@@ -86,7 +86,7 @@ private:
 
     LogstoreFeedBackKey mLogstoreKey = 0;
 
-    Aggregator<SLSEventBatchStatus> mAggregator;
+    Batcher<SLSEventBatchStatus> mBatcher;
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Serializer<std::vector<CompressedLogGroup>>> mGroupListSerializer;
     std::unique_ptr<Compressor> mCompressor;

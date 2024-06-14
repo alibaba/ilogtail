@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "aggregator/BatchedEvents.h"
+#include "batch/BatchedEvents.h"
 #include "models/PipelineEventPtr.h"
 #include "plugin/interface/Flusher.h"
 

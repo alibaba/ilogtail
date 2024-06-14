@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "aggregator/BatchItem.h"
+#include "batch/BatchItem.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

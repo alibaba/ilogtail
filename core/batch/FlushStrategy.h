@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <ctime>
 
-#include "aggregator/BatchStatus.h"
+#include "batch/BatchStatus.h"
 #include "models/PipelineEventPtr.h"
 
 namespace logtail {

@@ -28,6 +28,7 @@
 #include "LogtailAlarm.h"
 #include "LogFileProfiler.h"
 #include "application/Application.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace sls_logs;
 using namespace std;

@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <utility>
 
-#include "aggregator/TimeoutFlushManager.h"
+#include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "flusher/FlusherSLS.h"

@@ -83,15 +83,15 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(flusher->mGroupSerializer);
     APSARA_TEST_TRUE(flusher->mGroupListSerializer);
     APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(merge_log_count_limit)),
-                      flusher->mAggregator.mEventFlushStrategy.GetMaxCnt());
+                      flusher->mBatcher.mEventFlushStrategy.GetMaxCnt());
     APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
-                      flusher->mAggregator.mEventFlushStrategy.GetMaxSizeBytes());
+                      flusher->mBatcher.mEventFlushStrategy.GetMaxSizeBytes());
     uint32_t timeout = static_cast<uint32_t>(INT32_FLAG(batch_send_interval)) / 2;
     APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(batch_send_interval)) - timeout,
-                      flusher->mAggregator.mEventFlushStrategy.GetTimeoutSecs());
+                      flusher->mBatcher.mEventFlushStrategy.GetTimeoutSecs());
     APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)) * 2,
-                      flusher->mAggregator.mGroupFlushStrategy->GetMaxSizeBytes());
-    APSARA_TEST_EQUAL(timeout, flusher->mAggregator.mGroupFlushStrategy->GetTimeoutSecs());
+                      flusher->mBatcher.mGroupFlushStrategy->GetMaxSizeBytes());
+    APSARA_TEST_EQUAL(timeout, flusher->mBatcher.mGroupFlushStrategy->GetTimeoutSecs());
 
     // valid optional param
     configStr = R"(

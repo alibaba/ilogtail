@@ -17,7 +17,7 @@
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
-#include "aggregator/FlushStrategy.h"
+#include "batch/FlushStrategy.h"
 #include "common/EndpointUtil.h"
 #include "common/HashUtil.h"
 #include "common/LogtailCommonFlags.h"
@@ -233,7 +233,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     DefaultFlushStrategyOptions strategy{static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
                                          static_cast<uint32_t>(INT32_FLAG(merge_log_count_limit)),
                                          static_cast<uint32_t>(INT32_FLAG(batch_send_interval))};
-    if (!mAggregator.Init(
+    if (!mBatcher.Init(
             itr ? *itr : Json::Value(), this, strategy, !mContext->IsExactlyOnceEnabled() && mShardHashKeys.empty())) {
         // when either exactly once is enabled or ShardHashKeys is not empty, we don't enable group batch
         return false;
@@ -288,14 +288,14 @@ void FlusherSLS::Send(PipelineEventGroup&& g) {
         SerializeAndPush(std::move(g));
     } else {
         vector<BatchedEventsList> res;
-        mAggregator.Add(std::move(g), res);
+        mBatcher.Add(std::move(g), res);
         SerializeAndPush(std::move(res));
     }
 }
 
 void FlusherSLS::Flush(size_t key) {
     BatchedEventsList res;
-    mAggregator.FlushQueue(key, res);
+    mBatcher.FlushQueue(key, res);
     SerializeAndPush(std::move(res));
 }
 
@@ -303,7 +303,7 @@ void FlusherSLS::Flush(size_t key) {
 // this should be fixed during sender queue refactorization, where all batch should be put into sender queue
 void FlusherSLS::FlushAll() {
     vector<BatchedEventsList> res;
-    mAggregator.FlushAll(res);
+    mBatcher.FlushAll(res);
     SerializeAndPush(std::move(res));
 }
 

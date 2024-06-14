@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "common/Lock.h"
-#include "profile_sender/ProfileSender.h"
 
 namespace logtail {
 

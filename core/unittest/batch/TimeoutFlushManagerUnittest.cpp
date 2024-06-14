@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "aggregator/TimeoutFlushManager.h"
+#include "batch/TimeoutFlushManager.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -45,7 +45,7 @@ unique_ptr<FlusherMock> TimeoutFlushManagerUnittest::sFlusher;
 PipelineContext TimeoutFlushManagerUnittest::sCtx;
 
 void TimeoutFlushManagerUnittest::TestUpdateRecord() {
-    // new aggregator queue
+    // new batch queue
     TimeoutFlushManager::GetInstance()->UpdateRecord("test_config", 0, 1, 3, sFlusher.get());
     APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords.size());
     APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords["test_config"].size());
@@ -55,7 +55,7 @@ void TimeoutFlushManagerUnittest::TestUpdateRecord() {
     APSARA_TEST_EQUAL(sFlusher.get(), record1.mFlusher);
     APSARA_TEST_GT(record1.mUpdateTime, 0);
 
-    // existed aggregator queue
+    // existed batch queue
     time_t lastTime = record1.mUpdateTime;
     TimeoutFlushManager::GetInstance()->UpdateRecord("test_config", 0, 1, 3, sFlusher.get());
     APSARA_TEST_EQUAL(1U, TimeoutFlushManager::GetInstance()->mTimeoutRecords.size());

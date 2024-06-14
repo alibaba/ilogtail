@@ -70,7 +70,7 @@ elseif (MSVC)
 endif ()
 
 add_subdirectory(app_config)
-add_subdirectory(aggregator)
+add_subdirectory(batch)
 add_subdirectory(checkpoint)
 add_subdirectory(common)
 add_subdirectory(compression)
