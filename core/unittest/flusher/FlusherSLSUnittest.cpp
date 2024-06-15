@@ -89,7 +89,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     uint32_t timeout = static_cast<uint32_t>(INT32_FLAG(batch_send_interval)) / 2;
     APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(batch_send_interval)) - timeout,
                       flusher->mBatcher.mEventFlushStrategy.GetTimeoutSecs());
-    APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)) * 2,
+    APSARA_TEST_EQUAL(static_cast<uint32_t>(INT32_FLAG(batch_send_metric_size)),
                       flusher->mBatcher.mGroupFlushStrategy->GetMaxSizeBytes());
     APSARA_TEST_EQUAL(timeout, flusher->mBatcher.mGroupFlushStrategy->GetTimeoutSecs());
 
