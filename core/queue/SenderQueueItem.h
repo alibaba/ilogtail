@@ -58,8 +58,10 @@ struct SenderQueueItem {
 
 struct SLSSenderQueueItem : public SenderQueueItem {
     std::string mShardHashKey;
-    std::string mLogstore; // it normally equals to flusher_sls.Logstore, however, when route is enabled in Go pipeline,
-                           // it is designated explicitly
+    // it normally equals to flusher_sls.Logstore, except for the following situations:
+    // 1. when route is enabled in Go pipeline, it is designated explicitly
+    // 2. self telemetry data from C++ pipelines
+    std::string mLogstore;
     RangeCheckpointPtr mExactlyOnceCheckpoint;
 
     std::string mCurrentEndpoint;
