@@ -127,12 +127,12 @@ void SendClosure::OnSuccess(sdk::Response* response) {
 
         if (sLogger->should_log(spdlog::level::debug)) {
             time_t curTime = time(NULL);
-            bool isProfileData = Sender::IsProfileData(flusher->mRegion, flusher->mProject, flusher->mLogstore);
+            bool isProfileData = Sender::IsProfileData(flusher->mRegion, flusher->mProject, data->mLogstore);
             LOG_DEBUG(
                 sLogger,
                 ("SendSucess", "OK")("RequestId", response->requestId)("StatusCode", response->statusCode)(
                     "ResponseTime", curTime - data->mLastSendTime)("Region", flusher->mRegion)(
-                    "Project", flusher->mProject)("Logstore", flusher->mLogstore)("Config", configName)(
+                    "Project", flusher->mProject)("Logstore", data->mLogstore)("Config", configName)(
                     "RetryTimes", data->mSendRetryTimes)("TotalSendCost", curTime - data->mEnqueTime)(
                     "Bytes", data->mData.size())("Endpoint", data->mCurrentEndpoint)("IsProfileData", isProfileData));
         }
@@ -145,7 +145,7 @@ void SendClosure::OnSuccess(sdk::Response* response) {
         }
 
         Sender::Instance()->IncreaseRegionConcurrency(flusher->mRegion);
-        Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, time(NULL));
+        Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, time(NULL));
     }
     Sender::Instance()->OnSendDone(mDataPtr, LogstoreSenderInfo::SendResult_OK); // mDataPtr is released here
 
@@ -210,7 +210,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
                 Sender::Instance()->ForceUpdateRealIp(flusher->mRegion);
             }
             double serverErrorRatio
-                = Sender::Instance()->IncSendServerErrorStatistic(flusher->mProject, flusher->mLogstore, curTime);
+                = Sender::Instance()->IncSendServerErrorStatistic(flusher->mProject, data->mLogstore, curTime);
             if (serverErrorRatio < DOUBLE_FLAG(send_server_error_retry_ratio)
                 && data->mSendRetryTimes < static_cast<uint32_t>(INT32_FLAG(send_retrytimes))) {
                 operation = RETRY_ASYNC_WHEN_FAIL;
@@ -238,19 +238,19 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
                 suggestion << "Submit quota modification request. "
                               "https://help.aliyun.com/zh/sls/user-guide/expansion-of-resources";
             }
-            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, curTime);
+            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, curTime);
             LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
                                                    "error_code: " + errorCode + ", error_message: " + errorMessage
                                                        + ", request_id:" + response->requestId,
                                                    flusher->mProject,
-                                                   flusher->mLogstore,
+                                                   data->mLogstore,
                                                    flusher->mRegion);
             operation = RECORD_ERROR_WHEN_FAIL;
             recordRst = LogstoreSenderInfo::SendResult_QuotaFail;
         } else if (sendResult == SEND_UNAUTHORIZED) {
             failDetail << "write unauthorized";
             suggestion << "check https connection to endpoint or access keys provided";
-            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, curTime);
+            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, curTime);
             if (data->mSendRetryTimes > static_cast<uint32_t>(INT32_FLAG(unauthorized_send_retrytimes))) {
                 operation = DISCARD_WHEN_FAIL;
             } else {
@@ -274,13 +274,13 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
 #endif
             }
         } else if (sendResult == SEND_PARAMETER_INVALID) {
-            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, curTime);
+            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, curTime);
             failDetail << "invalid paramters";
             suggestion << "check input parameters";
             operation = DefaultOperation();
         } else if (sendResult == SEND_INVALID_SEQUENCE_ID) {
             failDetail << "invalid exactly-once sequence id";
-            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, curTime);
+            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, curTime);
             do {
                 auto& cpt = data->mExactlyOnceCheckpoint;
                 if (!cpt) {
@@ -290,7 +290,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
                         EXACTLY_ONCE_ALARM,
                         "drop exactly once log group because of invalid sequence ID, request id:" + response->requestId,
                         flusher->mProject,
-                        flusher->mLogstore,
+                        data->mLogstore,
                         flusher->mRegion);
                     operation = DISCARD_WHEN_FAIL;
                     break;
@@ -308,7 +308,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
                     "drop exactly once log group because of invalid sequence ID, cpt:" + cpt->key
                         + ", data:" + cpt->data.DebugString() + "request id:" + response->requestId,
                     flusher->mProject,
-                    flusher->mLogstore,
+                    data->mLogstore,
                     flusher->mRegion);
                 operation = DISCARD_WHEN_FAIL;
                 cpt->IncreaseSequenceID();
@@ -316,12 +316,12 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         } else if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust() && sdk::LOGE_REQUEST_TIME_EXPIRED == errorCode) {
             failDetail << "write request expired, will retry";
             suggestion << "check local system time";
-            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, curTime);
+            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, curTime);
             operation = RETRY_ASYNC_WHEN_FAIL;
         } else {
             failDetail << "other error";
             suggestion << "no suggestion";
-            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, flusher->mLogstore, curTime);
+            Sender::Instance()->IncTotalSendStatistic(flusher->mProject, data->mLogstore, curTime);
             // when unknown error such as SignatureNotMatch happens, we should retry several times
             // first time, we will retry immediately
             // then we record error and retry latter
@@ -331,7 +331,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         if (curTime - data->mEnqueTime > INT32_FLAG(discard_send_fail_interval)) {
             operation = DISCARD_WHEN_FAIL;
         }
-        bool isProfileData = Sender::IsProfileData(flusher->mRegion, flusher->mProject, flusher->mLogstore);
+        bool isProfileData = Sender::IsProfileData(flusher->mRegion, flusher->mProject, data->mLogstore);
         if (isProfileData && data->mSendRetryTimes >= static_cast<uint32_t>(INT32_FLAG(profile_data_send_retrytimes))) {
             operation = DISCARD_WHEN_FAIL;
         }
@@ -340,7 +340,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     ("SendFail", failDetail.str())("Operation", GetOperationString(operation))("Suggestion", suggestion.str())( \
         "RequestId", response->requestId)("StatusCode", response->statusCode)("ErrorCode", errorCode)( \
         "ErrorMessage", errorMessage)("ResponseTime", curTime - data->mLastSendTime)("Region", flusher->mRegion)( \
-        "Project", flusher->mProject)("Logstore", flusher->mLogstore)("Config", configName)( \
+        "Project", flusher->mProject)("Logstore", data->mLogstore)("Config", configName)( \
         "RetryTimes", data->mSendRetryTimes)("TotalSendCost", curTime - data->mEnqueTime)( \
         "Bytes", data->mData.size())("Endpoint", data->mCurrentEndpoint)("IsProfileData", isProfileData)
 
@@ -374,7 +374,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
                                                                + ", requestId:" + response->requestId + ", endpoint:"
                                                                + data->mCurrentEndpoint + ", config:" + configName,
                                                            flusher->mProject,
-                                                           flusher->mLogstore,
+                                                           data->mLogstore,
                                                            flusher->mRegion);
                 }
                 Sender::Instance()->SubSendingBufferCount();
@@ -1355,7 +1355,8 @@ void Sender::DaemonSender() {
 }
 
 void Sender::PutIntoSecondaryBuffer(SenderQueueItem* dataPtr, int32_t retryTimes) {
-    auto flusher = static_cast<const FlusherSLS*>(static_cast<SLSSenderQueueItem*>(dataPtr)->mFlusher);
+    auto data = static_cast<SLSSenderQueueItem*>(dataPtr);
+    auto flusher = static_cast<const FlusherSLS*>(data->mFlusher);
     int32_t retry = 0;
     bool writeDone = false;
     while (true) {
@@ -1383,12 +1384,12 @@ void Sender::PutIntoSecondaryBuffer(SenderQueueItem* dataPtr, int32_t retryTimes
         WaitObject::Lock lock(mWriteSecondaryWait);
         mWriteSecondaryWait.signal();
     } else {
-        LOG_ERROR(sLogger,
-                  ("write to secondary buffer fail", "discard data")("projectName", flusher->mProject)(
-                      "logstore", flusher->mLogstore)("RetryTimes", dataPtr->mSendRetryTimes)("bytes",
-                                                                                              dataPtr->mData.size()));
+        LOG_ERROR(
+            sLogger,
+            ("write to secondary buffer fail", "discard data")("projectName", flusher->mProject)(
+                "logstore", data->mLogstore)("RetryTimes", dataPtr->mSendRetryTimes)("bytes", dataPtr->mData.size()));
         LogtailAlarm::GetInstance()->SendAlarm(
-            DISCARD_DATA_ALARM, "write to buffer file fail", flusher->mProject, flusher->mLogstore, flusher->mRegion);
+            DISCARD_DATA_ALARM, "write to buffer file fail", flusher->mProject, data->mLogstore, flusher->mRegion);
         delete dataPtr;
     }
 }
@@ -1448,7 +1449,7 @@ bool Sender::SendToBufferFile(SenderQueueItem* dataPtr) {
     bufferMeta.set_project(flusher->mProject);
     bufferMeta.set_endpoint(flusher->mRegion);
     bufferMeta.set_aliuid(flusher->mAliuid);
-    bufferMeta.set_logstore(flusher->mLogstore);
+    bufferMeta.set_logstore(data->mLogstore);
     bufferMeta.set_datatype(int32_t(data->mType));
     bufferMeta.set_rawsize(data->mRawSize);
     bufferMeta.set_shardhashkey(data->mShardHashKey);
