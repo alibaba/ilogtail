@@ -1862,12 +1862,12 @@ void Sender::SendToNetAsync(SenderQueueItem* dataPtr) {
         sendClosure->mDataPtr = dataPtr;
         LOG_DEBUG(sLogger,
                   ("region", flusher->mRegion)("endpoint", data->mCurrentEndpoint)("project", flusher->mProject)(
-                      "logstore", flusher->mLogstore)("bytes", data->mData.size()));
+                      "logstore", data->mLogstore)("bytes", data->mData.size()));
         if (data->mType == RawDataType::EVENT_GROUP) {
             const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : data->mShardHashKey;
             if (hashKey.empty()) {
                 sendClient->PostLogStoreLogs(flusher->mProject,
-                                             flusher->mLogstore,
+                                             data->mLogstore,
                                              ConvertCompressType(flusher->GetCompressType()),
                                              data->mData,
                                              data->mRawSize,
@@ -1875,7 +1875,7 @@ void Sender::SendToNetAsync(SenderQueueItem* dataPtr) {
             } else {
                 int64_t hashKeySeqID = exactlyOnceCpt ? exactlyOnceCpt->data.sequence_id() : sdk::kInvalidHashKeySeqID;
                 sendClient->PostLogStoreLogs(flusher->mProject,
-                                             flusher->mLogstore,
+                                             data->mLogstore,
                                              ConvertCompressType(flusher->GetCompressType()),
                                              data->mData,
                                              data->mRawSize,
@@ -1886,13 +1886,13 @@ void Sender::SendToNetAsync(SenderQueueItem* dataPtr) {
         } else {
             if (data->mShardHashKey.empty())
                 sendClient->PostLogStoreLogPackageList(flusher->mProject,
-                                                       flusher->mLogstore,
+                                                       data->mLogstore,
                                                        ConvertCompressType(flusher->GetCompressType()),
                                                        data->mData,
                                                        sendClosure);
             else
                 sendClient->PostLogStoreLogPackageList(flusher->mProject,
-                                                       flusher->mLogstore,
+                                                       data->mLogstore,
                                                        ConvertCompressType(flusher->GetCompressType()),
                                                        data->mData,
                                                        sendClosure,
