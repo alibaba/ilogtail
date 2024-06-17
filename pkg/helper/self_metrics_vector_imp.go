@@ -285,20 +285,20 @@ func (v *metricVector) LabelKeys() []string {
 }
 
 func (v *metricVector) WithLabels(labels ...pipeline.Label) pipeline.Metric {
-	index, err := v.buildIndex(labels)
+	labelValues, err := v.buildLabelValues(labels)
 	if err != nil {
 		return newErrorMetric(v.metricType, err)
 	}
-	defer v.indexPool.Put(index)
-	return v.cache.WithLabelValues(*index)
+	defer v.indexPool.Put(labelValues)
+	return v.cache.WithLabelValues(*labelValues)
 }
 
 func (v *metricVector) Collect() []pipeline.Metric {
 	return v.cache.Collect()
 }
 
-// buildIndex return the index
-func (v *metricVector) buildIndex(labels []pipeline.Label) (*[]string, error) {
+// buildLabelValues return the index
+func (v *metricVector) buildLabelValues(labels []pipeline.Label) (*[]string, error) {
 	if len(labels) > len(v.labelKeys) {
 		return nil, fmt.Errorf("too many labels, expected %d, got %d. defined labels: %v",
 			len(v.labelKeys), len(labels), v.labelKeys)
@@ -347,9 +347,9 @@ func NewMapCache(metricSet pipeline.MetricSet) MetricVectorCache {
 	}
 }
 
-func (v *MapCache) WithLabelValues(index []string) pipeline.Metric {
+func (v *MapCache) WithLabelValues(labelValues []string) pipeline.Metric {
 	buffer := v.bytesPool.Get()
-	for _, tagValue := range index {
+	for _, tagValue := range labelValues {
 		*buffer = append(*buffer, '|')
 		*buffer = append(*buffer, tagValue...)
 	}
@@ -363,7 +363,7 @@ func (v *MapCache) WithLabelValues(index []string) pipeline.Metric {
 		return metric
 	}
 
-	newMetric := newMetric(v.Type(), v, index)
+	newMetric := newMetric(v.Type(), v, labelValues)
 	acV, loaded = v.LoadOrStore(k, newMetric)
 	if loaded {
 		v.bytesPool.Put(buffer)

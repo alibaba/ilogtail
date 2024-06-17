@@ -39,20 +39,20 @@ var (
 	_ pipeline.StringMetric  = (*errorStrMetric)(nil)
 )
 
-func newMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, index []string) pipeline.Metric {
+func newMetric(metricType pipeline.SelfMetricType, metricSet pipeline.MetricSet, labelValues []string) pipeline.Metric {
 	switch metricType {
 	case pipeline.CumulativeCounterType:
-		return newCumulativeCounter(metricSet, index)
+		return newCumulativeCounter(metricSet, labelValues)
 	case pipeline.AverageType:
-		return newAverage(metricSet, index)
+		return newAverage(metricSet, labelValues)
 	case pipeline.CounterType:
-		return newDeltaCounter(metricSet, index)
+		return newDeltaCounter(metricSet, labelValues)
 	case pipeline.GaugeType:
-		return newGauge(metricSet, index)
+		return newGauge(metricSet, labelValues)
 	case pipeline.StringType:
-		return newStringMetric(metricSet, index)
+		return newStringMetric(metricSet, labelValues)
 	case pipeline.LatencyType:
-		return newLatency(metricSet, index)
+		return newLatency(metricSet, labelValues)
 	}
 	return newErrorMetric(metricType, errors.New("invalid metric type"))
 }
@@ -75,9 +75,9 @@ type cumulativeCounterImp struct {
 	Series
 }
 
-func newCumulativeCounter(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
+func newCumulativeCounter(ms pipeline.MetricSet, labelValues []string) pipeline.CounterMetric {
 	c := &cumulativeCounterImp{
-		Series: newSeries(ms, index),
+		Series: newSeries(ms, labelValues),
 	}
 	return c
 }
@@ -112,9 +112,9 @@ type counterImp struct {
 	Series
 }
 
-func newDeltaCounter(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
+func newDeltaCounter(ms pipeline.MetricSet, labelValues []string) pipeline.CounterMetric {
 	c := &counterImp{
-		Series: newSeries(ms, index),
+		Series: newSeries(ms, labelValues),
 	}
 	return c
 }
@@ -148,9 +148,9 @@ type gaugeImp struct {
 	Series
 }
 
-func newGauge(ms pipeline.MetricSet, index []string) pipeline.GaugeMetric {
+func newGauge(ms pipeline.MetricSet, labelValues []string) pipeline.GaugeMetric {
 	g := &gaugeImp{
-		Series: newSeries(ms, index),
+		Series: newSeries(ms, labelValues),
 	}
 	return g
 }
@@ -187,9 +187,9 @@ type averageImp struct {
 	Series
 }
 
-func newAverage(ms pipeline.MetricSet, index []string) pipeline.CounterMetric {
+func newAverage(ms pipeline.MetricSet, labelValues []string) pipeline.CounterMetric {
 	a := &averageImp{
-		Series: newSeries(ms, index),
+		Series: newSeries(ms, labelValues),
 	}
 	return a
 }
@@ -238,9 +238,9 @@ type latencyImp struct {
 	Series
 }
 
-func newLatency(ms pipeline.MetricSet, index []string) pipeline.LatencyMetric {
+func newLatency(ms pipeline.MetricSet, labelValues []string) pipeline.LatencyMetric {
 	l := &latencyImp{
-		Series: newSeries(ms, index),
+		Series: newSeries(ms, labelValues),
 	}
 	return l
 }
@@ -291,9 +291,9 @@ type strMetricImp struct {
 	Series
 }
 
-func newStringMetric(ms pipeline.MetricSet, index []string) pipeline.StringMetric {
+func newStringMetric(ms pipeline.MetricSet, labelValues []string) pipeline.StringMetric {
 	s := &strMetricImp{
-		Series: newSeries(ms, index),
+		Series: newSeries(ms, labelValues),
 	}
 	return s
 }
@@ -328,19 +328,19 @@ func (s *strMetricImp) Export() map[string]string {
 
 type Series struct {
 	pipeline.MetricSet
-	index []string
+	labelValues []string
 }
 
-func newSeries(ms pipeline.MetricSet, index []string) Series {
+func newSeries(ms pipeline.MetricSet, labelValues []string) Series {
 	var indexToStore []string
-	if index != nil {
-		indexToStore = make([]string, len(index))
-		copy(indexToStore, index)
+	if labelValues != nil {
+		indexToStore = make([]string, len(labelValues))
+		copy(indexToStore, labelValues)
 	}
 
 	return Series{
-		MetricSet: ms,
-		index:     indexToStore,
+		MetricSet:   ms,
+		labelValues: indexToStore,
 	}
 }
 
@@ -354,13 +354,13 @@ func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr s
 	}
 
 	labelNames := s.LabelKeys()
-	for i, v := range s.index {
+	for i, v := range s.labelValues {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: labelNames[i], Value: v})
 	}
 }
 
 func (s Series) Export(metricName, metricValue string) map[string]string {
-	ret := make(map[string]string, len(s.ConstLabels())+len(s.index)+2)
+	ret := make(map[string]string, len(s.ConstLabels())+len(s.labelValues)+2)
 	ret[metricName] = metricValue
 	ret[SelfMetricNameKey] = metricName
 
@@ -368,7 +368,7 @@ func (s Series) Export(metricName, metricValue string) map[string]string {
 		ret[v.Key] = v.Value
 	}
 
-	for i, v := range s.index {
+	for i, v := range s.labelValues {
 		ret[s.LabelKeys()[i]] = v
 	}
 
