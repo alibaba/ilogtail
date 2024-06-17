@@ -18,13 +18,12 @@
 namespace logtail {
 
 // 负责接收ebpf返回的数据，然后将数据推送到对应的队列中
+// TODO: 目前暂时没有考虑并发Start的问题
 void ObserverServer::Start() {
-    static bool initialized = false;
-    if (initialized) {
+    if (mIsRunning) {
         return;
     } else {
-        mStop = false;
-        initialized = true;
+        mIsRunning = false;
         // TODO: 创建一个线程，用于接收ebpf返回的数据，并将数据推送到对应的队列中
         LOG_INFO(sLogger, ("observer ebpf server", "started"));
     }
@@ -32,17 +31,19 @@ void ObserverServer::Start() {
 
 void ObserverServer::Stop() {
     // TODO: ebpf_stop(); 停止所有类型的ebpf探针
-    mStop = true;
+    mIsRunning = false;
 }
 
 // 插件配置注册逻辑
 // 负责启动对应的ebpf程序
-void ObserverServer::AddObserverOption(const PipelineContext* context, size_t index, const ObserverOptions* option) {
-    std::string key = context->GetConfigName() + "#" + std::to_string(index);
-    mInputMap[key] = option;
-    mInputContextMap[key] = context;
+void ObserverServer::AddObserverOptions(const std::string& name,
+                                        size_t index,
+                                        const ObserverOptions* options,
+                                        const PipelineContext* ctx) {
+    std::string key = name + "#" + std::to_string(index);
+    mInputConfigMap[key] = std::make_pair(options, ctx);
     // TODO: 目前一种类型的input只能处理一个，后续需要修改
-    switch (option->mType) {
+    switch (options->mType) {
         case ObserverType::FILE: {
             // TODO: ebpf_start(type);
             break;
@@ -61,10 +62,11 @@ void ObserverServer::AddObserverOption(const PipelineContext* context, size_t in
 }
 
 // 插件配置注销逻辑
-void ObserverServer::RemoveObserverOption(const std::string& name, size_t index) {
+// TODO: 目前处理配置变更，先stop掉该类型的探针，然后在map里remove配置
+void ObserverServer::RemoveObserverOptions(const std::string& name, size_t index) {
     std::string key = name + "#" + std::to_string(index);
     // TODO: 目前一种类型的input只能处理一个，后续需要修改
-    switch (mInputMap[key]->mType) {
+    switch (mInputConfigMap[key].first->mType) {
         case ObserverType::FILE: {
             // TODO: ebpf_stop(type);
             break;
@@ -80,8 +82,7 @@ void ObserverServer::RemoveObserverOption(const std::string& name, size_t index)
         default:
             break;
     }
-    mInputMap.erase(key);
-    mInputContextMap.erase(key);
+    mInputConfigMap.erase(key);
 }
 
 } // namespace logtail

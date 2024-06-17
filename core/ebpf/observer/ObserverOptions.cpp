@@ -38,7 +38,7 @@ bool ObserverOptions::Init(ObserverType type,
     const Json::Value& probeConfig = config["ProbeConfig"];
     switch (type) {
         case ObserverType::NETWORK: {
-            ObserverNetwork thisObserverNetwork;
+            ObserverNetworkOption thisObserverNetwork;
             // EnableProtocols (Mandatory)
             if (!GetOptionalListParam(probeConfig, "EnableProtocols", thisObserverNetwork.mEnableProtocols, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -86,11 +86,11 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
-            mObserver.emplace<ObserverNetwork>(thisObserverNetwork);
+            mObserverOption.emplace<ObserverNetworkOption>(thisObserverNetwork);
             break;
         }
         case ObserverType::FILE: {
-            ObserverFile thisObserverFile;
+            ObserverFileOption thisObserverFile;
             // ProfileRemoteServer (Mandatory)
             if (!GetOptionalStringParam(
                     probeConfig, "ProfileRemoteServer", thisObserverFile.mProfileRemoteServer, errorMsg)) {
@@ -125,11 +125,11 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
-            mObserver.emplace<ObserverFile>(thisObserverFile);
+            mObserverOption.emplace<ObserverFileOption>(thisObserverFile);
             break;
         }
         case ObserverType::PROCESS: {
-            ObserverProcess thisObserverProcess;
+            ObserverProcessOption thisObserverProcess;
             // IncludeCmdRegex (Mandatory)
             if (!GetOptionalListParam(probeConfig, "IncludeCmdRegex", thisObserverProcess.mIncludeCmdRegex, errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -152,7 +152,7 @@ bool ObserverOptions::Init(ObserverType type,
                                    mContext->GetLogstoreName(),
                                    mContext->GetRegion());
             }
-            mObserver.emplace<ObserverProcess>(thisObserverProcess);
+            mObserverOption.emplace<ObserverProcessOption>(thisObserverProcess);
             break;
         }
         default:

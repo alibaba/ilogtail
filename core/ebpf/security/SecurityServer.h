@@ -39,16 +39,18 @@ public:
     void Stop();
 
     // 其他函数注册：配置注册、注销等
-    void AddSecurityOptions(const PipelineContext* context, size_t index, SecurityOptions* options);
+    void AddSecurityOptions(const std::string& name,
+                            size_t index,
+                            const SecurityOptions* options,
+                            const PipelineContext* ctx);
     void RemoveSecurityOptions(const std::string& name, size_t index);
 
 private:
     SecurityServer() = default;
     ~SecurityServer() = default;
 
-    bool mStop;
-    std::unordered_map<std::string, const SecurityOptions*> mInputMap;
-    std::unordered_map<std::string, const PipelineContext*> mInputContextMap;
+    bool mIsRunning = false;
+    std::unordered_map<std::string, SecurityConfig> mInputConfigMap;
     // std::unordered_map<pair<std::string, size_t>, const pointer*> mEbpfPointerMap;
 };
 

@@ -32,7 +32,7 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    ObserverOptions mObserverOption;
+    ObserverOptions mObserverOptions;
 };
 
 } // namespace logtail

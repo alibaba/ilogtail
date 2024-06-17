@@ -31,21 +31,18 @@ enum class ObserverType { PROCESS, FILE, NETWORK };
 #define BOOL_DEFAULT false
 #define STRING_DEFAULT ""
 
-class ObserverProcess {
-public:
+struct ObserverProcessOption {
     std::vector<std::string> mIncludeCmdRegex;
     std::vector<std::string> mExcludeCmdRegex;
 };
 
-class ObserverFile {
-public:
+struct ObserverFileOption {
     std::string mProfileRemoteServer = STRING_DEFAULT;
     bool mCpuSkipUpload = BOOL_DEFAULT;
     bool mMemSkipUpload = BOOL_DEFAULT;
 };
 
-class ObserverNetwork {
-public:
+struct ObserverNetworkOption {
     std::vector<std::string> mEnableProtocols;
     bool mDisableProtocolParse = BOOL_DEFAULT;
     bool mDisableConnStats = BOOL_DEFAULT;
@@ -57,8 +54,10 @@ class ObserverOptions {
 public:
     bool Init(ObserverType type, const Json::Value& config, const PipelineContext* mContext, const std::string& sName);
 
-    std::variant<ObserverProcess, ObserverFile, ObserverNetwork> mObserver;
+    std::variant<ObserverProcessOption, ObserverFileOption, ObserverNetworkOption> mObserverOption;
     ObserverType mType;
 };
+
+using ObserverConfig = std::pair<const ObserverOptions*, const PipelineContext*>;
 
 } // namespace logtail

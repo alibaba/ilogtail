@@ -68,8 +68,8 @@ void InputEbpfFileObserverUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
-    ObserverFile thisObserver = std::get<ObserverFile>(input->mObserverOption.mObserver);
-    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOption.mType);
+    ObserverFileOption thisObserver = std::get<ObserverFileOption>(input->mObserverOptions.mObserverOption);
+    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
     APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
     APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);

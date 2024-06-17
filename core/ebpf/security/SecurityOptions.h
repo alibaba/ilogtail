@@ -32,33 +32,28 @@ enum class SecurityFilterType { PROCESS, FILE, NETWORK };
 #define STRING_DEFAULT ""
 
 // file
-class SecurityFileFilterItem {
-public:
+struct SecurityFileFilterItem {
     std::string mFilePath = STRING_DEFAULT;
     std::string mFileName = STRING_DEFAULT;
 };
-class SecurityFileFilter {
-public:
+struct SecurityFileFilter {
     std::vector<SecurityFileFilterItem> mFileFilterItem;
 };
 
 // process
-class SecurityProcessNamespaceFilter {
-public:
+struct SecurityProcessNamespaceFilter {
     // type of securityNamespaceFilter
     std::string mNamespaceType = STRING_DEFAULT;
     std::vector<std::string> mValueList;
 };
-class SecurityProcessFilter {
-public:
+struct SecurityProcessFilter {
     std::vector<SecurityProcessNamespaceFilter> mNamespaceFilter;
     std::vector<SecurityProcessNamespaceFilter> mNamespaceBlackFilter;
     // std::vector<std::string> mIp;
 };
 
 // network
-class SecurityNetworkFilter {
-public:
+struct SecurityNetworkFilter {
     std::vector<std::string> mDestAddrList;
     std::vector<uint32_t> mDestPortList;
     std::vector<std::string> mDestAddrBlackList;
@@ -91,5 +86,7 @@ public:
     std::vector<SecurityOption> mOptionList;
     SecurityFilterType mFilterType;
 };
+
+using SecurityConfig = std::pair<const SecurityOptions*, const PipelineContext*>;
 
 } // namespace logtail

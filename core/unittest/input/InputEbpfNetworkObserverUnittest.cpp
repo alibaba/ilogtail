@@ -71,8 +71,8 @@ void InputEbpfNetworkObserverUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
-    ObserverNetwork thisObserver = std::get<ObserverNetwork>(input->mObserverOption.mObserver);
-    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOption.mType);
+    ObserverNetworkOption thisObserver = std::get<ObserverNetworkOption>(input->mObserverOptions.mObserverOption);
+    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
     APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);
