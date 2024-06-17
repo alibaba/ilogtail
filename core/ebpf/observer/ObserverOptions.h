@@ -28,6 +28,9 @@ namespace logtail {
 
 enum class ObserverType { PROCESS, FILE, NETWORK };
 
+#define BOOL_DEFAULT false
+#define STRING_DEFAULT ""
+
 class ObserverProcess {
 public:
     std::vector<std::string> mIncludeCmdRegex;
@@ -36,17 +39,17 @@ public:
 
 class ObserverFile {
 public:
-    std::string mProfileRemoteServer;
-    bool mCpuSkipUpload;
-    bool mMemSkipUpload;
+    std::string mProfileRemoteServer = STRING_DEFAULT;
+    bool mCpuSkipUpload = BOOL_DEFAULT;
+    bool mMemSkipUpload = BOOL_DEFAULT;
 };
 
 class ObserverNetwork {
 public:
     std::vector<std::string> mEnableProtocols;
-    bool mDisableProtocolParse;
-    bool mDisableConnStats;
-    bool mEnableConnTrackerDump;
+    bool mDisableProtocolParse = BOOL_DEFAULT;
+    bool mDisableConnStats = BOOL_DEFAULT;
+    bool mEnableConnTrackerDump = BOOL_DEFAULT;
 };
 
 
