@@ -67,8 +67,8 @@ void InputEbpfProcessObserverUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
-    ObserverProcess thisObserver = std::get<ObserverProcess>(input->mObserverOption.mObserver);
-    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOption.mType);
+    ObserverProcessOption thisObserver = std::get<ObserverProcessOption>(input->mObserverOptions.mObserverOption);
+    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 1);
     APSARA_TEST_EQUAL("h", thisObserver.mIncludeCmdRegex[0]);
     APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);

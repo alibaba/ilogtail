@@ -18,13 +18,12 @@
 namespace logtail {
 
 // 负责接收ebpf返回的数据，然后将数据推送到对应的队列中
+// TODO: 目前暂时没有考虑并发Start的问题
 void SecurityServer::Start() {
-    static bool initialized = false;
-    if (initialized) {
+    if (mIsRunning) {
         return;
     } else {
-        mStop = false;
-        initialized = true;
+        mIsRunning = true;
         // TODO: 创建一个线程，用于接收ebpf返回的数据，并将数据推送到对应的队列中
         LOG_INFO(sLogger, ("security ebpf server", "started"));
     }
@@ -32,15 +31,17 @@ void SecurityServer::Start() {
 
 void SecurityServer::Stop() {
     // TODO: ebpf_stop(); 停止所有类型的ebpf探针
-    mStop = true;
+    mIsRunning = false;
 }
 
 // 插件配置注册逻辑
 // 负责启动对应的ebpf程序
-void SecurityServer::AddSecurityOptions(const PipelineContext* context, size_t index, SecurityOptions* options) {
-    std::string key = context->GetConfigName() + "#" + std::to_string(index);
-    mInputMap[key] = options;
-    mInputContextMap[key] = context;
+void SecurityServer::AddSecurityOptions(const std::string& name,
+                                        size_t index,
+                                        const SecurityOptions* options,
+                                        const PipelineContext* ctx) {
+    std::string key = name + "#" + std::to_string(index);
+    mInputConfigMap[key] = std::make_pair(options, ctx);
     // TODO: 目前一种类型的input只能处理一个，后续需要修改
     switch (options->mFilterType) {
         case SecurityFilterType::FILE: {
@@ -60,10 +61,11 @@ void SecurityServer::AddSecurityOptions(const PipelineContext* context, size_t i
     }
 }
 // 插件配置注销逻辑
+// TODO: 目前处理配置变更，先stop掉该类型的探针，然后在map里remove配置
 void SecurityServer::RemoveSecurityOptions(const std::string& name, size_t index) {
     std::string key = name + "#" + std::to_string(index);
     // TODO: 目前一种类型的input只能处理一个，后续需要修改
-    switch (mInputMap[name + "#" + std::to_string(index)]->mFilterType) {
+    switch (mInputConfigMap[key].first->mFilterType) {
         case SecurityFilterType::FILE: {
             // TODO: ebpf_stop(type);
             break;
@@ -79,8 +81,7 @@ void SecurityServer::RemoveSecurityOptions(const std::string& name, size_t index
         default:
             break;
     }
-    mInputMap.erase(key);
-    mInputContextMap.erase(key);
+    mInputConfigMap.erase(key);
 }
 
 } // namespace logtail

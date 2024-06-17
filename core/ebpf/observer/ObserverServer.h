@@ -39,17 +39,19 @@ public:
     void Stop();
 
     // 其他函数注册：配置注册、注销等
-    void AddObserverOption(const PipelineContext* context, size_t index, const ObserverOptions* option);
-    void RemoveObserverOption(const std::string& name, size_t index);
+    void AddObserverOptions(const std::string& name,
+                            size_t index,
+                            const ObserverOptions* options,
+                            const PipelineContext* ctx);
+    void RemoveObserverOptions(const std::string& name, size_t index);
 
 
 private:
     ObserverServer() = default;
     ~ObserverServer() = default;
 
-    bool mStop;
-    std::unordered_map<std::string, const ObserverOptions*> mInputMap;
-    std::unordered_map<std::string, const PipelineContext*> mInputContextMap;
+    bool mIsRunning = false;
+    std::unordered_map<std::string, ObserverConfig> mInputConfigMap;
 };
 
 } // namespace logtail

@@ -25,11 +25,11 @@ const std::string InputEbpfFileObserver::sName = "input_ebpf_profilingprobe_obse
 
 bool InputEbpfFileObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mObserverOption.Init(ObserverType::FILE, config, mContext, sName);
+    return mObserverOptions.Init(ObserverType::FILE, config, mContext, sName);
 }
 
 bool InputEbpfFileObserver::Start() {
-    ObserverServer::GetInstance()->AddObserverOption(mContext, mIndex, &mObserverOption);
+    ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
     ObserverServer::GetInstance()->Start();
     return true;
 }
@@ -38,7 +38,7 @@ bool InputEbpfFileObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    ObserverServer::GetInstance()->RemoveObserverOption(mContext->GetConfigName(), mIndex);
+    ObserverServer::GetInstance()->RemoveObserverOptions(mContext->GetConfigName(), mIndex);
     return true;
 }
 

@@ -24,11 +24,11 @@ const std::string InputEbpfNetworkObserver::sName = "input_ebpf_sockettraceprobe
 
 bool InputEbpfNetworkObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mObserverOption.Init(ObserverType::NETWORK, config, mContext, sName);
+    return mObserverOptions.Init(ObserverType::NETWORK, config, mContext, sName);
 }
 
 bool InputEbpfNetworkObserver::Start() {
-    ObserverServer::GetInstance()->AddObserverOption(mContext, mIndex, &mObserverOption);
+    ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
     ObserverServer::GetInstance()->Start();
     return true;
 }
@@ -37,7 +37,7 @@ bool InputEbpfNetworkObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    ObserverServer::GetInstance()->RemoveObserverOption(mContext->GetConfigName(), mIndex);
+    ObserverServer::GetInstance()->RemoveObserverOptions(mContext->GetConfigName(), mIndex);
     return true;
 }
 
