@@ -28,11 +28,14 @@ namespace logtail {
 
 enum class SecurityFilterType { PROCESS, FILE, NETWORK };
 
+#define BOOL_DEFAULT false
+#define STRING_DEFAULT ""
+
 // file
 class SecurityFileFilterItem {
 public:
-    std::string mFilePath;
-    std::string mFileName;
+    std::string mFilePath = STRING_DEFAULT;
+    std::string mFileName = STRING_DEFAULT;
 };
 class SecurityFileFilter {
 public:
@@ -43,7 +46,7 @@ public:
 class SecurityProcessNamespaceFilter {
 public:
     // type of securityNamespaceFilter
-    std::string mNamespaceType;
+    std::string mNamespaceType = STRING_DEFAULT;
     std::vector<std::string> mValueList;
 };
 class SecurityProcessFilter {
