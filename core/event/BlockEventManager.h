@@ -17,10 +17,12 @@
 #pragma once
 #include <string>
 #include <unordered_map>
-#include "common/LogstoreFeedbackQueue.h"
+
+#include "Event.h"
+#include "common/FeedbackInterface.h"
 #include "common/Flags.h"
 #include "common/Lock.h"
-#include "Event.h"
+#include "queue/FeedbackQueueKey.h"
 
 DECLARE_FLAG_INT32(max_block_event_timeout);
 
@@ -89,6 +91,11 @@ protected:
 
     std::unordered_map<int64_t, BlockedEvent> mBlockEventMap;
     SpinLock mLock;
+
+private:
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ForceReadUnittest;
+#endif
 };
 
 } // namespace logtail
