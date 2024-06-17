@@ -331,7 +331,8 @@ void Application::Exit() {
     EnterpriseConfigProvider::GetInstance()->Stop();
     LegacyConfigProvider::GetInstance()->Stop();
 #else
-    CommonConfigProvider::GetInstance()->Stop();
+   CommonConfigProvider::GetInstance()->Stop(); 
+   LegacyCommonConfigProvider::GetInstance()->Stop();
 #endif
 
     LogtailMonitor::GetInstance()->Stop();
@@ -343,7 +344,6 @@ void Application::Exit() {
     } else {
         LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
     }
-
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();

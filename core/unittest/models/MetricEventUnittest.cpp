@@ -27,9 +27,10 @@ public:
     void TestName();
     void TestValue();
     void TestTag();
+    void TestSize();
     void TestToJson();
     void TestFromJson();
-    
+
 protected:
     void SetUp() override {
         mSourceBuffer.reset(new SourceBuffer);
@@ -103,8 +104,28 @@ void MetricEventUnittest::TestTag() {
     }
 }
 
+void MetricEventUnittest::TestSize() {
+    size_t basicSize = sizeof(time_t) + sizeof(long) + sizeof(UntypedSingleValue) + sizeof(map<StringView, StringView>);
+    mMetricEvent->SetName("test");
+    basicSize += 4;
+    
+    mMetricEvent->SetValue(UntypedSingleValue{10.0});
+
+    // add tag, and key not existed
+    mMetricEvent->SetTag(string("key1"), string("a"));
+    APSARA_TEST_EQUAL(basicSize + 5U, mMetricEvent->DataSize());
+
+    // add tag, and key existed
+    mMetricEvent->SetTag(string("key1"), string("bb"));
+    APSARA_TEST_EQUAL(basicSize + 6U, mMetricEvent->DataSize());
+
+    // delete tag
+    mMetricEvent->DelTag(string("key1"));
+    APSARA_TEST_EQUAL(basicSize, mMetricEvent->DataSize());
+}
+
 void MetricEventUnittest::TestToJson() {
-    mMetricEvent->SetTimestamp(12345678901);
+    mMetricEvent->SetTimestamp(12345678901, 0);
     mMetricEvent->SetName("test");
     mMetricEvent->SetValue(UntypedSingleValue{10.0});
     mMetricEvent->SetTag(string("key1"), string("value1"));
@@ -149,7 +170,7 @@ void MetricEventUnittest::TestFromJson() {
     mMetricEvent->FromJson(eventJson);
 
     APSARA_TEST_EQUAL(12345678901, mMetricEvent->GetTimestamp());
-    APSARA_TEST_EQUAL(0L, mMetricEvent->GetTimestampNanosecond());
+    APSARA_TEST_EQUAL(0L, mMetricEvent->GetTimestampNanosecond().value());
     APSARA_TEST_EQUAL("test", mMetricEvent->GetName());
     APSARA_TEST_TRUE(mMetricEvent->Is<UntypedSingleValue>());
     APSARA_TEST_EQUAL(10.0, mMetricEvent->GetValue<UntypedSingleValue>()->mValue);
@@ -159,6 +180,7 @@ void MetricEventUnittest::TestFromJson() {
 UNIT_TEST_CASE(MetricEventUnittest, TestName)
 UNIT_TEST_CASE(MetricEventUnittest, TestValue)
 UNIT_TEST_CASE(MetricEventUnittest, TestTag)
+UNIT_TEST_CASE(MetricEventUnittest, TestSize)
 UNIT_TEST_CASE(MetricEventUnittest, TestToJson)
 UNIT_TEST_CASE(MetricEventUnittest, TestFromJson)
 

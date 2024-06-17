@@ -22,14 +22,17 @@
 #include "common/LogstoreSenderQueue.h"
 
 namespace logtail {
+
 class Flusher : public Plugin {
 public:
     virtual ~Flusher() = default;
 
     virtual bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) = 0;
-    virtual bool Start() = 0;
-    // used for unregistering the flusher
-    virtual bool Stop(bool isPipelineRemoving) = 0;
+    virtual bool Register() = 0;
+    virtual bool Unregister(bool isPipelineRemoving) = 0;
+    virtual void Send(PipelineEventGroup&& g) = 0;
+    virtual void Flush(size_t key) = 0;
+    virtual void FlushAll() = 0;
 
     SingleLogstoreSenderManager<SenderQueueParam>* GetSenderQueue() const { return mSenderQueue; }
 

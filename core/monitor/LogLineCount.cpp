@@ -26,6 +26,7 @@
 #include "LogtailAlarm.h"
 #include "application/Application.h"
 #include "common/TimeUtil.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -45,55 +46,6 @@ LogLineCount::LogLineCount() {
 
 LogLineCount::~LogLineCount() {
     ClearLineCountData();
-}
-
-void LogLineCount::NotifySuccess(LoggroupTimeValue* data) {
-    const std::string& region = data->mRegion;
-    const std::string& projectName = data->mProjectName;
-    const std::string& logStore = data->mLogstore;
-    const std::string& filename = data->mFilename;
-
-    // empty filename, filter metric data and data-integrity data
-    if (filename.empty()) {
-        LOG_DEBUG(sLogger,
-                  ("successfully send metric data or integrity data or line count data, region",
-                   region)("project", projectName)("logStore", logStore));
-        return;
-    }
-
-    // update line count map
-    PTScopedLock lock(mLineCountMapLock);
-    RegionLineCountMap::iterator regionIter = mRegionLineCountMap.find(region);
-    if (regionIter == mRegionLineCountMap.end()) {
-        LogStoreLineCountMap* logStoreLineCountMap = new LogStoreLineCountMap;
-        regionIter = mRegionLineCountMap.insert(std::make_pair(region, logStoreLineCountMap)).first;
-    }
-    LogStoreLineCountMap* logStoreLineCountMap = regionIter->second;
-
-    const string& key = projectName + "_" + logStore;
-    LogStoreLineCountMap::iterator projectLogStoreIter = logStoreLineCountMap->find(key);
-    if (projectLogStoreIter == logStoreLineCountMap->end()) {
-        LogStoreLineCount* lineCount
-            = new LogStoreLineCount(region,
-                                    projectName,
-                                    logStore,
-                                    data->mLogGroupContext.mLineCountConfigPtr->mLineCountProjectName,
-                                    data->mLogGroupContext.mLineCountConfigPtr->mLineCountLogstore);
-        projectLogStoreIter = logStoreLineCountMap->insert(std::make_pair(key, lineCount)).first;
-    }
-    LogStoreLineCount* lineCount = projectLogStoreIter->second;
-
-    const int32_t logLines = data->mLogLines;
-    const int32_t minuteTime = data->mLogTimeInMinute;
-    LogStoreLineCount::LogCountPerMinuteMap::iterator minuteIter = lineCount->mLogCountPerMinuteMap.find(minuteTime);
-    if (minuteIter == lineCount->mLogCountPerMinuteMap.end())
-        lineCount->mLogCountPerMinuteMap.insert(std::make_pair(minuteTime, logLines));
-    else
-        minuteIter->second += logLines;
-
-    LOG_DEBUG(sLogger,
-              ("update succeeded lines, region",
-               region)("project", projectName)("logStore", logStore)("minute", minuteTime)("count", logLines));
 }
 
 void LogLineCount::InsertLineCountDataToLogGroup(sls_logs::LogGroup& logGroup,
