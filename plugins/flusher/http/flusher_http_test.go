@@ -1122,7 +1122,7 @@ func TestFlusherHTTP_StopWithJitter(t *testing.T) {
 				Encoding: converter.EncodingCustom,
 			},
 			Timeout:     defaultTimeout,
-			Concurrency: 10,
+			Concurrency: 1,
 			JitterInSec: 3,
 			Query: map[string]string{
 				"db": "%{tag.db}",
