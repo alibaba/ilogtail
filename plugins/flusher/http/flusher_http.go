@@ -410,8 +410,8 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 		if len(f.ExemplarEvents) > 0 {
 			for _, target := range f.ExemplarEvents {
 				for _, m := range v.Events {
-					if m.GetName() == target && m.GetType() == models.EventTypeMetric {
-						logger.Infof(f.context.GetRuntimeContext(), "http flusher found target metric: %s: details: %v", target, m.(*models.Metric).String())
+					if m.GetName() == target {
+						logger.Infof(f.context.GetRuntimeContext(), "http flusher found target exemplar event: %s: details: %v", target, m)
 					}
 				}
 			}
@@ -703,7 +703,6 @@ func init() {
 			QueueCapacity: 1024,
 			Timeout:       defaultTimeout,
 			Concurrency:   1,
-			JitterInSec:   0,
 			Convert: helper.ConvertConfig{
 				Protocol:             converter.ProtocolCustomSingle,
 				Encoding:             converter.EncodingJSON,
@@ -715,7 +714,6 @@ func init() {
 				InitialDelay:  time.Second,
 				MaxDelay:      30 * time.Second,
 			},
-			DropEventWhenQueueFull: true,
 		}
 	}
 }
