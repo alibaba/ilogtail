@@ -244,6 +244,7 @@ func parseMetricNameAndLabels(labels []prompbmarshal.Label) (string, models.Tags
 			metricName = strings.Clone(label.Value)
 			continue
 		}
+		// deep copy these strings since they are unsafe to use after the function returns.
 		tags[strings.Clone(label.Name)] = strings.Clone(label.Value)
 	}
 	return metricName, models.NewMetadataWithMap(tags)
