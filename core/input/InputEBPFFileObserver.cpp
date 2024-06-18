@@ -12,28 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "input/InputEbpfProcessObserver.h"
+#include "input/InputEBPFFileObserver.h"
 
 #include "ebpf/observer/ObserverServer.h"
+
 
 using namespace std;
 
 namespace logtail {
 
-const std::string InputEbpfProcessObserver::sName = "input_ebpf_processprobe_observer";
+const std::string InputEBPFFileObserver::sName = "input_ebpf_profilingprobe_observer";
 
-bool InputEbpfProcessObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputEBPFFileObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mObserverOptions.Init(ObserverType::PROCESS, config, mContext, sName);
+    return mObserverOptions.Init(ObserverType::FILE, config, mContext, sName);
 }
 
-bool InputEbpfProcessObserver::Start() {
+bool InputEBPFFileObserver::Start() {
     ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
     ObserverServer::GetInstance()->Start();
     return true;
 }
 
-bool InputEbpfProcessObserver::Stop(bool isPipelineRemoving) {
+bool InputEBPFFileObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }

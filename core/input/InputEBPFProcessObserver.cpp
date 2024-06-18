@@ -12,32 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "input/InputEbpfProcessSecurity.h"
+#include "input/InputEBPFProcessObserver.h"
 
-#include "ebpf/security/SecurityServer.h"
+#include "ebpf/observer/ObserverServer.h"
 
 using namespace std;
 
 namespace logtail {
 
-const std::string InputEbpfProcessSecurity::sName = "input_ebpf_processprobe_security";
+const std::string InputEBPFProcessObserver::sName = "input_ebpf_processprobe_observer";
 
-bool InputEbpfProcessSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputEBPFProcessObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mSecurityOptions.Init(SecurityFilterType::PROCESS, config, mContext, sName);
+    return mObserverOptions.Init(ObserverType::PROCESS, config, mContext, sName);
 }
 
-bool InputEbpfProcessSecurity::Start() {
-    SecurityServer::GetInstance()->AddSecurityOptions(mContext->GetConfigName(), mIndex, &mSecurityOptions, mContext);
-    SecurityServer::GetInstance()->Start();
+bool InputEBPFProcessObserver::Start() {
+    ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
+    ObserverServer::GetInstance()->Start();
     return true;
 }
 
-bool InputEbpfProcessSecurity::Stop(bool isPipelineRemoving) {
+bool InputEBPFProcessObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }
-    SecurityServer::GetInstance()->RemoveSecurityOptions(mContext->GetConfigName(), mIndex);
+    ObserverServer::GetInstance()->RemoveObserverOptions(mContext->GetConfigName(), mIndex);
     return true;
 }
 

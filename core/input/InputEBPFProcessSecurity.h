@@ -21,9 +21,10 @@
 #include "ebpf/security/SecurityOptions.h"
 #include "plugin/interface/Input.h"
 
+
 namespace logtail {
 
-class InputEbpfFileSecurity : public Input {
+class InputEBPFProcessSecurity : public Input {
 public:
     static const std::string sName;
 

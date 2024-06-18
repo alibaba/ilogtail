@@ -28,6 +28,24 @@
 
 namespace logtail {
 
+// ebpf
+// 临时放到这里
+const int32_t defaultReceiveEventChanCap = 4096;
+const bool defaultAdminDebugMode = false;
+const std::string defaultAdminLogLevel = "warn";
+const bool defaultAdminPushAllSpan = false;
+const int32_t defaultAggregationAggWindowSecond = 15;
+const std::string defaultConverageStrategy = "combine";
+const std::string defaultSampleStrategy = "fixedRate";
+const double defaultSampleRate = 0.01;
+const int32_t defaultSocketSlowRequestThresholdMs = 500;
+const int32_t defaultSocketMaxConnTrackers = 10000;
+const int32_t defaultSocketMaxBandWidthMbPerSec = 30;
+const int32_t defaultSocketMaxRawRecordPerSec = 100000;
+const int32_t defaultProfileSampleRate = 10;
+const int32_t defaultProfileUploadDuration = 10;
+const bool defaultProcessEnableOOMDetect = false;
+
 template <class T>
 class DoubleBuffer {
 public:
@@ -162,43 +180,44 @@ private:
     std::string mBindInterface;
 
     // ebpf
-    int32_t mReceiveEventChanCap = 4096;
+    // 临时放到这里
+    int32_t mReceiveEventChanCap = defaultReceiveEventChanCap;
 
     struct AdminConfig {
-        bool mDebugMode = false;
-        std::string mLogLevel = "warn";
-        bool mPushAllSpan = false;
+        bool mDebugMode = defaultAdminDebugMode;
+        std::string mLogLevel = defaultAdminLogLevel;
+        bool mPushAllSpan = defaultAdminPushAllSpan;
     } mAdminConfig;
 
     struct AggregationConfig {
-        int mAggWindowSecond = 15;
+        int32_t mAggWindowSecond = defaultAggregationAggWindowSecond;
     } mAggregationConfig;
 
     struct ConverageConfig {
-        std::string mStrategy = "combine";
+        std::string mStrategy = defaultConverageStrategy;
     } mConverageConfig;
 
     struct SampleConfig {
-        std::string mStrategy = "fixedRate";
+        std::string mStrategy = defaultSampleStrategy;
         struct Config {
-            double mRate = 0.01;
+            double mRate = defaultSampleRate;
         } mConfig;
     } mSampleConfig;
 
     struct SocketProbeConfig {
-        int mSlowRequestThresholdMs = 500;
-        int mMaxConnTrackers = 10000;
-        int mMaxBandWidthMbPerSec = 30;
-        int mMaxRawRecordPerSec = 100000;
+        int32_t mSlowRequestThresholdMs = defaultSocketSlowRequestThresholdMs;
+        int32_t mMaxConnTrackers = defaultSocketMaxConnTrackers;
+        int32_t mMaxBandWidthMbPerSec = defaultSocketMaxBandWidthMbPerSec;
+        int32_t mMaxRawRecordPerSec = defaultSocketMaxRawRecordPerSec;
     } mSocketProbeConfig;
 
     struct ProfileProbeConfig {
-        int mProfileSampleRate = 10;
-        int mProfileUploadDuration = 10;
+        int32_t mProfileSampleRate = defaultProfileSampleRate;
+        int32_t mProfileUploadDuration = defaultProfileUploadDuration;
     } mProfileProbeConfig;
 
     struct ProcessProbeConfig {
-        bool mEnableOOMDetect = false;
+        bool mEnableOOMDetect = defaultProcessEnableOOMDetect;
     } mProcessProbeConfig;
 
     // /**

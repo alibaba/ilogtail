@@ -18,7 +18,7 @@
 #include "common/JsonUtil.h"
 #include "ebpf/observer/ObserverOptions.h"
 #include "ebpf/observer/ObserverServer.h"
-#include "input/InputEbpfProcessObserver.h"
+#include "input/InputEBPFFileObserver.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -27,7 +27,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputEbpfProcessObserverUnittest : public testing::Test {
+class InputEBPFFileObserverUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnFailedInit();
@@ -45,8 +45,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputEbpfProcessObserverUnittest::OnSuccessfulInit() {
-    unique_ptr<InputEbpfProcessObserver> input;
+void InputEBPFFileObserverUnittest::OnSuccessfulInit() {
+    unique_ptr<InputEBPFFileObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
     uint32_t pluginIdx = 0;
@@ -54,30 +54,29 @@ void InputEbpfProcessObserverUnittest::OnSuccessfulInit() {
     // valid optional param
     configStr = R"(
         {
-            "Type": "input_ebpf_processprobe_observer",
+            "Type": "input_ebpf_profilingprobe_observer",
             "ProbeConfig": 
             {
-                "IncludeCmdRegex": ["h"],
-                "ExcludeCmdRegex": ["m","n"]
+                "ProfileRemoteServer": "",
+                "CpuSkipUpload": false,
+                "MemSkipUpload": false
             }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessObserver());
+    input.reset(new InputEBPFFileObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
-    ObserverProcessOption thisObserver = std::get<ObserverProcessOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOptions.mType);
-    APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 1);
-    APSARA_TEST_EQUAL("h", thisObserver.mIncludeCmdRegex[0]);
-    APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
-    APSARA_TEST_EQUAL("m", thisObserver.mExcludeCmdRegex[0]);
-    APSARA_TEST_EQUAL("n", thisObserver.mExcludeCmdRegex[1]);
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
+    ObserverFileOption thisObserver = std::get<ObserverFileOption>(input->mObserverOptions.mObserverOption);
+    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOptions.mType);
+    APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
+    APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
+    APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);
 }
 
-void InputEbpfProcessObserverUnittest::OnFailedInit() {
-    unique_ptr<InputEbpfProcessObserver> input;
+void InputEBPFFileObserverUnittest::OnFailedInit() {
+    unique_ptr<InputEBPFFileObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
     uint32_t pluginIdx = 0;
@@ -85,41 +84,43 @@ void InputEbpfProcessObserverUnittest::OnFailedInit() {
     // invalid optional param
     configStr = R"(
         {
-            "Type": "input_ebpf_processprobe_observer",
+            "Type": "input_ebpf_profilingprobe_observer",
             "ProbeConfig": 
             {
-                "IncludeCmdRegex": 1,
-                "ExcludeCmdRegex": ["m","n"]
+                "ProfileRemoteServer": 1,
+                "CpuSkipUpload": false,
+                "MemSkipUpload": false
             }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessObserver());
+    input.reset(new InputEBPFFileObserver());
     input->SetContext(ctx);
     APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
     // error param level
     configStr = R"(
         {
-            "Type": "input_ebpf_processprobe_observer",
-            "IncludeCmdRegex": 1,
-            "ExcludeCmdRegex": ["m","n"]
+            "Type": "input_ebpf_profilingprobe_observer",
+            "ProfileRemoteServer": "",
+            "CpuSkipUpload": false,
+            "MemSkipUpload": false
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessObserver());
+    input.reset(new InputEBPFFileObserver());
     input->SetContext(ctx);
     APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 
-// void InputEbpfProcessObserverUnittest::OnPipelineUpdate() {
+// void InputEBPFFileObserverUnittest::OnPipelineUpdate() {
 // }
 
 
-UNIT_TEST_CASE(InputEbpfProcessObserverUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputEbpfProcessObserverUnittest, OnFailedInit)
-// UNIT_TEST_CASE(InputEbpfProcessObserverUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputEBPFFileObserverUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputEBPFFileObserverUnittest, OnFailedInit)
+// UNIT_TEST_CASE(InputEBPFFileObserverUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 

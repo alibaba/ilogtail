@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "input/InputEbpfNetworkSecurity.h"
+#include "input/InputEBPFNetworkSecurity.h"
 
 #include "ebpf/security/SecurityServer.h"
 
@@ -21,20 +21,20 @@ using namespace std;
 
 namespace logtail {
 
-const std::string InputEbpfNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
+const std::string InputEBPFNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
 
-bool InputEbpfNetworkSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputEBPFNetworkSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
     return mSecurityOptions.Init(SecurityFilterType::NETWORK, config, mContext, sName);
 }
 
-bool InputEbpfNetworkSecurity::Start() {
+bool InputEBPFNetworkSecurity::Start() {
     SecurityServer::GetInstance()->AddSecurityOptions(mContext->GetConfigName(), mIndex, &mSecurityOptions, mContext);
     SecurityServer::GetInstance()->Start();
     return true;
 }
 
-bool InputEbpfNetworkSecurity::Stop(bool isPipelineRemoving) {
+bool InputEBPFNetworkSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         // TODO: ?
     }

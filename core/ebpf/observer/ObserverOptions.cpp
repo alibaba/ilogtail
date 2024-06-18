@@ -19,6 +19,132 @@
 using namespace std;
 namespace logtail {
 
+bool InitObserverFileOption(const Json::Value& probeConfig,
+                            ObserverFileOption& thisObserverFileOption,
+                            const PipelineContext* mContext,
+                            const string& sName) {
+    string errorMsg;
+    // ProfileRemoteServer (Optional)
+    if (!GetOptionalStringParam(
+            probeConfig, "ProfileRemoteServer", thisObserverFileOption.mProfileRemoteServer, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // CpuSkipUpload (Optional)
+    if (!GetOptionalBoolParam(probeConfig, "CpuSkipUpload", thisObserverFileOption.mCpuSkipUpload, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // MemSkipUpload (Optional)
+    if (!GetOptionalBoolParam(probeConfig, "MemSkipUpload", thisObserverFileOption.mMemSkipUpload, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    return true;
+}
+
+bool InitObserverProcessOption(const Json::Value& probeConfig,
+                               ObserverProcessOption& thisObserverProcessOption,
+                               const PipelineContext* mContext,
+                               const string& sName) {
+    string errorMsg;
+    // IncludeCmdRegex (Optional)
+    if (!GetOptionalListParam(probeConfig, "IncludeCmdRegex", thisObserverProcessOption.mIncludeCmdRegex, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // ExcludeCmdRegex (Optional)
+    if (!GetOptionalListParam(probeConfig, "ExcludeCmdRegex", thisObserverProcessOption.mExcludeCmdRegex, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    return true;
+}
+
+bool InitObserverNetworkOption(const Json::Value& probeConfig,
+                               ObserverNetworkOption& thisObserverNetworkOption,
+                               const PipelineContext* mContext,
+                               const string& sName) {
+    string errorMsg;
+    // EnableProtocols (Optional)
+    if (!GetOptionalListParam(probeConfig, "EnableProtocols", thisObserverNetworkOption.mEnableProtocols, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // EnableProtocols (Optional)
+    if (!GetOptionalBoolParam(
+            probeConfig, "DisableProtocolParse", thisObserverNetworkOption.mDisableProtocolParse, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // DisableConnStats (Optional)
+    if (!GetOptionalBoolParam(probeConfig, "DisableConnStats", thisObserverNetworkOption.mDisableConnStats, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // EnableConnTrackerDump (Optional)
+    if (!GetOptionalBoolParam(
+            probeConfig, "EnableConnTrackerDump", thisObserverNetworkOption.mEnableConnTrackerDump, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    return true;
+}
+
 bool ObserverOptions::Init(ObserverType type,
                            const Json::Value& config,
                            const PipelineContext* mContext,
@@ -39,121 +165,27 @@ bool ObserverOptions::Init(ObserverType type,
     const Json::Value& probeConfig = config["ProbeConfig"];
     switch (type) {
         case ObserverType::NETWORK: {
-            ObserverNetworkOption thisObserverNetwork;
-            // EnableProtocols (Optional)
-            if (!GetOptionalListParam(probeConfig, "EnableProtocols", thisObserverNetwork.mEnableProtocols, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
+            ObserverNetworkOption thisObserverNetworkOption;
+            if (!InitObserverNetworkOption(probeConfig, thisObserverNetworkOption, mContext, sName)) {
+                return false;
             }
-            // EnableProtocols (Optional)
-            if (!GetOptionalBoolParam(
-                    probeConfig, "DisableProtocolParse", thisObserverNetwork.mDisableProtocolParse, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // DisableConnStats (Optional)
-            if (!GetOptionalBoolParam(
-                    probeConfig, "DisableConnStats", thisObserverNetwork.mDisableConnStats, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // EnableConnTrackerDump (Optional)
-            if (!GetOptionalBoolParam(
-                    probeConfig, "EnableConnTrackerDump", thisObserverNetwork.mEnableConnTrackerDump, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            mObserverOption.emplace<ObserverNetworkOption>(thisObserverNetwork);
+            mObserverOption.emplace<ObserverNetworkOption>(thisObserverNetworkOption);
             break;
         }
         case ObserverType::FILE: {
-            ObserverFileOption thisObserverFile;
-            // ProfileRemoteServer (Optional)
-            if (!GetOptionalStringParam(
-                    probeConfig, "ProfileRemoteServer", thisObserverFile.mProfileRemoteServer, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
+            ObserverFileOption thisObserverFileOption;
+            if (!InitObserverFileOption(probeConfig, thisObserverFileOption, mContext, sName)) {
+                return false;
             }
-            // CpuSkipUpload (Optional)
-            if (!GetOptionalBoolParam(probeConfig, "CpuSkipUpload", thisObserverFile.mCpuSkipUpload, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // MemSkipUpload (Optional)
-            if (!GetOptionalBoolParam(probeConfig, "MemSkipUpload", thisObserverFile.mMemSkipUpload, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            mObserverOption.emplace<ObserverFileOption>(thisObserverFile);
+            mObserverOption.emplace<ObserverFileOption>(thisObserverFileOption);
             break;
         }
         case ObserverType::PROCESS: {
-            ObserverProcessOption thisObserverProcess;
-            // IncludeCmdRegex (Optional)
-            if (!GetOptionalListParam(probeConfig, "IncludeCmdRegex", thisObserverProcess.mIncludeCmdRegex, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
+            ObserverProcessOption thisObserverProcessOption;
+            if (!InitObserverProcessOption(probeConfig, thisObserverProcessOption, mContext, sName)) {
+                return false;
             }
-            // ExcludeCmdRegex (Optional)
-            if (!GetOptionalListParam(probeConfig, "ExcludeCmdRegex", thisObserverProcess.mExcludeCmdRegex, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            mObserverOption.emplace<ObserverProcessOption>(thisObserverProcess);
+            mObserverOption.emplace<ObserverProcessOption>(thisObserverProcessOption);
             break;
         }
         default:

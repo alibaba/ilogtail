@@ -14,12 +14,11 @@
 
 #include <json/json.h>
 
-
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/security/SecurityOptions.h"
 #include "ebpf/security/SecurityServer.h"
-#include "input/InputEbpfProcessSecurity.h"
+#include "input/InputEBPFProcessSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -28,7 +27,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputEbpfProcessSecurityUnittest : public testing::Test {
+class InputEBPFProcessSecurityUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnFailedInit();
@@ -46,8 +45,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
-    unique_ptr<InputEbpfProcessSecurity> input;
+void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
+    unique_ptr<InputEBPFProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
     uint32_t pluginIdx = 0;
@@ -80,7 +79,7 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessSecurity());
+    input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
@@ -119,7 +118,7 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessSecurity());
+    input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
@@ -144,15 +143,15 @@ void InputEbpfProcessSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessSecurity());
+    input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
     APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
 }
 
-void InputEbpfProcessSecurityUnittest::OnFailedInit() {
-    unique_ptr<InputEbpfProcessSecurity> input;
+void InputEBPFProcessSecurityUnittest::OnFailedInit() {
+    unique_ptr<InputEBPFProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
     uint32_t pluginIdx = 0;
@@ -177,7 +176,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessSecurity());
+    input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
@@ -207,7 +206,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessSecurity());
+    input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
@@ -237,7 +236,7 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
     //     }
     // )";
     // APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    // input.reset(new InputEbpfProcessSecurity());
+    // input.reset(new InputEBPFProcessSecurity());
     // input->SetContext(ctx);
     // APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 
@@ -266,19 +265,19 @@ void InputEbpfProcessSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEbpfProcessSecurity());
+    input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 
-// void InputEbpfProcessSecurityUnittest::OnPipelineUpdate() {
+// void InputEBPFProcessSecurityUnittest::OnPipelineUpdate() {
 // }
 
 
-UNIT_TEST_CASE(InputEbpfProcessSecurityUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputEbpfProcessSecurityUnittest, OnFailedInit)
-// UNIT_TEST_CASE(InputEbpfProcessSecurityUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnFailedInit)
+// UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 
