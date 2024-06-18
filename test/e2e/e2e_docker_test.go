@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package core
+package e2e
 
 import (
 	"testing"
@@ -21,15 +21,15 @@ import (
 	"github.com/alibaba/ilogtail/test/testhub/cleanup"
 )
 
-func TestRegressionOnK8s(t *testing.T) {
+func TestE2EOnDocker(t *testing.T) {
 	defer cleanup.All()
 	suite := godog.TestSuite{
-		Name:                "RegressionOnK8s",
+		Name:                "E2EOnDocker",
 		ScenarioInitializer: scenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"scenarios"},
-			Tags:     "@regression && @k8s",
+			Tags:     "@e2e && @docker",
 			TestingT: t,
 		},
 	}
