@@ -165,11 +165,13 @@ bool IsRegexValid(const string& regStr) {
 
 bool IsValidList(const Json::Value& config, const string& key, string& errorMsg) {
     errorMsg.clear();
-    if (!config.isMember(ExtractCurrentKey(key))) {
+    string curKey = ExtractCurrentKey(key);
+    const Json::Value* itr = config.find(curKey.c_str(), curKey.c_str() + curKey.length());
+    if (itr == nullptr) {
         errorMsg = "param " + key + " is missing";
         return false;
     }
-    if (!config[ExtractCurrentKey(key)].isArray()) {
+    if (!itr->isArray()) {
         errorMsg = "param " + key + " is not of type list";
         return false;
     }
@@ -178,11 +180,13 @@ bool IsValidList(const Json::Value& config, const string& key, string& errorMsg)
 
 bool IsValidMap(const Json::Value& config, const string& key, string& errorMsg) {
     errorMsg.clear();
-    if (!config.isMember(ExtractCurrentKey(key))) {
+    string curKey = ExtractCurrentKey(key);
+    const Json::Value* itr = config.find(curKey.c_str(), curKey.c_str() + curKey.length());
+    if (itr == nullptr) {
         errorMsg = "param " + key + " is missing";
         return false;
     }
-    if (!config[ExtractCurrentKey(key)].isObject()) {
+    if (!itr->isObject()) {
         errorMsg = "param " + key + " is not of type map";
         return false;
     }
