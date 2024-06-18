@@ -32,7 +32,6 @@ import (
 
 	"github.com/dustin/go-broadcast"
 	"github.com/golang/snappy"
-	"k8s.io/apimachinery/pkg/util/net"
 
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -45,8 +44,7 @@ import (
 )
 
 const (
-	defaultTimeout = time.Minute
-
+	defaultTimeout        = time.Minute
 	contentTypeHeader     = "Content-Type"
 	defaultContentType    = "application/octet-stream"
 	contentEncodingHeader = "Content-Encoding"
@@ -65,8 +63,7 @@ var supportedCompressionType = map[string]any{
 }
 
 var (
-	flusherID       = int64(0) // http flusher id that starts from 0
-	sensitiveLabels = []string{"u", "user", "username", "p", "password", "passwd", "pwd", "Authorization"}
+	flusherID = int64(0) // http flusher id that starts from 0
 )
 
 type retryConfig struct {
@@ -91,7 +88,7 @@ type FlusherHTTP struct {
 	QueueCapacity          int                          // capacity of channel
 	DropEventWhenQueueFull bool                         // If true, pipeline events will be dropped when the queue is full
 	JitterInSec            int                          // JitterInSec is the jitter time in seconds to prevent peek traffic , default is 0
-	Compression            string                       // Compression type, support gzip and snappy
+	Compression            string                       // Compression type, support gzip and snappy at this moment.
 	ExemplarEvents         []string                     // log some event details for debug purpose
 
 	varKeys []string
@@ -105,13 +102,14 @@ type FlusherHTTP struct {
 	queue       chan *groupEventsWithTimestamp
 	counter     sync.WaitGroup
 
-	matchedEvents        pipeline.CounterMetric
-	unmatchedEvents      pipeline.CounterMetric
-	droppedEvents        pipeline.CounterMetric
-	retryCount           pipeline.CounterMetric
-	flushFailure         pipeline.CounterMetric
-	flushLatency         pipeline.CounterMetric
-	statusCodeStatistics pipeline.MetricVector[pipeline.CounterMetric]
+	// self-monitor metrics
+	matchedEvents        pipeline.CounterMetric                        // The number of events that have been matched by the FlushInterceptor
+	unmatchedEvents      pipeline.CounterMetric                        // The number of events that have not been matched by the FlushInterceptor
+	droppedEvents        pipeline.CounterMetric                        // The number of events that have been dropped because the queue is full (data is discarded).
+	retryCount           pipeline.CounterMetric                        // The number of times the request has been retried
+	flushFailure         pipeline.CounterMetric                        // The number of times the request has failed (data is discarded).
+	flushLatency         pipeline.CounterMetric                        // The average time it takes to send the request
+	statusCodeStatistics pipeline.MetricVector[pipeline.CounterMetric] // The number of status code returned by the server
 }
 
 // groupEventsWithTimestamp is a struct that contains the data and the time it was enqueued.
@@ -189,7 +187,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.fillRequestContentType()
 
 	metricsRecord := f.context.GetMetricRecord()
-	metricLabels := f.buildLabels()
+	metricLabels := f.buildSelfMonitorMetricLabels()
 	f.matchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_matched_events", metricLabels...)
 	f.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
 	f.droppedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_dropped_events", metricLabels...)
@@ -381,7 +379,7 @@ func (f *FlusherHTTP) runFlushTask(subscribeChan chan interface{}) {
 		// if queue is under low pressure and that there are some idle workers, sleep randomly.
 		if eventWaitTime < jitterDuration && len(f.queue) < f.Concurrency {
 			maxSleepDuration := jitterDuration - eventWaitTime
-			randomSleep(maxSleepDuration, subscribeChan)
+			helper.RandomSleep(maxSleepDuration, subscribeChan)
 		}
 
 		err := f.convertAndFlush(event.data)
@@ -465,7 +463,8 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 		}
 
 		ok, retryable, e := f.flush(data, varValues)
-		isEoF := isErrorEOF(e)
+		isEoF := helper.IsErrorEOF(e)
+
 		//  retry if the error is io.EOF.
 		if ok || (!retryable && !isEoF) || !f.Retry.Enable {
 			err = e
@@ -611,7 +610,7 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 	}
 }
 
-func (f *FlusherHTTP) buildLabels() []*protocol.Log_Content {
+func (f *FlusherHTTP) buildSelfMonitorMetricLabels() []*protocol.Log_Content {
 	id := atomic.AddInt64(&flusherID, 1) - 1
 	labels := make([]*protocol.Log_Content, 0, len(f.Query)+2)
 	labels = append(labels, &protocol.Log_Content{Key: "RemoteURL", Value: f.RemoteURL})
@@ -633,6 +632,8 @@ func (f *FlusherHTTP) getInsensitiveMap(info map[string]string) map[string]strin
 	}
 	return res
 }
+
+var sensitiveLabels = []string{"u", "user", "username", "p", "password", "passwd", "pwd", "Authorization"}
 
 func isSensitiveKey(label string) bool {
 	for _, sensitiveKey := range sensitiveLabels {
@@ -694,37 +695,6 @@ func getInterceptedEventCount(origin int64, group *models.PipelineGroupEvents) i
 		return origin
 	}
 	return origin - int64(len(group.Events))
-}
-
-func isErrorEOF(err error) bool {
-	return errors.Is(err, io.EOF) || net.IsProbableEOF(err)
-}
-
-// randomSleep sleeps for a random duration between 0 and jitterInSec.
-// If jitterInSec is 0, it will skip sleep.
-// If shutdown is closed, it will stop sleep immediately.
-func randomSleep(maxJitter time.Duration, stopChan chan interface{}) {
-	if maxJitter == 0 {
-		return
-	}
-
-	sleepTime := getJitter(maxJitter)
-	t := time.NewTimer(sleepTime)
-	select {
-	case <-t.C:
-		return
-	case <-stopChan:
-		t.Stop()
-		return
-	}
-}
-
-func getJitter(maxJitter time.Duration) time.Duration {
-	jitter, err := rand.Int(rand.Reader, big.NewInt(int64(maxJitter)))
-	if err != nil {
-		return 0
-	}
-	return time.Duration(jitter.Int64())
 }
 
 func init() {

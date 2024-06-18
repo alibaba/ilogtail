@@ -697,7 +697,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			queue:          make(chan *groupEventsWithTimestamp, 10),
 		}
 		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
-		metricLabels := flusher.buildLabels()
+		metricLabels := flusher.buildSelfMonitorMetricLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
 		flusher.matchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_matched_events", metricLabels...)
@@ -737,7 +737,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			queue:          make(chan *groupEventsWithTimestamp, 10),
 		}
 		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
-		metricLabels := flusher.buildLabels()
+		metricLabels := flusher.buildSelfMonitorMetricLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
 		flusher.matchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_matched_events", metricLabels...)
@@ -783,7 +783,7 @@ func TestHttpFlusherDropEvents(t *testing.T) {
 			DropEventWhenQueueFull: true,
 		}
 		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
-		metricLabels := flusher.buildLabels()
+		metricLabels := flusher.buildSelfMonitorMetricLabels()
 		metricsRecord := flusher.context.GetMetricRecord()
 		flusher.unmatchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_unmatched_events", metricLabels...)
 		flusher.matchedEvents = helper.NewCounterMetricAndRegister(metricsRecord, "http_flusher_matched_events", metricLabels...)
@@ -830,7 +830,7 @@ func TestBuildLabels(t *testing.T) {
 		{Key: "status", Value: "active"},
 	}
 
-	labels := flusher.buildLabels()
+	labels := flusher.buildSelfMonitorMetricLabels()
 
 	assert.Equal(t, len(expectedLabels), len(labels)-1)
 
@@ -1099,40 +1099,6 @@ func (mi *mockInterceptor) Intercept(group *models.PipelineGroupEvents) *models.
 	}
 	group.Events = group.Events[:0]
 	return group
-}
-
-func TestIsEOF(t *testing.T) {
-	err := &url.Error{
-		Op:  "Post",
-		URL: "http://test",
-		Err: io.EOF,
-	}
-	assert.True(t, isErrorEOF(err))
-
-	err = &url.Error{
-		Op:  "Post",
-		URL: "http://test",
-		Err: errors.New("connection reset by peer"),
-	}
-	assert.True(t, isErrorEOF(err))
-}
-
-func TestJitter(t *testing.T) {
-	jitter := getJitter(10)
-	assert.Greater(t, jitter, time.Duration(0))
-
-	start := time.Now()
-	randomSleep(5, nil)
-	assert.LessOrEqual(t, time.Since(start), time.Second*5)
-
-	stopCh := make(chan any)
-	go func() {
-		start = time.Now()
-		time.Sleep(time.Second)
-		close(stopCh)
-	}()
-	randomSleep(100, stopCh)
-	assert.LessOrEqual(t, time.Since(start), time.Second*2)
 }
 
 func TestFlusherHTTP_StopWithJitter(t *testing.T) {

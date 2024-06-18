@@ -1,4 +1,4 @@
-// Copyright 2022 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,20 +17,24 @@ package helper
 import (
 	"errors"
 	"io"
-	"net"
+	"net/url"
+	"testing"
 
-	knet "k8s.io/apimachinery/pkg/util/net"
+	"github.com/stretchr/testify/assert"
 )
 
-func GetFreePort() (port int, err error) {
-	listener, err := net.Listen("tcp", ":0") //nolint:gosec
-	if err != nil {
-		return 0, err
+func TestIsEOF(t *testing.T) {
+	err := &url.Error{
+		Op:  "Post",
+		URL: "http://test",
+		Err: io.EOF,
 	}
-	defer listener.Close()
-	return listener.Addr().(*net.TCPAddr).Port, nil
-}
+	assert.True(t, IsErrorEOF(err))
 
-func IsErrorEOF(err error) bool {
-	return errors.Is(err, io.EOF) || knet.IsProbableEOF(err)
+	err = &url.Error{
+		Op:  "Post",
+		URL: "http://test",
+		Err: errors.New("connection reset by peer"),
+	}
+	assert.True(t, IsErrorEOF(err))
 }
