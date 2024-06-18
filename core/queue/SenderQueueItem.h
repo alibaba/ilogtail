@@ -41,8 +41,6 @@ struct SenderQueueItem {
     const Flusher* mFlusher = nullptr;
     QueueKey mQueueKey;
 
-    std::string mConfigName; // TODO: temporarily used, should be replaced by mPipeline
-
     SendingStatus mStatus = SendingStatus::IDLE;
     time_t mEnqueTime = 0;
     time_t mLastSendTime = 0;

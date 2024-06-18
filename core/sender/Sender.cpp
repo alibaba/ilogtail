@@ -1061,10 +1061,6 @@ void Sender::DaemonSender() {
         ///////////////////////////////////////
 
         for (vector<SenderQueueItem*>::iterator itr = logGroupToSend.begin(); itr != logGroupToSend.end(); ++itr) {
-            // TODO: temporary used
-            if (!PipelineManager::GetInstance()->FindPipelineByName((*itr)->mConfigName)) {
-                continue;
-            }
             int32_t logGroupWaitTime = curTime - (*itr)->mEnqueTime;
 
             if (logGroupWaitTime > LOG_GROUP_WAIT_IN_QUEUE_ALARM_INTERVAL_SECOND) {
@@ -1492,6 +1488,13 @@ bool Sender::SendInstantly(sls_logs::LogGroup& logGroup,
 }
 
 void Sender::PutIntoBatchMap(SenderQueueItem* data, const std::string& region) {
+    // TODO: temporarily set here
+    data->mPipeline = PipelineManager::GetInstance()->FindPipelineByName(data->mFlusher->GetContext().GetConfigName());
+    if (!data->mPipeline) {
+        // should not happen
+        return;
+    }
+    
     int32_t tryTime = 0;
     while (tryTime < 1000) {
         if (mSenderQueue.PushItem(data->mQueueKey, data, region)) {
