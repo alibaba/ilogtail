@@ -31,7 +31,17 @@ Json::Value MetricEvent::ToJson() const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (GetTimestampNanosecond()) {
+        root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
+    }
+    root["name"] = mName.to_string();
+    root["value"] = MetricValueToJson(mValue);
+    if (!mTags.mInner.empty()) {
+        Json::Value& tags = root["tags"];
+        for (const auto& tag : mTags.mInner) {
+            tags[tag.first.to_string()] = tag.second.to_string();
+        }
+    }
     return root;
 }
 

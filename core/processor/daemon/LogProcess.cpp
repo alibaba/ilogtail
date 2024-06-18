@@ -285,6 +285,14 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 #endif
         {
             ReadLock lock(mAccessProcessThreadRWL);
+
+            std::unique_ptr<ProcessQueueItem> item;
+            std::string configName;
+            if (!ProcessQueueManager::GetInstance()->PopItem(threadNo, item, configName)) {
+                ProcessQueueManager::GetInstance()->Wait(100);
+                continue;
+            }
+
             mThreadFlags[threadNo] = true;
             s_processCount++;
             uint64_t readBytes = logBuffer->rawBuffer.size() + 1; // may not be accurate if input is not utf8

@@ -131,7 +131,13 @@ Json::Value LogEvent::ToJson() const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (GetTimestampNanosecond()) {
+        root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
+    }
+    if (enableEventMeta) {
+        root["fileOffset"] = GetPosition().first;
+        root["rawSize"] = GetPosition().second;
+    }
     if (!Empty()) {
         Json::Value contents;
         for (const auto& content : *this) {

@@ -492,7 +492,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                     "__raw__": "[2023-09-04 13:15"
                 },
                 "timestamp": 12345678901,
-                "timestampNanosecond": 0,
                 "type": 1
             },
             {
@@ -500,7 +499,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                     "__raw__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1"
                 },
                 "timestamp": 12345678901,
-                "timestampNanosecond": 0,
                 "type": 1
             },
             {
@@ -864,7 +862,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
                     "rawLog": "value1"
                 },
                 "timestamp": 12345678901,
-                "timestampNanosecond": 0,
                 "type": 1
             }
         ]
@@ -940,7 +937,6 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
                     "rawLog": "value1"
                 },
                 "timestamp": 12345678901,
-                "timestampNanosecond": 0,
                 "type": 1
             }
         ]
@@ -1051,7 +1047,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
                 "type" : 1
             },
             {
@@ -1060,7 +1055,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
                 "type" : 1
             },
             {
@@ -1069,7 +1063,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
                 "type" : 1
             },
             {
@@ -1078,7 +1071,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
                 "type" : 1
             },
             {
@@ -1087,7 +1079,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
                 "type" : 1
             }
         ]
@@ -1293,7 +1284,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventMicrosecondUnmatch() {
                     "rawLog": "[2023-09-04 13:18:04"
                 },
                 "timestamp": 12345678901,
-                "timestampNanosecond": 0,
                 "type": 1
             }
         ]
