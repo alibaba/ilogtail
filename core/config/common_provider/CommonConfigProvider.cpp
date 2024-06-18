@@ -1,4 +1,4 @@
-// Copyright 2023 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "config/provider/CommonConfigProvider.h"
+#include "config/common_provider/CommonConfigProvider.h"
 
 #include <json/json.h>
 
@@ -33,7 +33,7 @@
 
 using namespace std;
 
-DEFINE_FLAG_INT32(config_update_interval, "second", 10);
+DECLARE_FLAG_INT32(config_update_interval);
 
 namespace logtail {
 

@@ -33,6 +33,7 @@ option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHOUTSPL "Build Logtail and UT without SPL")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
 
+
 if (ENABLE_ENTERPRISE)
     message(STATUS "Enable Enterprise Feature.")
     add_definitions(-D__ENTERPRISE__)
@@ -81,13 +82,17 @@ if (ANDROID OR CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DLOGTAIL_NO_TC_MALLOC)
 endif ()
 
+set(CONFIG_PROVIDER_PATH "config/common_provider" CACHE PATH "config provider dir")
+
 # Dependencies.
 include(${CMAKE_CURRENT_SOURCE_DIR}/utils.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 
 # Subdirectories (modules).
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint common compression config config/provider config/watcher config_manager config_server_pb 
+        batch application app_config checkpoint common compression 
+        config config/provider config/legacy_provider 
+        config/watcher config_manager config_server_pb 
         container_manager controller event event_handler event_listener file_server flusher go_pipeline helper input log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon processor/inner
         profile_sender queue reader sdk sender serializer sls_control fuse
@@ -123,6 +128,10 @@ endforeach (DIR_NAME)
 foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     add_subdirectory(${DIR_NAME})
 endforeach (DIR_NAME)
+
+
+# add common config provider implementation
+add_subdirectory("${CONFIG_PROVIDER_PATH}" "${CMAKE_BINARY_DIR}/config/common_provider")
 
 # Logtail executable.
 if (BUILD_LOGTAIL)
@@ -170,6 +179,7 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
         target_link_libraries(${LOGTAIL_TARGET} -static-libstdc++ -static-libgcc)
     endif ()
 endif ()
+
 
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
