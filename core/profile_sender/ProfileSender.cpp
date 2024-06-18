@@ -14,9 +14,9 @@
 
 #include "profile_sender/ProfileSender.h"
 
-#include <unordered_set>
-
 #include <json/json.h>
+
+#include <unordered_set>
 
 #include "common/CompressTools.h"
 #include "common/Flags.h"
@@ -154,17 +154,14 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
     sdk::Client client(endpoint, "", "", INT32_FLAG(sls_client_send_timeout), "", "");
     SLSControl::GetInstance()->SetSlsSendClientCommonParam(&client);
     try {
-        time_t curTime = time(NULL);
-        unique_ptr<LoggroupTimeValue> data(new LoggroupTimeValue(
-            project, logstore, "", "", false, "", region, LOGGROUP_COMPRESSED, 1, logBody.size(), curTime, "", 0));
-
-        if (!CompressLz4(logBody, data->mLogData)) {
+        string res;
+        if (!CompressLz4(logBody, res)) {
             LOG_ERROR(sLogger, ("lz4 compress data", "fail"));
             return;
         }
 
-        sdk::PostLogStoreLogsResponse resp = client.PostLogUsingWebTracking(
-            data->mProjectName, data->mLogstore, sls_logs::SLS_CMP_LZ4, data->mLogData, data->mRawSize);
+        sdk::PostLogStoreLogsResponse resp
+            = client.PostLogUsingWebTracking(project, logstore, sls_logs::SLS_CMP_LZ4, res, logBody.size());
 
         LOG_DEBUG(sLogger,
                   ("SendToProfileProject",
