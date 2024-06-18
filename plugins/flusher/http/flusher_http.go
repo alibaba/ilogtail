@@ -99,7 +99,7 @@ type FlusherHTTP struct {
 	interceptor extensions.FlushInterceptor
 
 	broadcaster broadcast.Broadcaster
-	queue       chan *groupEventsWithTimestamp
+	queue       chan *dataWithTimestamp
 	counter     sync.WaitGroup
 
 	// self-monitor metrics
@@ -112,10 +112,10 @@ type FlusherHTTP struct {
 	statusCodeStatistics pipeline.MetricVector[pipeline.CounterMetric] // The number of status code returned by the server
 }
 
-// groupEventsWithTimestamp is a struct that contains the data and the time it was enqueued.
+// dataWithTimestamp is a struct that contains the data and the time it was enqueued.
 // it is used for compute the jitter.
-type groupEventsWithTimestamp struct {
-	data        any
+type dataWithTimestamp struct {
+	data        any // can be logGroup or groupEvents.
 	enqueueTime time.Time
 }
 
@@ -169,7 +169,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	if f.QueueCapacity <= 0 {
 		f.QueueCapacity = 1024
 	}
-	f.queue = make(chan *groupEventsWithTimestamp, f.QueueCapacity)
+	f.queue = make(chan *dataWithTimestamp, f.QueueCapacity)
 
 	if f.JitterInSec > 0 {
 		f.broadcaster = broadcast.NewBroadcaster(f.Concurrency)
@@ -332,7 +332,7 @@ func (f *FlusherHTTP) addTask(log interface{}, enqueueTime time.Time) {
 		f.broadcaster.TrySubmit(nil)
 	}
 
-	groupWithTs := &groupEventsWithTimestamp{
+	groupWithTs := &dataWithTimestamp{
 		data:        log,
 		enqueueTime: enqueueTime,
 	}

@@ -694,7 +694,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			AsyncIntercept: false,
 			Timeout:        defaultTimeout,
 			Concurrency:    1,
-			queue:          make(chan *groupEventsWithTimestamp, 10),
+			queue:          make(chan *dataWithTimestamp, 10),
 		}
 		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildSelfMonitorMetricLabels()
@@ -734,7 +734,7 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 			AsyncIntercept: true,
 			Timeout:        defaultTimeout,
 			Concurrency:    1,
-			queue:          make(chan *groupEventsWithTimestamp, 10),
+			queue:          make(chan *dataWithTimestamp, 10),
 		}
 		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
 		metricLabels := flusher.buildSelfMonitorMetricLabels()
@@ -779,7 +779,7 @@ func TestHttpFlusherDropEvents(t *testing.T) {
 			AsyncIntercept:         true,
 			Timeout:                defaultTimeout,
 			Concurrency:            1,
-			queue:                  make(chan *groupEventsWithTimestamp, 1),
+			queue:                  make(chan *dataWithTimestamp, 1),
 			DropEventWhenQueueFull: true,
 		}
 		flusher.broadcaster = broadcast.NewBroadcaster(flusher.Concurrency)
