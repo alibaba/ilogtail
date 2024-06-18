@@ -51,7 +51,14 @@ struct SenderQueueItem {
                     const Flusher* flusher,
                     QueueKey key,
                     RawDataType type = RawDataType::EVENT_GROUP,
-                    bool bufferOrNot = true);
+                    bool bufferOrNot = true)
+        : mData(std::move(data)),
+          mRawSize(rawSize),
+          mType(type),
+          mBufferOrNot(bufferOrNot),
+          mFlusher(flusher),
+          mQueueKey(key),
+          mEnqueTime(time(nullptr)) {}
 };
 
 struct SLSSenderQueueItem : public SenderQueueItem {
