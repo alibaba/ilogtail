@@ -73,7 +73,7 @@ public:
 
     std::vector<std::string> mCallName;
     std::variant<SecurityFileFilter, SecurityNetworkFilter, SecurityProcessFilter> mFilter;
-    bool IsProcessNamespaceFilterTypeValid(std::string type);
+    static bool IsProcessNamespaceFilterTypeValid(std::string type);
 };
 
 class SecurityOptions {

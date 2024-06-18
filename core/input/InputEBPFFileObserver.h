@@ -23,7 +23,7 @@
 
 namespace logtail {
 
-class InputEbpfFileObserver : public Input {
+class InputEBPFFileObserver : public Input {
 public:
     static const std::string sName;
 

@@ -18,12 +18,12 @@
 
 #include <string>
 
-#include "ebpf/observer/ObserverOptions.h"
+#include "ebpf/security/SecurityOptions.h"
 #include "plugin/interface/Input.h"
 
 namespace logtail {
 
-class InputEbpfNetworkObserver : public Input {
+class InputEBPFFileSecurity : public Input {
 public:
     static const std::string sName;
 
@@ -32,7 +32,7 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    ObserverOptions mObserverOptions;
+    SecurityOptions mSecurityOptions;
 };
 
 } // namespace logtail

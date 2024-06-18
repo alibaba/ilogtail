@@ -19,6 +19,242 @@
 using namespace std;
 namespace logtail {
 
+// 之后考虑将这几个函数拆分到input中的各个插件里面
+bool InitSecurityFileFilter(const Json::Value& config,
+                            SecurityFileFilter& thisFileFilter,
+                            const PipelineContext* mContext,
+                            const string& sName) {
+    string errorMsg;
+    for (auto& fileFilterItem : config["Filter"]) {
+        SecurityFileFilterItem thisFileFilterItem;
+        // FilePath (Mandatory)
+        if (!GetMandatoryStringParam(fileFilterItem, "FilePath", thisFileFilterItem.mFilePath, errorMsg)) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               errorMsg,
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
+        }
+        // FileName (Optional)
+        if (!GetOptionalStringParam(fileFilterItem, "FileName", thisFileFilterItem.mFileName, errorMsg)) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               errorMsg,
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
+        }
+        thisFileFilter.mFileFilterItem.emplace_back(thisFileFilterItem);
+    }
+    return true;
+}
+
+bool InitSecurityProcessFilter(const Json::Value& config,
+                               SecurityProcessFilter& thisProcessFilter,
+                               const PipelineContext* mContext,
+                               const string& sName) {
+    string errorMsg;
+    // NamespaceFilter (Optional)
+    if (config.isMember("NamespaceFilter")) {
+        if (!config["NamespaceFilter"].isArray()) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               "NamespaceFilter is not of type list",
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
+        }
+        for (auto& namespaceFilterConfig : config["NamespaceFilter"]) {
+            SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
+            // NamespaceType (Mandatory)
+            if (!GetMandatoryStringParam(
+                    namespaceFilterConfig, "NamespaceType", thisProcessNamespaceFilter.mNamespaceType, errorMsg)
+                || !SecurityOption::IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
+                PARAM_ERROR_RETURN(mContext->GetLogger(),
+                                   mContext->GetAlarm(),
+                                   errorMsg,
+                                   sName,
+                                   mContext->GetConfigName(),
+                                   mContext->GetProjectName(),
+                                   mContext->GetLogstoreName(),
+                                   mContext->GetRegion());
+            }
+            // ValueList (Mandatory)
+            if (!GetMandatoryListParam<string>(
+                    namespaceFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
+                PARAM_ERROR_RETURN(mContext->GetLogger(),
+                                   mContext->GetAlarm(),
+                                   errorMsg,
+                                   sName,
+                                   mContext->GetConfigName(),
+                                   mContext->GetProjectName(),
+                                   mContext->GetLogstoreName(),
+                                   mContext->GetRegion());
+            }
+            thisProcessFilter.mNamespaceFilter.emplace_back(thisProcessNamespaceFilter);
+        }
+        if (config.isMember("NamespaceBlackFilter")) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               "NamespaceFilter and NamespaceBlackFilter cannot be set at the same time",
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
+        }
+    }
+
+    // NamespaceBlackFilter (Optional)
+    if (config.isMember("NamespaceBlackFilter")) {
+        if (!config["NamespaceBlackFilter"].isArray()) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               "NamespaceBlackFilter is not of type list",
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
+        }
+        for (auto& namespaceBlackFilterConfig : config["NamespaceBlackFilter"]) {
+            SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
+            // NamespaceType (Mandatory)
+            if (!GetMandatoryStringParam(
+                    namespaceBlackFilterConfig, "NamespaceType", thisProcessNamespaceFilter.mNamespaceType, errorMsg)
+                || !SecurityOption::IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
+                PARAM_ERROR_RETURN(mContext->GetLogger(),
+                                   mContext->GetAlarm(),
+                                   errorMsg,
+                                   sName,
+                                   mContext->GetConfigName(),
+                                   mContext->GetProjectName(),
+                                   mContext->GetLogstoreName(),
+                                   mContext->GetRegion());
+            }
+            // ValueList (Mandatory)
+            if (!GetMandatoryListParam<string>(
+                    namespaceBlackFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
+                PARAM_ERROR_RETURN(mContext->GetLogger(),
+                                   mContext->GetAlarm(),
+                                   errorMsg,
+                                   sName,
+                                   mContext->GetConfigName(),
+                                   mContext->GetProjectName(),
+                                   mContext->GetLogstoreName(),
+                                   mContext->GetRegion());
+            }
+            thisProcessFilter.mNamespaceBlackFilter.emplace_back(thisProcessNamespaceFilter);
+        }
+    }
+    return true;
+}
+
+bool InitSecurityNetworkFilter(const Json::Value& config,
+                               SecurityNetworkFilter& thisNetworkFilter,
+                               const PipelineContext* mContext,
+                               const string& sName) {
+    string errorMsg;
+    // DestAddrList (Optional)
+    if (!GetOptionalListParam<string>(config, "DestAddrList", thisNetworkFilter.mDestAddrList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // DestPortList (Optional)
+    if (!GetOptionalListParam<uint32_t>(config, "DestPortList", thisNetworkFilter.mDestPortList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // DestAddrBlackList (Optional)
+    if (!GetOptionalListParam<string>(config, "DestAddrBlackList", thisNetworkFilter.mDestAddrBlackList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // DestPortBlackList (Optional)
+    if (!GetOptionalListParam<uint32_t>(config, "DestPortBlackList", thisNetworkFilter.mDestPortBlackList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // SourceAddrList (Optional)
+    if (!GetOptionalListParam<string>(config, "SourceAddrList", thisNetworkFilter.mSourceAddrList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // SourcePortList (Optional)
+    if (!GetOptionalListParam<uint32_t>(config, "SourcePortList", thisNetworkFilter.mSourcePortList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // SourceAddrBlackList (Optional)
+    if (!GetOptionalListParam<string>(
+            config, "SourceAddrBlackList", thisNetworkFilter.mSourceAddrBlackList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    // SourcePortBlackList (Optional)
+    if (!GetOptionalListParam<uint32_t>(
+            config, "SourcePortBlackList", thisNetworkFilter.mSourcePortBlackList, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
+    }
+    return true;
+}
+
 bool SecurityOption::Init(SecurityFilterType filterType,
                           const Json::Value& config,
                           const PipelineContext* mContext,
@@ -50,37 +286,13 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                    mContext->GetRegion());
             }
             SecurityFileFilter thisFileFilter;
-            for (auto& fileFilterItem : config["Filter"]) {
-                SecurityFileFilterItem thisFileFilterItem;
-                // FilePath (Mandatory)
-                if (!GetMandatoryStringParam(fileFilterItem, "FilePath", thisFileFilterItem.mFilePath, errorMsg)) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       errorMsg,
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                // FileName (Optional)
-                if (!GetOptionalStringParam(fileFilterItem, "FileName", thisFileFilterItem.mFileName, errorMsg)) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       errorMsg,
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                thisFileFilter.mFileFilterItem.emplace_back(thisFileFilterItem);
+            if (!InitSecurityFileFilter(config, thisFileFilter, mContext, sName)) {
+                return false;
             }
             mFilter.emplace<SecurityFileFilter>(thisFileFilter);
             break;
         }
         case SecurityFilterType::PROCESS: {
-            SecurityProcessFilter thisProcessFilter;
             if (!IsValidMap(config, "Filter", errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
@@ -92,108 +304,14 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                    mContext->GetRegion());
             }
             const Json::Value& filterConfig = config["Filter"];
-            // NamespaceFilter (Optional)
-            if (filterConfig.isMember("NamespaceFilter")) {
-                if (!filterConfig["NamespaceFilter"].isArray()) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       "NamespaceFilter is not of type list",
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                for (auto& namespaceFilterConfig : filterConfig["NamespaceFilter"]) {
-                    SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
-                    // NamespaceType (Mandatory)
-                    if (!GetMandatoryStringParam(
-                            namespaceFilterConfig, "NamespaceType", thisProcessNamespaceFilter.mNamespaceType, errorMsg)
-                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
-                        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                           mContext->GetAlarm(),
-                                           errorMsg,
-                                           sName,
-                                           mContext->GetConfigName(),
-                                           mContext->GetProjectName(),
-                                           mContext->GetLogstoreName(),
-                                           mContext->GetRegion());
-                    }
-                    // ValueList (Mandatory)
-                    if (!GetMandatoryListParam<string>(
-                            namespaceFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
-                        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                           mContext->GetAlarm(),
-                                           errorMsg,
-                                           sName,
-                                           mContext->GetConfigName(),
-                                           mContext->GetProjectName(),
-                                           mContext->GetLogstoreName(),
-                                           mContext->GetRegion());
-                    }
-                    thisProcessFilter.mNamespaceFilter.emplace_back(thisProcessNamespaceFilter);
-                }
-                if (filterConfig.isMember("NamespaceBlackFilter")) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       "NamespaceFilter and NamespaceBlackFilter cannot be set at the same time",
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-            }
-
-            // NamespaceBlackFilter (Optional)
-            if (filterConfig.isMember("NamespaceBlackFilter")) {
-                if (!filterConfig["NamespaceBlackFilter"].isArray()) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       "NamespaceBlackFilter is not of type list",
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                for (auto& namespaceBlackFilterConfig : filterConfig["NamespaceBlackFilter"]) {
-                    SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
-                    // NamespaceType (Mandatory)
-                    if (!GetMandatoryStringParam(namespaceBlackFilterConfig,
-                                                 "NamespaceType",
-                                                 thisProcessNamespaceFilter.mNamespaceType,
-                                                 errorMsg)
-                        || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
-                        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                           mContext->GetAlarm(),
-                                           errorMsg,
-                                           sName,
-                                           mContext->GetConfigName(),
-                                           mContext->GetProjectName(),
-                                           mContext->GetLogstoreName(),
-                                           mContext->GetRegion());
-                    }
-                    // ValueList (Mandatory)
-                    if (!GetMandatoryListParam<string>(
-                            namespaceBlackFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
-                        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                           mContext->GetAlarm(),
-                                           errorMsg,
-                                           sName,
-                                           mContext->GetConfigName(),
-                                           mContext->GetProjectName(),
-                                           mContext->GetLogstoreName(),
-                                           mContext->GetRegion());
-                    }
-                    thisProcessFilter.mNamespaceBlackFilter.emplace_back(thisProcessNamespaceFilter);
-                }
+            SecurityProcessFilter thisProcessFilter;
+            if (!InitSecurityProcessFilter(filterConfig, thisProcessFilter, mContext, sName)) {
+                return false;
             }
             mFilter.emplace<SecurityProcessFilter>(thisProcessFilter);
             break;
         }
         case SecurityFilterType::NETWORK: {
-            SecurityNetworkFilter thisNetWorkFilter;
             if (!IsValidMap(config, "Filter", errorMsg)) {
                 PARAM_ERROR_RETURN(mContext->GetLogger(),
                                    mContext->GetAlarm(),
@@ -205,103 +323,11 @@ bool SecurityOption::Init(SecurityFilterType filterType,
                                    mContext->GetRegion());
             }
             const Json::Value& filterConfig = config["Filter"];
-            // DestAddrList (Optional)
-            if (!GetOptionalListParam<string>(
-                    filterConfig, "DestAddrList", thisNetWorkFilter.mDestAddrList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
+            SecurityNetworkFilter thisNetworkFilter;
+            if (!InitSecurityNetworkFilter(filterConfig, thisNetworkFilter, mContext, sName)) {
+                return false;
             }
-            // DestPortList (Optional)
-            if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "DestPortList", thisNetWorkFilter.mDestPortList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // DestAddrBlackList (Optional)
-            if (!GetOptionalListParam<string>(
-                    filterConfig, "DestAddrBlackList", thisNetWorkFilter.mDestAddrBlackList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // DestPortBlackList (Optional)
-            if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "DestPortBlackList", thisNetWorkFilter.mDestPortBlackList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // SourceAddrList (Optional)
-            if (!GetOptionalListParam<string>(
-                    filterConfig, "SourceAddrList", thisNetWorkFilter.mSourceAddrList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // SourcePortList (Optional)
-            if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "SourcePortList", thisNetWorkFilter.mSourcePortList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // SourceAddrBlackList (Optional)
-            if (!GetOptionalListParam<string>(
-                    filterConfig, "SourceAddrBlackList", thisNetWorkFilter.mSourceAddrBlackList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            // SourcePortBlackList (Optional)
-            if (!GetOptionalListParam<uint32_t>(
-                    filterConfig, "SourcePortBlackList", thisNetWorkFilter.mSourcePortBlackList, errorMsg)) {
-                PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                   mContext->GetAlarm(),
-                                   errorMsg,
-                                   sName,
-                                   mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-            }
-            mFilter.emplace<SecurityNetworkFilter>(thisNetWorkFilter);
+            mFilter.emplace<SecurityNetworkFilter>(thisNetworkFilter);
             break;
         }
         default:
