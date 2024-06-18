@@ -50,6 +50,7 @@ private:
     ~SecurityServer() = default;
 
     bool mIsRunning = false;
+    // TODO: 目前配置更新时，会停止ebpf探针、重新加载配置、重新启动ebpf探针，后续优化时需要考虑这里的并发问题
     std::unordered_map<std::string, SecurityConfig> mInputConfigMap;
     // std::unordered_map<pair<std::string, size_t>, const pointer*> mEbpfPointerMap;
 };
