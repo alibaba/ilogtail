@@ -62,8 +62,12 @@ void ConcurrencyLimiter::Reset(const string& key) {
     lock_guard<mutex> lock(mMux);
     auto iter = mLimitMap.find(key);
     if (iter != mLimitMap.end()) {
-        iter->second
-            = AppConfig::GetInstance()->GetSendRequestConcurrency() / Sender::Instance()->mRegionRefCntMap.size();
+        if (Sender::Instance()->mRegionRefCntMap.empty()) {
+            iter->second = AppConfig::GetInstance()->GetSendRequestConcurrency();
+        } else {
+            iter->second
+                = AppConfig::GetInstance()->GetSendRequestConcurrency() / Sender::Instance()->mRegionRefCntMap.size();
+        }
     }
 }
 

@@ -113,14 +113,14 @@ void SLSClientManager::Init() {
     }
     InitEndpointSwitchPolicy();
     if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST) {
-        mTestNetworkClient.reset(new sdk::Client("",
+        mProbeNetworkClient.reset(new sdk::Client("",
                                                  STRING_FLAG(default_access_key_id),
                                                  STRING_FLAG(default_access_key),
                                                  INT32_FLAG(sls_client_send_timeout),
                                                  LogFileProfiler::mIpAddr,
                                                  AppConfig::GetInstance()->GetBindInterface()));
-        SLSControl::GetInstance()->SetSlsSendClientCommonParam(mTestNetworkClient.get());
-        mTestNetworkThreadRes = async(launch::async, &SLSClientManager::TestNetworkThread, this);
+        SLSControl::GetInstance()->SetSlsSendClientCommonParam(mProbeNetworkClient.get());
+        mProbeNetworkThreadRes = async(launch::async, &SLSClientManager::ProbeNetworkThread, this);
     }
     if (BOOL_FLAG(send_prefer_real_ip)) {
         mUpdateRealIpClient.reset(new sdk::Client("",
@@ -136,8 +136,8 @@ void SLSClientManager::Init() {
 
 void SLSClientManager::Stop() {
     if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST) {
-        lock_guard<mutex> lock(mTestNetworkThreadRunningMux);
-        mIsTestNetworkThreadRunning = false;
+        lock_guard<mutex> lock(mProbeNetworkThreadRunningMux);
+        mIsProbeNetworkThreadRunning = false;
     }
     if (BOOL_FLAG(send_prefer_real_ip)) {
         lock_guard<mutex> lock(mUpdateRealIpThreadRunningMux);
@@ -145,7 +145,7 @@ void SLSClientManager::Stop() {
     }
     mStopCV.notify_all();
     if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST) {
-        future_status s = mTestNetworkThreadRes.wait_for(chrono::seconds(1));
+        future_status s = mProbeNetworkThreadRes.wait_for(chrono::seconds(1));
         if (s == future_status::ready) {
             LOG_INFO(sLogger, ("test endpoint thread", "stopped successfully"));
         } else {
@@ -375,13 +375,13 @@ bool SLSClientManager::HasNetworkAvailable() {
     return false;
 }
 
-void SLSClientManager::TestNetworkThread() {
+void SLSClientManager::ProbeNetworkThread() {
     // pair<int32_t, string> represents the weight of each endpoint
     map<string, vector<pair<int32_t, string>>> unavaliableEndpoints;
     set<string> unavaliableRegions;
     int32_t lastCheckAllTime = 0;
-    unique_lock<mutex> lock(mTestNetworkThreadRunningMux);
-    while (mIsTestNetworkThreadRunning) {
+    unique_lock<mutex> lock(mProbeNetworkThreadRunningMux);
+    while (mIsProbeNetworkThreadRunning) {
         unavaliableEndpoints.clear();
         unavaliableRegions.clear();
         {
@@ -410,7 +410,7 @@ void SLSClientManager::TestNetworkThread() {
         }
         if (unavaliableEndpoints.empty()) {
             if (mStopCV.wait_for(lock, chrono::seconds(INT32_FLAG(test_network_normal_interval)), [this]() {
-                    return !mIsTestNetworkThreadRunning;
+                    return !mIsProbeNetworkThreadRunning;
                 })) {
                 break;
             }
@@ -459,7 +459,7 @@ void SLSClientManager::TestNetworkThread() {
             lastCheckAllTime = curTime;
         }
         if (mStopCV.wait_for(lock, chrono::seconds(INT32_FLAG(test_unavailable_endpoint_interval)), [this]() {
-                return !mIsTestNetworkThreadRunning;
+                return !mIsProbeNetworkThreadRunning;
             })) {
             break;
         }
@@ -474,13 +474,13 @@ bool SLSClientManager::TestEndpoint(const string& region, const string& endpoint
     if (endpoint.empty()) {
         return false;
     }
-    mTestNetworkClient->SetSlsHost(endpoint);
-    ResetClientPort(region, mTestNetworkClient.get());
+    mProbeNetworkClient->SetSlsHost(endpoint);
+    ResetClientPort(region, mProbeNetworkClient.get());
 
     bool status = true;
     uint64_t beginTime = GetCurrentTimeInMicroSeconds();
     try {
-        status = mTestNetworkClient->TestNetwork();
+        status = mProbeNetworkClient->TestNetwork();
     } catch (sdk::LOGException& ex) {
         if (ConvertErrorCode(ex.GetErrorCode()) == SEND_NETWORK_ERROR) {
             status = false;

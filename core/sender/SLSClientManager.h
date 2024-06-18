@@ -118,7 +118,7 @@ private:
     void ResetClientPort(const std::string& region, sdk::Client* sendClient);
     std::string GetAvailableEndpointWithTopPriority(const std::string& region) const;
 
-    void TestNetworkThread();
+    void ProbeNetworkThread();
     bool TestEndpoint(const std::string& region, const std::string& endpoint);
 
     void UpdateRealIpThread();
@@ -137,11 +137,11 @@ private:
     mutable std::mutex mRegionEndpointEntryMapLock;
     std::unordered_map<std::string, RegionEndpointsInfo> mRegionEndpointEntryMap;
     EndpointSwitchPolicy mDataServerSwitchPolicy = EndpointSwitchPolicy::DESIGNATED_FIRST;
-    std::unique_ptr<sdk::Client> mTestNetworkClient;
+    std::unique_ptr<sdk::Client> mProbeNetworkClient;
 
-    std::future<void> mTestNetworkThreadRes;
-    mutable std::mutex mTestNetworkThreadRunningMux;
-    bool mIsTestNetworkThreadRunning = true;
+    std::future<void> mProbeNetworkThreadRes;
+    mutable std::mutex mProbeNetworkThreadRunningMux;
+    bool mIsProbeNetworkThreadRunning = true;
 
     mutable std::mutex mRegionRealIpLock;
     std::unordered_map<std::string, RealIpInfo*> mRegionRealIpMap;
