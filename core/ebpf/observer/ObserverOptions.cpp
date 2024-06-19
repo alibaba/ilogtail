@@ -27,15 +27,14 @@ bool InitObserverFileOption(const Json::Value& probeConfig,
     // ProfileRemoteServer (Optional)
     if (!GetOptionalStringParam(
             probeConfig, "ProfileRemoteServer", thisObserverFileOption.mProfileRemoteServer, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              STRING_DEFAULT,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     }
     // CpuSkipUpload (Optional)
     if (!GetOptionalBoolParam(probeConfig, "CpuSkipUpload", thisObserverFileOption.mCpuSkipUpload, errorMsg)) {
