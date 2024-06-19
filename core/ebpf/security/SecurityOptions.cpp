@@ -40,15 +40,14 @@ bool InitSecurityFileFilter(const Json::Value& config,
         }
         // FileName (Optional)
         if (!GetOptionalStringParam(fileFilterItem, "FileName", thisFileFilterItem.mFileName, errorMsg)) {
-            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                                  mContext->GetAlarm(),
-                                  errorMsg,
-                                  STRING_DEFAULT,
-                                  sName,
-                                  mContext->GetConfigName(),
-                                  mContext->GetProjectName(),
-                                  mContext->GetLogstoreName(),
-                                  mContext->GetRegion());
+            PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                 mContext->GetAlarm(),
+                                 errorMsg,
+                                 sName,
+                                 mContext->GetConfigName(),
+                                 mContext->GetProjectName(),
+                                 mContext->GetLogstoreName(),
+                                 mContext->GetRegion());
         }
         thisFileFilter.mFileFilterItem.emplace_back(thisFileFilterItem);
     }

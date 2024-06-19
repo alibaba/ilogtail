@@ -27,7 +27,7 @@
 namespace logtail {
 
 enum class ObserverType { PROCESS, FILE, NETWORK };
-
+// TODO:重命名具体到每个参数
 #define BOOL_DEFAULT false
 #define STRING_DEFAULT ""
 
