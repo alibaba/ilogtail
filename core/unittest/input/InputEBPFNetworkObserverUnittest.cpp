@@ -104,9 +104,17 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFNetworkObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
+    ObserverNetworkOption thisObserver = std::get<ObserverNetworkOption>(input->mObserverOptions.mObserverOption);
+    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOptions.mType);
+    APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
+    APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
+    APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);
+    APSARA_TEST_EQUAL(false, thisObserver.mDisableConnStats);
+    APSARA_TEST_EQUAL(false, thisObserver.mEnableConnTrackerDump);
 
-    // error param level
+    // lag of mandatory param + error param level
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_observer",
