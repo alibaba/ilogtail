@@ -164,7 +164,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
                 {
                     "Filter": 
                     {
-                        "NamespaceBlackFilter": [
+                        "NamespaceBlackAAAAAAFilter": [
                             {
                                 "NamespaceType": "Pid",
                                 "ValueList": "4026531833"
@@ -178,7 +178,11 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
+    SecurityProcessFilter thisFilter1 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL(0, thisFilter1.mNamespaceFilter.size());
 
     // invalid param: 1 NamespaceFilter and 1 NamespaceBlackFilter
     configStr = R"(
@@ -208,7 +212,12 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
+    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    SecurityProcessFilter thisFilter2 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(1, thisFilter2.mNamespaceFilter.size());
+    APSARA_TEST_EQUAL(0, thisFilter2.mNamespaceBlackFilter.size());
 
     // // invalid param: 2 NamespaceFilter
     // configStr = R"(
@@ -267,7 +276,12 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
+    SecurityProcessFilter thisFilter3 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL(0, thisFilter3.mNamespaceFilter.size());
+    APSARA_TEST_EQUAL(0, thisFilter3.mNamespaceBlackFilter.size());
 }
 
 

@@ -130,7 +130,23 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFNetworkSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
+    SecurityNetworkFilter thisFilter1 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(SecurityFilterType::NETWORK, input->mSecurityOptions.mFilterType);
+    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].mCallName[1]);
+    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
+    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1.mDestAddrList[1]);
+    APSARA_TEST_EQUAL(0, thisFilter1.mDestPortList.size());
+    APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1.mSourceAddrBlackList[0]);
+    APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
+
+    SecurityNetworkFilter thisFilter2 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[1].mFilter);
+    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].mCallName[0]);
+    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2.mDestAddrList[0]);
+    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2.mDestAddrList[1]);
+    APSARA_TEST_EQUAL(80, thisFilter2.mDestPortList[0]);
 
     // error param level
     configStr = R"(
@@ -150,7 +166,36 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFNetworkSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    SecurityNetworkFilter thisFilter3 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(0, thisFilter3.mDestAddrList.size());
+    APSARA_TEST_EQUAL(0, thisFilter3.mDestPortList.size());
+
+    // valid and invalid optional param
+    // if the optional param in a list is invalid, the valid param will be ignored only when after it
+    configStr = R"(
+        {
+            "Type": "input_ebpf_sockettraceprobe_security",
+            "ConfigList": [
+                {
+                    "CallName": ["tcp_connect", "tcp_close"],
+                    "Filter": {
+                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                        "DestPortList": [40, "80", 160],
+                        "SourceAddrBlackList": ["127.0.0.1/8"],
+                        "SourcePortBlackList": [9300]
+                    }
+                }
+            ]
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    input.reset(new InputEBPFNetworkSecurity());
+    input->SetContext(ctx);
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    SecurityNetworkFilter thisFilter4 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    APSARA_TEST_EQUAL(2, thisFilter4.mDestAddrList.size());
+    APSARA_TEST_EQUAL(1, thisFilter4.mDestPortList.size());
 }
 
 

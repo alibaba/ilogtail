@@ -96,7 +96,14 @@ void InputEBPFProcessObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessObserver());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
+    ObserverProcessOption thisObserver = std::get<ObserverProcessOption>(input->mObserverOptions.mObserverOption);
+    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOptions.mType);
+    APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 0);
+    APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
+    APSARA_TEST_EQUAL("m", thisObserver.mExcludeCmdRegex[0]);
+    APSARA_TEST_EQUAL("n", thisObserver.mExcludeCmdRegex[1]);
 
     // error param level
     configStr = R"(
