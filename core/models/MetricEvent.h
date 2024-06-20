@@ -31,7 +31,7 @@ class MetricEvent : public PipelineEvent {
 
 public:
     std::unique_ptr<PipelineEvent> Copy() const override;
-    
+
     StringView GetName() const { return mName; }
     void SetName(const std::string& name);
 
@@ -56,6 +56,7 @@ public:
     }
 
     StringView GetTag(StringView key) const;
+    const std::map<StringView, StringView>& GetTags() const { return mTags.mInner; };
     bool HasTag(StringView key) const;
     void SetTag(StringView key, StringView val);
     void SetTag(const std::string& key, const std::string& val);
@@ -64,6 +65,7 @@ public:
     void DelTag(StringView key);
 
     size_t DataSize() const override;
+
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson(bool enableEventMeta = false) const override;

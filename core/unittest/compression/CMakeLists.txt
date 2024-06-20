@@ -24,7 +24,12 @@ target_link_libraries(lz4_compressor_unittest unittest_base)
 add_executable(zstd_compressor_unittest ZstdCompressorUnittest.cpp)
 target_link_libraries(zstd_compressor_unittest unittest_base)
 
+add_executable(snappy_compressor_unittest SnappyCompressorUnittest.cpp)
+target_link_libraries(snappy_compressor_unittest unittest_base)
+
+
 include(GoogleTest)
 gtest_discover_tests(compressor_factory_unittest)
 gtest_discover_tests(lz4_compressor_unittest)
 gtest_discover_tests(zstd_compressor_unittest)
+gtest_discover_tests(snappy_compressor_unittest)
