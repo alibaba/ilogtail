@@ -22,3 +22,5 @@ target_link_libraries(${PROJECT_NAME} common)
 target_link_libraries(${PROJECT_NAME} pipeline)
 link_lz4(${PROJECT_NAME})
 link_zstd(${PROJECT_NAME})
+link_snappy(${PROJECT_NAME})
+

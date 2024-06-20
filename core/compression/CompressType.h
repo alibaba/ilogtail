@@ -18,6 +18,6 @@
 
 namespace logtail {
 
-enum class CompressType { NONE, LZ4, ZSTD };
+enum class CompressType { NONE, LZ4, ZSTD, SNAPPY };
 
 } // namespace logtail
