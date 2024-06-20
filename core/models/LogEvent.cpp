@@ -131,7 +131,9 @@ Json::Value LogEvent::ToJson() const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (GetTimestampNanosecond()) {
+        root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
+    }
     if (!Empty()) {
         Json::Value contents;
         for (const auto& content : *this) {
