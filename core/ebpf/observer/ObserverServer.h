@@ -19,11 +19,23 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <mutex>
+#include <thread>
 
 #include "ebpf/observer/ObserverOptions.h"
 #include "pipeline/PipelineContext.h"
+#include "ebpf/SourceManager.h"
+#include "ebpf/include/SockettraceApi.h"
 
 namespace logtail {
+
+enum class BPFObserverPipelineType {
+    UNKNOWN,
+    PIPELINE_PROCESS,
+    PIPELINE_NETWORK,
+    PIPELINE_FILE,
+    MAX,
+};
 
 class ObserverServer {
 public:
@@ -35,7 +47,8 @@ public:
         return &instance;
     }
 
-    void Start();
+    void Start(BPFObserverPipelineType);
+    void Stop(BPFObserverPipelineType);
     void Stop();
 
     // 其他函数注册：配置注册、注销等
@@ -45,14 +58,27 @@ public:
                             const PipelineContext* ctx);
     void RemoveObserverOptions(const std::string& name, size_t index);
 
+    void HandleMeasures(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp);
+    void HandleSpans(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans);
 
 private:
     ObserverServer() = default;
     ~ObserverServer() = default;
 
+    void Init();
+    void InitBPF();
+    void StopBPF();
+    void CollectEvents();
+
+
     bool mIsRunning = false;
+    std::atomic_int ref_;
     // TODO: 目前配置更新时，会停止ebpf探针、重新加载配置、重新启动ebpf探针，后续优化时需要考虑这里的并发问题
     std::unordered_map<std::string, ObserverConfig> mInputConfigMap;
+
+    ObserverConfig network_config_;
+    ObserverConfig process_config_;
+    ObserverConfig file_config_;
 };
 
 } // namespace logtail

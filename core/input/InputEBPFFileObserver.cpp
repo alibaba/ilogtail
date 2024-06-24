@@ -30,13 +30,14 @@ bool InputEBPFFileObserver::Init(const Json::Value& config, uint32_t& pluginIdx,
 
 bool InputEBPFFileObserver::Start() {
     ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
-    ObserverServer::GetInstance()->Start();
+    ObserverServer::GetInstance()->Start(BPFObserverPipelineType::PIPELINE_FILE);
     return true;
 }
 
 bool InputEBPFFileObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
-        // TODO: ?
+        ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
+        // TODO @qianlu.kk update
     }
     ObserverServer::GetInstance()->RemoveObserverOptions(mContext->GetConfigName(), mIndex);
     return true;
