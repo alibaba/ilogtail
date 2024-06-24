@@ -33,8 +33,6 @@ macro(link_all target_name)
         link_spl(${target_name})
     endif ()
     link_curl(${target_name})
-    link_ssl(${target_name}) # must after link_spl
-    link_crypto(${target_name}) # must after link_spl
     link_tcmalloc(${target_name})
     if (UNIX)
         link_uuid(${target_name})
@@ -61,4 +59,6 @@ macro(link_all target_name)
         target_link_libraries(${target_name} "Shlwapi.lib")
         target_link_libraries(${target_name} "Psapi.lib")
     endif ()
+    link_ssl(${target_name}) # must after link_spl
+    link_crypto(${target_name}) # must after link_spl
 endmacro()
