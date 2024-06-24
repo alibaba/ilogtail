@@ -29,7 +29,6 @@ bool InputEBPFProcessObserver::Init(const Json::Value& config, uint32_t& pluginI
 
 bool InputEBPFProcessObserver::Start() {
     ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
-    ObserverServer::GetInstance()->Start();
     return true;
 }
 

@@ -30,7 +30,6 @@ bool InputEBPFFileSecurity::Init(const Json::Value& config, uint32_t& pluginIdx,
 
 bool InputEBPFFileSecurity::Start() {
     SecurityServer::GetInstance()->AddSecurityOptions(mContext->GetConfigName(), mIndex, &mSecurityOptions, mContext);
-    SecurityServer::GetInstance()->Start();
     return true;
 }
 

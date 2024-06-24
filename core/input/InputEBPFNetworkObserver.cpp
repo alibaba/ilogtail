@@ -29,7 +29,6 @@ bool InputEBPFNetworkObserver::Init(const Json::Value& config, uint32_t& pluginI
 
 bool InputEBPFNetworkObserver::Start() {
     ObserverServer::GetInstance()->AddObserverOptions(mContext->GetConfigName(), mIndex, &mObserverOptions, mContext);
-    ObserverServer::GetInstance()->Start();
     return true;
 }
 
