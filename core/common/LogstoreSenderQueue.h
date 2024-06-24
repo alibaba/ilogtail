@@ -127,18 +127,17 @@ public:
             mLastSendTimeSecond = nowTime;
         }
 
-        for (auto &limiter: mLimiters) {
-            if (limiter->IsValidToPop(mSenderInfo.mRegion)) {
-                return;
-            }
-        }
-
         uint64_t index = QueueType::ExactlyOnce == this->mType ? 0 : this->mRead;
         const uint64_t endIndex = QueueType::ExactlyOnce == this->mType ? this->SIZE : this->mWrite;
         for (; index < endIndex; ++index) {
             SenderQueueItem* item = this->mArray[index % this->SIZE];
             if (item == NULL) {
                 continue;
+            }
+            for (auto& limiter : mLimiters) {
+                if (!limiter->IsValidToPop(mSenderInfo.mRegion)) {
+                    return;
+                }
             }
             if (item->mStatus == SendingStatus::IDLE) {
                 // check consurrency
@@ -152,7 +151,7 @@ public:
                 mLastSecondTotalBytes += item->mRawSize;
                 item->mStatus = SendingStatus::SENDING;
                 logGroupVec.push_back(item);
-                for (auto &limiter: mLimiters) {
+                for (auto& limiter : mLimiters) {
                     limiter->PostPop(mSenderInfo.mRegion);
                 }
             }
