@@ -1,0 +1,41 @@
+
+        SERVER ROLE INSTANCE                    APP                     TYPE          USER    PID    CONTAINER ID 
+
+ ali-nimitz.NimitzNetplugin#         ancp-netplugin              application.process  root    53163               
+ alihyper.AliHyper#                  alihyper                    application.process  admin   79167               
+ cupid-service.CupidServiceWorker#   worker                      application.process  admin  123702               
+ disk-driver.DiskDriverWorker#       tdc                         application.process  root     6383               
+ disk-driver.DiskDriverWorker#       vrbd                        application.process  root     5854               
+ disk-driver.DiskDriverWorker#       worker                      application.process  admin    5856               
+ diting-niuer.niuer#                 diting                      application.process  root    36550               
+ fuxi.DeployAgent#                   deploy_agent                application.process  admin   15737               
+ fuxi.FuxiMonitor#                   fuxi_monitor                application.process  admin    7499               
+ fuxi.Tubo#                          tubo                        application.process  admin    4650               
+ nuwa.NuwaConfig#                    nuwa_config                 application.process  admin   14872               
+ odps-bodhi.Bodhi#                   bodhi                       application.process  root   114895               
+ odps-rpm.OdpsRpm#                   odps_rpm                    application.process  admin  107441               
+ odps-rpm.OdpsRpmMonitor#            odps_rpm_monitor            application.process  admin  108768               
+ pai_configuration.DummyServerRole#  dummy_application           application.process  root    91430               
+ pangu.PanguChunkserver#             pangu_chunkserver           application.process  admin    9827               
+ pangu.PanguMonitor#                 pangu_monitor               application.process  admin   16096               
+ tianji.TianjiClient#                capability_service_client   application.process  admin   55355               
+ tianji.TianjiClient#                config_manager              application.process  root    46370               
+ tianji.TianjiClient#                core_dump_manager           application.process  root    55276               
+ tianji.TianjiClient#                downloader                  application.process  root    54349               
+ tianji.TianjiClient#                downloader_monitor          application.process  root    55290               
+ tianji.TianjiClient#                local_labor                 application.process  root    55260               
+ tianji.TianjiClient#                log_fetcher                 application.process  root    55433               
+ tianji.TianjiClient#                machine_inspector           application.process  root    54394               
+ tianji.TianjiClient#                osman                       application.process  root    55326               
+ tianji.TianjiClient#                p2p_worker                  application.process  root    54360               
+ tianji.TianjiClient#                proxyssl                    application.process  root    42340               
+ tianji.TianjiClient#                service_manager             application.process          41500               
+ tianji.TianjiClient#                service_manager_monitor     application.process  root   107882               
+ tianji.TianjiClient#                service_manager_supervisor  application.process  root    43027               
+ tianji.TianjiClient#                sys_env_manager             application.process  root    42244               
+ tianji.TianjiClient#                sys_env_monitor             application.process  root    55413               
+ tianji.TianjiClient#                terminal_service_agent      application.process  root    55309               
+ tianji.TianjiClient#                tj_proxy                    application.process  root    42690               
+ yinglong.NetworkQos#                network_qos                 application.process  root    23094               
+ yinglong.NetworkQos#                network_qos_monitor         application.process  root    21750               
+ yinglong.NetworkQos#                yinglong_server             application.process  root   119366   

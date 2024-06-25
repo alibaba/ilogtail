@@ -1,0 +1,894 @@
+{
+    "baseMetric": [
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "TOTAL_USAGE",
+                "TOTAL_MEM_USAGE"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "116"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "116: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "gpu",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "AVAIL_SIZE",
+                "USED_SIZE",
+                "USED_RATIO",
+                "TOTAL",
+                "ITOTAL",
+                "IFREE",
+                "IUSED",
+                "IUTIL"
+            ],
+            "label_values": [
+                "!/dev/vrbd*",
+                "!tmpfs*",
+                "!devtmpfs*",
+                "!rootfs",
+                "!tj_sm_status",
+                "!overlay",
+                "!shm"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "79"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "79: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "partition",
+            "label_name": "device",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "CPU_USAGE",
+                "THREAD_NUM",
+                "RES",
+                "OPEN_FD",
+                "AGENT_RESROUCE",
+                "AGENT_COREDUMP",
+                "AGENT_RESTART",
+                "AGENT_VERSION"
+            ],
+            "label_values": [
+                "Argus"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "4"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "90"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "90: 4"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 300,
+            "module_name": "process",
+            "label_name": "name",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "TOTAL_RECEIVE_BYTES",
+                "TOTAL_RECEIVE_PACKETS",
+                "TOTAL_TRANSMIT_PACKETS",
+                "TOTAL_PACKETS_DROP",
+                "TOTAL_TRANSMIT_BYTES",
+                "TOTAL_PACKETS_ERROR",
+                "AVG_RECEIVE_ERRORS_RATIO",
+                "AVG_TRANSMIT_ERRORS_RATIO",
+                "AVG_RECEIVE_DROPS_RATIO",
+                "AVG_TRANSMIT_DROPS_RATIO"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "91"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "91: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "net",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "TOTAL",
+                "USED",
+                "ACTUAL_USED",
+                "CLOUD_FREE",
+                "FREE_UTIL",
+                "FREE",
+                "UTIL",
+                "SLAB",
+                "AVAIL"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "92"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "92: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "memory",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "t_rrqm",
+                "t_wrqm",
+                "t_util"
+            ],
+            "label_values": [
+                "!vrbd*"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "93"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "93: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "disk",
+            "label_name": "device",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "NICE",
+                "SYSTEM",
+                "IDLE",
+                "IOWAIT",
+                "UTIL",
+                "USER",
+                "NCPU"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "94"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "94: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "cpu",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "CurrEstab",
+                "RetransRate",
+                "OutSegs",
+                "InSegs",
+                "ActiveOpens",
+                "PassiveOpens",
+                "EstabResets",
+                "AttemptFails",
+                "RetransSegs"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "98"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "98: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "tcp",
+            "timeout": 10
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "metric_list": [
+                "LOAD1",
+                "LOAD5",
+                "LOAD15"
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "99"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "99: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "module_name": "system",
+            "timeout": 10
+        }
+    ],
+    "exporterTask": [
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "110"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "110: 3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "metrics": [
+                {
+                    "method": 0,
+                    "name": "node_filesystem_size_bytes"
+                },
+                {
+                    "method": 0,
+                    "name": "node_filesystem_readonly"
+                }
+            ],
+            "timeout": 10,
+            "name":"pod_collect1",
+            "metrics_path": "/metrics",
+            "target": "http: //127.0.0.1:9100"
+        },
+        {
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "add_labels": [
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "3"
+                },
+                {
+                    "name": "SYS_CCI",
+                    "type": 2,
+                    "value": "111"
+                },
+                {
+                    "name": "SYS_DT_CCI",
+                    "type": 2,
+                    "value": "111:3"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ],
+            "interval": 60,
+            "metrics": [
+                {
+                    "method": 0,
+                    "name": "node_cpu_guest_seconds_total"
+                }
+            ],
+            "timeout": 10,
+            "metrics_path": "/metrics",
+            "name":"alimetrics",
+            "target": "http://127.0.0.1:9100"
+        }
+    ],
+    "httpReceiveTask": [],
+    "customTask": [
+        {
+            "name": "alicms-host-status_testing_1797702_testhost",
+            "type": "exporterTask",
+            "version": "alimetrics1",
+            "content": {
+                "output": [
+                    {
+                        "type": "alimonitor"
+                    }
+                ],
+                "add_labels": [
+                    {
+                        "name": "SYS_DT",
+                        "type": 2,
+                        "value": "3"
+                    },
+                    {
+                        "name": "sn",
+                        "type": 0
+                    }
+                ],
+                "name": "pod_collect11",
+                "interval": 5,
+                "metrics": [
+                    {
+                        "name": "nginx$middleware.nginx.request.qps"
+                    },
+                    {
+                        "name": "nginx$middleware.nginx.request.avg_rt"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.concurrentmarksweep.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_old_generation.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.parnew.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_young_generation.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.concurrentmarksweep.time"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_old_generation.time"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.parnew.time"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_young_generation.time"
+                    },
+                    {
+                        "name": "jvm$jvm.thread.count"
+                    },
+                    {
+                        "name": "jvm$jvm.thread.deadlock.count"
+                    },
+                    {
+                        "name": "jvm$jvm.thread.runnable.count"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.heap.max"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.heap.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.heap.usage"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.cms_old_gen.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.par_eden_space.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.par_survivor_space.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.non_heap.max"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.non_heap.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.non_heap.usage"
+                    },
+                    {
+                        "name": "jvm$jvm.file_descriptor.open_ratio"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.metaspace.usage"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.code_cache.usage"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.consumer.qps"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.consumer.rt"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.consumer.success_rate"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.qps"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.rt"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.success_rate"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.biz_pool.max_size"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.biz_pool.size"
+                    },
+                    {
+                        "name": "tddl-client$middleware.tddl.connection.max_pool_size"
+                    },
+                    {
+                        "name": "tddl-client$middleware.tddl.connection.active_count"
+                    },
+                    {
+                        "name": "tddl-client$middleware.tddl.connection.error_count"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.read.qps"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.write.qps"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.read.rt"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.write.rt"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.read.success_rate"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.write.success_rate"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.hit_rate"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.qps"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.rt"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.success_rate"
+                    },
+                    {
+                        "name": "tail$middleware.tair.write.qps"
+                    },
+                    {
+                        "name": "tail$middleware.tair.write.rt"
+                    },
+                    {
+                        "name": "tail$middleware.tair.write.success_rate"
+                    },
+                    {
+                        "name": "notify$middleware.notify.send.qps"
+                    },
+                    {
+                        "name": "notify$middleware.notify.send.rt"
+                    },
+                    {
+                        "name": "notify$middleware.notify.send.success_rate"
+                    },
+                    {
+                        "name": "notify$middleware.notify.receive.qps"
+                    },
+                    {
+                        "name": "notify$middleware.notify.receive.rt"
+                    },
+                    {
+                        "name": "notify$middleware.notify.receive.success_rate"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.send.qps"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.send.rt"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.send.success_rate"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.receive.qps"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.receive.rt"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.receive.success_rate"
+                    }
+                ],
+                "type": 1,
+                "metrics_path": "/alimetrics",
+                "timeout": 4,
+                "target": "localhost:7002"
+            }
+        },
+        {
+            "name": "alicms-host-status_testing_1797702_testhost2",
+            "type": "exporterTask",
+            "version": "alimetrics2",
+            "content": {
+                "output": [
+                    {
+                        "type": "alimonitor"
+                    }
+                ],
+                "add_labels": [
+                    {
+                        "name": "SYS_DT",
+                        "type": 2,
+                        "value": "3"
+                    },
+                    {
+                        "name": "sn",
+                        "type": 0
+                    }
+                ],
+                "name": "pod_collect22",
+                "interval": 5,
+                "metrics": [
+                    {
+                        "name": "nginx$middleware.nginx.request.qps"
+                    },
+                    {
+                        "name": "nginx$middleware.nginx.request.avg_rt"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.concurrentmarksweep.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_old_generation.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.parnew.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_young_generation.count"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.concurrentmarksweep.time"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_old_generation.time"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.parnew.time"
+                    },
+                    {
+                        "name": "jvm$jvm.gc.g1_young_generation.time"
+                    },
+                    {
+                        "name": "jvm$jvm.thread.count"
+                    },
+                    {
+                        "name": "jvm$jvm.thread.deadlock.count"
+                    },
+                    {
+                        "name": "jvm$jvm.thread.runnable.count"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.heap.max"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.heap.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.heap.usage"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.cms_old_gen.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.par_eden_space.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.par_survivor_space.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.non_heap.max"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.non_heap.used"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.non_heap.usage"
+                    },
+                    {
+                        "name": "jvm$jvm.file_descriptor.open_ratio"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.metaspace.usage"
+                    },
+                    {
+                        "name": "jvm$jvm.mem.pools.code_cache.usage"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.consumer.qps"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.consumer.rt"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.consumer.success_rate"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.qps"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.rt"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.success_rate"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.biz_pool.max_size"
+                    },
+                    {
+                        "name": "hsf$middleware.hsf.provider.biz_pool.size"
+                    },
+                    {
+                        "name": "tddl-client$middleware.tddl.connection.max_pool_size"
+                    },
+                    {
+                        "name": "tddl-client$middleware.tddl.connection.active_count"
+                    },
+                    {
+                        "name": "tddl-client$middleware.tddl.connection.error_count"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.read.qps"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.write.qps"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.read.rt"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.write.rt"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.read.success_rate"
+                    },
+                    {
+                        "name": "tddl$middleware.tddl.write.success_rate"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.hit_rate"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.qps"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.rt"
+                    },
+                    {
+                        "name": "tail$middleware.tair.read.success_rate"
+                    },
+                    {
+                        "name": "tail$middleware.tair.write.qps"
+                    },
+                    {
+                        "name": "tail$middleware.tair.write.rt"
+                    },
+                    {
+                        "name": "tail$middleware.tair.write.success_rate"
+                    },
+                    {
+                        "name": "notify$middleware.notify.send.qps"
+                    },
+                    {
+                        "name": "notify$middleware.notify.send.rt"
+                    },
+                    {
+                        "name": "notify$middleware.notify.send.success_rate"
+                    },
+                    {
+                        "name": "notify$middleware.notify.receive.qps"
+                    },
+                    {
+                        "name": "notify$middleware.notify.receive.rt"
+                    },
+                    {
+                        "name": "notify$middleware.notify.receive.success_rate"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.send.qps"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.send.rt"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.send.success_rate"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.receive.qps"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.receive.rt"
+                    },
+                    {
+                        "name": "metaq$middleware.metaq-clnt.receive.success_rate"
+                    }
+                ],
+                "type": 1,
+                "metrics_path": "/alimetrics",
+                "timeout": 4,
+                "target": "localhost:7002"
+            }
+        }
+
+    ]
+}

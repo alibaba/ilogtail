@@ -1,0 +1,19 @@
+#ifdef ENABLE_COVERAGE
+
+#if !defined(private)
+#    define COVERAGE_DEFINED_PRIVATE
+#    define private public
+#elif defined(COVERAGE_DEFINED_PRIVATE)
+#    undef private
+#    undef COVERAGE_DEFINED_PRIVATE
+#endif
+
+#if !defined(protected)
+#    define COVERAGE_DEFINED_PROTECTED
+#    define protected public
+#elif defined(COVERAGE_DEFINED_PROTECTED)
+#   undef protected
+#   undef COVERAGE_DEFINED_PROTECTED
+#endif
+
+#endif

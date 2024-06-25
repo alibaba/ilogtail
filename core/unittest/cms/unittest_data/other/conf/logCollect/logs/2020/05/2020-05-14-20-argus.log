@@ -1,0 +1,462 @@
+[WARN ] 2020-05-14 20:00:00.336348 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478627] t1 [1478627],cycleInterval[15000]
+[WARN ] 2020-05-14 20:00:00.336475 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785307] t1 [785307],cycleInterval[15000]
+[WARN ] 2020-05-14 20:00:00.336516 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693320] t1 [693320],cycleInterval[15000]
+[INFO ] 2020-05-14 20:00:00.360715 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:00:00.361327 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:00:02.840591 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:00:02.840667 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:00:02.840689 [6128] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:00:04.568319 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:00:06.691543 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35183
+[INFO ] 2020-05-14 20:00:08.574311 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:00:12.211871 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:00:14.11070 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[WARN ] 2020-05-14 20:00:14.605969 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:00:15.359616 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:00:15.360231 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:00:17.849560 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:00:17.849614 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:00:17.849639 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:00:18.611875 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:00:21.699660 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35184
+[WARN ] 2020-05-14 20:00:24.642565 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:00:28.648521 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:00:29.26206 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=23
+[INFO ] 2020-05-14 20:00:30.335297 [6164] shennong_os_component_net.cpp(line:95):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:00:30.335330 [6164] shennong_os_component_net.cpp(line:107):rdma perf counter dir not exist
+[WARN ] 2020-05-14 20:00:30.336801 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478632] t1 [1478632],cycleInterval[15001]
+[WARN ] 2020-05-14 20:00:30.336918 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785310] t1 [785310],cycleInterval[15001]
+[WARN ] 2020-05-14 20:00:30.336960 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693322] t1 [693322],cycleInterval[15001]
+[WARN ] 2020-05-14 20:00:30.336992 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385185346] t1 [4385185346],cycleInterval[15001]
+[WARN ] 2020-05-14 20:00:30.337010 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710448] t1 [4710448],cycleInterval[15001]
+[WARN ] 2020-05-14 20:00:30.337023 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385185346] t1 [4385185346],cycleInterval[15001]
+[WARN ] 2020-05-14 20:00:30.337033 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710448] t1 [4710448],cycleInterval[15001]
+[INFO ] 2020-05-14 20:00:30.359877 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:00:30.360558 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:00:32.758235 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:00:32.758276 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:00:32.758298 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:00:34.676638 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:00:36.691601 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35185
+[INFO ] 2020-05-14 20:00:38.682609 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:00:41.768508 [6126] RdmaPlugin.cpp(line:147):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:00:41.768547 [6126] RdmaPlugin.cpp(line:159):rdma perf counter dir not exist
+[INFO ] 2020-05-14 20:00:44.30765 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[WARN ] 2020-05-14 20:00:44.211960 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:00:45.359328 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:00:45.360034 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:00:47.775671 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:00:47.775723 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:00:47.775746 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:00:48.718417 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:00:51.701667 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35186
+[WARN ] 2020-05-14 20:00:54.247839 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:00:58.753859 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:00:59.35417 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=23
+[WARN ] 2020-05-14 20:01:00.336589 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478636] t1 [1478636],cycleInterval[15000]
+[WARN ] 2020-05-14 20:01:00.336713 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785312] t1 [785312],cycleInterval[15000]
+[WARN ] 2020-05-14 20:01:00.336758 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693324] t1 [693324],cycleInterval[15000]
+[INFO ] 2020-05-14 20:01:00.360104 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:01:00.360794 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:01:02.792814 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:01:02.792860 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:01:02.792883 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:01:04.281256 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:01:06.691703 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35187
+[INFO ] 2020-05-14 20:01:08.787318 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:01:12.272842 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:01:14.40870 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[WARN ] 2020-05-14 20:01:14.317447 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:01:15.360572 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:01:15.361259 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:01:17.810081 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:01:17.810124 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:01:17.810146 [6125] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:01:18.823818 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:01:21.693669 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35188
+[WARN ] 2020-05-14 20:01:24.352689 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:01:28.859112 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:01:29.55988 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=23
+[WARN ] 2020-05-14 20:01:30.336721 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478641] t1 [1478641],cycleInterval[15001]
+[WARN ] 2020-05-14 20:01:30.336874 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785315] t1 [785315],cycleInterval[15001]
+[WARN ] 2020-05-14 20:01:30.336918 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693326] t1 [693326],cycleInterval[15001]
+[WARN ] 2020-05-14 20:01:30.336948 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385280543] t1 [4385280543],cycleInterval[15001]
+[WARN ] 2020-05-14 20:01:30.336964 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710527] t1 [4710527],cycleInterval[15001]
+[WARN ] 2020-05-14 20:01:30.336977 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385280543] t1 [4385280543],cycleInterval[15001]
+[WARN ] 2020-05-14 20:01:30.336987 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710527] t1 [4710527],cycleInterval[15001]
+[INFO ] 2020-05-14 20:01:30.359730 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:01:30.360412 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:01:32.827781 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:01:32.827823 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:01:32.827845 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:01:34.388658 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:01:36.696687 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35189
+[INFO ] 2020-05-14 20:01:38.895000 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:01:44.71113 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[WARN ] 2020-05-14 20:01:44.424812 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:01:45.360459 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:01:45.361148 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:01:47.845336 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:01:47.845379 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:01:47.845400 [6128] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:01:48.430771 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:01:51.695661 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35190
+[WARN ] 2020-05-14 20:01:54.460187 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:01:58.465976 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:01:59.76134 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=23
+[INFO ] 2020-05-14 20:01:59.76488 [6147] self_monitor.cpp(line:116):will malloc_trim
+[WARN ] 2020-05-14 20:02:00.336854 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478645] t1 [1478645],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:00.336981 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785317] t1 [785317],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:00.337026 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693328] t1 [693328],cycleInterval[15000]
+[INFO ] 2020-05-14 20:02:00.360580 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:02:00.361271 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:02:02.762687 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:02:02.762753 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:02:02.762775 [6125] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:02:04.497034 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:02:06.697686 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35191
+[INFO ] 2020-05-14 20:02:08.503042 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:02:12.333786 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:02:14.91605 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=39.73MB,openFiles=26
+[WARN ] 2020-05-14 20:02:14.533001 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:02:15.360518 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:02:15.361217 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:02:17.780592 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:02:17.780646 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:02:17.780669 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:02:18.538956 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:02:21.692007 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35192
+[WARN ] 2020-05-14 20:02:24.568000 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:02:28.574101 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:02:29.93212 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=39.78MB,openFiles=23
+[INFO ] 2020-05-14 20:02:30.335827 [6164] shennong_os_component_net.cpp(line:95):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:02:30.335858 [6164] shennong_os_component_net.cpp(line:107):rdma perf counter dir not exist
+[WARN ] 2020-05-14 20:02:30.337006 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478650] t1 [1478650],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:30.337117 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785320] t1 [785320],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:30.337161 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693330] t1 [693330],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:30.337193 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385375944] t1 [4385375944],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:30.337210 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710610] t1 [4710610],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:30.337224 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385375944] t1 [4385375944],cycleInterval[15000]
+[WARN ] 2020-05-14 20:02:30.337235 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710610] t1 [4710610],cycleInterval[15000]
+[INFO ] 2020-05-14 20:02:30.360807 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:02:30.361492 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:02:32.798430 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:02:32.798474 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:02:32.798495 [6128] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:02:34.604139 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:02:36.696680 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35193
+[INFO ] 2020-05-14 20:02:38.610228 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:02:41.808658 [6128] RdmaPlugin.cpp(line:147):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:02:41.808684 [6128] RdmaPlugin.cpp(line:159):rdma perf counter dir not exist
+[INFO ] 2020-05-14 20:02:44.108334 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=39.82MB,openFiles=26
+[WARN ] 2020-05-14 20:02:44.640845 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:02:45.360765 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:02:45.361450 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:02:47.816386 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:02:47.816430 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:02:47.816453 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:02:48.646670 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:02:51.699660 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35194
+[WARN ] 2020-05-14 20:02:54.675196 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:02:58.680628 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:02:59.123457 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.01MB,openFiles=23
+[WARN ] 2020-05-14 20:03:00.337087 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478654] t1 [1478654],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:00.337213 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785322] t1 [785322],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:00.337258 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693332] t1 [693332],cycleInterval[15000]
+[INFO ] 2020-05-14 20:03:00.360210 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:03:00.360914 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:03:02.834452 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:03:02.834497 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:03:02.834520 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:03:04.209183 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:03:06.692211 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35195
+[INFO ] 2020-05-14 20:03:08.715460 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:03:12.394690 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:03:14.138569 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.02MB,openFiles=26
+[WARN ] 2020-05-14 20:03:14.244877 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:03:15.361267 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:03:15.362031 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:03:17.852147 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:03:17.852190 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:03:17.852234 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:03:18.751249 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:03:21.694655 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35196
+[WARN ] 2020-05-14 20:03:24.280826 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:03:28.787201 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:03:29.142777 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.10MB,openFiles=23
+[WARN ] 2020-05-14 20:03:30.337204 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478659] t1 [1478659],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:30.337326 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785325] t1 [785325],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:30.337369 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693334] t1 [693334],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:30.337401 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385471122] t1 [4385471122],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:30.337417 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710689] t1 [4710689],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:30.337431 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385471122] t1 [4385471122],cycleInterval[15000]
+[WARN ] 2020-05-14 20:03:30.337444 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710689] t1 [4710689],cycleInterval[15000]
+[INFO ] 2020-05-14 20:03:30.361281 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:03:30.361983 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:03:32.770301 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:03:32.770348 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:03:32.770370 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:03:34.315668 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:03:36.697656 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35197
+[INFO ] 2020-05-14 20:03:38.822022 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:03:44.150692 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.16MB,openFiles=26
+[WARN ] 2020-05-14 20:03:44.351716 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:03:45.361831 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:03:45.362564 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:03:47.787259 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:03:47.787304 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:03:47.787326 [6125] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:03:48.857760 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:03:51.695875 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35198
+[WARN ] 2020-05-14 20:03:54.387564 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:03:58.893475 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:03:59.152378 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.37MB,openFiles=23
+[WARN ] 2020-05-14 20:04:00.337365 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478663] t1 [1478663],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:00.337485 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785327] t1 [785327],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:00.337529 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693336] t1 [693336],cycleInterval[15000]
+[INFO ] 2020-05-14 20:04:00.361040 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:04:00.361779 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:04:02.804358 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:04:02.804399 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:04:02.804421 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:04:04.421238 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:04:06.693667 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35199
+[INFO ] 2020-05-14 20:04:08.427150 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:04:12.398465 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:04:14.167504 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.37MB,openFiles=26
+[WARN ] 2020-05-14 20:04:14.457733 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:04:15.360898 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:04:15.361705 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:04:17.821877 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:04:17.821924 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:04:17.821946 [6128] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:04:18.463572 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:04:21.696656 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35200
+[WARN ] 2020-05-14 20:04:24.493033 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:04:28.499188 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:04:29.180679 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.37MB,openFiles=23
+[INFO ] 2020-05-14 20:04:30.336404 [6164] shennong_os_component_net.cpp(line:95):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:04:30.336437 [6164] shennong_os_component_net.cpp(line:107):rdma perf counter dir not exist
+[WARN ] 2020-05-14 20:04:30.337588 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478668] t1 [1478668],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:30.337701 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785330] t1 [785330],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:30.337744 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693338] t1 [693338],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:30.337775 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385566323] t1 [4385566323],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:30.337795 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710768] t1 [4710768],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:30.337808 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385566323] t1 [4385566323],cycleInterval[15000]
+[WARN ] 2020-05-14 20:04:30.337838 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710768] t1 [4710768],cycleInterval[15000]
+[INFO ] 2020-05-14 20:04:30.361243 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:04:30.361971 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[INFO ] 2020-05-14 20:04:30.862233 [6128] ProcessPlugin.cpp(line:166):skip process as is not stat error,pid=14231,
+[WARN ] 2020-05-14 20:04:32.839829 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:04:32.839871 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:04:32.839895 [6125] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:04:34.528977 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:04:36.694663 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35201
+[INFO ] 2020-05-14 20:04:38.535244 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:04:41.850624 [6125] RdmaPlugin.cpp(line:147):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:04:41.850657 [6125] RdmaPlugin.cpp(line:159):rdma perf counter dir not exist
+[INFO ] 2020-05-14 20:04:44.190683 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.37MB,openFiles=26
+[WARN ] 2020-05-14 20:04:44.566158 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:04:45.361063 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:04:45.361788 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:04:47.758328 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:04:47.758372 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:04:47.758394 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:04:48.572362 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:04:51.692630 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35202
+[WARN ] 2020-05-14 20:04:54.601969 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:04:58.607908 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:04:59.205793 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.39MB,openFiles=23
+[WARN ] 2020-05-14 20:05:00.337604 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478672] t1 [1478672],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:00.337725 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785332] t1 [785332],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:00.337766 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693340] t1 [693340],cycleInterval[15000]
+[INFO ] 2020-05-14 20:05:00.361102 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:05:00.361805 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:05:02.457935 [6151] SystemUtil.cpp(line:344):unknown cluster result:
+[WARN ] 2020-05-14 20:05:02.776769 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:05:02.776817 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:05:02.777058 [6128] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:05:04.636638 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:05:06.692700 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35203
+[INFO ] 2020-05-14 20:05:08.642674 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:05:12.402720 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:05:14.215933 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.39MB,openFiles=26
+[WARN ] 2020-05-14 20:05:14.671955 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:05:15.361288 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:05:15.361986 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:05:17.795105 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:05:17.795151 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:05:17.795172 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:05:18.678030 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:05:21.692760 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35204
+[WARN ] 2020-05-14 20:05:24.207071 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:05:28.713715 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:05:29.231056 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.50MB,openFiles=26
+[WARN ] 2020-05-14 20:05:30.337748 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478677] t1 [1478677],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:30.337870 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785335] t1 [785335],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:30.337913 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693342] t1 [693342],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:30.337944 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385661605] t1 [4385661605],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:30.337963 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710849] t1 [4710849],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:30.337976 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385661605] t1 [4385661605],cycleInterval[15000]
+[WARN ] 2020-05-14 20:05:30.337987 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710849] t1 [4710849],cycleInterval[15000]
+[INFO ] 2020-05-14 20:05:30.361166 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:05:30.361879 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:05:32.813212 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:05:32.813257 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:05:32.813278 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:05:34.243255 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:05:36.696660 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35205
+[INFO ] 2020-05-14 20:05:38.749846 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:05:44.245632 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.51MB,openFiles=27
+[WARN ] 2020-05-14 20:05:44.279109 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:05:45.361320 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:05:45.362034 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:05:47.830963 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:05:47.831003 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:05:47.831025 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:05:48.785898 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:05:51.695672 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35206
+[WARN ] 2020-05-14 20:05:54.315837 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:05:58.821657 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:05:59.260622 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.51MB,openFiles=23
+[WARN ] 2020-05-14 20:06:00.337907 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478681] t1 [1478681],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:00.338124 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785337] t1 [785337],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:00.338220 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693344] t1 [693344],cycleInterval[15000]
+[INFO ] 2020-05-14 20:06:00.361691 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:06:00.362370 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:06:02.848790 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:06:02.848835 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:06:02.848857 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:06:04.351052 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:06:06.695667 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35207
+[INFO ] 2020-05-14 20:06:08.857605 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:06:12.463627 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:06:14.275737 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.51MB,openFiles=26
+[WARN ] 2020-05-14 20:06:14.387790 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:06:15.361399 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:06:15.362205 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:06:17.766128 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:06:17.766175 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:06:17.766198 [6125] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:06:18.894193 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:06:21.692994 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35208
+[WARN ] 2020-05-14 20:06:24.424316 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:06:28.430250 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:06:29.277979 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.51MB,openFiles=23
+[INFO ] 2020-05-14 20:06:30.336888 [6164] shennong_os_component_net.cpp(line:95):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:06:30.336932 [6164] shennong_os_component_net.cpp(line:107):rdma perf counter dir not exist
+[WARN ] 2020-05-14 20:06:30.338076 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478686] t1 [1478686],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:30.338190 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785340] t1 [785340],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:30.338235 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693346] t1 [693346],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:30.338266 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385756790] t1 [4385756790],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:30.338283 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710928] t1 [4710928],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:30.338298 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385756790] t1 [4385756790],cycleInterval[15000]
+[WARN ] 2020-05-14 20:06:30.338308 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4710928] t1 [4710928],cycleInterval[15000]
+[INFO ] 2020-05-14 20:06:30.361205 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:06:30.361913 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:06:32.783797 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:06:32.783838 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:06:32.784121 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:06:34.460453 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:06:36.696664 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35209
+[INFO ] 2020-05-14 20:06:38.466368 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:06:41.794011 [6129] RdmaPlugin.cpp(line:147):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:06:41.794041 [6129] RdmaPlugin.cpp(line:159):rdma perf counter dir not exist
+[INFO ] 2020-05-14 20:06:44.278313 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.51MB,openFiles=27
+[WARN ] 2020-05-14 20:06:44.496559 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:06:45.361145 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:06:45.361923 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:06:47.801461 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:06:47.801508 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:06:47.801531 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:06:48.502384 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:06:51.696671 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35210
+[WARN ] 2020-05-14 20:06:54.532637 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:06:58.538258 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:06:59.279065 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.53MB,openFiles=23
+[WARN ] 2020-05-14 20:07:00.338154 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478690] t1 [1478690],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:00.338273 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785342] t1 [785342],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:00.338317 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693348] t1 [693348],cycleInterval[15000]
+[INFO ] 2020-05-14 20:07:00.361969 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:07:00.362694 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:07:02.820128 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:07:02.820175 [6125] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:07:02.820197 [6125] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:07:04.568976 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:07:06.697655 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35211
+[INFO ] 2020-05-14 20:07:08.575113 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:07:12.516449 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[INFO ] 2020-05-14 20:07:14.294183 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[WARN ] 2020-05-14 20:07:14.605111 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:07:15.361816 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:07:15.362582 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:07:17.835023 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:07:17.835067 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:07:17.835088 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:07:18.611356 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:07:21.700665 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35212
+[WARN ] 2020-05-14 20:07:24.641124 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:07:28.647165 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:07:29.309305 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=23
+[WARN ] 2020-05-14 20:07:30.338282 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478695] t1 [1478695],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:30.338404 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785345] t1 [785345],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:30.338449 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693350] t1 [693350],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:30.338479 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385852010] t1 [4385852010],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:30.338497 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4711007] t1 [4711007],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:30.338510 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385852010] t1 [4385852010],cycleInterval[15000]
+[WARN ] 2020-05-14 20:07:30.338521 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4711007] t1 [4711007],cycleInterval[15000]
+[INFO ] 2020-05-14 20:07:30.361951 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:07:30.362637 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:07:32.844209 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:07:32.844257 [6127] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:07:32.844299 [6127] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:07:34.677892 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:07:36.700655 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35213
+[INFO ] 2020-05-14 20:07:38.683645 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 20:07:44.214354 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:07:44.323753 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=27
+[INFO ] 2020-05-14 20:07:45.361205 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:07:45.361927 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:07:47.853175 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:07:47.853215 [6128] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:07:47.853237 [6128] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:07:48.721063 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:07:51.693374 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35214
+[WARN ] 2020-05-14 20:07:54.249555 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:07:58.755654 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:07:59.338875 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[WARN ] 2020-05-14 20:08:00.338381 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478699] t1 [1478699],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:00.338500 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785347] t1 [785347],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:00.338552 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693352] t1 [693352],cycleInterval[15000]
+[INFO ] 2020-05-14 20:08:00.361837 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:08:00.362555 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:08:02.762047 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:08:02.762093 [6126] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:08:02.762116 [6126] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[WARN ] 2020-05-14 20:08:04.284215 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:08:06.693446 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35215
+[INFO ] 2020-05-14 20:08:08.790739 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:08:12.554433 [6148] alimonitor_channel.cpp(line:223):send metric to alimonitor,metricNum=8
+[WARN ] 2020-05-14 20:08:14.320209 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:08:14.354005 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[INFO ] 2020-05-14 20:08:15.361567 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:08:15.362274 [6164] inspector_service.cpp(line:445):write to ilogtail finished
+[WARN ] 2020-05-14 20:08:17.771130 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth0/speed) error
+[WARN ] 2020-05-14 20:08:17.771176 [6129] NetPlugin.cpp(line:169):fscanf-read file(/sys/class/net/eth1/speed) error
+[WARN ] 2020-05-14 20:08:17.771219 [6129] NetPlugin.cpp(line:158):fscanf-open file(/sys/class/net/eth2/speed) error
+[INFO ] 2020-05-14 20:08:18.826612 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:08:21.697667 [6165] shennong_sdk_deal.cpp(line:19):total HandlePacket from domain socket 35216
+[WARN ] 2020-05-14 20:08:24.355036 [6155] ScriptScheduler.cpp(line:386):mid:example2_1.1, run timeout
+[INFO ] 2020-05-14 20:08:28.861445 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[INFO ] 2020-05-14 20:08:29.369120 [6147] self_monitor.cpp(line:67):cpuUsage=0.52%,memory=40.55MB,openFiles=26
+[INFO ] 2020-05-14 20:08:30.337376 [6164] shennong_os_component_net.cpp(line:95):rdma shem [/dev/shm/rdma.log] not dir exist
+[INFO ] 2020-05-14 20:08:30.337408 [6164] shennong_os_component_net.cpp(line:107):rdma perf counter dir not exist
+[WARN ] 2020-05-14 20:08:30.338560 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1478704] t1 [1478704],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:30.338675 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [785350] t1 [785350],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:30.338719 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [693354] t1 [693354],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:30.338750 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385947213] t1 [4385947213],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:30.338766 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4711086] t1 [4711086],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:30.338779 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4385947213] t1 [4385947213],cycleInterval[15000]
+[WARN ] 2020-05-14 20:08:30.338790 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [4711086] t1 [4711086],cycleInterval[15000]
+[INFO ] 2020-05-14 20:08:30.361694 [6164] inspector_service.cpp(line:514):PacketArrived_Pool [PACKET_AOS_SHENNONG_INSPECTOR],Packet_number [1164660704]
+[INFO ] 2020-05-14 20:08:30.362413 [6164] inspector_service.cpp(line:445):write to ilogtail finished

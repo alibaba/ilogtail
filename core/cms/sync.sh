@@ -26,8 +26,9 @@ echo "ARGUSAGENT_SRC: ${ARGUS_SRC}"
 # exit 0
 function run_cmd()
 {
-    # 打印120个-
-    printf "\n%120s\n" | tr " " "-"
+    echo
+    # # 打印120个-
+    # printf "\n%100s\n" | tr " " "-"
 
     printf "%s " "$@"
     echo
@@ -38,9 +39,31 @@ function run_cmd()
 
 # common
 # -u skip files that are newer on the receiver
-run_cmd rsync -auv --exclude="impl/*_test.cpp" ${ARGUS_SRC}/common ${ONE_AGENT_SRC}
+run_cmd rsync -auv --exclude=CMakeLists.txt --exclude="impl/*_test.cpp" ${ARGUS_SRC}/common ${ONE_AGENT_SRC}
 # --include='*/' ：首先包括所有目录，这样 rsync 就能够递归进入子目录。
 # --include='*.txt' ：然后包括所有的 .txt 文件。
 # --exclude='*' ：最后排除所有其他文件。
 run_cmd rsync -auv --include='*/' --include="impl/*_test.cpp" --exclude="*" ${ARGUS_SRC}/common ${ONE_AGENT_UT}
 
+# third_party
+run_cmd rsync -auv ${ARGUS_ROOT}/third_party/fmt ${ONE_AGENT_SRC}/third_party
+run_cmd rsync -auv --exclude=WinHttpClient ${ARGUS_ROOT}/third_party/header_only ${ONE_AGENT_SRC}/third_party
+
+# sic
+run_cmd rsync -auv --exclude=CMakeLists.txt --exclude="tests" ${ARGUS_SRC}/sic ${ONE_AGENT_SRC}
+run_cmd rsync -auv --exclude={CMakeLists.txt,"tests/conf","src","*.h"} --include="*_test.cpp" ${ARGUS_SRC}/sic ${ONE_AGENT_UT}
+
+# cloudMonitor, detect, core
+# https://www.ruanyifeng.com/blog/2020/08/rsync.html
+run_cmd rsync -auv --include='*/' --exclude={CMakeLists.txt,README.md,"*_test.cpp","sls_*.*"} ${ARGUS_SRC}/cloudMonitor ${ARGUS_SRC}/detect ${ARGUS_SRC}/core ${ONE_AGENT_SRC}
+run_cmd rsync -auv --include='*/' --exclude="sls_*.*" --include="*_test.cpp" --exclude="*"    ${ARGUS_SRC}/cloudMonitor ${ARGUS_SRC}/detect ${ARGUS_SRC}/core ${ONE_AGENT_UT}
+
+#
+run_cmd rsync -auv --exclude={'tmp/*','local_data/logs/*','GPU/.gpu'} ${ARGUS_ROOT}/test/unit_test/conf ${ONE_AGENT_UT}/unittest_data/other
+run_cmd rsync -auv --exclude='conf/logs/*' ${ARGUS_ROOT}/src/sic/tests/conf ${ONE_AGENT_UT}/unittest_data/sic
+
+if [ ! -f "${ONE_AGENT_SRC}/runtime" ]; then
+    mkdir -p "${ONE_AGENT_SRC}/runtime"
+fi
+run_cmd rsync -auv ${ARGUS_ROOT}/cmd/release_cloud_monitor/moduleTask.json ${ONE_AGENT_SRC}/runtime/moduleTask.json
+run_cmd rsync -auv ${ARGUS_ROOT}/cmd/release_cloud_monitor/agent.properties ${ONE_AGENT_SRC}/runtime/agent.properties

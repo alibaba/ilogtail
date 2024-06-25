@@ -1,0 +1,29 @@
+[
+    {
+        "target":"localhost:9100",
+        "metrics_path":"/metrics",
+        "interval":15,
+        "timeout":10,
+        "add_labels":[
+            {
+                "name":"hostname",
+                "type":0
+            },
+            {
+                "name":"instance",
+                "value":"ArgusName",
+                "type":1
+            },
+            {
+                "name":"group",
+                "value":"sigma-test",
+                "type":2 
+            }
+        ],
+        "output":[
+            {
+                "type":"alimonitor"
+            }
+        ]
+    }
+]

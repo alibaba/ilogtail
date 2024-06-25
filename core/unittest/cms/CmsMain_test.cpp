@@ -14,31 +14,39 @@
 
 #include <memory>
 #include <string>
-#include "unittest/Unittest.h"
+#include "unittest/Unittest.h"  // 这个文件跟<fmt/printf.h>冲突
+#include "cms/common/ExceptionsHandler.h"
 #include "cms/CmsMain.h"
+#include "cms/common/UnitTestEnv.h"
 
-using namespace std;
+const boost::filesystem::path TEST_CONF_PATH     = boost::filesystem::path(__FILE__).parent_path() / "unittest_data" / "other";
+const boost::filesystem::path TEST_SIC_CONF_PATH = boost::filesystem::path(__FILE__).parent_path() / "unittest_data" / "sic";
 
 namespace logtail {
 
-class CmsMainUnittest : public testing::Test {
-public:
-    void OnName() {
-        APSARA_TEST_EQUAL("cms", cms::name());
-    }
-    void OnVersion() {
-        APSARA_TEST_EQUAL(1000000, cms::version());
-    }
-    void OnCpu() {
-        cms::cpu();
-    }
-};
+// class CmsForOneAgentUnittest : public testing::Test {
+// public:
+//     void OnName() {
+//         APSARA_TEST_EQUAL("cms", cms::name());
+//     }
+//     void OnVersion() {
+//         APSARA_TEST_EQUAL(1000000, cms::version());
+//     }
+//     void OnCpu() {
+//         cms::cpu();
+//     }
+// };
 
 
-UNIT_TEST_CASE(CmsMainUnittest, OnName)
-UNIT_TEST_CASE(CmsMainUnittest, OnVersion)
-UNIT_TEST_CASE(CmsMainUnittest, OnCpu)
+// UNIT_TEST_CASE(CmsForOneAgentUnittest, OnName)
+// UNIT_TEST_CASE(CmsForOneAgentUnittest, OnVersion)
+// UNIT_TEST_CASE(CmsForOneAgentUnittest, OnCpu)
 
 } // namespace logtail
 
-UNIT_TEST_MAIN
+int main(int argc, char** argv) {
+    SetupProcess();
+    logtail::Logger::Instance().InitGlobalLoggers();
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

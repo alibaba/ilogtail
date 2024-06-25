@@ -1,0 +1,146 @@
+[
+    {
+        "file": "/home/admin/cai1/test.log",
+        "interval": 60,
+        "sampleRate": 0.1,
+        "split": {
+            "type": "regex",
+            "regex": "([a-z]+)_([a-z]+)_(\\d+)",
+            "columns": [
+                "column1",
+                "column2",
+                "column3"
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    },
+                    {
+                        "column": "column2",
+                        "name": "alias_name_2"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_name_3",
+                        "type": "sum"
+                    }
+                ]
+            },
+            {
+                "metric": "idxxxxxx22",
+                "filters": [
+                    {
+                        "column": "column2",
+                        "type": "exclude",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_column3",
+                        "type": "avg"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "split": {
+            "type": "regex",
+            "regex": "([a-z]+)_([a-z]+)_(\\d+)",
+            "columns": [
+                "column1",
+                "column2",
+                "column3"
+            ]
+        },
+        "file": "/home/admin/cai1/test.log",
+        "interval": 60,
+        "sampleRate": 0.1,
+        "process": [
+            {
+                "metric": "idxxxxxx22",
+                "filters": [
+                    {
+                        "column": "column2",
+                        "type": "exclude",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_column3",
+                        "type": "avg"
+                    }
+                ]
+            },
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column2",
+                        "name": "alias_name_2"
+                    },
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_name_3",
+                        "type": "sum"
+                    }
+                ]
+            }
+        ]
+    }
+]

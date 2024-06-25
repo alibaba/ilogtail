@@ -1,0 +1,19 @@
+{
+  "SpdkFileSystem": {
+    "disk8": "/dev/sdj1",
+    "disk9": "/dev/sdk1",
+    "disk1": "/dev/sdc1",
+    "disk2": "/dev/sdd1",
+    "disk3": "/dev/sde1",
+    "disk4": "/dev/sdf1",
+    "disk5": "/dev/sdg1",
+    "disk6": "/dev/sdh1",
+    "disk7": "/dev/sdi1",
+    "disk12": "/dev/sdn1",
+    "disk10": "/dev/sdl1",
+    "disk11": "/dev/sdm1",
+    "disk249": "0000:b0:00.00",
+    "disk250": "0000:af:00.00"
+  },
+  "BasicFileSystem": {}
+}

@@ -1,0 +1,6 @@
+{
+  "MODE": "public",
+  "name": "tj-core-edge-compute",
+  "DOCKER_REGISTRY_ADDRESS": "lns-registry.alicdn.com",
+  "service.API_SERVER.endpoint_in": "http://tianji-api.edge-compute.aliyun-inc.com"
+}

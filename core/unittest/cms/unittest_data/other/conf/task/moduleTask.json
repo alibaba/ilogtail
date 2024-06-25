@@ -1,0 +1,47 @@
+{
+    "moduleItem": [
+        {
+            "name": "cpu",
+            "cron": "[* * * * * ?]",
+            "args":"test para",
+            "version":"1.0",
+            "interval": 10,
+            "output": [
+                {
+                    "type": "local"
+                },
+                {
+                    "type": "sls",
+                    "conf": {
+                        "accessKeyId":"xxxxx",
+                         "accessKeySecret":"xxxxx",
+                         "endpoint":"http://zhangbei-corp-share.log.aliyuncs.com",
+                         "project":"argus-sls-project",
+                         "logstore":"argus_log"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "memory_sec",
+            "module":"memory",
+            "version":"1.0",
+            "interval": 20,
+            "output": [
+                {
+                    "type": "local"
+                },
+                {
+                    "type": "sls",
+                    "conf": {
+                        "accessKeyId":"xxxxx",
+                         "accessKeySecret":"xxxxx",
+                         "endpoint":"http://zhangbei-corp-share.log.aliyuncs.com",
+                         "project":"argus-sls-project",
+                         "logstore":"argus_log"
+                    }
+                }
+            ]
+        }
+    ]
+}

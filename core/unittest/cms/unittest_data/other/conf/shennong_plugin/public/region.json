@@ -1,0 +1,5 @@
+{
+  "MODE": "public",
+  "name": "staging",
+  "service.API_SERVER.endpoint_in": "http://140.205.169.84:80"
+}

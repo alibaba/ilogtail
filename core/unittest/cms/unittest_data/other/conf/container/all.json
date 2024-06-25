@@ -1,0 +1,2958 @@
+[
+    {
+        "Id": "3775ea436031081f79487440e885800d814788f751fb4e17965c40db75619d12",
+        "Names": [
+            "/applet-ark-api"
+        ],
+        "Image": "10.116.8.11/alibaba_apsara_paas/ark-api:c6d4a533ccded456f000829680ef854540eceba1371c94ede3bdee71a3ff7c8e",
+        "ImageID": "sha256:79f52ae883b59f6c3310b051720d699c9524003ce1cff9ea6cc02e949317cd96",
+        "Command": "/opt/entrypoint.sh",
+        "Created": 1606888422,
+        "Ports": [],
+        "Labels": {},
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "82a4f80c62c01dc280c5f4ccb231e8e6dcab6be1417e5a40290a94ca7cea6c56",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/root/.kube",
+                "Destination": "/root/.kube",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/root/env_center",
+                "Destination": "/root/env_center",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk9/imports_packages",
+                "Destination": "/apsarapangu/disk9/imports_packages",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/ansible",
+                "Destination": "/etc/ansible",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/packages",
+                "Destination": "/packages",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/var/log",
+                "Destination": "/var/log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/dev",
+                "Destination": "/dev",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/root/.ssh",
+                "Destination": "/root/.ssh",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "618d7bdc433a6108df87d5bf4e7ea80c8706118b24e5987b493b9d83fc24616f",
+        "Names": [
+            "/paas-seed.SeedFlow__.seedflow.1606876691"
+        ],
+        "Image": "sha256:445c9fb32c7f3f45074f341d0a04938e936d9ba726e28be84b75e130901ecd46",
+        "ImageID": "sha256:445c9fb32c7f3f45074f341d0a04938e936d9ba726e28be84b75e130901ecd46",
+        "Command": "python3 /opt/seed/src/workflow.py",
+        "Created": 1606876691,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=20G",
+            "TJ_APP_NAME": "seedflow",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "paas-seed.SeedFlow#",
+            "TJ_USER": "root",
+            "TJ_WORK_DIR": "/cloud/app/paas-seed/SeedFlow#/seedflow/1953322_paas-seed_SeedFlow_9632f0a7",
+            "ali.host.dns": "true",
+            "aliyun.probe.cmd": "",
+            "aliyun.probe.initial_delay_seconds": "120",
+            "aliyun.probe.timeout_seconds": "300",
+            "baseOS": "v1.0.0",
+            "buildTime": "20200122102212",
+            "org.label-schema.build-date": "",
+            "org.label-schema.name": "helm-kubectl",
+            "org.label-schema.url": "https://hub.docker.com/r/dtzar/helm-kubectl/",
+            "org.label-schema.vcs-ref": "",
+            "org.label-schema.vcs-url": "https://github.com/dtzar/helm-kubectl"
+        },
+        "State": "running",
+        "Status": "Up 6 hours",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "aadb47c1d1772687a20b25f11cc4841613153a8c24785f6c4cde4281c8e25500",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Name": "4afeb93131f9f81c08f66e1443082b66c76769d016e7c00be3406acfdcd21e34",
+                "Source": "/apsarapangu/disk5/vfsdir/4afeb93131f9f81c08f66e1443082b66c76769d016e7c00be3406acfdcd21e34test",
+                "Destination": "/runtest",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "4afeb93131f9f81c08f66e1443082b66c76769d016e7c00be3406acfdcd21e34",
+                "Source": "/apsarapangu/disk5/vfsdir/4afeb93131f9f81c08f66e1443082b66c76769d016e7c00be3406acfdcd21e34test2/",
+                "Destination": "/runtest2/",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "4afeb93131f9f81c08f66e1443082b66c76769d016e7c00be3406acfdcd21e34",
+                "Source": "/apsarapangu/disk5/vfsdir/4afeb93131f9f81c08f66e1443082b66c76769d016e7c00be3406acfdcd21e34",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/var/run/proxyssl",
+                "Destination": "/var/run/proxyssl",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/paas-seed/SeedFlow#/seedflow",
+                "Destination": "/cloud/data/paas-seed/SeedFlow#/seedflow",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/tianji/TianjiClient#/tool/1939741",
+                "Destination": "/cloud/tool/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/paas-seed/SeedFlow#/seedflow",
+                "Destination": "/opt/seed/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "8fde4e509f5202417879f09291f75c412fe12b21de93ed5a549009abd863154b",
+                "Source": "/apsarapangu/disk4/vfsdir/8fde4e509f5202417879f09291f75c412fe12b21de93ed5a549009abd863154b",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/local/paas-seed/SeedFlow#/seedflow",
+                "Destination": "/cloud/conf/local/paas-seed/SeedFlow#/seedflow",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/paas-seed/SeedFlow#/seedflow",
+                "Destination": "/cloud/log/paas-seed/SeedFlow#/seedflow",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/paas-seed/SeedFlow#/seedflow/1953322_paas-seed_SeedFlow_9632f0a7",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/paas_data",
+                "Destination": "/opt/seed/packages",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "d182b98e4bc14945b5dcd8bd1e01533db0daa8ce23d5797192e02d3ace18ef29",
+        "Names": [
+            "/repair.repairApi__.cloud-repair.1606470611"
+        ],
+        "Image": "sha256:de2da799cfa6f82dd10ab56a8aa69c0c4635c571a43889426b4bd29e69b49197",
+        "ImageID": "sha256:de2da799cfa6f82dd10ab56a8aa69c0c4635c571a43889426b4bd29e69b49197",
+        "Command": "/home/admin/start.sh",
+        "Created": 1606470613,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=10G",
+            "TJ_APP_NAME": "cloud-repair",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "repair.repairApi#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/repair/repairApi#/cloud-repair/1905368_repair_repairApi_92a09312",
+            "ali.host.dns": "true"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.24"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "bc44c3b85f42e260b1628fe3bcf04d815afd9e042731356a7f7e016542ce5c36",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.24",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:18",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/repair/repairApi#/cloud-repair",
+                "Destination": "/cloud/conf/local/repair/repairApi#/cloud-repair",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/repair/repairApi#/cloud-repair",
+                "Destination": "/cloud/log/repair/repairApi#/cloud-repair",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "ffb0f92a358e214ce662c4cc041451199b2b52d2d31040096d61184b9931413d",
+                "Source": "/apsarapangu/disk4/vfsdir/ffb0f92a358e214ce662c4cc041451199b2b52d2d31040096d61184b9931413d",
+                "Destination": "/home/admin/cai/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "561b23594c60bc25d2e35eb08f72e22961e7119b2f38d91fa7d5580c4c17c478",
+                "Source": "/apsarapangu/disk1/vfsdir/561b23594c60bc25d2e35eb08f72e22961e7119b2f38d91fa7d5580c4c17c478",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/app/repair/repairApi#/cloud-repair/1905368_repair_repairApi_92a09312",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "e9d600deaa61e006aaa744486d4a860c8581abe7559d453db90ab034a55ba038",
+                "Source": "/apsarapangu/disk6/vfsdir/e9d600deaa61e006aaa744486d4a860c8581abe7559d453db90ab034a55ba038",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/data/repair/repairApi#/cloud-repair",
+                "Destination": "/cloud/data/repair/repairApi#/cloud-repair",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "ae24a04424a7e956c52f8ac6f0d17b2434a543c736f03b707bd4cf186db4775c",
+                "Source": "/apsarapangu/disk4/vfsdir/ae24a04424a7e956c52f8ac6f0d17b2434a543c736f03b707bd4cf186db4775c",
+                "Destination": "/home/admin/cloud-repair/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "3a37cee314d2b65ff2c5d6da4b73ca316f02f80cf7933751181bb8516e6a37b1",
+                "Source": "/apsarapangu/disk5/vfsdir/3a37cee314d2b65ff2c5d6da4b73ca316f02f80cf7933751181bb8516e6a37b1",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "986bcbe9e3fc44393e7959118e7bda772d75b8277df6017ddcb03ff977c7e855",
+        "Names": [
+            "/yamaService.yamaServerRole__.yamaApp.1606466670"
+        ],
+        "Image": "sha256:9966c1ae28dbc50be48fc8c5af26567f0e660e387c8c9d1363638faebed2701e",
+        "ImageID": "sha256:9966c1ae28dbc50be48fc8c5af26567f0e660e387c8c9d1363638faebed2701e",
+        "Command": "/bin/sh -c /alidata/bin/start /bin/sh -c 'bash init.sh \u0026\u0026 sleep infinity'",
+        "Created": 1606466673,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=10G",
+            "TJ_APP_NAME": "yamaApp",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "yamaService.yamaServerRole#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/yamaService/yamaServerRole#/yamaApp/1845035_yamaService_yamaServerRole_d256c194",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/apsara_stack_system/aliyun-alios7u2:1.0",
+            "buildTime": "20200820113155"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.26"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "a2d8bd5c6a7da7194deedb625b8058ac04fb01482213ba340803b95fdd47b6f0",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.26",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:1a",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/conf/local/yamaService/yamaServerRole#/yamaApp",
+                "Destination": "/cloud/conf/local/yamaService/yamaServerRole#/yamaApp",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/yamaService/yamaServerRole#/yamaApp",
+                "Destination": "/cloud/data/yamaService/yamaServerRole#/yamaApp",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "9a576b151522b50aa579c21e2311980d25dd3ccad5c3396b7b9e595b1d7a5f63",
+                "Source": "/apsarapangu/disk6/vfsdir/9a576b151522b50aa579c21e2311980d25dd3ccad5c3396b7b9e595b1d7a5f63",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/app/yamaService/yamaServerRole#/yamaApp/1845035_yamaService_yamaServerRole_d256c194",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "11c40d538787a51d97665d399896d7188aac306d0ef12e1c7a4e82d4f0d7b717",
+                "Source": "/apsarapangu/disk4/vfsdir/11c40d538787a51d97665d399896d7188aac306d0ef12e1c7a4e82d4f0d7b717",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "9f71a156a5f37d1e73877eb2e70ee610a4b194f0af404e1cf7c05e576bf0b87d",
+                "Source": "/apsarapangu/disk1/vfsdir/9f71a156a5f37d1e73877eb2e70ee610a4b194f0af404e1cf7c05e576bf0b87d",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/yamaService/yamaServerRole#/yamaApp",
+                "Destination": "/cloud/log/yamaService/yamaServerRole#/yamaApp",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "689a26a798fa5a02c0b72269115d8c2d1c7e1541b3161d6c1ca26088a5502357",
+        "Names": [
+            "/tianji-sshtunnel.SSHTunnelMaster__.ssh_tunnel_master.1606466665"
+        ],
+        "Image": "sha256:8701394c212e3900d18f6d34d2dfe37c103fced0425eb6ed2bc01396a62e7a1f",
+        "ImageID": "sha256:8701394c212e3900d18f6d34d2dfe37c103fced0425eb6ed2bc01396a62e7a1f",
+        "Command": "/bin/sh -c /alidata/bin/start",
+        "Created": 1606466665,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=20G",
+            "TJ_APP_NAME": "ssh_tunnel_master",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "tianji-sshtunnel.SSHTunnelMaster#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master/1914935_tianji-sshtunnel_SSHTunnelMaster_ae306a2a",
+            "ali.host.dns": "true",
+            "maintainer": "zengyusheng"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "072d447f6d48f565fe13769044f68e6dd08792ee2eea96567cbc6c12bf4cb752",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master",
+                "Destination": "/cloud/conf/local/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master",
+                "Destination": "/cloud/data/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master",
+                "Destination": "/cloud/log/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "dcab5f239478cf1130cb0114dd4c871d711c330515c52076fe44a9755ad8122f",
+                "Source": "/apsarapangu/disk6/vfsdir/dcab5f239478cf1130cb0114dd4c871d711c330515c52076fe44a9755ad8122f",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/app/tianji-sshtunnel/SSHTunnelMaster#/ssh_tunnel_master/1914935_tianji-sshtunnel_SSHTunnelMaster_ae306a2a",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "6623ddb5f314b0595653015b3fbea6334817fd5a14d9fb6fbf86aec5757d8009",
+                "Source": "/apsarapangu/disk1/vfsdir/6623ddb5f314b0595653015b3fbea6334817fd5a14d9fb6fbf86aec5757d8009",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "a1a307bccb21055753c2f1bbefcf8248d2a9d98f0d15a60597f783532e36c24a",
+                "Source": "/apsarapangu/disk5/vfsdir/a1a307bccb21055753c2f1bbefcf8248d2a9d98f0d15a60597f783532e36c24a",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "36c0c45e5a8bef62b25432a572b5280849605b21c648a42fe98c98871a994330",
+        "Names": [
+            "/opsx.OpsxSyslog__.syslog.1606466658"
+        ],
+        "Image": "sha256:9a432b6e4825c0e0c8f3373c92a029c05f0959e289b55aac7faa9c8fc55728b3",
+        "ImageID": "sha256:9a432b6e4825c0e0c8f3373c92a029c05f0959e289b55aac7faa9c8fc55728b3",
+        "Command": "/bin/sh -c /opt/service/bin/start",
+        "Created": 1606466661,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "syslog",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "opsx.OpsxSyslog#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/opsx/OpsxSyslog#/syslog/1836804_opsx_OpsxSyslog_4b0ce716",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/apsara_stack_system/aliyun-alios7u2:1.0",
+            "buildTime": "20200807110233"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.12"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "e8643d906dfcb09efc1b7f8020042c42b9527b5fd8f627ca74238ff33461cb6c",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.12",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:0c",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/conf/local/opsx/OpsxSyslog#/syslog",
+                "Destination": "/cloud/conf/local/opsx/OpsxSyslog#/syslog",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/opsx/OpsxSyslog#/syslog",
+                "Destination": "/cloud/data/opsx/OpsxSyslog#/syslog",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/opsx/OpsxSyslog#/syslog/1836804_opsx_OpsxSyslog_4b0ce716",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "52fc420961d57960e38b20950c255955963a88afce0772768752c363682674c7",
+                "Source": "/apsarapangu/disk4/vfsdir/52fc420961d57960e38b20950c255955963a88afce0772768752c363682674c7",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/opsx/OpsxSyslog#/syslog",
+                "Destination": "/cloud/log/opsx/OpsxSyslog#/syslog",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "4370e4bbd485ab0324fc0e06092907279c1a8ad6237bcd762c730ff25ce85c48",
+                "Source": "/apsarapangu/disk5/vfsdir/4370e4bbd485ab0324fc0e06092907279c1a8ad6237bcd762c730ff25ce85c48",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "a772e7051de50929f8a394fa703adc4a628fdedb91e03653081732179089ba28",
+        "Names": [
+            "/dcaas-test.dcaasTestSR__.dcaas_test.1606466648"
+        ],
+        "Image": "sha256:deca15c9b29210c34e200e3f7ee6c7061e9883d8349fd7cfe6aeb916c7e25e60",
+        "ImageID": "sha256:deca15c9b29210c34e200e3f7ee6c7061e9883d8349fd7cfe6aeb916c7e25e60",
+        "Command": "/bin/sh -c /home/admin/start.sh",
+        "Created": 1606466651,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=10G",
+            "TJ_APP_NAME": "dcaas_test",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "dcaas-test.dcaasTestSR#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/dcaas-test/dcaasTestSR#/dcaas_test/1952338_dcaas-test_dcaasTestSR_6cd6eb0b",
+            "ali.host.dns": "true"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.3"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "7913c073499a7374c5960f6290a893fac933b3ea4407241053a4cb7771937968",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.3",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:03",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Name": "48871ba2acbf3f54332c8e014fcdb36ed7a6acecc4b4a6387d35e38ab3f5f658",
+                "Source": "/apsarapangu/disk6/vfsdir/48871ba2acbf3f54332c8e014fcdb36ed7a6acecc4b4a6387d35e38ab3f5f658",
+                "Destination": "/home/admin/dcaas-testnode/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "c44976e0c9e7d93f65c3d0097a84270cff88e835188fbc014ae6e1f094ecea4e",
+                "Source": "/apsarapangu/disk5/vfsdir/c44976e0c9e7d93f65c3d0097a84270cff88e835188fbc014ae6e1f094ecea4e",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "57ae0094c01be94555fbaf46c5eded0794f5862f7cff2c7f5f87e0490e4d9122",
+                "Source": "/apsarapangu/disk1/vfsdir/57ae0094c01be94555fbaf46c5eded0794f5862f7cff2c7f5f87e0490e4d9122",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "e9d8755e0e833239a482249a7842d274286fec30b8ae5360e6b753048342233e",
+                "Source": "/apsarapangu/disk6/vfsdir/e9d8755e0e833239a482249a7842d274286fec30b8ae5360e6b753048342233e",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/local/dcaas-test/dcaasTestSR#/dcaas_test",
+                "Destination": "/cloud/conf/local/dcaas-test/dcaasTestSR#/dcaas_test",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "1343df20721cac076f588ac442289649d314aa69e7183b14d79df4c8723c0a69",
+                "Source": "/apsarapangu/disk1/vfsdir/1343df20721cac076f588ac442289649d314aa69e7183b14d79df4c8723c0a69",
+                "Destination": "/home/admin/cai/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/app/dcaas-test/dcaasTestSR#/dcaas_test/1952338_dcaas-test_dcaasTestSR_6cd6eb0b",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "1d007c1a73a842576eba75e798dffc44b78acbd5a2b89538f331000ade13f872",
+                "Source": "/apsarapangu/disk4/vfsdir/1d007c1a73a842576eba75e798dffc44b78acbd5a2b89538f331000ade13f872",
+                "Destination": "/root/.ssh",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/dcaas-test/dcaasTestSR#/dcaas_test",
+                "Destination": "/cloud/data/dcaas-test/dcaasTestSR#/dcaas_test",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/dcaas-test/dcaasTestSR#/dcaas_test",
+                "Destination": "/cloud/log/dcaas-test/dcaasTestSR#/dcaas_test",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "81b6f7050f8b212bd7ce152bad5de6053f38b2476590770752727f47ec0f835d",
+        "Names": [
+            "/cruiser.cruiserSR__.cruiser.1606466643"
+        ],
+        "Image": "sha256:37ae9bdfee1647bf0252b5f6db20978d8759c5bdea7c7ea9fa156f86507805cf",
+        "ImageID": "sha256:37ae9bdfee1647bf0252b5f6db20978d8759c5bdea7c7ea9fa156f86507805cf",
+        "Command": "/home/admin/start.sh",
+        "Created": 1606466643,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=50G",
+            "TJ_APP_NAME": "cruiser",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "cruiser.cruiserSR#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/cruiser/cruiserSR#/cruiser/1915125_cruiser_cruiserSR_78da2907",
+            "ali.host.dns": "true"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "fa5d0cea3767d6ea214d2d38ce8df582b36d8a25c957ce09eeb5ba2002f21b35",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/sysconfig/clock",
+                "Destination": "/etc/sysconfig/clock",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "d722c9abd8561475d6e7a0750ab31c6411c8c88ed7c4f13e3f90f67090ba1b2a",
+                "Source": "/apsarapangu/disk6/vfsdir/d722c9abd8561475d6e7a0750ab31c6411c8c88ed7c4f13e3f90f67090ba1b2a",
+                "Destination": "/home/admin/cruiser/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "ffb330466460b83e015936775863e70e4e8217549bd66d5dfa21374cfe347214",
+                "Source": "/apsarapangu/disk5/vfsdir/ffb330466460b83e015936775863e70e4e8217549bd66d5dfa21374cfe347214",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "4941f9e7249e5f73a01a3d04f61fa41bacc7aec09885a73b7ba760566df98353",
+                "Source": "/apsarapangu/disk6/vfsdir/4941f9e7249e5f73a01a3d04f61fa41bacc7aec09885a73b7ba760566df98353",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/cruiser/cruiserSR#/cruiser",
+                "Destination": "/cloud/log/cruiser/cruiserSR#/cruiser",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/cruiser/cruiserSR#/cruiser/1915125_cruiser_cruiserSR_78da2907",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "d50e95f102b487745b4a0ceb1373700f86c0849819f9c43062c0df5f8a90e871",
+                "Source": "/apsarapangu/disk5/vfsdir/d50e95f102b487745b4a0ceb1373700f86c0849819f9c43062c0df5f8a90e871",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/local/cruiser/cruiserSR#/cruiser",
+                "Destination": "/cloud/conf/local/cruiser/cruiserSR#/cruiser",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/cruiser/cruiserSR#/cruiser",
+                "Destination": "/cloud/data/cruiser/cruiserSR#/cruiser",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "cb0d7df1f3e658169aa4e2f032c4173ebae0efb7df09d76d6ea583084ea32835",
+                "Source": "/apsarapangu/disk1/vfsdir/cb0d7df1f3e658169aa4e2f032c4173ebae0efb7df09d76d6ea583084ea32835",
+                "Destination": "/home/admin/vipsrv-failover",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "5e2f402a932c7168dea84039416331607d5bc03d39e23f72c454d16fe4abdd20",
+                "Source": "/apsarapangu/disk4/vfsdir/5e2f402a932c7168dea84039416331607d5bc03d39e23f72c454d16fe4abdd20",
+                "Destination": "/home/admin/cai/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "1cf38b96c274f734c8f8596c5cbcce2ce00d9b49b9905d413e2ef72479c04730",
+                "Source": "/apsarapangu/disk4/vfsdir/1cf38b96c274f734c8f8596c5cbcce2ce00d9b49b9905d413e2ef72479c04730",
+                "Destination": "/home/admin/vipsrv-cache",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "deb2350141b0b034b5fd590e0a1d200299dd3730e0f81b5290ae3e1aef631f50",
+        "Names": [
+            "/cmdbService.cmdbSR__.cmdb_app.1606458423"
+        ],
+        "Image": "sha256:37639112d4325e24cd443adb5fa52ea2a835fa6f56363e91276de5fac9e30ec8",
+        "ImageID": "sha256:37639112d4325e24cd443adb5fa52ea2a835fa6f56363e91276de5fac9e30ec8",
+        "Command": "sh -c /root/skyline/start.sh",
+        "Created": 1606458426,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=10G",
+            "TJ_APP_NAME": "cmdb_app",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "cmdbService.cmdbSR#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/cmdbService/cmdbSR#/cmdb_app/1929745_cmdbService_cmdbSR_d206e721",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/apsara_stack_system/aliyun-alios7u2:1.0",
+            "buildTime": "20200729140049"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.22"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "a8b66c4472af1cd59be7d1e132bbee806f36a702d94198eae0adca495e519796",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.22",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:16",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/cmdbService/cmdbSR#/cmdb_app",
+                "Destination": "/cloud/log/cmdbService/cmdbSR#/cmdb_app",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "b7d4246b1169571f1b99e1c5f552dc2c4185c1e91f7da91a9e6808f306fd045b",
+                "Source": "/apsarapangu/disk5/vfsdir/b7d4246b1169571f1b99e1c5f552dc2c4185c1e91f7da91a9e6808f306fd045b",
+                "Destination": "/root/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "96ea2d14f201e63259668af2a459b67ab16eeaa5da00453cd7ecf0af2f0b2fc3",
+                "Source": "/apsarapangu/disk4/vfsdir/96ea2d14f201e63259668af2a459b67ab16eeaa5da00453cd7ecf0af2f0b2fc3",
+                "Destination": "/root/skyline/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "3553b92bb181b535a64004710660c9053092de76bd5a40352ebe03083c05b660",
+                "Source": "/apsarapangu/disk1/vfsdir/3553b92bb181b535a64004710660c9053092de76bd5a40352ebe03083c05b660",
+                "Destination": "/root/skyline/sky_cache",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/cmdbService/cmdbSR#/cmdb_app",
+                "Destination": "/cloud/conf/local/cmdbService/cmdbSR#/cmdb_app",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/cmdbService/cmdbSR#/cmdb_app",
+                "Destination": "/cloud/data/cmdbService/cmdbSR#/cmdb_app",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "b139bc1e24fbe23a46d3d6f7a93f2a774a632d87e8b6eb3a9d8509e90b605b20",
+                "Source": "/apsarapangu/disk6/vfsdir/b139bc1e24fbe23a46d3d6f7a93f2a774a632d87e8b6eb3a9d8509e90b605b20",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/app/cmdbService/cmdbSR#/cmdb_app/1929745_cmdbService_cmdbSR_d206e721",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "fbc666a7f8922a0a5502dca9b3ba1c59a5b91fb3f21b0b1a8ca24c971b779a0d",
+                "Source": "/apsarapangu/disk4/vfsdir/fbc666a7f8922a0a5502dca9b3ba1c59a5b91fb3f21b0b1a8ca24c971b779a0d",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "71c2b7ca9300d67356597d406bf53332aaa2c114acf62375841ecee13d3e2071",
+                "Source": "/apsarapangu/disk1/vfsdir/71c2b7ca9300d67356597d406bf53332aaa2c114acf62375841ecee13d3e2071",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "d68d6acc6c082f3c9488b07804e0335f5c38db7247671101e922e7497cbd6e71",
+        "Names": [
+            "/cmdbService.RaptorPanther__.raptor_panther.1606447449"
+        ],
+        "Image": "sha256:5f4337b678ad9c1be9f3502b8cc0f5571cb09283c7d068e2b3aae5d14ddb37ed",
+        "ImageID": "sha256:5f4337b678ad9c1be9f3502b8cc0f5571cb09283c7d068e2b3aae5d14ddb37ed",
+        "Command": "/home/admin/start.sh",
+        "Created": 1606447452,
+        "Ports": [],
+        "Labels": {
+            "DiskQuota": ".*=50G",
+            "TJ_APP_NAME": "raptor_panther",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "cmdbService.RaptorPanther#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/cmdbService/RaptorPanther#/raptor_panther/1861123_cmdbService_RaptorPanther_d206e721",
+            "ali.host.dns": "true"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.23"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "0df74600d3ce99416ad375df07a35de295deca872f701edfe9ec9b5b04feb87b",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.23",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:17",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/cmdbService/RaptorPanther#/raptor_panther",
+                "Destination": "/cloud/data/cmdbService/RaptorPanther#/raptor_panther",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "eb9673ac27683b71943f5a5f68e6f54d2985c727010a2e27c6d939005a9cea28",
+                "Source": "/apsarapangu/disk1/vfsdir/eb9673ac27683b71943f5a5f68e6f54d2985c727010a2e27c6d939005a9cea28",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "b3f63540fb1a400c6d6bf9b521a080340509bbe193470a0be786e75a6162727d",
+                "Source": "/apsarapangu/disk6/vfsdir/b3f63540fb1a400c6d6bf9b521a080340509bbe193470a0be786e75a6162727d",
+                "Destination": "/home/admin/raptor-panther/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "b7e5c45bf0f9192d71e1153f6e6bc828c1eb0f6c0961ac7f98870d64e06c4117",
+                "Source": "/apsarapangu/disk5/vfsdir/b7e5c45bf0f9192d71e1153f6e6bc828c1eb0f6c0961ac7f98870d64e06c4117",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "e17be8351b940a0ea4c78c1bf0d7d10e0a00d00ee41b65363ca62fecd9ba691a",
+                "Source": "/apsarapangu/disk4/vfsdir/e17be8351b940a0ea4c78c1bf0d7d10e0a00d00ee41b65363ca62fecd9ba691a",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/cmdbService/RaptorPanther#/raptor_panther",
+                "Destination": "/cloud/conf/local/cmdbService/RaptorPanther#/raptor_panther",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/cmdbService/RaptorPanther#/raptor_panther",
+                "Destination": "/cloud/log/cmdbService/RaptorPanther#/raptor_panther",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "724f187d596d80532c68cb1c3445776423c175689376060a7c3550ef64f9b404",
+                "Source": "/apsarapangu/disk4/vfsdir/724f187d596d80532c68cb1c3445776423c175689376060a7c3550ef64f9b404",
+                "Destination": "/home/admin/cai/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/app/cmdbService/RaptorPanther#/raptor_panther/1861123_cmdbService_RaptorPanther_d206e721",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "b57ff7b7f21f2b56c39d1baf698e7070cc5415a336e03c4e6b478e60ba52fe1a",
+        "Names": [
+            "/applet"
+        ],
+        "Image": "alios6u2.applet:v1",
+        "ImageID": "sha256:b847f4fe8aceecb3b98be01dd5f9dfde4de240b67c1219c09aaa0fde684f2c8d",
+        "Command": "/root/tini -- /root/httpd.py",
+        "Created": 1606398831,
+        "Ports": [],
+        "Labels": {},
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "3330d9beeb2d281ab604a4b378a78dd87d86dee9a737c91af1671ce07510a4b4",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/apsarapangu/disk9/imports_packages",
+                "Destination": "/home/workdir",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "6f01aaf14218272c71542365f178d555d4a14d7e829783682a9d66712f58251b",
+        "Names": [
+            "/ops.OpsYum__.yum.1606398204"
+        ],
+        "Image": "sha256:66e7108185e842e4b879c3865559fcd500102ec2994b038dd6af032dd3a67640",
+        "ImageID": "sha256:66e7108185e842e4b879c3865559fcd500102ec2994b038dd6af032dd3a67640",
+        "Command": "/sbin/init",
+        "Created": 1606398204,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "yum",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsYum#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsYum#/yum/1894437_ops_OpsYum_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200827112050"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "d7e8f708230281d48f884a2617b0400326d9d12b244776de1697d2b90b9222df",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_yum",
+                "Destination": "/home/yum",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsYum#/yum",
+                "Destination": "/cloud/conf/local/ops/OpsYum#/yum",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsYum#/yum",
+                "Destination": "/cloud/data/ops/OpsYum#/yum",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsYum#/yum",
+                "Destination": "/cloud/log/ops/OpsYum#/yum",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsYum#/yum/1894437_ops_OpsYum_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "7e57b84a5138cb446dcc481c949b4d3743e13efd5c09d5387343104903394759",
+                "Source": "/apsarapangu/disk4/vfsdir/7e57b84a5138cb446dcc481c949b4d3743e13efd5c09d5387343104903394759",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "ff088f632faf4356e4953063af4ffb13e14742510aa0272228f5c8408b772b51",
+                "Source": "/apsarapangu/disk1/vfsdir/ff088f632faf4356e4953063af4ffb13e14742510aa0272228f5c8408b772b51",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "f1cd56df92917a628359f1e57f30ff199289fc4cf02a0c37c3c47ef45f750015",
+        "Names": [
+            "/ops.OpsMysql__.mysql.1606398190"
+        ],
+        "Image": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "ImageID": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "Command": "/sbin/init",
+        "Created": 1606398193,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "mysql",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsMysql#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsMysql#/mysql/1946903_ops_OpsMysql_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.10"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "68dabf91b094b46635e5e3ec0d1c7e047c0d77425439b145f80e1dc3429e1586",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.10",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:0a",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/app/ops/OpsMysql#/mysql/1946903_ops_OpsMysql_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "ad152b44cc6a0a6cc9626bb7d145a65ebe20de8a6054f63f2e1eb41d254ac626",
+                "Source": "/apsarapangu/disk6/vfsdir/ad152b44cc6a0a6cc9626bb7d145a65ebe20de8a6054f63f2e1eb41d254ac626",
+                "Destination": "/var/lib/mysql",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "fa33af200d9b0147a48dce5ca0bbf526f370e5c47377862b02d45dad1f70ea58",
+                "Source": "/apsarapangu/disk5/vfsdir/fa33af200d9b0147a48dce5ca0bbf526f370e5c47377862b02d45dad1f70ea58",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/data/ops/OpsMysql#/mysql",
+                "Destination": "/cloud/data/ops/OpsMysql#/mysql",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/resolv.conf",
+                "Destination": "/etc/resolv.conf",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsMysql#/mysql",
+                "Destination": "/cloud/log/ops/OpsMysql#/mysql",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "4e97b025bcc8de4320114fb5ddb7f950cc8787473681e17efa1a2bd4d81e5336",
+                "Source": "/apsarapangu/disk1/vfsdir/4e97b025bcc8de4320114fb5ddb7f950cc8787473681e17efa1a2bd4d81e5336",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsMysql#/mysql",
+                "Destination": "/cloud/conf/local/ops/OpsMysql#/mysql",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "9b794dcdf1f5bd1c47b0969ba439aa4784aa8a93f46ccf4aee7df90113fb3763",
+        "Names": [
+            "/ops.OpsClone__.clone.1606398185"
+        ],
+        "Image": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "ImageID": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "Command": "/sbin/init",
+        "Created": 1606398188,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "clone",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsClone#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsClone#/clone/1946903_ops_OpsClone_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.1"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "e530c4a25a3e927e03a821afdc0113fec3cb550bb2e59b51d72376934877ebbc",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.1",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:01",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/log/ops/OpsClone#/clone",
+                "Destination": "/cloud/log/ops/OpsClone#/clone",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/resolv.conf",
+                "Destination": "/etc/resolv.conf",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_clone_tftpboot",
+                "Destination": "/home/aliclone/tftpboot",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "ded936fb4851426bbfd29640866d5959693ea671109a291a54bf64a4e3078a19",
+                "Source": "/apsarapangu/disk5/vfsdir/ded936fb4851426bbfd29640866d5959693ea671109a291a54bf64a4e3078a19",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsClone#/clone",
+                "Destination": "/cloud/conf/local/ops/OpsClone#/clone",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "e873b45c937ee85858724189a6bbf57a8efb756fc22ec356aafb0ab8853e716f",
+                "Source": "/apsarapangu/disk4/vfsdir/e873b45c937ee85858724189a6bbf57a8efb756fc22ec356aafb0ab8853e716f",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/data/ops/OpsClone#/clone",
+                "Destination": "/cloud/data/ops/OpsClone#/clone",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_clone",
+                "Destination": "/home/aliclone/download",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsClone#/clone/1946903_ops_OpsClone_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "adcedd7a1240475e9c744945e02c88011008dbb5b65cc1790c0920cb3e67570c",
+        "Names": [
+            "/ops.OpsCloneWeb__.cloneweb.1606398178"
+        ],
+        "Image": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "ImageID": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "Command": "/sbin/init",
+        "Created": 1606398181,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "cloneweb",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsCloneWeb#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsCloneWeb#/cloneweb/1946903_ops_OpsCloneWeb_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.4"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "5531ca7a022f6c0e5ccbf26c9310770e9b3d01943c09949b277fecd41d0a7238",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.4",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:04",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsCloneWeb#/cloneweb",
+                "Destination": "/cloud/log/ops/OpsCloneWeb#/cloneweb",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsCloneWeb#/cloneweb/1946903_ops_OpsCloneWeb_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsCloneWeb#/cloneweb",
+                "Destination": "/cloud/conf/local/ops/OpsCloneWeb#/cloneweb",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsCloneWeb#/cloneweb",
+                "Destination": "/cloud/data/ops/OpsCloneWeb#/cloneweb",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/resolv.conf",
+                "Destination": "/etc/resolv.conf",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_clone",
+                "Destination": "/root/clone",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "36ad1b3fcc0ab46b68ac1b8a766f7371cc61fc581bfef54147dde15a4a676644",
+                "Source": "/apsarapangu/disk1/vfsdir/36ad1b3fcc0ab46b68ac1b8a766f7371cc61fc581bfef54147dde15a4a676644",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "320c42620c1b57394ab2b6544ea98867fe0aafe1190b920a7da088261494562f",
+                "Source": "/apsarapangu/disk6/vfsdir/320c42620c1b57394ab2b6544ea98867fe0aafe1190b920a7da088261494562f",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "c57450e965b0a376951d589447c299117539ffaa1e7cce1c96984f1f00ee8468",
+        "Names": [
+            "/ops.OpsOob__.oob.1606398172"
+        ],
+        "Image": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "ImageID": "sha256:eed43b1d4732ab82465edfc578a1db5700232b122e531a1140c19c0a1a725e95",
+        "Command": "/sbin/init",
+        "Created": 1606398172,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "oob",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsOob#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsOob#/oob/1946903_ops_OpsOob_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "ac9afeb3b88c45d1959ea233a2b72850a8438a97bb6919187d7de7020d69dfac",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsOob#/oob",
+                "Destination": "/cloud/data/ops/OpsOob#/oob",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/etc/resolv.conf",
+                "Destination": "/etc/resolv.conf",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_conman_log",
+                "Destination": "/var/log/conman",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "98c69696d5a58f10ac35b00279ddca7cbfb34cf912e258135d01cfdfdd42363e",
+                "Source": "/apsarapangu/disk4/vfsdir/98c69696d5a58f10ac35b00279ddca7cbfb34cf912e258135d01cfdfdd42363e",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsOob#/oob",
+                "Destination": "/cloud/conf/local/ops/OpsOob#/oob",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsOob#/oob",
+                "Destination": "/cloud/log/ops/OpsOob#/oob",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsOob#/oob/1946903_ops_OpsOob_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "19783de032de312c0ccc252fe8855f5c8bbe8031e4c3bf62125c6888b5900568",
+                "Source": "/apsarapangu/disk5/vfsdir/19783de032de312c0ccc252fe8855f5c8bbe8031e4c3bf62125c6888b5900568",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "0c07c5b797ec0a74af6c86eeb893dc3f0179a7c1fabc2f2758f3819778ae0a69",
+        "Names": [
+            "/ops.OpsHardware__.hardware.1606398157"
+        ],
+        "Image": "sha256:e90f2317c964fc7b7ccf2c586f69b325b1e3deec0384b4ded9eca431309c5a7f",
+        "ImageID": "sha256:e90f2317c964fc7b7ccf2c586f69b325b1e3deec0384b4ded9eca431309c5a7f",
+        "Command": "/sbin/init",
+        "Created": 1606398159,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "hardware",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsHardware#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsHardware#/hardware/1880022_ops_OpsHardware_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200805010025"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.5"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "ea6cc939608c57142b0acf8b6350111107b397d5f612923e89360ac4b63eeebc",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.5",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:05",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/log/ops/OpsHardware#/hardware",
+                "Destination": "/cloud/log/ops/OpsHardware#/hardware",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsHardware#/hardware/1880022_ops_OpsHardware_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "824519d4df311e2fc68a06376e813b566d0f6cdecbf2203724561a858112f521",
+                "Source": "/apsarapangu/disk6/vfsdir/824519d4df311e2fc68a06376e813b566d0f6cdecbf2203724561a858112f521",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_clone",
+                "Destination": "/home/aliclone/download",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk4/tianji_clone_tftpboot",
+                "Destination": "/home/aliclone/tftpboot",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "17a687e03a3b6719c5c1ca7ee775726b45964a2261c4fc43839c192df1b0ae23",
+                "Source": "/apsarapangu/disk1/vfsdir/17a687e03a3b6719c5c1ca7ee775726b45964a2261c4fc43839c192df1b0ae23",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsHardware#/hardware",
+                "Destination": "/cloud/conf/local/ops/OpsHardware#/hardware",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsHardware#/hardware",
+                "Destination": "/cloud/data/ops/OpsHardware#/hardware",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "0f7dc7f44630914f83c36c068ba03f4d649f0060f385b8076e85e7eac3eeac38",
+        "Names": [
+            "/tianji-dockerregistry.DockerRegistry__.docker_registry.1606398087"
+        ],
+        "Image": "sha256:abead7e822ef5b739ada257ab6c62696ac6a52f87ceec94aec8fd373ca0758b2",
+        "ImageID": "sha256:abead7e822ef5b739ada257ab6c62696ac6a52f87ceec94aec8fd373ca0758b2",
+        "Command": "/entrypoint.sh /etc/docker/registry/config.yml",
+        "Created": 1606398090,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "docker_registry",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "tianji-dockerregistry.DockerRegistry#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/tianji-dockerregistry/DockerRegistry#/docker_registry/1939741",
+            "ali.host.dns": "true",
+            "aliyun.deploy.container.cluster": "tianji"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.11"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "b71972adcc5b37f7ef29abf934dbdc5ad5d995b362ab79d936f239cf0d995c27",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.11",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:0b",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/tianji-dockerregistry/DockerRegistry#/docker_registry",
+                "Destination": "/cloud/data/tianji-dockerregistry/DockerRegistry#/docker_registry",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/tianji-dockerregistry/DockerRegistry#/docker_registry/1939741",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk5/vfsdir/61c726d4d809076dea19fdd1d006c21f14410c99e090715776eadfdce9304220",
+                "Destination": "/var/run",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/tianji-dockerregistry/DockerRegistry#/docker_registry/current/conf.global/self/user/htpasswd",
+                "Destination": "/htpasswd",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk6/vfsdir/d1efa1e674328245962262e176015d74ce2f82dadf96e61c1f5a2197788ba044",
+                "Destination": "/run",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/apsarapangu/disk2/registry",
+                "Destination": "/var/lib/registry",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/tianji-dockerregistry/DockerRegistry#/docker_registry",
+                "Destination": "/cloud/conf/local/tianji-dockerregistry/DockerRegistry#/docker_registry",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/tianji-dockerregistry/DockerRegistry#/docker_registry",
+                "Destination": "/cloud/log/tianji-dockerregistry/DockerRegistry#/docker_registry",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/tianji-dockerregistry/DockerRegistry#/docker_registry/current/conf.local/config.json",
+                "Destination": "/etc/docker/registry/config.yml",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "64be5c1fa3fea90b95a8085c9603d3648b6f8a6419ad863b37a43b5c6f6cc446",
+        "Names": [
+            "/ops.OpsDnsMaster__.dnsmaster.1606398072"
+        ],
+        "Image": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "ImageID": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "Command": "/sbin/init",
+        "Created": 1606398074,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "dnsmaster",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsDnsMaster#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsDnsMaster#/dnsmaster/1923129_ops_OpsDnsMaster_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.8"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "31c407b80c9fc81f8f4f493e01b9965d1b05048667b81f95df6faa837872436a",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.8",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:08",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsDnsMaster#/dnsmaster",
+                "Destination": "/cloud/data/ops/OpsDnsMaster#/dnsmaster",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "b63828b431d1551eeb7dd47ce87d9a1aee4750265c671e1391cca92c0756a64b",
+                "Source": "/apsarapangu/disk6/vfsdir/b63828b431d1551eeb7dd47ce87d9a1aee4750265c671e1391cca92c0756a64b",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "faac6968ec7c5102786069f412d2da070356e210cc39874577d21fd73262fb57",
+                "Source": "/apsarapangu/disk5/vfsdir/faac6968ec7c5102786069f412d2da070356e210cc39874577d21fd73262fb57",
+                "Destination": "/var/named",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "a040e0a53783460b2a6e61733689f21d6a886dd8ce519633b222f4c2dafdc531",
+                "Source": "/apsarapangu/disk4/vfsdir/a040e0a53783460b2a6e61733689f21d6a886dd8ce519633b222f4c2dafdc531",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsDnsMaster#/dnsmaster",
+                "Destination": "/cloud/conf/local/ops/OpsDnsMaster#/dnsmaster",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsDnsMaster#/dnsmaster",
+                "Destination": "/cloud/log/ops/OpsDnsMaster#/dnsmaster",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsDnsMaster#/dnsmaster/1923129_ops_OpsDnsMaster_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsDnsMaster#/dnsmaster_named",
+                "Destination": "/var/named/chroot/var/log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "80270f20fdbdba5652740706ad91e34017e480abcdc6325d24d373d1bf4c991d",
+        "Names": [
+            "/ops.OpsDnsSlave__.dnsslave.1606398053"
+        ],
+        "Image": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "ImageID": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "Command": "/sbin/init",
+        "Created": 1606398053,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "dnsslave",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsDnsSlave#",
+            "TJ_USER": "admin",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsDnsSlave#/dnsslave/1923129_ops_OpsDnsSlave_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "host"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "88000f7f5e627ee3c5e7f3d2e33a6a9ca7964f384e62db1ea9b60828d15b5d64",
+                    "EndpointID": "788d2bfd1767b6d659a1056eef51fa9939de9cd2ebdb4440c53c6710a47d7729",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Name": "2b6d182dcacb251b657900a182dd4c518b14ff3ce677342a6f1fda02c0e0552f",
+                "Source": "/apsarapangu/disk6/vfsdir/2b6d182dcacb251b657900a182dd4c518b14ff3ce677342a6f1fda02c0e0552f",
+                "Destination": "/var/named",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/log/ops/OpsDnsSlave#/dnsslave_named",
+                "Destination": "/var/named/chroot/var/log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsDnsSlave#/dnsslave",
+                "Destination": "/cloud/conf/local/ops/OpsDnsSlave#/dnsslave",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsDnsSlave#/dnsslave",
+                "Destination": "/cloud/data/ops/OpsDnsSlave#/dnsslave",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsDnsSlave#/dnsslave",
+                "Destination": "/cloud/log/ops/OpsDnsSlave#/dnsslave",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsDnsSlave#/dnsslave/1923129_ops_OpsDnsSlave_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "dbc8e25a9540847686084a8f514d415e024ece6051fe9e1404d718b7cbf28942",
+                "Source": "/apsarapangu/disk5/vfsdir/dbc8e25a9540847686084a8f514d415e024ece6051fe9e1404d718b7cbf28942",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "54f1b750354b090c2f808d1f758819180fdfc0f31c90337299d766629c1c9c67",
+                "Source": "/apsarapangu/disk4/vfsdir/54f1b750354b090c2f808d1f758819180fdfc0f31c90337299d766629c1c9c67",
+                "Destination": "/root/dnsagent",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "3edd136a23cfaf54c44023fdb3fda62761fbb3b996fd8414821fafc07f40196b",
+                "Source": "/apsarapangu/disk1/vfsdir/3edd136a23cfaf54c44023fdb3fda62761fbb3b996fd8414821fafc07f40196b",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "d16e05447591d569dbb60d0aa8110d3cd13c33a088cccd7f2ef890f9f51c016a",
+        "Names": [
+            "/ops.OpsDnsEtcd__.dnsetcd.1606397967"
+        ],
+        "Image": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "ImageID": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "Command": "/sbin/init",
+        "Created": 1606397970,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "dnsetcd",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsDnsEtcd#",
+            "TJ_USER": "root",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsDnsEtcd#/dnsetcd/1923129_ops_OpsDnsEtcd_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.27"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "77f2ec15dbef86a32707f79f12b30225e83f5fab82180c19161945a3213ec68c",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.27",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:1b",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/app/ops/OpsDnsEtcd#/dnsetcd/1923129_ops_OpsDnsEtcd_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "c765f6554f028e788048ee1633f22f59df86731572058b03fbded4ade23f6b60",
+                "Source": "/apsarapangu/disk5/vfsdir/c765f6554f028e788048ee1633f22f59df86731572058b03fbded4ade23f6b60",
+                "Destination": "/root/etcd",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsDnsEtcd#/dnsetcd",
+                "Destination": "/cloud/conf/local/ops/OpsDnsEtcd#/dnsetcd",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/ops/OpsDnsEtcd#/dnsetcd",
+                "Destination": "/cloud/data/ops/OpsDnsEtcd#/dnsetcd",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsDnsEtcd#/dnsetcd",
+                "Destination": "/cloud/log/ops/OpsDnsEtcd#/dnsetcd",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "42c5c8a050684209d0208f48fa4b1a0c528a147dae87fc35235ebb058c87d130",
+                "Source": "/apsarapangu/disk4/vfsdir/42c5c8a050684209d0208f48fa4b1a0c528a147dae87fc35235ebb058c87d130",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "721d2dfc897a9d6534d6b97ad1aa586f056306bf9466514ae6aaf62438f29048",
+                "Source": "/apsarapangu/disk1/vfsdir/721d2dfc897a9d6534d6b97ad1aa586f056306bf9466514ae6aaf62438f29048",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ]
+    },
+    {
+        "Id": "0de102d9cca6b82bad48ef78d8a60d3700b720a19f8d3c65f1d21ab25a8b824b",
+        "Names": [
+            "/ops.OpsDns__.dns.1606397914"
+        ],
+        "Image": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "ImageID": "sha256:5f7cee797fe7ca8cf63a7dae38208bbb6d5abcca698de090b10de594dff7dddd",
+        "Command": "/sbin/init",
+        "Created": 1606397917,
+        "Ports": [],
+        "Labels": {
+            "TJ_APP_NAME": "dns",
+            "TJ_BIND_PROTOCOL": "v2",
+            "TJ_HOSTNAME": "e21i08001.cloud.i08.amtest116",
+            "TJ_SR_NAME": "ops.OpsDns#",
+            "TJ_USER": "root",
+            "TJ_WORK_DIR": "/cloud/app/ops/OpsDns#/dns/1923129_ops_OpsDns_50b70e81",
+            "ali.host.dns": "true",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20200927184327"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "nw_10.116.8.0_22"
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "nw_10.116.8.0_22": {
+                    "IPAMConfig": {
+                        "IPv4Address": "10.116.8.6"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "b45e65278ae7b65cfb71924edc92a99ac18b3c9cdbbbfb9120e02404c0f9d950",
+                    "EndpointID": "6d74985d31d8b28398dc41196f8db7fc45c1bf2c84a9c0b80c341307717824df",
+                    "Gateway": "10.116.11.247",
+                    "IPAddress": "10.116.8.6",
+                    "IPPrefixLen": 22,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:0a:74:08:06",
+                    "Time": 0,
+                    "SkipResolver": false
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Source": "/cloud/data/ops/OpsDns#/dns",
+                "Destination": "/cloud/data/ops/OpsDns#/dns",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/log/ops/OpsDns#/dns",
+                "Destination": "/cloud/log/ops/OpsDns#/dns",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Name": "ab2c459e4da4a52982ddc9ada16997305aa8ae8cfcc663780469943a6dd9460f",
+                "Source": "/apsarapangu/disk1/vfsdir/ab2c459e4da4a52982ddc9ada16997305aa8ae8cfcc663780469943a6dd9460f",
+                "Destination": "/var/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "7018b34a76117356cc076715f80d477d1971a51123c1883faa07c399cde1617c",
+                "Source": "/apsarapangu/disk6/vfsdir/7018b34a76117356cc076715f80d477d1971a51123c1883faa07c399cde1617c",
+                "Destination": "/root/dnsapi",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Name": "65730c7b07c2637d4c372ecfb0949a20f04c86dd119d9c1d0f2b92c585a4e14e",
+                "Source": "/apsarapangu/disk4/vfsdir/65730c7b07c2637d4c372ecfb0949a20f04c86dd119d9c1d0f2b92c585a4e14e",
+                "Destination": "/run",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Source": "/usr/share/zoneinfo",
+                "Destination": "/usr/share/zoneinfo",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/global",
+                "Destination": "/cloud/conf/global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/conf/local/ops/OpsDns#/dns",
+                "Destination": "/cloud/conf/local/ops/OpsDns#/dns",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/data/_global",
+                "Destination": "/cloud/data/_global",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/usr/share/zoneinfo/Asia/Shanghai",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Source": "/cloud/app/ops/OpsDns#/dns/1923129_ops_OpsDns_50b70e81",
+                "Destination": "/opt/tianji",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    }
+]

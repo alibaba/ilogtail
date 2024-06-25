@@ -1,0 +1,75 @@
+{
+    "timestamp": {
+        "date": "11_09_2018",
+        "time": "13_34_20",
+        "epoch_sec": 1541741660
+    },
+    "cpu_util_all": {
+        "pcpu_used": 176329.97,
+        "pcpu_util": 1.11,
+        "core_util": 352660.19
+    },
+    "cpu_util_per_cgroup": [
+        {
+            "cgid": 0,
+            "cgroup": "/sigma/c7c17f0a2778b473e8f2c9edeaa3515deb3717e5e66e335951dc1a7cfedfa81f",
+            "cpu_util": 3.99
+        }
+    ],
+    "cpu_event_all": {
+        "instruction": 16888293159744680,
+        "cycle": 2814726782827472,
+        "ref_cycle": 17753953225,
+        "ipc": 6.00,
+        "cpi": 0.50,
+        "l1miss": 5629450922233716,
+        "l2miss": 5629416246896030,
+        "l3miss": 11258833253510738,
+        "l1mpi": 0.00,
+        "l2mpi": 1.85,
+        "l3mpi": 1.85,
+        "split_lock": 11258833115737400
+    },
+    "cpu_event_per_cgroup": [
+        {
+            "cgid": 0,
+            "cgroup": "/sigma/c7c17f0a2778b473e8f2c9edeaa3515deb3717e5e66e335951dc1a7cfedfa81f",
+            "instruction": 7372990196972067,
+            "cycle": 927510273,
+            "ref_cycle": 790996710,
+            "ipc": 7949227.53,
+            "cpi": 0.00,
+            "l1miss": 806733219264407,
+            "l2miss": 1016206418048349,
+            "l3miss": 1967585298050908,
+            "l1mpi": 0.46,
+            "l2mpi": 0.58,
+            "l3mpi": 1.12
+        }
+    ],
+    "imc_all": {
+        "read": 226.73,
+        "write": 232.36,
+        "total": 459.09,
+        "latency": 0.00,
+        "util": 0.34
+    },
+    "rdt_all": {
+        "l3occ": 54908.12,
+        "local": 1390.69,
+        "remote": 1360.50,
+        "total": 2753.25,
+        "remote_ratio": 48.11
+    },
+    "rdt_per_cgroup": [
+        {
+            "cgid": 0,
+            "cgroup": "/sigma/c7c17f0a2778b473e8f2c9edeaa3515deb3717e5e66e335951dc1a7cfedfa81f",
+            "l3occ": 7265.50,
+            "local": 203.42,
+            "remote": 140.03,
+            "total": 343.46,
+            "remote_ratio": 40.77
+        }
+    ]
+}

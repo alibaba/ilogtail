@@ -1,0 +1,69 @@
+[
+    {
+        "file": "/home/admin/cai/test.log",
+        "interval": 60,
+        "split": {
+            "type": "json",
+            "columns": [
+                {
+                    "key": "message",
+                    "label": "label1"
+                },
+                {
+                    "key": "value.time",
+                    "label": "label2"
+                }
+            ]
+        },
+        "process": [
+            {
+                "filters": [
+                    {
+                        "column": "label1",
+                        "type": "include",
+                        "values": [
+                            "DIEGEST"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "dockerLabels": [
+            {
+                "key": "io.kubernetes.pod.name",
+                "value": "argus-prometheus",
+                "type": "contain",
+                "rename": "pod_name"
+            },
+            {
+                "key": "io.kubernetes.pod.namespace",
+                "value": "argus-prom"
+            }
+        ],
+        "add_labels": [
+            {
+                "name": "pod_name",
+                "type": 2,
+                "value": "argus-prometheus"
+            },
+            {
+                "name": "namespace",
+                "type": 2,
+                "value": "argus-prom"
+            }
+        ],
+        "output": [
+            {
+                "type": "loki",
+                "conf": {
+                    "labels": [
+                        "namespace"
+                    ],
+                    "value": "{label1}_{label2}_{output}",
+                    "timestamp": "time",
+                    "endpoint": "http://xxxx/loki/api/write"
+                }
+            }
+        ]
+    }
+]
