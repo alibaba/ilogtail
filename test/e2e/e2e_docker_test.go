@@ -18,19 +18,19 @@ import (
 
 	"github.com/cucumber/godog"
 
-	"github.com/alibaba/ilogtail/test/testhub/cleanup"
+	"github.com/alibaba/ilogtail/test/config"
 )
 
-func TestE2EOnDocker(t *testing.T) {
-	defer cleanup.All()
+func TestE2EOnDockerCompose(t *testing.T) {
 	suite := godog.TestSuite{
-		Name:                "E2EOnDocker",
+		Name:                "E2EOnDockerCompose",
 		ScenarioInitializer: scenarioInitializer,
 		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"scenarios"},
-			Tags:     "@e2e && @docker",
-			TestingT: t,
+			Format:         "pretty",
+			Paths:          []string{"test_cases"},
+			Tags:           "@e2e && @docker-compose && @WIP",
+			TestingT:       t,
+			DefaultContext: config.TestContext,
 		},
 	}
 	if suite.Run() != 0 {

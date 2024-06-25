@@ -14,6 +14,7 @@
 package e2e
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"testing"
@@ -23,8 +24,10 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/testhub/cleanup"
 	"github.com/alibaba/ilogtail/test/testhub/control"
 	"github.com/alibaba/ilogtail/test/testhub/setup"
+	"github.com/alibaba/ilogtail/test/testhub/setup/subscriber"
 	"github.com/alibaba/ilogtail/test/testhub/trigger"
 	"github.com/alibaba/ilogtail/test/testhub/verify"
 )
@@ -63,7 +66,7 @@ func TestMain(m *testing.M) {
 	config.TestConfig.Region = os.Getenv("REGION")
 	timeout, err := strconv.ParseInt(os.Getenv("RETRY_TIMEOUT"), 10, 64)
 	if err != nil {
-		timeout = 30
+		timeout = 60
 	}
 	config.TestConfig.RetryTimeout = time.Duration(timeout) * time.Second
 	code := m.Run()
@@ -74,14 +77,37 @@ func TestMain(m *testing.M) {
 func scenarioInitializer(ctx *godog.ScenarioContext) {
 	// Given
 	ctx.Given(`^\{(\S+)\} environment$`, setup.InitEnv)
-	ctx.Given(`^\{(\S+)\} config as below`, control.AddLocalConfig)
+	ctx.Given(`^iLogtail depends on containers \{(.*)\}`, setup.SetDockerComposeDependOn)
+	ctx.Given(`^\{(.*)\} config as below`, control.AddLocalConfig)
+	ctx.Given(`^subcribe data from \{(\S+)\} with config`, subscriber.InitSubscriber)
 
 	// When
 	ctx.When(`^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
+	ctx.When(`^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body:`, trigger.HTTP)
 	ctx.When(`^add k8s label \{(.*)\}`, control.AddLabel)
 	ctx.When(`^remove k8s label \{(.*)\}`, control.RemoveLabel)
+	ctx.When(`^start docker-compose dependencies \{(\S+)\}`, setup.StartDockerComposeEnv)
 
 	// Then
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)
-	ctx.Then(`^the log contents match regex single`, verify.RegexSingle)
+	ctx.Then(`^there is at least \{(\d+)\} logs$`, verify.LogCountAtLeast)
+	ctx.Then(`^the log fields match regex single`, verify.RegexSingle)
+	ctx.Then(`^the log fields match kv`, verify.LogFieldKV)
+	ctx.Then(`^the log tags match kv`, verify.TagKV)
+	ctx.Then(`^the context of log is valid$`, verify.LogContext)
+	ctx.Then(`^the log fields match`, verify.LogField)
+	ctx.Then(`wait`, func(ctx context.Context) context.Context {
+		time.Sleep(3 * time.Minute)
+		return ctx
+	})
+
+	// Cleanup
+	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+		cleanup.HandleSignal()
+		return ctx, nil
+	})
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		cleanup.All()
+		return ctx, nil
+	})
 }

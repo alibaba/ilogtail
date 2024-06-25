@@ -34,20 +34,16 @@ func NewHostEnv() *HostEnv {
 	return env
 }
 
+func (h *HostEnv) GetType() string {
+	return "host"
+}
+
 func (h *HostEnv) ExecOnLogtail(command string) error {
 	return h.exec(command)
 }
 
 func (h *HostEnv) ExecOnSource(command string) error {
 	return h.exec(command)
-}
-
-func (h *HostEnv) AddFilter(filter ContainerFilter) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (h *HostEnv) RemoveFilter(filter ContainerFilter) error {
-	return fmt.Errorf("not implemented")
 }
 
 func (h *HostEnv) exec(command string) error {

@@ -16,34 +16,39 @@ package control
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
-	"sync"
-	"text/template"
 
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/testhub/setup"
+	"github.com/alibaba/ilogtail/test/testhub/setup/subscriber"
 )
 
 const iLogtailLocalConfigDir = "/etc/ilogtail/config/local"
-const SLSFlusherConfigTemplate = `
-flushers:
-  - Type: flusher_sls
-    Aliuid: "{{.Aliuid}}"
-    TelemetryType: "logs"
-    Region: {{.Region}}
-    Endpoint: {{.Endpoint}}
-    Project: {{.Project}}
-    Logstore: {{.Logstore}}`
-
-var SLSFlusherConfig string
-var SLSFlusherConfigOnce sync.Once
 
 func AddLocalConfig(ctx context.Context, configName, c string) (context.Context, error) {
 	c = completeConfigWithFlusher(c)
-	command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
-%s`, iLogtailLocalConfigDir, configName, c)
-	if err := setup.Env.ExecOnLogtail(command); err != nil {
-		return ctx, err
+	fmt.Println(config.ConfigDir)
+	if setup.Env.GetType() == "docker-compose" {
+		// write local file
+		if _, err := os.Stat(config.ConfigDir); os.IsNotExist(err) {
+			if err := os.MkdirAll(config.ConfigDir, 0750); err != nil {
+				return ctx, err
+			}
+		} else if err != nil {
+			return ctx, err
+		}
+		filePath := fmt.Sprintf("%s/%s.yaml", config.ConfigDir, configName)
+		err := os.WriteFile(filePath, []byte(c), 0644)
+		if err != nil {
+			return ctx, err
+		}
+	} else {
+		command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
+	%s`, iLogtailLocalConfigDir, configName, c)
+		if err := setup.Env.ExecOnLogtail(command); err != nil {
+			return ctx, err
+		}
 	}
 	return ctx, nil
 }
@@ -57,17 +62,8 @@ func RemoveAllLocalConfig(ctx context.Context) (context.Context, error) {
 }
 
 func completeConfigWithFlusher(c string) string {
-	SLSFlusherConfigOnce.Do(func() {
-		tpl := template.Must(template.New("slsFlusherConfig").Parse(SLSFlusherConfigTemplate))
-		var builder strings.Builder
-		_ = tpl.Execute(&builder, map[string]interface{}{
-			"Aliuid":   config.TestConfig.Aliuid,
-			"Region":   config.TestConfig.Region,
-			"Endpoint": config.TestConfig.Endpoint,
-			"Project":  config.TestConfig.Project,
-			"Logstore": config.TestConfig.Logstore,
-		})
-		SLSFlusherConfig = builder.String()
-	})
-	return c + SLSFlusherConfig
+	if strings.Index(c, "flushers") != -1 {
+		return c
+	}
+	return c + subscriber.TestSubscriber.FlusherConfig()
 }

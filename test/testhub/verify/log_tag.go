@@ -16,18 +16,17 @@ package verify
 import (
 	"context"
 	"fmt"
-	"strings"
+	"regexp"
 	"time"
 
-	"github.com/avast/retry-go/v4"
-
+	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
-	"github.com/alibaba/ilogtail/test/testhub/control"
+	"github.com/alibaba/ilogtail/test/testhub/setup/subscriber"
+	"github.com/avast/retry-go/v4"
+	"gopkg.in/yaml.v3"
 )
 
-const queryRegexSQL = "* | SELECT %s FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
-
-func RegexSingle(ctx context.Context) (context.Context, error) {
+func TagKV(ctx context.Context, expectKeyValuesStr string) (context.Context, error) {
 	var from int32
 	value := ctx.Value(config.StartTimeContextKey)
 	if value != nil {
@@ -35,14 +34,15 @@ func RegexSingle(ctx context.Context) (context.Context, error) {
 	} else {
 		return ctx, fmt.Errorf("no start time")
 	}
-	fields := []string{"mark", "file", "logNo", "ip", "time", "method", "url", "http", "status", "size", "userAgent", "msg"}
-	sql := fmt.Sprintf(queryRegexSQL, strings.Join(fields, ", "), from)
+
+	// Get logs
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
 	var err error
+	var groups []*protocol.LogGroup
 	err = retry.Do(
 		func() error {
-			_, err = control.GetLogFromSLS(sql, from)
+			groups, err = subscriber.TestSubscriber.GetData(from)
 			return err
 		},
 		retry.Context(timeoutCtx),
@@ -51,6 +51,33 @@ func RegexSingle(ctx context.Context) (context.Context, error) {
 	)
 	if err != nil {
 		return ctx, err
+	}
+
+	kvRegexps := make(map[string]*regexp.Regexp)
+	expectKeyValues := make(map[string]string)
+	err = yaml.Unmarshal([]byte(expectKeyValuesStr), expectKeyValues)
+	for k, v := range expectKeyValues {
+		reg, err := regexp.Compile(v)
+		if err != nil {
+			return ctx, err
+		}
+		kvRegexps[k] = reg
+	}
+
+	for _, group := range groups {
+		for k, reg := range kvRegexps {
+			for _, tag := range group.LogTags {
+				fmt.Println(tag.Key, tag.Value)
+				if tag.Key == k {
+					if !reg.MatchString(tag.Value) {
+						return ctx, fmt.Errorf("want contains KV %s:%s, but got %s:%s", k, reg.String(), tag.Key, tag.Value)
+					}
+					goto find
+				}
+			}
+			return ctx, fmt.Errorf("want contains KV %s:%s, but not found", k, reg.String())
+		find:
+		}
 	}
 	return ctx, nil
 }

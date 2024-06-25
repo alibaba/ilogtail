@@ -16,8 +16,10 @@ package control
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/alibaba/ilogtail/test/testhub/setup"
+	"github.com/alibaba/ilogtail/test/testhub/setup/controller"
 )
 
 func AddLabel(ctx context.Context, labelStr string) (context.Context, error) {
@@ -25,11 +27,15 @@ func AddLabel(ctx context.Context, labelStr string) (context.Context, error) {
 	if err := json.Unmarshal([]byte(labelStr), &labels); err != nil {
 		return ctx, err
 	}
-	filter := setup.ContainerFilter{
+	filter := controller.ContainerFilter{
 		K8sLabel: labels,
 	}
-	if err := setup.Env.AddFilter(filter); err != nil {
-		return ctx, err
+	if k8sEnv, ok := setup.Env.(*setup.K8sEnv); ok {
+		if err := k8sEnv.AddFilter(filter); err != nil {
+			return ctx, err
+		}
+	} else {
+		return ctx, fmt.Errorf("try to add label, but env is not k8s env")
 	}
 	return ctx, nil
 }
@@ -39,11 +45,15 @@ func RemoveLabel(ctx context.Context, labelStr string) (context.Context, error) 
 	if err := json.Unmarshal([]byte(labelStr), &labels); err != nil {
 		return ctx, err
 	}
-	filter := setup.ContainerFilter{
+	filter := controller.ContainerFilter{
 		K8sLabel: labels,
 	}
-	if err := setup.Env.RemoveFilter(filter); err != nil {
-		return ctx, err
+	if k8sEnv, ok := setup.Env.(*setup.K8sEnv); ok {
+		if err := k8sEnv.RemoveFilter(filter); err != nil {
+			return ctx, nil
+		}
+	} else {
+		return ctx, fmt.Errorf("try to remove label, but env is not k8s env")
 	}
 	return ctx, nil
 }

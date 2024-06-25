@@ -27,14 +27,15 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/testhub/setup/controller"
 )
 
 type K8sEnv struct {
 	deployType           string
 	config               *rest.Config
 	k8sClient            *kubernetes.Clientset
-	deploymentController *DeploymentController
-	daemonsetController  *DaemonSetController
+	deploymentController *controller.DeploymentController
+	daemonsetController  *controller.DaemonSetController
 }
 
 func NewDaemonSetEnv() *K8sEnv {
@@ -43,6 +44,10 @@ func NewDaemonSetEnv() *K8sEnv {
 	}
 	env.init()
 	return env
+}
+
+func (k *K8sEnv) GetType() string {
+	return k.deployType
 }
 
 func (k *K8sEnv) ExecOnLogtail(command string) error {
@@ -80,11 +85,11 @@ func (k *K8sEnv) ExecOnSource(command string) error {
 	return nil
 }
 
-func (k *K8sEnv) AddFilter(filter ContainerFilter) error {
+func (k *K8sEnv) AddFilter(filter controller.ContainerFilter) error {
 	return k.deploymentController.AddFilter("e2e-generator", filter)
 }
 
-func (k *K8sEnv) RemoveFilter(filter ContainerFilter) error {
+func (k *K8sEnv) RemoveFilter(filter controller.ContainerFilter) error {
 	return k.deploymentController.RemoveFilter("e2e-generator", filter)
 }
 
@@ -105,8 +110,8 @@ func (k *K8sEnv) init() {
 	}
 	k.config = c
 	k.k8sClient = k8sClient
-	k.deploymentController = NewDeploymentController(k.k8sClient)
-	k.daemonsetController = NewDaemonSetController(k.k8sClient)
+	k.deploymentController = controller.NewDeploymentController(k.k8sClient)
+	k.daemonsetController = controller.NewDaemonSetController(k.k8sClient)
 }
 
 func (k *K8sEnv) execInPod(config *rest.Config, namespace, podName, containerName string, command []string) error {

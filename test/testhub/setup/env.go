@@ -16,10 +16,9 @@ package setup
 var Env TestEnv
 
 type TestEnv interface {
+	GetType() string
 	ExecOnLogtail(command string) error
 	ExecOnSource(command string) error
-	AddFilter(filter ContainerFilter) error
-	RemoveFilter(filter ContainerFilter) error
 }
 
 func InitEnv(envType string) {
@@ -28,5 +27,7 @@ func InitEnv(envType string) {
 		Env = NewHostEnv()
 	case "daemonset":
 		Env = NewDaemonSetEnv()
+	case "docker-compose":
+		Env = NewDockerComposeEnv()
 	}
 }

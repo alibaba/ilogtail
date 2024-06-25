@@ -15,10 +15,28 @@ package cleanup
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/alibaba/ilogtail/test/testhub/control"
 	"github.com/alibaba/ilogtail/test/testhub/setup"
+	"github.com/alibaba/ilogtail/test/testhub/setup/subscriber"
 )
+
+func HandleSignal() {
+	if setup.Env == nil {
+		return
+	}
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		All()
+		os.Exit(0)
+	}()
+}
 
 func All() {
 	if setup.Env == nil {
@@ -28,4 +46,6 @@ func All() {
 	_, _ = control.RemoveAllLocalConfig(ctx)
 	_, _ = AllGeneratedLog(ctx)
 	_, _ = GoTestCache(ctx)
+	_, _ = DeleteContainers(ctx)
+	_ = subscriber.TestSubscriber.Stop()
 }

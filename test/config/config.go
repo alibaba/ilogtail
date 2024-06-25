@@ -21,12 +21,17 @@ type Config struct {
 	// Log
 	GeneratedLogDir string `mapstructure:"generated_log_dir" yaml:"generated_log_dir"`
 	WorkDir         string `mapstructure:"work_dir" yaml:"work_dir"`
-	// SSH
+	// Host
 	SSHUsername string `mapstructure:"ssh_username" yaml:"ssh_username"`
 	SSHIP       string `mapstructure:"ssh_ip" yaml:"ssh_ip"`
 	SSHPassword string `mapstructure:"ssh_password" yaml:"ssh_password"`
 	// K8s
 	KubeConfigPath string `mapstructure:"kube_config_path" yaml:"kube_config_path"`
+	// docker compose
+	Profile          bool     `mapstructure:"profile" yaml:"profile"`
+	CoveragePackages []string `mapstructure:"coverage_packages" yaml:"coverage_packages"`
+	TestingInterval  string   `mapstructure:"testing_interval" yaml:"testing_interval"`
+
 	// SLS
 	Project         string        `mapstructure:"project" yaml:"project"`
 	Logstore        string        `mapstructure:"logstore" yaml:"logstore"`
@@ -112,20 +117,3 @@ type (
 		Spec      map[string]interface{} `mapstructure:"spec" yaml:"spec"`
 	}
 )
-
-func GetDefaultCase() *Case {
-	return &Case{
-		TestingInterval: "60s",
-		Retry: Retry{
-			Times:    0,
-			Interval: "10s",
-		},
-		Ilogtail: Ilogtail{
-			CloseWait:      "10s",
-			LoadConfigWait: "5s",
-		},
-		Boot: Boot{
-			Timeout: "60s",
-		},
-	}
-}
