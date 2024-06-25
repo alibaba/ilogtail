@@ -234,7 +234,7 @@ void start_server() {
 UNIT_TEST_CASE(ScrapeJobUnittest, ScrapeJobConstructor);
 UNIT_TEST_CASE(ScrapeJobUnittest, ScrapeJobTargetsDiscovery);
 void ScrapeJobUnittest::ScrapeJobConstructor() {
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>(mConfig);
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>(mConfig["ScrapeConfig"]);
     EXPECT_TRUE(scrapeJobPtr->GetScrapeConfig().isMember("http_sd_configs"));
     EXPECT_TRUE(scrapeJobPtr->GetScrapeConfig()["http_sd_configs"].isArray());
     EXPECT_EQ(scrapeJobPtr->GetScrapeConfig()["http_sd_configs"].size(), 1u);
@@ -248,7 +248,7 @@ void ScrapeJobUnittest::ScrapeJobConstructor() {
 void ScrapeJobUnittest::ScrapeJobTargetsDiscovery() {
     std::thread server_thread([]() { start_server(); });
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>(mConfig);
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>(mConfig["ScrapeConfig"]);
 
     scrapeJobPtr->StartTargetsDiscoverLoop();
     std::this_thread::sleep_for(std::chrono::seconds(6));
@@ -258,10 +258,7 @@ void ScrapeJobUnittest::ScrapeJobTargetsDiscovery() {
     for (const auto& pair : scrapeTargetsMap) {
         EXPECT_TRUE(pair.first.find("192.168.22.7") != std::string::npos);
         EXPECT_EQ(pair.second->mTargets[0], "192.168.22.7:8080");
-        EXPECT_EQ(pair.second->mLabels.size(), 13u);
-        for (auto it = pair.second->mLabels.begin(); it != pair.second->mLabels.end(); ++it) {
-            std::cout << it->first << "=" << it->second << std::endl;
-        }
+        EXPECT_EQ(pair.second->mLabels.size(), 6u);
         EXPECT_EQ(pair.second->mJobName, "_kube-state-metrics");
         EXPECT_EQ(pair.second->mMetricsPath, "/metrics");
         EXPECT_EQ(pair.second->mScheme, "http");

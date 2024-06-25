@@ -31,31 +31,31 @@ const int sRefeshIntervalSeconds = 5;
 /// @brief Construct from json config
 ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
     mScrapeConfig = scrapeConfig;
-    if (scrapeConfig.isMember("job_name")) {
+    if (mScrapeConfig.isMember("job_name")) {
         mJobName = mScrapeConfig["job_name"].asString();
     }
-    if (scrapeConfig.isMember("scheme")) {
+    if (mScrapeConfig.isMember("scheme")) {
         mScheme = mScrapeConfig["scheme"].asString();
     } else {
         mScheme = "http";
     }
-    if (scrapeConfig.isMember("metrics_path")) {
+    if (mScrapeConfig.isMember("metrics_path")) {
         mMetricsPath = mScrapeConfig["metrics_path"].asString();
     } else {
         mMetricsPath = "/metrics";
     }
-    if (scrapeConfig.isMember("scrape_interval")) {
+    if (mScrapeConfig.isMember("scrape_interval")) {
         mScrapeIntervalString = mScrapeConfig["scrape_interval"].asString();
     } else {
         mScrapeIntervalString = "30s";
     }
-    if (scrapeConfig.isMember("scrape_timeout")) {
+    if (mScrapeConfig.isMember("scrape_timeout")) {
         mScrapeTimeoutString = mScrapeConfig["scrape_timeout"].asString();
     } else {
         mScrapeTimeoutString = "10s";
     }
-    if (scrapeConfig.isMember("params") && scrapeConfig["params"].isObject()) {
-        const Json::Value& params = scrapeConfig["params"];
+    if (mScrapeConfig.isMember("params") && mScrapeConfig["params"].isObject()) {
+        const Json::Value& params = mScrapeConfig["params"];
         if (params.isObject()) {
             for (const auto& key : params.getMemberNames()) {
                 const Json::Value& values = params[key];
@@ -130,7 +130,6 @@ unordered_map<string, unique_ptr<ScrapeTarget>> ScrapeJob::GetScrapeTargetsMapCo
 
 void ScrapeJob::TargetsDiscoveryLoop() {
     uint64_t nextTargetsDiscoveryLoopTime = GetCurrentTimeInNanoSeconds();
-    cout << nextTargetsDiscoveryLoopTime << endl;
     while (!mFinished.load()) {
         uint64_t timeNow = GetCurrentTimeInNanoSeconds();
         if (timeNow < nextTargetsDiscoveryLoopTime) {
@@ -140,7 +139,6 @@ void ScrapeJob::TargetsDiscoveryLoop() {
             = GetCurrentTimeInNanoSeconds() + sRefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
 
         string url = mScrapeConfig["http_sd_configs"][0]["url"].asString();
-        cout << url << endl;
         string readBuffer;
         bool b1 = FetchHttpData(url, readBuffer);
         if (!b1) {
