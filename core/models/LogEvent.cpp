@@ -23,6 +23,10 @@ namespace logtail {
 LogEvent::LogEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::LOG, ptr) {
 }
 
+unique_ptr<PipelineEvent> LogEvent::Copy() const {
+    return make_unique<LogEvent>(*this);
+}
+
 StringView LogEvent::GetContent(StringView key) const {
     auto it = mIndex.find(key);
     if (it != mIndex.end()) {
@@ -138,7 +142,9 @@ Json::Value LogEvent::ToJson(bool enableEventMeta) const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (GetTimestampNanosecond()) {
+        root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
+    }
     if (enableEventMeta) {
         root["fileOffset"] = GetPosition().first;
         root["rawSize"] = GetPosition().second;
