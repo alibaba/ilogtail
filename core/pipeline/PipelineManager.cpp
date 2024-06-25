@@ -30,6 +30,8 @@
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
+#include "ebpf/observer/ObserverServer.h"
+#include "ebpf/security/SecurityServer.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
 
@@ -89,6 +91,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     if (isFileServerStarted && (isInputFileChanged || isInputContainerStdioChanged)) {
         FileServer::GetInstance()->Pause();
     }
+    Sender::Instance()->SetQueueUrgent(); // TODO: temporary used
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
 #endif
@@ -198,6 +201,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         ShennongManager::GetInstance()->Resume();
     }
 #endif
+    Sender::Instance()->ResetQueueUrgent(); // TODO: temporary used
 #endif
 }
 
@@ -240,6 +244,9 @@ void PipelineManager::StopAllPipelines() {
 #endif
     FileServer::GetInstance()->Stop();
     PrometheusInputRunner::GetInstance()->Stop();
+    // ebpf
+    SecurityServer::GetInstance()->Stop();
+    ObserverServer::GetInstance()->Stop();
 
     Sender::Instance()->SetQueueUrgent();
     bool logProcessFlushFlag = false;
@@ -252,6 +259,8 @@ void PipelineManager::StopAllPipelines() {
         LOG_INFO(sLogger, ("flush process daemon queue", "succeeded"));
     }
     LogProcess::GetInstance()->HoldOn();
+
+    FlushAllBatch();
 
     LogtailPlugin::GetInstance()->HoldOn(true);
 
@@ -266,6 +275,12 @@ shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
         return nullptr;
     }
     return p;
+}
+
+void PipelineManager::FlushAllBatch() {
+    for (const auto& item : mPipelineNameEntityMap) {
+        item.second->FlushBatch();
+    }
 }
 
 void PipelineManager::IncreasePluginUsageCnt(const unordered_map<string, unordered_map<string, uint32_t>>& statistics) {

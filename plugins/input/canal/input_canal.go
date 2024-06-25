@@ -141,6 +141,8 @@ type ServiceCanal struct {
 	Charset           string
 	// Pack values into two fields: new_data and old_data. False by default.
 	PackValues bool
+	// True时 binlog解析DECIMAL输出原格式而非科学计数法, like:https://github.com/go-mysql-org/go-mysql/blob/6c99b4bff931a5aced0978b78aadb5867afcdcd3/canal/dump.go#L85
+	UseDecimal bool
 
 	shutdown  chan struct{}
 	waitGroup sync.WaitGroup
@@ -189,17 +191,19 @@ func (sc *ServiceCanal) Init(context pipeline.Context) (int, error) {
 	sc.config.DiscardNoMetaRowEvent = true
 	sc.config.IncludeTableRegex = sc.IncludeTables
 	sc.config.ExcludeTableRegex = sc.ExcludeTables
+	sc.config.UseDecimal = sc.UseDecimal
 
 	sc.lastErrorChan = make(chan error, 1)
 
-	sc.rotateCounter = helper.NewCounterMetricAndRegister(context, "binlog_rotate")
-	sc.syncCounter = helper.NewCounterMetricAndRegister(context, "binlog_sync")
-	sc.ddlCounter = helper.NewCounterMetricAndRegister(context, "binlog_ddl")
-	sc.rowCounter = helper.NewCounterMetricAndRegister(context, "binlog_row")
-	sc.xgidCounter = helper.NewCounterMetricAndRegister(context, "binlog_xgid")
-	sc.checkpointCounter = helper.NewCounterMetricAndRegister(context, "binlog_checkpoint")
-	sc.lastBinLogMetric = helper.NewStringMetricAndRegister(context, "binlog_filename")
-	sc.lastGTIDMetric = helper.NewStringMetricAndRegister(context, "binlog_gtid")
+	metricsRecord := context.GetMetricRecord()
+	sc.rotateCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_rotate")
+	sc.syncCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_sync")
+	sc.ddlCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_ddl")
+	sc.rowCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_row")
+	sc.xgidCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_xgid")
+	sc.checkpointCounter = helper.NewCounterMetricAndRegister(metricsRecord, "binlog_checkpoint")
+	sc.lastBinLogMetric = helper.NewStringMetricAndRegister(metricsRecord, "binlog_filename")
+	sc.lastGTIDMetric = helper.NewStringMetricAndRegister(metricsRecord, "binlog_gtid")
 
 	return 0, nil
 }

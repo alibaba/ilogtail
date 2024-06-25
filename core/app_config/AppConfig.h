@@ -28,6 +28,24 @@
 
 namespace logtail {
 
+// ebpf
+// 临时放到这里
+const int32_t defaultReceiveEventChanCap = 4096;
+const bool defaultAdminDebugMode = false;
+const std::string defaultAdminLogLevel = "warn";
+const bool defaultAdminPushAllSpan = false;
+const int32_t defaultAggregationAggWindowSecond = 15;
+const std::string defaultConverageStrategy = "combine";
+const std::string defaultSampleStrategy = "fixedRate";
+const double defaultSampleRate = 0.01;
+const int32_t defaultSocketSlowRequestThresholdMs = 500;
+const int32_t defaultSocketMaxConnTrackers = 10000;
+const int32_t defaultSocketMaxBandWidthMbPerSec = 30;
+const int32_t defaultSocketMaxRawRecordPerSec = 100000;
+const int32_t defaultProfileSampleRate = 10;
+const int32_t defaultProfileUploadDuration = 10;
+const bool defaultProcessEnableOOMDetect = false;
+
 template <class T>
 class DoubleBuffer {
 public:
@@ -160,6 +178,47 @@ private:
     DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
 
     std::string mBindInterface;
+
+    // ebpf
+    // 临时放到这里
+    int32_t mReceiveEventChanCap = defaultReceiveEventChanCap;
+
+    struct AdminConfig {
+        bool mDebugMode = defaultAdminDebugMode;
+        std::string mLogLevel = defaultAdminLogLevel;
+        bool mPushAllSpan = defaultAdminPushAllSpan;
+    } mAdminConfig;
+
+    struct AggregationConfig {
+        int32_t mAggWindowSecond = defaultAggregationAggWindowSecond;
+    } mAggregationConfig;
+
+    struct ConverageConfig {
+        std::string mStrategy = defaultConverageStrategy;
+    } mConverageConfig;
+
+    struct SampleConfig {
+        std::string mStrategy = defaultSampleStrategy;
+        struct Config {
+            double mRate = defaultSampleRate;
+        } mConfig;
+    } mSampleConfig;
+
+    struct SocketProbeConfig {
+        int32_t mSlowRequestThresholdMs = defaultSocketSlowRequestThresholdMs;
+        int32_t mMaxConnTrackers = defaultSocketMaxConnTrackers;
+        int32_t mMaxBandWidthMbPerSec = defaultSocketMaxBandWidthMbPerSec;
+        int32_t mMaxRawRecordPerSec = defaultSocketMaxRawRecordPerSec;
+    } mSocketProbeConfig;
+
+    struct ProfileProbeConfig {
+        int32_t mProfileSampleRate = defaultProfileSampleRate;
+        int32_t mProfileUploadDuration = defaultProfileUploadDuration;
+    } mProfileProbeConfig;
+
+    struct ProcessProbeConfig {
+        bool mEnableOOMDetect = defaultProcessEnableOOMDetect;
+    } mProcessProbeConfig;
 
     // /**
     //  * @brief Load ConfigServer, DataServer and network interface
@@ -399,6 +458,25 @@ public:
 
     void UpdateFileTags();
 
+    // ebpf
+    void LoadEbpfConfig(const Json::Value& confJson);
+
+    int32_t GetReceiveEventChanCap() const { return mReceiveEventChanCap; }
+
+    const AdminConfig& GetAdminConfig() const { return mAdminConfig; }
+
+    const AggregationConfig& GetAggregationConfig() const { return mAggregationConfig; }
+
+    const ConverageConfig& GetConverageConfig() const { return mConverageConfig; }
+
+    const SampleConfig& GetSampleConfig() const { return mSampleConfig; }
+
+    const SocketProbeConfig& GetSocketProbeConfig() const { return mSocketProbeConfig; }
+
+    const ProfileProbeConfig& GetProfileProbeConfig() const { return mProfileProbeConfig; }
+
+    const ProcessProbeConfig& GetProcessProbeConfig() const { return mProcessProbeConfig; }
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;
@@ -409,7 +487,7 @@ public:
     friend class InputFileUnittest;
     friend class InputPrometheusUnittest;
     friend class InputContainerStdioUnittest;
-    friend class AggregatorUnittest;
+    friend class BatcherUnittest;
 #endif
 };
 

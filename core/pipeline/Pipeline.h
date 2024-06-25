@@ -40,8 +40,10 @@ public:
     // copy/move control functions are deleted because of mContext
     bool Init(Config&& config);
     void Start();
-    void Process(std::vector<PipelineEventGroup>& logGroupList);
     void Stop(bool isRemoving);
+    void Process(std::vector<PipelineEventGroup>& logGroupList, size_t inputIndex);
+    void Send(std::vector<PipelineEventGroup>&& groupList);
+    void FlushBatch();
     void RemoveProcessQueue() const;
 
     const std::string& Name() const { return mName; }
@@ -58,11 +60,6 @@ public:
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
 private:
-    bool handleInputFileProcessor(const InputFile* inputFile, int16_t& pluginIndex, const Config& config);
-    bool handleInputContainerStdioProcessor(const InputContainerStdio* inputContainerStdio,
-                                            int16_t& pluginIndex,
-                                            const Config& config);
-    bool handleInputPrometheusProcessor(const InputPrometheus* input, int16_t& pluginIndex, const Config& config);
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
@@ -84,6 +81,12 @@ private:
     friend class InputFileUnittest;
     friend class InputPrometheusUnittest;
     friend class ProcessorTagNativeUnittest;
+    friend class InputEBPFFileSecurityUnittest;
+    friend class InputEBPFProcessSecurityUnittest;
+    friend class InputEBPFNetworkSecurityUnittest;
+    friend class InputEBPFFileObserverUnittest;
+    friend class InputEBPFProcessObserverUnittest;
+    friend class InputEBPFNetworkObserverUnittest;
 #endif
 };
 

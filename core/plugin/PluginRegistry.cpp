@@ -29,6 +29,12 @@
 #include "input/InputFile.h"
 #include "input/InputPrometheus.h"
 #if defined(__linux__) && !defined(__ANDROID__)
+#include "input/InputEBPFFileObserver.h"
+#include "input/InputEBPFFileSecurity.h"
+#include "input/InputEBPFNetworkObserver.h"
+#include "input/InputEBPFNetworkSecurity.h"
+#include "input/InputEBPFProcessObserver.h"
+#include "input/InputEBPFProcessSecurity.h"
 #include "input/InputObserverNetwork.h"
 #ifdef __ENTERPRISE__
 #include "input/InputStream.h"
@@ -121,6 +127,12 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputPrometheus>());
 #if defined(__linux__) && !defined(__ANDROID__)
     RegisterInputCreator(new StaticInputCreator<InputContainerStdio>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFFileObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFFileSecurity>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFNetworkObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFNetworkSecurity>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFProcessObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFProcessSecurity>());
     RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
 #ifdef __ENTERPRISE__
     RegisterInputCreator(new StaticInputCreator<InputStream>());

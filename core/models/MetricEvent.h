@@ -22,6 +22,7 @@
 #include "common/memory/SourceBuffer.h"
 #include "models/MetricValue.h"
 #include "models/PipelineEvent.h"
+#include "models/SizedContainer.h"
 
 namespace logtail {
 
@@ -29,6 +30,8 @@ class MetricEvent : public PipelineEvent {
     friend class PipelineEventGroup;
 
 public:
+    std::unique_ptr<PipelineEvent> Copy() const override;
+    
     StringView GetName() const { return mName; }
     void SetName(const std::string& name);
 
@@ -60,11 +63,11 @@ public:
     void SetTagNoCopy(StringView key, StringView val);
     void DelTag(StringView key);
 
-    std::map<StringView, StringView>::const_iterator LabelsBegin() const { return mTags.begin(); }
-    std::map<StringView, StringView>::const_iterator LabelsEnd() const { return mTags.end(); }
-    size_t LabelsSize() const { return mTags.size(); }
+    std::map<StringView, StringView>::const_iterator LabelsBegin() const { return mTags.mInner.begin(); }
+    std::map<StringView, StringView>::const_iterator LabelsEnd() const { return mTags.mInner.end(); }
+    size_t LabelsSize() const { return mTags.mInner.size(); }
 
-    uint64_t EventsSizeBytes() override;
+    size_t DataSize() const override;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     Json::Value ToJson(bool enableEventMeta = false) const override;
@@ -76,7 +79,7 @@ private:
 
     StringView mName;
     MetricValue mValue;
-    std::map<StringView, StringView> mTags;
+    SizedMap mTags;
 };
 
 } // namespace logtail

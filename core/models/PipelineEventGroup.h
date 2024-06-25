@@ -51,9 +51,7 @@ enum class EventGroupMetaKey {
     CONTAINER_IMAGE_NAME,
     CONTAINER_IMAGE_ID,
 
-    SOURCE_ID,
-    TOPIC,
-    LOGGROUP_KEY // TODO: temporarily used here, should be removed in flusher refactorization
+    SOURCE_ID
 };
 
 using GroupMetadata = std::map<EventGroupMetaKey, StringView>;
@@ -63,13 +61,14 @@ using GroupTags = std::map<StringView, StringView>;
 // We cannot just use default copy constructor as it won't deep copy PipelineEvent pointed in Events vector.
 using EventsContainer = std::vector<PipelineEventPtr>;
 
+// only movable
 class PipelineEventGroup {
 public:
-    PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
-    PipelineEventGroup(const PipelineEventGroup&) = delete;
-    PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
+    PipelineEventGroup(const std::shared_ptr<SourceBuffer>& sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(PipelineEventGroup&&) noexcept;
     PipelineEventGroup& operator=(PipelineEventGroup&&) noexcept;
+
+    PipelineEventGroup Copy() const;
 
     std::unique_ptr<LogEvent> CreateLogEvent();
     std::unique_ptr<MetricEvent> CreateMetricEvent();
@@ -91,8 +90,6 @@ public:
     bool HasMetadata(EventGroupMetaKey key) const;
     void SetMetadataNoCopy(EventGroupMetaKey key, StringView val);
     void DelMetadata(EventGroupMetaKey key);
-    GroupMetadata& MutableAllMetadata() { return mMetadata; };
-    void SwapAllMetadata(GroupMetadata& other) { mMetadata.swap(other); }
     void SetAllMetadata(const GroupMetadata& other) { mMetadata = other; }
 
     void SetTag(StringView key, StringView val);
@@ -100,17 +97,19 @@ public:
     void SetTag(const StringBuffer& key, StringView val);
     void SetTagNoCopy(const StringBuffer& key, const StringBuffer& val);
     StringView GetTag(StringView key) const;
-    const GroupTags& GetTags() const { return mTags; };
+    const GroupTags& GetTags() const { return mTags.mInner; };
+    SizedMap& GetSizedTags() { return mTags; };
     bool HasTag(StringView key) const;
     void SetTagNoCopy(StringView key, StringView val);
     void DelTag(StringView key);
-    GroupTags& MutableTags() { return mTags; };
-    void SwapTags(GroupTags& other) { mTags.swap(other); }
+
+    size_t GetTagsHash() const;
 
     void SetExactlyOnceCheckpoint(const RangeCheckpointPtr& checkpoint) { mExactlyOnceCheckpoint = checkpoint; }
     RangeCheckpointPtr GetExactlyOnceCheckpoint() const { return mExactlyOnceCheckpoint; }
+    bool IsReplay() const;
 
-    uint64_t EventGroupSizeBytes();
+    size_t DataSize() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     // for debug and test
@@ -122,7 +121,7 @@ public:
 
 private:
     GroupMetadata mMetadata; // Used to generate tag/log. Will not output.
-    GroupTags mTags; // custom tags to output
+    SizedMap mTags; // custom tags to output
     EventsContainer mEvents;
     std::shared_ptr<SourceBuffer> mSourceBuffer;
     RangeCheckpointPtr mExactlyOnceCheckpoint;

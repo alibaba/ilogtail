@@ -20,6 +20,7 @@
 #include <ctime>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "common/memory/SourceBuffer.h"
@@ -39,18 +40,24 @@ public:
 
     virtual ~PipelineEvent() = default;
 
+    virtual std::unique_ptr<PipelineEvent> Copy() const = 0;
+
     Type GetType() const { return mType; }
-    time_t GetTimestamp() const { return timestamp; }
-    long GetTimestampNanosecond() const { return timestampNanosecond; }
-    void SetTimestamp(time_t t) { timestamp = t; }
-    void SetTimestamp(time_t t, long ns) {
-        timestamp = t;
-        timestampNanosecond = ns; // Only nanosecond part
+    time_t GetTimestamp() const { return mTimestamp; }
+    std::optional<uint32_t> GetTimestampNanosecond() const { return mTimestampNanosecond; }
+    void SetTimestamp(time_t t) { mTimestamp = t; }
+    void SetTimestamp(time_t t, uint32_t ns) {
+        mTimestamp = t;
+        mTimestampNanosecond = ns; // Only nanosecond part
+    }
+    void SetTimestamp(time_t t, std::optional<uint32_t> ns) {
+        mTimestamp = t;
+        mTimestampNanosecond = ns; // Only nanosecond part
     }
     void ResetPipelineEventGroup(PipelineEventGroup* ptr) { mPipelineEventGroupPtr = ptr; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer();
 
-    virtual uint64_t EventsSizeBytes() = 0;
+    virtual size_t DataSize() const { return sizeof(decltype(mTimestamp)) + sizeof(decltype(mTimestampNanosecond)); };
 
 #ifdef APSARA_UNIT_TEST_MAIN
     virtual Json::Value ToJson(bool enableEventMeta = false) const = 0;
@@ -63,9 +70,13 @@ protected:
     PipelineEvent(Type type, PipelineEventGroup* ptr);
 
     Type mType = Type::NONE;
-    time_t timestamp = 0;
-    long timestampNanosecond = 0;
+    time_t mTimestamp = 0;
+    std::optional<uint32_t> mTimestampNanosecond;
     PipelineEventGroup* mPipelineEventGroupPtr = nullptr;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PipelineEventGroupUnittest;
+#endif
 };
 
 const std::string& PipelineEventTypeToString(PipelineEvent::Type t);
