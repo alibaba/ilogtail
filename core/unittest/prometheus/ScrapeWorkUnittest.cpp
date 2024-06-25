@@ -97,10 +97,10 @@ private:
 };
 
 void ScrapeWorkUnittest::OnStartAndStopScrapeLoop() {
-    ScrapeTarget target = ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100);
+    ScrapeTarget target = ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9100, 3, 3);
     ScrapeWork work(target);
     MockHttpClient* client = new MockHttpClient();
-    work.client.reset(client);
+    work.mClient.reset(client);
 
     // before start
     APSARA_TEST_EQUAL(nullptr, work.mScrapeLoopThread);
@@ -115,8 +115,8 @@ void ScrapeWorkUnittest::OnStartAndStopScrapeLoop() {
 }
 
 void ScrapeWorkUnittest::OnGetRandSleep() {
-    ScrapeTarget target1 = ScrapeTarget("test_job", "/metrics", "http", 15, 15, "172.17.0.1:9100", 9100);
-    ScrapeTarget target2 = ScrapeTarget("test_job", "/metrics", "http", 15, 15, "172.17.0.1:9200", 9200);
+    ScrapeTarget target1 = ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9100, 15, 15);
+    ScrapeTarget target2 = ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9200, 15, 15);
     ScrapeWork work1(target1);
     ScrapeWork work2(target2);
     uint64_t rand1 = work1.getRandSleep();

@@ -29,25 +29,26 @@ namespace logtail {
 
 class PrometheusInputRunner {
 public:
-    PrometheusInputRunner();
+    PrometheusInputRunner(const PrometheusInputRunner&) = delete;
+    PrometheusInputRunner& operator=(const PrometheusInputRunner&) = delete;
 
     static PrometheusInputRunner* GetInstance() {
-        static auto runner = new PrometheusInputRunner;
-        return runner;
+        static PrometheusInputRunner instance;
+        return &instance;
     }
 
-    void UpdateScrapeInput(const std::string& inputName, const std::vector<ScrapeJob>& jobs);
+    void UpdateScrapeInput(const std::string& inputName, std::unique_ptr<ScrapeJob> scrapeJob);
     void RemoveScrapeInput(const std::string& inputName);
 
     void Start();
     void Stop();
     bool HasRegisteredPlugin();
 
-    // void HoldOn();
-    // void Reload();
-
 private:
-    std::unordered_map<std::string, std::set<ScrapeJob>> scrapeInputsMap;
+    PrometheusInputRunner() = default;
+    ~PrometheusInputRunner() = default;
+
+    std::unordered_map<std::string, std::string> mPrometheusInputsMap;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;

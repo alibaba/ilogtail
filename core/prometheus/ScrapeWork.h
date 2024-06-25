@@ -16,13 +16,7 @@
 
 #pragma once
 
-#include <stdint.h>
-
-#include <atomic>
-#include <string>
-
-#include "boost/functional/hash.hpp"
-#include "common/Lock.h"
+#include "Labels.h"
 #include "common/Thread.h"
 #include "models/PipelineEventGroup.h"
 #include "queue/FeedbackQueueKey.h"
@@ -31,39 +25,42 @@
 namespace logtail {
 
 struct ScrapeTarget {
-    std::string jobName;
-    std::string metricsPath;
-    std::string scheme;
-    int scrapeInterval;
-    int scrapeTimeout;
+    ScrapeTarget(const std::vector<std::string>& targets, const Labels& labels, const std::string& source);
+    bool operator<(const ScrapeTarget& other) const;
 
-    std::string host;
-    int port;
+    std::vector<std::string> mTargets;
+    Labels mLabels;
+    std::string mSource;
+
+    std::string mHash;
+
+    std::string mJobName;
+    std::string mMetricsPath;
+    std::string mScheme;
+    std::string mHost;
+    std::string mQueryString;
+    int mPort;
+    int mScrapeInterval;
+    int mScrapeTimeout;
 
     QueueKey queueKey;
     size_t inputIndex;
-
-    std::string targetId;
-    bool operator<(const ScrapeTarget& other) const;
-
-    ScrapeTarget();
-    ScrapeTarget(const Json::Value& target);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     ScrapeTarget(std::string jobName,
                  std::string metricsPath,
                  std::string scheme,
-                 int interval,
-                 int timeout,
                  std::string host,
-                 int port)
-        : jobName(jobName),
-          metricsPath(metricsPath),
-          scheme(scheme),
-          scrapeInterval(interval),
-          scrapeTimeout(timeout),
-          host(host),
-          port(port) {}
+                 int port,
+                 int interval,
+                 int timeout)
+        : mJobName(jobName),
+          mMetricsPath(metricsPath),
+          mScheme(scheme),
+          mHost(host),
+          mPort(port),
+          mScrapeInterval(interval),
+          mScrapeTimeout(timeout) {}
 
 #endif
 };
@@ -71,7 +68,6 @@ struct ScrapeTarget {
 
 class ScrapeWork {
 public:
-    ScrapeWork();
     ScrapeWork(const ScrapeTarget&);
 
     ScrapeWork(const ScrapeWork&) = delete;
@@ -90,11 +86,11 @@ private:
 
     uint64_t getRandSleep();
     sdk::HttpMessage scrape();
-    void pushEventGroup(PipelineEventGroup);
+    void pushEventGroup(PipelineEventGroup&&);
 
-    ScrapeTarget target;
-    std::atomic<bool> finished;
-    std::unique_ptr<sdk::HTTPClient> client;
+    ScrapeTarget mTarget;
+    std::atomic<bool> mFinished;
+    std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;
     // ReadWriteLock mScrapeLoopThreadRWL;
 

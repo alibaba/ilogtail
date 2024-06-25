@@ -134,8 +134,8 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
                 "job_name": "_arms-prom/node-exporter/0",
                 "metrics_path": "/metrics",
                 "scheme": "http",
-                "scrape_interval": 15,
-                "scrape_timeout": 15,
+                "scrape_interval": "15s",
+                "scrape_timeout": "15s",
                 "scrape_targets": [
                     {
                         "host": "172.17.0.3:9100",
@@ -149,11 +149,10 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->scrapeJob.jobName);
-    APSARA_TEST_EQUAL("/metrics", input->scrapeJob.metricsPath);
-    APSARA_TEST_EQUAL(15, input->scrapeJob.scrapeInterval);
-    APSARA_TEST_EQUAL(15, input->scrapeJob.scrapeTimeout);
-    APSARA_TEST_EQUAL(9100, input->scrapeJob.scrapeTargets[0].port);
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
+    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mMetricsPath);
+    APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeIntervalString);
+    APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeTimeoutString);
 
     PrometheusInputRunner::GetInstance()->Stop();
 }
@@ -169,8 +168,8 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
                 "job_name": "_arms-prom/node-exporter/0",
                 "metrics_path": "/metrics",
                 "scheme": "http",
-                "scrape_interval": 15,
-                "scrape_timeout": 15,
+                "scrape_interval": "15s",
+                "scrape_timeout": "15s",
                 "scrape_targets": [
                     {
                         "host": "172.17.0.3:9100",
@@ -186,10 +185,10 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     APSARA_TEST_TRUE(input->Start());
-    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["test_config"].size());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_config") != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
 
     APSARA_TEST_TRUE(input->Stop(true));
-    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap["test_config"].size());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_config") == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
 
     PrometheusInputRunner::GetInstance()->Stop();
 }
@@ -209,8 +208,8 @@ void InputPrometheusUnittest::TestScrapeData() {
                 "job_name": "_arms-prom/node-exporter/0",
                 "metrics_path": "/metrics",
                 "scheme": "http",
-                "scrape_interval": 3,
-                "scrape_timeout": 3,
+                "scrape_interval": "3s",
+                "scrape_timeout": "3s",
                 "scrape_targets": [
                     {
                         "host": "172.17.0.3:9100",
@@ -228,9 +227,9 @@ void InputPrometheusUnittest::TestScrapeData() {
     PrometheusInputRunner::GetInstance()->Start();
 
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    ScraperGroup::GetInstance()->scrapeIdWorkMap["_arms-prom/node-exporter/0-index-0"]->StopScrapeLoop();
-    ScraperGroup::GetInstance()->scrapeIdWorkMap["_arms-prom/node-exporter/0-index-0"]->client.reset(client);
-    ScraperGroup::GetInstance()->scrapeIdWorkMap["_arms-prom/node-exporter/0-index-0"]->StartScrapeLoop();
+    ScraperGroup::GetInstance()->mScrapeWorkMap["_arms-prom/node-exporter/0"]["index-0"]->StopScrapeLoop();
+    ScraperGroup::GetInstance()->mScrapeWorkMap["_arms-prom/node-exporter/0"]["index-0"]->mClient.reset(client);
+    ScraperGroup::GetInstance()->mScrapeWorkMap["_arms-prom/node-exporter/0"]["index-0"]->StartScrapeLoop();
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     unique_ptr<ProcessQueueItem> item;

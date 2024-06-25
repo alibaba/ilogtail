@@ -47,7 +47,8 @@ public:
     size_t size() const;
     // void Bytes();
     // void MatchLabels();
-    // void Hash();
+    std::string Hash();
+    void RemoveMetaLabels();
     // void HashForLabels();
     // void HashWithoutLabels();
     // void BytesWithlabels();

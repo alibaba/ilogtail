@@ -37,21 +37,22 @@ private:
 void ScraperUnittest::OnUpdateScrapeJob() {
     // start scraper group first
     ScraperGroup::GetInstance()->Start();
+   
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
-    scrapeTargets[0].targetId = "index-0";
-    ScrapeJob scrapeJob = ScrapeJob("test_job", "/metrics", "http", 3, 3);
-    scrapeJob.scrapeTargets = scrapeTargets;
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9100, 3, 3));
+    scrapeTargets[0].mHash = "index-0";
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
+    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].mHash, scrapeTargets[0]);
 
-    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
-    ScraperGroup::GetInstance()->UpdateScrapeJob(scrapeJob);
+    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->mScrapeWorkMap.empty());
+    ScraperGroup::GetInstance()->UpdateScrapeJob(move(scrapeJobPtr));
 
-    // sleep 1s
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
-    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
-    ScraperGroup::GetInstance()->RemoveScrapeJob(scrapeJob);
+    // sleep 6s
+    std::this_thread::sleep_for(std::chrono::seconds(6));
+    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->mScrapeJobMap["test_job"]->GetScrapeTargetsMapCopy().size());
+    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->mScrapeWorkMap["test_job"]["index-0"]);
+    ScraperGroup::GetInstance()->RemoveScrapeJob("test_job");
 
     // stop scraper group to clean up
     ScraperGroup::GetInstance()->Stop();
@@ -63,24 +64,24 @@ void ScraperUnittest::OnRemoveScrapeJob() {
 
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
-    scrapeTargets[0].targetId = "index-0";
-    ScrapeJob scrapeJob = ScrapeJob("test_job", "/metrics", "http", 3, 3);
-    scrapeJob.scrapeTargets = scrapeTargets;
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9100, 3, 3));
+    scrapeTargets[0].mHash = "index-0";
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
+    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].mHash, scrapeTargets[0]);
 
-    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
-    ScraperGroup::GetInstance()->UpdateScrapeJob(scrapeJob);
+    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->mScrapeJobMap.empty());
+    ScraperGroup::GetInstance()->UpdateScrapeJob(move(scrapeJobPtr));
+
+    // sleep 6s
+    std::this_thread::sleep_for(std::chrono::seconds(6));
+    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->mScrapeJobMap["test_job"]->GetScrapeTargetsMapCopy().size());
+    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->mScrapeWorkMap["test_job"]["index-0"]);
+    ScraperGroup::GetInstance()->RemoveScrapeJob("test_job");
 
     // sleep 1s
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-    APSARA_TEST_EQUAL((size_t)1, ScraperGroup::GetInstance()->scrapeJobTargetsMap["test_job"].size());
-    APSARA_TEST_NOT_EQUAL(nullptr, ScraperGroup::GetInstance()->scrapeIdWorkMap["index-0"]);
-    ScraperGroup::GetInstance()->RemoveScrapeJob(scrapeJob);
-
-    // sleep 1s
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeJobTargetsMap.empty());
-    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->scrapeIdWorkMap.empty());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->mScrapeJobMap.find("test_job") == ScraperGroup::GetInstance()->mScrapeJobMap.end());
+    APSARA_TEST_TRUE(ScraperGroup::GetInstance()->mScrapeWorkMap.find("test_job") == ScraperGroup::GetInstance()->mScrapeWorkMap.end());
 
     // stop scraper group to clean up
     ScraperGroup::GetInstance()->Stop();

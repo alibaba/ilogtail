@@ -25,28 +25,16 @@
 using namespace std;
 
 namespace logtail {
-PrometheusInputRunner::PrometheusInputRunner() {
-}
 
 /// @brief receive scrape jobs from input plugin and update scrape jobs
-void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, const vector<ScrapeJob>& jobs) {
-    for (const ScrapeJob& job : scrapeInputsMap[inputName]) {
-        ScraperGroup::GetInstance()->RemoveScrapeJob(job);
-    }
-    scrapeInputsMap[inputName].clear();
-    for (const ScrapeJob& job : jobs) {
-        if (!scrapeInputsMap[inputName].count(job)) {
-            scrapeInputsMap[inputName].insert(job);
-            ScraperGroup::GetInstance()->UpdateScrapeJob(job);
-        }
-    }
+void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, std::unique_ptr<ScrapeJob> scrapeJobPtr) {
+    mPrometheusInputsMap[inputName] = scrapeJobPtr->mJobName;
+    ScraperGroup::GetInstance()->UpdateScrapeJob(move(scrapeJobPtr));
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
-    for (const ScrapeJob& job : scrapeInputsMap[inputName]) {
-        ScraperGroup::GetInstance()->RemoveScrapeJob(job);
-    }
-    scrapeInputsMap.erase(inputName);
+    ScraperGroup::GetInstance()->RemoveScrapeJob(mPrometheusInputsMap[inputName]);
+    mPrometheusInputsMap.erase(inputName);
 }
 
 /// @brief targets discovery and start scrape work
@@ -58,11 +46,11 @@ void PrometheusInputRunner::Start() {
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
     ScraperGroup::GetInstance()->Stop();
-    scrapeInputsMap.clear();
+    mPrometheusInputsMap.clear();
 }
 
 bool PrometheusInputRunner::HasRegisteredPlugin() {
-    return !scrapeInputsMap.empty();
+    return !mPrometheusInputsMap.empty();
 }
 
 /// 暂时不做处理

@@ -199,4 +199,18 @@ void LabelsBuilder::Range(const std::function<void(Label)>& closure) {
     }
 }
 
+string Labels::Hash() {
+    return to_string(labels.size());
+}
+
+void Labels::RemoveMetaLabels() {
+    for (auto it = labels.begin(); it != labels.end();) {
+        if (it->first.find("__meta_") == 0) {
+            it = labels.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 } // namespace logtail

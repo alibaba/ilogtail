@@ -16,130 +16,115 @@
 
 #include "Scraper.h"
 
+#include <stdint.h>
+
+#include <atomic>
+#include <string>
+
+#include "boost/functional/hash.hpp"
+#include "common/Lock.h"
+#include "logger/Logger.h"
+
 using namespace std;
 
 namespace logtail {
 
-
-ScrapeJob::ScrapeJob() {
+ScraperGroup::ScraperGroup() : mScraperThread(nullptr) {
 }
 
-/// @brief Construct from json config
-ScrapeJob::ScrapeJob(const Json::Value& jobConfig) {
-    if (jobConfig.isMember("job_name")) {
-        jobName = jobConfig["job_name"].asString();
+void ScraperGroup::UpdateScrapeWork(const string& jobName) {
+    if (mScrapeJobMap.find(jobName) == mScrapeJobMap.end()) {
+        LOG_WARNING(sLogger, ("Job not found", jobName));
+        return;
     }
-    if (jobConfig.isMember("metrics_path")) {
-        metricsPath = jobConfig["metrics_path"].asString();
-    }
-    if (jobConfig.isMember("scheme")) {
-        scheme = jobConfig["scheme"].asString();
-    }
-    if (jobConfig.isMember("scrape_interval")) {
-        scrapeInterval = jobConfig["scrape_interval"].asInt();
-    }
-    if (jobConfig.isMember("scrape_timeout")) {
-        scrapeTimeout = jobConfig["scrape_timeout"].asInt();
-    }
-}
+    const auto& sTMap = mScrapeJobMap[jobName]->GetScrapeTargetsMapCopy();
+    auto& sWMap = mScrapeWorkMap[jobName];
 
-
-bool ScrapeJob::isValid() const {
-    return !jobName.empty();
-}
-
-/// @brief Sort temporarily by name
-bool ScrapeJob::operator<(const ScrapeJob& other) const {
-    return jobName < other.jobName;
-}
-
-vector<ScrapeTarget> ScrapeJob::TargetsDiscovery() const {
-    // 临时过渡
-    return scrapeTargets;
-}
-
-ScraperGroup::ScraperGroup() : runningState(false), scraperThread(nullptr) {
-}
-
-void ScraperGroup::UpdateScrapeJob(const ScrapeJob& job) {
-    if (scrapeJobTargetsMap.count(job.jobName)) {
-        // target级别更新，先全部清理之前的work，然后开启新的work
-        RemoveScrapeJob(job);
-    }
-
-    // 注意解决多个jobs请求targets时的阻塞问题，relabel阻塞
-    // 和master交互时 targets更新而config没变的过程
-    auto updateJobEvnet = [this, job]() {
-        // 进行targets发现
-        vector<ScrapeTarget> targets = job.TargetsDiscovery();
-
-        // targets relabel 逻辑
-
-        scrapeJobTargetsMap[job.jobName] = set(targets.begin(), targets.end());
-        for (const ScrapeTarget& target : scrapeJobTargetsMap[job.jobName]) {
-            scrapeIdWorkMap[target.targetId] = std::make_unique<ScrapeWork>(target);
-            scrapeIdWorkMap[target.targetId]->StartScrapeLoop();
+    // stop obsolete targets
+    vector<string> obsoleteTargets;
+    for (const auto& pair : sWMap) {
+        if (sTMap.find(pair.first) == sTMap.end()) {
+            obsoleteTargets.push_back(pair.first);
         }
-    };
-    unique_lock<std::mutex> lock(eventMutex);
-    jobEventQueue.push(updateJobEvnet);
-    scraperThreadCondition.notify_one();
+    }
+    for (const auto& targetHash : obsoleteTargets) {
+        sWMap[targetHash]->StopScrapeLoop();
+        sWMap.erase(targetHash);
+    }
+
+    // start new targets
+    for (const auto& pair : sTMap) {
+        if (sWMap.find(pair.first) == sWMap.end()) {
+            auto& scrapeTarget = *pair.second;
+            sWMap[pair.first] = make_unique<ScrapeWork>(scrapeTarget);
+            sWMap[pair.first]->StartScrapeLoop();
+        }
+    }
 }
 
-void ScraperGroup::RemoveScrapeJob(const ScrapeJob& job) {
-    auto removeJobEvent = [this, job]() {
-        for (auto target : scrapeJobTargetsMap[job.jobName]) {
-            // 找到对应的线程（协程）并停止
-            auto work = scrapeIdWorkMap.find(target.targetId);
-            if (work != scrapeIdWorkMap.end()) {
-                work->second->StopScrapeLoop();
-                scrapeIdWorkMap.erase(target.targetId);
-            }
+void ScraperGroup::UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr) {
+    RemoveScrapeJob(scrapeJobPtr->mJobName);
+
+    lock_guard<mutex> lock(mMutex);
+
+    scrapeJobPtr->StartTargetsDiscoverLoop();
+    mScrapeJobMap[scrapeJobPtr->mJobName] = move(scrapeJobPtr);
+}
+
+void ScraperGroup::RemoveScrapeJob(const string& jobName) {
+    lock_guard<mutex> lock(mMutex);
+
+    if (mScrapeJobMap.find(jobName) != mScrapeJobMap.end()) {
+        mScrapeJobMap[jobName]->StopTargetsDiscoverLoop();
+        for (auto& pair : mScrapeWorkMap[jobName]) {
+            pair.second->StopScrapeLoop();
         }
-        scrapeJobTargetsMap.erase(job.jobName);
-    };
-    unique_lock<std::mutex> lock(eventMutex);
-    jobEventQueue.push(removeJobEvent);
-    scraperThreadCondition.notify_one();
+        mScrapeWorkMap.erase(jobName);
+        mScrapeJobMap.erase(jobName);
+    }
 }
 
 void ScraperGroup::Start() {
-    runningState = true;
-    scraperThread = CreateThread([this]() { ProcessEvents(); });
+    mFinished.store(false);
+    mScraperThread = CreateThread([this]() { ProcessScrapeWorkUpdate(); });
 }
 
 void ScraperGroup::Stop() {
-    runningState = false;
-    scraperThreadCondition.notify_one();
-    for (auto& iter : scrapeIdWorkMap) {
-        // 根据key找到对应的线程（协程）并停止
-        iter.second->StopScrapeLoop();
+    mFinished.store(true);
+
+    vector<string> jobsToRemove;
+    {
+        lock_guard<mutex> lock(mMutex);
+        for (auto& iter : mScrapeJobMap) {
+            jobsToRemove.push_back(iter.first);
+        }
     }
-    if (scraperThread)
-        scraperThread->Wait(0ULL);
-    scraperThread.reset();
-    scrapeJobTargetsMap.clear();
-    scrapeIdWorkMap.clear();
-    while (!jobEventQueue.empty())
-        jobEventQueue.pop();
+    for (const auto& jobName : jobsToRemove) {
+        RemoveScrapeJob(jobName);
+    }
+
+    if (mScraperThread) {
+        mScraperThread->Wait(0ULL);
+    }
+    mScraperThread.reset();
+
+    {
+        lock_guard<mutex> lock(mMutex);
+        mScrapeWorkMap.clear();
+        mScrapeJobMap.clear();
+    }
 }
 
-void ScraperGroup::ProcessEvents() {
-    JobEvent event;
-    while (runningState) {
+void ScraperGroup::ProcessScrapeWorkUpdate() {
+    while (!mFinished.load()) {
         {
-            std::unique_lock<std::mutex> lock(eventMutex);
-            scraperThreadCondition.wait(lock, [this]() { return !jobEventQueue.empty() || !runningState; });
+            lock_guard<mutex> lock(mMutex);
 
-            if (!runningState && jobEventQueue.empty()) {
-                break;
+            for (auto& iter : mScrapeJobMap) {
+                UpdateScrapeWork(iter.first);
             }
-
-            event = jobEventQueue.front();
-            jobEventQueue.pop();
         }
-
-        event();
+        this_thread::sleep_for(chrono::seconds(sRefeshIntervalSeconds));
     }
 }
 

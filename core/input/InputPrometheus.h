@@ -9,7 +9,9 @@ class InputPrometheus : public Input {
 public:
     static const std::string sName;
 
-    InputPrometheus();
+    std::string mJobName;
+
+    InputPrometheus() = default;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
@@ -18,8 +20,7 @@ public:
 
 private:
     // only one job is supported
-    // std::vector<ScrapeJob> scrapeJobs;
-    ScrapeJob scrapeJob;
+    std::unique_ptr<ScrapeJob> mScrapeJobPtr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;

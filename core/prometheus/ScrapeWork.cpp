@@ -28,17 +28,17 @@ using namespace std;
 
 namespace logtail {
 
-ScrapeWork::ScrapeWork() {
-    client = std::make_unique<sdk::CurlClient>();
-    finished = false;
+ScrapeTarget::ScrapeTarget(const vector<string>& targets, const Labels& labels, const string& source)
+    : mTargets(targets), mLabels(labels), mSource(source) {
+    mHash = mLabels.Get("job") + mLabels.Get("__address__") + mLabels.Hash();
 }
 
-ScrapeWork::ScrapeWork(const ScrapeTarget& target) : target(target), finished(false) {
-    client = std::make_unique<sdk::CurlClient>();
+ScrapeWork::ScrapeWork(const ScrapeTarget& target) : mTarget(target) {
+    mClient = make_unique<sdk::CurlClient>();
 }
 
 void ScrapeWork::StartScrapeLoop() {
-    finished = false;
+    mFinished.store(false);
     // 以线程的方式实现
     if (!mScrapeLoopThread) {
         mScrapeLoopThread = CreateThread([this]() { scrapeLoop(); });
@@ -46,7 +46,7 @@ void ScrapeWork::StartScrapeLoop() {
 }
 
 void ScrapeWork::StopScrapeLoop() {
-    finished = true;
+    mFinished.store(true);
     // 清理线程
     mScrapeLoopThread->Wait(0ULL);
     mScrapeLoopThread.reset();
@@ -57,12 +57,13 @@ void ScrapeWork::scrapeLoop() {
     printf("start prometheus scrape loop\n");
     uint64_t randSleep = getRandSleep();
     printf("randSleep %llums\n", randSleep / 1000ULL / 1000ULL);
-    std::this_thread::sleep_for(std::chrono::nanoseconds(randSleep));
+    this_thread::sleep_for(chrono::nanoseconds(randSleep));
 
-    while (!finished) {
+    while (!mFinished.load()) {
         uint64_t lastProfilingTime = GetCurrentTimeInNanoSeconds();
         // ReadLock lock(mScrapeLoopThreadRWL);
         printf("scrape time %llus\n", lastProfilingTime / 1000ULL / 1000ULL / 1000ULL);
+        time_t defaultTs = time(nullptr);
 
         // scrape target by CurlClient
         // TODO: scrape超时处理逻辑，和出错处理
@@ -73,11 +74,11 @@ void ScrapeWork::scrapeLoop() {
             // text parser
             const auto& sourceBuffer = make_shared<SourceBuffer>();
             auto parser = TextParser(sourceBuffer);
-            auto eventGroup = parser.Parse(httpResponse.content);
+            auto eventGroup = parser.Parse(httpResponse.content, defaultTs);
 
             // 发送到对应的处理队列
             // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
-            pushEventGroup(std::move(*eventGroup));
+            pushEventGroup(move(*eventGroup));
         } else {
             // scrape failed
             // TODO: scrape超时处理逻辑，和出错处理
@@ -88,92 +89,79 @@ void ScrapeWork::scrapeLoop() {
 
         // 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
-        uint64_t timeToWait = (uint64_t)target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL
-            - elapsedTime % ((uint64_t)target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL);
+        uint64_t timeToWait = (uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
+            - elapsedTime % ((uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
         printf("time to wait: %llums\n", timeToWait / 1000ULL / 1000ULL);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(timeToWait));
+        this_thread::sleep_for(chrono::nanoseconds(timeToWait));
     }
     printf("stop loop\n");
 }
 
 uint64_t ScrapeWork::getRandSleep() {
     // 根据target信息构造hash输入
-    string key = string(target.jobName + target.scheme + target.host + target.metricsPath);
-    // 遇到性能问题可以考虑使用xxhash代替Boost.hash优化
-    boost::hash<std::string> string_hash;
-    uint64_t h = string_hash(key);
-    uint64_t randSleep = ((double)1.0) * target.scrapeInterval * (1.0 * h / (uint64_t)0xFFFFFFFFFFFFFFFF);
-    uint64_t sleepOffset = GetCurrentTimeInNanoSeconds() % (target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL);
+    string key = string(mTarget.mJobName + mTarget.mScheme + mTarget.mHost + mTarget.mMetricsPath);
+    hash<string> hash_fn;
+    uint64_t h = hash_fn(key);
+    uint64_t randSleep = ((double)1.0) * mTarget.mScrapeInterval * (1.0 * h / (uint64_t)0xFFFFFFFFFFFFFFFF);
+    uint64_t sleepOffset = GetCurrentTimeInNanoSeconds() % (mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
     if (randSleep < sleepOffset) {
-        randSleep += target.scrapeInterval * 1000ULL * 1000ULL * 1000ULL;
+        randSleep += mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL;
     }
     randSleep -= sleepOffset;
     return randSleep;
 }
 
-inline sdk::HttpMessage ScrapeWork::scrape() {
-    std::map<std::string, std::string> httpHeader;
+inline sdk::HttpMessage ScrapeWork:: scrape() {
+    map<string, string> httpHeader;
     string reqBody;
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusScrapeWork";
     // 使用CurlClient抓取目标
     try {
-        client->Send(sdk::HTTP_GET,
-                     target.host,
-                     target.port,
-                     target.metricsPath,
-                     "",
+        mClient->Send(sdk::HTTP_GET,
+                     mTarget.mHost,
+                     mTarget.mPort,
+                     mTarget.mMetricsPath,
+                     mTarget.mQueryString,
                      httpHeader,
                      reqBody,
-                     target.scrapeTimeout,
+                     mTarget.mScrapeTimeout,
                      httpResponse,
                      "",
-                     false);
+                     mTarget.mScheme == "https");
     } catch (const sdk::LOGException& e) {
         printf("errCode %s, errMsg %s \n", e.GetErrorCode().c_str(), e.GetMessage().c_str());
     }
     return httpResponse;
 }
 
-void ScrapeWork::pushEventGroup(PipelineEventGroup eGroup) {
+void ScrapeWork::pushEventGroup(PipelineEventGroup&& eGroup) {
     // parser.Parse返回unique_ptr但下面的构造函数接收右值引用，所以又一次拷贝消耗
-    auto item = std::make_unique<ProcessQueueItem>(std::move(eGroup), target.inputIndex);
+    auto item = make_unique<ProcessQueueItem>(move(eGroup), mTarget.inputIndex);
     for (size_t i = 0; i < 1000; ++i) {
-        if (ProcessQueueManager::GetInstance()->PushQueue(target.queueKey, std::move(item)) == 0) {
+        if (ProcessQueueManager::GetInstance()->PushQueue(mTarget.queueKey, move(item)) == 0) {
             break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
 bool ScrapeTarget::operator<(const ScrapeTarget& other) const {
-    if (jobName != other.jobName)
-        return jobName < other.jobName;
-    if (scrapeInterval != other.scrapeInterval)
-        return scrapeInterval < other.scrapeInterval;
-    if (scrapeTimeout != other.scrapeTimeout)
-        return scrapeTimeout < other.scrapeTimeout;
-    if (scheme != other.scheme)
-        return scheme < other.scheme;
-    if (metricsPath != other.metricsPath)
-        return metricsPath < other.metricsPath;
-    if (host != other.host)
-        return host < other.host;
-    if (port != other.port)
-        return port < other.port;
-    return targetId < other.targetId;
-}
-
-ScrapeTarget::ScrapeTarget() {
-}
-
-ScrapeTarget::ScrapeTarget(const Json::Value& target) {
-    host = target["host"].asString();
-    if (host.find(':') != std::string::npos) {
-        port = stoi(host.substr(host.find(':') + 1));
-    } else {
-        port = 8080;
-    }
+    if (mJobName != other.mJobName)
+        return mJobName < other.mJobName;
+    if (mScrapeInterval != other.mScrapeInterval)
+        return mScrapeInterval < other.mScrapeInterval;
+    if (mScrapeTimeout != other.mScrapeTimeout)
+        return mScrapeTimeout < other.mScrapeTimeout;
+    if (mScheme != other.mScheme)
+        return mScheme < other.mScheme;
+    if (mMetricsPath != other.mMetricsPath)
+        return mMetricsPath < other.mMetricsPath;
+    if (mHost != other.mHost)
+        return mHost < other.mHost;
+    if (mPort != other.mPort)
+        return mPort < other.mPort;
+    return mHash < other.mHash;
 }
 
 

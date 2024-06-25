@@ -166,7 +166,10 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         }
     }
     if (isInputPrometheusChanged) {
-        PrometheusInputRunner::GetInstance()->Start();
+        if (!isPrometheusInputRunnerStarted) {
+            PrometheusInputRunner::GetInstance()->Start();
+            isPrometheusInputRunnerStarted = true;
+        }
     }
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverChanged) {

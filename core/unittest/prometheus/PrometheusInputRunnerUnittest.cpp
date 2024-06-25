@@ -48,56 +48,55 @@ private:
 void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
-    scrapeTargets[0].targetId = "index-0";
-    auto scrapeJobs = std::vector<ScrapeJob>();
-    scrapeJobs.push_back(ScrapeJob("test_job", "/metrics", "http", 3, 3));
-    scrapeJobs[0].scrapeTargets = scrapeTargets;
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "172.17.0.2", 9100, 3, 3));
+    scrapeTargets[0].mHash = "index-0";
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
+    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].mHash, scrapeTargets[0]);
 
-    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName") == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
     // 代替插件手动注册scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
-    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", move(scrapeJobPtr));
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName") != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
-    scrapeTargets[0].targetId = "index-0";
-    auto scrapeJobs = std::vector<ScrapeJob>();
-    scrapeJobs.push_back(ScrapeJob("test_job", "/metrics", "http", 3, 3));
-    scrapeJobs[0].scrapeTargets = scrapeTargets;
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9100, 3, 3));
+    scrapeTargets[0].mHash = "index-0";
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
+    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].mHash, scrapeTargets[0]);
 
     // 代替插件手动注册scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", scrapeJobs);
-    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", move(scrapeJobPtr));
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName") != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput("testInputName");
-    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap["testInputName"].size());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName") == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", 3, 3, "172.17.0.1:9100", 9100));
-    scrapeTargets[0].targetId = "index-0";
+    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "172.17.0.1", 9100, 3, 3));
+    scrapeTargets[0].mHash = "index-0";
     auto scrapeJobs = std::vector<ScrapeJob>();
-    scrapeJobs.push_back(ScrapeJob("test_job", "/metrics", "http", 3, 3));
-    scrapeJobs[0].scrapeTargets = scrapeTargets;
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
+    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].mHash, scrapeTargets[0]);
 
+    printf("12312312");
     // 代替插件手动注册scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test_input_name", scrapeJobs);
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test_input_name", move(scrapeJobPtr));
     // start
     PrometheusInputRunner::GetInstance()->Start();
-    APSARA_TEST_EQUAL((size_t)1, PrometheusInputRunner::GetInstance()->scrapeInputsMap["test_input_name"].size());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_input_name") != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
 
     sleep(10);
 
     // stop
     PrometheusInputRunner::GetInstance()->Stop();
-    APSARA_TEST_EQUAL((size_t)0, PrometheusInputRunner::GetInstance()->scrapeInputsMap.size());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_input_name") == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
 }
 
 

@@ -26,9 +26,6 @@ namespace logtail {
 
 const string InputPrometheus::sName = "input_prometheus";
 
-InputPrometheus::InputPrometheus() {
-}
-
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
@@ -42,43 +39,23 @@ bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPip
     const Json::Value& scrapeConfig = config["ScrapeConfig"];
 
     // build scrape job
-    scrapeJob = ScrapeJob(scrapeConfig);
-    if (!scrapeJob.isValid()) {
+    mScrapeJobPtr = make_unique<ScrapeJob>(scrapeConfig);
+    if (!mScrapeJobPtr->isValid()) {
         return false;
     }
 
-    // 根据config参数构造target 过渡
-    // 过渡方法 传参targets
-    if (scrapeConfig["scrape_targets"].isArray()) {
-        for (auto targetConfig : scrapeConfig["scrape_targets"]) {
-            ScrapeTarget target(targetConfig);
-            target.jobName = scrapeJob.jobName;
-            target.scheme = scrapeJob.scheme;
-            target.metricsPath = scrapeJob.metricsPath;
-            target.scrapeInterval = scrapeJob.scrapeInterval;
-            target.scrapeTimeout = scrapeJob.scrapeTimeout;
-            target.targetId = scrapeJob.jobName + "-index-" + to_string(scrapeJob.scrapeTargets.size());
-            scrapeJob.scrapeTargets.push_back(target);
-        }
-    }
-
-    // 从Master中请求scrapetargets，但当前缺少依赖master，由config传入
+    mJobName = mScrapeJobPtr->mJobName;
 
     // 为每个job设置queueKey、inputIndex，inputIndex暂时用0代替
-    scrapeJob.queueKey = mContext->GetProcessQueueKey();
-    scrapeJob.inputIndex = 0;
-    for (ScrapeTarget& target : scrapeJob.scrapeTargets) {
-        target.jobName = scrapeJob.jobName;
-        target.queueKey = mContext->GetProcessQueueKey();
-        target.inputIndex = 0;
-    }
+    mScrapeJobPtr->queueKey = mContext->GetProcessQueueKey();
+    mScrapeJobPtr->inputIndex = 0;
 
     return true;
 }
 
 /// @brief register scrape job by PrometheusInputRunner
 bool InputPrometheus::Start() {
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(mContext->GetConfigName(), vector<ScrapeJob>{scrapeJob});
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(mContext->GetConfigName(), move(mScrapeJobPtr));
     return true;
 }
 
