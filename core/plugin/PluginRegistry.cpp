@@ -25,6 +25,7 @@
 
 #include "app_config/AppConfig.h"
 #include "flusher/FlusherSLS.h"
+#include "flusher/FlusherPushGateway.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
 #include "input/InputPrometheus.h"
@@ -160,6 +161,7 @@ void PluginRegistry::LoadStaticPlugins() {
 #endif
 
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherPushGateway>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {

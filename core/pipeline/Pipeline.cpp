@@ -57,7 +57,6 @@ bool Pipeline::Init(Config&& config) {
     // for special treatment below
     const InputFile* inputFile = nullptr;
     const InputContainerStdio* inputContainerStdio = nullptr;
-    const InputPrometheus* inputPrometheus = nullptr;
     bool hasFlusherSLS = false;
 
 #ifdef __ENTERPRISE__
@@ -88,8 +87,6 @@ bool Pipeline::Init(Config&& config) {
                 inputFile = static_cast<const InputFile*>(mInputs[0]->GetPlugin());
             } else if (name == InputContainerStdio::sName) {
                 inputContainerStdio = static_cast<const InputContainerStdio*>(mInputs[0]->GetPlugin());
-            } else if (name == InputPrometheus::sName) {
-                inputPrometheus = static_cast<const InputPrometheus*>(mInputs[0]->GetPlugin());
             }
         } else {
             AddPluginToGoPipeline(detail, "inputs", mGoPipelineWithInput);

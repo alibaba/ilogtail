@@ -27,7 +27,7 @@ namespace logtail {
 const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
-bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     string errorMsg;
 
     // config["ScrapeConfig"]

@@ -18,5 +18,9 @@ project(serializer_unittest)
 add_executable(sls_serializer_unittest SLSSerializerUnittest.cpp)
 target_link_libraries(sls_serializer_unittest unittest_base)
 
+add_executable(push_gateway_serializer_unittest PushGatewaySerializerUnittest.cpp)
+target_link_libraries(push_gateway_serializer_unittest unittest_base)
+
 include(GoogleTest)
 gtest_discover_tests(sls_serializer_unittest)
+gtest_discover_tests(push_gateway_serializer_unittest)

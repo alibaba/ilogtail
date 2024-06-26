@@ -18,5 +18,9 @@ project(flusher_unittest)
 add_executable(flusher_sls_unittest FlusherSLSUnittest.cpp)
 target_link_libraries(flusher_sls_unittest unittest_base)
 
+add_executable(flusher_push_gateway_unittest FlusherPushGatewayUnittest.cpp)
+target_link_libraries(flusher_push_gateway_unittest unittest_base)
+
 include(GoogleTest)
 gtest_discover_tests(flusher_sls_unittest)
+gtest_discover_tests(flusher_push_gateway_unittest)
