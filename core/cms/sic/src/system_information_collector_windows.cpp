@@ -25,6 +25,7 @@
 #include "sic/system_information_collector.h"
 #include "sic/system_information_collector_util.h"
 
+#include "common/ArgusMacros.h"  // RETURN_RVALUE
 #include "common/ScopeGuard.h"
 #include "common/Arithmetic.h"
 #include "common/FieldEntry.h"

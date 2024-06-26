@@ -17,7 +17,7 @@
 #endif
 
 // # C++17开始编译器会RVO,不需要再std::move了
-#if !defined(MSC_VER) && __cplusplus < 201703L
+#if defined(_MSC_VER) || __cplusplus < 201703L
 #   define RETURN_RVALUE(N) return std::move(N)
 #else
 #   define RETURN_RVALUE(N) return N

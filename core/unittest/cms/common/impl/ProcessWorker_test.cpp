@@ -10,7 +10,7 @@
 #include "common/ProcessWorker.h"
 #include <apr-1/apr_thread_proc.h>  // apr_proc_t
 
-#if (defined(__linux__) || defined(__unix__))
+#if !defined(DISABLE_SIC_IN_COMMON) && (defined(__linux__) || defined(__unix__))
 #   define TEST_ALL
 #endif
 #ifdef TEST_ALL
@@ -33,7 +33,7 @@ bool IsInDocker() {
 }
 #ifdef TEST_ALL
 static std::string dmidecodePath() {
-    if (IsInDocker) {
+    if (IsInDocker()) {
         return {}; // docker里拿不到sn，跳过
     }
     auto dmiRoot = fs::path(std::string(__FILE__, SRC_ROOT_OFFSET)) / "cmd" / "dmidecode";
