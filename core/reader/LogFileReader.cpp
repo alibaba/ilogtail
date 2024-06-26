@@ -37,7 +37,6 @@
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/HashUtil.h"
-#include "common/LogFileCollectOffsetIndicator.h"
 #include "common/RandomUtil.h"
 #include "common/TimeUtil.h"
 #include "common/UUIDUtil.h"
@@ -268,14 +267,8 @@ bool LogFileReader::ShouldForceReleaseDeletedFileFd() {
 }
 
 void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t eoConcurrency) {
-    string buffer = LogFileProfiler::mIpAddr + "_" + mHostLogPath + "_" + CalculateRandomUUID();
-    uint64_t cityHash = CityHash64(buffer.c_str(), buffer.size());
-    mSourceId = ToHexString(cityHash);
-    FileDiscoveryConfig config
-        = FileServer::GetInstance()->GetFileDiscoveryConfig(mReaderConfig.second->GetConfigName());
-    mLogGroupKey = HashString(mReaderConfig.second->GetProjectName() + "_" + mReaderConfig.second->GetLogstoreName()
-                              + "_" + mTopicName + "_" + LogFileProfiler::mIpAddr + "_"
-                              + (config.first->GetBasePath() + config.first->GetFilePattern()) + "_" + mSourceId);
+    mSourceId = LogFileProfiler::mIpAddr + "_" + mReaderConfig.second->GetConfigName() + "_" + mHostLogPath + "_"
+        + CalculateRandomUUID();
 
     if (!tailExisted) {
         static CheckPointManager* checkPointManagerPtr = CheckPointManager::Instance();
@@ -1034,7 +1027,7 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     }
 
     size_t lastFilePos = mLastFilePos;
-    bool allowRollback = true;
+    bool tryRollback = true;
     if (event != nullptr && event->IsReaderFlushTimeout()) {
         // If flush timeout event, we should filter whether the event is legacy.
         if (event->GetLastReadPos() == GetLastReadPos() && event->GetLastFilePos() == mLastFilePos
@@ -1042,14 +1035,18 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
             // For the scenario: log rotation, the last line needs to be read by timeout, which is a normal situation.
             // So here only local warning is given, don't raise alarm.
             LOG_WARNING(sLogger,
-                        ("read timeout", "force to read")("last read pos", event->GetLastReadPos())(
-                            "last file pos", event->GetLastFilePos())("file inode", mDevInode.inode));
-            allowRollback = false;
+                        ("read log", "timeout")("project", GetProject())("logstore", GetLogstore())(
+                            "config", GetConfigName())("log reader queue name", mHostLogPath)("log path", mRealLogPath)(
+                            "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                            "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                            "last file position", mLastFilePos)("last file size", mLastFileSize)(
+                            "read size", mLastFilePos - lastFilePos)("log", logBuffer.rawBuffer));
+            tryRollback = false;
         } else {
             return false;
         }
     }
-    bool moreData = GetRawData(logBuffer, mLastFileSize, allowRollback);
+    bool moreData = GetRawData(logBuffer, mLastFileSize, tryRollback);
     if (!logBuffer.rawBuffer.empty() > 0) {
         if (mEOOption) {
             // This read was replayed by checkpoint, adjust mLastFilePos to skip hole.
@@ -1062,7 +1059,8 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     LOG_DEBUG(sLogger,
               ("read log file", mRealLogPath)("last file pos", mLastFilePos)("last file size", mLastFileSize)(
                   "read size", mLastFilePos - lastFilePos));
-    if (HasDataInCache()) {
+    if (HasDataInCache() && GetLastReadPos() == mLastFileSize) {
+        LOG_DEBUG(sLogger, ("add timeout event", mRealLogPath));
         auto event = CreateFlushTimeoutEvent();
         BlockedEventManager::GetInstance()->UpdateBlockEvent(
             GetQueueKey(), GetConfigName(), *event, mDevInode, time(NULL) + mReaderConfig.first->mFlushTimeoutSecs);
@@ -1249,8 +1247,6 @@ bool LogFileReader::CloseTimeoutFilePtr(int32_t curTime) {
                          "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                          "file size", mLastFileSize)("last file position", mLastFilePos));
             CloseFilePtr();
-            // delete item in LogFileCollectOffsetIndicator map
-            LogFileCollectOffsetIndicator::GetInstance()->DeleteItem(mHostLogPath, mDevInode);
             return true;
         }
     }
@@ -1555,7 +1551,7 @@ bool LogFileReader::GetLogTimeByOffset(const char* buffer,
  * "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\n" -> "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\0"
  * "SingleLineLog_1\nSingleLineLog_2\nxxx" -> "SingleLineLog_1\nSingleLineLog_2\0"
  */
-bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback) {
+bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool tryRollback) {
     // Truncate, return false to indicate no more data.
     if (fileSize == mLastFilePos) {
         return false;
@@ -1563,9 +1559,9 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allo
 
     bool moreData = false;
     if (mReaderConfig.first->mFileEncoding == FileReaderOptions::Encoding::GBK)
-        ReadGBK(logBuffer, fileSize, moreData, allowRollback);
+        ReadGBK(logBuffer, fileSize, moreData, tryRollback);
     else
-        ReadUTF8(logBuffer, fileSize, moreData, allowRollback);
+        ReadUTF8(logBuffer, fileSize, moreData, tryRollback);
 
     int64_t delta = fileSize - mLastFilePos;
     if (delta > mReaderConfig.first->mReadDelayAlertThresholdBytes && !logBuffer.rawBuffer.empty()) {
@@ -1670,7 +1666,7 @@ void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
     cpt.set_read_length(readSize);
 }
 
-void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
+void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool tryRollback) {
     char* stringBuffer = nullptr;
     size_t nbytes = 0;
 
@@ -1688,7 +1684,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
             logBuffer.readOffset = mLastFilePos;
             --nbytes;
         }
-        mLastForceRead = !allowRollback;
+        mLastForceRead = true;
         mCache.clear();
         moreData = false;
     } else {
@@ -1716,6 +1712,11 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
             ? ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo)
             : 0UL;
         stringBuffer = stringMemory.data;
+        bool allowRollback = true;
+        // Only when there is no new log and not try rollback, then force read
+        if (!tryRollback && nbytes == 0) {
+            allowRollback = false;
+        }
         if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // read nothing, if no cached data or allow rollback the
             // reader's state cannot be changed
             return;
@@ -1798,12 +1799,13 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     LOG_DEBUG(sLogger, ("read size", nbytes)("last file pos", mLastFilePos));
 }
 
-void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
+void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool tryRollback) {
     std::unique_ptr<char[]> gbkMemory;
     char* gbkBuffer = nullptr;
     size_t readCharCount = 0, originReadCount = 0;
     int64_t lastReadPos = 0;
     bool logTooLongSplitFlag = false, fromCpt = false;
+    bool allowRollback = true;
 
     logBuffer.readOffset = mLastFilePos;
     if (!mLogFileOp.IsOpen()) {
@@ -1819,7 +1821,8 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             logBuffer.readOffset = mLastFilePos;
             --readCharCount;
         }
-        mLastForceRead = !allowRollback;
+        mLastForceRead = true;
+        allowRollback = false;
         lastReadPos = mLastFilePos + readCharCount;
         originReadCount = readCharCount;
         moreData = false;
@@ -1838,6 +1841,10 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         lastReadPos = GetLastReadPos();
         readCharCount
             = READ_BYTE ? ReadFile(mLogFileOp, gbkBuffer + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo) : 0UL;
+        // Only when there is no new log and not try rollback, then force read
+        if (!tryRollback && readCharCount == 0) {
+            allowRollback = false;
+        }
         if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
             return;
         }
@@ -2527,8 +2534,6 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
     }
     group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(GetSourceId()));
-    group.SetMetadata(EventGroupMetaKey::TOPIC, GetTopicName());
-    group.SetMetadata(EventGroupMetaKey::LOGGROUP_KEY, ToString(GetLogGroupKey()));
 
     // for source-specific info without fixed key, we store them in tags directly
     // for log, these includes:
@@ -2540,6 +2545,8 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
     for (size_t i = 0; i < extraTags.size(); ++i) {
         group.SetTag(extraTags[i].key(), extraTags[i].value());
     }
+    StringBuffer b = group.GetSourceBuffer()->CopyString(GetTopicName());
+    group.SetTagNoCopy(LOG_RESERVED_KEY_TOPIC, StringView(b.data, b.size));
 }
 
 PipelineEventGroup LogFileReader::GenerateEventGroup(LogFileReaderPtr reader, LogBuffer* logBuffer) {
