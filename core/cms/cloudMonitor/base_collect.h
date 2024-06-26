@@ -19,14 +19,9 @@ namespace cloudMonitor {
     struct NetStat {
         // 最后两个为TCP_TOTAL,NON_ESTABLISHED
         int tcpStates[SIC_TCP_STATE_END];
-        int updSession;
+        int updSession = 0;
 
-        NetStat() {
-            for (int i = 0; i <= sizeof(tcpStates) / sizeof(tcpStates[0]); i++) {
-                tcpStates[i] = -1;
-            }
-            updSession = 0;
-        }
+        NetStat();
     };
 
     struct InterfaceConfig {

@@ -28,6 +28,15 @@ using namespace common;
 #define COUNT(mib) sizeof(mib) / sizeof(mib[0])
 
 namespace cloudMonitor {
+    NetStat::NetStat() {
+        constexpr const size_t size = sizeof(tcpStates) / sizeof(tcpStates[0]);
+        for (size_t i = 0; i <= size; i++) {
+            tcpStates[i] = -1;
+        }
+        // std::fill(std::begin(tcpStates), std::end(tcpStates), -1);
+        updSession = 0;
+    }
+
     BaseCollect::BaseCollect() {
         mSystemInformationCollector = SystemInformationCollector::New();
     }
