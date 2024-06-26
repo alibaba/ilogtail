@@ -23,6 +23,7 @@ namespace logtail {
 class PipelineEventGroupUnittest : public ::testing::Test {
 public:
     void TestSwapEvents();
+    void TestCopy();
     void TestSetMetadata();
     void TestDelMetadata();
     void TestFromJsonToJson();
@@ -48,6 +49,14 @@ void PipelineEventGroupUnittest::TestSwapEvents() {
     APSARA_TEST_EQUAL_FATAL(0U, mEventGroup->GetEvents().size());
 }
 
+void PipelineEventGroupUnittest::TestCopy() {
+    mEventGroup->AddLogEvent();
+    auto res = mEventGroup->Copy();
+    APSARA_TEST_EQUAL(1U, res.GetEvents().size());
+    APSARA_TEST_EQUAL(&res, res.GetEvents()[0]->mPipelineEventGroupPtr);
+    APSARA_TEST_EQUAL(3U, res.GetSourceBuffer().use_count());
+}
+
 void PipelineEventGroupUnittest::TestSetMetadata() {
     { // string copy, let kv out of scope
         mEventGroup->SetMetadata(EventGroupMetaKey::LOG_FILE_PATH, std::string("value1"));
@@ -64,7 +73,7 @@ void PipelineEventGroupUnittest::TestSetMetadata() {
     }
     std::string value("value4");
     { // StringView nocopy
-        mEventGroup->SetMetadataNoCopy(EventGroupMetaKey::TOPIC, StringView(value));
+        mEventGroup->SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(value));
     }
     size_t afterAlloc = mSourceBuffer->mAllocator.TotalAllocated();
     APSARA_TEST_EQUAL_FATAL(beforeAlloc, afterAlloc);
@@ -72,7 +81,7 @@ void PipelineEventGroupUnittest::TestSetMetadata() {
         {EventGroupMetaKey::LOG_FILE_PATH, "value1"},
         {EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, "value2"},
         {EventGroupMetaKey::LOG_FILE_INODE, "value3"},
-        {EventGroupMetaKey::TOPIC, "value4"}
+        {EventGroupMetaKey::SOURCE_ID, "value4"}
     };
     for (const auto kv : answers) {
         APSARA_TEST_TRUE_FATAL(mEventGroup->HasMetadata(kv.first));
@@ -128,6 +137,7 @@ void PipelineEventGroupUnittest::TestFromJsonToJson() {
 }
 
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestSwapEvents)
+UNIT_TEST_CASE(PipelineEventGroupUnittest, TestCopy)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestSetMetadata)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestDelMetadata)
 UNIT_TEST_CASE(PipelineEventGroupUnittest, TestFromJsonToJson)

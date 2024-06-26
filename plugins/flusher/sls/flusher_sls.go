@@ -39,7 +39,8 @@ type SlsFlusher struct { // nolint:revive
 // Init ...
 func (p *SlsFlusher) Init(context pipeline.Context) error {
 	p.context = context
-	p.lenCounter = helper.NewCounterMetric("flush_sls_size")
+	metricsRecord := context.GetMetricRecord()
+	p.lenCounter = helper.NewCounterMetricAndRegister(metricsRecord, "flush_sls_size")
 	return nil
 }
 
@@ -85,7 +86,6 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 		p.lenCounter.Add(int64(bufLen))
 
 		var rst int
-		// TODO: why use logGroup.Category which is usually empty, why not use logstoreName
 		if !p.EnableShardHash {
 			rst = logtail.SendPb(configName, logGroup.Category, buf, len(logGroup.Logs))
 		} else {

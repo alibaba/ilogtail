@@ -23,6 +23,10 @@ namespace logtail {
 MetricEvent::MetricEvent(PipelineEventGroup* ptr) : PipelineEvent(Type::METRIC, ptr) {
 }
 
+unique_ptr<PipelineEvent> MetricEvent::Copy() const {
+    return make_unique<MetricEvent>(*this);
+}
+
 void MetricEvent::SetName(const string& name) {
     const StringBuffer& b = GetSourceBuffer()->CopyString(name);
     mName = StringView(b.data, b.size);
@@ -69,7 +73,9 @@ Json::Value MetricEvent::ToJson(bool enableEventMeta) const {
     Json::Value root;
     root["type"] = static_cast<int>(GetType());
     root["timestamp"] = GetTimestamp();
-    root["timestampNanosecond"] = GetTimestampNanosecond();
+    if (GetTimestampNanosecond()) {
+        root["timestampNanosecond"] = static_cast<int32_t>(GetTimestampNanosecond().value());
+    }
     root["name"] = mName.to_string();
     root["value"] = MetricValueToJson(mValue);
     if (!mTags.mInner.empty()) {
