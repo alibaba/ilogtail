@@ -86,5 +86,6 @@ rsync -auv ${ARGUS_ROOT}/cmd/release_cloud_monitor/moduleTask.json ${ONE_AGENT_S
 # run_cmd
 rsync -auv ${ARGUS_ROOT}/cmd/release_cloud_monitor/agent.properties ${ONE_AGENT_SRC}/runtime/agent.properties | tail -n +2 | head -n -3
 
+echo
 echo "rsync complete at $(date)"
 echo

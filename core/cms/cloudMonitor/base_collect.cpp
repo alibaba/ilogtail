@@ -30,7 +30,7 @@ using namespace common;
 namespace cloudMonitor {
     NetStat::NetStat() {
         constexpr const size_t size = sizeof(tcpStates) / sizeof(tcpStates[0]);
-        for (size_t i = 0; i <= size; i++) {
+        for (size_t i = 0; i < size; i++) {
             tcpStates[i] = -1;
         }
         // std::fill(std::begin(tcpStates), std::end(tcpStates), -1);
