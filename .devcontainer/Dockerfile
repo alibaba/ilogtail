@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:2.0.2-argus
+FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:2.0.2-argus-snappy
 
 ARG USERNAME=admin
 USER root
@@ -27,6 +27,12 @@ RUN wget http://mirrors.ustc.edu.cn/gnu/libc/glibc-2.18.tar.gz && \
     make install && \
     cd ../ && \
     rm -fr glibc-2.18*
+
+RUN wget https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.41.0.tar.gz --no-check-certificate && \
+    sudo yum install dh-autoreconf curl-devel expat-devel gettext-devel openssl-devel perl-devel zlib-devel && \
+    tar -zxf git-2.41.0.tar.gz && cd git-2.41.0 && \
+    sudo make prefix=/usr/local all && \
+    sudo make prefix=/usr/local install 
 
 # Create the user
 COPY .env /tmp/.env
