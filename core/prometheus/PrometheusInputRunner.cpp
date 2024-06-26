@@ -41,6 +41,7 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
 
 /// @brief targets discovery and start scrape work
 void PrometheusInputRunner::Start() {
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
     while (true) {
         map<string, string> httpHeader;
         httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));

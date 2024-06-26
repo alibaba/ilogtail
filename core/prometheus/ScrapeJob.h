@@ -66,6 +66,7 @@ public:
 private:
     Json::Value mScrapeConfig;
     std::vector<RelabelConfig> mRelabelConfigs;
+    std::map<std::string, std::string> mHeaders;
 
     std::mutex mMutex;
     std::unordered_map<std::string, std::unique_ptr<ScrapeTarget>> mScrapeTargetsMap;

@@ -30,8 +30,6 @@ const string InputPrometheus::sName = "input_prometheus";
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     LOG_INFO(sLogger,("LOG_INFO config", config.toStyledString()));
-    printf("printf config %s", config.toStyledString().c_str());
-    cout << "cout config " << config.toStyledString() << endl;
     
     string errorMsg;
 
@@ -46,6 +44,7 @@ bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPip
     // build scrape job
     mScrapeJobPtr = make_unique<ScrapeJob>(scrapeConfig);
     if (!mScrapeJobPtr->isValid()) {
+        LOG_ERROR(sLogger, ("scrape config not valid", config.toStyledString()));
         return false;
     }
 

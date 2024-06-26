@@ -39,6 +39,7 @@ struct ScrapeTarget {
     std::string mScheme;
     std::string mHost;
     std::string mQueryString;
+    std::map<std::string, std::string> mHeaders;
     int mPort;
     int mScrapeInterval;
     int mScrapeTimeout;
