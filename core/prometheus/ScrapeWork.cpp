@@ -123,7 +123,7 @@ inline sdk::HttpMessage ScrapeWork:: scrape() {
                      mTarget.mPort,
                      mTarget.mMetricsPath,
                      mTarget.mQueryString,
-                     httpHeader,
+                     mTarget.mHeaders,
                      reqBody,
                      mTarget.mScrapeTimeout,
                      httpResponse,

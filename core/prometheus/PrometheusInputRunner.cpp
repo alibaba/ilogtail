@@ -17,6 +17,8 @@
 #include "PrometheusInputRunner.h"
 
 #include "common/TimeUtil.h"
+#include "logger/Logger.h"
+#include "common/StringTools.h"
 #include "prometheus/Scraper.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
@@ -39,12 +41,65 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
 
 /// @brief targets discovery and start scrape work
 void PrometheusInputRunner::Start() {
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
+    while (true) {
+        map<string, string> httpHeader;
+        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+        sdk::HttpMessage httpResponse;
+        try {
+            mClient->Send(sdk::HTTP_GET,
+                          ToString(getenv("OPERATOR_HOST")),
+                          stoi(getenv("OPERATOR_PORT")),
+                          "/register_collector",
+                          "pod_name" + ToString(getenv("POD_NAME")),
+                          httpHeader,
+                          "",
+                          10,
+                          httpResponse,
+                          "",
+                          false);
+        } catch (const sdk::LOGException& e) {
+            LOG_ERROR(sLogger, ("curl error", e.what()));
+        }
+        if (httpResponse.statusCode != 200) {
+            LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
+        } else {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
     ScraperGroup::GetInstance()->Start();
 }
 
 
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
+    for (int retry = 0; retry < 3; ++retry) {
+        map<string, string> httpHeader;
+        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+        sdk::HttpMessage httpResponse;
+        try {
+            mClient->Send(sdk::HTTP_GET,
+                          ToString(getenv("OPERATOR_HOST")),
+                          stoi(getenv("OPERATOR_PORT")),
+                          "/unregister_collector",
+                          "pod_name" + ToString(getenv("POD_NAME")),
+                          httpHeader,
+                          "",
+                          10,
+                          httpResponse,
+                          "",
+                          false);
+        } catch (const sdk::LOGException& e) {
+            LOG_ERROR(sLogger, ("curl error", e.what()));
+        }
+        if (httpResponse.statusCode != 200) {
+            LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
+        } else {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
     ScraperGroup::GetInstance()->Stop();
     mPrometheusInputsMap.clear();
 }

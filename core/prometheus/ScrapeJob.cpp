@@ -18,6 +18,7 @@
 
 #include <curl/curl.h>
 
+#include "common/FileSystemUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -69,6 +70,15 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
             }
         }
     }
+    if (mScrapeConfig.isMember("bearer_token_file")) {
+        string bearerToken;
+        bool b = ReadFile(mScrapeConfig["bearer_token_file"].asString(), bearerToken);
+        if (!b) {
+            LOG_ERROR(sLogger, ("read bearer_token_file failed, bearer_token_file", mScrapeConfig["bearer_token_file"].asString()));
+        }
+        string mode = " Bearer ";
+        mHeaders["Authorization"] = mode + bearerToken;
+    }
     vector<string> sdConfigs
         = {"azure_sd_configs",       "consul_sd_configs",     "digitalocean_sd_configs", "docker_sd_configs",
            "dockerswarm_sd_configs", "dns_sd_configs",        "ec2_sd_configs",          "eureka_sd_configs",
@@ -86,7 +96,6 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
         mScrapeConfig.removeMember(sdConfig);
     }
     mScrapeConfig["http_sd_configs"].append(httpSDConfig);
-
     for (const auto& relabelConfig : mScrapeConfig["relabel_configs"]) {
         mRelabelConfigs.push_back(RelabelConfig(relabelConfig));
     }
@@ -276,6 +285,7 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         st.mJobName = mJobName;
         st.mScheme = mScheme;
         st.mMetricsPath = mMetricsPath;
+        st.mHeaders = mHeaders;
         st.mScrapeInterval = GetIntSeconds(mScrapeIntervalString);
         st.mScrapeTimeout = GetIntSeconds(mScrapeTimeoutString);
 

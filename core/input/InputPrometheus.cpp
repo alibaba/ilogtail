@@ -17,6 +17,7 @@
 #include "input/InputPrometheus.h"
 
 #include "common/ParamExtractor.h"
+#include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
 
@@ -28,6 +29,8 @@ const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+    LOG_INFO(sLogger,("LOG_INFO config", config.toStyledString()));
+    
     string errorMsg;
 
     // config["ScrapeConfig"]
@@ -41,6 +44,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     // build scrape job
     mScrapeJobPtr = make_unique<ScrapeJob>(scrapeConfig);
     if (!mScrapeJobPtr->isValid()) {
+        LOG_ERROR(sLogger, ("scrape config not valid", config.toStyledString()));
         return false;
     }
 
