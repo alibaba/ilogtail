@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-#include <sstream>
-#include <chrono>
-#include <string>
-#include <cmath>
-#include <boost/algorithm/string.hpp>
-#include "re2/re2.h"
-#include "models/MetricEvent.h"
 #include "prometheus/TextParser.h"
+
+#include <boost/algorithm/string.hpp>
+#include <chrono>
+#include <cmath>
+#include <sstream>
+#include <string>
+
+#include "logger/Logger.h"
+#include "models/MetricEvent.h"
+#include "re2/re2.h"
 
 using namespace std;
 
@@ -64,7 +67,14 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
         // argValue = "9.9410452992e+10"
         // argSuffix = " 1715829785083"
         // argTimestamp = "1715829785083"
-        RE2::FullMatch(line, mSampleRegex, RE2::Arg(&argName), RE2::Arg(&argLabels), RE2::Arg(&argUnwrappedLabels), RE2::Arg(&argValue), RE2::Arg(&argSuffix), RE2::Arg(&argTimestamp));
+        RE2::FullMatch(line,
+                       mSampleRegex,
+                       RE2::Arg(&argName),
+                       RE2::Arg(&argLabels),
+                       RE2::Arg(&argUnwrappedLabels),
+                       RE2::Arg(&argValue),
+                       RE2::Arg(&argSuffix),
+                       RE2::Arg(&argTimestamp));
 
         // skip any sample that has no name
         if (argName.empty()) {
@@ -115,6 +125,9 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
                 }
             }
         }
+        LOG_INFO(sLogger,
+                 ("__name__", e->GetName())("labels", argUnwrappedLabels)("value", e->GetValue<UntypedSingleValue>())(
+                     "timestamp", e->GetTimestamp()));
     }
 
     return eGroup;
@@ -128,4 +141,4 @@ std::shared_ptr<std::exception> TextParser::Err() const {
     return mErr;
 }
 
-}
+} // namespace logtail

@@ -17,6 +17,7 @@
 #include "input/InputPrometheus.h"
 
 #include "common/ParamExtractor.h"
+#include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
 
@@ -28,6 +29,10 @@ const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    LOG_INFO(sLogger,("LOG_INFO config", config.toStyledString()));
+    printf("printf config %s", config.toStyledString().c_str());
+    cout << "cout config " << config.toStyledString() << endl;
+    
     string errorMsg;
 
     // config["ScrapeConfig"]

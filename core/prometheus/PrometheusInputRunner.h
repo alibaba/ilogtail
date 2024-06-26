@@ -24,6 +24,7 @@
 #include "common/Thread.h"
 #include "input/InputPrometheus.h"
 #include "sdk/Common.h"
+#include "sdk/CurlImp.h"
 
 namespace logtail {
 
@@ -45,10 +46,12 @@ public:
     bool HasRegisteredPlugin();
 
 private:
-    PrometheusInputRunner() = default;
+    PrometheusInputRunner() { mClient = std::make_unique<sdk::CurlClient>(); }
     ~PrometheusInputRunner() = default;
 
     std::unordered_map<std::string, std::string> mPrometheusInputsMap;
+
+    std::unique_ptr<sdk::HTTPClient> mClient;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;
