@@ -107,6 +107,7 @@ DECLARE_FLAG_BOOL(enable_collection_mark);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
 DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
+DEFINE_FLAG_INT32(default_reader_flush_timeout, "Timeout before incomplete log is flushed", 5);
 
 namespace logtail {
 
@@ -619,7 +620,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (logEndReg != "" && CheckRegFormat(logEndReg) == false) {
                     throw ExceptionBase("The log end line is not value regex : " + logEndReg);
                 }
-                int readerFlushTimeout = 5;
+                int readerFlushTimeout = INT32_FLAG(default_reader_flush_timeout);
                 if (value.isMember("reader_flush_timeout"))
                     readerFlushTimeout = GetIntValue(value, "reader_flush_timeout");
 
