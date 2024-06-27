@@ -388,8 +388,7 @@ int Rsa::pubEncryptByKey(const std::string& source, const std::string& publicKey
     defer(RSA_free(pRsa));
 
     int rsaLen = RSA_size(pRsa);
-    int enLen = 0;
-    int srcReadLen = 0;
+    size_t srcReadLen = 0;
 
     if (RsaPaddingMode == RSA_PKCS1_PADDING) {
         srcReadLen = rsaLen - 11;
@@ -410,6 +409,7 @@ int Rsa::pubEncryptByKey(const std::string& source, const std::string& publicKey
     //read peer segment
     enString.clear();
     auto *pSrc = (unsigned char*)source.c_str();
+    size_t enLen = 0;
 	while (enLen + srcReadLen <= source.size())
     {
         //ex: use RSA_PKCS1_PADDING, read srcReadLen bytes plaintext and output rsaLen bytes ciphertext segment

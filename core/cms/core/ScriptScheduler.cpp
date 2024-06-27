@@ -353,7 +353,7 @@ int ScriptScheduler::checkForEnd()
                 }
             }
 
-            if ((int) item->output.size() > maxOutputLen) {
+            if (item->output.size() > maxOutputLen) {
                 LogWarn("cmd({}) output too long({} > {})", mid, item->output.size(), maxOutputLen);
                 int errCode = E_OutputTooLong;
                 string errMsg = "output too long";
@@ -385,7 +385,7 @@ int ScriptScheduler::checkForEnd()
             size_t len = pw->output(&m_buf[0], m_buf.size() - 1);
             m_buf[len] = '\0';
             item->output += &m_buf[0];
-            if ((int) item->output.size() > maxOutputLen) {
+            if (item->output.size() > maxOutputLen) {
                 LogWarn("cmd({}) output too long({} > {})", mid, item->output.size(), maxOutputLen);
                 failed = true;
             }

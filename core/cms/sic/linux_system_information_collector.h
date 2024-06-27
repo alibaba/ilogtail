@@ -28,7 +28,7 @@ struct Sic: SicBase
 {
     ~Sic() override;
 
-    int cpu_list_cores = 0;
+    size_t cpu_list_cores = 0;
     // int ticks;
     // the time at which the system booted, in seconds since the Unix epoch.
     uint64_t bootSeconds = 0;  // 秒级时间戳
