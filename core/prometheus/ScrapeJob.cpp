@@ -29,6 +29,24 @@ namespace logtail {
 
 const int sRefeshIntervalSeconds = 5;
 
+string url_encode(const string& value) {
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    for (char c : value) {
+        // Keep alphanumeric characters and other safe characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+        // Any other characters are percent-encoded
+        escaped << '%' << setw(2) << int((unsigned char)c);
+    }
+
+    return escaped.str();
+}
+
 /// @brief Construct from json config
 ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
     mScrapeConfig = scrapeConfig;
@@ -90,7 +108,7 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
     Json::Value httpSDConfig;
     string httpPrefix = "http://";
     httpSDConfig["url"] = httpPrefix + ToString(getenv("OPERATOR_HOST")) + ":" + ToString(getenv("OPERATOR_PORT"))
-        + "/jobs/" + mJobName + "/targets?collector_id=" + ToString(getenv("POD_NAME"));
+        + "/jobs/" + url_encode(mJobName) + "/targets?collector_id=" + ToString(getenv("POD_NAME"));
     httpSDConfig["follow_redirects"] = false;
     for (const auto& sdConfig : sdConfigs) {
         mScrapeConfig.removeMember(sdConfig);
