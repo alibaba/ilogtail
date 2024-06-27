@@ -47,6 +47,7 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
 endif()
 link_argus(${PROJECT_NAME})  # must before boost
+target_link_libraries(${PROJECT_NAME} sigar boost_iostreams boost_program_options backtrace)
 link_jsoncpp(${PROJECT_NAME})
 link_yamlcpp(${PROJECT_NAME})
 link_boost(${PROJECT_NAME})

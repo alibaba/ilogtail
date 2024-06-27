@@ -47,21 +47,8 @@ bool FileWrite::setup(const std::string &file)
     }
     if (dir.is_relative()) {
         fs::path baseDir = SingletonConfig::Instance()->getBaseDir();
-#if defined(ENABLE_COVERAGE)
-        baseDir = TEST_CONF_PATH;
-#endif
         dir = baseDir / dir;
     }
-    // string::size_type lastSlashPosition = file.rfind('/');
-    // if (string::npos == lastSlashPosition) {
-    //     lastSlashPosition = file.rfind('\\');
-    //     if (string::npos == lastSlashPosition) {
-    //         return false;
-    //     }
-    // }
-
-    // std::string dirPath = path.string();
-    // string name = filename.string();
 
     std::string finalFile = (dir / filename).string();
     boost::system::error_code ec;

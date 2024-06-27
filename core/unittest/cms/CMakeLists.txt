@@ -51,7 +51,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # boost_iostreams is depended by ExecCmd function
-target_link_libraries(${PROJECT_NAME} sigar unittest_base boost_iostreams boost_program_options pthread)
+target_link_libraries(${PROJECT_NAME} sigar unittest_base boost_iostreams boost_program_options backtrace pthread)
 
 # if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 #     target_link_options(${PROJECT_NAME} PRIVATE -Wl,--wrap=__gxx_personality_v0 -Wl,--wrap=pthread_create -Wl,--wrap=__gxx_personality_v0 -rdynamic)

@@ -12,6 +12,7 @@
 #include "common/UnitTestEnv.h"
 #include "common/Chrono.h"
 #include "common/StringUtils.h"
+#include "common/Config.h"
 
 using namespace common;
 using namespace std;
@@ -19,16 +20,20 @@ using namespace argus;
 
 class CoreFileWriteTest : public testing::Test {
 protected:
-
     void SetUp() override {
+        oldBaseDir = SingletonConfig::Instance()->getBaseDir();
+        SingletonConfig::Instance()->setBaseDir(TEST_CONF_PATH);
+
         p_shared = new FileWrite(10000, 5);
     }
 
     void TearDown() override {
         Delete(p_shared);
+        SingletonConfig::Instance()->setBaseDir(oldBaseDir);
     }
 
     FileWrite *p_shared = nullptr;
+    fs::path oldBaseDir;
 };
 
 TEST_F(CoreFileWriteTest, setup) {

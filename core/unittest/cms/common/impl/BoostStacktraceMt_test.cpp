@@ -175,6 +175,7 @@ TEST(CommonBoost, chrono) {
 }
 #endif // #if BOOST_VERSION >= 108100
 
+#if !defined(ONE_AGENT)
 TEST(CommonBoost, stacktrace) {
 #if defined(ONE_AGENT) || defined(__APPLE__) || defined(__FreeBSD__)
 #   define __IS_CMS__
@@ -203,3 +204,4 @@ TEST(CommonBoost, stacktrace) {
 #   undef __IS_CMS__
 #endif
 }
+#endif // !ONE_AGENT

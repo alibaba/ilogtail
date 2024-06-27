@@ -142,12 +142,14 @@ namespace argus {
         }
     }
 
-    void ArgusManager::Start() {
+    void ArgusManager::Start(bool enableCloudClient) {
         mSelfMonitor->Start();
 #ifdef ENABLE_CLOUD_MONITOR
-        auto cloudClient = std::make_shared<cloudMonitor::CloudClient>();
-        cloudClient->Start(); // 由于要初始化代理，此处可能会很慢
-        mCloudClient = cloudClient;
+        if (enableCloudClient) {
+            auto cloudClient = std::make_shared<cloudMonitor::CloudClient>();
+            cloudClient->Start(); // 由于要初始化代理，此处可能会很慢
+            mCloudClient = cloudClient;
+        }
         AddOutputChannel<cloudMonitor::CloudChannel>(mChannelManager, cloudMonitor::CloudChannel::Name, {});
 #   ifdef ENABLE_FILE_CHANNEL
         AddOutputChannel<FileChannel>(mChannelManager, "localfile", "agent.enable.localfile.channel");

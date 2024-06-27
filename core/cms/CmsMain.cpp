@@ -14,9 +14,9 @@
 #include "cms/core/argus_manager.h"
 
 namespace cms {
-    fs::path getConfigDir() {
-        return GetExecDir() / "local_data" / "conf";    
-    }
+fs::path getConfigDir() {
+    return GetExecDir() / "local_data" / "conf";
+}
 fs::path getConfigFile() {
     return getConfigDir() / "agent.properties";
 }
@@ -67,8 +67,10 @@ void Start(bool async) {
     LogInfo("BaseDir: {}", cfg->getBaseDir().string());
     cfg->setModuleTaskFile((getConfigDir() / "moduleTask.json").string());
 
-    argus::SingletonArgusManager::Instance()->Start();
-    std::thread thread(StartCmsService);
+    std::thread thread([]() {
+        argus::SingletonArgusManager::Instance()->Start();
+        StartCmsService();
+    });
     async ? thread.detach() : thread.join();
 }
 } // namespace cms

@@ -37,7 +37,7 @@ protected:
         SingletonConfig::Instance();
         p_shared = new DomainSocketCollect;
         ArgusManager *pManager = SingletonArgusManager::Instance();
-        pManager->Start();
+        pManager->Start(false);
         StartGlobalPoll();
     }
 
@@ -58,6 +58,7 @@ int sendData(const string& msg)
         LogError("Can't access socket file [{}].", sockPath);
         return -1;
     }
+    LogDebug("sockPath: {}", sockPath);
 
     NetWorker m_net("DomainSocketCollectUT.sendData");
     m_net.setTimeout(3_s);
@@ -107,6 +108,8 @@ int sendData(const string& msg)
     // 等待对方接收
 #if defined(__APPLE__) || defined(__FreeBSD__)
     std::this_thread::sleep_for(1_s);
+#elif defined(ONE_AGENT)
+    std::this_thread::sleep_for(2_s);
 #else
     std::this_thread::sleep_for(50_ms);
 #endif

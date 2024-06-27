@@ -29,7 +29,8 @@ namespace argus {
     public:
         explicit ArgusManager(TaskManager * = nullptr);
         ~ArgusManager();
-        void Start();
+        // enableCloudClient仅在ENABLE_CLOUD_MONITOR为ON时生效
+        void Start(bool enableCloudClient = true);
 
         std::shared_ptr<ModuleScheduler2> getModuleScheduler() const { return mModuleScheduler; }
         std::shared_ptr<ScriptScheduler> getScriptScheduler() const { return mScriptScheduler; }
