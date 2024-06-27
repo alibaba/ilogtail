@@ -143,11 +143,17 @@ extern "C" int __wrap_pthread_create(pthread_t *__restrict thread,
     }
     return __real_pthread_create(thread, attr, start_routine, arg);
 }
-
-size_t EnumThreads(std::map<TID, pthread_t> &threads) {
-    return pthreadManager->CopyTo(threads);
-}
 #endif // SUPPORT_WRAP_PTHREAD_CREATE
+
+#if !defined(WITHOUT_MINI_DUMP)
+size_t EnumThreads(std::map<TID, pthread_t> &threads) {
+#if defined(SUPPORT_WRAP_PTHREAD_CREATE)
+    return pthreadManager->CopyTo(threads);
+#else
+    return 0;
+#endif
+}
+#endif // WITHOUT_MINI_DUMP
 
 void SetThreadName(const std::string &name) {
     std::string actualName = (name.size() > MAX_THREAD_NAME_LEN? name.substr(0, MAX_THREAD_NAME_LEN): name);
