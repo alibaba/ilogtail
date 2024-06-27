@@ -50,7 +50,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${DEPS_INCLUDE_ROOT}/zlib
 )
 link_argus(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} boost_iostreams boost_program_options)
 # target_link_libraries(${PROJECT_NAME} /opt/logtail/deps/lib/libapr-1.a)
 # target_link_libraries(${PROJECT_NAME} pipeline)
 # target_link_libraries(${PROJECT_NAME} sender)
