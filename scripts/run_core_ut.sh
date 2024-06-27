@@ -24,13 +24,13 @@ search_files() {
         elif [[ -f "$file" ]]; then
             unittest="${file##*_}"
             if [ "$unittest" == "unittest" ]; then
-                if [ "$file" != "cms_unittest"]; then
+                # if [ "$file" != "cms_unittest"]; then
                     echo "============== ${file##*/} =============="
                     cd ${file%/*}
                     ./${file##*/}
                     cd -
                     echo "===================================="
-                fi
+                # fi
             fi
         fi
     done
