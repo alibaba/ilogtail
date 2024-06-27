@@ -19,30 +19,8 @@
 #include "cms/CmsMain.h"
 #include "cms/common/UnitTestEnv.h"
 
-const boost::filesystem::path TEST_CONF_PATH     = boost::filesystem::path(__FILE__).parent_path() / "unittest_data" / "other";
-const boost::filesystem::path TEST_SIC_CONF_PATH = boost::filesystem::path(__FILE__).parent_path() / "unittest_data" / "sic";
-
-namespace logtail {
-
-// class CmsForOneAgentUnittest : public testing::Test {
-// public:
-//     void OnName() {
-//         APSARA_TEST_EQUAL("cms", cms::name());
-//     }
-//     void OnVersion() {
-//         APSARA_TEST_EQUAL(1000000, cms::version());
-//     }
-//     void OnCpu() {
-//         cms::cpu();
-//     }
-// };
-
-
-// UNIT_TEST_CASE(CmsForOneAgentUnittest, OnName)
-// UNIT_TEST_CASE(CmsForOneAgentUnittest, OnVersion)
-// UNIT_TEST_CASE(CmsForOneAgentUnittest, OnCpu)
-
-} // namespace logtail
+const boost::filesystem::path TEST_CONF_PATH     = GetExecDir() / "unittest_data" / "other";
+const boost::filesystem::path TEST_SIC_CONF_PATH = GetExecDir() / "unittest_data" / "sic";
 
 int main(int argc, char** argv) {
     SetupProcess();

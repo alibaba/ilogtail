@@ -155,7 +155,11 @@ namespace common {
             if (!fs::exists(file)) {
                 return -1;
             }
-            fileContent = ::ReadFileContent(file);
+            std::string errMsg;
+            fileContent = ::ReadFileContent(file, &errMsg);
+            if (!errMsg.empty()) {
+                LogInfo("ReadFileContent: {}", errMsg);
+            }
             return static_cast<int>(fileContent.size());
         }
 

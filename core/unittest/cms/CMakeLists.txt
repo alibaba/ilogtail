@@ -53,6 +53,17 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # boost_iostreams is depended by ExecCmd function
 target_link_libraries(${PROJECT_NAME} unittest_base pthread)
 
+if (MSVC)
+    set(TEST_DATA_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/unittest_data)
+else()
+    set(TEST_DATA_PATH ${CMAKE_CURRENT_BINARY_DIR}/unittest_data)
+endif()
+
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    # https://fig.io/manual/cmake/-E
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/unittest_data ${TEST_DATA_PATH}
+)
 # if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 #     target_link_options(${PROJECT_NAME} PRIVATE -Wl,--wrap=__gxx_personality_v0 -Wl,--wrap=pthread_create -Wl,--wrap=__gxx_personality_v0 -rdynamic)
 # endif()

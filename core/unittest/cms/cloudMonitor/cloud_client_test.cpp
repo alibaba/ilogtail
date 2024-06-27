@@ -58,6 +58,7 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
     string fileContent;
     FileUtils::ReadFileContent((TEST_CONF_PATH / "conf/cloudMonitor/heartResponse.json").string(), fileContent);
     auto *pClient = new CloudClient();
+    defer(delete pClient);
     pClient->DealHeartBeatResponse(fileContent);
     NodeItem nodeItem;
     SingletonTaskManager::Instance()->GetNodeItem(nodeItem);
@@ -69,11 +70,11 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
     EXPECT_EQ(nodeItem.operatingSystem, "Linux");
     auto ptr = SingletonTaskManager::Instance()->ProcessCollectItems().GetCopy();
     auto &processCollectItems = *ptr;
-    EXPECT_EQ(processCollectItems.size(), 2);
+    ASSERT_EQ(processCollectItems.size(), 2);
     EXPECT_EQ(processCollectItems[0].name, "argusagent");
     EXPECT_EQ(processCollectItems[1].name, "argusagent_ut");
     vector<MetricItem> metricItems = *SingletonTaskManager::Instance()->MetricItems().Get();
-    EXPECT_EQ(metricItems.size(), 2);
+    ASSERT_EQ(metricItems.size(), 2);
     EXPECT_EQ(metricItems[0].url, "https://metrichub-cms-cn-hangzhou.aliyuncs.com/agent/metrics/putLines");
     EXPECT_EQ(metricItems[0].gzip, false);
     EXPECT_EQ(metricItems[0].useProxy, false);
@@ -109,11 +110,11 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
         }
     }
     vector<TelnetItem> telnetItems = SingletonTaskManager::Instance()->TelnetItems().Values();
-    EXPECT_EQ(telnetItems.size(), 1);
+    ASSERT_EQ(telnetItems.size(), 1);
     EXPECT_EQ(telnetItems[0].taskId, "536176");
     EXPECT_EQ(telnetItems[0].uri, "telnet://10.137.71.2:22");
     std::vector<PingItem> pingItems = SingletonTaskManager::Instance()->PingItems().Values();
-    EXPECT_EQ(pingItems.size(), 1);
+    ASSERT_EQ(pingItems.size(), 1);
     EXPECT_EQ(pingItems[0].taskId, "536175");
     EXPECT_EQ(pingItems[0].host, "10.137.71.2");
     HpcClusterItem hpcClusterItem;
@@ -127,7 +128,6 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
         EXPECT_EQ(hpcClusterItem.hpcNodeInstances[0].instanceId, "i-uf6ef1y46xhgd77hgt5u");
         EXPECT_EQ(hpcClusterItem.hpcNodeInstances[0].ip, "200.0.134.2");
     }
-    delete pClient;
 }
 
 TEST_F(Cms_CloudClientTest, GetPingItemsTest) {

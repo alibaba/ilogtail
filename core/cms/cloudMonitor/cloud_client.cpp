@@ -306,7 +306,7 @@ namespace cloudMonitor {
     }
 
     void CloudClient::DealHeartBeatResponse(const string &response) {
-        LogInfo("the heartbeat response is :{}", response.c_str());
+        LogInfo("the heartbeat response is: {}", response);
         string md5 = MD5String(response.c_str(), response.size());
         if (mResponseMd5 == md5) {
             LogDebug("the heartbeat response is the same with the last,skip parse");
