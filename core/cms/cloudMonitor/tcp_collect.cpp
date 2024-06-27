@@ -144,12 +144,12 @@ int TcpCollect::ReadSnmpFile(TcpMetric &tcpStat, const string &filePath){
    }
    fin.close();
    map<string,long>valueMap;
-   if(keyVector.size()==valueVector.size()){
-       for(int i=0;i<keyVector.size();i++){
+   if(keyVector.size() == valueVector.size()) {
+       for(size_t i = 0; i < keyVector.size(); i++) {
            valueMap[keyVector[i]]=valueVector[i];
        }
    }else{
-       LogError("keySize({}) !=valueSize({})",keyVector.size(),valueVector.size());
+       LogError("keySize({}) != valueSize({})",keyVector.size(),valueVector.size());
        return -1;
    }
    // //copy value to tcpStat;

@@ -85,7 +85,6 @@ const char *const PROCESS_NET_IF_INET6 = "net/if_inet6";
 const char *const SYS_BLOCK = "/sys/block";
 
 const static int SIC_NET_INTERFACE_LIST_MAX = 20;
-const static int HEX_INT_LEN = 8;
 
 extern const int SRC_ROOT_OFFSET;
 
@@ -250,7 +249,7 @@ static SicLinuxIOType getIOType(const fs::path &procDir) {
     };
 
     SicLinuxIOType ioType = IO_STATE_NONE;
-    for (int i = 0; i < sizeof(ioTypes) / sizeof(ioTypes[0]) && ioType == IO_STATE_NONE; i++) {
+    for (size_t i = 0; i < sizeof(ioTypes) / sizeof(ioTypes[0]) && ioType == IO_STATE_NONE; i++) {
         auto &entry = ioTypes[i];
         struct stat ioStat{};
         if (stat(entry.filename.c_str(), &ioStat) == 0) {
@@ -276,7 +275,7 @@ int LinuxSystemInformationCollector::SicInitialize() {
     // PR(get_nprocs());
     // 获取可用核心而不是配置核心
     // SicPtr()->cpu_list_cores = get_nprocs();
-    pSic->cpu_list_cores = static_cast<int>(std::thread::hardware_concurrency());
+    pSic->cpu_list_cores = std::thread::hardware_concurrency();
     pSic->bootSeconds = SicGetBootSeconds();
     pSic->ioType = getIOType(PROCESS_DIR);
 
@@ -355,7 +354,7 @@ int LinuxSystemInformationCollector::SicGetCpuListInformation(std::vector<SicCpu
     std::vector<std::string> cpuLines = {};
     int ret = GetFileLines(PROCESS_DIR / PROCESS_STAT, cpuLines, true, SicPtr()->errorMessage);
     if (ret == SIC_EXECUTABLE_SUCCESS && !cpuLines.empty()) {
-        if (cpuLines.size() <= SicPtr()->cpu_list_cores - 1) {
+        if (cpuLines.size() + 1 <= SicPtr()->cpu_list_cores) {
             // likely only has total cpu
             SicCpuInformation information;
             if (SIC_EXECUTABLE_SUCCESS == GetCpuMetric(cpuLines.front(), information)) {
@@ -364,7 +363,7 @@ int LinuxSystemInformationCollector::SicGetCpuListInformation(std::vector<SicCpu
             }
         }
 
-        for (int i = 1; i <= SicPtr()->cpu_list_cores && i < cpuLines.size(); ++i) {
+        for (size_t i = 1; i <= SicPtr()->cpu_list_cores && i < cpuLines.size(); ++i) {
             SicCpuInformation information;
             if (SIC_EXECUTABLE_SUCCESS == GetCpuMetric(cpuLines[i], information)) {
                 informations.push_back(information);
@@ -430,7 +429,7 @@ void completeSicMemoryInformation(SicMemoryInformation &memInfo,
                                   uint64_t available,
                                   const std::function<void(uint64_t &)> &fnGetMemoryRam) {
     const uint64_t mb = 1024 * 1024;
-    if (available != -1) {
+    if (available != std::numeric_limits<decltype(available)>::max()) {
         // 新内核，存在 MemAvailable
         memInfo.actualUsed = Diff(memInfo.total, available);
         memInfo.actualFree = available;
@@ -674,7 +673,7 @@ int LinuxSystemInformationCollector::SicGetInterfaceConfigList(SicInterfaceConfi
         return ret;
     }
 
-    for (int i = 2; i < netDevLines.size(); ++i) {
+    for (size_t i = 2; i < netDevLines.size(); ++i) {
         std::string netDev = netDevLines[i];
         netDev = netDev.substr(0, netDev.find_first_of(':'));
         netDev = TrimSpace(netDev);
@@ -701,7 +700,7 @@ int LinuxSystemInformationCollector::SicGetInterfaceInformation(const std::strin
         return ret;
     }
 
-    for (int i = 2; i < netDevLines.size(); ++i) {
+    for (size_t i = 2; i < netDevLines.size(); ++i) {
         auto pos = netDevLines[i].find_first_of(':');
         std::string devCounterStr = netDevLines[i].substr(pos + 1);
         std::string devName = netDevLines[i].substr(0, pos);
@@ -792,8 +791,9 @@ int LinuxSystemInformationCollector::SicGetInterfaceConfig(SicInterfaceConfig &i
         std::string inet6Name = netInet6Metric.back();
         inet6Name = TrimSpace(inet6Name);
         if (inet6Name == name) {
-            int index = 0;
-            std::string addr = index < netInet6Metric.size() ? netInet6Metric[index++] : "";
+            // Doc: https://ata.atatech.org/articles/11020228072?spm=ata.25287382.0.0.1c647536bhA7NG#lyRD52DR
+            size_t index = 0;  // 长度为32的16进制IPv6地址
+            std::string addr = index < netInet6Metric.size() ? netInet6Metric[index] : "";
             auto *addr6 = (unsigned char *) &(interfaceConfig.address6.addr.in6);
             char *ptr = const_cast<char *>(addr.c_str());
 
@@ -801,10 +801,13 @@ int LinuxSystemInformationCollector::SicGetInterfaceConfig(SicInterfaceConfig &i
                 addr6[i] = (unsigned char) Hex2Int(std::string{ptr, ptr + 2});
             }
 
-            index++; // skip index
+            index++; // netlink设备号skip index
+
+            index++; // 16进制表示的 prefix length
             interfaceConfig.prefix6Length =
-                    index < netInet6Metric.size() ? convertHex<int>(netInet6Metric[index++]) : 0;
-            interfaceConfig.scope6 = index < netInet6Metric.size() ? convertHex<int>(netInet6Metric[index++]) : 0;
+                index < netInet6Metric.size() ? convertHex<int>(netInet6Metric[index]) : 0;
+            index++; // scope
+            interfaceConfig.scope6 = index < netInet6Metric.size() ? convertHex<int>(netInet6Metric[index]) : 0;
         }
     }
 
@@ -812,14 +815,15 @@ int LinuxSystemInformationCollector::SicGetInterfaceConfig(SicInterfaceConfig &i
 }
 
 void LinuxSystemInformationCollector::SicGetNetAddress(const std::string &str, SicNetAddress &address) {
-    if (str.size() > HEX_INT_LEN) {
+    constexpr const size_t hexIntLen = 8;
+    if (str.size() > hexIntLen) {
         address.family = SicNetAddress::SIC_AF_INET6;
-        for (int i = 0, pos = 0; i < 4 && str.size() >= pos + HEX_INT_LEN; ++i, pos += HEX_INT_LEN) {
-            address.addr.in6[i] = Hex2Int(str.substr(pos, HEX_INT_LEN));
+        for (size_t i = 0, pos = 0; i < 4 && str.size() >= pos + hexIntLen; ++i, pos += hexIntLen) {
+            address.addr.in6[i] = Hex2Int(str.substr(pos, hexIntLen));
         }
     } else {
         address.family = SicNetAddress::SIC_AF_INET;
-        address.addr.in = (str.size() == HEX_INT_LEN) ? Hex2Int(str) : 0;
+        address.addr.in = (str.size() == hexIntLen) ? Hex2Int(str) : 0;
     }
 }
 
@@ -883,7 +887,7 @@ int LinuxSystemInformationCollector::SicReadNetFile(SicNetState &netState,
     }
 
     // [0] 为header
-    for (int i = 1; i < netLines.size() && ret == SIC_EXECUTABLE_SUCCESS; ++i) {
+    for (size_t i = 1; i < netLines.size() && ret == SIC_EXECUTABLE_SUCCESS; ++i) {
         SicNetConnectionInformation netInfo;
         std::vector<std::string> netMetric = split(netLines[i], ' ', true);
         if (netMetric.size() < 10) {
@@ -1227,7 +1231,7 @@ int LinuxSystemInformationCollector::CalDiskUsage(SicIODev &ioDev, SicDiskUsage 
         double interval = diskUsage.snapTime - ioDev.diskUsage.snapTime;
 
         diskUsage.serviceTime = -1;
-        if (diskUsage.time != -1) {
+        if (diskUsage.time != std::numeric_limits<decltype(diskUsage.time)>::max()) {
             uint64_t ios = Diff(diskUsage.reads, ioDev.diskUsage.reads)
                                      + Diff(diskUsage.writes, ioDev.diskUsage.writes);
             double tmp = ((double) ios) * HZ / interval;
@@ -1237,7 +1241,7 @@ int LinuxSystemInformationCollector::CalDiskUsage(SicIODev &ioDev, SicDiskUsage 
         }
 
         diskUsage.queue = -1;
-        if (diskUsage.qTime != -1) {
+        if (diskUsage.qTime != std::numeric_limits<decltype(diskUsage.qTime)>::max()) {
             // 浮点运算：0.0/0.0 => nan, 1.0/0.0 => inf
             double util = ((double) (diskUsage.qTime - ioDev.diskUsage.qTime)) / interval;
             diskUsage.queue = util / 1000.0;
@@ -1655,7 +1659,7 @@ int LinuxSystemInformationCollector::SicGetProcessCredName(pid_t pid,
     }
 
     SicProcessCred cred{};
-    for (int i = 2; i < processStatusLines.size(); ++i) {
+    for (size_t i = 2; i < processStatusLines.size(); ++i) {
         auto metric = split(processStatusLines[i], '\t', false);
         if (metric.size() >= 3 && metric.front() == "Uid:") {
             int index = 1;

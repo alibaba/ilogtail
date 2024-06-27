@@ -27,10 +27,11 @@ void globUtil::myglob1(const string &pattern, vector<std::string> &fileNames) {
 }
 void globUtil::adjustPattern(const string &pattern, vector<string> &patterns){
     string newPattern=pattern;
-    int pos=0;
+    size_t pos = 0;
     while((pos=newPattern.find("**",pos))!=string::npos){
-        int tmpPos = pos+2;
-        for(;tmpPos<newPattern.size()&&newPattern[tmpPos]=='*';tmpPos++);
+        size_t tmpPos = pos+2;
+        for(;tmpPos<newPattern.size()&&newPattern[tmpPos]=='*';tmpPos++){
+        }
         newPattern.erase(pos+2,tmpPos-pos-2);
         if(pos>0&&(newPattern[pos-1]!='/'||(pos+2<newPattern.size()&&newPattern[pos+2]!='/'))){
             string tmpPattern=newPattern;
@@ -49,7 +50,7 @@ void globUtil::adjustPattern(const string &pattern, vector<string> &patterns){
             pos+=2;
         }
         pos+=2;
-    };
+    }
     if(!StringUtils::Contain(patterns,newPattern)){
         patterns.push_back(newPattern);
     }

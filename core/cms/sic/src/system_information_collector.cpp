@@ -43,11 +43,12 @@ const struct {
         {SIC_FILE_SYSTEM_TYPE_CDROM,      "cdrom"},
         {SIC_FILE_SYSTEM_TYPE_SWAP,       "swap"},
 };
-static_assert(SIC_FILE_SYSTEM_TYPE_MAX == sizeof(fsTypeNames) / sizeof(fsTypeNames[0]), "fsTypeNames size not matched");
+constexpr size_t fsTypeNamesCount = sizeof(fsTypeNames) / sizeof(fsTypeNames[0]);
+static_assert(SIC_FILE_SYSTEM_TYPE_MAX == fsTypeNamesCount, "fsTypeNames size not matched");
 
 std::string GetName(SicFileSystemType fs) {
     int idx = static_cast<int>(fs);
-    if (0 <= idx && idx < sizeof(fsTypeNames) / sizeof(fsTypeNames[0]) && fsTypeNames[idx].fs == fs) {
+    if (0 <= idx && (size_t)idx < fsTypeNamesCount && fsTypeNames[idx].fs == fs) {
         return fsTypeNames[idx].name;
     }
     return "";

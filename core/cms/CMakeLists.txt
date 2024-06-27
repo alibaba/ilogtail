@@ -17,8 +17,8 @@ project(cms)
 
 include(cms.cmake)
 
-# boost 1.79 的BOOST_CATCH宏，有些问题直接catch了实例，导致产生catch-value warning
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function -Wno-sign-compare")
+# 严格的编译选项
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function -Wall")
 
 file(GLOB_RECURSE LIB_SOURCE_FILES "${PROJECT_SOURCE_DIR}/*.c*")
 # sic

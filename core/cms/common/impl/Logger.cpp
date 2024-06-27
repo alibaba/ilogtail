@@ -40,7 +40,7 @@ static constexpr size_t logLevelMetaSize = sizeof(logLevelMeta) / sizeof(logLeve
 
 const LogLevelMeta *LogLevelMeta::find(LogLevel level) {
     int index = (int)level;
-    return 0 <= index && index < logLevelMetaSize ? logLevelMeta + index : nullptr;
+    return 0 <= index && size_t(index) < logLevelMetaSize ? logLevelMeta + index : nullptr;
 }
 
 const LogLevelMeta *LogLevelMeta::find(const std::string &levelName) {
