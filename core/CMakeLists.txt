@@ -87,12 +87,17 @@ endif ()
 include(${CMAKE_CURRENT_SOURCE_DIR}/utils.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/links.cmake)
+set(SUBDIR_SOURCE_FILES "")
+include(${CMAKE_CURRENT_SOURCE_DIR}/common/common.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/input/input.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/processor/processor.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/flusher.cmake)
 
-# Subdirectories (modules).
+# Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint common compression config config/provider config/watcher config_manager config_server_pb 
-        container_manager controller event event_handler event_listener file_server flusher go_pipeline input log_pb logger 
-        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon processor/inner
+        batch application app_config checkpoint compression config config/provider config/watcher config_manager config_server_pb 
+        container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
+        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
         profile_sender queue reader sdk sender serializer sls_control fuse
         )
 if (LINUX)
@@ -121,67 +126,30 @@ endif()
 foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${DIR_NAME})
 endforeach (DIR_NAME)
+
 foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     file(GLOB TEMP_SOURCE_FILES ${DIR_NAME}/*.c ${DIR_NAME}/*.cc ${DIR_NAME}/*.cpp)
-    list(APPEND SUB_SOURCE_FILES ${TEMP_SOURCE_FILES})
+    list(APPEND SOURCE_FILES_LIST ${TEMP_SOURCE_FILES})
 endforeach (DIR_NAME)
 
-# remove several files in common
-list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/common/BoostRegexValidator.cpp ${CMAKE_CURRENT_SOURCE_DIR}/common/GetUUID.cpp)
 # remove several files in go_pipeline
-list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.cpp ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.h)
-# xxhash in common
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-    file(GLOB XX_HASH_SOURCE_FILES common/xxhash/*.c common/xxhash/*.h)
-else ()
-    file(GLOB XX_HASH_SOURCE_FILES common/xxhash/xxhash.c common/xxhash/xxhash.h)
-endif ()
-list(APPEND SUB_SOURCE_FILES ${XX_HASH_SOURCE_FILES})
-# memory in common
-list(APPEND SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/common/memory/SourceBuffer.h)
+list(REMOVE_ITEM SOURCE_FILES_LIST ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.cpp ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.h)
 
 if(MSVC)
-    # remove LinuxDaemonUtil in common
-    if (ENABLE_ENTERPRISE)
-        list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/common/LinuxDaemonUtil.h ${CMAKE_CURRENT_SOURCE_DIR}/common/LinuxDaemonUtil.cpp)
-    endif()
     # remove linux event listener
     file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Linux.cpp event_listener/*_Linux.h)
-    list(REMOVE_ITEM SUB_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
-    # remove observer related files in input
-    list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/input/InputObserverNetwork.cpp ${CMAKE_CURRENT_SOURCE_DIR}/input/InputObserverNetwork.h)
-    if (ENABLE_ENTERPRISE)
-        list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/input/InputStream.cpp ${CMAKE_CURRENT_SOURCE_DIR}/input/InputStream.h)
-    endif ()
-    # remove spl related files in processor
-    list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/processor/ProcessorSPL.cpp ${CMAKE_CURRENT_SOURCE_DIR}/processor/ProcessorSPL.h)
-    set(WINDOWS_SOURCE_FILES ${SUB_SOURCE_FILES})
+    list(REMOVE_ITEM SOURCE_FILES_LIST ${REMOVE_EVENT_LISTENER_SOURCES})
+    set(WINDOWS_SOURCE_FILES ${SOURCE_FILES_LIST} ${SUBDIR_SOURCE_FILES})
 elseif(UNIX)
     # remove windows event listener
     file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Windows.cpp event_listener/*_Windows.h)
-    list(REMOVE_ITEM SUB_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
+    list(REMOVE_ITEM SOURCE_FILES_LIST ${REMOVE_EVENT_LISTENER_SOURCES})
     if (LINUX)
-        # needed by observer in common
-        file(GLOB PICOHTTPPARSER_SOURCE_FILES common/protocol/picohttpparser/*.c common/protocol/picohttpparser/*.h)
-        list(APPEND SUB_SOURCE_FILES ${PICOHTTPPARSER_SOURCE_FILES})
         # observer
         file(GLOB_RECURSE APPEND_OBSERVER_SOURCES observer/*)
-        list(APPEND SUB_SOURCE_FILES ${APPEND_OBSERVER_SOURCES})
-        if(WITHOUTSPL)
-            # remove spl related files in processor
-            list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/processor/ProcessorSPL.cpp ${CMAKE_CURRENT_SOURCE_DIR}/processor/ProcessorSPL.h)
-        endif()
-    else()
-        # remove observer related files in input
-        list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/input/InputObserverNetwork.cpp ${CMAKE_CURRENT_SOURCE_DIR}/input/InputObserverNetwork.h)
-        # remove inputStream in input
-        if (ENABLE_ENTERPRISE)
-            list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/input/InputStream.cpp ${CMAKE_CURRENT_SOURCE_DIR}/input/InputStream.h)
-        endif ()
-        # remove spl related files in processor
-        list(REMOVE_ITEM SUB_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/processor/ProcessorSPL.cpp ${CMAKE_CURRENT_SOURCE_DIR}/processor/ProcessorSPL.h)
+        list(APPEND SOURCE_FILES_LIST ${APPEND_OBSERVER_SOURCES})
     endif()
-    set(UNIX_SOURCE_FILES ${SUB_SOURCE_FILES})
+    set(UNIX_SOURCE_FILES ${SOURCE_FILES_LIST} ${SUBDIR_SOURCE_FILES})
 endif()
 
 # Generate SPL library.
