@@ -29,7 +29,7 @@ const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    LOG_INFO(sLogger,("LOG_INFO config", config.toStyledString()));
+    LOG_INFO(sLogger,("LOG_INFO input config", config.toStyledString()));
     
     string errorMsg;
 

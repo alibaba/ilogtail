@@ -151,6 +151,7 @@ protected:
         }
         return parsingSuccessful;
     }
+    uint32_t mPluginIndex = 0;
     Json::Value mConfig;
     std::string mConfigString = R"JSON(
 {
@@ -232,7 +233,7 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
 
     // with scrape job
     configStr = R"(
@@ -256,7 +257,7 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
     APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
     APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mMetricsPath);
     APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeIntervalString);
@@ -290,7 +291,8 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+
+    APSARA_TEST_TRUE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
 
     APSARA_TEST_TRUE(input->Start());
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_config")
@@ -421,7 +423,7 @@ void InputPrometheusUnittest::TestScrapeData() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_TRUE(input->Init(mConfig, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(mConfig, mPluginIndex, optionalGoPipeline));
     input->Start();
 
     std::this_thread::sleep_for(std::chrono::seconds(6));

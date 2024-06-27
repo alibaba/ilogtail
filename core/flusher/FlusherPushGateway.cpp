@@ -18,6 +18,7 @@
 
 #include <vector>
 
+#include "logger/Logger.h"
 #include "sdk/Common.h"
 #include "sender/Sender.h"
 
@@ -28,21 +29,25 @@ namespace logtail {
 
 const string FlusherPushGateway::sName = "flusher_push_gateway";
 bool FlusherPushGateway::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher config", config.toStyledString()));
     if (config.isMember("pushGatewayScheme")) {
         const Json::Value& pushGatewayScheme = config["pushGatewayScheme"];
         mPushGatewayScheme = pushGatewayScheme.asString();
+        LOG_INFO(sLogger, ("mPushGatewayScheme", mPushGatewayScheme));
     } else {
         // TODO: throws exception
     }
     if (config.isMember("pushGatewayHost")) {
         const Json::Value& pushGatewayHost = config["pushGatewayHost"];
         mPushGatewayHost = pushGatewayHost.asString();
+        LOG_INFO(sLogger, ("mPushGatewayHost", mPushGatewayHost));
     } else {
         // TODO: throws exception
     }
     if (config.isMember("pushGatewayPath")) {
         const Json::Value& pushGatewayPath = config["pushGatewayPath"];
         mPushGatewayPath = pushGatewayPath.asString();
+        LOG_INFO(sLogger, ("mPushGatewayPath", mPushGatewayPath));
     } else {
         // TODO: throws exception
     }
