@@ -96,15 +96,14 @@
 
     message HeartbeatResponse {
         bytes request_id = 1;  
-        int32 code = 2;      
-        string message = 3;     
-        uint64 capabilities = 4;                            // Bitmask of flags defined by ServerCapabilities enum
+        ServerErrorResponse error_response = 2;             // Set value indicates error
+        uint64 capabilities = 3;                            // Bitmask of flags defined by ServerCapabilities enum
 
-        repeated ConfigDetail pipeline_config_updates = 5;  // Agent's pipeline config update status
-        repeated ConfigDetail process_config_updates = 6;   // Agent's process config update status
-        repeated CommandDetail custom_command_updates = 7;  // Agent's commands updates
-        uint64 flags = 8;                                   // Predefined command flag
-        bytes opaque = 9;                                   // Opaque data for extension
+        repeated ConfigDetail pipeline_config_updates = 4;  // Agent's pipeline config update status
+        repeated ConfigDetail process_config_updates = 5;   // Agent's process config update status
+        repeated CommandDetail custom_command_updates = 6;  // Agent's commands updates
+        uint64 flags = 7;                                   // Predefined command flag
+        bytes opaque = 8;                                   // Opaque data for extension
     }
     
     message ConfigDetail {
@@ -133,6 +132,11 @@
         RembersCustomCommandStatus         = 0x00000008;
 
         // bits before 2^16 (inclusive) are reserved for future official fields
+    }
+
+    message ServerErrorResponse {
+        int32 error_code = 1;                               // None-zero value indicates error
+        string error_message = 2;                           // Error message
     }
 
     enum ResponseFlags {
