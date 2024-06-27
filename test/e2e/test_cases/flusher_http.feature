@@ -11,7 +11,7 @@ Feature: flusher http
     db_name: mydb
     measurement: weather
     """
-    Given {flusher-http-case} config as below
+    Given {flusher-http-case} local config as below
     """
     enable: true
     inputs:

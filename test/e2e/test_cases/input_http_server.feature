@@ -8,12 +8,12 @@ Feature: input http server
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-http-server-case} config as below
+    Given {input-http-server-case} local config as below
     """
     enable: true
     inputs:
       - Type: service_http_server
-        Address: ":18086"
+        Address: ":18089"
         Format: influxdb
         FieldsExtend: true
     processors:
@@ -27,8 +27,9 @@ Feature: input http server
             FieldType: json
             ExpondJson: true
     """
+    Given iLogtail expose port {18089} to {18089}
     When start docker-compose dependencies {input_http_server}
-    When generate {10} http logs, with interval {10}ms, url: {http://ilogtailC:18086/?db=mydb}, method: {POST}, body:
+    When generate {10} http logs, with interval {10}ms, url: {http://ilogtailC:18089/?db=mydb}, method: {POST}, body:
     """
     weather,city=hz value=32
     """

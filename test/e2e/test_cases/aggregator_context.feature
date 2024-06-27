@@ -8,7 +8,7 @@ Feature: aggregator context
     Given subcribe data from {grpc} with config
     """
     """
-    Given {aggregator-context-case} config as below
+    Given {aggregator-context-case} local config as below
     """
     global:
       DefaultLogQueueSize: 10

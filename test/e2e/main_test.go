@@ -24,12 +24,12 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
-	"github.com/alibaba/ilogtail/test/testhub/cleanup"
-	"github.com/alibaba/ilogtail/test/testhub/control"
-	"github.com/alibaba/ilogtail/test/testhub/setup"
-	"github.com/alibaba/ilogtail/test/testhub/setup/subscriber"
-	"github.com/alibaba/ilogtail/test/testhub/trigger"
-	"github.com/alibaba/ilogtail/test/testhub/verify"
+	"github.com/alibaba/ilogtail/test/engine/cleanup"
+	"github.com/alibaba/ilogtail/test/engine/control"
+	"github.com/alibaba/ilogtail/test/engine/setup"
+	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
+	"github.com/alibaba/ilogtail/test/engine/trigger"
+	"github.com/alibaba/ilogtail/test/engine/verify"
 )
 
 func TestMain(m *testing.M) {
@@ -78,7 +78,11 @@ func scenarioInitializer(ctx *godog.ScenarioContext) {
 	// Given
 	ctx.Given(`^\{(\S+)\} environment$`, setup.InitEnv)
 	ctx.Given(`^iLogtail depends on containers \{(.*)\}`, setup.SetDockerComposeDependOn)
-	ctx.Given(`^\{(.*)\} config as below`, control.AddLocalConfig)
+	ctx.Given(`^iLogtail container mount \{(.*)\} to \{(.*)\}`, setup.MountVolume)
+	ctx.Given(`^iLogtail expose port \{(.*)\} to \{(.*)\}`, setup.ExposePort)
+	ctx.Given(`^\{(.*)\} local config as below`, control.AddLocalConfig)
+	ctx.Given(`^\{(.*)\} http config as below`, control.AddHttpConfig)
+	ctx.Given(`^remove http config \{(.*)\}`, control.RemoveHttpConfig)
 	ctx.Given(`^subcribe data from \{(\S+)\} with config`, subscriber.InitSubscriber)
 
 	// When
@@ -91,13 +95,16 @@ func scenarioInitializer(ctx *godog.ScenarioContext) {
 	// Then
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)
 	ctx.Then(`^there is at least \{(\d+)\} logs$`, verify.LogCountAtLeast)
+	ctx.Then(`^there is at least \{(\d+)\} logs with filter key \{(.*)\} value \{(.*)\}$`, verify.LogCountAtLeastWithFilter)
 	ctx.Then(`^the log fields match regex single`, verify.RegexSingle)
 	ctx.Then(`^the log fields match kv`, verify.LogFieldKV)
 	ctx.Then(`^the log tags match kv`, verify.TagKV)
 	ctx.Then(`^the context of log is valid$`, verify.LogContext)
 	ctx.Then(`^the log fields match`, verify.LogField)
-	ctx.Then(`wait`, func(ctx context.Context) context.Context {
-		time.Sleep(3 * time.Minute)
+	ctx.Then(`^the log labels match`, verify.LogLabel)
+	ctx.Then(`^the logtail log contains \{(\d+)\} times of \{(.*)\}$`, verify.LogtailPluginLog)
+	ctx.Then(`wait \{(\d+)\} seconds`, func(ctx context.Context, t int) context.Context {
+		time.Sleep(time.Duration(t) * time.Second)
 		return ctx
 	})
 

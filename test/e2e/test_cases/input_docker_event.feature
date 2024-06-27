@@ -8,7 +8,7 @@ Feature: input docker event
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-container-stdio-case} config as below
+    Given {input-container-stdio-case} local config as below
     """
     enable: true
     inputs:

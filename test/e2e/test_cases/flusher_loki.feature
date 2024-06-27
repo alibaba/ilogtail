@@ -13,7 +13,7 @@ Feature: flusher loki
       loki_name: hello
       source: ilogtail
     """
-    Given {flusher-loki-case} config as below
+    Given {flusher-loki-case} local config as below
     """
     enable: true
     inputs:

@@ -2,7 +2,7 @@
 Feature: flusher elasticsearch
   Test flusher elasticsearch
 
-  @e2e @docker-compose @WIP
+  @e2e @docker-compose
   Scenario: TestFlusherElasticSearch
     Given {docker-compose} environment
     Given subcribe data from {elasticsearch} with config
@@ -12,7 +12,7 @@ Feature: flusher elasticsearch
     password: BtpoRTeyjmC=ruTIUoNN
     index: default
     """
-    Given {flusher-elasticsearch-case} config as below
+    Given {flusher-elasticsearch-case} local config as below
     """
     enable: true
     inputs:
@@ -30,7 +30,7 @@ Feature: flusher elasticsearch
             Username: elastic
             Password: BtpoRTeyjmC=ruTIUoNN
     """
-    Given iLogtail depends on containers {["clickhouse"]}
+    Given iLogtail depends on containers {["elasticsearch"]}
     When start docker-compose dependencies {flusher_elasticsearch}
     Then there is at least {10} logs
     Then the log fields match kv

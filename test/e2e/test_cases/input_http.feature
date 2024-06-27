@@ -8,7 +8,7 @@ Feature: input http
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-http-case} config as below
+    Given {input-http-case} local config as below
     """
     enable: true
     inputs:

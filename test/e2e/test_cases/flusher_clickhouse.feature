@@ -11,7 +11,7 @@ Feature: flusher clickhouse
     database: default
     table: demo
     """
-    Given {flusher-clickhouse-case} config as below
+    Given {flusher-clickhouse-case} local config as below
     """
     enable: true
     inputs:

@@ -13,13 +13,11 @@
 // limitations under the License.
 package config
 
-import "context"
-
 type ContextKey string
-
-var TestContext = context.Background()
 
 const (
 	StartTimeContextKey  ContextKey = "startTime"
 	DependOnContainerKey ContextKey = "dependOnContainer"
+	MountVolumeKey       ContextKey = "mountVolume"
+	ExposePortKey        ContextKey = "exposePort"
 )

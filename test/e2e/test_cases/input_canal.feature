@@ -8,7 +8,7 @@ Feature: input canal
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-canal-case} config as below
+    Given {input-canal-case} local config as below
     """
     enable: true
     inputs:

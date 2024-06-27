@@ -8,7 +8,7 @@ Feature: input mock log
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-mock-log-case} config as below
+    Given {input-mock-log-case} local config as below
     """
     enable: true
     inputs: 

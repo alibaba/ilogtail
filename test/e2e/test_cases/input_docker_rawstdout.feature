@@ -8,7 +8,7 @@ Feature: input docker rawstdout
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-docker-rawstdout-case} config as below
+    Given {input-docker-rawstdout-case} local config as below
     """
     enable: true
     inputs:
@@ -34,7 +34,7 @@ Feature: input docker rawstdout
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-docker-rawstdout-multiline-case} config as below
+    Given {input-docker-rawstdout-multiline-case} local config as below
     """
     enable: true
     inputs:

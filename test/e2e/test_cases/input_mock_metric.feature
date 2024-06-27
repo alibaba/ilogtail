@@ -8,7 +8,7 @@ Feature: input mock metric
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-mock-metric-case} config as below
+    Given {input-mock-metric-case} local config as below
     """
     enable: true
     inputs: 
@@ -26,8 +26,15 @@ Feature: input mock metric
     Then there is at least {15} logs
     Then the log fields match
     """
+    - __labels__
+    - __time_nano__
+    - __value__
+    - __name__
+    """
+    Then the log labels match
+    """
+    - content
     - tag1
     - tag2
-    - content
     - time
     """

@@ -8,7 +8,7 @@ Feature: input docker stdout
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-docker-stdout-case} config as below
+    Given {input-docker-stdout-case} local config as below
     """
     enable: true
     inputs:
@@ -34,7 +34,7 @@ Feature: input docker stdout
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-docker-stdout-multiline-case} config as below
+    Given {input-docker-stdout-multiline-case} local config as below
     """
     enable: true
     inputs:

@@ -8,7 +8,7 @@ Feature: input docker static file
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-docker-static-file-case} config as below
+    Given {input-docker-static-file-case} local config as below
     """
     enable: true
     inputs:

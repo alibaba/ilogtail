@@ -8,7 +8,7 @@ Feature: input container stdio
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-container-stdio-case} config as below
+    Given {input-container-stdio-case} local config as below
     """
     enable: true
     inputs:
@@ -19,7 +19,7 @@ Feature: input container stdio
         IgnoringStderr: true
         IgnoringStdout: false
     """
-    Given start docker-compose dependencies {input_container_stdio}
+    When start docker-compose dependencies {input_container_stdio}
     Then there is at least {1} logs
     Then the log tags match kv
     """
@@ -40,7 +40,7 @@ Feature: input container stdio
     Given subcribe data from {grpc} with config
     """
     """
-    Given {input-container-stdio-multiline-case} config as below
+    Given {input-container-stdio-multiline-case} local config as below
     """
     enable: true
     inputs:
