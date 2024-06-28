@@ -82,7 +82,7 @@ jobs:
 
   result:
     runs-on: arc-runner-set-ilogtail
-    timeout-minutes: 90
+    timeout-minutes: 120
     needs: [CI]
     steps:
       - name: Build Result
