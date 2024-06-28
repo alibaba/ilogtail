@@ -101,7 +101,7 @@ func AddHTTPConfig(ctx context.Context, configName, c string) (context.Context, 
 	return ctx, nil
 }
 
-func RemoveHttpConfig(ctx context.Context, configName string) (context.Context, error) {
+func RemoveHTTPConfig(ctx context.Context, configName string) (context.Context, error) {
 	if setup.Env.GetType() == "docker-compose" {
 		address := dockercompose.GetPhysicalAddress(lotailpluginHTTPAddress)
 		if address == "" {

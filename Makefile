@@ -185,7 +185,7 @@ e2e-performance: clean docker gocdocker
 
 .PHONY: unittest_e2e_engine
 unittest_e2e_engine: clean gocdocker
-	cd test && go test  $$(go list ./... | grep -Ev "engine|cases") -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
+	cd test && go test  $$(go list ./... | grep -Ev "engine|e2e") -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
 
 .PHONY: unittest_plugin
 unittest_plugin: clean import_plugins
