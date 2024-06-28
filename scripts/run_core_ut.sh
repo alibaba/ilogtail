@@ -26,6 +26,7 @@ search_files() {
             if [ "$unittest" == "unittest" ]; then
                 echo "============== ${file##*/} =============="
                 cd ${file%/*}
+                ldd ${file##*/}
                 ./${file##*/}
                 cd -
                 echo "===================================="
@@ -35,5 +36,8 @@ search_files() {
 }
 
 # Maybe some unittest depend on relative paths, so execute in the unittest directory
+cd ./core/build
+ls
+cd -
 cd $TARGET_ARTIFACT_PATH
 search_files .
