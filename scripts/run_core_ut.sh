@@ -39,5 +39,6 @@ search_files() {
 cd ./core/build/unittest
 ls
 cd -
+export LD_LIBRARY_PATH=$TARGET_ARTIFACT_PATH:$LD_LIBRARY_PATH
 cd $TARGET_ARTIFACT_PATH
 search_files .
