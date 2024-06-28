@@ -48,6 +48,7 @@ void ScraperGroup::UpdateScrapeWork(const string& jobName) {
         }
     }
     for (const auto& targetHash : obsoleteTargets) {
+        LOG_INFO(sLogger, ("Stop obsolete scrape target", targetHash));
         sWMap[targetHash]->StopScrapeLoop();
         sWMap.erase(targetHash);
     }
@@ -55,6 +56,7 @@ void ScraperGroup::UpdateScrapeWork(const string& jobName) {
     // start new targets
     for (const auto& pair : sTMap) {
         if (sWMap.find(pair.first) == sWMap.end()) {
+            LOG_INFO(sLogger, ("Start new scrape target", pair.first));
             auto& scrapeTarget = *pair.second;
             sWMap[pair.first] = make_unique<ScrapeWork>(scrapeTarget);
             sWMap[pair.first]->StartScrapeLoop();
@@ -87,6 +89,7 @@ void ScraperGroup::RemoveScrapeJob(const string& jobName) {
 void ScraperGroup::Start() {
     mFinished.store(false);
     mScraperThread = CreateThread([this]() { ProcessScrapeWorkUpdate(); });
+    LOG_INFO(sLogger, ("ScraperGroup Start", ""));
 }
 
 void ScraperGroup::Stop() {

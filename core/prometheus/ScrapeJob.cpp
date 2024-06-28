@@ -110,6 +110,7 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
     httpSDConfig["url"] = httpPrefix + ToString(getenv("OPERATOR_HOST")) + ":" + ToString(getenv("OPERATOR_PORT"))
         + "/jobs/" + url_encode(mJobName) + "/targets?collector_id=" + ToString(getenv("POD_NAME"));
     httpSDConfig["follow_redirects"] = false;
+    LOG_INFO(sLogger,("ScrapeJob init", httpSDConfig.toStyledString()));
     for (const auto& sdConfig : sdConfigs) {
         mScrapeConfig.removeMember(sdConfig);
     }
@@ -133,6 +134,7 @@ void ScrapeJob::StartTargetsDiscoverLoop() {
     mFinished.store(false);
     if (!mTargetsDiscoveryLoopThread) {
         mTargetsDiscoveryLoopThread = CreateThread([this]() { TargetsDiscoveryLoop(); });
+        LOG_INFO(sLogger,("ScrapeJob start", mJobName));
     }
 }
 
@@ -171,12 +173,14 @@ void ScrapeJob::TargetsDiscoveryLoop() {
         if (!b1) {
             continue;
         }
+        LOG_INFO(sLogger,("FetchHttpData success", mJobName)("url", url));
         unordered_map<string, unique_ptr<ScrapeTarget>> newScrapeTargetsMap
             = unordered_map<string, unique_ptr<ScrapeTarget>>();
         bool b2 = ParseTargetGroups(readBuffer, url, newScrapeTargetsMap);
         if (!b2) {
             continue;
         }
+        LOG_INFO(sLogger,("ParseTargetGroups success", mJobName)("url", url));
         mScrapeTargetsMap = move(newScrapeTargetsMap);
     }
 }
@@ -315,6 +319,8 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         st.mQueryString = ConvertMapParamsToQueryString();
 
         newScrapeTargetsMap[st.mHash] = make_unique<ScrapeTarget>(st);
+
+        LOG_INFO(sLogger,("get target success", mJobName)("url", url)("target address", st.mTargets[0]));
     }
     return true;
 }

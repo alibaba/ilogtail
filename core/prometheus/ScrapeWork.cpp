@@ -42,6 +42,7 @@ void ScrapeWork::StartScrapeLoop() {
     // 以线程的方式实现
     if (!mScrapeLoopThread) {
         mScrapeLoopThread = CreateThread([this]() { scrapeLoop(); });
+        LOG_INFO(sLogger, ("start prometheus scrape loop", mTarget.mHash));
     }
 }
 
@@ -54,21 +55,22 @@ void ScrapeWork::StopScrapeLoop() {
 
 /// @brief scrape target loop
 void ScrapeWork::scrapeLoop() {
-    printf("start prometheus scrape loop\n");
+    LOG_INFO(sLogger, ("start prometheus scrape loop", mTarget.mHash));
     uint64_t randSleep = getRandSleep();
-    printf("randSleep %llums\n", randSleep / 1000ULL / 1000ULL);
+    LOG_INFO(sLogger, ("randSleep ms", randSleep / 1000ULL / 1000ULL)("target", mTarget.mHash));
     this_thread::sleep_for(chrono::nanoseconds(randSleep));
 
     while (!mFinished.load()) {
         uint64_t lastProfilingTime = GetCurrentTimeInNanoSeconds();
         // ReadLock lock(mScrapeLoopThreadRWL);
-        printf("scrape time %llus\n", lastProfilingTime / 1000ULL / 1000ULL / 1000ULL);
+        LOG_INFO(sLogger, ("scrape time", lastProfilingTime / 1000ULL / 1000ULL / 1000ULL)("target", mTarget.mHash));
         time_t defaultTs = time(nullptr);
 
         // scrape target by CurlClient
         // TODO: scrape超时处理逻辑，和出错处理
         auto httpResponse = scrape();
         if (httpResponse.statusCode == 200) {
+            LOG_INFO(sLogger, ("scrape success", httpResponse.statusCode)("target", mTarget.mHash));
             // TODO: 生成自监控指标，但走下面pushEventGroup链路的指标 up指标
 
             // text parser
@@ -82,7 +84,7 @@ void ScrapeWork::scrapeLoop() {
         } else {
             // scrape failed
             // TODO: scrape超时处理逻辑，和出错处理
-            printf("scrape failed, status code: %d\n", httpResponse.statusCode);
+            LOG_WARNING(sLogger, ("scrape failed, status code", httpResponse.statusCode)("target", mTarget.mHash));
             // continue;
         }
 
@@ -91,10 +93,10 @@ void ScrapeWork::scrapeLoop() {
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
         uint64_t timeToWait = (uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
             - elapsedTime % ((uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
-        printf("time to wait: %llums\n", timeToWait / 1000ULL / 1000ULL);
+        LOG_INFO(sLogger, ("time to wait ms", timeToWait / 1000ULL / 1000ULL)("target", mTarget.mHash));
         this_thread::sleep_for(chrono::nanoseconds(timeToWait));
     }
-    printf("stop loop\n");
+    LOG_INFO(sLogger, ("stop prometheus scrape loop", mTarget.mHash));
 }
 
 uint64_t ScrapeWork::getRandSleep() {
@@ -130,7 +132,7 @@ inline sdk::HttpMessage ScrapeWork:: scrape() {
                      "",
                      mTarget.mScheme == "https");
     } catch (const sdk::LOGException& e) {
-        printf("errCode %s, errMsg %s \n", e.GetErrorCode().c_str(), e.GetMessage().c_str());
+        LOG_WARNING(sLogger, ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mTarget.mHash));
     }
     return httpResponse;
 }

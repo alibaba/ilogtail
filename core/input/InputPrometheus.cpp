@@ -54,17 +54,20 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     mScrapeJobPtr->queueKey = mContext->GetProcessQueueKey();
     mScrapeJobPtr->inputIndex = 0;
 
+    LOG_INFO(sLogger,("input config init success", mJobName));
     return true;
 }
 
 /// @brief register scrape job by PrometheusInputRunner
 bool InputPrometheus::Start() {
+    LOG_INFO(sLogger,("input config start", mJobName));
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput(mContext->GetConfigName(), move(mScrapeJobPtr));
     return true;
 }
 
 /// @brief unregister scrape job by PrometheusInputRunner
 bool InputPrometheus::Stop(bool isPipelineRemoving) {
+    LOG_INFO(sLogger,("input config stop", mJobName));
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput(mContext->GetConfigName());
     return true;
 }

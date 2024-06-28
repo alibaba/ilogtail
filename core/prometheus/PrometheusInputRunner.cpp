@@ -68,12 +68,14 @@ void PrometheusInputRunner::Start() {
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    LOG_INFO(sLogger, ("Register Success", ToString(getenv("POD_NAME"))));
     ScraperGroup::GetInstance()->Start();
 }
 
 
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     for (int retry = 0; retry < 3; ++retry) {
         map<string, string> httpHeader;
         httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
@@ -100,6 +102,7 @@ void PrometheusInputRunner::Stop() {
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    LOG_INFO(sLogger, ("Unregister Success", ToString(getenv("POD_NAME"))));
     ScraperGroup::GetInstance()->Stop();
     mPrometheusInputsMap.clear();
 }
