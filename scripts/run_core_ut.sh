@@ -39,6 +39,8 @@ search_files() {
 cd ./core/build/unittest
 ls
 cd -
+pwd
 export LD_LIBRARY_PATH=$TARGET_ARTIFACT_PATH:$LD_LIBRARY_PATH
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 cd $TARGET_ARTIFACT_PATH
 search_files .
