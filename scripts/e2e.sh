@@ -14,20 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# There are 2 kinds of test, which are e2e and performance.
+# There are 3 kinds of test, which are e2e, core and performance.
 TYPE=$1
 TEST_SCOPE=$2
 
 ROOT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 TESTDIR=$ROOT_DIR/test
 
-cd "$TEST_HOME"
+cd "$TESTDIR"
 if [ "$TEST_SCOPE" = "core" ]; then
-  go test -v -run ^TestE2EOnDockerComposeCore$ github.com/alibaba/ilogtail/test/$TYPE
-else if [ "$TEST_SCOPE" = "performance" ]; then
-  go test -v -run ^TestE2EOnDockerComposePerformance$ github.com/alibaba/ilogtail/test/$TYPE
+  go test -v -timeout 30m -run ^TestE2EOnDockerComposeCore$ github.com/alibaba/ilogtail/test/$TYPE
+elif [ "$TEST_SCOPE" = "performance" ]; then
+  go test -v -timeout 30m -run ^TestE2EOnDockerComposePerformance$ github.com/alibaba/ilogtail/test/$TYPE
 else
-  go test -v -run ^TestE2EOnDockerCompose$ github.com/alibaba/ilogtail/test/$TYPE
+  go test -v -timeout 30m -run ^TestE2EOnDockerCompose$ github.com/alibaba/ilogtail/test/$TYPE
 fi
 
 if [ $? = 0 ]; then

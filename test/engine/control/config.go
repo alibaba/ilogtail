@@ -41,14 +41,14 @@ func AddLocalConfig(ctx context.Context, configName, c string) (context.Context,
 	if setup.Env.GetType() == "docker-compose" {
 		// write local file
 		if _, err := os.Stat(config.ConfigDir); os.IsNotExist(err) {
-			if err := os.MkdirAll(config.ConfigDir, 0750); err != nil {
+			if err = os.MkdirAll(config.ConfigDir, 0750); err != nil {
 				return ctx, err
 			}
 		} else if err != nil {
 			return ctx, err
 		}
 		filePath := fmt.Sprintf("%s/%s.yaml", config.ConfigDir, configName)
-		err := os.WriteFile(filePath, []byte(c), 0644)
+		err := os.WriteFile(filePath, []byte(c), 0600)
 		if err != nil {
 			return ctx, err
 		}
@@ -70,7 +70,7 @@ func RemoveAllLocalConfig(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func AddHttpConfig(ctx context.Context, configName, c string) (context.Context, error) {
+func AddHTTPConfig(ctx context.Context, configName, c string) (context.Context, error) {
 	if setup.Env.GetType() == "docker-compose" {
 		address := dockercompose.GetPhysicalAddress(lotailpluginHTTPAddress)
 		if address == "" {
@@ -125,7 +125,7 @@ func RemoveHttpConfig(ctx context.Context, configName string) (context.Context, 
 }
 
 func completeConfigWithFlusher(c string) string {
-	if strings.Index(c, "flushers") != -1 {
+	if strings.Contains(c, "flushers") {
 		return c
 	}
 	return c + subscriber.TestSubscriber.FlusherConfig()

@@ -37,6 +37,7 @@ func LogtailPluginLog(ctx context.Context, expectCount int, expectStr string) (c
 	if err != nil {
 		return ctx, fmt.Errorf("read log file %s failed: %v", logtailPluginLog, err)
 	}
+	// #nosec G304
 	f, _ := os.Open(logtailPluginLog)
 
 	workerNum := count/200000 + 1
@@ -103,6 +104,7 @@ func LogtailPluginLog(ctx context.Context, expectCount int, expectStr string) (c
 }
 
 func lineCounter(logtailPluginLog string) (int, error) {
+	// #nosec G304
 	r, err := os.Open(logtailPluginLog)
 	if err != nil {
 		return -1, err

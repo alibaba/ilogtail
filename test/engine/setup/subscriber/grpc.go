@@ -146,8 +146,8 @@ func init() {
 			g.DelayStart = "0s"
 		}
 		g.channel = make(chan *protocol.LogGroup, 1000)
-		g.Start()
-		return g, nil
+		err := g.Start()
+		return g, err
 	})
 
 	doc.Register("subscriber", gRPCName, new(GrpcSubscriber))

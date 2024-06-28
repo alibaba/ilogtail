@@ -35,7 +35,7 @@ func (c *BootController) Init() error {
 func (c *BootController) Start(ctx context.Context) error {
 	logger.Info(context.Background(), "boot controller is starting....")
 	if _, err := os.Stat(config.ConfigDir); os.IsNotExist(err) {
-		if err := os.Mkdir(config.ConfigDir, 0750); err != nil {
+		if err = os.Mkdir(config.ConfigDir, 0750); err != nil {
 			return err
 		}
 	} else if err != nil {

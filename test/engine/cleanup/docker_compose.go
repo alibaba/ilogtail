@@ -23,7 +23,7 @@ func DeleteContainers(ctx context.Context) (context.Context, error) {
 	if setup.Env.GetType() == "docker-compose" {
 		// Delete containers
 		dockerComposeEnv, ok := setup.Env.(*setup.DockerComposeEnv)
-		if ok != true {
+		if !ok {
 			return ctx, nil
 		}
 		err := dockerComposeEnv.Clean()

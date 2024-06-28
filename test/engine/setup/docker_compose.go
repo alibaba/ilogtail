@@ -43,7 +43,10 @@ func StartDockerComposeEnv(ctx context.Context, dependencyName string) (context.
 func SetDockerComposeDependOn(ctx context.Context, dependOnContainers string) (context.Context, error) {
 	if _, ok := Env.(*DockerComposeEnv); ok {
 		containers := make([]string, 0)
-		yaml.Unmarshal([]byte(dependOnContainers), &containers)
+		err := yaml.Unmarshal([]byte(dependOnContainers), &containers)
+		if err != nil {
+			return ctx, err
+		}
 		ctx = context.WithValue(ctx, config.DependOnContainerKey, containers)
 	} else {
 		return ctx, fmt.Errorf("env is not docker-compose")
@@ -109,6 +112,6 @@ func (d *DockerComposeEnv) ExecOnLogtail(command string) error {
 	return fmt.Errorf("not implemented")
 }
 
-func (h *DockerComposeEnv) ExecOnSource(command string) error {
+func (d *DockerComposeEnv) ExecOnSource(command string) error {
 	return fmt.Errorf("not implemented")
 }

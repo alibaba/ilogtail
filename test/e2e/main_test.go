@@ -81,7 +81,7 @@ func scenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.Given(`^iLogtail container mount \{(.*)\} to \{(.*)\}`, setup.MountVolume)
 	ctx.Given(`^iLogtail expose port \{(.*)\} to \{(.*)\}`, setup.ExposePort)
 	ctx.Given(`^\{(.*)\} local config as below`, control.AddLocalConfig)
-	ctx.Given(`^\{(.*)\} http config as below`, control.AddHttpConfig)
+	ctx.Given(`^\{(.*)\} http config as below`, control.AddHTTPConfig)
 	ctx.Given(`^remove http config \{(.*)\}`, control.RemoveHttpConfig)
 	ctx.Given(`^subcribe data from \{(\S+)\} with config`, subscriber.InitSubscriber)
 

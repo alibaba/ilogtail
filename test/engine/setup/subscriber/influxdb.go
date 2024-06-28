@@ -73,7 +73,7 @@ func (i *InfluxdbSubscriber) GetData(startTime int32) ([]*protocol.LogGroup, err
 	i.lastTimestamp = int64(startTime)
 
 	if i.CreateDb {
-		err := i.createDatabase()
+		err = i.createDatabase()
 		if err != nil {
 			logger.Warningf(context.Background(), "INFLUXDB_SUBSCRIBER_ALARM", "failed to create database %s, err: %s", i.DbName, err)
 		}
@@ -100,7 +100,7 @@ func (i *InfluxdbSubscriber) FlusherConfig() string {
 
 func (i *InfluxdbSubscriber) Stop() error {
 	if i.client != nil {
-		i.client.Close()
+		return i.client.Close()
 	}
 	return nil
 }
