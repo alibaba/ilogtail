@@ -36,7 +36,7 @@ search_files() {
 }
 
 # Maybe some unittest depend on relative paths, so execute in the unittest directory
-cd ./core/build
+cd ./core/build/unittest
 ls
 cd -
 cd $TARGET_ARTIFACT_PATH
