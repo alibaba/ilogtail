@@ -1,0 +1,99 @@
+2022-11-25 00:00:43,129 ERROR [ConsumeMessageThread_18] [com.alibaba.dataworks.exclusive.resource.service.aliyun.AliyunEcsManager:114] [] - delete instances error
+com.aliyuncs.exceptions.ClientException: SDK.ReadTimeout : SocketTimeoutException has occurred on a socket read or accept.The url is http://ecs-cn-hangzhou.aliyuncs.com/?Action=DeleteInstance&For
+ce=true&InstanceId=i-j6calzsckaxerdwkmttu&Timestamp=2022-11-24T16%3A00%3A33Z&SignatureVersion=1.0&ServiceCode=ecs&Format=JSON&SignatureNonce=1ac777d8-e43b-48ce-bea2-768ba328e8591669305633121208&V
+ersion=2014-05-26&AccessKeyId=LTAIOuDQQT8x9BcV&Signature=aeEFDxxRaGqEdj2IqSHb7mRrGAE%3D&SignatureMethod=HMAC-SHA1&RegionId=cn-hongkong
+        at com.aliyuncs.DefaultAcsClient.doRealAction(DefaultAcsClient.java:343)
+        at com.aliyuncs.DefaultAcsClient.doAction(DefaultAcsClient.java:277)
+        at com.aliyuncs.DefaultAcsClient.doAction(DefaultAcsClient.java:204)
+        at com.aliyuncs.DefaultAcsClient.doAction(DefaultAcsClient.java:97)
+        at com.aliyuncs.DefaultAcsClient.getAcsResponse(DefaultAcsClient.java:126)
+        at com.alibaba.dataworks.exclusive.resource.service.aliyun.AliyunEcsManager.deleteInstance(AliyunEcsManager.java:106)
+        at com.alibaba.dataworks.exclusive.resource.service.business.message.ResGroupDeleteMsgService.doEvent(ResGroupDeleteMsgService.java:210)
+        at com.alibaba.dataworks.exclusive.resource.service.business.message.ResGroupDeleteMsgService.handle(ResGroupDeleteMsgService.java:169)
+        at com.alibaba.dataworks.exclusive.resource.service.message.DataOsMessageHandler.handleMessage(DataOsMessageHandler.java:27)
+        at com.alibaba.dataworks.message.client.metaq.MetaqMessageConcurrentListener.consumeMessage(MetaqMessageConcurrentListener.java:55)
+        at com.alibaba.rocketmq.client.impl.consumer.ConsumeMessageConcurrentlyService$ConsumeRequest.run(ConsumeMessageConcurrentlyService.java:420)
+        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+        at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+        at java.lang.Thread.run(Thread.java:756)
+Caused by: java.net.SocketTimeoutException: Read timed out
+        at java.net.SocketInputStream.socketRead0(Native Method)
+        at java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+        at java.net.SocketInputStream.read(SocketInputStream.java:170)
+        at java.net.SocketInputStream.read(SocketInputStream.java:141)
+        at org.apache.http.impl.io.SessionInputBufferImpl.streamRead(SessionInputBufferImpl.java:137)
+        at org.apache.http.impl.io.SessionInputBufferImpl.fillBuffer(SessionInputBufferImpl.java:153)
+        at org.apache.http.impl.io.SessionInputBufferImpl.readLine(SessionInputBufferImpl.java:282)
+        at org.apache.http.impl.conn.DefaultHttpResponseParser.parseHead(DefaultHttpResponseParser.java:138)
+        at org.apache.http.impl.conn.DefaultHttpResponseParser.parseHead(DefaultHttpResponseParser.java:56)
+        at org.apache.http.impl.io.AbstractMessageParser.parse(AbstractMessageParser.java:259)
+        at org.apache.http.impl.DefaultBHttpClientConnection.receiveResponseHeader(DefaultBHttpClientConnection.java:163)
+        at org.apache.http.impl.conn.CPoolProxy.receiveResponseHeader(CPoolProxy.java:165)
+        at org.apache.http.protocol.HttpRequestExecutor.doReceiveResponse(HttpRequestExecutor.java:273)
+        at org.apache.http.protocol.HttpRequestExecutor.execute(HttpRequestExecutor.java:125)
+        at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:272)
+        at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:185)
+        at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+        at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:111)
+        at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+        at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+        at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+        at com.aliyuncs.http.clients.ApacheHttpClient.syncInvoke(ApacheHttpClient.java:308)
+        at com.aliyuncs.DefaultAcsClient.doRealAction(DefaultAcsClient.java:334)
+        ... 15 common frames omitted
+2022-11-25 00:00:43,130 ERROR [ConsumeMessageThread_18] [com.alibaba.dataworks.exclusive.resource.service.business.message.ResGroupDeleteMsgServi
+ce:172] [] - resg delete process error
+com.alibaba.dataworks.exclusive.resource.common.exception.ServerException: SDK.ReadTimeout : SocketTimeoutException has occurred on a socket read
+ or accept.The url is http://ecs-cn-hangzhou.aliyuncs.com/?Action=DeleteInstance&Force=true&InstanceId=i-j6calzsckaxerdwkmttu&Timestamp=2022-11-2
+4T16%3A00%3A33Z&SignatureVersion=1.0&ServiceCode=ecs&Format=JSON&SignatureNonce=1ac777d8-e43b-48ce-bea2-768ba328e8591669305633121208&Version=2014
+-05-26&AccessKeyId=LTAIOuDQQT8x9BcV&Signature=aeEFDxxRaGqEdj2IqSHb7mRrGAE%3D&SignatureMethod=HMAC-SHA1&RegionId=cn-hongkong
+        at com.alibaba.dataworks.exclusive.resource.service.aliyun.AliyunEcsManager.deleteInstance(AliyunEcsManager.java:115)
+        at com.alibaba.dataworks.exclusive.resource.service.business.message.ResGroupDeleteMsgService.doEvent(ResGroupDeleteMsgService.java:210)
+        at com.alibaba.dataworks.exclusive.resource.service.business.message.ResGroupDeleteMsgService.handle(ResGroupDeleteMsgService.java:169)
+        at com.alibaba.dataworks.exclusive.resource.service.message.DataOsMessageHandler.handleMessage(DataOsMessageHandler.java:27)
+        at com.alibaba.dataworks.message.client.metaq.MetaqMessageConcurrentListener.consumeMessage(MetaqMessageConcurrentListener.java:55)
+        at com.alibaba.rocketmq.client.impl.consumer.ConsumeMessageConcurrentlyService$ConsumeRequest.run(ConsumeMessageConcurrentlyService.java:
+420)
+        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+        at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+        at java.lang.Thread.run(Thread.java:756)
+Caused by: com.aliyuncs.exceptions.ClientException: SDK.ReadTimeout : SocketTimeoutException has occurred on a socket read or accept.The url is h
+ttp://ecs-cn-hangzhou.aliyuncs.com/?Action=DeleteInstance&Force=true&InstanceId=i-j6calzsckaxerdwkmttu&Timestamp=2022-11-24T16%3A00%3A33Z&Signatu
+reVersion=1.0&ServiceCode=ecs&Format=JSON&SignatureNonce=1ac777d8-e43b-48ce-bea2-768ba328e8591669305633121208&Version=2014-05-26&AccessKeyId=LTAI
+OuDQQT8x9BcV&Signature=aeEFDxxRaGqEdj2IqSHb7mRrGAE%3D&SignatureMethod=HMAC-SHA1&RegionId=cn-hongkong
+        at com.aliyuncs.DefaultAcsClient.doRealAction(DefaultAcsClient.java:343)
+        at com.aliyuncs.DefaultAcsClient.doAction(DefaultAcsClient.java:277)
+        at com.aliyuncs.DefaultAcsClient.doAction(DefaultAcsClient.java:204)
+        at com.aliyuncs.DefaultAcsClient.doAction(DefaultAcsClient.java:97)
+        at com.aliyuncs.DefaultAcsClient.getAcsResponse(DefaultAcsClient.java:126)
+        at com.alibaba.dataworks.exclusive.resource.service.aliyun.AliyunEcsManager.deleteInstance(AliyunEcsManager.java:106)
+        ... 10 common frames omitted
+Caused by: java.net.SocketTimeoutException: Read timed out
+        at java.net.SocketInputStream.socketRead0(Native Method)
+        at java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+        at java.net.SocketInputStream.read(SocketInputStream.java:170)
+        at java.net.SocketInputStream.read(SocketInputStream.java:141)
+        at org.apache.http.impl.io.SessionInputBufferImpl.streamRead(SessionInputBufferImpl.java:137)
+        at org.apache.http.impl.io.SessionInputBufferImpl.fillBuffer(SessionInputBufferImpl.java:153)
+        at org.apache.http.impl.io.SessionInputBufferImpl.readLine(SessionInputBufferImpl.java:282)
+        at org.apache.http.impl.conn.DefaultHttpResponseParser.parseHead(DefaultHttpResponseParser.java:138)
+        at org.apache.http.impl.conn.DefaultHttpResponseParser.parseHead(DefaultHttpResponseParser.java:56)
+        at org.apache.http.impl.io.AbstractMessageParser.parse(AbstractMessageParser.java:259)
+        at org.apache.http.impl.DefaultBHttpClientConnection.receiveResponseHeader(DefaultBHttpClientConnection.java:163)
+        at org.apache.http.impl.conn.CPoolProxy.receiveResponseHeader(CPoolProxy.java:165)
+        at org.apache.http.protocol.HttpRequestExecutor.doReceiveResponse(HttpRequestExecutor.java:273)
+        at org.apache.http.protocol.HttpRequestExecutor.execute(HttpRequestExecutor.java:125)
+        at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:272)
+        at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:185)
+        at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+        at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:111)
+        at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+        at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+        at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+        at com.aliyuncs.http.clients.ApacheHttpClient.syncInvoke(ApacheHttpClient.java:308)
+        at com.aliyuncs.DefaultAcsClient.doRealAction(DefaultAcsClient.java:334)
+        ... 15 common frames omitted

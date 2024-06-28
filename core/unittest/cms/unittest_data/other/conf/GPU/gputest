@@ -1,0 +1,15 @@
+{
+    "AttachedGPUs": "8",
+"DateTime": "2019-05-29 17:09:41",
+    "ErrorCode": "0",
+    "ErrorMsg": "",
+    "MemoryFree": "5348261888",
+    "MemoryMax": "11721506816",
+    "MemoryUsed": "6373244928",
+    "MemoryUtil": "0.1",
+    "ProductName": "",
+    "Status": "OK",
+    "Temperature": "28",
+    "UUID": "GPU-47c6140b-32d9-10e7-5428-69ac54d52c9f",
+    "Util": "0.1"
+}

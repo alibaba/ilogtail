@@ -1,0 +1,5 @@
+search tbsite.net aliyun.com
+options timeout:2 attempts:3 rotate single-request-reopen
+nameserver 10.101.0.1
+nameserver 10.101.0.17
+nameserver 10.101.0.33

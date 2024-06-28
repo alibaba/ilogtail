@@ -1,0 +1,45 @@
+[
+  {
+    "description": "api shennong test GetConfigMetric",
+    "request": {
+      "method": "post",
+      "uri": "/v1/metrics/query",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "response": {
+      "json": {
+        "Success": true,
+        "RequestId": "cms-3e079a3f-9e00-434f-9a00-354e610d8051",
+        "Code": 200,
+        "Message": "",
+        "TotalCount": 1,
+        "NextToken": "",
+        "Data": [
+          {
+            "cnName": "",
+            "description": "",
+            "downsample": null,
+            "enName": "",
+            "extInfo": "{\"tree\":{\"perf\":{\"exactMetrics\":{\"ClusterMonitorTest:AG_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"ag_metric_host\"], \"/test\":[\"ag_metric_host\"]}},\"ClusterMonitorTest:AVG_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"avg_metric_host\"]}},\"ClusterMonitorTest:BASE_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"base_metric_host\"]}},\"ClusterMonitorTest:MAX_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"max_metric_host\"]}},\"ClusterMonitorTest:MIN_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"min_metric_host\"]}},\"ClusterMonitorTest:MN_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"mn_metric_host\"]}},\"ClusterMonitorTest:MX_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"mx_metric_host\"]}},\"ClusterMonitorTest:QPS_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"qps_metric_host\"]}}}}},\"metrics\":[\"ag_metric_host\",\"avg_metric_host\",\"base_metric_host\",\"max_metric_host\",\"min_metric_host\",\"mn_metric_host\",\"mx_metric_host\",\"qps_metric_host\"],\"sec_metrics\":[\"ag_metric_host\",\"avg_metric_host\"],\"ingestion\":{\"sn\":\"aaaaa\",\"sn2\":\"bbbbb\"}, \"trace_list\":[\"*\"], \"agg_list\":[\"test_metric_host\"]}",
+            "from": "",
+            "jpName": "",
+            "lastModify": 1608860399572981957,
+            "md5": "X8P2hiWMv8/Z9yKYiN9+LA==",
+            "metricName": "shennong_clusterMonitor__test__online",
+            "metricUnit": "",
+            "namespace": "sn_decision_tree",
+            "parent": "",
+            "period": 0,
+            "product": "",
+            "sql": "",
+            "status": "",
+            "type": "",
+            "values": null
+          }
+        ]
+      }
+    }
+  }
+]

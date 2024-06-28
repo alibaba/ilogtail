@@ -1,0 +1,3980 @@
+{
+    "data": {
+        "config-client": [
+            {
+                "interval": 15,
+                "metric": "middleware.config-client.connection.size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 45
+            }
+        ],
+        "config.client.sli": [
+            {
+                "interval": 15,
+                "metric": "CLIENT_WORK.invokerSuccess_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 5
+            },
+            {
+                "interval": 15,
+                "metric": "CLIENT_WORK.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 5
+            },
+            {
+                "interval": 15,
+                "metric": "CLIENT_WORK.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "CLIENT_WORK.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.3333333333333333
+            },
+            {
+                "interval": 15,
+                "metric": "CLIENT_WORK.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "CLIENT_WORK.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.invokerException_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.invokerSuccess_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "INVOKER_ADDRESS.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "DEFAULT_ENV"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            }
+        ],
+        "diamond-client": [
+            {
+                "interval": 15,
+                "metric": "middleware.diamond.defaultEnv.listenerSize",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 45
+            }
+        ],
+        "hsf": [
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.consumer.connection.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.provider.biz_pool.active_count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.provider.biz_pool.core_size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 50
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.provider.biz_pool.max_size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 720
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.provider.biz_pool.size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.provider.connection.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.hsf.provider.elapse_time",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            }
+        ],
+        "jstackplus": [
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "COUNTER",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 473
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.m1",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 0.011535864115669125
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.m5",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 0.004892238624564455
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.m15",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 0.003822308733058748
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.mean",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 94.0
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.rt",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 94.0
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.bucket_count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259380000,
+                "value": 1
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.qps",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259380000,
+                "value": 0.016666666666666666
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.success_count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "COUNTER",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.success_bucket_count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259380000,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.jstackplus.snapshot.success_rate",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "type": "1"
+                },
+                "timestamp": 1605259380000,
+                "value": 0.0
+            }
+        ],
+        "jvm": [
+            {
+                "interval": 15,
+                "metric": "jvm.buffer_pool.direct.capacity",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1256621
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.buffer_pool.direct.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 51
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.buffer_pool.direct.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1256626
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.buffer_pool.mapped.capacity",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.buffer_pool.mapped.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.buffer_pool.mapped.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.class_load.loaded",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 36221
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.class_load.loaded_current",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 34461
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.class_load.unloaded",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1760
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.compilation.delta_time",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 468487
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.file_descriptor.open_count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 2213
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.file_descriptor.open_ratio",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.0033752956435492486
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.concurrentmarksweep.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 362
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.concurrentmarksweep.count.delta",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.concurrentmarksweep.time",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 109614
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.concurrentmarksweep.time.delta",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.parnew.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 507723
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.parnew.count.delta",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.parnew.time",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 29532414
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.gc.parnew.time.delta",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.heap.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 15569256448
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.heap.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 16106127360
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.heap.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 15569256448
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.heap.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.5139455620584816
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.heap.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 8001750256
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.non_heap.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 361000960
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.non_heap.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 2555904
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.non_heap.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": -1
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.non_heap.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.9689576005559652
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.non_heap.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 349794624
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.cms_old_gen.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 9663676416
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.cms_old_gen.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 9663676416
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.cms_old_gen.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 9663676416
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.cms_old_gen.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.3691289805703693
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.cms_old_gen.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 3567143024
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.cms_old_gen.used_after_gc",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 962518776
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.code_cache.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 128712704
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.code_cache.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 2555904
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.code_cache.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 251658240
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.code_cache.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.5025161743164063
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.code_cache.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 126462336
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.compressed_class_space.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 25505792
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.compressed_class_space.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.compressed_class_space.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1073741824
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.compressed_class_space.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.02207457274198532
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.compressed_class_space.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 23702392
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.metaspace.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 206782464
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.metaspace.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.metaspace.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": -1
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.metaspace.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.9654101810103201
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.metaspace.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 199629896
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_eden_space.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 5368709120
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_eden_space.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 5368709120
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_eden_space.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 5368709120
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_eden_space.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.8229206383228302
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_eden_space.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 4418021536
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_eden_space.used_after_gc",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_survivor_space.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 536870912
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_survivor_space.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 536870912
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_survivor_space.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 536870912
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_survivor_space.usage",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.030914202332496643
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_survivor_space.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 16596936
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.pools.par_survivor_space.used_after_gc",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 16596936
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.total.committed",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 15930257408
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.total.init",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 16108683264
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.total.max",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 15569256447
+            },
+            {
+                "interval": 15,
+                "metric": "jvm.mem.total.used",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 8351620984
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.blocked.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1432
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.daemon.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 591
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.deadlock.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.new.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.runnable.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 127
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.terminated.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.timed_waiting.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 415
+            },
+            {
+                "interval": 60,
+                "metric": "jvm.thread.waiting.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 890
+            }
+        ],
+        "metaq": [
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.success_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.error_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.bucket_sum",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 12
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.qps",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 0.2
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.rt",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 12.0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.metaq-clnt.send.success_rate",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 25
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 25
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 33
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.6666666666666667
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.32
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.group_id.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "CID_DEVICE_UPDATE"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 25
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 25
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 33
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.6666666666666667
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.32
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "10"
+                },
+                "timestamp": 1605259440000,
+                "value": 24
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "20"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "50"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "75"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "100"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "150"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "200"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "250"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "300"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "350"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "400"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "500"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "+Inf"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "10",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 24
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "20",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "50",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "75",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "100",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "150",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "200",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "250",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "300",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "350",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "400",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "500",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metaq-clnt.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "+Inf",
+                    "topic": "staragent_device_update"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            }
+        ],
+        "metrics": [
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "COUNTER",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259461039,
+                "value": 4
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m1",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.15230964996511623
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m5",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.1875692479556047
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m15",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.19565891035870417
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.mean",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259461039,
+                "value": 21.78186333333333
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.rt",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259461039,
+                "value": 21.78186333333333
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.bucket_count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259380000,
+                "value": 1
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.qps",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/all"
+                },
+                "timestamp": 1605259380000,
+                "value": 0.016666666666666666
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "COUNTER",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259461039,
+                "value": 1250425
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m1",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.7850527010878982
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m5",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.5745656731591681
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m15",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.5138285679896197
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.mean",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259461039,
+                "value": 1.0374166052631577
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.rt",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259461039,
+                "value": 1.0374166052631577
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.bucket_count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259380000,
+                "value": 38
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.qps",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/search"
+                },
+                "timestamp": 1605259380000,
+                "value": 0.6333333333333333
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "COUNTER",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259461039,
+                "value": 522999
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m1",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.20000102716594353
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m5",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.20003278049293402
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.m15",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.20001440938647835
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.mean",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.5260876
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.rt",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.5260876
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.bucket_count",
+                "metricLevel": "TRIVIAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259380000,
+                "value": 12
+            },
+            {
+                "interval": 60,
+                "metric": "middleware.metrics.rest.url.qps",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "url": "/specific"
+                },
+                "timestamp": 1605259380000,
+                "value": 0.2
+            }
+        ],
+        "monitor": [
+            {
+                "interval": 15,
+                "metric": "middleware.monitor.http.request.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1947500
+            }
+        ],
+        "nginx": [
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.conn.accepted",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 116.64177866268459
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.conn.active",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.conn.handled",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 116.64177866268459
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.conn.reading",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.conn.waiting",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.conn.writing",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.request.avg_rt",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 14.344238975817923
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.nginx.request.qps",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 116.64177866268459
+            }
+        ],
+        "notify": [
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.success_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 5
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.error_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 5
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.bucket_sum",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 95
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.qps",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.rt",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 19.0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.notify.receive.success_rate",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 48
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 48
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 591
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 3.2
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 12.3125
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.group_id.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "group_id": "{spring.notify.publisher.groupId}"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 48
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 48
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 591
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 3.2
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 12.3125
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.receive.topic.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 1.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "10"
+                },
+                "timestamp": 1605259440000,
+                "value": 41
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "20"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "50"
+                },
+                "timestamp": 1605259440000,
+                "value": 4
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "75"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "100"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "150"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "200"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "250"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "300"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "350"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "400"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "500"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "+Inf"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "10",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 41
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "20",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "50",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 4
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "75",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "100",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "150",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "200",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "250",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "300",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "350",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "400",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "500",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.notify.send.topic.cluster.cluster_percentile",
+                "metricLevel": "NORMAL",
+                "metricType": "PERCENTILE",
+                "tags": {
+                    "bucket": "+Inf",
+                    "topic": "Armory-new"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            }
+        ],
+        "self-statistics": [],
+        "situation_awareness": [
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.current_access.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1249874
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.current_access.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 38
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.current_access.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 2.533333333333333
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_collected.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 610434
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_collected.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 14
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_collected.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0.9333333333333333
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_unfinished.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 639984
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_unfinished.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 24
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_unfinished.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 1.6
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.hit.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1250277
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.hit.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 38
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.hit.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 2.533333333333333
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.meta_access.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1250015
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.meta_access.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 38
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.meta_access.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 2.533333333333333
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.meta_timeout.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 59
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.meta_timeout.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.meta_timeout.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.parts_hit.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 140
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.parts_hit.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.parts_hit.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 134
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.m1",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 2.964393875E-314
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.m5",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 3.2585113249373392E-93
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.m15",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 2.7787098309254965E-33
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.mean",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.success_count",
+                "metricLevel": "NORMAL",
+                "metricType": "COUNTER",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.metrics.cache.data_read.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259440000,
+                "value": 0.0
+            }
+        ],
+        "spas-sdk-service": [
+            {
+                "interval": 15,
+                "metric": "middleware.spas.monitor.check.perm.pass.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.spas.monitor.check.perm.total.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.spas.monitor.verify.sign.pass.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.spas.monitor.verify.sign.total.count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            }
+        ],
+        "system": [
+            {
+                "interval": 5,
+                "metric": "system.context_switches",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 13349.045643153528
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.guest",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.idle",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 38.23
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.iowait",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.01
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.irq",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.nice",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.softirq",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.95
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.steal",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 47.96
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.system",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 1.77
+            },
+            {
+                "interval": 5,
+                "metric": "system.cpu.user",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 11.09
+            },
+            {
+                "interval": 60,
+                "metric": "system.disk.partition.free",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "partition": "/"
+                },
+                "timestamp": 1605259461039,
+                "value": 531762302976
+            },
+            {
+                "interval": 60,
+                "metric": "system.disk.partition.total",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "partition": "/"
+                },
+                "timestamp": 1605259461039,
+                "value": 536870912000
+            },
+            {
+                "interval": 60,
+                "metric": "system.disk.partition.used_ratio",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "partition": "/"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.009515525817871094
+            },
+            {
+                "interval": 5,
+                "metric": "system.interrupts",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 650882.96812749
+            },
+            {
+                "interval": 5,
+                "metric": "system.load.15min",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 4.91
+            },
+            {
+                "interval": 5,
+                "metric": "system.load.1min",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 4.38
+            },
+            {
+                "interval": 5,
+                "metric": "system.load.5min",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 4.6
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.buffers",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.cached",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 15475136
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.free",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 1867320
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.swap.free",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.swap.total",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.swap.used",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.total",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 33554432
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.used",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 16211976
+            },
+            {
+                "interval": 60,
+                "metric": "system.mem.used_ratio",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.4831545352935791
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.bytes",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 7089206.379116605
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.compressed",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.dropped",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.fifo.errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.frame.errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.multicast",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.in.packets",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 44696.55112801452
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.bytes",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 1.4023332889618808E7
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.carrier.errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.collisions",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.compressed",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.dropped",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.fifo.errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.net.out.packets",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "face": "eth0"
+                },
+                "timestamp": 1605259461039,
+                "value": 13787.068891001814
+            },
+            {
+                "interval": 5,
+                "metric": "system.process.blocked",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "system.process.running",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 1
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.active_opens",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 103.70639283615115
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.attempt_fails",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.5531929606195761
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.current_estab",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 767
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.estab_resets",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.4840438405421291
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.in_errs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.0
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.in_segs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 45741.33042907029
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.out_rsts",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 1.0890986412197905
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.out_segs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 22562.700964630225
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.passive_opens",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 209.86757943505168
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.retran_ratio",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0.0027521487754010613
+            },
+            {
+                "interval": 60,
+                "metric": "system.tcp.retran_segs",
+                "metricLevel": "TRIVIAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 62.095909829547416
+            }
+        ],
+        "tair-plugin": [
+            {
+                "interval": 15,
+                "metric": "middleware.tair.traffic.down.per.sec",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.tair.traffic.up.per.sec",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            }
+        ],
+        "tddl": [
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.read.success_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 973
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.read.bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 973
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.read.bucket_sum",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 990
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.read.qps",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 194.6
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.read.rt",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0174717368961974
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.read.success_rate",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.success_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 116
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.error_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 116
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.bucket_sum",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 161
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.qps",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 23.2
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.rt",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.3879310344827587
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tddl.write.success_rate",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0
+            }
+        ],
+        "tddl-client": [
+            {
+                "interval": 30,
+                "metric": "middleware.tddl.connection.active_count",
+                "metricLevel": "MINOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 30,
+                "metric": "middleware.tddl.connection.create_count",
+                "metricLevel": "MINOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 30,
+                "metric": "middleware.tddl.connection.destroy_count",
+                "metricLevel": "MINOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 30,
+                "metric": "middleware.tddl.connection.error_count",
+                "metricLevel": "MINOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 30,
+                "metric": "middleware.tddl.connection.max_pool_size",
+                "metricLevel": "MINOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            },
+            {
+                "interval": 30,
+                "metric": "middleware.tddl.connection.spare_count",
+                "metricLevel": "MINOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461039,
+                "value": 0
+            }
+        ],
+        "tomcat": [
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.bytes_received",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 31884003819
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.bytes_sent",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 2945864723
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.error_count",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 90456
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.max_start_time",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.max_time",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 5281
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.processing_time",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 584800308
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request_count",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {
+                    "connector": "http-bio-7001"
+                },
+                "timestamp": 1605259461038,
+                "value": 300970576
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.tomcat.thread.busy_count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.tomcat.thread.max_pool_size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 1500
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.tomcat.thread.min_pool_size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 10
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.tomcat.thread.thread_pool_queue_size",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "middleware.tomcat.thread.total_count",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259461038,
+                "value": 307
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.success_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1093
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.error_bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 0
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.bucket_count",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1093
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.bucket_sum",
+                "metricLevel": "MAJOR",
+                "metricType": "DELTA",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1245
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.qps",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 218.6
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.rt",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.1390667886550778
+            },
+            {
+                "interval": 5,
+                "metric": "middleware.tomcat.http.request.success_rate",
+                "metricLevel": "MAJOR",
+                "metricType": "GAUGE",
+                "tags": {},
+                "timestamp": 1605259455000,
+                "value": 1.0
+            }
+        ],
+        "vipserver.java.client": [
+            {
+                "interval": 15,
+                "metric": "address-server._success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "address-server._error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "address-server.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "address-server.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "address-server.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "address-server.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "address-server.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode._success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode._error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "armoryNode.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes._success_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes._error_bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes.bucket_count",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes.bucket_sum",
+                "metricLevel": "NORMAL",
+                "metricType": "DELTA",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes.qps",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes.rt",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            },
+            {
+                "interval": 15,
+                "metric": "queryNodes.success_rate",
+                "metricLevel": "NORMAL",
+                "metricType": "GAUGE",
+                "tags": {
+                    "env": "sh"
+                },
+                "timestamp": 1605259440000,
+                "value": 0.0
+            }
+        ]
+    },
+    "success": true,
+    "message": "",
+    "timestamp": 1605259461039
+}

@@ -1,0 +1,3393 @@
+{
+    "err_msg": "",
+    "err_code": 0,
+    "data": {
+        "action_description": "",
+        "action_name": "",
+        "action_params": "",
+        "action_status": "",
+        "cluster": "tianji-A-010b",
+        "current_os": "{\"os\":\"AliOS7U2-4.19-x86-64\",\"part\":\"ALdefault\",\"os_version\":\"\",\"kernel\":\"\",\"nic_driver\":\"\",\"app_name\":\"tianji_7u_x86\",\"sig\":\"\"}",
+        "hostname": "a36b04001.cloud.b04.amtest11",
+        "ip": "10.171.64.1",
+        "project": "tianji",
+        "serverrole": [
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "Ali-tianji-machine-decider.AliTianjiMachineDecider#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.LogSearchAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.MonitorAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.OTSAlertChecker#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.OTSFrontServer#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.OTSServer#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.OTSTEngine#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.SQLOnlineReplicationServer#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"8549e4f1f3144e61e059facb355613333b79a4a0\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreInner.SQLOnlineWorker#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "8549e4f1f3144e61e059facb355613333b79a4a0"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreMonitor.TableStoreAlertChecker#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "TableStoreSqlInner.SqlMockAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "cmdbService.RaptorPanther#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "cmdbService.cmdbSR#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "fuxi.DeployAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "fuxi.FuxiMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "fuxi.FuxiTools#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "fuxi.Package#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "fuxi.PackageManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "fuxi.Tubo#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "hids-client.HidsClient#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "kube-base.KubeTools#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "nuwa.NuwaConfig#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsClone#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsCloneVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsCloneWeb#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsCloneWebVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDns#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDnsEtcd#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDnsMaster#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDnsMasterVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDnsSlave#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDnsSlaveVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsDnsVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsHardware#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsHardwareOob#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsHardwareVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsMasterTagAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsMysql#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsMysqlVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsNtp#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsNtpVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsOob#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsOobVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsYum#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "ops.OpsYumVipAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "paas-seed.SeedFlow#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "pangu.PanguChunkserver#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "pangu.PanguMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "panshi.PanshiApsaraStackGlobal#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.Nginx#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.PackageManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.SlsFastcgi#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.SlsLogtail#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.SlsScmc#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.SlsScmg#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.SlsWeb#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sls-common.SlsWebTools#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "srs-client.srs-client#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "sys.Env#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-anytunnel-monitor.AnytunnelMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-anytunnel-monitor.ServiceTest#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-cvmm.ContainerVMManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-dockerdaemon.DockerDaemon#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-dockerregistry.DockerRegistry#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-dockerregistry.ImageUploader#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-endpoint.EndpointInit#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-graceoff.GraceOffDecider#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-ha.HaManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-ha.PanguSync#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-hostservice.host-service#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-sshtunnel-client.SSHTunnelClient#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-sshtunnel.SSHTunnelMaster#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-sync.SyncPaas#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "rolling",
+                "action_name": "rolling",
+                "action_params": "{\"runame\":\"tianji-test.ServiceTest#\",\"expected_version\":\"db6273c22c292957d1c0ff251be6c35033159c9b\",\"action_type\":\"rolling\"}",
+                "action_status": "doing",
+                "actual_version": "990051db19eb04139277a43239126876c17e0537",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "SysEnv state of build_prepare not done, details: ServiceDependency Assure failed, because: states of [ tianji-dockerdaemon.DockerDaemon# on a36b04116.cloud.b05.amtest11,a36b07047.cloud.b07.amtest11,a36b07049.cloud.b07.amtest11,a36c01003.cloud.c01.amtest11  ] not all good",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-test.ServiceTest#",
+                "state": "ERROR",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji-tools.PrivateCloudTool#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.APIServer#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.Adapter#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.AvailabilityService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.CapabilityService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.CertificateCenter#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.CloneProxyMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.CloneService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ConfigStore#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ConfigStoreSupervisor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.DelegateController#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.DeployService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.DockerVmDecider#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.HealingLaborService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.HealingService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.Houyi#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.HsaKeyManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.HsaKeyManagerMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.IaaSManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ImageBuilder#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.MachineManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.MachineMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.Magneto#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.MockICloneService#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.OsCenter#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.P2PTracker#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.P2pMaster#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ResourceManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ResourceReporter#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ResourceWorker#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.SLAMonitor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.ShutdownManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.SnapshotBuilder#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.SocksProxy#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TerminalServiceGateway#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TerminalServiceManager#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TerminalServicePortal#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TianjiClient#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TianjiDataSynchronizer#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TianjiDataSynchronizerPrimaryDecider#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TianjiMaster#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TianjiMasterSupervisor#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"bbdafa7bd82bbb47e5f03770e843d420d49b134d\",\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "tianji.TianjiPortal#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "bbdafa7bd82bbb47e5f03770e843d420d49b134d"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            },
+            {
+                "action_description": "",
+                "action_name": "",
+                "action_params": "",
+                "action_status": "",
+                "actual_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "available_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "error_message": "",
+                "expected_version": "db6273c22c292957d1c0ff251be6c35033159c9b",
+                "kept_versions": "[\"990051db19eb04139277a43239126876c17e0537\",\"db6273c22c292957d1c0ff251be6c35033159c9b\"]",
+                "serverrole": "xnet2-agent.CloudNetAgent#",
+                "state": "GOOD",
+                "version": [
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "990051db19eb04139277a43239126876c17e0537"
+                    },
+                    {
+                        "dl_state": "done",
+                        "group": "",
+                        "version": "db6273c22c292957d1c0ff251be6c35033159c9b"
+                    }
+                ]
+            }
+        ],
+        "service": [
+            {
+                "actual_version": "1ec51dd42adc2c55279a733de740c6ba18753b05.OPS__1",
+                "batch_info": "",
+                "expected_version": "1ec51dd42adc2c55279a733de740c6ba18753b05.OPS__1",
+                "operate_action": "",
+                "rolling": "51",
+                "rolling_result": "NoChanged",
+                "service": "os.OS#",
+                "supervise_action": "",
+                "version_group": "OPS__1"
+            }
+        ],
+        "sm_name": "N52M1",
+        "state": "GOOD",
+        "underlay_ip": ""
+    }
+}

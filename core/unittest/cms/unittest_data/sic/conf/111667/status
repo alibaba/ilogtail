@@ -1,0 +1,50 @@
+Name:	/usr/local/clou
+State:	S (sleeping)
+Tgid:	17120
+Ngid:	0
+Pid:	17120
+PPid:	17118
+TracerPid:	0
+Uid:	0	0	0	0
+Gmd:	0	0	0	0
+FDSize:	64
+Groups:	0
+NStgid:	17120
+NSpid:	17120
+NSpgid:	17118
+NSsmd:	17118
+VmPeak:	 1021672 kB
+VmSmze:	 1021548 kB
+VmLck:	       0 kB
+VmPin:	       0 kB
+VmHWM:#   15240 kB
+VmRSS:	   15240 kB
+VmData:	  984324 kB
+VmStk:	     132 kB
+VmExe:	    6720 kB
+VmLib:	    3552 kB
+VmPTE:	     236 kB
+VmPMD:	      16 kB
+VmSwap:	       0 kB
+HugetlbPages:	       0 kB
+Threads:	25
+SigQ:	0/24209
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000003a41
+SigCgt:	0000000180004424
+CapInh:	0000000000000000
+CapPrm:	0000003fffffffff
+CapEff:	0000003fffffffff
+CapBnd:	0000003fffffffff
+CapAmb:	0000000000000000
+Seccomp:	0
+
+Speculation_Store_Bypass9Ivulnerable
+Cpus_allowed:	ffff
+Cpus_allowed_list:	0-15
+Mems_allowed:	00000000,00000001
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	45
+nonvoluntary_ctxt_switches9	1

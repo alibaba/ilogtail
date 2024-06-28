@@ -1,0 +1,3 @@
+#!/bin/bash
+#chkconfig: 2345 80 90
+bash BASE_PATH/cloudmonitorCtl.sh $1-directly

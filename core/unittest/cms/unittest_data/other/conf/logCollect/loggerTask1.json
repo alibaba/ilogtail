@@ -1,0 +1,543 @@
+[
+    {
+        "file": "/home/admin/cai1/test.log",
+        "priority": 111,
+        "limit": {
+            "readSizePerSecond": "20MB"
+        },
+        "interval": 60,
+        "sampleRate": 0.1,
+        "split": {
+            "type": "regex",
+            "regex": "([a-z]+)_([a-z]+)_(\\d+)",
+            "columns": [
+                "column1",
+                {
+                    "name": "column2",
+                    "translate": {
+                        "default": "false",
+                        "mappings": [
+                            {
+                                "from": "(\\d+)ms",
+                                "to": "$1",
+                                "type": "regex"
+                            },
+                            {
+                                "from": "range(200,300)",
+                                "to": "true",
+                                "type": "function"
+                            }
+                        ]
+                    }
+                },
+                "column3"
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    },
+                    {
+                        "column": "column2",
+                        "name": "alias_name_2"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_name_3",
+                        "type": "sum"
+                    }
+                ]
+            },
+            {
+                "metric": "idxxxxxx22",
+                "filters": [
+                    {
+                        "column": "column2",
+                        "type": "exclude",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_column3",
+                        "type": "avg"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai2/ops/test.log",
+        "priority": 888,
+        "limit": {
+            "readSizePerSecond": "A"
+        },
+        "split": {
+            "type": "simple",
+            "columns": [
+                {
+                    "name": "column1",
+                    "start": "|",
+                    "startIndex": 3,
+                    "end": " ",
+                    "translate": {
+                        "default": "false",
+                        "mappings": [
+                            {
+                                "from": "(\\d+)ms",
+                                "to": "$1",
+                                "type": "regex"
+                            },
+                            {
+                                "from": "range(200,300)",
+                                "to": "true",
+                                "type": "function"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "column2",
+                    "start": ";",
+                    "startIndex": 3,
+                    "end": ","
+                }
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column2",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column2",
+                        "name": "alias_column2",
+                        "type": "max"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai3/test.log",
+        "interval": 60,
+        "sampleRate": 0.1,
+        "split": {
+            "type": "regex",
+            "regex": "([a-z]+)_([a-z]+)_(\\d+)",
+            "columns": [
+                "column1",
+                "column2",
+                "column3"
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column4",
+                        "name": "alias_name"
+                    },
+                    {
+                        "column": "colum2",
+                        "name": "alias_name_2"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_name_3",
+                        "type": "sum"
+                    }
+                ]
+            },
+            {
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column4",
+                        "name": "alias_name"
+                    },
+                    {
+                        "column": "colum2",
+                        "name": "alias_name_2"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column3",
+                        "name": "alias_name_3",
+                        "type": "sum"
+                    }
+                ]
+            }
+        ],
+        "output": [
+            {
+                "type": "sls",
+                "conf": {
+                    "encrypted": true,
+                    "accessKeyId": "xxxx1",
+                    "accessKeySecret": "xxxxx2",
+                    "endpoint": "http://zhangbei-corp-share.log.aliyuncs.com",
+                    "logstore": "argus_log",
+                    "project": "argus-sls-project"
+                }
+            },
+            {
+                "type": "alimonitor"
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai4/ops/test.log",
+        "interval": 60,
+        "split": {
+            "type": "simple",
+            "columns": [
+                {
+                    "name": "column1",
+                    "start": "|",
+                    "startIndex": 3,
+                    "end": " "
+                },
+                {
+                    "name": "column2",
+                    "start": ";",
+                    "startIndex": 3,
+                    "end": ","
+                }
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column2",
+                        "name": "alias_column2",
+                        "type": "max"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai4/ops/**/test.log",
+        "interval": 60,
+        "split": {
+            "type": "simple",
+            "columns": [
+                {
+                    "name": "column1",
+                    "start": "|",
+                    "startIndex": 3,
+                    "end": " "
+                },
+                {
+                    "name": "column2",
+                    "start": ";",
+                    "startIndex": 3,
+                    "end": ","
+                }
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column2",
+                        "name": "alias_column2",
+                        "type": "max"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai5/ops/test.log",
+        "split": {
+            "type": "simple",
+            "columns": [
+                {
+                    "name": "column1",
+                    "start": "|",
+                    "startIndex": 3,
+                    "end": " ",
+                    "endList": [
+                        "",
+                        ","
+                    ],
+                    "translate": {
+                        "default": "false",
+                        "mappings": [
+                            {
+                                "from": "(\\d+)ms",
+                                "to": "$1",
+                                "type": "regex"
+                            },
+                            {
+                                "from": "range(200,300)",
+                                "to": "true",
+                                "type": "function"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "column2",
+                    "start": ";",
+                    "startIndex": 3
+                }
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column1",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column2",
+                        "name": "alias_column2",
+                        "type": "max"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai6/ops/test.log",
+        "split": {
+            "type": "json",
+            "columns": [
+                {
+                    "key": "a",
+                    "label": "column1",
+                    "translate": {
+                        "default": "false",
+                        "mappings": [
+                            {
+                                "from": "(\\d+)ms",
+                                "to": "$1",
+                                "type": "regex"
+                            },
+                            {
+                                "from": "range(200,300)",
+                                "to": "true",
+                                "type": "function"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "key": "b",
+                    "label": "column2"
+                },
+                {
+                    "key": "c",
+                    "label": "column3"
+                }
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "column3",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "column1",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "column2",
+                        "name": "alias_column2",
+                        "type": "max"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "file": "/home/admin/cai7/ops/test.log",
+        "split": {
+            "type": "regexEach",
+            "columns": [
+                {
+                    "name": "old_abc",
+                    "regex": "old_abc[^\\w](\\d+)",
+                    "translate": {
+                        "default": "false",
+                        "mappings": [
+                            {
+                                "from": "(\\d+)ms",
+                                "to": "$1",
+                                "type": "regex"
+                            },
+                            {
+                                "from": "range(200,300)",
+                                "to": "true",
+                                "type": "function"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "old_efg",
+                    "regex": "old_efg[^\\w](\\d+)"
+                },
+                {
+                    "name": "old_hij",
+                    "regex": "(hij)"
+                }
+            ]
+        },
+        "process": [
+            {
+                "metric": "idxxxxxx1",
+                "filters": [
+                    {
+                        "column": "old_hij",
+                        "type": "include",
+                        "values": [
+                            "xxxxx1",
+                            "xxxxx2"
+                        ]
+                    }
+                ],
+                "groupBys": [
+                    {
+                        "column": "old_abc",
+                        "name": "alias_name"
+                    }
+                ],
+                "calculates": [
+                    {
+                        "column": "old_efg",
+                        "name": "alias_column2",
+                        "type": "max"
+                    }
+                ]
+            }
+        ]
+    }
+]

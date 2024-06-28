@@ -1,0 +1,70 @@
+[
+    {
+        "file": "/alidata/www/logs/**/test.log",
+        "interval": 60,
+        "split": {
+            "type": "json",
+            "columns": [
+                {
+                    "key": "message",
+                    "label": "label1"
+                },
+                {
+                    "key": "value.time",
+                    "label": "label2"
+                }
+            ]
+        },
+        "process": [
+            {
+                "filters": [
+                    {
+                        "column": "label1",
+                        "type": "include",
+                        "values": [
+                            "DIEGEST"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "dockerLabels": [
+            {
+                "key": "io.kubernetes.pod.name",
+                "value": "tianjimon",
+                "type": "contain",
+                "rename": "pod_name"
+            },
+            {
+                "key": "io.kubernetes.pod.namespace",
+                "value": "tianjimon",
+                "rename": "namespace"
+            }
+        ],
+        "add_labels": [
+            {
+                "name": "pod_name1",
+                "type": 2,
+                "value": "argus-prometheus"
+            },
+            {
+                "name": "namespace1",
+                "type": 2,
+                "value": "argus-prom"
+            }
+        ],
+        "output": [
+            {
+                "type": "loki",
+                "conf": {
+                    "labels": [
+                        "namespace"
+                    ],
+                    "value": "{label1}_{label2}_{output}",
+                    "timestamp": "time",
+                    "endpoint": "http://xxxx/loki/api/write"
+                }
+            }
+        ]
+    }
+]

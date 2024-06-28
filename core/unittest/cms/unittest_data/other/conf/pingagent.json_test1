@@ -1,0 +1,16 @@
+{
+    "pingListIntv":100,
+    "noPingListIntv":120,
+    "updateIntv":300,
+    "maxPingThread":60,
+    "localPort":3600,
+    "listenPort":31060,
+    "recordFileSize":200000,
+    "recordFileNum":30,
+    "recordFileName":"/tmp/ping_agent.log",
+    "sendMsg":true,
+    "pingControllerUrl": [
+        "http://11.160.59.60/pingmesh/pinglist",
+        "http://pingmesh-controller.alibaba.net/pingmesh/pinglist"
+    ]
+}

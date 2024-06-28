@@ -1,0 +1,5 @@
+ClusterMonitorTest:AVG_COUNTER_METRIC,7,/start,-1,perf
+ClusterMonitorTest:MAX_COUNTER_METRIC,8,/start,-1,perf
+ClusterMonitorTest:AG_COUNTER_METRIC,9,/start,-1,perf
+ClusterMonitorTest:MAX_COUNTER_METRIC,10,/start,-1,perf
+ClusterMonitorTest:QPS_COUNTER_METRIC,10,/start,-1,perf,cluster=aaa
