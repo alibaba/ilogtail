@@ -74,7 +74,7 @@ jobs:
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
           ONLY_SPL_UT: ON
-          MAKE_JOBS: 8
+          MAKE_JOBS: 16
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
         run: make core
 
