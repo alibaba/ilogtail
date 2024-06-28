@@ -1,0 +1,162 @@
+[
+  {
+      "add_labels": [
+          {
+              "name": "SYS_NAMESPACE",
+              "type": 2,
+              "value": "alicms_log_monitor"
+          },
+          {
+              "name": "SYS_METRIC_STORE",
+              "type": 2,
+              "value": "1"
+          },
+          {
+              "name": "SYS_DT",
+              "type": 2,
+              "value": "2"
+          },
+          {
+              "name": "SYS_CCI",
+              "type": 2,
+              "value": "37543"
+          },
+          {
+              "name": "SYS_DT_CCI",
+              "type": 2,
+              "value": "37543:2"
+          },
+          {
+              "name": "sn",
+              "type": 0
+          }
+      ],
+      "file": "/home/admin/logs/alimonitor-web.log",
+      "interval": 60,
+      "output": [
+          {
+              "type": "alimonitor"
+          }
+      ],
+      "process": [
+          {
+              "calculates": [
+                  {
+                      "name": "menghong_spm_test_total_count",
+                      "type": "count"
+                  }
+              ],
+              "filters": [],
+              "groupBys": [
+                  {
+                      "column": "Statistics",
+                      "name": "Statistics"
+                  }
+              ],
+              "metric": "1538416829400043522"
+          },
+          {
+              "calculates": [
+                  {
+                      "name": "menghong_spm_test_success_count",
+                      "type": "count"
+                  }
+              ],
+              "filters": [
+                  {
+                      "column": "Used",
+                      "type": "include",
+                      "values": [
+                          "Y"
+                      ]
+                  }
+              ],
+              "groupBys": [
+                  {
+                      "column": "Statistics",
+                      "name": "Statistics"
+                  }
+              ],
+              "metric": "1538416829400043522"
+          },
+          {
+              "calculates": [
+                  {
+                      "name": "menghong_spm_test_failed_count",
+                      "type": "count"
+                  }
+              ],
+              "filters": [
+                  {
+                      "column": "Used",
+                      "type": "include",
+                      "values": [
+                          "N"
+                      ]
+                  }
+              ],
+              "groupBys": [
+                  {
+                      "column": "Statistics",
+                      "name": "Statistics"
+                  }
+              ],
+              "metric": "1538416829400043522"
+          },
+          {
+              "calculates": [
+                  {
+                      "column": "RT",
+                      "name": "menghong_spm_test_rt",
+                      "type": "avg"
+                  }
+              ],
+              "filters": [
+                  {
+                      "column": "Used",
+                      "type": "include",
+                      "values": [
+                          "Y"
+                      ]
+                  }
+              ],
+              "groupBys": [
+                  {
+                      "column": "Statistics",
+                      "name": "Statistics"
+                  }
+              ],
+              "metric": "1538416829400043522"
+          }
+      ],
+      "sampleRate": 1.0,
+      "split": {
+          "columns": [
+              {
+                  "end": "M",
+                  "name": "RT",
+                  "start": ":",
+                  "startIndex": 3
+              },
+              {
+                  "end": ":",
+                  "name": "Used",
+                  "start": " ",
+                  "startIndex": 8,
+                  "translate": {
+                      "default": "N",
+                      "mappings": [
+                          {
+                              "from": "Used",
+                              "to": "Y",
+                              "type": "regex"
+                          }
+                      ]
+                  }
+              }
+          ],
+          "type": "simple"
+      },
+      "version": "1660042490852"
+  }
+]

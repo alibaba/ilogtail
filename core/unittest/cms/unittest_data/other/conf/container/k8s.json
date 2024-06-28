@@ -1,0 +1,1107 @@
+[
+    {
+        "Id": "28cc3e9caa5579723213503cc2e4c11bf5b7976530e8b009b1f755981dd2e259",
+        "Names": [
+            "/k8s_apiserver_aliacs-service-catalog-catalog-apiserver-5594db7478-wpdwg_acs-system_4e7ca206-d462-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/alibaba_apsara_paas/service-catalog@sha256:9292cd68d410007680c27b9811d96fed6d4dc3ec2a34adb2ca4516b7a9ff0ae9",
+        "ImageID": "sha256:711993e9537927078c3b16d173b6c42570639e6a34dd6c686829f5b3f07df03c",
+        "Command": "/opt/services/service-catalog apiserver --enable-admission-plugins NamespaceLifecycle,DefaultServicePlan,ServiceBindingsLifecycle,ServicePlanChangeValidator,BrokerAuthSarCheck --secure-port 8443 --etcd-servers https://10.116.2.2:2379,https://10.116.3.14:2379,https://10.116.3.15:2379 -v 5 --disable-auth --feature-gates OriginatingIdentity=true --feature-gates ServicePlanDefaults=true --etcd-cafile=/var/run/ca.pem --etcd-certfile=/var/run/etcd-client.pem --etcd-keyfile=/var/run/etcd-client-key.pem",
+        "Created": 1624480436,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "b5f6b7c1",
+            "annotation.io.kubernetes.container.ports": "[{\"containerPort\":8443,\"protocol\":\"TCP\"}]",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/acs-system_aliacs-service-catalog-catalog-apiserver-5594db7478-wpdwg_4e7ca206-d462-11eb-99b7-743a201f4ba8/apiserver/0.log",
+            "io.kubernetes.container.name": "apiserver",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "aliacs-service-catalog-catalog-apiserver-5594db7478-wpdwg",
+            "io.kubernetes.pod.namespace": "acs-system",
+            "io.kubernetes.pod.uid": "4e7ca206-d462-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "7ce32f96c20798381595fb67e4e4d51a68eb2ac43705ac4d3e094c6b7073537f"
+        },
+        "State": "running",
+        "Status": "Up 2 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:7ce32f96c20798381595fb67e4e4d51a68eb2ac43705ac4d3e094c6b7073537f"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/4e7ca206-d462-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/service-catalog-apiserver-token-xvcdn",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/4e7ca206-d462-11eb-99b7-743a201f4ba8/containers/apiserver/eb0cbf76",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/4e7ca206-d462-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/kubernetes/pki/etcd/ca.pem",
+                "Destination": "/var/run/ca.pem",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/kubernetes/pki/etcd/etcd-client-key.pem",
+                "Destination": "/var/run/etcd-client-key.pem",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/kubernetes/pki/etcd/etcd-client.pem",
+                "Destination": "/var/run/etcd-client.pem",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/4e7ca206-d462-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/apiserver-cert",
+                "Destination": "/var/run/kubernetes-service-catalog",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "2bbe94c671ee4e065a679327f94fb3c50d52cb306e359744545325b4707c7ad4",
+        "Names": [
+            "/k8s_siteprobe_tianjimoncmssiteprobe-0_tianjimon_27888b27-bd3d-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/fray/cms-siteprobe@sha256:749f1280edc76d34619e05dbc2b55b8ccd4f86485056e319a920da40379cc4d8",
+        "ImageID": "sha256:8fbd0c6825f14a7b785dae65e3a36ffd5f687a3f6212cf0dad83d95c488cb384",
+        "Command": "/bin/bash -c /alidata/bin/start.sh",
+        "Created": 1621935598,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "27799e4b",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimoncmssiteprobe-0_27888b27-bd3d-11eb-99b7-743a201f4ba8/siteprobe/0.log",
+            "io.kubernetes.container.name": "siteprobe",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimoncmssiteprobe-0",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "27888b27-bd3d-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "88337bf52f163cdef54f55bae35e98f9b90d8532f5791193cd7fa4f0bccfd103"
+        },
+        "State": "running",
+        "Status": "Up 6 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:88337bf52f163cdef54f55bae35e98f9b90d8532f5791193cd7fa4f0bccfd103"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/27888b27-bd3d-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-11d4f640-b3ea-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/alidata/www/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/27888b27-bd3d-11eb-99b7-743a201f4ba8/containers/siteprobe/5519882c",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/27888b27-bd3d-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/27888b27-bd3d-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/27888b27-bd3d-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/27888b27-bd3d-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "87e5c745114a8c870357b890a1a85b804145a7624485841de7b9fe201d5c391e",
+        "Names": [
+            "/k8s_self-monitor_tianjimonselfmonitor-0_tianjimon_ccaefe6b-b3eb-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/yc/tianjimon-selfmonitor@sha256:d83486572e0cc6f4f3f74543bdd49fe52be77904eac2febb363357eb1595396f",
+        "ImageID": "sha256:448cee6e86b4d6fa9e655af415446d7452bd950c0fe2a8a75063714385aa64df",
+        "Command": "/bin/sh -c /alidata/selfmonitor/start.sh",
+        "Created": 1620911209,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "1e9e9139",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonselfmonitor-0_ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/self-monitor/0.log",
+            "io.kubernetes.container.name": "self-monitor",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonselfmonitor-0",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "ccaefe6b-b3eb-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "f3c6b0ab7b97a6edbdb2bfa21ba785ad53300d47cdb3c39735482b12014ab972"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:f3c6b0ab7b97a6edbdb2bfa21ba785ad53300d47cdb3c39735482b12014ab972"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-cca55703-b3eb-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/alidata/selfmonitor/log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/containers/self-monitor/6ee6e009",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/ccaefe6b-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-cca4b948-b3eb-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/alidata/selfmonitor/data",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "412c24062384b161275653bc41cd0b00cd8aeb689707628fc22729c376f6a997",
+        "Names": [
+            "/k8s_shennong2-api_tianjimonshennong2api-1_tianjimon_7f60d43e-b3eb-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/shennong2/shennong2-api-test@sha256:e68e5507c58f152cb51af418c3fed7b97cf808ffc5242e99d7b2be64c0e436d7",
+        "ImageID": "sha256:050829a1ed87591ab59b542adcbd6a307599e2488043081a2b699065085f54d2",
+        "Command": "/alidata/bin/start.sh",
+        "Created": 1620910984,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "235d852b",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20210209184111",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonshennong2api-1_7f60d43e-b3eb-11eb-99b7-743a201f4ba8/shennong2-api/0.log",
+            "io.kubernetes.container.name": "shennong2-api",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonshennong2api-1",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "7f60d43e-b3eb-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "6515598dd8c292db6daca31fc685c87ed3dce39f310e8fc2aec1fd15e8d6a9b0"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:6515598dd8c292db6daca31fc685c87ed3dce39f310e8fc2aec1fd15e8d6a9b0"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "72395278a618b1de5bc8c7c795b82806fc8f767b4742f2c90e28a5ac35658054",
+                "Source": "/apsarapangu/disk3/vfsdir/72395278a618b1de5bc8c7c795b82806fc8f767b4742f2c90e28a5ac35658054",
+                "Destination": "/alidata/www/logs/tengine",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/8",
+                "Destination": "/proc/loadavg",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-7f5357f1-b3eb-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/alidata/www/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "c35a370783fc75cd47089ce063f74c8af25b7c869f30f6f76f43aa6e8e1313ea",
+                "Source": "/apsarapangu/disk6/vfsdir/c35a370783fc75cd47089ce063f74c8af25b7c869f30f6f76f43aa6e8e1313ea",
+                "Destination": "/alidata/www/logs/shennong2-api",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/containers/shennong2-api/2a28c1c0",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/9",
+                "Destination": "/proc/stat",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/6",
+                "Destination": "/proc/cpuinfo",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/11",
+                "Destination": "/proc/uptime",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/7",
+                "Destination": "/proc/diskstats",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/5",
+                "Destination": "/proc/meminfo",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/10",
+                "Destination": "/proc/swaps",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f60d43e-b3eb-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/shennong2-api/12",
+                "Destination": "/sys/devices/system/cpu/online",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "cfe8fc780d906c4b0f604e838da99856d64cc6ffdc7717db560dc666adca72d8",
+        "Names": [
+            "/k8s_alertengine_tianjimonalertengine-1_tianjimon_50e52b62-b3eb-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/tianjimon-private/alert-engine-go@sha256:b920028a366f91b8ead0f3d92b3f12add889021a667ec84f3abe6a907c454df6",
+        "ImageID": "sha256:825ee3b4e5aed758b9dff7e49c059e3faf826da38d64b39c16f58efca0a2f1c9",
+        "Command": "/home/alidata/alert-engine/bin/start.sh",
+        "Created": 1620910898,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "e38985d1",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "baseOS": "reg.docker.alibaba-inc.com/jackyjkchen/aliyun-alios7u2-mini:1.0",
+            "buildTime": "20210209184111",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonalertengine-1_50e52b62-b3eb-11eb-99b7-743a201f4ba8/alertengine/0.log",
+            "io.kubernetes.container.name": "alertengine",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonalertengine-1",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "50e52b62-b3eb-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "88635093d645fd97ff53e3b4f0bfbc641813fa27e2fe614a14176abd1879c9db"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:88635093d645fd97ff53e3b4f0bfbc641813fa27e2fe614a14176abd1879c9db"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/docker/logs/tianjimon.alertengine",
+                "Destination": "/home/admin/alidata/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/50e52b62-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-495da511-b3e7-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/home/alidata/alert-engine/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/50e52b62-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/50e52b62-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/50e52b62-b3eb-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/50e52b62-b3eb-11eb-99b7-743a201f4ba8/containers/alertengine/6d2ed36c",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/50e52b62-b3eb-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "c7a29919fa38f96ebfe87028bd7fb8bc9a4c06cd0ef13b0cbf903509d3c57e92",
+        "Names": [
+            "/k8s_accagg_tianjimonaccagg-2_tianjimon_f49d30f4-b3ea-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/tianjimon-private/accelerator-container@sha256:72bd3c2e31c678ecf52f57f84e59466ee5e58655776784112b1319bf6ea5c2c9",
+        "ImageID": "sha256:8772fdd6e01c03f9d743adbf513f9a10513ad0c9f873150d459ba34b74f89704",
+        "Command": "/bin/sh -c /alidata/bin/start.sh",
+        "Created": 1620910763,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "de7f5ced",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonaccagg-2_f49d30f4-b3ea-11eb-99b7-743a201f4ba8/accagg/0.log",
+            "io.kubernetes.container.name": "accagg",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonaccagg-2",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "f49d30f4-b3ea-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "9ebd90f1f28073274a7acd7885e497b453ad6407eab28fbc059815787c729c82",
+            "maintainer": "zengyusheng"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:9ebd90f1f28073274a7acd7885e497b453ad6407eab28fbc059815787c729c82"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "759bd045da385b8bd57296907a25e9212125fbf94f2290fdf666576ff58c4441",
+                "Source": "/apsarapangu/disk4/vfsdir/759bd045da385b8bd57296907a25e9212125fbf94f2290fdf666576ff58c4441",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/f49d30f4-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/f49d30f4-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/f49d30f4-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/docker/logs/tianjimon.accagg/tianjimonaccagg",
+                "Destination": "/alidata/www/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/f49d30f4-b3ea-11eb-99b7-743a201f4ba8/containers/accagg/91dbf8ed",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/f49d30f4-b3ea-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "f131c5e8d72b4dfc70335156df3aa501a6ba8b22a188aad3691ef2fbdb8881b9",
+        "Names": [
+            "/k8s_accsource_tianjimonaccsource-2_tianjimon_edc282da-b3ea-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/tianjimon-private/accelerator-container@sha256:72bd3c2e31c678ecf52f57f84e59466ee5e58655776784112b1319bf6ea5c2c9",
+        "ImageID": "sha256:8772fdd6e01c03f9d743adbf513f9a10513ad0c9f873150d459ba34b74f89704",
+        "Command": "/bin/sh -c /alidata/bin/start.sh",
+        "Created": 1620910763,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "e285fb47",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonaccsource-2_edc282da-b3ea-11eb-99b7-743a201f4ba8/accsource/0.log",
+            "io.kubernetes.container.name": "accsource",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonaccsource-2",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "edc282da-b3ea-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "acfe760cacab4876f4888339c01fb0b06b4031166387a0f9c4bed4277d736ff3",
+            "maintainer": "zengyusheng"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:acfe760cacab4876f4888339c01fb0b06b4031166387a0f9c4bed4277d736ff3"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/edc282da-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/docker/logs/tianjimon.accsource/tianjimonaccsource",
+                "Destination": "/alidata/www/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/edc282da-b3ea-11eb-99b7-743a201f4ba8/containers/accsource/0d793a95",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/edc282da-b3ea-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "9c3d3c02925a9df1c44ecdbcb63ead225f74f9f66b2d54d7de133c22fef49e28",
+                "Source": "/apsarapangu/disk5/vfsdir/9c3d3c02925a9df1c44ecdbcb63ead225f74f9f66b2d54d7de133c22fef49e28",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/edc282da-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/edc282da-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "0b34df53822760cc035cb201afb174ceb827edcb31b8cee1fbd82418e523051b",
+        "Names": [
+            "/k8s_metriccollector_tianjimonmetriccollector-1_tianjimon_7f270878-b3ea-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/fray/cms-collector@sha256:572039c5b78dc321f9be2d1497f3167577e504f46adf5bc89d66a8ba29285a5c",
+        "ImageID": "sha256:4f4ca11d8bdffb814ccf88741b1f1e312e03b66100e7dbe1ada5dc96d776eeaa",
+        "Command": "/bin/sh -c /alidata/bin/start.sh",
+        "Created": 1620910614,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "ace7adbb",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonmetriccollector-1_7f270878-b3ea-11eb-99b7-743a201f4ba8/metriccollector/0.log",
+            "io.kubernetes.container.name": "metriccollector",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonmetriccollector-1",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "7f270878-b3ea-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "40fa1333e3f591802e85999d1d22df439e2df0d158ce15da79f1fda642af951a",
+            "maintainer": "zengyusheng"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:40fa1333e3f591802e85999d1d22df439e2df0d158ce15da79f1fda642af951a"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/6",
+                "Destination": "/proc/cpuinfo",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/11",
+                "Destination": "/proc/uptime",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/containers/metriccollector/f05aa2fc",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "34d335bd9be777d8878621d3132c080b31ef12e79d482e55b0d9439eb6b775e3",
+                "Source": "/apsarapangu/disk3/vfsdir/34d335bd9be777d8878621d3132c080b31ef12e79d482e55b0d9439eb6b775e3",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/5",
+                "Destination": "/proc/meminfo",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/9",
+                "Destination": "/proc/stat",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/7",
+                "Destination": "/proc/diskstats",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/12",
+                "Destination": "/sys/devices/system/cpu/online",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-7f224b25-b3ea-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/alidata/www/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/8",
+                "Destination": "/proc/loadavg",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metriccollector/10",
+                "Destination": "/proc/swaps",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7f270878-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ]
+    },
+    {
+        "Id": "2c9b97ae18212143725936315250b23e359835a5f63bcfc0a66069653e33d59b",
+        "Names": [
+            "/k8s_metric-master_tianjimonmetricmaster-2_tianjimon_7e0eebaf-b3ea-11eb-99b7-743a201f4ba8_0"
+        ],
+        "Image": "cn-wulan-env116-d01-reg.docker.intra.env116.shuguang.com:80/tianjimon-metricmaster@sha256:d3263ae67c86532d2e965af5ccf8fad803ffd6e1e589d0ebdbef0b627dc85432",
+        "ImageID": "sha256:8dab637b15e87096d0b9d196fa9a07c23084ebd8e87ba80a8a27c1b72e866fc2",
+        "Command": "/bin/bash -c /alidata/bin/start.sh",
+        "Created": 1620910598,
+        "Ports": [],
+        "Labels": {
+            "annotation.com.aliyun.ack.hashVersion": "1.14.3",
+            "annotation.io.kubernetes.container.hash": "d7606a46",
+            "annotation.io.kubernetes.container.restartCount": "0",
+            "annotation.io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "annotation.io.kubernetes.container.terminationMessagePolicy": "File",
+            "annotation.io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.container.logpath": "/var/log/pods/tianjimon_tianjimonmetricmaster-2_7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/metric-master/0.log",
+            "io.kubernetes.container.name": "metric-master",
+            "io.kubernetes.docker.type": "container",
+            "io.kubernetes.pod.name": "tianjimonmetricmaster-2",
+            "io.kubernetes.pod.namespace": "tianjimon",
+            "io.kubernetes.pod.uid": "7e0eebaf-b3ea-11eb-99b7-743a201f4ba8",
+            "io.kubernetes.sandbox.id": "c9d7b3e1677e42a74a9ea04d3d8de0ea99e6d9083289244efdeca18ff4c76e9f",
+            "maintainer": "zengyusheng"
+        },
+        "State": "running",
+        "Status": "Up 8 weeks",
+        "HostConfig": {
+            "NetworkMode": "container:c9d7b3e1677e42a74a9ea04d3d8de0ea99e6d9083289244efdeca18ff4c76e9f"
+        },
+        "NetworkSettings": {
+            "Networks": {}
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.local",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~configmap/docker",
+                "Destination": "/opt/tianji/conf.tmpl",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/8",
+                "Destination": "/proc/loadavg",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/5",
+                "Destination": "/proc/meminfo",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "3fce1384b0833d87fbc5457281ab27f177a475c163cbf6b5f0318ac89e58ad41",
+                "Source": "/apsarapangu/disk6/vfsdir/3fce1384b0833d87fbc5457281ab27f177a475c163cbf6b5f0318ac89e58ad41",
+                "Destination": "/home/admin/logs",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/6",
+                "Destination": "/proc/cpuinfo",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/7",
+                "Destination": "/proc/diskstats",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/10",
+                "Destination": "/proc/swaps",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/localtime",
+                "Destination": "/etc/localtime",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/9",
+                "Destination": "/proc/stat",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/11",
+                "Destination": "/proc/uptime",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volume-subpaths/pvc-ef14bc66-b3e6-11eb-99b7-743a201f4ba8/metric-master/12",
+                "Destination": "/sys/devices/system/cpu/online",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~csi/yoda-7df3473f-b3ea-11eb-99b7-743a201f4ba8/mount",
+                "Destination": "/alidata/www/logs",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/etc-hosts",
+                "Destination": "/etc/hosts",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/volumes/kubernetes.io~secret/default-token-p82ln",
+                "Destination": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/lib/kubelet/pods/7e0eebaf-b3ea-11eb-99b7-743a201f4ba8/containers/metric-master/f2e53dbc",
+                "Destination": "/dev/termination-log",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    }
+]

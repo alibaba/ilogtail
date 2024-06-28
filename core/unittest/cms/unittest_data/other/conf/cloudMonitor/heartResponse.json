@@ -1,0 +1,69 @@
+{
+    "node": {
+        "instanceId": "host-3n3zLcA3Qms",
+        "serialNumber": "6303c38e-f243-4262-96f2-907f2fc7962c",
+        "aliUid": 1052053700687882,
+        "hostName": "staragent-fenghua-coding",
+        "operatingSystem": "Linux",
+        "region": "unknown",
+        "ipGroup": "10.137.71.4",
+        "tianjimonVersion": "3.3.5.6",
+        "aliyunHost": false,
+        "aegisStatus": 1
+    },
+    "collectConfig": {
+        "processNames": [
+            "argusagent_ut",
+            "argusagent"
+        ],
+        "processConfigs": [
+            {
+                "id": 243648,
+                "instanceId": "host-3n3zLcA3Qms",
+                "name": "argusagent",
+                "command": "number"
+            },
+            {
+                "id": 243649,
+                "instanceId": "host-3n3zLcA3Qms",
+                "name": "argusagent_ut",
+                "command": "number"
+            }
+        ],
+        "httpConfigs": []
+    },
+    "metricConfig": {
+        "url": "https://cms-cloudmonitor.aliyun.com/agent/metrics/putLines",
+        "gzip": false,
+        "useProxy": true
+    },
+    "metricHubConfig": {
+        "url": "https://metrichub-cms-cn-hangzhou.aliyuncs.com/agent/metrics/putLines",
+        "gzip": false,
+        "useProxy": false
+    },
+    "HTTP": [
+        "{\"uri\":\"https://www.baidu.com\",\"method\":\"GET\",\"taskId\":536177,\"timeout\":12}",
+        "{\"uri\":\"http://www.baidu.com\",\"requestBody\":\"helloworld\",\"header\":\"UTF-8\",\"keyword\":\"bad\",\"negative\":true,\"method\":\"POST\",\"taskId\":559862}",
+        "{\"uri\":\"http://www.baidu.com\",\"method\":\"HEAD\",\"taskId\":559958,\"timeout\":20}",
+        "{\"uri\":\"http://127.0.0.1/cms/v1.0/alikey?app_version\u003d7.9.1\u0026installation_id\u003d1810221750133318\u0026timestamp\u003d1540458693\u0026type\u003d1\u0026app_key\u003dxdThhy2239daax\u0026os_type\u003d1\u0026channel\u003dAliClound\u0026sign\u003d149BE6B9197E6A28B8FCEE845ECBC9D668C87792\",\"resposeCharset\":\"UTF-8\",\"keyword\":\"get_count\",\"negative\":false,\"method\":\"GET\",\"taskId\":449815}",
+        "{\"uri\":\"http://127.0.0.1/cms/v1.0/ad/config?installation_id\u003d1810221750133318\u0026app_version\u003d7.8.7\u0026sign\u003d149BE6B9197E6A28B8FCEE845ECBC9D668C87792\u0026os_type\u003d1\u0026device_id\u003d5ea25c6b3296505\u0026bssid\u003dd0%3A76%3Ae7%3A98%3A9d%3A4b\u0026app_key\u003dxdThhy2239daax\u0026gcid\u003d6ddb322c0fa84e8c6602b635798dfca2\u0026mac_address\u003d02%3A00%3A00%3A00%3A00%3A00\u0026imei\u003d866479020121793\u0026timestamp\u003d1540458693\u0026channel\u003dAliClound\u0026os_version\u003d6.0\",\"method\":\"GET\",\"taskId\":465119}"
+    ],
+    "PING": [
+        "{\"host\":\"10.137.71.2\",\"taskId\":536175}"
+    ],
+    "TELNET": [
+        "{\"uri\":\"telnet://10.137.71.2:22\",\"taskId\":536176}"
+    ],
+    "hpcClusterConfig": {
+        "clusterId": "hpc-uf671uizyvln4qc9qudt",
+        "regionId": "cn-shanghai",
+        "instances": [
+            {
+                "instanceId": "i-uf6ef1y46xhgd77hgt5u",
+                "ip": "200.0.134.2"
+            }
+        ],
+        "version": "1F2F5ECFD8AF2810F4F36112C9E2C0BC"
+    }
+}

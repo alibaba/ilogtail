@@ -15,6 +15,20 @@
 cmake_minimum_required(VERSION 3.22)
 project(unittest_base)
 
+
+# ----argusagent for tmp by @chengjie.hcj ---------------------------------------------------------------------------------
+set(CMS_SRC ${PROJECT_SOURCE_DIR}/../cms)
+include(${CMS_SRC}/cms.cmake)
+include_directories(
+    ${CMS_SRC}
+    ${CMS_SRC}/third_party/fmt/include
+    ${CMS_SRC}/third_party/header_only
+    ${DEPS_INCLUDE_ROOT}/zlib
+    ${DEPS_INCLUDE_ROOT}/sigar-1.6
+)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function -Wno-sign-compare")
+# ----argusagent for tmp by @chengjie.hcj ---------------------------------------------------------------------------------
+
 add_definitions(-DAPSARA_UNIT_TEST_MAIN)
 set(NO_TCMALLOC TRUE)
 add_definitions(-DLOGTAIL_NO_TC_MALLOC)
@@ -32,6 +46,7 @@ if(MSVC)
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
 endif()
+link_argus(${PROJECT_NAME})  # must before boost
 link_jsoncpp(${PROJECT_NAME})
 link_yamlcpp(${PROJECT_NAME})
 link_boost(${PROJECT_NAME})
@@ -95,6 +110,7 @@ add_subdirectory(queue)
 add_subdirectory(reader)
 add_subdirectory(sdk)
 add_subdirectory(sender)
+add_subdirectory(cms)
 add_subdirectory(serializer)
 
 if (LINUX)

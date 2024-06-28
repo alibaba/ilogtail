@@ -1,0 +1,235 @@
+{
+	"baseMetric": [
+		{
+			"module_name": "disk",
+			"interval": 60,
+			"metric_list": [
+				"RRQM",
+				"WRQM"
+			],
+			"label_name": "dev",
+			"label_values": [
+				"/dev/sda",
+				"/dev/sdb"
+			],
+			"add_lables": [
+				{
+					"name:": "consumer",
+					"value": "sunfire",
+					"type": 2
+				}
+			]
+		},
+		{
+			"module_name": "cpu",
+			"interval": 60,
+			"metric_list": [
+				"NCPU",
+				"USER",
+				"SYSTEM"
+			],
+			"add_lables": [
+				{
+					"name:": "consumer",
+					"value": "sunfire",
+					"type": 2
+				}
+			]
+		},
+		{
+			"module_name": "cpu",
+			"interval": 60,
+			"metric_list": [
+				"SYSTEM_USER",
+				"IOWAIT_USAGE"
+			],
+			"add_lables": [
+				{
+					"name:": "consumer",
+					"value": "shennongV3",
+					"type": 2
+				}
+			]
+		}
+	],
+	"exporterTask": [
+		{
+			"output": [
+				{
+					"type": "alimonitor"
+				}
+			],
+			"add_labels": [
+				{
+					"name": "pod",
+					"type": 3,
+					"value": "sn"
+				},
+				{
+					"name": "SYS_CollectConfigId",
+					"type": 2,
+					"value": "82"
+				}
+			],
+			"interval": 60,
+			"metrics": [
+				{
+					"name": "container_network_retran_util"
+				}
+			],
+			"timeout": 10,
+			"metrics_path": "/metrics/container",
+			"target": "http://localhost:9199"
+		},
+		{
+			"output": [
+				{
+					"type": "alimonitor"
+				}
+			],
+			"add_labels": [
+				{
+					"name": "sn",
+					"type": 0
+				},
+				{
+					"name": "SYS_CollectConfigId",
+					"type": 2,
+					"value": "83"
+				},
+				{
+					"name": "SYS_DT",
+					"type": 2,
+					"value": "1,2"
+				}
+			],
+			"interval": 60,
+			"metrics": [
+				{
+					"name": "node_cpu_core_throttles_total"
+				}
+			],
+			"timeout": 60,
+			"metrics_path": "/metrics",
+			"target": "http://localhost:9100"
+		}
+	],
+	"httpReceiveTask": [
+		{
+			"metrics": [
+				{
+					"name": "container_memory_rss"
+				},
+				{
+					"name": "container_cpu_usage_seconds_total"
+				},
+				{
+					"name": "container_fs_reads_bytes_total"
+				}
+			],
+			"add_labels": [
+				{
+					"name": "hostname",
+					"type": 0
+				},
+				{
+					"name": "instance",
+					"value": "INSTANCE",
+					"type": 1
+				},
+				{
+					"name": "group",
+					"value": "sigma-test",
+					"type": 2
+				}
+			],
+			"output": [
+				{
+					"type": "alimonitor"
+				}
+			]
+		}
+	],
+	"moduleTask": [
+		{
+			"name": "cpu",
+			"cron": "[* * * * * ?]",
+			"cmd": "so://cpu",
+			"version": "1.0",
+			"interval": 15,
+			"output": [
+				{
+					"type": "alimoitor"
+				}
+			]
+		},
+		{
+			"name": "memory",
+			"cron": "[* * * * * ?]",
+			"cmd": "so://memory",
+			"version": "1.0",
+			"interval": 15,
+			"output": [
+				{
+					"type": "shennong"
+				}
+			]
+		}
+	],
+	"scriptTask": [
+		{
+			"cmd": "ps aux|grep argusagent1|grep -v \"grep\"",
+			"cron": "[* * * * * ?]",
+			"duration": 360,
+			"interval": 100,
+			"name": "staragent",
+			"output": [
+				{
+					"conf": {
+						"encrypted": false,
+						"accessKeyId": "xxxx",
+						"accessKeySecret": "xxxx",
+						"endpoint": "http://zhangbei-corp-share.log.aliyuncs.com",
+						"logstore": "argus_log",
+						"project": "argus-sls-project"
+					},
+					"type": "sls"
+				},
+				{
+					"type": "localfile",
+					"conf": {
+						"path": "/tmp/opsx.log",
+						"size": 1024000,
+						"count": 7
+					}
+				}
+			],
+			"reportStatus": 1,
+			"timeout": 20,
+			"user": "nobody",
+			"version": "1.0"
+		},
+		{
+			"cmd": "echo 'test_metric 10.0'",
+			"cron": "[* * * * * ?]",
+			"duration": 360,
+			"interval": 100,
+			"name": "test_arugs",
+			"resultFormat": "prometheus",
+			"output": [
+				{
+					"type": "localfile",
+					"conf": {
+						"path": "/tmp/hello.log",
+						"size": 1024000,
+						"count": 7
+					}
+				}
+			],
+			"reportStatus": 1,
+			"timeout": 20,
+			"user": "nobody",
+			"version": "1.0"
+		}
+	]
+}

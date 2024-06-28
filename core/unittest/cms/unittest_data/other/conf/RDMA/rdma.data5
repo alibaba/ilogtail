@@ -1,0 +1,83 @@
+
+2019-6-9 17:23:13 CST
+tx_bytes: 146758419282452 (58563037148597/88195377133855)
+rx_bytes: 146755998241639 (0/146755990141639)
+tx_pause: 2036584875 (0/1036584875)
+rx_pause: 710 (2710/6)
+tx_pause_duration: 1484480162 (0/1384480162)
+rx_pause_duration: 28101 (18101/0)
+np_cnp_sent: 350688145
+rp_cnp_handled: 298803645
+num_of_qp: 11
+np_ecn_marked: 255796496
+rp_cnp_ignored: 0
+out_of_buffer: 0
+out_of_seq: 0
+packet_seq_err: 0
+port_rcv_data: 169972759108556
+port_rcv_packets: 160621591774
+port_xmit_data: 169975226891496
+port_xmit_packets: 160615266757
+tx_bytes_phy: 1117635593422864 (606671437575681/510964155847183)
+rx_bytes_phy: 1286602009267670 (7094093612/1286594915174058)
+tx_bytes_total: 968143664514680 (546619645550841/421524018963839)
+rx_bytes_total: 1135689422598844 (187938738/1135689234660106)
+tx_packets: 137384794781 (54761783287/82623011494)
+rx_packets: 137373497660 (0/137373497660)
+tx_packets_phy: 801964503871 (427601756946/374362746925)
+rx_packets_phy: 907126099597 (103306254/907022793343)
+tx_packets_total: 663314757144 (372850554916/290464202228)
+rx_packets_total: 768598121218 (1856546/768596264672)
+tx_discards_phy: 0 (0/0)
+rx_discards_phy: 696870995 (0/696870995)
+rx_pause_transition: 854 (854/0)
+tx_errors_phy: 0 (0/0)
+rx_crc_errors_phy: 0 (0/0)
+rx_out_of_range_len_phy: 0 (0/0)
+port_rcv_errors: 0
+port_rcv_constraint_errors: 0
+port_rcv_remote_physical_errors: 0
+port_rcv_switch_relay_errors: 0
+local_ack_timeout_err: 0
+req_cqe_error: 0
+req_cqe_flush_error: 0
+resp_cqe_error: 0
+resp_cqe_flush_error: 0
+rx_dct_connect: 0
+rnr_nak_retry_err: 0
+rx_read_requests: 104176800
+rx_write_requests: 1094814891
+tx_prio0_bytes: 970790187675156 (548107855391604/422682332283552)
+rx_prio0_bytes: 1007900070627830 (7094093612/1007892976534218)
+tx_prio0_packets: 663276379010 (372831978626/290444400384)
+rx_prio0_packets: 680917576318 (103304545/680814271773)
+tx_prio1_bytes: 1042032 (591906/450126)
+rx_prio1_bytes: 55055990 (0/55055990)
+tx_prio1_packets: 10216 (5803/4413)
+rx_prio1_packets: 576533 (0/576533)
+tx_prio2_bytes: 882845444 (441418604/441426840)
+rx_prio2_bytes: 131924770957960 (0/131924770957960)
+tx_prio2_packets: 13794086 (6897041/6897045)
+rx_prio2_packets: 87867440447 (0/87867440447)
+tx_prio3_bytes: 0 (0/0)
+rx_prio3_bytes: 234212 (0/234212)
+tx_prio3_packets: 0 (0/0)
+rx_prio3_packets: 3045 (0/3045)
+tx_prio4_bytes: 0 (0/0)
+rx_prio4_bytes: 3260 (0/3260)
+tx_prio4_packets: 0 (0/0)
+rx_prio4_packets: 10 (0/10)
+tx_prio5_bytes: 146758414282452 (58563037148597/88195377133855)
+rx_prio5_bytes: 146755990141639 (0/146755990141639)
+tx_prio5_packets: 137384794781 (54761783287/82623011494)
+rx_prio5_packets: 137373497660 (0/137373497660)
+tx_prio6_bytes: 19766147250 (103026090/19663121160)
+rx_prio6_bytes: 21123183716 (0/21123183716)
+tx_prio6_packets: 252940924 (1092205/251848719)
+rx_prio6_packets: 270133501 (0/270133501)
+tx_prio7_bytes: 0 (0/0)
+rx_prio7_bytes: 0 (0/0)
+tx_prio7_packets: 0 (0/0)
+rx_prio7_packets: 0 (0/0)
+tcp_segs_retrans: 256223673
+epoch_time: 1560072193

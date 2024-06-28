@@ -1,0 +1,161 @@
+{
+    "moduleItem": [
+        {
+            "name": "cpu",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://cpu",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "memory",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://memory",
+            "version":"1.0",
+            "interval": 15,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "system",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://system",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "disk",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://disk",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "process",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://process",
+            "version":"1.0",
+            "interval": 15,
+            "disabled": false,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "net",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://net",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "netstat",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://netstat",
+            "version":"1.0",
+            "interval": 15,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "gpu",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://gpu",
+            "version":"1.0",
+            "interval": 15,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "rdma",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://rdma",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "tcp",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://tcp",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "tcpExt",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://tcpExt",
+            "version":"1.0",
+            "interval": 1,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "xdragon",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://xdragon",
+            "version":"1.0",
+            "interval": 180,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        },
+        {
+            "name": "detect",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://detect",
+            "version":"1.0",
+            "interval": 5,
+            "output": [
+                {
+                    "type": "cloudMonitor"
+                }
+            ]
+        }
+    ]
+}

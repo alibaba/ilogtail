@@ -1,0 +1,2 @@
+2020/07/13 13:30:00 [clientThread_007] WARN Test3 [GGoCf.cpp:159] - |cpu=9.504%|mem=40.86MB|randomNum=7|process_time=15ms|total_time=21ms|
+2020/07/13 13:30:00 [clientThread_007] INFO Test3 [YLKdkZ.cpp:51] - |cpu=0.809%|mem=105.06MB|randomNum=2|process_time=19ms|total_time=20ms|

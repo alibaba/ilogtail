@@ -1,0 +1,567 @@
+2023-06-25 00:00:00.075|heartBeat-task-pool-5|INFO|MONITOR|user active|951902|1|false
+2023-06-25 00:00:00.238|common-task-pool-2|INFO|MONITOR|MATCH_REQUEST|146349|2|3|
+2023-06-25 00:00:00.290|heartBeat-task-pool-1|INFO|MONITOR|user active|749488|2|true
+2023-06-25 00:00:00.430|heartBeat-task-pool-3|INFO|MONITOR|user active|936111|1|false
+2023-06-25 00:00:00.474|heartBeat-task-pool-4|INFO|MONITOR|user active|816448|1|false
+2023-06-25 00:00:00.489|heartBeat-task-pool-8|INFO|MONITOR|user active|962720|1|false
+2023-06-25 00:00:00.499|heartBeat-task-pool-7|INFO|MONITOR|user active|686897|1|false
+2023-06-25 00:00:00.722|heartBeat-task-pool-2|INFO|MONITOR|user active|868312|2|true
+2023-06-25 00:00:00.753|heartBeat-task-pool-6|INFO|MONITOR|user active|674948|1|false
+2023-06-25 00:00:00.824|heartBeat-task-pool-5|INFO|MONITOR|user active|962656|1|false
+2023-06-25 00:00:01.047|common-task-pool-20|INFO|MONITOR|MATCH_REQUEST|892996|2|5|
+2023-06-25 00:00:01.147|heartBeat-task-pool-1|INFO|MONITOR|user active|913902|1|false
+2023-06-25 00:00:01.171|heartBeat-task-pool-3|INFO|MONITOR|user active|940992|2|true
+2023-06-25 00:00:01.679|common-task-pool-32|INFO|MONITOR|MATCH_REQUEST|874198|2|3|
+2023-06-25 00:00:02.284|heartBeat-task-pool-4|INFO|MONITOR|user active|961486|1|false
+2023-06-25 00:00:02.286|common-task-pool-6|INFO|MONITOR|MATCH_REQUEST|962663|2|2|
+2023-06-25 00:00:02.473|common-task-pool-16|INFO|MONITOR|MATCH_REQUEST|770969|2|3|
+2023-06-25 00:00:02.494|heartBeat-task-pool-8|INFO|MONITOR|user active|961235|1|false
+2023-06-25 00:00:02.653|heartBeat-task-pool-7|INFO|MONITOR|user active|898460|2|true
+2023-06-25 00:00:02.810|heartBeat-task-pool-2|INFO|MONITOR|user active|566152|1|false
+2023-06-25 00:00:03.278|http-nio-8080-exec-128|INFO|MONITOR|用户ID:98308,NAME:单身二姐,请求一视频匹配
+2023-06-25 00:00:03.313|common-task-pool-3|INFO|MONITOR|MATCH_REQUEST|954904|2|3|
+2023-06-25 00:00:03.398|heartBeat-task-pool-6|INFO|MONITOR|user active|913200|1|false
+2023-06-25 00:00:03.458|schedule-task-pool-3|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:03.458|schedule-task-pool-3|INFO|MONITOR|当前在线女性 180个
+2023-06-25 00:00:03.458|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:03.458|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内女性 372个
+2023-06-25 00:00:03.470|schedule-task-pool-3|INFO|MONITOR|flush group 75ms
+2023-06-25 00:00:03.595|common-task-pool-21|INFO|MONITOR|MATCH_REQUEST|962973|1|2|
+2023-06-25 00:00:03.761|heartBeat-task-pool-5|INFO|MONITOR|user active|667189|2|true
+2023-06-25 00:00:03.909|heartBeat-task-pool-1|INFO|MONITOR|user active|962059|1|false
+2023-06-25 00:00:03.983|heartBeat-task-pool-3|INFO|MONITOR|user active|695982|2|true
+2023-06-25 00:00:04.267|heartBeat-task-pool-4|INFO|MONITOR|user active|413545|1|false
+2023-06-25 00:00:04.491|heartBeat-task-pool-8|INFO|MONITOR|user active|962920|1|false
+2023-06-25 00:00:04.512|common-task-pool-30|INFO|MONITOR|MATCH_REQUEST|909190|2|3|
+2023-06-25 00:00:04.560|common-task-pool-3|INFO|MONITOR|MATCH_REQUEST|954904|2|3|
+2023-06-25 00:00:04.573|common-task-pool-5|INFO|MONITOR|MATCH_REQUEST|643979|2|3|
+2023-06-25 00:00:04.573|heartBeat-task-pool-7|INFO|MONITOR|user active|942273|1|false
+2023-06-25 00:00:04.748|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|938614|2|3|
+2023-06-25 00:00:04.890|heartBeat-task-pool-2|INFO|MONITOR|user active|954942|2|true
+2023-06-25 00:00:05.466|heartBeat-task-pool-6|INFO|MONITOR|user active|778865|1|false
+2023-06-25 00:00:05.714|heartBeat-task-pool-5|INFO|MONITOR|user active|840499|1|false
+2023-06-25 00:00:05.988|heartBeat-task-pool-1|INFO|MONITOR|user active|960918|1|false
+2023-06-25 00:00:06.312|heartBeat-task-pool-3|INFO|MONITOR|user active|955668|1|false
+2023-06-25 00:00:06.445|heartBeat-task-pool-4|INFO|MONITOR|user active|956432|1|false
+2023-06-25 00:00:06.656|common-task-pool-20|INFO|MONITOR|MATCH_REQUEST|771451|2|5|
+2023-06-25 00:00:06.787|common-task-pool-29|INFO|MONITOR|MATCH_REQUEST|936484|2|3|
+2023-06-25 00:00:06.863|heartBeat-task-pool-8|INFO|MONITOR|user active|819700|2|true
+2023-06-25 00:00:06.874|common-task-pool-16|INFO|MONITOR|MATCH_REQUEST|748564|2|3|
+2023-06-25 00:00:06.886|heartBeat-task-pool-7|INFO|MONITOR|user active|962310|1|false
+2023-06-25 00:00:07.110|heartBeat-task-pool-2|INFO|MONITOR|user active|520607|1|false
+2023-06-25 00:00:07.131|http-nio-8080-exec-17|INFO|MONITOR|用户ID:714405,NAME:一见钟情,请求一视频匹配
+2023-06-25 00:00:07.175|http-nio-8080-exec-93|INFO|MONITOR|用户ID:909729,NAME:温柔的垚垚,请求一视频匹配
+2023-06-25 00:00:07.278|http-nio-8080-exec-17|INFO|MONITOR|from : 714405, video match : 946772
+2023-06-25 00:00:07.281|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|962990|1|2|
+2023-06-25 00:00:07.317|http-nio-8080-exec-93|INFO|MONITOR|from : 909729, video match : 667768
+2023-06-25 00:00:07.859|heartBeat-task-pool-6|INFO|MONITOR|user active|955585|1|false
+2023-06-25 00:00:08.037|common-task-pool-24|INFO|MONITOR|MATCH_REQUEST|962995|0|2|
+2023-06-25 00:00:08.194|heartBeat-task-pool-5|INFO|MONITOR|user active|907858|1|false
+2023-06-25 00:00:08.266|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|938300|2|5|
+2023-06-25 00:00:08.281|heartBeat-task-pool-1|INFO|MONITOR|user active|936989|1|false
+2023-06-25 00:00:08.380|heartBeat-task-pool-3|INFO|MONITOR|user active|869949|1|false
+2023-06-25 00:00:08.409|heartBeat-task-pool-4|INFO|MONITOR|user active|962967|1|false
+2023-06-25 00:00:08.460|schedule-task-pool-2|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:08.460|schedule-task-pool-2|INFO|MONITOR|当前在线女性 183个
+2023-06-25 00:00:08.460|schedule-task-pool-2|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:08.460|schedule-task-pool-2|INFO|MONITOR|当前离线30分钟内女性 373个
+2023-06-25 00:00:08.473|schedule-task-pool-2|INFO|MONITOR|flush group 78ms
+2023-06-25 00:00:08.705|common-task-pool-23|INFO|MONITOR|MATCH_REQUEST|868284|2|3|
+2023-06-25 00:00:08.784|schedule-task-pool-4|INFO|MONITOR|flush flushRecommendationList 388ms
+2023-06-25 00:00:08.961|heartBeat-task-pool-8|INFO|MONITOR|user active|645132|2|true
+2023-06-25 00:00:09.209|heartBeat-task-pool-7|INFO|MONITOR|user active|645487|1|false
+2023-06-25 00:00:09.222|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|948167|2|3|
+2023-06-25 00:00:09.457|heartBeat-task-pool-2|INFO|MONITOR|user active|126529|2|true
+2023-06-25 00:00:09.572|heartBeat-task-pool-6|INFO|MONITOR|user active|962619|1|false
+2023-06-25 00:00:09.708|common-task-pool-20|INFO|MONITOR|MATCH_REQUEST|647932|2|5|
+2023-06-25 00:00:09.967|heartBeat-task-pool-5|INFO|MONITOR|user active|943695|2|true
+2023-06-25 00:00:10.046|heartBeat-task-pool-1|INFO|MONITOR|user active|642019|2|true
+2023-06-25 00:00:10.499|heartBeat-task-pool-3|INFO|MONITOR|user active|458348|2|true
+2023-06-25 00:00:10.658|heartBeat-task-pool-4|INFO|MONITOR|user active|962962|1|false
+2023-06-25 00:00:10.789|heartBeat-task-pool-8|INFO|MONITOR|user active|929005|2|true
+2023-06-25 00:00:11.095|heartBeat-task-pool-7|INFO|MONITOR|user active|637683|2|true
+2023-06-25 00:00:11.152|heartBeat-task-pool-2|INFO|MONITOR|user active|748564|2|true
+2023-06-25 00:00:11.472|heartBeat-task-pool-6|INFO|MONITOR|user active|939176|1|false
+2023-06-25 00:00:11.520|heartBeat-task-pool-5|INFO|MONITOR|user active|812128|1|false
+2023-06-25 00:00:11.543|heartBeat-task-pool-1|INFO|MONITOR|user active|962706|1|false
+2023-06-25 00:00:11.769|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|893585|2|3|
+2023-06-25 00:00:11.804|common-task-pool-22|INFO|MONITOR|MATCH_REQUEST|643979|2|3|
+2023-06-25 00:00:11.834|heartBeat-task-pool-3|INFO|MONITOR|user active|700822|1|false
+2023-06-25 00:00:11.932|common-task-pool-27|INFO|MONITOR|MATCH_REQUEST|610730|2|2|
+2023-06-25 00:00:12.020|heartBeat-task-pool-4|INFO|MONITOR|user active|962963|1|false
+2023-06-25 00:00:12.032|heartBeat-task-pool-8|INFO|MONITOR|user active|954290|1|false
+2023-06-25 00:00:12.074|heartBeat-task-pool-7|INFO|MONITOR|user active|822839|1|false
+2023-06-25 00:00:12.918|heartBeat-task-pool-2|INFO|MONITOR|user active|939595|1|false
+2023-06-25 00:00:13.457|schedule-task-pool-1|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:13.457|schedule-task-pool-1|INFO|MONITOR|当前在线女性 188个
+2023-06-25 00:00:13.457|schedule-task-pool-1|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:13.457|schedule-task-pool-1|INFO|MONITOR|当前离线30分钟内女性 374个
+2023-06-25 00:00:13.469|schedule-task-pool-1|INFO|MONITOR|flush group 74ms
+2023-06-25 00:00:14.175|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|647932|2|5|
+2023-06-25 00:00:14.475|heartBeat-task-pool-6|INFO|MONITOR|user active|962968|1|false
+2023-06-25 00:00:14.496|heartBeat-task-pool-5|INFO|MONITOR|user active|931958|1|false
+2023-06-25 00:00:14.540|common-task-pool-17|INFO|MONITOR|MATCH_REQUEST|770969|2|3|
+2023-06-25 00:00:14.569|heartBeat-task-pool-1|INFO|MONITOR|user active|962489|1|false
+2023-06-25 00:00:14.603|heartBeat-task-pool-3|INFO|MONITOR|user active|757849|2|true
+2023-06-25 00:00:14.776|heartBeat-task-pool-4|INFO|MONITOR|user active|683539|2|true
+2023-06-25 00:00:14.961|common-task-pool-27|INFO|MONITOR|MATCH_REQUEST|954904|2|3|
+2023-06-25 00:00:15.040|heartBeat-task-pool-8|INFO|MONITOR|user active|686413|1|false
+2023-06-25 00:00:15.067|heartBeat-task-pool-7|INFO|MONITOR|user active|913094|2|true
+2023-06-25 00:00:15.084|heartBeat-task-pool-2|INFO|MONITOR|user active|822706|2|true
+2023-06-25 00:00:15.216|common-task-pool-20|INFO|MONITOR|MATCH_REQUEST|763178|2|3|
+2023-06-25 00:00:15.248|heartBeat-task-pool-6|INFO|MONITOR|user active|960968|1|false
+2023-06-25 00:00:15.553|heartBeat-task-pool-5|INFO|MONITOR|user active|897555|1|false
+2023-06-25 00:00:15.596|heartBeat-task-pool-1|INFO|MONITOR|user active|953992|2|true
+2023-06-25 00:00:15.794|heartBeat-task-pool-3|INFO|MONITOR|user active|962591|1|false
+2023-06-25 00:00:15.925|common-task-pool-15|INFO|MONITOR|MATCH_REQUEST|962453|1|2|
+2023-06-25 00:00:15.929|heartBeat-task-pool-4|INFO|MONITOR|user active|924891|1|false
+2023-06-25 00:00:16.135|heartBeat-task-pool-8|INFO|MONITOR|user active|962973|1|false
+2023-06-25 00:00:16.353|heartBeat-task-pool-7|INFO|MONITOR|user active|961476|1|false
+2023-06-25 00:00:16.387|heartBeat-task-pool-2|INFO|MONITOR|user active|960597|1|false
+2023-06-25 00:00:16.496|heartBeat-task-pool-6|INFO|MONITOR|user active|962940|1|false
+2023-06-25 00:00:16.635|heartBeat-task-pool-5|INFO|MONITOR|user active|959832|1|false
+2023-06-25 00:00:16.696|common-task-pool-2|INFO|MONITOR|MATCH_REQUEST|933824|2|3|
+2023-06-25 00:00:16.747|heartBeat-task-pool-1|INFO|MONITOR|user active|707689|1|false
+2023-06-25 00:00:16.884|common-task-pool-17|INFO|MONITOR|MATCH_REQUEST|937998|1|2|
+2023-06-25 00:00:17.004|heartBeat-task-pool-3|INFO|MONITOR|user active|962366|1|false
+2023-06-25 00:00:17.073|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|952745|2|3|
+2023-06-25 00:00:17.123|heartBeat-task-pool-4|INFO|MONITOR|user active|958297|1|false
+2023-06-25 00:00:17.147|heartBeat-task-pool-8|INFO|MONITOR|user active|899943|2|true
+2023-06-25 00:00:17.174|common-task-pool-27|INFO|MONITOR|MATCH_REQUEST|576115|2|3|
+2023-06-25 00:00:17.182|heartBeat-task-pool-7|INFO|MONITOR|user active|771451|2|true
+2023-06-25 00:00:17.337|heartBeat-task-pool-2|INFO|MONITOR|user active|34493|2|true
+2023-06-25 00:00:17.710|heartBeat-task-pool-6|INFO|MONITOR|user active|713910|1|false
+2023-06-25 00:00:17.802|heartBeat-task-pool-5|INFO|MONITOR|user active|937819|1|false
+2023-06-25 00:00:17.837|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|913561|2|3|
+2023-06-25 00:00:17.903|heartBeat-task-pool-1|INFO|MONITOR|user active|914827|2|true
+2023-06-25 00:00:18.293|heartBeat-task-pool-3|INFO|MONITOR|user active|910110|2|true
+2023-06-25 00:00:18.457|schedule-task-pool-4|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:18.457|schedule-task-pool-4|INFO|MONITOR|当前在线女性 193个
+2023-06-25 00:00:18.457|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:18.457|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内女性 374个
+2023-06-25 00:00:18.469|schedule-task-pool-4|INFO|MONITOR|flush group 74ms
+2023-06-25 00:00:18.771|schedule-task-pool-3|INFO|MONITOR|flush flushRecommendationList 375ms
+2023-06-25 00:00:19.368|heartBeat-task-pool-4|INFO|MONITOR|user active|923511|1|false
+2023-06-25 00:00:19.520|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|771342|2|3|
+2023-06-25 00:00:19.618|heartBeat-task-pool-8|INFO|MONITOR|user active|699951|1|false
+2023-06-25 00:00:19.984|http-nio-8080-exec-61|INFO|MONITOR|用户ID:798051,NAME:附近的人,请求一视频匹配
+2023-06-25 00:00:20.287|heartBeat-task-pool-7|INFO|MONITOR|user active|772598|1|false
+2023-06-25 00:00:20.324|heartBeat-task-pool-2|INFO|MONITOR|user active|807961|2|true
+2023-06-25 00:00:20.392|heartBeat-task-pool-6|INFO|MONITOR|user active|644861|2|true
+2023-06-25 00:00:20.446|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|866087|2|3|
+2023-06-25 00:00:20.462|common-task-pool-16|INFO|MONITOR|MATCH_REQUEST|866087|2|3|
+2023-06-25 00:00:20.519|heartBeat-task-pool-5|INFO|MONITOR|user active|962941|1|false
+2023-06-25 00:00:20.606|heartBeat-task-pool-1|INFO|MONITOR|user active|956554|1|false
+2023-06-25 00:00:20.619|heartBeat-task-pool-3|INFO|MONITOR|user active|571761|1|false
+2023-06-25 00:00:21.303|heartBeat-task-pool-4|INFO|MONITOR|user active|962565|1|false
+2023-06-25 00:00:21.355|heartBeat-task-pool-8|INFO|MONITOR|user active|941605|2|true
+2023-06-25 00:00:21.362|common-task-pool-11|INFO|MONITOR|MATCH_REQUEST|907858|1|2|
+2023-06-25 00:00:21.419|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|405568|2|3|
+2023-06-25 00:00:21.592|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|405568|2|3|
+2023-06-25 00:00:21.839|heartBeat-task-pool-7|INFO|MONITOR|user active|874999|2|true
+2023-06-25 00:00:22.309|heartBeat-task-pool-2|INFO|MONITOR|user active|647709|2|true
+2023-06-25 00:00:22.342|http-nio-8080-exec-147|INFO|MONITOR|用户ID:908158,NAME:奈奈,请求一视频匹配
+2023-06-25 00:00:22.399|common-task-pool-13|INFO|MONITOR|MATCH_REQUEST|899943|2|3|
+2023-06-25 00:00:22.457|heartBeat-task-pool-6|INFO|MONITOR|user active|770119|2|true
+2023-06-25 00:00:22.493|http-nio-8080-exec-147|INFO|MONITOR|from : 908158, video match : 962908
+2023-06-25 00:00:22.623|heartBeat-task-pool-5|INFO|MONITOR|user active|784647|1|false
+2023-06-25 00:00:22.667|heartBeat-task-pool-1|INFO|MONITOR|user active|280454|1|false
+2023-06-25 00:00:23.072|heartBeat-task-pool-3|INFO|MONITOR|user active|608267|1|false
+2023-06-25 00:00:23.259|heartBeat-task-pool-4|INFO|MONITOR|user active|949535|1|false
+2023-06-25 00:00:23.457|schedule-task-pool-2|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:23.457|schedule-task-pool-2|INFO|MONITOR|当前在线女性 198个
+2023-06-25 00:00:23.457|schedule-task-pool-2|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:23.457|schedule-task-pool-2|INFO|MONITOR|当前离线30分钟内女性 376个
+2023-06-25 00:00:23.470|schedule-task-pool-2|INFO|MONITOR|flush group 75ms
+2023-06-25 00:00:23.566|heartBeat-task-pool-8|INFO|MONITOR|user active|962692|1|false
+2023-06-25 00:00:23.577|heartBeat-task-pool-7|INFO|MONITOR|user active|952964|1|false
+2023-06-25 00:00:23.602|heartBeat-task-pool-2|INFO|MONITOR|user active|961757|2|true
+2023-06-25 00:00:24.270|heartBeat-task-pool-6|INFO|MONITOR|user active|770165|1|false
+2023-06-25 00:00:24.430|heartBeat-task-pool-5|INFO|MONITOR|user active|648996|2|true
+2023-06-25 00:00:24.554|heartBeat-task-pool-1|INFO|MONITOR|user active|686694|1|false
+2023-06-25 00:00:25.011|common-task-pool-7|INFO|MONITOR|MATCH_REQUEST|863316|2|3|
+2023-06-25 00:00:25.067|heartBeat-task-pool-3|INFO|MONITOR|user active|893189|1|false
+2023-06-25 00:00:25.093|heartBeat-task-pool-4|INFO|MONITOR|user active|855144|1|false
+2023-06-25 00:00:25.351|heartBeat-task-pool-8|INFO|MONITOR|user active|792758|1|false
+2023-06-25 00:00:25.360|heartBeat-task-pool-7|INFO|MONITOR|user active|962601|1|false
+2023-06-25 00:00:25.529|heartBeat-task-pool-2|INFO|MONITOR|user active|962213|1|false
+2023-06-25 00:00:25.599|heartBeat-task-pool-6|INFO|MONITOR|user active|758316|2|true
+2023-06-25 00:00:25.610|heartBeat-task-pool-5|INFO|MONITOR|user active|898028|1|false
+2023-06-25 00:00:25.629|heartBeat-task-pool-1|INFO|MONITOR|user active|962906|1|false
+2023-06-25 00:00:25.807|http-nio-8080-exec-159|INFO|MONITOR|用户ID:611125,NAME:我叫露露,请求一视频匹配
+2023-06-25 00:00:25.890|heartBeat-task-pool-3|INFO|MONITOR|user active|954904|2|true
+2023-06-25 00:00:25.941|heartBeat-task-pool-4|INFO|MONITOR|user active|961328|1|false
+2023-06-25 00:00:26.539|heartBeat-task-pool-8|INFO|MONITOR|user active|866174|2|true
+2023-06-25 00:00:26.937|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|820088|1|2|
+2023-06-25 00:00:27.079|heartBeat-task-pool-7|INFO|MONITOR|user active|939193|1|false
+2023-06-25 00:00:27.174|heartBeat-task-pool-2|INFO|MONITOR|user active|950624|1|false
+2023-06-25 00:00:27.646|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|863316|2|3|
+2023-06-25 00:00:27.706|heartBeat-task-pool-6|INFO|MONITOR|user active|369715|1|false
+2023-06-25 00:00:27.792|heartBeat-task-pool-5|INFO|MONITOR|user active|768655|1|false
+2023-06-25 00:00:28.009|heartBeat-task-pool-1|INFO|MONITOR|user active|943333|1|false
+2023-06-25 00:00:28.226|heartBeat-task-pool-3|INFO|MONITOR|user active|942354|1|false
+2023-06-25 00:00:28.244|common-task-pool-14|INFO|MONITOR|MATCH_REQUEST|683539|2|5|
+2023-06-25 00:00:28.411|heartBeat-task-pool-4|INFO|MONITOR|user active|955111|2|true
+2023-06-25 00:00:28.465|schedule-task-pool-3|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:28.465|schedule-task-pool-3|INFO|MONITOR|当前在线女性 198个
+2023-06-25 00:00:28.465|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:28.465|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内女性 376个
+2023-06-25 00:00:28.478|schedule-task-pool-3|INFO|MONITOR|flush group 83ms
+2023-06-25 00:00:28.700|heartBeat-task-pool-8|INFO|MONITOR|user active|703410|1|false
+2023-06-25 00:00:28.774|schedule-task-pool-1|INFO|MONITOR|flush flushRecommendationList 379ms
+2023-06-25 00:00:28.813|heartBeat-task-pool-7|INFO|MONITOR|user active|637535|2|true
+2023-06-25 00:00:28.832|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|683539|2|5|
+2023-06-25 00:00:28.901|heartBeat-task-pool-2|INFO|MONITOR|user active|901067|1|false
+2023-06-25 00:00:29.053|heartBeat-task-pool-6|INFO|MONITOR|user active|961032|1|false
+2023-06-25 00:00:29.067|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|683539|2|5|
+2023-06-25 00:00:29.490|heartBeat-task-pool-5|INFO|MONITOR|user active|786344|1|false
+2023-06-25 00:00:29.533|heartBeat-task-pool-1|INFO|MONITOR|user active|907683|1|false
+2023-06-25 00:00:29.558|common-task-pool-13|INFO|MONITOR|MATCH_REQUEST|866088|2|3|
+2023-06-25 00:00:29.619|heartBeat-task-pool-3|INFO|MONITOR|user active|956184|1|false
+2023-06-25 00:00:29.669|heartBeat-task-pool-4|INFO|MONITOR|user active|611125|2|true
+2023-06-25 00:00:29.896|heartBeat-task-pool-8|INFO|MONITOR|user active|939135|1|false
+2023-06-25 00:00:30.189|heartBeat-task-pool-7|INFO|MONITOR|user active|957530|1|false
+2023-06-25 00:00:30.234|heartBeat-task-pool-2|INFO|MONITOR|user active|899407|1|false
+2023-06-25 00:00:30.368|heartBeat-task-pool-6|INFO|MONITOR|user active|857683|1|false
+2023-06-25 00:00:30.374|heartBeat-task-pool-5|INFO|MONITOR|user active|839532|1|false
+2023-06-25 00:00:30.423|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|938614|2|3|
+2023-06-25 00:00:30.483|common-task-pool-22|INFO|MONITOR|MATCH_REQUEST|819700|2|5|
+2023-06-25 00:00:30.540|common-task-pool-14|INFO|MONITOR|MATCH_REQUEST|797187|2|3|
+2023-06-25 00:00:30.621|common-task-pool-7|INFO|MONITOR|MATCH_REQUEST|962880|1|2|
+2023-06-25 00:00:30.626|common-task-pool-18|INFO|MONITOR|MATCH_REQUEST|645132|2|1|
+2023-06-25 00:00:30.704|common-task-pool-31|INFO|MONITOR|MATCH_REQUEST|939135|1|2|
+2023-06-25 00:00:30.761|heartBeat-task-pool-1|INFO|MONITOR|user active|962970|1|false
+2023-06-25 00:00:30.969|heartBeat-task-pool-3|INFO|MONITOR|user active|763831|1|false
+2023-06-25 00:00:31.366|common-task-pool-32|INFO|MONITOR|MATCH_REQUEST|48446|2|3|
+2023-06-25 00:00:31.447|heartBeat-task-pool-4|INFO|MONITOR|user active|667768|1|false
+2023-06-25 00:00:31.711|heartBeat-task-pool-8|INFO|MONITOR|user active|957452|2|true
+2023-06-25 00:00:31.730|heartBeat-task-pool-7|INFO|MONITOR|user active|962868|1|false
+2023-06-25 00:00:31.773|heartBeat-task-pool-2|INFO|MONITOR|user active|961594|1|false
+2023-06-25 00:00:31.786|heartBeat-task-pool-6|INFO|MONITOR|user active|962397|1|false
+2023-06-25 00:00:32.062|common-task-pool-19|INFO|MONITOR|MATCH_REQUEST|933824|2|3|
+2023-06-25 00:00:32.292|heartBeat-task-pool-5|INFO|MONITOR|user active|637753|1|false
+2023-06-25 00:00:32.479|heartBeat-task-pool-1|INFO|MONITOR|user active|659131|1|false
+2023-06-25 00:00:32.581|heartBeat-task-pool-3|INFO|MONITOR|user active|958258|1|false
+2023-06-25 00:00:32.650|common-task-pool-3|INFO|MONITOR|MATCH_REQUEST|789280|2|3|
+2023-06-25 00:00:32.895|heartBeat-task-pool-4|INFO|MONITOR|user active|891301|1|false
+2023-06-25 00:00:33.458|schedule-task-pool-3|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:33.458|schedule-task-pool-3|INFO|MONITOR|当前在线女性 199个
+2023-06-25 00:00:33.458|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:33.458|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内女性 375个
+2023-06-25 00:00:33.470|schedule-task-pool-3|INFO|MONITOR|flush group 75ms
+2023-06-25 00:00:33.603|heartBeat-task-pool-8|INFO|MONITOR|user active|962938|1|false
+2023-06-25 00:00:33.610|common-task-pool-11|INFO|MONITOR|MATCH_REQUEST|799810|2|5|
+2023-06-25 00:00:33.761|common-task-pool-2|INFO|MONITOR|MATCH_REQUEST|947984|2|3|
+2023-06-25 00:00:33.826|common-task-pool-32|INFO|MONITOR|MATCH_REQUEST|962663|2|2|
+2023-06-25 00:00:34.549|heartBeat-task-pool-7|INFO|MONITOR|user active|962989|1|false
+2023-06-25 00:00:34.735|heartBeat-task-pool-2|INFO|MONITOR|user active|962888|1|false
+2023-06-25 00:00:34.794|common-task-pool-24|INFO|MONITOR|MATCH_REQUEST|933824|2|3|
+2023-06-25 00:00:34.962|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|935605|2|3|
+2023-06-25 00:00:35.076|heartBeat-task-pool-6|INFO|MONITOR|user active|650160|2|true
+2023-06-25 00:00:35.114|heartBeat-task-pool-5|INFO|MONITOR|user active|582499|1|false
+2023-06-25 00:00:35.360|heartBeat-task-pool-1|INFO|MONITOR|user active|944653|1|false
+2023-06-25 00:00:35.450|heartBeat-task-pool-3|INFO|MONITOR|user active|953393|1|false
+2023-06-25 00:00:35.625|common-task-pool-31|INFO|MONITOR|MATCH_REQUEST|899943|2|3|
+2023-06-25 00:00:35.671|common-task-pool-19|INFO|MONITOR|MATCH_REQUEST|749488|2|4|
+2023-06-25 00:00:35.679|common-task-pool-12|INFO|MONITOR|MATCH_REQUEST|861426|2|3|
+2023-06-25 00:00:35.922|common-task-pool-21|INFO|MONITOR|MATCH_REQUEST|530763|1|2|
+2023-06-25 00:00:36.077|heartBeat-task-pool-4|INFO|MONITOR|user active|845376|1|false
+2023-06-25 00:00:36.277|heartBeat-task-pool-8|INFO|MONITOR|user active|921663|2|true
+2023-06-25 00:00:36.285|heartBeat-task-pool-7|INFO|MONITOR|user active|930414|1|false
+2023-06-25 00:00:36.405|heartBeat-task-pool-2|INFO|MONITOR|user active|642399|1|false
+2023-06-25 00:00:36.471|common-task-pool-25|INFO|MONITOR|MATCH_REQUEST|960660|2|2|
+2023-06-25 00:00:36.897|heartBeat-task-pool-6|INFO|MONITOR|user active|769196|1|false
+2023-06-25 00:00:37.018|heartBeat-task-pool-5|INFO|MONITOR|user active|751369|1|false
+2023-06-25 00:00:37.065|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|953992|2|3|
+2023-06-25 00:00:37.091|heartBeat-task-pool-1|INFO|MONITOR|user active|710026|1|false
+2023-06-25 00:00:37.186|heartBeat-task-pool-3|INFO|MONITOR|user active|921135|1|false
+2023-06-25 00:00:37.204|heartBeat-task-pool-4|INFO|MONITOR|user active|892996|2|true
+2023-06-25 00:00:37.325|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|962971|1|2|
+2023-06-25 00:00:37.381|heartBeat-task-pool-8|INFO|MONITOR|user active|943090|2|true
+2023-06-25 00:00:37.599|heartBeat-task-pool-7|INFO|MONITOR|user active|782491|1|false
+2023-06-25 00:00:37.673|common-task-pool-27|INFO|MONITOR|MATCH_REQUEST|892996|2|5|
+2023-06-25 00:00:37.736|heartBeat-task-pool-2|INFO|MONITOR|user active|866146|2|true
+2023-06-25 00:00:37.895|heartBeat-task-pool-6|INFO|MONITOR|user active|958601|1|false
+2023-06-25 00:00:38.324|heartBeat-task-pool-5|INFO|MONITOR|user active|87405|1|false
+2023-06-25 00:00:38.346|heartBeat-task-pool-1|INFO|MONITOR|user active|553014|1|false
+2023-06-25 00:00:38.465|schedule-task-pool-4|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:38.465|schedule-task-pool-4|INFO|MONITOR|当前在线女性 201个
+2023-06-25 00:00:38.465|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:38.465|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内女性 376个
+2023-06-25 00:00:38.477|schedule-task-pool-4|INFO|MONITOR|flush group 82ms
+2023-06-25 00:00:38.593|common-task-pool-4|INFO|MONITOR|MATCH_REQUEST|824333|2|5|
+2023-06-25 00:00:38.770|schedule-task-pool-3|INFO|MONITOR|flush flushRecommendationList 374ms
+2023-06-25 00:00:39.168|common-task-pool-12|INFO|MONITOR|MATCH_REQUEST|952745|2|3|
+2023-06-25 00:00:39.292|common-task-pool-24|INFO|MONITOR|MATCH_REQUEST|874198|2|3|
+2023-06-25 00:00:39.375|http-nio-8080-exec-90|INFO|MONITOR|用户ID:824766,NAME:尹穆然,请求一视频匹配
+2023-06-25 00:00:39.524|http-nio-8080-exec-90|INFO|MONITOR|from : 824766, video match : 744189
+2023-06-25 00:00:39.650|heartBeat-task-pool-3|INFO|MONITOR|user active|955679|1|false
+2023-06-25 00:00:39.654|heartBeat-task-pool-4|INFO|MONITOR|user active|925465|1|false
+2023-06-25 00:00:39.827|heartBeat-task-pool-8|INFO|MONITOR|user active|698229|1|false
+2023-06-25 00:00:40.210|common-task-pool-21|INFO|MONITOR|MATCH_REQUEST|690340|2|3|
+2023-06-25 00:00:40.342|heartBeat-task-pool-7|INFO|MONITOR|user active|817401|1|false
+2023-06-25 00:00:40.488|http-nio-8080-exec-71|INFO|MONITOR|用户ID:802221,NAME:老板娘,请求一视频匹配
+2023-06-25 00:00:40.490|heartBeat-task-pool-2|INFO|MONITOR|user active|802221|2|true
+2023-06-25 00:00:40.637|http-nio-8080-exec-71|INFO|MONITOR|from : 802221, video match : 962116
+2023-06-25 00:00:40.663|heartBeat-task-pool-6|INFO|MONITOR|user active|953233|2|true
+2023-06-25 00:00:40.695|common-task-pool-5|INFO|MONITOR|MATCH_REQUEST|643979|2|3|
+2023-06-25 00:00:41.003|heartBeat-task-pool-5|INFO|MONITOR|user active|548316|2|true
+2023-06-25 00:00:41.144|heartBeat-task-pool-1|INFO|MONITOR|user active|942542|2|true
+2023-06-25 00:00:41.416|heartBeat-task-pool-3|INFO|MONITOR|user active|885276|1|false
+2023-06-25 00:00:41.594|heartBeat-task-pool-4|INFO|MONITOR|user active|962882|1|false
+2023-06-25 00:00:41.596|common-task-pool-2|INFO|MONITOR|MATCH_REQUEST|933824|2|3|
+2023-06-25 00:00:42.189|heartBeat-task-pool-8|INFO|MONITOR|user active|901967|2|true
+2023-06-25 00:00:42.439|heartBeat-task-pool-7|INFO|MONITOR|user active|921103|1|false
+2023-06-25 00:00:42.448|heartBeat-task-pool-2|INFO|MONITOR|user active|962850|1|false
+2023-06-25 00:00:42.585|heartBeat-task-pool-6|INFO|MONITOR|user active|926597|1|false
+2023-06-25 00:00:42.653|common-task-pool-11|INFO|MONITOR|MATCH_REQUEST|954904|2|3|
+2023-06-25 00:00:42.765|heartBeat-task-pool-5|INFO|MONITOR|user active|728510|2|true
+2023-06-25 00:00:42.855|heartBeat-task-pool-1|INFO|MONITOR|user active|940559|1|false
+2023-06-25 00:00:42.866|heartBeat-task-pool-3|INFO|MONITOR|user active|926672|1|false
+2023-06-25 00:00:42.953|heartBeat-task-pool-4|INFO|MONITOR|user active|930899|2|true
+2023-06-25 00:00:43.005|heartBeat-task-pool-8|INFO|MONITOR|user active|956762|1|false
+2023-06-25 00:00:43.124|heartBeat-task-pool-7|INFO|MONITOR|user active|856323|1|false
+2023-06-25 00:00:43.458|schedule-task-pool-4|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:43.458|schedule-task-pool-4|INFO|MONITOR|当前在线女性 203个
+2023-06-25 00:00:43.458|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:43.458|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内女性 377个
+2023-06-25 00:00:43.470|schedule-task-pool-4|INFO|MONITOR|flush group 75ms
+2023-06-25 00:00:43.659|common-task-pool-21|INFO|MONITOR|MATCH_REQUEST|933824|2|3|
+2023-06-25 00:00:43.775|heartBeat-task-pool-2|INFO|MONITOR|user active|637589|2|true
+2023-06-25 00:00:43.812|common-task-pool-11|INFO|MONITOR|MATCH_REQUEST|642333|2|4|
+2023-06-25 00:00:43.975|heartBeat-task-pool-6|INFO|MONITOR|user active|962908|1|false
+2023-06-25 00:00:44.045|heartBeat-task-pool-5|INFO|MONITOR|user active|609905|1|false
+2023-06-25 00:00:44.571|heartBeat-task-pool-1|INFO|MONITOR|user active|920040|1|false
+2023-06-25 00:00:44.586|http-nio-8080-exec-16|INFO|MONITOR|用户ID:893008,NAME:萱宝,请求一视频匹配
+2023-06-25 00:00:44.732|http-nio-8080-exec-16|INFO|MONITOR|from : 893008, video match : 962680
+2023-06-25 00:00:44.839|heartBeat-task-pool-3|INFO|MONITOR|user active|817964|2|true
+2023-06-25 00:00:44.958|heartBeat-task-pool-4|INFO|MONITOR|user active|953832|1|false
+2023-06-25 00:00:44.977|heartBeat-task-pool-8|INFO|MONITOR|user active|961683|1|false
+2023-06-25 00:00:45.449|common-task-pool-5|INFO|MONITOR|MATCH_REQUEST|893585|2|3|
+2023-06-25 00:00:45.685|heartBeat-task-pool-7|INFO|MONITOR|user active|902398|2|true
+2023-06-25 00:00:45.766|common-task-pool-22|INFO|MONITOR|MATCH_REQUEST|757796|2|4|
+2023-06-25 00:00:45.826|heartBeat-task-pool-2|INFO|MONITOR|user active|962903|1|false
+2023-06-25 00:00:45.895|heartBeat-task-pool-6|INFO|MONITOR|user active|931388|1|false
+2023-06-25 00:00:45.937|heartBeat-task-pool-5|INFO|MONITOR|user active|872941|2|true
+2023-06-25 00:00:46.137|heartBeat-task-pool-1|INFO|MONITOR|user active|874198|2|true
+2023-06-25 00:00:46.442|heartBeat-task-pool-3|INFO|MONITOR|user active|960683|1|false
+2023-06-25 00:00:46.792|heartBeat-task-pool-4|INFO|MONITOR|user active|962992|1|false
+2023-06-25 00:00:46.845|common-task-pool-31|INFO|MONITOR|MATCH_REQUEST|866087|2|3|
+2023-06-25 00:00:47.203|common-task-pool-20|INFO|MONITOR|MATCH_REQUEST|799810|2|5|
+2023-06-25 00:00:47.421|common-task-pool-25|INFO|MONITOR|MATCH_REQUEST|541519|1|2|
+2023-06-25 00:00:47.620|heartBeat-task-pool-8|INFO|MONITOR|user active|872359|1|false
+2023-06-25 00:00:47.719|common-task-pool-30|INFO|MONITOR|MATCH_REQUEST|938614|2|3|
+2023-06-25 00:00:48.010|heartBeat-task-pool-7|INFO|MONITOR|user active|594566|2|true
+2023-06-25 00:00:48.113|heartBeat-task-pool-2|INFO|MONITOR|user active|194627|1|false
+2023-06-25 00:00:48.293|common-task-pool-11|INFO|MONITOR|MATCH_REQUEST|938614|2|3|
+2023-06-25 00:00:48.464|schedule-task-pool-2|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:48.464|schedule-task-pool-2|INFO|MONITOR|当前在线女性 203个
+2023-06-25 00:00:48.464|schedule-task-pool-2|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:48.464|schedule-task-pool-2|INFO|MONITOR|当前离线30分钟内女性 376个
+2023-06-25 00:00:48.477|schedule-task-pool-2|INFO|MONITOR|flush group 82ms
+2023-06-25 00:00:48.519|common-task-pool-2|INFO|MONITOR|MATCH_REQUEST|637683|2|3|
+2023-06-25 00:00:48.722|heartBeat-task-pool-6|INFO|MONITOR|user active|956044|1|false
+2023-06-25 00:00:48.780|schedule-task-pool-1|INFO|MONITOR|flush flushRecommendationList 385ms
+2023-06-25 00:00:48.891|common-task-pool-24|INFO|MONITOR|MATCH_REQUEST|848390|2|3|
+2023-06-25 00:00:48.895|http-nio-8080-exec-98|INFO|MONITOR|用户ID:638840,NAME:请叫我锦锦,请求一视频匹配
+2023-06-25 00:00:49.043|http-nio-8080-exec-98|INFO|MONITOR|from : 638840, video match : 865983
+2023-06-25 00:00:49.175|heartBeat-task-pool-5|INFO|MONITOR|user active|944221|1|false
+2023-06-25 00:00:49.203|heartBeat-task-pool-1|INFO|MONITOR|user active|898884|1|false
+2023-06-25 00:00:49.410|heartBeat-task-pool-3|INFO|MONITOR|user active|885111|2|true
+2023-06-25 00:00:49.421|heartBeat-task-pool-4|INFO|MONITOR|user active|797187|2|true
+2023-06-25 00:00:49.734|heartBeat-task-pool-8|INFO|MONITOR|user active|945765|1|false
+2023-06-25 00:00:49.784|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|953992|2|3|
+2023-06-25 00:00:49.958|heartBeat-task-pool-7|INFO|MONITOR|user active|785362|1|false
+2023-06-25 00:00:50.138|heartBeat-task-pool-2|INFO|MONITOR|user active|943427|1|false
+2023-06-25 00:00:50.210|common-task-pool-15|INFO|MONITOR|MATCH_REQUEST|644777|2|5|
+2023-06-25 00:00:50.430|heartBeat-task-pool-6|INFO|MONITOR|user active|859449|2|true
+2023-06-25 00:00:51.065|heartBeat-task-pool-5|INFO|MONITOR|user active|962437|1|false
+2023-06-25 00:00:51.292|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|405568|2|3|
+2023-06-25 00:00:51.339|heartBeat-task-pool-1|INFO|MONITOR|user active|865754|1|false
+2023-06-25 00:00:51.350|heartBeat-task-pool-3|INFO|MONITOR|user active|961093|1|false
+2023-06-25 00:00:51.661|heartBeat-task-pool-4|INFO|MONITOR|user active|957769|1|false
+2023-06-25 00:00:52.305|heartBeat-task-pool-8|INFO|MONITOR|user active|892708|2|true
+2023-06-25 00:00:52.698|common-task-pool-8|INFO|MONITOR|MATCH_REQUEST|576115|2|3|
+2023-06-25 00:00:52.756|heartBeat-task-pool-7|INFO|MONITOR|user active|756840|2|true
+2023-06-25 00:00:53.138|heartBeat-task-pool-2|INFO|MONITOR|user active|962899|1|false
+2023-06-25 00:00:53.285|heartBeat-task-pool-6|INFO|MONITOR|user active|961349|1|false
+2023-06-25 00:00:53.387|heartBeat-task-pool-5|INFO|MONITOR|user active|962755|1|false
+2023-06-25 00:00:53.457|schedule-task-pool-3|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:53.457|schedule-task-pool-3|INFO|MONITOR|当前在线女性 203个
+2023-06-25 00:00:53.457|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:53.457|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内女性 376个
+2023-06-25 00:00:53.469|schedule-task-pool-3|INFO|MONITOR|flush group 74ms
+2023-06-25 00:00:53.548|common-task-pool-31|INFO|MONITOR|MATCH_REQUEST|644846|2|5|
+2023-06-25 00:00:53.604|heartBeat-task-pool-1|INFO|MONITOR|user active|728272|1|false
+2023-06-25 00:00:53.627|http-nio-8080-exec-148|INFO|MONITOR|用户ID:884176,NAME:慕容枫,请求一视频匹配
+2023-06-25 00:00:53.716|heartBeat-task-pool-3|INFO|MONITOR|user active|960666|1|false
+2023-06-25 00:00:53.833|http-nio-8080-exec-148|INFO|MONITOR|from : 884176, video match : 641151
+2023-06-25 00:00:53.931|heartBeat-task-pool-4|INFO|MONITOR|user active|962482|1|false
+2023-06-25 00:00:54.048|heartBeat-task-pool-8|INFO|MONITOR|user active|962917|1|false
+2023-06-25 00:00:54.059|common-task-pool-29|INFO|MONITOR|MATCH_REQUEST|962888|1|2|
+2023-06-25 00:00:54.217|heartBeat-task-pool-7|INFO|MONITOR|user active|871245|1|false
+2023-06-25 00:00:54.333|common-task-pool-14|INFO|MONITOR|MATCH_REQUEST|697620|1|2|
+2023-06-25 00:00:54.461|common-task-pool-30|INFO|MONITOR|MATCH_REQUEST|938614|2|3|
+2023-06-25 00:00:54.516|heartBeat-task-pool-2|INFO|MONITOR|user active|939160|2|true
+2023-06-25 00:00:54.625|common-task-pool-7|INFO|MONITOR|MATCH_REQUEST|649956|2|4|
+2023-06-25 00:00:54.721|heartBeat-task-pool-6|INFO|MONITOR|user active|835030|1|false
+2023-06-25 00:00:54.983|heartBeat-task-pool-5|INFO|MONITOR|user active|933268|1|false
+2023-06-25 00:00:54.996|heartBeat-task-pool-1|INFO|MONITOR|user active|955140|1|false
+2023-06-25 00:00:55.056|heartBeat-task-pool-3|INFO|MONITOR|user active|961963|1|false
+2023-06-25 00:00:55.293|common-task-pool-29|INFO|MONITOR|MATCH_REQUEST|913561|2|3|
+2023-06-25 00:00:55.371|common-task-pool-15|INFO|MONITOR|MATCH_REQUEST|898460|2|3|
+2023-06-25 00:00:55.393|heartBeat-task-pool-4|INFO|MONITOR|user active|709475|1|false
+2023-06-25 00:00:55.414|common-task-pool-32|INFO|MONITOR|MATCH_REQUEST|938300|2|5|
+2023-06-25 00:00:55.643|heartBeat-task-pool-8|INFO|MONITOR|user active|861370|1|false
+2023-06-25 00:00:55.837|heartBeat-task-pool-7|INFO|MONITOR|user active|637483|2|true
+2023-06-25 00:00:56.436|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|962904|1|2|
+2023-06-25 00:00:56.704|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|776484|2|1|
+2023-06-25 00:00:56.738|heartBeat-task-pool-2|INFO|MONITOR|user active|955472|1|false
+2023-06-25 00:00:56.877|heartBeat-task-pool-6|INFO|MONITOR|user active|962936|1|false
+2023-06-25 00:00:57.086|heartBeat-task-pool-5|INFO|MONITOR|user active|962855|1|false
+2023-06-25 00:00:57.128|heartBeat-task-pool-1|INFO|MONITOR|user active|961231|1|false
+2023-06-25 00:00:57.185|heartBeat-task-pool-3|INFO|MONITOR|user active|962883|1|false
+2023-06-25 00:00:57.252|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|778896|2|3|
+2023-06-25 00:00:57.404|common-task-pool-30|INFO|MONITOR|MATCH_REQUEST|683539|2|5|
+2023-06-25 00:00:57.444|heartBeat-task-pool-4|INFO|MONITOR|user active|962953|1|false
+2023-06-25 00:00:57.475|http-nio-8080-exec-137|INFO|MONITOR|用户ID:641015,NAME:请叫我杰儿,请求一视频匹配
+2023-06-25 00:00:57.508|heartBeat-task-pool-8|INFO|MONITOR|user active|962945|1|false
+2023-06-25 00:00:57.547|heartBeat-task-pool-7|INFO|MONITOR|user active|632356|2|true
+2023-06-25 00:00:57.594|heartBeat-task-pool-2|INFO|MONITOR|user active|962605|1|false
+2023-06-25 00:00:57.653|heartBeat-task-pool-6|INFO|MONITOR|user active|933824|2|true
+2023-06-25 00:00:57.770|heartBeat-task-pool-5|INFO|MONITOR|user active|926156|1|false
+2023-06-25 00:00:57.842|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|962858|1|2|
+2023-06-25 00:00:57.969|http-nio-8080-exec-157|INFO|MONITOR|用户ID:897957,NAME:可可,请求一视频匹配
+2023-06-25 00:00:57.990|heartBeat-task-pool-1|INFO|MONITOR|user active|897957|2|true
+2023-06-25 00:00:58.121|http-nio-8080-exec-157|INFO|MONITOR|from : 897957, video match : 962447
+2023-06-25 00:00:58.181|heartBeat-task-pool-3|INFO|MONITOR|user active|957230|2|false
+2023-06-25 00:00:58.249|common-task-pool-32|INFO|MONITOR|MATCH_REQUEST|635253|2|5|
+2023-06-25 00:00:58.340|heartBeat-task-pool-4|INFO|MONITOR|user active|962354|1|false
+2023-06-25 00:00:58.384|heartBeat-task-pool-8|INFO|MONITOR|user active|948322|1|false
+2023-06-25 00:00:58.460|schedule-task-pool-1|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:00:58.460|schedule-task-pool-1|INFO|MONITOR|当前在线女性 204个
+2023-06-25 00:00:58.460|schedule-task-pool-1|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:00:58.460|schedule-task-pool-1|INFO|MONITOR|当前离线30分钟内女性 376个
+2023-06-25 00:00:58.473|schedule-task-pool-1|INFO|MONITOR|flush group 78ms
+2023-06-25 00:00:58.702|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|812845|2|3|
+2023-06-25 00:00:58.761|heartBeat-task-pool-7|INFO|MONITOR|user active|790192|1|false
+2023-06-25 00:00:58.768|schedule-task-pool-4|INFO|MONITOR|flush flushRecommendationList 372ms
+2023-06-25 00:00:58.791|heartBeat-task-pool-2|INFO|MONITOR|user active|962900|1|false
+2023-06-25 00:00:58.792|common-task-pool-26|INFO|MONITOR|MATCH_REQUEST|790192|1|2|
+2023-06-25 00:00:59.123|heartBeat-task-pool-6|INFO|MONITOR|user active|953332|1|false
+2023-06-25 00:00:59.131|common-task-pool-5|INFO|MONITOR|MATCH_REQUEST|770969|2|3|
+2023-06-25 00:00:59.272|common-task-pool-14|INFO|MONITOR|MATCH_REQUEST|642333|2|4|
+2023-06-25 00:00:59.302|heartBeat-task-pool-5|INFO|MONITOR|user active|962373|1|false
+2023-06-25 00:00:59.484|heartBeat-task-pool-1|INFO|MONITOR|user active|942652|1|false
+2023-06-25 00:00:59.553|heartBeat-task-pool-3|INFO|MONITOR|user active|960660|2|false
+2023-06-25 00:00:59.571|heartBeat-task-pool-4|INFO|MONITOR|user active|934076|1|false
+2023-06-25 00:00:59.577|heartBeat-task-pool-8|INFO|MONITOR|user active|962621|1|false
+2023-06-25 00:00:59.797|heartBeat-task-pool-7|INFO|MONITOR|user active|927984|1|false
+2023-06-25 00:00:59.809|http-nio-8080-exec-148|INFO|MONITOR|用户ID:49459,NAME:安然,请求一视频匹配
+2023-06-25 00:00:59.809|heartBeat-task-pool-2|INFO|MONITOR|user active|49459|2|true
+2023-06-25 00:00:59.907|http-nio-8080-exec-165|INFO|MONITOR|用户ID:797382,NAME:女老板,请求一视频匹配
+2023-06-25 00:01:00.056|http-nio-8080-exec-165|INFO|MONITOR|from : 797382, video match : 947956
+2023-06-25 00:01:00.065|common-task-pool-29|INFO|MONITOR|MATCH_REQUEST|861426|2|3|
+2023-06-25 00:01:00.429|http-nio-8080-exec-153|INFO|MONITOR|用户ID:146349,NAME:妙妙,请求一视频匹配
+2023-06-25 00:01:00.477|heartBeat-task-pool-6|INFO|MONITOR|user active|847302|1|false
+2023-06-25 00:01:00.486|common-task-pool-2|INFO|MONITOR|MATCH_REQUEST|594803|2|3|
+2023-06-25 00:01:00.541|heartBeat-task-pool-5|INFO|MONITOR|user active|674948|1|false
+2023-06-25 00:01:00.784|heartBeat-task-pool-1|INFO|MONITOR|user active|820673|1|false
+2023-06-25 00:01:00.885|heartBeat-task-pool-3|INFO|MONITOR|user active|868312|2|true
+2023-06-25 00:01:00.991|common-task-pool-9|INFO|MONITOR|MATCH_REQUEST|642333|2|4|
+2023-06-25 00:01:01.082|heartBeat-task-pool-4|INFO|MONITOR|user active|48446|2|true
+2023-06-25 00:01:01.181|heartBeat-task-pool-8|INFO|MONITOR|user active|962958|1|false
+2023-06-25 00:01:01.197|heartBeat-task-pool-7|INFO|MONITOR|user active|940992|2|true
+2023-06-25 00:01:01.701|heartBeat-task-pool-2|INFO|MONITOR|user active|960670|1|false
+2023-06-25 00:01:01.704|heartBeat-task-pool-6|INFO|MONITOR|user active|962136|1|false
+2023-06-25 00:01:01.775|heartBeat-task-pool-5|INFO|MONITOR|user active|337803|1|false
+2023-06-25 00:01:02.010|heartBeat-task-pool-1|INFO|MONITOR|user active|819856|1|false
+2023-06-25 00:01:02.087|http-nio-8080-exec-151|INFO|MONITOR|用户ID:644786,NAME:单身小果果,请求一视频匹配
+2023-06-25 00:01:02.143|heartBeat-task-pool-3|INFO|MONITOR|user active|931524|2|true
+2023-06-25 00:01:02.300|heartBeat-task-pool-4|INFO|MONITOR|user active|962639|1|false
+2023-06-25 00:01:02.338|heartBeat-task-pool-8|INFO|MONITOR|user active|898460|2|true
+2023-06-25 00:01:02.390|common-task-pool-12|INFO|MONITOR|MATCH_REQUEST|771451|2|5|
+2023-06-25 00:01:02.460|heartBeat-task-pool-7|INFO|MONITOR|user active|802060|2|true
+2023-06-25 00:01:02.604|heartBeat-task-pool-2|INFO|MONITOR|user active|872197|1|false
+2023-06-25 00:01:02.657|heartBeat-task-pool-6|INFO|MONITOR|user active|749884|2|true
+2023-06-25 00:01:02.723|heartBeat-task-pool-5|INFO|MONITOR|user active|900282|2|true
+2023-06-25 00:01:02.933|common-task-pool-4|INFO|MONITOR|MATCH_REQUEST|962982|1|2|
+2023-06-25 00:01:03.424|heartBeat-task-pool-1|INFO|MONITOR|user active|953355|1|false
+2023-06-25 00:01:03.432|common-task-pool-22|INFO|MONITOR|MATCH_REQUEST|576115|2|3|
+2023-06-25 00:01:03.454|heartBeat-task-pool-3|INFO|MONITOR|user active|851870|1|false
+2023-06-25 00:01:03.458|schedule-task-pool-1|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:01:03.458|schedule-task-pool-1|INFO|MONITOR|当前在线女性 192个
+2023-06-25 00:01:03.458|schedule-task-pool-1|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:01:03.458|schedule-task-pool-1|INFO|MONITOR|当前离线30分钟内女性 373个
+2023-06-25 00:01:03.470|schedule-task-pool-1|INFO|MONITOR|flush group 75ms
+2023-06-25 00:01:03.585|heartBeat-task-pool-4|INFO|MONITOR|user active|651197|2|true
+2023-06-25 00:01:03.600|heartBeat-task-pool-8|INFO|MONITOR|user active|851900|1|false
+2023-06-25 00:01:03.650|heartBeat-task-pool-7|INFO|MONITOR|user active|905010|1|false
+2023-06-25 00:01:03.659|heartBeat-task-pool-2|INFO|MONITOR|user active|638004|2|true
+2023-06-25 00:01:03.819|heartBeat-task-pool-6|INFO|MONITOR|user active|667189|2|true
+2023-06-25 00:01:03.827|heartBeat-task-pool-5|INFO|MONITOR|user active|961869|1|false
+2023-06-25 00:01:03.913|heartBeat-task-pool-1|INFO|MONITOR|user active|962059|1|false
+2023-06-25 00:01:04.219|common-task-pool-32|INFO|MONITOR|MATCH_REQUEST|824333|2|5|
+2023-06-25 00:01:04.288|heartBeat-task-pool-3|INFO|MONITOR|user active|926716|1|false
+2023-06-25 00:01:04.639|common-task-pool-25|INFO|MONITOR|MATCH_REQUEST|844473|2|3|
+2023-06-25 00:01:04.843|heartBeat-task-pool-4|INFO|MONITOR|user active|962944|1|false
+2023-06-25 00:01:05.314|heartBeat-task-pool-8|INFO|MONITOR|user active|104944|1|false
+2023-06-25 00:01:05.579|heartBeat-task-pool-7|INFO|MONITOR|user active|778865|1|false
+2023-06-25 00:01:05.626|heartBeat-task-pool-2|INFO|MONITOR|user active|901825|2|true
+2023-06-25 00:01:05.700|heartBeat-task-pool-6|INFO|MONITOR|user active|840499|1|false
+2023-06-25 00:01:05.807|heartBeat-task-pool-5|INFO|MONITOR|user active|920668|1|false
+2023-06-25 00:01:05.857|heartBeat-task-pool-1|INFO|MONITOR|user active|961832|1|false
+2023-06-25 00:01:05.903|heartBeat-task-pool-3|INFO|MONITOR|user active|474130|1|false
+2023-06-25 00:01:05.952|heartBeat-task-pool-4|INFO|MONITOR|user active|833957|1|false
+2023-06-25 00:01:06.042|common-task-pool-15|INFO|MONITOR|MATCH_REQUEST|887295|2|2|
+2023-06-25 00:01:06.421|heartBeat-task-pool-8|INFO|MONITOR|user active|302980|1|false
+2023-06-25 00:01:06.831|heartBeat-task-pool-7|INFO|MONITOR|user active|882200|2|true
+2023-06-25 00:01:06.832|common-task-pool-18|INFO|MONITOR|MATCH_REQUEST|874198|2|3|
+2023-06-25 00:01:07.116|heartBeat-task-pool-2|INFO|MONITOR|user active|962884|1|false
+2023-06-25 00:01:07.182|heartBeat-task-pool-6|INFO|MONITOR|user active|962453|1|false
+2023-06-25 00:01:07.539|heartBeat-task-pool-5|INFO|MONITOR|user active|875964|1|false
+2023-06-25 00:01:07.698|heartBeat-task-pool-1|INFO|MONITOR|user active|954291|1|false
+2023-06-25 00:01:07.781|heartBeat-task-pool-3|INFO|MONITOR|user active|326422|1|false
+2023-06-25 00:01:07.898|common-task-pool-14|INFO|MONITOR|MATCH_REQUEST|893710|2|3|
+2023-06-25 00:01:07.962|heartBeat-task-pool-4|INFO|MONITOR|user active|98308|2|true
+2023-06-25 00:01:08.213|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|963003|0|2|
+2023-06-25 00:01:08.253|heartBeat-task-pool-8|INFO|MONITOR|user active|907858|1|false
+2023-06-25 00:01:08.279|heartBeat-task-pool-7|INFO|MONITOR|user active|962967|1|false
+2023-06-25 00:01:08.297|heartBeat-task-pool-2|INFO|MONITOR|user active|936989|1|false
+2023-06-25 00:01:08.458|schedule-task-pool-3|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:01:08.458|schedule-task-pool-3|INFO|MONITOR|当前在线女性 193个
+2023-06-25 00:01:08.458|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:01:08.458|schedule-task-pool-3|INFO|MONITOR|当前离线30分钟内女性 373个
+2023-06-25 00:01:08.471|schedule-task-pool-3|INFO|MONITOR|flush group 76ms
+2023-06-25 00:01:08.529|heartBeat-task-pool-6|INFO|MONITOR|user active|885472|1|false
+2023-06-25 00:01:08.777|schedule-task-pool-2|INFO|MONITOR|flush flushRecommendationList 381ms
+2023-06-25 00:01:08.978|heartBeat-task-pool-5|INFO|MONITOR|user active|772514|1|false
+2023-06-25 00:01:09.640|common-task-pool-21|INFO|MONITOR|MATCH_REQUEST|896313|1|2|
+2023-06-25 00:01:09.761|heartBeat-task-pool-1|INFO|MONITOR|user active|909729|2|true
+2023-06-25 00:01:09.855|heartBeat-task-pool-3|INFO|MONITOR|user active|637513|2|true
+2023-06-25 00:01:09.995|heartBeat-task-pool-4|INFO|MONITOR|user active|865544|2|true
+2023-06-25 00:01:10.087|heartBeat-task-pool-8|INFO|MONITOR|user active|904994|2|true
+2023-06-25 00:01:10.087|common-task-pool-1|INFO|MONITOR|MATCH_REQUEST|875689|2|3|
+2023-06-25 00:01:10.153|heartBeat-task-pool-7|INFO|MONITOR|user active|956771|1|false
+2023-06-25 00:01:10.383|heartBeat-task-pool-2|INFO|MONITOR|user active|923608|1|false
+2023-06-25 00:01:10.383|heartBeat-task-pool-6|INFO|MONITOR|user active|962985|1|false
+2023-06-25 00:01:10.571|heartBeat-task-pool-5|INFO|MONITOR|user active|814778|2|true
+2023-06-25 00:01:10.583|common-task-pool-10|INFO|MONITOR|MATCH_REQUEST|216847|1|2|
+2023-06-25 00:01:11.414|heartBeat-task-pool-1|INFO|MONITOR|user active|954467|1|false
+2023-06-25 00:01:12.019|heartBeat-task-pool-3|INFO|MONITOR|user active|962963|1|false
+2023-06-25 00:01:12.074|heartBeat-task-pool-4|INFO|MONITOR|user active|946833|1|false
+2023-06-25 00:01:12.090|heartBeat-task-pool-8|INFO|MONITOR|user active|910922|1|false
+2023-06-25 00:01:12.129|heartBeat-task-pool-7|INFO|MONITOR|user active|700822|1|false
+2023-06-25 00:01:12.174|heartBeat-task-pool-2|INFO|MONITOR|user active|822839|1|false
+2023-06-25 00:01:12.622|common-task-pool-7|INFO|MONITOR|MATCH_REQUEST|726345|2|5|
+2023-06-25 00:01:12.900|common-task-pool-27|INFO|MONITOR|MATCH_REQUEST|899943|2|3|
+2023-06-25 00:01:13.005|common-task-pool-28|INFO|MONITOR|MATCH_REQUEST|644777|2|5|
+2023-06-25 00:01:13.155|common-task-pool-25|INFO|MONITOR|MATCH_REQUEST|594806|2|3|
+2023-06-25 00:01:13.308|heartBeat-task-pool-6|INFO|MONITOR|user active|924866|1|false
+2023-06-25 00:01:13.427|heartBeat-task-pool-5|INFO|MONITOR|user active|952841|1|false
+2023-06-25 00:01:13.456|schedule-task-pool-4|INFO|MONITOR|当前在线男性 500个
+2023-06-25 00:01:13.456|schedule-task-pool-4|INFO|MONITOR|当前在线女性 194个
+2023-06-25 00:01:13.456|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内男性 500个
+2023-06-25 00:01:13.456|schedule-task-pool-4|INFO|MONITOR|当前离线30分钟内女性 374个
+2023-06-25 00:01:13.459|heartBeat-task-pool-1|INFO|MONITOR|user active|948167|2|true
+2023-06-25 00:01:13.468|schedule-task-pool-4|INFO|MONITOR|flush group 73ms

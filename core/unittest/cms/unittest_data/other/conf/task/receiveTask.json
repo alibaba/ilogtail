@@ -1,0 +1,18 @@
+{
+    "receiveItem": [
+        {
+            "name": "staragent",
+            "type": 1,
+            "output": [
+                {
+                    "type": "localfile",
+                    "conf": {
+                        "path":"./conf/task/.localfile",
+                        "size":10240,
+                        "count":7
+                    }
+                }
+            ]
+        }
+    ]
+}

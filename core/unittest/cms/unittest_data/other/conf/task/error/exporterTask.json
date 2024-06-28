@@ -1,0 +1,26 @@
+[
+    {
+        "target":"localhost:8080",
+        "metrics_path":"/metrics",
+        "interval":15,
+        "timeout":10,
+        "metrics":[
+        ],
+        "add_labels":[
+            {
+                "name":"hostname",
+                "type":0
+            },
+            {
+                "name":"instance",
+                "value":"INSTANCE",
+                "type":1
+            },
+            {
+                "name":"group",
+                "value":"sigma-test",
+                "type":2 
+            }
+        ]
+    }
+]

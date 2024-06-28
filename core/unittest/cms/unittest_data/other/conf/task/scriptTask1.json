@@ -1,0 +1,70 @@
+{
+    "scriptItem": [
+        {
+            "name": "staragent",
+            "cron": "[* * * * * ?]",
+            "cmd": "ps aux|grep argusagent1|grep -v \"grep\"",
+            "interval": 120,
+            "timeout":20,
+            "user":"root",
+            "version":"1.0",
+            "duration":360,
+            "firstSche":1000,
+            "reportStatus":1,
+            "resultFormat":"prometheus",
+            "add_labels":[
+                {
+                    "name": "group",
+                    "value": "sigma-test",
+                    "type": 2
+                }
+            ],
+            "output": [
+                {
+                    "type": "sls",
+                    "conf": {
+                        "encrypted":true,
+                        "accessKeyId":"xxxx",
+                        "accessKeySecret":"xxxxx",
+                        "endpoint":"http://zhangbei-corp-share.log.aliyuncs.com",
+                        "project":"argus-sls-project",
+                        "logstore":"argus_log"
+                    }
+                }
+            ]
+        },
+        {
+            "version":"1.0",
+            "duration":360,
+            "firstSche":1000,
+            "reportStatus":1,
+            "resultFormat":"prometheus",
+            "add_labels":[
+                {
+                    "name": "group",
+                    "value": "sigma-test",
+                    "type": 2
+                }
+            ],
+            "name": "staragent",
+            "cron": "[* * * * * ?]",
+            "cmd": "ps aux|grep argusagent1|grep -v \"grep\"",
+            "interval": 120,
+            "output": [
+                {
+                    "type": "sls",
+                    "conf": {
+                        "encrypted":true,
+                        "accessKeyId":"xxxx",
+                        "accessKeySecret":"xxxxx",
+                        "endpoint":"http://zhangbei-corp-share.log.aliyuncs.com",
+                        "project":"argus-sls-project",
+                        "logstore":"argus_log"
+                    }
+                }
+            ],
+            "timeout":20,
+            "user":"root"
+        }
+    ]
+}
