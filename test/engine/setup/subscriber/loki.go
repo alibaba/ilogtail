@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 const lokiName = "loki"

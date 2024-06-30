@@ -19,12 +19,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go/v4"
+	"gopkg.in/yaml.v3"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
-	"github.com/avast/retry-go/v4"
-	"gopkg.in/yaml.v3"
 )
 
 func LogLabel(ctx context.Context, expectLabelsStr string) (context.Context, error) {

@@ -16,16 +16,14 @@ package verify
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/avast/retry-go/v4"
 
+	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
-	"github.com/alibaba/ilogtail/test/engine/control"
+	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 )
-
-const queryRegexSQL = "* | SELECT %s FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
 
 func RegexSingle(ctx context.Context) (context.Context, error) {
 	var from int32
@@ -36,13 +34,35 @@ func RegexSingle(ctx context.Context) (context.Context, error) {
 		return ctx, fmt.Errorf("no start time")
 	}
 	fields := []string{"mark", "file", "logNo", "ip", "time", "method", "url", "http", "status", "size", "userAgent", "msg"}
-	sql := fmt.Sprintf(queryRegexSQL, strings.Join(fields, ", "), from)
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
+	var groups []*protocol.LogGroup
 	var err error
 	err = retry.Do(
 		func() error {
-			_, err = control.GetLogFromSLS(sql, from)
+			groups, err = subscriber.TestSubscriber.GetData(from)
+			if err != nil {
+				return err
+			}
+			for _, group := range groups {
+				for _, log := range group.Logs {
+					if len(log.Contents) != len(fields) {
+						return fmt.Errorf("field count not match, expect %d, got %d", len(fields), len(log.Contents))
+					}
+					for _, field := range fields {
+						found := false
+						for _, content := range log.Contents {
+							if content.Key == field {
+								found = true
+								break
+							}
+						}
+						if !found {
+							return fmt.Errorf("field %s not found", field)
+						}
+					}
+				}
+			}
 			return err
 		},
 		retry.Context(timeoutCtx),

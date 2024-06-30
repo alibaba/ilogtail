@@ -24,12 +24,12 @@ import (
 	"strconv"
 	"strings"
 
+	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	client "github.com/influxdata/influxdb1-client/v2"
-	"github.com/mitchellh/mapstructure"
 )
 
 const influxdbName = "influxdb"

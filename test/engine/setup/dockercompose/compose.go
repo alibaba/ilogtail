@@ -263,7 +263,7 @@ func (c *ComposeBooter) createComposeFile(ctx context.Context) error {
 			}
 		}
 		newServices := caseCfg["services"].(map[string]interface{})
-		for k, _ := range newServices {
+		for k := range newServices {
 			services[k] = newServices[k]
 		}
 		ilogtail["depends_on"] = ilogtailDependOn

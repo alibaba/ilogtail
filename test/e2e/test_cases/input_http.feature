@@ -15,7 +15,7 @@ Feature: input http
       - Type: metric_http
         IntervalMs: 1000
         Addresses: 
-          - https://www.aliyun.com
+          - http://www.google.com
         IncludeBody: true
     processors:
       - Type: processor_anchor
@@ -40,7 +40,7 @@ Feature: input http
     """
     Then the log fields match kv
     """
-    _address_: "https://www.aliyun.com"
+    _address_: "http://www.google.com"
     _method_: "GET"
     _result_: "success"
     _http_response_code_: "200"

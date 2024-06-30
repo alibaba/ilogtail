@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+
 	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/mitchellh/mapstructure"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/encoding"
 )
 
 const gRPCName = "grpc"

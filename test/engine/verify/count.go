@@ -16,19 +16,14 @@ package verify
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
-	sls "github.com/alibabacloud-go/sls-20201230/v5/client"
 	"github.com/avast/retry-go/v4"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
-	"github.com/alibaba/ilogtail/test/engine/control"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 )
-
-const queryCountSQL = "* | SELECT COUNT(1) as count FROM log WHERE from_unixtime(__time__) >= from_unixtime(%v) AND from_unixtime(__time__) < now()"
 
 func LogCount(ctx context.Context, expect int) (context.Context, error) {
 	var from int32
@@ -38,22 +33,19 @@ func LogCount(ctx context.Context, expect int) (context.Context, error) {
 	} else {
 		return ctx, fmt.Errorf("no start time")
 	}
-	sql := fmt.Sprintf(queryCountSQL, from)
-
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
-	var resp *sls.GetLogsResponse
+	var groups []*protocol.LogGroup
 	var err error
 	var count int
 	err = retry.Do(
 		func() error {
-			resp, err = control.GetLogFromSLS(sql, from)
+			groups, err = subscriber.TestSubscriber.GetData(from)
 			if err != nil {
 				return err
 			}
-			count, err = strconv.Atoi(resp.Body[0]["count"].(string))
-			if err != nil {
-				return err
+			for _, group := range groups {
+				count += len(group.Logs)
 			}
 			if count != expect {
 				return fmt.Errorf("log count not match, expect %d, got %d", expect, count)

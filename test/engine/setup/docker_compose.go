@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/engine/setup/controller"
-	"gopkg.in/yaml.v3"
 )
 
 const dependencyHome = "test_cases/dependencies"

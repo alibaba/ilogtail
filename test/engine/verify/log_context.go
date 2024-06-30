@@ -20,10 +20,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go/v4"
+
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
-	"github.com/avast/retry-go/v4"
 )
 
 type contextInfo struct {

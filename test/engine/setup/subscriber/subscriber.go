@@ -21,11 +21,12 @@ import (
 	"net/url"
 	"sync"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/engine/setup/dockercompose"
-	"gopkg.in/yaml.v3"
 )
 
 var TestSubscriber Subscriber
