@@ -31,7 +31,6 @@ type Config struct {
 	Profile          bool     `mapstructure:"profile" yaml:"profile"`
 	CoveragePackages []string `mapstructure:"coverage_packages" yaml:"coverage_packages"`
 	TestingInterval  string   `mapstructure:"testing_interval" yaml:"testing_interval"`
-
 	// SLS
 	Project         string        `mapstructure:"project" yaml:"project"`
 	Logstore        string        `mapstructure:"logstore" yaml:"logstore"`
@@ -43,77 +42,3 @@ type Config struct {
 	Region          string        `mapstructure:"region" yaml:"region"`
 	RetryTimeout    time.Duration `mapstructure:"retry_timeout" yaml:"retry_timeout"`
 }
-
-// The following is for plugin tests.
-
-// Case declares a procedure for testing a case.
-type Case struct {
-	Boot             Boot       `mapstructure:"boot" yaml:"boot"`
-	SetUps           []SetUp    `mapstructure:"setups" yaml:"setups"`
-	Ilogtail         Ilogtail   `mapstructure:"ilogtail" yaml:"ilogtail"`
-	Subscriber       Subscriber `mapstructure:"subscriber" yaml:"subscriber"`
-	Trigger          Trigger    `mapstructure:"trigger" yaml:"trigger"`
-	Verify           Verify     `mapstructure:"verify" yaml:"verify"`
-	Retry            Retry      `mapstructure:"retry" yaml:"retry"`
-	TestingInterval  string     `mapstructure:"testing_interval" yaml:"testing_interval"`
-	CoveragePackages []string   `mapstructure:"coverage_packages" yaml:"coverage_packages"`
-}
-
-type (
-	// Boot the dependency virtual environment, such as docker compose.
-	Boot struct {
-		Category string `mapstructure:"category" yaml:"category"`
-		Timeout  string `mapstructure:"timeout" yaml:"timeout"`
-	}
-	// SetUp prepares the test environment after the virtual environment started, such as installing some software.
-	SetUp struct {
-		Name    string `mapstructure:"name" yaml:"name"`
-		Command string `mapstructure:"command" yaml:"command"`
-	}
-	// Ilogtail is the logtail plugin configuration to load the ilogtail context.
-	Ilogtail struct {
-		Config         []LogtailCfgs          `mapstructure:"config" yaml:"config"`
-		LoadConfigWait string                 `mapstructure:"load_config_wait" yaml:"load_config_wait"`
-		CloseWait      string                 `mapstructure:"close_wait" yaml:"close_wait"` // wait interval for upstream process.
-		ENV            map[string]string      `mapstructure:"env" yaml:"env"`
-		DependsOn      map[string]interface{} `mapstructure:"depends_on" yaml:"depends_on"`
-		MountFiles     []string               `mapstructure:"mounts" yaml:"mounts"`
-		Ports          []string               `mapstructure:"ports" yaml:"ports"`
-	}
-
-	LogtailCfgs struct {
-		Name      string                   `mapstructure:"name" yaml:"name"`
-		MixedMode bool                     `mapstructure:"mixed_mode" yaml:"mixed_mode"`
-		Detail    []map[string]interface{} `mapstructure:"detail" yaml:"detail"`
-		Content   []string                 `mapstructure:"content" yaml:"content"`
-	}
-
-	Subscriber struct {
-		Name   string                 `mapstructure:"name" yaml:"name"`
-		Config map[string]interface{} `mapstructure:"config" yaml:"config"`
-	}
-	// Trigger triggers the custom HTTP endpoint to create some telemetry data.
-	Trigger struct {
-		URL      string `mapstructure:"url" yaml:"url"`
-		Method   string `mapstructure:"method" yaml:"method"`
-		Interval string `mapstructure:"interval" yaml:"interval"`
-		Times    int    `mapstructure:"times" yaml:"times"`
-		Body     string `mapstructure:"body" yaml:"body"`
-	}
-	// Verify content transferred to the mock backend to verify the collected telemetry data.
-	Verify struct {
-		LogRules    []Rule `mapstructure:"log_rules" yaml:"log_rules"`
-		TagRules    []Rule `mapstructure:"tag_rules" yaml:"tag_rules"`
-		SystemRules []Rule `mapstructure:"system_rules" yaml:"system_rules"`
-	}
-	// Retry triggered when failing.
-	Retry struct {
-		Times    int    `mapstructure:"times" yaml:"times"`
-		Interval string `mapstructure:"interval" yaml:"interval"`
-	}
-	Rule struct {
-		Name      string                 `mapstructure:"name" yaml:"name"`
-		Validator string                 `mapstructure:"validator" yaml:"validator"`
-		Spec      map[string]interface{} `mapstructure:"spec" yaml:"spec"`
-	}
-)

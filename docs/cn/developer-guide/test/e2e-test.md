@@ -15,7 +15,7 @@ E2E测试采用行为驱动开发（Behavior-Driven Development）的设计思�
 
 在准备开始进行集成测试前，您首先需要准备以下内容：
 
-- 测试环境：主机（可通过SSH访问）、K8s集群（可通过kubeconfig访问）
+- 测试环境：主机（可通过SSH访问）、K8s集群（可通过kubeconfig访问）、Docker-Compose环境（需在本地安装docker-compose）
 - 部署 iLogtail
 
 ### 配置文件
@@ -25,41 +25,36 @@ E2E测试采用行为驱动开发（Behavior-Driven Development）的设计思�
 配置文件的基本框架如下所示：
 
 ```plain
-@processor
-Feature: processor regex
-  Test processor regex
+@input
+Feature: input static file
+  Test input static file
 
-  @e2e @host
-  Scenario: TestRegexSingle
-    Given {host} environment
-    Given {regex_single} config as below
+  @e2e @docker-compose
+  Scenario: TestInputStaticFile
+    Given {docker-compose} environment
+    Given subcribe data from {grpc} with config
     """
-  enable: true
-  inputs:
-    - Type: input_file
-      FilePaths:
-        - /tmp/ilogtail/regex_single.log
-  processors:
-    - Type: processor_parse_regex_native
-      SourceKey: content
-      Regex: (\S+)\s(\w+):(\d+)\s(\S+)\s-\s\[([^]]+)]\s"(\w+)\s(\S+)\s([^"]+)"\s(\d+)\s(\d+)\s"([^"]+)"\s(.*)
-      Keys:
-        - mark
-        - file
-        - logNo
-        - ip
-        - time
-        - method
-        - url
-        - http
-        - status
-        - size
-        - userAgent
-        - msg
     """
-    When generate {100} regex logs, with interval {100}ms
-    Then there is {100} logs
-    Then the log contents match regex single
+    Given {input-static-file-case} local config as below
+    """
+    enable: true
+    global:
+      UsingOldContentTag: true
+      DefaultLogQueueSize: 10
+    inputs:
+      - Type: input_file
+        FilePaths: 
+          - "/root/test/**/a*.log"
+        MaxDirSearchDepth: 10
+    """
+    Given iLogtail container mount {./a.log} to {/root/test/1/2/3/axxxx.log}
+    When start docker-compose {input_static_file}
+    Then there is at least {1000} logs
+    Then the log fields match kv
+    """
+    "__tag__:__path__": "^/root/test/1/2/3/axxxx.log$"
+    content: "^\\d+===="
+    """
 ```
 
 - `Feature`定义了一个测试功能，下面为这个功能的描述信息。在`Feature`下可以定义多个测试场景。
@@ -74,12 +69,16 @@ Feature: processor regex
   - `@regression`：表示该测试场景为回归测试。
   - `@host`：表示该测试场景在host环境下运行。
   - `@k8s`：表示该测试场景在k8s环境下运行。
+  - `@docker-compose`：表示该测试场景在本地启动docker-compose运行
 
 ### 运行测试
 
 在所有测试内容准备完毕后，您可以直接在test目录下以go test的方式运行E2E测试。根据您的需求，可以选择运行所有测试或者指定测试。
 
 ```shell
-go test -v -run ^TestE2EOnK8s$ github.com/alibaba/ilogtail/test/cases/core
-go test -v -run ^TestE2EOnHost$ github.com/alibaba/ilogtail/test/cases/core
+go test -v -timeout 30m -run ^TestE2EOnDockerCompose$ github.com/alibaba/ilogtail/test/e2e
 ```
+
+### 拓展
+
+如果目前engine中已有的测试行为无法满足您的需求，您可以参考以下[添加指南](./e2e-test-step.md)，自行拓展测试行为。

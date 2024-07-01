@@ -14,7 +14,7 @@ import (
 	"github.com/alibaba/ilogtail/test/engine/setup/controller"
 )
 
-const dependencyHome = "test_cases/dependencies"
+const dependencyHome = "test_cases"
 
 type DockerComposeEnv struct {
 	BootController *controller.BootController

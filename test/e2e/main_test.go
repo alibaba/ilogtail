@@ -90,7 +90,7 @@ func scenarioInitializer(ctx *godog.ScenarioContext) {
 	ctx.When(`^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body:`, trigger.HTTP)
 	ctx.When(`^add k8s label \{(.*)\}`, control.AddLabel)
 	ctx.When(`^remove k8s label \{(.*)\}`, control.RemoveLabel)
-	ctx.When(`^start docker-compose dependencies \{(\S+)\}`, setup.StartDockerComposeEnv)
+	ctx.When(`^start docker-compose \{(\S+)\}`, setup.StartDockerComposeEnv)
 
 	// Then
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)

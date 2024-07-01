@@ -2,19 +2,41 @@
 
 iLogtail提供了一个完整的E2E测试引擎，方便您快速开展集成测试，从而进一步保证代码质量。在大部分情况下，您只需要编写一个配置文件来定义测试行为，即可轻松完成测试。
 
-## 工作原理
+## 目前支持的测试行为
 
-E2E测试采用行为驱动开发（Behavior-Driven Development）的设计思路，通过定义一系列测试行为，并通过配置文件的方式来描述测试场景，从而实现对插件的集成测试。测试引擎会根据配置文件中的内容，正则匹配对应的函数，并解析配置文件中的参数，传递给对应的函数。从而完成自动创建测试环境、启动iLogtail、触发日志生成、验证日志内容等一系列操作，最终输出测试报告。
-相关参考：
-- [https://cucumber.io/docs/bdd/](https://cucumber.io/docs/bdd/)
-- [https://github.com/cucumber/godog](https://github.com/cucumber/godog)
+| 行为类型 | 模板 | 参数 | 说明 |
+| --- | --- | --- | --- |
+| Given | ^\{(\S+)\} environment$ | 环境类型 | 初始化远程测试环境 |
+| Given | ^iLogtail depends on containers \{(.*)\} | 容器 | iLogtail依赖容器，可多次执行，累积添加 |
+| Given | ^iLogtail expose port \{(.*)\} to \{(.*)\} | 端口号 | iLogtail暴露端口，可多次执行，累积添加 |
+| Given | ^\{(.*)\} local config as below | 1. 配置名 2. 配置文件内容 | 添加本地配置 |
+| Given | ^\{(.*)\} http config as below | 1. 配置名 2. 配置文件内容 | 通过http添加配置 |
+| Given | ^remove http config \{(.*)\} | 配置名 | 通过http移除配置 |
+| Given | ^subcribe data from \{(\S+)\} with config | 1. 数据源 2. 配置文件内容 | 订阅数据源 |
+| When | ^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$ | 1. 生成日志数量 2. 生成日志间隔 | 生成正则文本日志（路径为/tmp/ilogtail/regex_single.log） |
+| When | ^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body: | 1. 生成日志数量 2. 生成日志间隔 3. url 4. method 5. body | 生成http日志，发送到iLogtail input_http_server |
+| When | ^add k8s label \{(.*)\} | k8s标签 | 为k8s资源添加标签 |
+| When | ^remove k8s label \{(.*)\} | k8s标签 | 为k8s资源移除标签 |
+| When | ^start docker-compose dependencies \{(\S+)\} | 依赖服务 | 启动docker-compose依赖服务 |
+| Then | ^there is \{(\d+)\} logs$ | 日志数量 | 验证日志数量 |
+| Then | ^there is at least \{(\d+)\} logs$ | 日志数量 | 验证日志数量 |
+| Then | ^there is at least \{(\d+)\} logs with filter key \{(.*)\} value \{(.*)\}$ | 1. 日志数量 2. 过滤键 3. 过滤值 | 验证日志数量 |
+| Then | ^the log contents match regex single |  | 验证正则文本日志内容 |
+| Then | ^the log fields match kv | kv键值对列表 | 验证kv日志内容 |
+| Then | ^the log tags match kv | kv键值对列表 | 验证kv日志标签内容 |
+| Then | ^the context of log is valid$ | | 验证日志上下文 |
+| Then | ^the log fields match | 日志字段列表 | 验证日志字段内容 |
+| Then | ^the log labels match | 日志标签列表 | 验证日志标签内容 |
+| Then | ^the logtail log contains \{(\d+)\} times of \{(.*)\}$ | 1. 匹配次数 2. 匹配内容 | 验证日志内容 |
+| Then | wait \{(\d+)\} seconds | 等待时间 | 等待时间 |
 
-## 添加行为
+## 如何添加新的测试行为
+
+在某些情况下，需要对engine中的测试行为进行拓展，可以参考下面的添加指南。
 
 ### 1. 编写行为函数
-测试框架中已经定义了一系列的行为函数，您可以直接使用这些函数来完成测试。具体定义可以参考`testhub/README.md`文件。
 
-如果您需要添加新的行为函数，可以在`testhub`目录下添加一个Go函数。不同目录下的行为函数的职责有所不同：
+如果您需要添加新的行为函数，可以在`engine`目录下添加一个Go函数。不同目录下的行为函数的职责有所不同：
 - `cleanup`：清理测试环境，其中的测试函数会默认在测试结束后执行。无需在配置文件中显式声明使用。
 - `control`：管控相关的行为函数，如初始化环境、添加配置等。
 - `setup`：初始化测试环境，并提供远程调用的相关功能。
@@ -29,7 +51,11 @@ func LogCount(ctx context.Context, expect int) (context.Context, error) {
 }
 ```
 
-函数的第一个参数必须为`context.Context`。除此之外，后续可添加任意多个参数。函数的返回值为`context.Context`和`error`，其中`context.Context`为传递给下一个行为函数的参数，`error`为错误信息。
+函数的第一个参数必须为`context.Context`。除此之外，后续可添加任意多个参数。函数的返回值为`context.Context`和`error`，其中`context.Context`为传递给下一个行为函数的参数，`error`为错误信息。一些需要在多个行为函数之间传递的参数，可以通过`context.Context`来传递。
+
+```go
+return context.WithValue(ctx, key, value), nil
+```
 
 ### 2. 注册行为函数
 
@@ -65,31 +91,3 @@ Then there is {100} logs
 ```
 
 在运行测试时，测试框架会根据配置文件中的行为，调用对应的行为函数，并传递参数。
-
-## 目前支持的测试行为
-
-| 行为类型 | 模板 | 参数 | 说明 |
-| --- | --- | --- | --- |
-| Given | ^\{(\S+)\} environment$ | 环境类型 | 初始化远程测试环境 |
-| Given | ^iLogtail depends on containers \{(.*)\} | 容器 | iLogtail依赖容器，可多次执行，累积添加 |
-| Given | ^iLogtail expose port \{(.*)\} to \{(.*)\} | 端口号 | iLogtail暴露端口，可多次执行，累积添加 |
-| Given | ^\{(.*)\} local config as below | 1. 配置名 2. 配置文件内容 | 添加本地配置 |
-| Given | ^\{(.*)\} http config as below | 1. 配置名 2. 配置文件内容 | 通过http添加配置 |
-| Given | ^remove http config \{(.*)\} | 配置名 | 通过http移除配置 |
-| Given | ^subcribe data from \{(\S+)\} with config | 1. 数据源 2. 配置文件内容 | 订阅数据源 |
-| When | ^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$ | 1. 生成日志数量 2. 生成日志间隔 | 生成正则文本日志（路径为/tmp/ilogtail/regex_single.log） |
-| When | ^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body: | 1. 生成日志数量 2. 生成日志间隔 3. url 4. method 5. body | 生成http日志，发送到iLogtail input_http_server |
-| When | ^add k8s label \{(.*)\} | k8s标签 | 为k8s资源添加标签 |
-| When | ^remove k8s label \{(.*)\} | k8s标签 | 为k8s资源移除标签 |
-| When | ^start docker-compose dependencies \{(\S+)\} | 依赖服务 | 启动docker-compose依赖服务 |
-| Then | ^there is \{(\d+)\} logs$ | 日志数量 | 验证日志数量 |
-| Then | ^there is at least \{(\d+)\} logs$ | 日志数量 | 验证日志数量 |
-| Then | ^there is at least \{(\d+)\} logs with filter key \{(.*)\} value \{(.*)\}$ | 1. 日志数量 2. 过滤键 3. 过滤值 | 验证日志数量 |
-| Then | ^the log contents match regex single |  | 验证正则文本日志内容 |
-| Then | ^the log fields match kv | kv键值对列表 | 验证kv日志内容 |
-| Then | ^the log tags match kv | kv键值对列表 | 验证kv日志标签内容 |
-| Then | ^the context of log is valid$ | | 验证日志上下文 |
-| Then | ^the log fields match | 日志字段列表 | 验证日志字段内容 |
-| Then | ^the log labels match | 日志标签列表 | 验证日志标签内容 |
-| Then | ^the logtail log contains \{(\d+)\} times of \{(.*)\}$ | 1. 匹配次数 2. 匹配内容 | 验证日志内容 |
-| Then | wait \{(\d+)\} seconds | 等待时间 | 等待时间 |
