@@ -37,9 +37,6 @@ public:
 
 
 private:
-    void SerializeAndPush(std::vector<BatchedEventsList>&& groupLists);
-    void SerializeAndPush(BatchedEventsList&& groupList);
-
     Batcher<> mBatcher;
     std::unique_ptr<EventGroupSerializer> mGroupSerializer;
     std::unique_ptr<Compressor> mComperssor;
@@ -51,6 +48,10 @@ private:
     std::string mClusterId;
     std::string mRegion;
 
+    void SerializeAndPush(std::vector<BatchedEventsList>&& groupLists);
+    void SerializeAndPush(BatchedEventsList&& groupList);
+
+    void PushToQueue(std::string&& data, size_t rawSize, RawDataType type);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     std::vector<SenderQueueItem*> mItems;

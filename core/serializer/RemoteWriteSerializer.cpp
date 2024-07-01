@@ -32,7 +32,8 @@ bool RemoteWriteEventGroupSerializer::Serialize(BatchedEvents&& p, std::string& 
         auto* s = ts->add_samples();
         // 好像每个event只有一个sample
         s->set_value(metricEvent->GetValue<UntypedSingleValue>()->mValue);
-        s->set_timestamp(metricEvent->GetTimestamp());
+        // TODO: second and nanosecond
+        s->set_timestamp(metricEvent->GetTimestamp() * 1000);
     }
     req.SerializeToString(&res);
     return true;

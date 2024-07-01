@@ -1,5 +1,6 @@
 #include "FlusherRemoteWrite.h"
 
+#include "compression/CompressorFactory.h"
 #include "sdk/Common.h"
 #include "sender/Sender.h"
 
@@ -16,6 +17,8 @@ FlusherRemoteWrite::FlusherRemoteWrite() {
 bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
     LOG_INFO(sLogger, ("LOG_INFO flusher config", config.toStyledString()));
+
+    // config
     // {
     //   "Type": "flusher_remote_write/flusher_push_gateway",
     //   "Endpoint": "cn-hangzhou.arms.aliyuncs.com",
@@ -40,6 +43,8 @@ bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGo
 
     mRemoteWritePath = "/prometheus/" + mUserId + "/" + mClusterId + "/" + mRegion + "/api/v2/write";
 
+    // compressor
+    mComperssor = CompressorFactory::GetInstance()->Create(config, *mContext, sName, CompressType::SNAPPY);
     DefaultFlushStrategyOptions strategy{
         static_cast<uint32_t>(1024 * 1024), static_cast<uint32_t>(5000), static_cast<uint32_t>(1)};
     if (!mBatcher.Init(Json::Value(), this, strategy, false)) {
@@ -93,21 +98,37 @@ void FlusherRemoteWrite::SerializeAndPush(std::vector<BatchedEventsList>&& group
 
 void FlusherRemoteWrite::SerializeAndPush(BatchedEventsList&& groupList) {
     for (auto& batchedEv : groupList) {
-        string data, errMsg;
+        string data, compressedData, errMsg;
         mGroupSerializer->Serialize(std::move(batchedEv), data, errMsg);
         if (!errMsg.empty()) {
             LOG_ERROR(sLogger, ("LOG_ERROR serialize event group", errMsg));
             continue;
         }
-        // TODO: mQueueKey && groupStrategy
-        SenderQueueItem* item
-            = new SenderQueueItem(std::move(data), data.size(), this, 0, RawDataType::EVENT_GROUP, false);
-#ifdef APSARA_UNIT_TEST_MAIN
-        mItems.push_back(item);
-#else
-        Sender::Instance()->PutIntoBatchMap(item);
-#endif
+
+        size_t packageSize = 0;
+        packageSize += data.size();
+        if (mComperssor) {
+            if (!mComperssor->Compress(data, compressedData, errMsg)) {
+                LOG_WARNING(mContext->GetLogger(),
+                            ("failed to compress arms metrics event group",
+                             errMsg)("action", "discard data")("plugin", sName)("config", mContext->GetConfigName()));
+                return;
+            }
+        } else {
+            compressedData = data;
+        }
+        PushToQueue(std::move(compressedData), packageSize, RawDataType::EVENT_GROUP);
     }
+}
+
+void FlusherRemoteWrite::PushToQueue(string&& data, size_t rawSize, RawDataType type) {
+    // TODO: mQueueKey && groupStrategy
+    SenderQueueItem* item = new SenderQueueItem(std::move(data), rawSize, this, mContext->GetProcessQueueKey(), type);
+#ifdef APSARA_UNIT_TEST_MAIN
+    mItems.push_back(item);
+#else
+    Sender::Instance()->PutIntoBatchMap(item);
+#endif
 }
 
 void RemoteWriteClosure::OnSuccess(sdk::Response* response) {

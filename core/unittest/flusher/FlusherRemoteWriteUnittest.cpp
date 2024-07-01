@@ -32,7 +32,7 @@ void FlusherRemoteWriteTest::SimpleTest() {
     //   "Region": "cn-hangzhou"
     // }
     config["Endpoint"] = string(getenv("ENDPOINT"));
-    config["Scheme"] = "https";
+    config["Scheme"] =  string(getenv("SCHEME"));
     config["UserId"] = string(getenv("USER_ID"));
     config["ClusterId"] = string(getenv("CLUSTER_ID"));
     config["Region"] = string(getenv("REGION"));
@@ -43,7 +43,7 @@ void FlusherRemoteWriteTest::SimpleTest() {
     auto event = eGroup.AddMetricEvent();
     event->SetName("test_metric");
     event->SetValue(MetricValue(UntypedSingleValue{1.0}));
-    event->SetTimestamp(1719414245);
+    event->SetTimestamp(1719836022);
     event->SetTag(StringView("test_key_x"), StringView("test_value_x"));
     event->SetTag(StringView("__job__"), StringView("remote_write_job"));
     event->SetTag(StringView("__name__"), StringView("test_metric"));

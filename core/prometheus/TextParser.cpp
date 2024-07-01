@@ -36,11 +36,11 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content) {
     auto now = std::chrono::system_clock::now();
     auto duration_since_epoch = now.time_since_epoch();
     auto seconds_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(duration_since_epoch);
-    std::time_t timestamp = seconds_since_epoch.count();
-    return Parse(content, timestamp);
+    std::time_t defaultTsInSecs = seconds_since_epoch.count();
+    return Parse(content, defaultTsInSecs);
 }
 
-unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const time_t defaultTs) {
+unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const time_t defaultTsInSecs) {
     string line;
     string argName, argLabels, argUnwrappedLabels, argValue, argSuffix, argTimestamp;
     istringstream iss(content);
@@ -92,14 +92,16 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
             continue;
         }
 
-        // set timestamp to `defaultTs` if timestamp is empty, otherwise parse it
+        // set timestamp to `defaultTsInSecs` if timestamp is empty, otherwise parse it
         // if timestamp is not empty but not a valid integer, skip it
         time_t timestamp;
         if (argTimestamp.empty()) {
-            timestamp = defaultTs;
+            timestamp = defaultTsInSecs;
         } else {
             try {
-                timestamp = stol(argTimestamp);
+                // TODO: check if timestamp is out of window （e.g. 24h)
+                timestamp = stol(argTimestamp) / 1000;
+                // TODO: convert milli-second part into nano-second
             } catch (const exception&) {
                 continue;
             }
