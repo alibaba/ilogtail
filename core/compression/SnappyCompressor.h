@@ -16,8 +16,18 @@
 
 #pragma once
 
+#include "compression/Compressor.h"
+
 namespace logtail {
 
-enum class CompressType { NONE, LZ4, ZSTD, SNAPPY };
+class SnappyCompressor : public Compressor {
+public:
+    SnappyCompressor(CompressType type) : Compressor(type) {};
+
+    bool Compress(const std::string& input, std::string& output, std::string& errorMsg) override;
+#ifdef APSARA_UNIT_TEST_MAIN
+    bool UnCompress(const std::string& input, std::string& output, std::string& errorMsg) override;
+#endif
+};
 
 } // namespace logtail

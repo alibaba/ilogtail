@@ -16,6 +16,7 @@
 
 #include "common/ParamExtractor.h"
 #include "compression/LZ4Compressor.h"
+#include "compression/SnappyCompressor.h"
 #include "compression/ZstdCompressor.h"
 
 using namespace std;
@@ -23,9 +24,9 @@ using namespace std;
 namespace logtail {
 
 unique_ptr<Compressor> CompressorFactory::Create(const Json::Value& config,
-                                                      const PipelineContext& ctx,
-                                                      const string& pluginName,
-                                                      CompressType defaultType) {
+                                                 const PipelineContext& ctx,
+                                                 const string& pluginName,
+                                                 CompressType defaultType) {
     string compressType, errorMsg;
     if (!GetOptionalStringParam(config, "CompressType", compressType, errorMsg)) {
         PARAM_WARNING_DEFAULT(ctx.GetLogger(),
@@ -42,6 +43,8 @@ unique_ptr<Compressor> CompressorFactory::Create(const Json::Value& config,
         return Create(CompressType::LZ4);
     } else if (compressType == "zstd") {
         return Create(CompressType::ZSTD);
+    } else if (compressType == "snappy") {
+        return Create(CompressType::SNAPPY);
     } else if (compressType == "none") {
         return nullptr;
     } else if (!compressType.empty()) {
@@ -66,6 +69,8 @@ unique_ptr<Compressor> CompressorFactory::Create(CompressType type) {
             return make_unique<LZ4Compressor>(type);
         case CompressType::ZSTD:
             return make_unique<ZstdCompressor>(type);
+        case CompressType::SNAPPY:
+            return make_unique<SnappyCompressor>(type);
         default:
             return nullptr;
     }
@@ -79,6 +84,9 @@ const string& CompressTypeToString(CompressType type) {
         case CompressType::ZSTD:
             static string zstd = "zstd";
             return zstd;
+        case CompressType::SNAPPY:
+            static string snappy = "snappy";
+            return snappy;
         case CompressType::NONE:
             static string none = "none";
             return none;

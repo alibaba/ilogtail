@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-enable: true
-inputs:
-  - Type: input_file
-    FilePaths: 
-      - /home/test-log/*.log
-flushers:
-  - Type: flusher_stdout    # 标准输出流输出类型
-    OnlyStdout: true
+cmake_minimum_required(VERSION 3.22)
+project(span_pb)
+
+file(GLOB LIB_SOURCE_FILES *.cc *.cpp *.h)
+append_source_files(LIB_SOURCE_FILES)
+add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
+link_protobuf(${PROJECT_NAME})

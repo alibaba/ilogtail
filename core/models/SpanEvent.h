@@ -147,6 +147,7 @@ public:
     void SetEndTimeNs(uint64_t endTimeNs) { mEndTimeNs = endTimeNs; }
 
     StringView GetTag(StringView key) const;
+    const std::map<StringView, StringView>& GetTags() const { return mTags.mInner; };
     bool HasTag(StringView key) const;
     void SetTag(StringView key, StringView val);
     void SetTag(const std::string& key, const std::string& val);
