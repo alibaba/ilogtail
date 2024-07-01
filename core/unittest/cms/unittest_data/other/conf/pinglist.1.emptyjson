@@ -1,0 +1,15 @@
+{
+    "self": {
+        "ip": "10.125.5.112",
+        "sn": "i-31oqtj2sa",
+        "hostname": "e010125005112.bja",
+        "groupName": "src_staragent-test",
+        "asw": "src_test_asw1",
+        "asw2": "src_test_asw2",
+        "pod": "src_test_pod",
+        "dsw": "src_est_dsw",
+        "logicSite": "src_test_logicSite"
+    },
+    "machineList": [
+    ]
+}

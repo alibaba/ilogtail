@@ -1,0 +1,57 @@
+{
+    "scriptItem": [
+        {
+            "add_labels": [
+                {
+                    "name": "__task_name__",
+                    "type": 2,
+                    "value": "ut-script-1"
+                },
+                {
+                    "name": "__script_name__",
+                    "type": 2,
+                    "value": "/home/staragent/plugins/Argus/local_data/libexec/alimonitor/check_xgw_table.sh 127.0.0.1"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                },
+                {
+                    "name": "SYS_METRIC_STORE",
+                    "type": 2,
+                    "value": "1"
+                },
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "12"
+                }
+            ],
+            "cmd": "/home/staragent/plugins/Argus/local_data/libexec/alimonitor/check_xgw_table.sh 127.0.0.1",
+            "cron": "[* * * * * ?]",
+            "interval": 300,
+            "name": "ut-script-1",
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "reportStatus": 1,
+            "resultFormat": "alimonitorJson",
+            "timeout": 90,
+            "user": "root",
+            "version": "1624254278518",
+            "metricMeta": [
+                {
+                    "name": "table",
+                    "type": "string",
+                    "isMetric": true
+                },
+                {
+                    "name": "result",
+                    "type": "number"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,281 @@
+{
+    "self": {
+        "ip": "10.125.5.112",
+        "sn": "i-31oqtj2sa",
+        "hostname": "e010125005112.bja",
+        "groupName": "src_staragent-test",
+        "asw": "src_test_asw1",
+        "asw2": "src_test_asw2",
+        "pod": "src_test_pod",
+        "dsw": "src_est_dsw",
+        "logicSite": "src_test_logicSite"
+    },
+    "machineList": [
+        {
+            "ip": "10.125.5.112",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.152.160",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.152.159",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.152.157",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "10.101.76.69",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "10.125.67.97",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "10.125.64.58",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "10.125.56.117",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "10.125.61.136",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.3.93",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.3.138",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.3.124",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.3.159",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.3.148",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.81.3.158",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.69.193.90",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        },
+        {
+            "ip": "100.69.210.54",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "100.69.210.199",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "100.81.3.209",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "100.81.3.179",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "100.81.4.88",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "10.125.28.41",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "10.125.25.136",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "11.239.179.225",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }, {
+            "ip": "11.239.164.2",
+            "sn": "i-31oqtj2sa",
+            "hostname": "e010125005112.bja",
+            "groupName": "dst_staragent-test",
+            "asw": "dst_test_asw1",
+            "asw2": "dst_test_asw2",
+            "pod": "dst_test_pod",
+            "dsw": "dst_test_dsw",
+            "logicSite": "dst_test_logicSite"
+        }
+    ]
+}

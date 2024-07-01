@@ -99,3 +99,8 @@ license_coverage.txt
 /generated_files/
 /dist/
 /tags/
+
+## argus
+/core/unittest/cms/unittest_data/other/conf/RDMA/rping.data
+/core/unittest/cms/unittest_data/other/conf/task/.localfile
+/core/unittest/cms/unittest_data/sic/conf/logs/*

@@ -1,0 +1,154 @@
+[
+  {
+    "description": "api tjMaster",
+    "request": {
+      "method": "get",
+      "uri": "/api/v5/GetClusterSRInfo",
+      "queries": {
+        "serverrole": "tianjimon",
+        "cluster": "mock-cluster-for-paas",
+        "attr": "service_registration"
+      }
+    },
+    "response": {
+      "json": {
+        "err_code": 0,
+        "err_msg": "",
+        "data": {
+          "serverrole": "tianjimon",
+          "service_registration": "{\"alert.inc.endpoint\": \"alert-master.ops.env45.com\", \"discovery.endpoint\": \"alert-master.ops.env45.com\", \"minirds.username\": \"tianjimon_small\", \"zkServerPort\": \"2181\", \"minirds.host\": \"tianjimon-small.xdb.ops.env45.com\", \"zkService\": \"tianjimonzk.tianjimon\", \"selfmonitor.grafana.endpoint\": \"monitor.cms.ops.env45.com\", \"accesskey.secret\": \"uQnhwopu7AkqFZPDnV5HjpmkSmB1yQ\", \"metrics.inc.domain\": \"query-service.ops.env45.com\", \"alert.open.endpoint\": \"alert.open.cloud.env45.com\", \"query.endpoint\": \"query-service.ops.env45.com\", \"alertnotify.endpoint\": \"alert-notify.ops.env45.com\", \"influxdb.cms.ipList\": \"10.45.33.128\", \"ingestion.endpoint\": \"ingestion-service.ops.env45.com\", \"accesskey.id\": \"yFrYY2L8fvBFBhSq\", \"account.tianjimon.id\": \"1896002825819845\", \"influxdb.cms.endpoint\": \"tianjimoninfluxdb.tianjimon\", \"influxdb.cms.port\": \"8086\", \"metric.open.endpoint\": \"query-service.open.cloud.env45.com\", \"account.id\": \"1896002825819845\", \"alert.endpoint\": \"alert-master.ops.env45.com\", \"config.endpoint\": \"config-service.ops.env45.com\", \"minirds.database\": \"tianjimon_small\", \"account.tianjimon.user\": \"tianjimon@alibaba-inc.com\", \"minirds.port\": \"3881\", \"ingestion.cluster.ip\": \"10.45.50.117\", \"config.cluster.ip\":\"10.45.50.118\", \"selfmonitor.cluster.ip\":\"10.45.50.119\", \"selfmonitor.prometheus.endpoint\": \"prometheus.cms.ops.env45.com\", \"metrics.open.endpoint\": \"query-service.open.cloud.env45.com\", \"alert.inc.domain\": \"alert-master.ops.env45.com\", \"account.user\": \"tianjimon@alibaba-inc.com\", \"selfmonitor.cms.endpoint\": \"admin.cms.ops.env45.com\", \"selfmonitor.cms.port\": \"19101\", \"minirds.password\": \"uni16fg03o2Z9jhs\", \"siterule.endpoint\": \"nouse\", \"metric.endpoint\": \"query-service.ops.env45.com\"}"
+        }
+      }
+    }
+  },
+  {
+    "description": "api tjMaster",
+    "request": {
+      "method": "get",
+      "uri": "/test/api/v5/GetClusterSRInfo",
+      "queries": {
+        "serverrole": "tianjimon",
+        "cluster": "mock-cluster-for-paas",
+        "attr": "service_registration"
+      }
+    },
+    "response": {
+      "json": {
+        "err_code": 0,
+        "err_msg": "",
+        "data": {
+          "serverrole": "tianjimon",
+          "service_registration": "{\"alert.inc.endpoint\": \"alert-master.ops.env45.com\", \"discovery.endpoint\": \"alert-master.ops.env45.com\", \"minirds.username\": \"tianjimon_small\", \"zkServerPort\": \"2181\", \"minirds.host\": \"tianjimon-small.xdb.ops.env45.com\", \"zkService\": \"tianjimonzk.tianjimon\", \"selfmonitor.grafana.endpoint\": \"monitor.cms.ops.env45.com\", \"accesskey.secret\": \"uQnhwopu7AkqFZPDnV5HjpmkSmB1yQ\", \"metrics.inc.domain\": \"query-service.ops.env45.com\", \"alert.open.endpoint\": \"alert.open.cloud.env45.com\", \"query.endpoint\": \"query-service.ops.env45.com\", \"alertnotify.endpoint\": \"alert-notify.ops.env45.com\", \"influxdb.cms.ipList\": \"10.45.33.128\", \"ingestion.endpoint\": \"ingestion-service.ops.env45.com\", \"accesskey.id\": \"yFrYY2L8fvBFBhSq\", \"account.tianjimon.id\": \"1896002825819845\", \"influxdb.cms.endpoint\": \"tianjimoninfluxdb.tianjimon\", \"influxdb.cms.port\": \"8086\", \"metric.open.endpoint\": \"query-service.open.cloud.env45.com\", \"account.id\": \"1896002825819845\", \"alert.endpoint\": \"alert-master.ops.env45.com\", \"config.endpoint\": \"config-service.ops.env45.com\", \"minirds.database\": \"tianjimon_small\", \"account.tianjimon.user\": \"tianjimon@alibaba-inc.com\", \"minirds.port\": \"3881\", \"selfmonitor.prometheus.endpoint\": \"prometheus.cms.ops.env45.com\", \"metrics.open.endpoint\": \"query-service.open.cloud.env45.com\", \"alert.inc.domain\": \"alert-master.ops.env45.com\", \"account.user\": \"tianjimon@alibaba-inc.com\", \"selfmonitor.cms.endpoint\": \"admin.cms.ops.env45.com\", \"selfmonitor.cms.port\": \"19101\", \"minirds.password\": \"uni16fg03o2Z9jhs\", \"siterule.endpoint\": \"nouse\", \"metric.endpoint\": \"query-service.ops.env45.com\"}"
+        }
+      }
+    }
+  },
+  {
+    "description": "api shennong test GetHostCluster",
+    "request": {
+      "method": "post",
+      "uri": "/v1/group/queryResources",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "response": {
+      "json": {
+        "Success": true,
+        "RequestId": "cms-7f5eadaf-b226-4bb6-b496-568a5a0765d1",
+        "Code": 200,
+        "Message": "",
+        "TotalCount": 2,
+        "NextToken": "",
+        "Data": [
+          {
+            "appName": "clusterMonitor_test_online",
+            "category": "",
+            "groupId": "All",
+            "lastModify": 1609725100711109474,
+            "md5": "",
+            "product": "shennong_clusterMonitor__test__online",
+            "region": "sh",
+            "resource": [
+              "host=agrus-test-shennong"
+            ],
+            "sn": 1345910739269619713,
+            "userId": "1094890823900470"
+          },
+          {
+            "appName": "clusterMonitor_test_online",
+            "category": "",
+            "groupId": "tianji.TianjiClient#",
+            "lastModify": 1609725100711109474,
+            "md5": "",
+            "product": "shennong_clusterMonitor__test__online",
+            "region": "sh",
+            "resource": [
+              "host=agrus-test-shennong"
+            ],
+            "sn": 1345910739269619712,
+            "userId": "1094890823900470"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "description": "api shennong test GetConfigMetric",
+    "request": {
+      "method": "post",
+      "uri": "/v1/metrics/query",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "response": {
+      "json": {
+        "Success": true,
+        "RequestId": "cms-3e079a3f-9e00-434f-9a00-354e610d8051",
+        "Code": 200,
+        "Message": "",
+        "TotalCount": 1,
+        "NextToken": "",
+        "Data": [
+          {
+            "cnName": "",
+            "description": "",
+            "downsample": null,
+            "enName": "",
+            "extInfo": "{\"tree\":{\"perf\":{\"exactMetrics\":{\"ClusterMonitorTest:AG_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"ag_metric_host\"]}},\"ClusterMonitorTest:AVG_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"avg_metric_host\"]}},\"ClusterMonitorTest:BASE_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"base_metric_host\"]}},\"ClusterMonitorTest:MAX_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"max_metric_host\"]}},\"ClusterMonitorTest:MIN_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"min_metric_host\"]}},\"ClusterMonitorTest:MN_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"mn_metric_host\"]}},\"ClusterMonitorTest:MX_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"mx_metric_host\"]}},\"ClusterMonitorTest:QPS_COUNTER_METRIC\":{\"exactIdCounters\":{\"/start\":[\"qps_metric_host\"]}}}}},\"metrics\":[\"ag_metric_host\",\"avg_metric_host\",\"base_metric_host\",\"max_metric_host\",\"min_metric_host\",\"mn_metric_host\",\"mx_metric_host\",\"qps_metric_host\"],\"sec_metrics\":[\"ag_metric_host\",\"avg_metric_host\"],\"ingestion\":{\"sn\":\"aaaaa\",\"sn2\":\"bbbbb\"},\"shennongExporterTask\":[[{\"target\":\"localhost:8080\",\"metrics_path\":\"/metrics\",\"interval\":15,\"timeout\":10,\"metrics\":[{\"name\":\"container_memory_rss\",\"labels\":[{\"label_name\":\"id\",\"label_value\":\"/docker/8e0100346912f327f0cb1bd66589443a9b1d0f5ea188c117c0191c9c470a3d2e\"}],\"metric_name\":\"container_memory_rss_rename\"},{\"name\":\"container_cpu_usage_seconds_total\",\"labels\":[{\"label_name\":\"id\",\"label_value\":\"/docker/8e0100346912f327f0cb1bd66589443a9b1d0f5ea188c117c0191c9c470a3d2e\"}]},{\"name\":\"container_fs_reads_bytes_total\",\"labels\":[{\"label_name\":\"id\",\"label_value\":\"/docker/8e0100346912f327f0cb1bd66589443a9b1d0f5ea188c117c0191c9c470a3d2e\"},{\"labal_name\":\"device\",\"labal_value\":\"/dev/sda\"}]}],\"add_labels\":[{\"name\":\"hostname\",\"type\":0},{\"name\":\"instance\",\"value\":\"INSTANCE\",\"type\":1},{\"name\":\"group\",\"value\":\"sigma-test\",\"type\":2}]}]]}",
+            "from": "",
+            "jpName": "",
+            "lastModify": 1608860399572981957,
+            "md5": "X8P2hiWMv8/Z9yKYiN9+LA==",
+            "metricName": "shennong_clusterMonitor__test__online",
+            "metricUnit": "",
+            "namespace": "sn_decision_tree",
+            "parent": "",
+            "period": 0,
+            "product": "",
+            "sql": "",
+            "status": "",
+            "type": "",
+            "values": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "description": "api shennong test CommitDataToIngestionService",
+    "request": {
+      "method": "post",
+      "uri": "/metric/product/aliyun/service/shennong_clusterMonitor__test__online",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "response": {
+      "json": {
+        "Success": true
+      }
+    }
+  }
+]

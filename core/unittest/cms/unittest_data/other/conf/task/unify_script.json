@@ -1,0 +1,148 @@
+{
+    "customTask": [
+        {
+            "name": "scriptTask-26915905732990",
+            "type": "scriptTask",
+            "version": "1",
+            "content": {
+                "cron": "[* * 2-8 * * ?]",
+                "output": [
+                    {
+                        "type": "alimonitor"
+                    }
+                ],
+                "add_labels": [
+                    {
+                        "name": "__task_name__",
+                        "type": 2,
+                        "value": "ut-script-1"
+                    },
+                    {
+                        "name": "__script_name__",
+                        "type": 2,
+                        "value": "/home/staragent/plugins/raptor-agent/cpu_iss.sh 127.0.0.1"
+                    },
+                    {
+                        "name": "sn",
+                        "type": 0
+                    },
+                    {
+                        "name": "SYS_DT",
+                        "type": 2,
+                        "value": "12"
+                    },
+                    {
+                        "name": "SYS_METRIC_STORE",
+                        "type": 2,
+                        "value": "1"
+                    },
+                    {
+                        "name": "SYS_DT",
+                        "type": 2,
+                        "value": "12"
+                    }
+                ],
+                "name": "ut-script-1",
+                "reportStatus": 1,
+                "interval": 300,
+                "cmd": "/home/staragent/plugins/raptor-agent/cpu_iss.sh 127.0.0.1",
+                "version": "1624256902134",
+                "user": "root",
+                "timeout": 90,
+                "metricMeta": [
+                    {
+                        "name": "table",
+                        "type": "string",
+                        "isMetric": true
+                    },
+                    {
+                        "name": "result",
+                        "type": "number"
+                    }
+                ],
+                "resultFormat": "alimonitorJson"
+            }
+        },
+        {
+            "name": "scriptTask-1",
+            "type": "scriptTask",
+            "version": "1",
+            "content": {
+                "cron": "[* * * * * ?]",
+                "output": [
+                    {
+                        "type": "alimonitor"
+                    }
+                ],
+                "resultFormat": "alimonitorJson",
+                "add_labels": [
+                    {
+                        "name": "__task_name__",
+                        "type": 2,
+                        "value": "ut-script-1"
+                    },
+                    {
+                        "name": "__script_name__",
+                        "type": 2,
+                        "value": "/home/staragent/plugins/Argus/local_data/libexec/alimonitor/check_xgw_table.sh 127.0.0.1"
+                    },
+                    {
+                        "name": "sn",
+                        "type": 0
+                    },
+                    {
+                        "name": "SYS_METRIC_STORE",
+                        "type": 2,
+                        "value": "1"
+                    },
+                    {
+                        "name": "SYS_DT",
+                        "type": 2,
+                        "value": "12"
+                    }
+                ],
+                "name": "ut-script-2",
+                "reportStatus": 1,
+                "interval": 300,
+                "cmd": "/home/staragent/plugins/Argus/local_data/libexec/alimonitor/check_xgw_table.sh 127.0.0.1",
+                "version": "1624254278518",
+                "user": "root",
+                "timeout": 90
+            }
+        }
+    ],
+    "scriptTask": [
+        {
+            "name": "script_name",
+            "cron": "[* * * * * ?]",
+            "cmd": "/home/staragent/plugins/Argus/local_data/libexec/alimonitor/check_xgw_table.sh",
+            "version": "1",
+            "user": "root",
+            "interval": 15,
+            "timeout": 60,
+            "reportStatus": 1,
+            "resultFormat": "prometheus",
+            "output": [
+                {
+                    "type": "alimonitor"
+                }
+            ],
+            "add_labels": [
+                {
+                    "name": "__argus_script_name__",
+                    "type": 2.0,
+                    "value": "script_name"
+                },
+                {
+                    "name": "SYS_DT",
+                    "type": 2,
+                    "value": "12"
+                },
+                {
+                    "name": "sn",
+                    "type": 0
+                }
+            ]
+        }
+    ]
+}
