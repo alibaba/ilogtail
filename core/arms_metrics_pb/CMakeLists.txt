@@ -13,14 +13,9 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.22)
-project(compression)
+project(arms_metrics_pb)
 
-file(GLOB LIB_SOURCE_FILES *.cpp *.h)
+file(GLOB LIB_SOURCE_FILES *.cc *.h *.cpp)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} common)
-target_link_libraries(${PROJECT_NAME} pipeline)
-link_lz4(${PROJECT_NAME})
-link_zstd(${PROJECT_NAME})
-link_snappy(${PROJECT_NAME})
-
+link_protobuf(${PROJECT_NAME})

@@ -137,6 +137,16 @@ make -j24
 sudo make install
 cd ..
 
+# snappy
+remove_old_lib libsnappy
+rm -rf snappy-1.2.1
+tar xf snappy-1.2.1.tar.gz
+cd snappy-1.2.1
+./configure --prefix=$DESTINATION --static
+make -j24
+sudo make install
+cd ..
+
 # curl
 remove_old_lib libcurl
 rm -rf curl-7.61.1
@@ -155,3 +165,5 @@ sudo make clean
 ./configure --prefix=$DESTINATION --disable-shared --enable-static
 make -j24
 sudo make install
+
+# snappy
