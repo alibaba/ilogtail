@@ -9,7 +9,7 @@
 namespace logtail {
 
 struct RemoteWriteResponseInfo {
-    sdk::Response* response;
+    int32_t statusCode;
     std::string errorCode;
     std::string errorMessage;
 };
@@ -53,6 +53,7 @@ private:
 
 
 #ifdef APSARA_UNIT_TEST_MAIN
+    std::vector<SenderQueueItem*> mItems;
     friend class FlusherRemoteWriteTest;
 #endif
 };

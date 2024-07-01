@@ -6,6 +6,9 @@
 using namespace std;
 
 namespace logtail {
+
+const string FlusherRemoteWrite::sName = "flusher_remote_write";
+
 FlusherRemoteWrite::FlusherRemoteWrite() {
 }
 
@@ -35,7 +38,14 @@ bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGo
     mClusterId = config["ClusterId"].asString();
     mRegion = config["Region"].asString();
 
-    mRemoteWritePath = mEndpoint + "/prometheus/" + mUserId + "/" + mClusterId + "/" + mRegion + "/api/v3/write";
+    mRemoteWritePath = "/prometheus/" + mUserId + "/" + mClusterId + "/" + mRegion + "/api/v2/write";
+
+    DefaultFlushStrategyOptions strategy{
+        static_cast<uint32_t>(1024 * 1024), static_cast<uint32_t>(5000), static_cast<uint32_t>(1)};
+    if (!mBatcher.Init(Json::Value(), this, strategy, false)) {
+        // TODO: throws exception
+        return false;
+    }
 
     mGroupSerializer = make_unique<RemoteWriteEventGroupSerializer>(this);
 
@@ -90,19 +100,24 @@ void FlusherRemoteWrite::SerializeAndPush(BatchedEventsList&& groupList) {
             continue;
         }
         // TODO: mQueueKey && groupStrategy
-        SenderQueueItem* item = new SenderQueueItem(std::move(data), data.size(), this, 0);
+        SenderQueueItem* item
+            = new SenderQueueItem(std::move(data), data.size(), this, 0, RawDataType::EVENT_GROUP, false);
+#ifdef APSARA_UNIT_TEST_MAIN
+        mItems.push_back(item);
+#else
         Sender::Instance()->PutIntoBatchMap(item);
+#endif
     }
 }
 
 void RemoteWriteClosure::OnSuccess(sdk::Response* response) {
-    mPromise.set_value(RemoteWriteResponseInfo{response, "", ""});
+    mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, "", ""});
 }
 
 void RemoteWriteClosure::OnFail(sdk::Response* response,
                                 const std::string& errorCode,
                                 const std::string& errorMessage) {
-    mPromise.set_value(RemoteWriteResponseInfo{response, errorCode, errorMessage});
+    mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, errorCode, errorMessage});
 }
 
 } // namespace logtail

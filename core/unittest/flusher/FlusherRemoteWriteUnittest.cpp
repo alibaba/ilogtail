@@ -2,6 +2,7 @@
 
 #include "flusher/FlusherRemoteWrite.h"
 #include "plugin/instance/FlusherInstance.h"
+#include "sdk/CurlAsynInstance.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -30,11 +31,11 @@ void FlusherRemoteWriteTest::SimpleTest() {
     //   "ClusterId": "*******",
     //   "Region": "cn-hangzhou"
     // }
-    config["endpoint"] = string(getenv("ENDPOINT"));
-    config["scheme"] = "https";
-    config["user_id"] = string(getenv("USER_ID"));
-    config["cluster_id"] = string(getenv("CLUSTER_ID"));
-    config["region"] = string(getenv("REGION"));
+    config["Endpoint"] = string(getenv("ENDPOINT"));
+    config["Scheme"] = "https";
+    config["UserId"] = string(getenv("USER_ID"));
+    config["ClusterId"] = string(getenv("CLUSTER_ID"));
+    config["Region"] = string(getenv("REGION"));
 
     flusherIns->Init(config, ctx, goPipeline);
     const auto& srcBuf = make_shared<SourceBuffer>();
@@ -44,10 +45,31 @@ void FlusherRemoteWriteTest::SimpleTest() {
     event->SetValue(MetricValue(UntypedSingleValue{1.0}));
     event->SetTimestamp(1719414245);
     event->SetTag(StringView("test_key_x"), StringView("test_value_x"));
+    event->SetTag(StringView("__job__"), StringView("remote_write_job"));
+    event->SetTag(StringView("__name__"), StringView("test_metric"));
 
     flusherIns->Start();
     flusherIns->Send(std::move(eGroup));
     flusherIns->FlushAll();
+
+    APSARA_TEST_EQUAL(1UL, flusher->mItems.size());
+
+    auto item = flusher->mItems.at(0);
+    auto req = flusher->BuildRequest(item);
+    auto curlIns = sdk::CurlAsynInstance::GetInstance();
+    curlIns->AddRequest(req);
+    RemoteWriteClosure* closure = (RemoteWriteClosure*)req->mCallBack;
+    auto future = closure->mPromise.get_future();
+    auto resInfo = future.get();
+    // APSARA_TEST_STREQ("", req->mBody.data());
+    APSARA_TEST_STREQ("", resInfo.errorCode.data());
+    APSARA_TEST_STREQ("", resInfo.errorMessage.data());
+    APSARA_TEST_EQUAL(200, resInfo.statusCode);
+    delete item;
 }
 
+UNIT_TEST_CASE(FlusherRemoteWriteTest, SimpleTest)
+
 } // namespace logtail
+
+UNIT_TEST_MAIN
