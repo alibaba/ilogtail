@@ -290,6 +290,17 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputInd
 
 void Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
     for (auto& group : groupList) {
+        // TODO: special treatment for demo
+        if (mInputs[0]->Name() == "input_ebpf_sockettraceprobe_observer") {
+            if (!group.GetEvents().empty()) {
+                if (group.GetEvents()[0].Is<MetricEvent>()) {
+                    mFlushers[0]->Send(std::move(group));
+                } else if (group.GetEvents()[0].Is<SpanEvent>()) {
+                    mFlushers[1]->Send(std::move(group));
+                }
+            }
+            continue;
+        }
         // TODO: support route
         for (size_t i = 0; i < mFlushers.size(); ++i) {
             if (i + 1 != mFlushers.size()) {
