@@ -13,19 +13,9 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.22)
-project(serializer)
+project(arms_metrics_pb)
 
-file(GLOB LIB_SOURCE_FILES *.cpp *.h)
+file(GLOB LIB_SOURCE_FILES *.cc *.h *.cpp)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} logger)
-target_link_libraries(${PROJECT_NAME} models)
-target_link_libraries(${PROJECT_NAME} batch)
-target_link_libraries(${PROJECT_NAME} plugin)
-target_link_libraries(${PROJECT_NAME} application)
-target_link_libraries(${PROJECT_NAME} common)
-target_link_libraries(${PROJECT_NAME} compression)
-target_link_libraries(${PROJECT_NAME} flusher)
-target_link_libraries(${PROJECT_NAME} snappy)
-target_link_libraries(${PROJECT_NAME} arms_metrics_pb)
-target_link_libraries(${PROJECT_NAME} span_pb)target_link_libraries(${PROJECT_NAME} prometheus_prompb)
+link_protobuf(${PROJECT_NAME})

@@ -1,0 +1,118 @@
+syntax = "proto3";
+package proto;
+
+//option java_multiple_files = false;
+//option java_package = "com.alibaba.arms.collector.proto";
+//option java_outer_classname = "ArmsMetrics";
+
+option go_package = "../protobuf";
+
+
+message MeasureBatches {
+
+  repeated MeasureBatch measureBatches = 1;
+
+}
+
+message MeasureBatch {
+  /**
+  * 版本号
+  * 初始版本为v1
+  */
+  string version = 1;
+  /**
+   * 数据包类型(应用，基础设施等)
+   * 应用相关指标:app
+   * jvm相关指标:jvm
+   * 系统相关指标:system
+   */
+  string type = 2;
+  /**
+  * 度量时间戳(单位ms)
+  */
+  int64 time = 3;
+
+
+
+  string pid = 4; //pid
+
+  string ip = 5; //实例ip
+  /**
+  * 公共维度字段
+  */
+  map<string, string> commonTags = 6;
+
+  repeated Measures measures = 7;
+}
+
+message Measures {
+  map<string, string> labels = 1;
+  repeated Measure measures = 2;
+}
+
+message Measure {
+
+  /**
+  *
+   * 度量值类型
+   * 以http.server.duration指标为例(Histogram类型): count, sum, max, min
+   * 其余指标类型valueType的值为空
+   */
+  string valueType = 1;
+
+  /**
+    * 度量名称
+    * 以http耗时指标为例: http.server.duration
+    */
+  string name = 2;
+
+  /**
+    * 度量值, null表示未赋值
+    * 以http.server.duration指标为例:
+    * sum: 1966.67, count: 6, max: 1616.88, min: 87.92
+    *
+   */
+  double value = 3;
+
+  /**
+     * 度量单位(可选),如果未配置则以约定为准
+    *  以http.server.duration指标为例: MILLISECONDS
+    */
+  EnumUnit unit = 4;
+
+  /**
+     * 指标描述(可选)
+     * 以http耗时指标为例: The duration of the inbound HTTP request
+     */
+  string desc = 5;
+}
+
+enum EnumUnit{
+  UNKNOWN = 0;
+  /**
+       * 次数
+       */
+  COUNT = 1;
+  /**
+   * 比例， 值域为0-1
+   */
+  RATIO = 2;
+  /**
+   * 百分比，值域为0-100
+   */
+  PERCENT = 3;
+  /**
+   * 字节
+   */
+  BYTE = 4;
+  /**
+   * 秒
+   */
+  SECOND = 5;
+
+  /**
+    * 毫秒
+    */
+  MILLISECONDS = 6;
+
+}
