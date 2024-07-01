@@ -57,12 +57,12 @@ void ArmsMetricsSerializerUnittest::TestSerializeEventGroupList() {
 
 BatchedEvents ArmsMetricsSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
-    group.SetTag(std::string("appName"), "cmonitor-test");
-    group.SetTag(std::string("clusterId"), "clusterId-test");
-    group.SetTag(std::string("workloadName"), "cmonitor-test");
-    group.SetTag(std::string("workloadKind"), "deployment");
-    group.SetTag(std::string("appId"), "xxxxdsgejosldie");
-    group.SetTag(std::string("source_ip"), "192.168.88.11");
+    group.SetTag(std::string("appName"), std::string("cmonitor-test"));
+    group.SetTag(std::string("clusterId"), std::string("clusterId-test"));
+    group.SetTag(std::string("workloadName"), std::string("cmonitor-test"));
+    group.SetTag(std::string("workloadKind"), std::string("deployment"));
+    group.SetTag(std::string("appId"), std::string("xxxxdsgejosldie"));
+    group.SetTag(std::string("source_ip"), std::string("192.168.88.11"));
     StringBuffer b = group.GetSourceBuffer()->CopyString(string("pack_id"));
     group.SetMetadataNoCopy(EventGroupMetaKey::SOURCE_ID, StringView(b.data, b.size));
     group.SetExactlyOnceCheckpoint(RangeCheckpointPtr(new RangeCheckpoint));

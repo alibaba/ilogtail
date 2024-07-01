@@ -156,11 +156,11 @@ std::string ArmsMetricsEventGroupListSerializer::GetValueTypeByMetricName(std::s
 
 std::string ArmsMetricsEventGroupListSerializer::GetIpFromTags(SizedMap& mTags) {
     auto& mTagsInner = mTags.mInner;
-    auto it = mTagsInner.find("source_ip");
+    auto it = mTagsInner.find("ip");
     if (it != mTagsInner.end()) {
         return it->second.to_string();
     } else {
-        LOG_WARNING(sLogger, ("GetIpFromTags", "do not find source_ip, no tag"));
+        LOG_WARNING(sLogger, ("GetIpFromTags", "do not find ip, no tag"));
     }
     return "unkown";
 }
