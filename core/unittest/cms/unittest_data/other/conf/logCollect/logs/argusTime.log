@@ -1,0 +1,18 @@
+[WARN ] 2020-05-14 17:00:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:00:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:01:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:01:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:01:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:02:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:02:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:02:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:02:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:03:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:03:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:03:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:03:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:03:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:04:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:04:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!
+[WARN ] 2020-05-14 17:04:00.286012 [6164] shennong_os_component_net.cpp(line:567):result <= 0 drop it [0],t0 [1477006] t1 [1477006],cycleInterval[15000]
+[INFO ] 2020-05-14 17:04:28.739900 [6155] alimonitor_channel.cpp(line:51):no AliModuleConfig for this module(example1),skip!

@@ -1,0 +1,58 @@
+[
+  {
+    "output": [
+      {
+        "conf": {
+          "acckeyId": "x",
+          "accKeySecretSign": "xxxxxxxx",
+          "secureToken": "xxxxx",
+          "namespace": "default-aliyun",
+          "uploadEndpoint": "https://metrichub-cn-hangzhou.aliyun.com/metric/v2/put/default-aliyun"
+        },
+        "type": "cloudMonitor"
+      }
+    ],
+    "process": [
+      {
+        "metric": "heart_beat_count",
+        "filters": [
+          {
+            "column": "hb_count",
+            "type": "include",
+            "values": [
+              "user active"
+            ]
+          }
+        ],
+        "groupBys": [],
+        "calculates": [
+          {
+            "column": "hb_count",
+            "type": "count",
+            "name": "heart_beat_count"
+          }
+        ]
+      }
+    ],
+    "file": %s,
+    "split": {
+      "columns": [
+        {
+          "startIndex": 4,
+          "start": "|",
+          "name": "hb_count",
+          "end": "|"
+        }
+      ],
+      "type": "simple"
+    },
+    "add_labels": [
+      {
+        "name": "__cms_task__",
+        "type": 2,
+        "value": "124512"
+      }
+    ],
+    "interval": 60
+  }
+]

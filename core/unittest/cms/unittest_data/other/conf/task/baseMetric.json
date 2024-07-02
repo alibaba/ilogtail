@@ -1,0 +1,29 @@
+[
+    {
+        "module_name": "cpu",
+        "interval": 60,
+        "metric_list": [
+            "NCPU",
+            "USER",
+            "SYSTEM",
+            "NICE",
+            "IDLE",
+            "IRQ",
+            "SOFTIRQ",
+            "STEAL",
+            "UTIL"
+        ],
+        "add_labels": [
+            {
+                "name": "SYS_DT",
+                "value": "1,2",
+                "type": 2
+            }
+        ],
+        "blacklist": [{
+            "--comment": "shennong metric",
+            "label_name": "cmdline",
+            "label_values": ["*"]
+        }]
+    }
+]

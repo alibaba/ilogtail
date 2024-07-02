@@ -1,0 +1,1 @@
+java-Dfile.encoding= utf-8-jar/root/cise/agent.jar-ramqp://admin:cisemq@cise-worker-mq.alibaba-inc.com-samqp://admin:cisemq@cise-mq.alibaba-inc.com-whttp://cise-sys.oss-cn-hangzhou-zmf.aliyuncs.com/self/worker.jar-ohttp://cise-sys.oss-cn-hangzhou-zmf.aliyuncs.com/self/opshell.zip-p/root/cise/agent.pid-l/root/cise/agent.log

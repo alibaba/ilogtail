@@ -57,6 +57,7 @@
 #include "config/provider/CommonConfigProvider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
+#include "cms/CmsMain.h"
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
 DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
@@ -238,6 +239,7 @@ void Application::Start() {
     }
 
     LogProcess::GetInstance()->Start();
+    cms::Start(true);
 
     time_t curTime = 0, lastProfilingCheckTime = 0, lastConfigCheckTime = 0, lastUpdateMetricTime = 0,
            lastCheckTagsTime = 0, lastQueueGCTime = 0;
@@ -341,7 +343,6 @@ void Application::Exit() {
     } else {
         LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
     }
-
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();

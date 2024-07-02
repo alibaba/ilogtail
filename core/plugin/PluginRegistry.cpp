@@ -24,10 +24,18 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
+#include "flusher/FlusherArmsMetrics.h"
+#include "flusher/FlusherXTrace.h"
 #include "flusher/FlusherSLS.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
 #if defined(__linux__) && !defined(__ANDROID__)
+#include "input/InputEBPFFileObserver.h"
+#include "input/InputEBPFFileSecurity.h"
+#include "input/InputEBPFNetworkObserver.h"
+#include "input/InputEBPFNetworkSecurity.h"
+#include "input/InputEBPFProcessObserver.h"
+#include "input/InputEBPFProcessSecurity.h"
 #include "input/InputObserverNetwork.h"
 #ifdef __ENTERPRISE__
 #include "input/InputStream.h"
@@ -118,6 +126,12 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
 #if defined(__linux__) && !defined(__ANDROID__)
     RegisterInputCreator(new StaticInputCreator<InputContainerStdio>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFFileObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFFileSecurity>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFNetworkObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFNetworkSecurity>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFProcessObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFProcessSecurity>());
     RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
 #ifdef __ENTERPRISE__
     RegisterInputCreator(new StaticInputCreator<InputStream>());
@@ -144,6 +158,12 @@ void PluginRegistry::LoadStaticPlugins() {
 #endif
 
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
+    LOG_INFO(sLogger, ("FlusherArmsMetrics info", "start load FlusherArmsMetrics flusher"));
+
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherArmsMetrics>());
+
+    LOG_INFO(sLogger, ("FlusherXTraceSpan info", "start load FlusherXTraceSpan flusher"));
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherXTraceSpan>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {

@@ -1,0 +1,55 @@
+{
+    "HTTP": [
+        "{\"method\":\"GET\",\"uri\":\"http://www.baidu.com\",\"taskId\":1476145651891863554}",
+        "{\"method\":\"GET\",\"uri\":\"http://www.baidz.com\",\"taskId\":1002824}",
+        "{\"method\":\"GET\",\"uri\":\"http://www.baidx.com\",\"taskId\":140}"
+    ],
+    "PING": [
+        "{\"host\":\"www.baidu.com\",\"taskId\":980384}",
+        "{\"host\":\"cms-cloudmonitor.aliyun.com\",\"taskId\":1476145651891863555,\"effective\":\"[* * * * * 1-7]\"}"
+    ],
+    "TELNET": [
+        "{\"uri\":\"telnet://10.137.69.8:22\",\"taskId\":1476145651891863556}"
+    ],
+    "add_labels": [
+        {
+            "name": "userId",
+            "type": 2,
+            "value": "1153704480835126"
+        },
+        {
+            "name": "UDF_RENAME_SN",
+            "type": 2,
+            "value": "instanceId"
+        },
+        {
+            "name": "UDF_CC_NOCHECK",
+            "type": 2,
+            "value": "1"
+        },
+        {
+            "name": "code",
+            "type": 3,
+            "value": "status"
+        },
+        {
+            "name": "SYS_DT",
+            "type": 2,
+            "value": "7"
+        },
+        {
+            "name": "SYS_CCI",
+            "type": 2,
+            "value": "1130"
+        },
+        {
+            "name": "SYS_DT_CCI",
+            "type": 2,
+            "value": "1130:7"
+        },
+        {
+            "name": "sn",
+            "type": 0
+        }
+    ]
+}

@@ -21,4 +21,5 @@ add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} models)
 target_link_libraries(${PROJECT_NAME} plugin)
 target_link_libraries(${PROJECT_NAME} plugin_instance)
+target_link_libraries(${PROJECT_NAME} ebpf)
 

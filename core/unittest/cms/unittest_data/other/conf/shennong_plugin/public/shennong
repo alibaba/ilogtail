@@ -1,0 +1,17 @@
+{
+    "shennong_on": true,
+    "shennong2IngestionService": "http://sn2-ingestion.cn-beijing-share.aliyun-inc.com",
+    "debugMode": true,
+    "debugDetailMetric": "ClusterMonitorTest:MAX_COUNTER_METRIC",
+    "debugDetailProcess": "max_app1",
+    "debugDetailGroup": "group2",
+    "debugDetailInstance": "yc-test011165235134.na62",
+    "tjmon_on": true,
+    "debugDetailMode": true,
+    "shennongIngestionService": "http://sn2-ingestion.cn-test-share.aliyun-inc.com",
+    "tjmIngestionService": "http://sn2-ingestion.cn-test-share.aliyun-inc.com",
+    "configService": "http://sn2-ingestion.cn-test-share.aliyun-inc.com",
+    "persistRecord": true,
+    "period": "23333",
+    "maxQueueSize": "233333"
+}

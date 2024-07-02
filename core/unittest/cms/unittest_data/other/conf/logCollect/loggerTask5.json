@@ -1,0 +1,102 @@
+[
+  {
+    "add_labels": [
+      {
+        "name": "__cms_app__",
+        "type": 2,
+        "value": "CloudMonitor"
+      },
+      {
+        "name": "__cms_task__",
+        "type": 2,
+        "value": "29588"
+      },
+      {
+        "name": "__cms_agent__",
+        "type": 2,
+        "value": "host-dd2aikh2ct03e"
+      },
+      {
+        "name": "__cms_group__",
+        "type": 2,
+        "value": "182321096"
+      },
+      {
+        "name": "__cms_target__",
+        "type": 2,
+        "value": "cms-cloudmonitor011175060108.eu13"
+      },
+      {
+        "name": "instance",
+        "type": 2,
+        "value": "cms-cloudmonitor011175060108.eu13"
+      }
+    ],
+    "file": "/usr/local/cloudmonitor/local_data/logs/aa.log",
+    "interval": 60,
+    "output": [
+      {
+        "conf": {
+          "accKeySecretSign": "680a6f6975490485ed593563dbcff406",
+          "acckeyId": "STS.NV7ZTtyc8xPWB9XCxUP4rZccF",
+          "namespace": "data-check",
+          "secureToken": "CAISiwJ1q6Ft5B2yfSjIr5WCEe7AlLwZz5K8QB/pp3gAXLtetabIpDz2IH9FdHdsAugZsvw1mWFZ7vYclqV4T5hYSUnDa8ps6Y4PCoEc/TCG6aKP9rUhpMCPOwr6UmzWvqL7Z+H+U6muGJOEYEzFkSle2KbzcS7YMXWuLZyOj+wMDL1VJH7aCwBLH9BLPABvhdYHPH/KT5aXPwXtn3DbATgD2GM+qxsms/vnnJLCtEWP0QGklbdJnemrfMj4NfsLFYxkTtK40NZxcqf8yyNK43BIjvwp3fwapWyf4Y3FWQQAsk3WbfCc29luPRJ/XaUgBa9PocL7kfBWvfb4k4PqxzNKO+BJVD7P+zNnbGc6g4kagAEh2Mmuiveq63Elq6xy7K4LWiQkxq0S2+8Go20RIZi1pBOgzUbUKdStQ+8CeJffR4tAF6NIV1zIshI2waNQiWjob2NPDB+hA8a7knBtIuZSeqK0r7TG/oVVCkGlRegQ58JN4eNdTLTQ/27LLMPBq2uy0yXWos7meAwLHiK9tQONIQ==",
+          "uploadEndpoint": "http://pre-metrichub-cms.aliyuncs.com/metric/v2/put/data-check"
+        },
+        "type": "cloudMonitor"
+      }
+    ],
+    "process": [
+      {
+        "calculates": [
+          {
+            "column": "level123",
+            "interval": 0,
+            "name": "count",
+            "type": "count"
+          }
+        ],
+        "filters": [],
+        "groupBys": [
+          {
+            "column": "level",
+            "name": "level"
+          },
+          {
+            "column": "cpp11",
+            "name": "cpp"
+          }
+        ],
+        "metric": "count"
+      },
+      {
+        "calculates": [
+        ],
+        "filters": [],
+        "groupBys": [
+          {
+            "column": "level",
+            "name": "level"
+          },
+          {
+            "column": "cpp",
+            "name": "cpp"
+          }
+        ],
+        "metric": "count2"
+      }
+    ],
+    "split": {
+      "columns": [
+        {
+          "name": "level"
+        },
+        {
+          "name": "cpp"
+        }
+      ],
+      "regex": "\\[(\\S+)\\s+\\]\\s+\\S+\\s+\\d+:\\d+:\\d+\\.\\d+\\s+\\[\\d+\\]\\s+(\\S+)\\(",
+      "type": "regex"
+    }
+  }
+]

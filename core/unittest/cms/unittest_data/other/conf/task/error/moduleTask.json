@@ -1,0 +1,34 @@
+{
+    "moduleItem": [
+        {
+            "name": "cpu",
+            "cron": "[* * * * * ?]",
+            "cmd":"so://cpu test para",
+            "version":"1.0",
+            "interval": 10,
+            "output": [
+            ]
+        },
+        {
+            "name": "memory",
+            "cmd":"so://me test para",
+            "version":"1.0",
+            "interval": 20,
+            "output": [
+                {
+                    "type": "local"
+                },
+                {
+                    "type": "sls",
+                    "conf": {
+                        "accessKeyId":"xxxxx",
+                         "accessKeySecret":"xxxxx",
+                         "endpoint":"http://zhangbei-corp-share.log.aliyuncs.com",
+                         "project":"argus-sls-project",
+                         "logstore":"argus_log"
+                    }
+                }
+            ]
+        }
+    ]
+}

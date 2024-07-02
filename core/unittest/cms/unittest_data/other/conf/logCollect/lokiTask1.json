@@ -1,0 +1,62 @@
+[
+    {
+        "file": "/home/admin/cai/test.log",
+        "split": {
+            "type": "regex",
+            "regex": "^(\\[DIEGEST\\]\\s+([\\d\\s-:\\.]*)([a-z0-9]+)\\s.*)$",
+            "columns": [
+                "message",
+                "time",
+                "traceId"
+            ]
+        },
+        "process": [
+            {
+                "filters": [
+                    {
+                        "column": "message",
+                        "type": "include",
+                        "values": [
+                            "DIEGEST"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "dockerLabels": [
+            {
+                "key": "io.kubernetes.pod.name",
+                "value": "argus-prometheus",
+                "type": "contain",
+                "rename": "pod_name"
+            },
+            {
+                "key": "io.kubernetes.pod.namespace",
+                "value": "argus-prom"
+            }
+        ],
+        "add_labels": [
+            {
+                "name": "mylabel",
+                "type": 2,
+                "value": "mylabel_value"
+            }
+        ],
+        "output": [
+            {
+                "type": "loki",
+                "conf": {
+                    "labels": [
+                        "pod_name",
+                        "namespace",
+                        "traceId"
+                    ],
+                    "value": "{pod_name}_{content}",
+                    "timestamp": "time",
+                    "endpoint": "http://xxxx/loki/api/write"
+                }
+            }
+        ]
+    }
+
+]
