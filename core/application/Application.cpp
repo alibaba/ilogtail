@@ -57,6 +57,7 @@
 #include "config/provider/CommonConfigProvider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
+#include "queue/SenderQueueManager.h"
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
 DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
@@ -270,6 +271,7 @@ void Application::Start() {
 #endif
         if (curTime - lastQueueGCTime >= INT32_FLAG(queue_check_gc_interval_sec)) {
             ExactlyOnceQueueManager::GetInstance()->ClearTimeoutQueues();
+            SenderQueueManager::GetInstance()->ClearUnusedQueues();
             lastQueueGCTime = curTime;
         }
         if (curTime - lastUpdateMetricTime >= 40) {
