@@ -54,7 +54,8 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 #else
-#include "config/provider/CommonConfigProvider.h"
+#include "config/common_provider/CommonConfigProvider.h"
+#include "config/legacy_provider/LegacyCommonConfigProvider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
 
@@ -210,6 +211,7 @@ void Application::Start() {
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
     CommonConfigProvider::GetInstance()->Init("common");
+    LegacyCommonConfigProvider::GetInstance()->Init("legacy");
 #endif
 
     LogtailAlarm::GetInstance()->Init();
@@ -330,6 +332,7 @@ void Application::Exit() {
     LegacyConfigProvider::GetInstance()->Stop();
 #else
     CommonConfigProvider::GetInstance()->Stop();
+    LegacyCommonConfigProvider::GetInstance()->Stop();
 #endif
 
     LogtailMonitor::GetInstance()->Stop();

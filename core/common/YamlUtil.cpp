@@ -14,9 +14,12 @@
 
 #include "common/YamlUtil.h"
 #include "common/ExceptionBase.h"
-#include <vector>
+#include "common/StringTools.h"
 #include <algorithm>
+#include <filesystem>
 #include <string>
+#include <vector>
+
 
 using namespace std;
 
@@ -123,6 +126,125 @@ Json::Value ConvertYamlToJson(const YAML::Node& rootNode) {
             break;
     }
     return result;
+}
+
+void EmitYamlWithQuotes(const YAML::Node& node, YAML::Emitter& out) {
+    switch (node.Type()) {
+        case YAML::NodeType::Null:
+            out << YAML::Null;
+            break;
+        case YAML::NodeType::Scalar:
+            {
+                std::string value = node.Scalar();
+                if (node.Tag() == "!") { // check ""
+                    out << YAML::DoubleQuoted << value;
+                } else {
+                    out << value;
+                }
+            }
+            break;
+        case YAML::NodeType::Sequence:
+            out << YAML::BeginSeq;
+            for (const auto& subNode : node) {
+                EmitYamlWithQuotes(subNode, out);
+            }
+            out << YAML::EndSeq;
+            break;
+        case YAML::NodeType::Map:
+            out << YAML::BeginMap;
+            for (const auto& it : node) {
+                out << YAML::Key;
+                EmitYamlWithQuotes(it.first, out);
+                out << YAML::Value;
+                EmitYamlWithQuotes(it.second, out);
+            }
+            out << YAML::EndMap;
+            break;
+        default:
+            break;
+    }
+}
+
+bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, string& errorMsg) {
+    // Check if 'version' field exists, then update it to 'global.StructureType'
+    if (yamlContent["version"]) {
+        yamlContent["global"]["StructureType"] = yamlContent["version"];
+        yamlContent.remove("version"); // Remove the old 'version' field
+    }
+
+    // rename "file_log" to "input_file"
+    // combine LogPath and FilePattern to FilePaths
+    if (yamlContent["inputs"]) {
+        YAML::Node inputsNode = yamlContent["inputs"];
+        for (std::size_t i = 0; i < inputsNode.size(); ++i) {
+            YAML::Node input = inputsNode[i]; // Make a copy of the YAML::Node object
+            if (input["Type"] && input["Type"].as<string>() == "file_log") {
+                // Change type file_log to input_file
+                input["Type"] = "input_file";
+
+                // Update the 'FilePaths' field
+                if (input["LogPath"] && input["FilePattern"]) {
+                    string dirPath = input["LogPath"].as<string>();
+                    string filePattern =  input["FilePattern"].as<string>();
+
+                    filesystem::path filePath = dirPath;
+                    // Append directory search depth if MaxDepth is specified
+                    if (input["MaxDepth"] && input["MaxDepth"].as<int>() > 0) {
+                        filePath /= "**";
+                        input["MaxDirSearchDepth"] = input["MaxDepth"];
+                    }
+
+                    filePath /= filePattern;
+                    string finalPath = filePath.string();
+                    input["FilePaths"] = std::vector<std::string>{finalPath};
+                } else {
+                    errorMsg = "LogPath or FilePattern not found in file_log input";
+                    return false;
+                }
+
+                // delete LogPath, FilePattern, and MaxDepth
+                input.remove("LogPath");
+                input.remove("FilePattern");
+                input.remove("MaxDepth");
+
+                if (input["TopicFormat"]) {
+                    string topicFormat = input["TopicFormat"].as<string>();
+                    string prefix = "costomized://";
+                    if (StartWith(topicFormat, prefix)) {
+                        // remove "customized://"
+                        input["TopicFormat"] = topicFormat.substr(prefix.size());
+                        yamlContent["global"]["TopicType"] = "customized";                        
+                    }
+                }
+            }
+            inputsNode[i] = input;            
+        }
+        // Update the 'inputs' section in the YAML content
+        yamlContent["inputs"] = inputsNode;
+    }
+
+
+    // rename processor_regex_accelerate to processor_parse_regex_native
+    // rename processor_json_accelerate to processor_parse_json_native
+    // rename processor_delimiter_accelerate to processor_parse_delimiter_native
+    if (yamlContent["processors"]) {
+        YAML::Node processorsNode = yamlContent["processors"];
+        for (std::size_t i = 0; i < processorsNode.size(); ++i) {
+            YAML::Node processor = processorsNode[i];
+            if (processor["Type"] && processor["Type"].as<string>() == "processor_regex_accelerate") {
+                processor["Type"] = "processor_parse_regex_native";
+            } else if (processor["Type"] && processor["Type"].as<string>() == "processor_json_accelerate") {
+                processor["Type"] = "processor_parse_json_native";
+            } else if (processor["Type"] && processor["Type"].as<string>() == "processor_delimiter_accelerate") {
+                processor["Type"] = "processor_parse_delimiter_native";
+            }
+            processorsNode[i] = processor;
+        }
+        // Update the 'processors' section in the YAML content
+        yamlContent["processors"] = processorsNode;
+    }
+
+    return true;
 }
 
 } // namespace logtail
