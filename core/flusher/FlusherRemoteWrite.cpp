@@ -10,7 +10,8 @@ namespace logtail {
 
 const string FlusherRemoteWrite::sName = "flusher_remote_write";
 
-FlusherRemoteWrite::FlusherRemoteWrite() {
+FlusherRemoteWrite::FlusherRemoteWrite() : mRegion(Sender::Instance()->GetDefaultRegion()) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher", ""));
 }
 
 
@@ -48,34 +49,40 @@ bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGo
     DefaultFlushStrategyOptions strategy{
         static_cast<uint32_t>(1024 * 1024), static_cast<uint32_t>(5000), static_cast<uint32_t>(1)};
     if (!mBatcher.Init(Json::Value(), this, strategy, false)) {
-        // TODO: throws exception
+        LOG_WARNING(sLogger, ("mBatcher init info:", "init err"));
         return false;
     }
 
     mGroupSerializer = make_unique<RemoteWriteEventGroupSerializer>(this);
 
+    LOG_INFO(sLogger, ("init info:", "prometheus remote write init successful !"));
+
     return true;
 }
 
 void FlusherRemoteWrite::Send(PipelineEventGroup&& g) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher Send", sName));
     vector<BatchedEventsList> res;
     mBatcher.Add(std::move(g), res);
     SerializeAndPush(std::move(res));
 }
 
 void FlusherRemoteWrite::Flush(size_t key) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher Flush", sName));
     BatchedEventsList res;
     mBatcher.FlushQueue(key, res);
     SerializeAndPush(std::move(res));
 }
 
 void FlusherRemoteWrite::FlushAll() {
+    LOG_INFO(sLogger, ("LOG_INFO flusher FlushAll", sName));
     vector<BatchedEventsList> res;
     mBatcher.FlushAll(res);
     SerializeAndPush(std::move(res));
 }
 
 sdk::AsynRequest* FlusherRemoteWrite::BuildRequest(SenderQueueItem* item) const {
+    LOG_INFO(sLogger, ("LOG_INFO flusher BuildRequest", sName));
     RemoteWriteClosure* closure = new RemoteWriteClosure();
     sdk::Response* response = new sdk::Response();
     string httpMethod = "POST";
@@ -91,12 +98,14 @@ sdk::AsynRequest* FlusherRemoteWrite::BuildRequest(SenderQueueItem* item) const 
 }
 
 void FlusherRemoteWrite::SerializeAndPush(std::vector<BatchedEventsList>&& groupLists) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher SerializeAndPush", sName));
     for (auto& groupList : groupLists) {
         SerializeAndPush(std::move(groupList));
     }
 }
 
 void FlusherRemoteWrite::SerializeAndPush(BatchedEventsList&& groupList) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher SerializeAndPush", sName));
     for (auto& batchedEv : groupList) {
         string data, compressedData, errMsg;
         mGroupSerializer->Serialize(std::move(batchedEv), data, errMsg);
@@ -123,6 +132,7 @@ void FlusherRemoteWrite::SerializeAndPush(BatchedEventsList&& groupList) {
 
 void FlusherRemoteWrite::PushToQueue(string&& data, size_t rawSize, RawDataType type) {
     // TODO: mQueueKey && groupStrategy
+    LOG_INFO(sLogger, ("LOG_INFO flusher PushToQueue", sName));
     SenderQueueItem* item = new SenderQueueItem(std::move(data), rawSize, this, mContext->GetProcessQueueKey(), type);
 #ifdef APSARA_UNIT_TEST_MAIN
     mItems.push_back(item);

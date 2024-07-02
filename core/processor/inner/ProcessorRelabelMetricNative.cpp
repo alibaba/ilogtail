@@ -27,6 +27,7 @@ const string ProcessorRelabelMetricNative::sName = "processor_relabel_metric_nat
 
 // only for inner processor
 bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
+    LOG_INFO(sLogger, ("LOG_INFO processor config", config.toStyledString()));
     std::string errorMsg;
     if (config.isMember("metric_relabel_configs") && config["metric_relabel_configs"].isArray()
         && config["metric_relabel_configs"].size() > 0) {
@@ -34,6 +35,7 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
             relabelConfigs.emplace_back(item);
             if (!relabelConfigs.back().Validate()) {
                 errorMsg = "metric_relabel_configs is invalid";
+                LOG_ERROR(sLogger, ("init prometheus processor failed", errorMsg));
                 return false;
             }
         }
@@ -44,6 +46,7 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
 }
 
 void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
+    LOG_INFO(sLogger, ("LOG_INFO processor process", sName)("config", mContext->GetConfigName()));
     if (metricGroup.GetEvents().empty()) {
         return;
     }
@@ -74,6 +77,7 @@ bool ProcessorRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) c
 void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
                                                 PipelineEventPtr&& e,
                                                 EventsContainer& newEvents) {
+    LOG_INFO(sLogger, ("processor ProcessEvent", sName)("config", mContext->GetConfigName()));
     if (!IsSupportedEvent(e)) {
         newEvents.emplace_back(std::move(e));
         return;
@@ -102,6 +106,7 @@ void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
 
         // set metricEvent name
         if (!result.Get("__name__").empty()) {
+            LOG_INFO(sLogger, ("processor set name", result.Get("__name__"))("config", mContext->GetConfigName()));
             sourceEvent.SetName(result.Get("__name__"));
         }
         newEvents.emplace_back(std::move(e));
