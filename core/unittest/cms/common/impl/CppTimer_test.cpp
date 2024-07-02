@@ -21,7 +21,7 @@ TEST(CommonCppTimerTest, ThrowException) {
         ThrowWithTrace<std::runtime_error>("ByDesign");
     }, 0);
     EXPECT_GT(timerId, CppTime::timer_id{0});
-    EXPECT_EQ(timer.events.size(), 1);
+    EXPECT_EQ(timer.events.size(), size_t(1));
 
     // 异常抛出后，timer仍能正常调度
     SyncQueue<int> queue(1);
@@ -42,7 +42,7 @@ TEST(CommonCppTimerTest, Add) {
         queue << callCount;
     }, std::chrono::milliseconds{1});
     EXPECT_GT(timerId, CppTime::timer_id{0});
-    EXPECT_EQ(timer.events.size(), 1);
+    EXPECT_EQ(timer.events.size(), size_t(1));
 
     EXPECT_TRUE(queue.Wait(std::chrono::milliseconds{2})); // 最多等两毫秒
     timer.remove(timerId);
@@ -117,11 +117,11 @@ TEST(CommonCppTimerTest, SharedPtrEvent) {
 
     decltype(data.use_count()) refCount = 0;
     queue >> refCount;
-    EXPECT_EQ(2, refCount);  // data:1, timer:2
+    EXPECT_EQ(decltype(data.use_count())(2), refCount);  // data:1, timer:2
 
     data.reset();
     queue >> refCount; // 避开干扰
 
     queue >> refCount;
-    EXPECT_EQ(1, refCount);
+    EXPECT_EQ(decltype(data.use_count())(1), refCount);
 }

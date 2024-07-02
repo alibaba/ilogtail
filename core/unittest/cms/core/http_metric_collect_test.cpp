@@ -33,7 +33,7 @@ TEST_F(HttpMetricCollectTest, Test) {
     string type;
     EXPECT_TRUE(pCollect->ParseHeader(header, type, tagMap, errorMsg));
     EXPECT_EQ(type, "metrics");
-    EXPECT_EQ(tagMap.size(), 1);
+    EXPECT_EQ(tagMap.size(), size_t(1));
     EXPECT_EQ(tagMap["test_tag"], "test");
     header = "POST /shennong/test_tag/test/helle/world/test";
     tagMap.clear();
@@ -43,13 +43,13 @@ TEST_F(HttpMetricCollectTest, Test) {
     tagMap.clear();
     type.clear();
     EXPECT_TRUE(pCollect->ParseHeader(header, type, tagMap, errorMsg));
-    EXPECT_EQ(tagMap.size(), 2);
+    EXPECT_EQ(tagMap.size(), size_t(2));
     EXPECT_EQ(type, "shennong");
     header = "POST /shennong/test_tag@base64/dGVzdA==";
     tagMap.clear();
     type.clear();
     EXPECT_TRUE(pCollect->ParseHeader(header, type, tagMap, errorMsg));
-    EXPECT_EQ(tagMap.size(), 1);
+    EXPECT_EQ(tagMap.size(), size_t(1));
     EXPECT_EQ(tagMap["test_tag"], "test");
     EXPECT_EQ(type, "shennong");
 }

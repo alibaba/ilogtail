@@ -26,7 +26,9 @@ include_directories(
     ${DEPS_INCLUDE_ROOT}/zlib
     ${DEPS_INCLUDE_ROOT}/sigar-1.6
 )
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function -Wno-sign-compare")
+if (NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function -Wall")
+endif()
 # ----argusagent for tmp by @chengjie.hcj ---------------------------------------------------------------------------------
 
 add_definitions(-DAPSARA_UNIT_TEST_MAIN)

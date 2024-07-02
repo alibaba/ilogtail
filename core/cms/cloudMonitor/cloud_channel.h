@@ -4,6 +4,7 @@
 #include <list>
 #include <vector>
 #include <chrono>
+#include <mutex>
 
 #include "common/InstanceLock.h"
 #include "common/ModuleData.h"
@@ -77,7 +78,10 @@ private:
                              CloudMetricConfig &metricConfig) const;
 
     bool doSend(const char *, const common::HttpRequest &, common::HttpResponse &, int tryTimes) const;
+
+    argus::NodeItem nodeItem() const;
 private:
+    mutable std::mutex mutex;
     SafeList<CloudMsg> mMsgs;
 
     std::vector<argus::MetricItem> mMetricItems;

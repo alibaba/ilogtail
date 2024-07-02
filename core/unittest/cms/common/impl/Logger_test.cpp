@@ -186,7 +186,7 @@ TEST(CommonLoggerTest, Rotate) {
     memset(line, '-', sizeof(line) - 1);
     LOG(&logger, LEVEL_INFO, line);
     LOG(&logger, LEVEL_INFO, "----------------");
-    EXPECT_EQ(logger.getLogFiles().size(), 2);
+    EXPECT_EQ(logger.getLogFiles().size(), size_t(2));
 
     Logger stdoutLogger;
     int count = 0;
@@ -213,7 +213,7 @@ TEST(CommonLoggerTest, Rotate2) {
     LOG(&logger, LEVEL_INFO, line);
     LOG(&logger, LEVEL_INFO, line);
     LOG(&logger, LEVEL_INFO, "----------------");
-    EXPECT_EQ(logger.getLogFiles().size(), 3);
+    EXPECT_EQ(logger.getLogFiles().size(), size_t(3));
 
     Logger stdoutLogger;
     int count = 0;
@@ -232,7 +232,7 @@ TEST(CommonLoggerTest, CountWith2) {
 
     Logger logger;
     logger.setFileSize(256);
-    EXPECT_EQ(256, logger.getFileSize());
+    EXPECT_EQ(size_t(256), logger.getFileSize());
     logger.setCount(2);
     EXPECT_TRUE(logger.setup(logFile.string()));
     ASSERT_TRUE(fs::exists(logFile));
@@ -242,7 +242,7 @@ TEST(CommonLoggerTest, CountWith2) {
     LOG_I(&logger, line);
     LOG_I(&logger, line);
     LOG_I(&logger, "----------------");
-    EXPECT_EQ(logger.getLogFiles().size(), 2);
+    EXPECT_EQ(logger.getLogFiles().size(), size_t(2));
 
     Logger stdoutLogger;
     int count = 0;

@@ -13,7 +13,7 @@ TEST(CommonLazyTest, DoTest) {
     }
     {
         Lazy<std::string> lazyString("hello");
-        EXPECT_EQ(5, lazyString->size());
+        EXPECT_EQ(size_t(5), lazyString->size());
     }
 
     struct tagStub {

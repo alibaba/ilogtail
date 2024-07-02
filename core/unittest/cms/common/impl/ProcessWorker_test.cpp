@@ -77,10 +77,10 @@ TEST(CommonProcessWorkerTest, create) {
 
     std::vector<char> buf(8192);
     size_t size = pw.output(&buf[0], buf.size());
-    EXPECT_GT(size, 0);
+    EXPECT_GT(size, size_t(0));
     LogInfo("system-serial-number: {}", std::string(&buf[0], size));
 
-    EXPECT_EQ(0, pw.errput(&buf[0], buf.size()));
+    EXPECT_EQ(size_t(0), pw.errput(&buf[0], buf.size()));
 #endif
 }
 
@@ -142,7 +142,7 @@ TEST(CommonProcessWorkerTest, enumChildProcess) {
     std::set<pid_t> pidSet = ProcessWorker::enumChildProcess(1);
     LogDebug("process(1)'s children count: {}", pidSet.size());
 #if defined(__linux__) || defined(__unix__) || defined(SOLARIS)
-    EXPECT_GT(pidSet.size(), 1);
+    EXPECT_GT(pidSet.size(), size_t(1));
 #else
     EXPECT_TRUE(pidSet.empty());
 #endif

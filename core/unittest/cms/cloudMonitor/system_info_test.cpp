@@ -54,7 +54,7 @@ TEST_F(CmsSystemInfoTest, highPriorityIPFirst) {
             std::string("192.168.1.1"),
             std::string("30.52.96.38"),
     };
-    ASSERT_EQ(2, ips.size());
+    ASSERT_EQ(size_t(2), ips.size());
     highPriorityIPFirst(ips);
     EXPECT_EQ(ips[0], "30.52.96.38");
     EXPECT_EQ(ips[1], "192.168.1.1");

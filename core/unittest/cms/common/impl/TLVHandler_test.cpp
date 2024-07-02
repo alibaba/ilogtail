@@ -32,7 +32,7 @@ TEST(CommonTLVPackageTest, resetSendLen) {
     TLVPackage package;
     package.m_sendLen = 1;
     package.resetSendLen();
-    EXPECT_EQ(0, package.m_sendLen);
+    EXPECT_EQ(decltype(package.m_sendLen)(0), package.m_sendLen);
 }
 
 TEST(CommonTLVPackageTest, serialize) {
@@ -41,7 +41,7 @@ TEST(CommonTLVPackageTest, serialize) {
     package.setValue("hello");
 
     const char szExpect[] = "\0\3\0\0\0\5hello";
-    EXPECT_EQ(sizeof(szExpect), 12);
+    EXPECT_EQ(sizeof(szExpect), size_t(12));
     std::string expect = std::string(szExpect, sizeof(szExpect) - 1);
     EXPECT_EQ(expect.size(), sizeof(szExpect) - 1);
     EXPECT_EQ(expect, package.serialize());
@@ -211,7 +211,7 @@ static void testSendOK() {
         TNetWorker netWorker;
         TLVHandler handler;
         EXPECT_EQ(0, handler.sendPackage(&netWorker, package));
-        EXPECT_EQ(package.m_sendLen, 0);
+        EXPECT_EQ(package.m_sendLen, decltype(package.m_sendLen)(0));
         EXPECT_EQ(std::string(szPackage, szPackage + sizeof(szPackage) - 1), netWorker.str());
     }
 }

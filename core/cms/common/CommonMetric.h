@@ -19,6 +19,7 @@ namespace common {
         double value = 0;
         std::map<std::string, std::string> tagMap;
 
+        virtual ~CommonMetricBase() = 0;
         virtual std::string toString(int tabNum) const = 0;
         std::string toString() const {
             return toString(0);

@@ -42,7 +42,7 @@ TEST_F(CoreModuleTest, Module) {
 
     int len = pModule.Collect(buf);
     ASSERT_GT(len, MIN_LEN);
-    ASSERT_EQ(len, strlen(buf));
+    ASSERT_EQ(len, int(strlen(buf)));
     CollectData collectData;
     ModuleData::convertStringToCollectData(buf, collectData);
 

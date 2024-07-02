@@ -8,7 +8,7 @@
 TEST(CommonSafeVector, RandomFalse) {
     SafeVector<int> vec;
     EXPECT_TRUE(vec.IsEmpty());
-    EXPECT_EQ(vec.Size(), 0);
+    EXPECT_EQ(vec.Size(), size_t(0));
     bool called = false;
     int index = vec.Random([&](int, int &v) {
         called = true;
@@ -23,14 +23,14 @@ TEST(CommonSafeVector, Reserve) {
     SafeVector<int> vec;
     vec.Reserve(5);
     EXPECT_TRUE(vec.IsEmpty());
-    EXPECT_EQ(vec.Size(), 0);
+    EXPECT_EQ(vec.Size(), size_t(0));
 }
 
 TEST(CommonSafeVector, RandomOK) {
     SafeVector<int> vec;
     vec.Resize(5);
     EXPECT_FALSE(vec.IsEmpty());
-    EXPECT_EQ(vec.Size(), 5);
+    EXPECT_EQ(vec.Size(), size_t(5));
     EXPECT_EQ(vec[0], 0);
 
     int called = 0;
@@ -47,7 +47,7 @@ TEST(CommonSafeVector, ForEach) {
     SafeVector<int> vec;
     vec.Resize(5, 1);
     EXPECT_FALSE(vec.IsEmpty());
-    EXPECT_EQ(vec.Size(), 5);
+    EXPECT_EQ(vec.Size(), size_t(5));
     EXPECT_EQ(vec[0], 1);
 
     vec[0] = 0;
@@ -61,7 +61,7 @@ TEST(CommonSafeVector, ForEach) {
 
     vec.PushBack(100);
     vec.EmplaceBack(101);
-    EXPECT_EQ(7, vec.Size());
+    EXPECT_EQ(size_t(7), vec.Size());
     EXPECT_EQ(100, vec[-2]);
     EXPECT_EQ(101, vec[-1]);
 

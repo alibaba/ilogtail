@@ -35,23 +35,23 @@ TEST_F(CmsMemoryCollectTest, Collect) {
     string data;
     int collectLen = p_shared->Collect(data);
     EXPECT_EQ(collectLen > 0, true);
-    EXPECT_EQ(collectLen, data.size());
+    EXPECT_EQ(collectLen, int(data.size()));
     cout << "collectResult:" << data << endl;
     CollectData collectData;
     ModuleData::convertStringToCollectData(data, collectData);
     EXPECT_EQ(collectData.moduleName, p_shared->mModuleName);
 #ifdef ENABLE_MEM_SWAP
-    int count = 3;
+    size_t count = 3;
 #else
-    int count = 2;
+    size_t count = 2;
 #endif
     EXPECT_EQ(collectData.dataVector.size(), count);
     int index = 0;
-    EXPECT_EQ(collectData.dataVector[index++].valueMap.size(), 9);
+    EXPECT_EQ(collectData.dataVector[index++].valueMap.size(), size_t(9));
 #ifdef ENABLE_MEM_SWAP
-    EXPECT_EQ(collectData.dataVector[index++].valueMap.size(), 7);
+    EXPECT_EQ(collectData.dataVector[index++].valueMap.size(), size_t(7));
 #endif
-    EXPECT_EQ(collectData.dataVector[index++].valueMap.size(), 1);
+    EXPECT_EQ(collectData.dataVector[index++].valueMap.size(), size_t(1));
 }
 
 TEST_F(CmsMemoryCollectTest, memory) {

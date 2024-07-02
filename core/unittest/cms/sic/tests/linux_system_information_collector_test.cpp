@@ -56,6 +56,13 @@ extern void completeSicMemoryInformation(SicMemoryInformation &memInfo,
 extern bool IsDev(const std::string &dirName);
 extern std::string __printDirStat(const char *file, int line, const std::string &dirName, struct stat &ioStat);
 
+template<typename T1, typename T2, typename T3>
+static inline void absMinusExpectLessThan(const T1 &a, const T2 &b, const T3 &expectMin) {
+    EXPECT_LE(AbsMinus(a, b), decltype(a - b)(expectMin));
+}
+
+/// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// SicLinuxCollectorTest
 class SicLinuxCollectorTest : public testing::Test {
 protected:
     void SetUp() override {
@@ -77,10 +84,9 @@ public:
 };
 
 TEST_F(SicLinuxCollectorTest, Hex2Int) {
-    EXPECT_EQ(15, Hex2Int("F"));
-    EXPECT_EQ(15, Hex2Int("f"));
-
-    EXPECT_EQ(255, Hex2Int("fF"));
+    EXPECT_EQ(decltype(Hex2Int(""))(15), Hex2Int("F"));
+    EXPECT_EQ(decltype(Hex2Int(""))(15), Hex2Int("f"));
+    EXPECT_EQ(decltype(Hex2Int(""))(255), Hex2Int("fF"));
 }
 
 TEST_F(SicLinuxCollectorTest, __printDirStat) {
@@ -91,19 +97,19 @@ TEST_F(SicLinuxCollectorTest, __printDirStat) {
 }
 
 TEST_F(SicLinuxCollectorTest, UtilsTest) {
-    EXPECT_EQ(10, convert<unsigned long>("10"));
-    EXPECT_EQ(-10, convert<unsigned long>("-10"));
-    EXPECT_EQ(10, convert<unsigned long>("10a"));
-    EXPECT_EQ(1, convert<unsigned long>("1a0"));
-    EXPECT_EQ(0, convert<unsigned long>("a10"));
-    EXPECT_EQ(0, convert<unsigned long>("ab"));
+    EXPECT_EQ((unsigned long)(10), convert<unsigned long>("10"));
+    EXPECT_EQ((unsigned long)(-10), convert<unsigned long>("-10"));
+    EXPECT_EQ((unsigned long)(10), convert<unsigned long>("10a"));
+    EXPECT_EQ((unsigned long)(1), convert<unsigned long>("1a0"));
+    EXPECT_EQ((unsigned long)(0), convert<unsigned long>("a10"));
+    EXPECT_EQ((unsigned long)(0), convert<unsigned long>("ab"));
 
-    EXPECT_EQ(0x10, convertHex<unsigned long>("10"));
-    EXPECT_EQ(-0x10, convertHex<unsigned long>("-10"));
-    EXPECT_EQ(0x10a, convertHex<unsigned long>("10a"));
-    EXPECT_EQ(0x1, convertHex<unsigned long>("1z0"));
-    EXPECT_EQ(0xa10, convertHex<unsigned long>("a10"));
-    EXPECT_EQ(0xab, convertHex<unsigned long>("abh"));
+    EXPECT_EQ((unsigned long)(0x10),  convertHex<unsigned long>("10"));
+    EXPECT_EQ((unsigned long)(-0x10), convertHex<unsigned long>("-10"));
+    EXPECT_EQ((unsigned long)(0x10a), convertHex<unsigned long>("10a"));
+    EXPECT_EQ((unsigned long)(0x1),   convertHex<unsigned long>("1z0"));
+    EXPECT_EQ((unsigned long)(0xa10), convertHex<unsigned long>("a10"));
+    EXPECT_EQ((unsigned long)(0xab),  convertHex<unsigned long>("abh"));
 
     EXPECT_EQ(10, convert<int>("10"));
     EXPECT_EQ(-10, convert<int>("-10"));
@@ -194,7 +200,7 @@ TEST_F(SicLinuxCollectorTest, SicGetCpuListInformation2) {
     collector.SicPtr()->cpu_list_cores = std::numeric_limits<decltype(Sic::cpu_list_cores)>::max();
     std::vector<SicCpuInformation> cpus;
     _EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector, SicGetCpuListInformation(cpus));
-    EXPECT_EQ(1, cpus.size());
+    EXPECT_EQ(size_t(1), cpus.size());
 }
 
 TEST_F(SicLinuxCollectorTest, SicGetCpuListInformation1) {
@@ -211,27 +217,25 @@ TEST_F(SicLinuxCollectorTest, SicGetCpuListInformation1) {
     EXPECT_EQ(informations.size(), cpulist.number);
     ASSERT_EQ(collector.SicPtr()->cpu_list_cores, informations.size());
 
-    const std::chrono::milliseconds _100ms{100};
-    const std::chrono::milliseconds _200ms{200};
-    for (int i = 0; i < collector.SicPtr()->cpu_list_cores; ++i) {
-        EXPECT_LE(AbsMinus(informations[i].user, std::chrono::milliseconds{cpulist.data[i].user}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].nice, std::chrono::milliseconds{cpulist.data[i].nice}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].sys, std::chrono::milliseconds{cpulist.data[i].sys}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].idle, std::chrono::milliseconds{cpulist.data[i].idle}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].wait, std::chrono::milliseconds{cpulist.data[i].wait}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].irq, std::chrono::milliseconds{cpulist.data[i].irq}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].softIrq, std::chrono::milliseconds{cpulist.data[i].soft_irq}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].stolen, std::chrono::milliseconds{cpulist.data[i].stolen}), _100ms);
-        EXPECT_LE(AbsMinus(informations[i].total(), std::chrono::milliseconds{cpulist.data[i].total}), _200ms);
+    for (size_t i = 0; i < collector.SicPtr()->cpu_list_cores; ++i) {
+        absMinusExpectLessThan(informations[i].user, std::chrono::milliseconds{cpulist.data[i].user}, 100_ms);
+        absMinusExpectLessThan(informations[i].nice, std::chrono::milliseconds{cpulist.data[i].nice}, 100_ms);
+        absMinusExpectLessThan(informations[i].sys, std::chrono::milliseconds{cpulist.data[i].sys}, 100_ms);
+        absMinusExpectLessThan(informations[i].idle, std::chrono::milliseconds{cpulist.data[i].idle}, 100_ms);
+        absMinusExpectLessThan(informations[i].wait, std::chrono::milliseconds{cpulist.data[i].wait}, 100_ms);
+        absMinusExpectLessThan(informations[i].irq, std::chrono::milliseconds{cpulist.data[i].irq}, 100_ms);
+        absMinusExpectLessThan(informations[i].softIrq, std::chrono::milliseconds{cpulist.data[i].soft_irq}, 100_ms);
+        absMinusExpectLessThan(informations[i].stolen, std::chrono::milliseconds{cpulist.data[i].stolen}, 100_ms);
+        absMinusExpectLessThan(informations[i].total(), std::chrono::milliseconds{cpulist.data[i].total}, 200_ms);
     }
 }
 
 TEST_F(SicLinuxCollectorTest, GetMemoryValue) {
-    EXPECT_EQ(1024, LinuxSystemInformationCollector::GetMemoryValue('k', 1));
-    EXPECT_EQ(1024, LinuxSystemInformationCollector::GetMemoryValue('K', 1));
+    EXPECT_EQ(uint64_t(1024), LinuxSystemInformationCollector::GetMemoryValue('k', 1));
+    EXPECT_EQ(uint64_t(1024), LinuxSystemInformationCollector::GetMemoryValue('K', 1));
 
-    EXPECT_EQ(1024 * 1024, LinuxSystemInformationCollector::GetMemoryValue('m', 1));
-    EXPECT_EQ(1024 * 1024, LinuxSystemInformationCollector::GetMemoryValue('M', 1));
+    EXPECT_EQ(uint64_t(1024 * 1024), LinuxSystemInformationCollector::GetMemoryValue('m', 1));
+    EXPECT_EQ(uint64_t(1024 * 1024), LinuxSystemInformationCollector::GetMemoryValue('M', 1));
 }
 
 TEST_F(SicLinuxCollectorTest, GetMemoryRam) {
@@ -241,9 +245,9 @@ TEST_F(SicLinuxCollectorTest, GetMemoryRam) {
         _EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collect, GetMemoryRam(ram));
         auto mtrr = collect.PROCESS_DIR / "mtrr";
         if (!fs::exists(mtrr)) {
-            EXPECT_EQ(0, ram);
+            EXPECT_EQ(decltype(ram)(0), ram);
         } else {
-            EXPECT_GE(ram, 0);
+            EXPECT_GE(ram, decltype(ram)(0));
         }
     }
     {
@@ -255,7 +259,7 @@ reg02: base=0xe8000000 (3712MB), size=  32: write-combining, count=1
         GetLines(std::istringstream{mtrr}, lines);
 
         uint64_t ram = parseProcMtrr(lines);
-        EXPECT_EQ(256 * 1024 * 1024, ram);
+        EXPECT_EQ(uint64_t(256 * 1024 * 1024), ram);
     }
 }
 
@@ -267,7 +271,7 @@ TEST_F(SicLinuxCollectorTest, completeSicMemoryInformation) {
         completeSicMemoryInformation(memInfo, 50 * 1024 * 1024, 79 * 1024 * 1024, -1, [](uint64_t &ram) {
             ram = 356 * 1024 * 1024;
         });
-        EXPECT_EQ(356, memInfo.ram);
+        EXPECT_EQ(decltype(memInfo.ram)(356), memInfo.ram);
     }
     {
         SicMemoryInformation memInfo;
@@ -275,7 +279,7 @@ TEST_F(SicLinuxCollectorTest, completeSicMemoryInformation) {
         memInfo.free = 127 * 1024 * 1024;
         completeSicMemoryInformation(memInfo, 50 * 1024 * 1024, 79 * 1024 * 1024, -1,
                                      [](uint64_t &ram) { ram = 0; });
-        EXPECT_EQ(256 + 8, memInfo.ram);
+        EXPECT_EQ(decltype(memInfo.ram)(256 + 8), memInfo.ram);
     }
 }
 
@@ -298,14 +302,14 @@ TEST_F(SicLinuxCollectorTest, SicGetMemoryInformationTest) {
         SicMemoryInformation information;
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, mSystemInformationCollector.SicGetMemoryInformation(information));
 
-        EXPECT_EQ(information.total, 66977550336);
-        EXPECT_EQ(information.free, 54607618048);
-        EXPECT_EQ(information.used, 12369932288);
-        EXPECT_EQ(information.ram, 63874);
-        EXPECT_EQ(information.actualUsed, 2062565376);
-        EXPECT_EQ(information.actualFree, 64914984960);
-        EXPECT_LE(std::abs(information.freePercent - 96.9205124), 0.1);
-        EXPECT_LE(std::abs(information.usedPercent - 3.0794876), 0.1);
+        EXPECT_EQ(information.total, decltype(information.total)(66977550336));
+        EXPECT_EQ(information.free, decltype(information.free)(54607618048));
+        EXPECT_EQ(information.used, decltype(information.used)(12369932288));
+        EXPECT_EQ(information.ram, decltype(information.ram)(63874));
+        EXPECT_EQ(information.actualUsed, decltype(information.actualUsed)(2062565376));
+        EXPECT_EQ(information.actualFree, decltype(information.actualFree)(64914984960));
+        absMinusExpectLessThan(information.freePercent, 96.9205124, 0.1);
+        absMinusExpectLessThan(information.usedPercent, 3.0794876, 0.1);
     }
 
     {
@@ -382,11 +386,11 @@ TEST_F(SicLinuxCollectorTest, SicGetSwapInformation01) {
     sigar_swap_get(mSigar, &swap);
     output(__FILE__, __LINE__, swap);
 
-    EXPECT_LE(AbsMinus(information.total, swap.total), 100);
-    EXPECT_LE(AbsMinus(information.used, swap.used), 100);
-    EXPECT_LE(AbsMinus(information.free, swap.free), 100);
-    EXPECT_LE(AbsMinus(information.pageIn, swap.page_in), 10);
-    EXPECT_LE(AbsMinus(information.pageOut, swap.page_out), 10);
+    absMinusExpectLessThan(information.total, swap.total, 100);
+    absMinusExpectLessThan(information.used, swap.used, 100);
+    absMinusExpectLessThan(information.free, swap.free, 100);
+    absMinusExpectLessThan(information.pageIn, swap.page_in, 10);
+    absMinusExpectLessThan(information.pageOut, swap.page_out, 10);
 }
 
 TEST_F(SicLinuxCollectorTest, GetSwapPageInfo) {
@@ -395,8 +399,8 @@ TEST_F(SicLinuxCollectorTest, GetSwapPageInfo) {
 
     SicSwapInformation information;
     _EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector, GetSwapPageInfo(information));
-    EXPECT_EQ(1, information.pageIn);
-    EXPECT_EQ(2, information.pageOut);
+    EXPECT_EQ(decltype(information.pageIn)(1), information.pageIn);
+    EXPECT_EQ(decltype(information.pageOut)(2), information.pageOut);
 }
 
 TEST_F(SicLinuxCollectorTest, SicGetSwapInformation02) {
@@ -426,8 +430,7 @@ TEST_F(SicLinuxCollectorTest, SicGetInterfaceConfigListTest) {
 
         sigar_net_interface_list_t interfaceList;
         sigar_net_interface_list_get(mSigar, &interfaceList);
-        int index = 0;
-        for (index = 0; index < interfaceList.number; ++index) {
+        for (decltype(interfaceList.number) index = 0; index < interfaceList.number; ++index) {
             EXPECT_TRUE(contains(interfaceConfigList.names, interfaceList.data[index]));
         }
         sigar_net_interface_list_destroy(mSigar, &interfaceList);
@@ -457,48 +460,46 @@ TEST_F(SicLinuxCollectorTest, SicGetInterfaceConfigListTest) {
 
 TEST_F(SicLinuxCollectorTest, SicGetInterfaceInformationTest) {
     {
-        std::shared_ptr<LinuxSystemInformationCollector> mSystemInformationCollector;
-        mSystemInformationCollector =
-                std::make_shared<LinuxSystemInformationCollector>(TEST_SIC_CONF_PATH / "conf");
+        auto collector = std::make_shared<LinuxSystemInformationCollector>(TEST_SIC_CONF_PATH / "conf");
         int ret = -1;
-        ret = mSystemInformationCollector->SicInitialize();
+        ret = collector->SicInitialize();
         EXPECT_EQ(ret, SIC_EXECUTABLE_SUCCESS);
 
         SicInterfaceConfigList interfaceConfigList;
-        mSystemInformationCollector->SicGetInterfaceConfigList(interfaceConfigList);
+        collector->SicGetInterfaceConfigList(interfaceConfigList);
         for (const auto &name: interfaceConfigList.names) {
             SicNetInterfaceInformation information{};
-            mSystemInformationCollector->SicGetInterfaceInformation(name, information);
+            collector->SicGetInterfaceInformation(name, information);
             if (name == "eth11") {
-                EXPECT_EQ(information.rxBytes, 10622051605);
-                EXPECT_EQ(information.rxPackets, 25051833);
-                EXPECT_EQ(information.rxErrors, 0);
-                EXPECT_EQ(information.rxDropped, 0);
-                EXPECT_EQ(information.rxOverruns, 0);
-                EXPECT_EQ(information.rxFrame, 0);
-                EXPECT_EQ(information.txBytes, 13458290010);
-                EXPECT_EQ(information.txPackets, 38406699);
-                EXPECT_EQ(information.txErrors, 0);
-                EXPECT_EQ(information.txDropped, 0);
-                EXPECT_EQ(information.txOverruns, 0);
-                EXPECT_EQ(information.txCollisions, 0);
-                EXPECT_EQ(information.txCarrier, 0);
-                EXPECT_EQ(information.speed, -1);
+                EXPECT_EQ(information.rxBytes, decltype(information.rxBytes)(10622051605));
+                EXPECT_EQ(information.rxPackets, decltype(information.rxPackets)(25051833));
+                EXPECT_EQ(information.rxErrors, decltype(information.rxErrors)(0));
+                EXPECT_EQ(information.rxDropped, decltype(information.rxDropped)(0));
+                EXPECT_EQ(information.rxOverruns, decltype(information.rxOverruns)(0));
+                EXPECT_EQ(information.rxFrame, decltype(information.rxFrame)(0));
+                EXPECT_EQ(information.txBytes, decltype(information.txBytes)(13458290010));
+                EXPECT_EQ(information.txPackets, decltype(information.txPackets)(38406699));
+                EXPECT_EQ(information.txErrors, decltype(information.txErrors)(0));
+                EXPECT_EQ(information.txDropped, decltype(information.txDropped)(0));
+                EXPECT_EQ(information.txOverruns, decltype(information.txOverruns)(0));
+                EXPECT_EQ(information.txCollisions, decltype(information.txCollisions)(0));
+                EXPECT_EQ(information.txCarrier, decltype(information.txCarrier)(0));
+                EXPECT_EQ(information.speed, decltype(information.speed)(-1));
             } else if (name == "eth12") {
-                EXPECT_EQ(information.rxBytes, 115998540);
-                EXPECT_EQ(information.rxPackets, 464906);
-                EXPECT_EQ(information.rxErrors, 0);
-                EXPECT_EQ(information.rxDropped, 0);
-                EXPECT_EQ(information.rxOverruns, 0);
-                EXPECT_EQ(information.rxFrame, 0);
-                EXPECT_EQ(information.txBytes, 115998540);
-                EXPECT_EQ(information.txPackets, 464906);
-                EXPECT_EQ(information.txErrors, 0);
-                EXPECT_EQ(information.txDropped, 0);
-                EXPECT_EQ(information.txOverruns, 0);
-                EXPECT_EQ(information.txCollisions, 0);
-                EXPECT_EQ(information.txCarrier, 0);
-                EXPECT_EQ(information.speed, -1);
+                EXPECT_EQ(information.rxBytes, decltype(information.rxBytes)(115998540));
+                EXPECT_EQ(information.rxPackets, decltype(information.rxPackets)(464906));
+                EXPECT_EQ(information.rxErrors, decltype(information.rxErrors)(0));
+                EXPECT_EQ(information.rxDropped, decltype(information.rxDropped)(0));
+                EXPECT_EQ(information.rxOverruns, decltype(information.rxOverruns)(0));
+                EXPECT_EQ(information.rxFrame, decltype(information.rxFrame)(0));
+                EXPECT_EQ(information.txBytes, decltype(information.txBytes)(115998540));
+                EXPECT_EQ(information.txPackets, decltype(information.txPackets)(464906));
+                EXPECT_EQ(information.txErrors, decltype(information.txErrors)(0));
+                EXPECT_EQ(information.txDropped, decltype(information.txDropped)(0));
+                EXPECT_EQ(information.txOverruns, decltype(information.txOverruns)(0));
+                EXPECT_EQ(information.txCollisions, decltype(information.txCollisions)(0));
+                EXPECT_EQ(information.txCarrier, decltype(information.txCarrier)(0));
+                EXPECT_EQ(information.speed, decltype(information.speed)(-1));
             }
         }
     }
@@ -518,20 +519,20 @@ TEST_F(SicLinuxCollectorTest, SicGetInterfaceInformationTest) {
             mSystemInformationCollector->SicGetInterfaceInformation(name, information);
             sigar_net_interface_stat_t sigarNetInterfaceStat;
             sigar_net_interface_stat_get(mSigar, name.c_str(), &sigarNetInterfaceStat);
-            EXPECT_LE(AbsMinus(information.rxBytes, sigarNetInterfaceStat.rx_bytes), 10);
-            EXPECT_LE(AbsMinus(information.rxPackets, sigarNetInterfaceStat.rx_packets), 10);
-            EXPECT_LE(AbsMinus(information.rxErrors, sigarNetInterfaceStat.rx_errors), 10);
-            EXPECT_LE(AbsMinus(information.rxDropped, sigarNetInterfaceStat.rx_dropped), 10);
-            EXPECT_LE(AbsMinus(information.rxOverruns, sigarNetInterfaceStat.rx_overruns), 10);
-            EXPECT_LE(AbsMinus(information.rxFrame, sigarNetInterfaceStat.rx_frame), 10);
-            EXPECT_LE(AbsMinus(information.txPackets, sigarNetInterfaceStat.tx_packets), 10);
-            EXPECT_LE(AbsMinus(information.txBytes, sigarNetInterfaceStat.tx_bytes), 10);
-            EXPECT_LE(AbsMinus(information.txErrors, sigarNetInterfaceStat.tx_errors), 10);
-            EXPECT_LE(AbsMinus(information.txDropped, sigarNetInterfaceStat.tx_dropped), 10);
-            EXPECT_LE(AbsMinus(information.txOverruns, sigarNetInterfaceStat.tx_overruns), 10);
-            EXPECT_LE(AbsMinus(information.txCollisions, sigarNetInterfaceStat.tx_collisions), 10);
-            EXPECT_LE(AbsMinus(information.txCarrier, sigarNetInterfaceStat.tx_carrier), 10);
-            EXPECT_LE(AbsMinus(information.speed, sigarNetInterfaceStat.speed), 10);
+            absMinusExpectLessThan(information.rxBytes, sigarNetInterfaceStat.rx_bytes, 10);
+            absMinusExpectLessThan(information.rxPackets, sigarNetInterfaceStat.rx_packets, 10);
+            absMinusExpectLessThan(information.rxErrors, sigarNetInterfaceStat.rx_errors, 10);
+            absMinusExpectLessThan(information.rxDropped, sigarNetInterfaceStat.rx_dropped, 10);
+            absMinusExpectLessThan(information.rxOverruns, sigarNetInterfaceStat.rx_overruns, 10);
+            absMinusExpectLessThan(information.rxFrame, sigarNetInterfaceStat.rx_frame, 10);
+            absMinusExpectLessThan(information.txPackets, sigarNetInterfaceStat.tx_packets, 10);
+            absMinusExpectLessThan(information.txBytes, sigarNetInterfaceStat.tx_bytes, 10);
+            absMinusExpectLessThan(information.txErrors, sigarNetInterfaceStat.tx_errors, 10);
+            absMinusExpectLessThan(information.txDropped, sigarNetInterfaceStat.tx_dropped, 10);
+            absMinusExpectLessThan(information.txOverruns, sigarNetInterfaceStat.tx_overruns, 10);
+            absMinusExpectLessThan(information.txCollisions, sigarNetInterfaceStat.tx_collisions, 10);
+            absMinusExpectLessThan(information.txCarrier, sigarNetInterfaceStat.tx_carrier, 10);
+            absMinusExpectLessThan(information.speed, sigarNetInterfaceStat.speed, 10);
         }
     }
 }
@@ -622,17 +623,17 @@ TEST_F(SicLinuxCollectorTest, SicGetInterfaceConfigTest) {
             SicInterfaceConfig interfaceConfig;
             mSystemInformationCollector->SicGetInterfaceConfig(interfaceConfig, name);
             if (name == "eth11") {
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[0], 33022);
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[1], 0);
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[2], 4282258946);
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[3], 4062314750);
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[0], uint32_t(33022));
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[1], uint32_t(0));
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[2], uint32_t(4282258946));
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[3], uint32_t(4062314750));
                 EXPECT_EQ(interfaceConfig.prefix6Length, 64);
                 EXPECT_EQ(interfaceConfig.scope6, 32);
             } else if (name == "eth12") {
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[0], 0);
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[1], 0);
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[2], 0);
-                EXPECT_EQ(interfaceConfig.address6.addr.in6[3], 16777216);
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[0], uint32_t(0));
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[1], uint32_t(0));
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[2], uint32_t(0));
+                EXPECT_EQ(interfaceConfig.address6.addr.in6[3], uint32_t(16777216));
                 EXPECT_EQ(interfaceConfig.prefix6Length, 128);
                 EXPECT_EQ(interfaceConfig.scope6, 16);
             }
@@ -739,7 +740,7 @@ TEST_F(SicLinuxCollectorTest, SicGetNetStateTest2) {
         for (int i = 0; i <= SIC_TCP_UNKNOWN; ++i) {
             if (netState.tcpStates[i] != sigarNetStat.tcp_states[i]) {
                 std::string name = GetTcpStateName(EnumTcpState(i));
-                std::cout << ", netStat[" << name << "]:      " << netState.tcpStates[i]
+                std::cout << "*** netStat[" << name << "]: " << netState.tcpStates[i]
                           << ", sigarNetStat[" << name << "]: " << sigarNetStat.tcp_states[i]
                           << std::endl;
             }
@@ -771,7 +772,7 @@ TEST_F(SicLinuxCollectorTest, SicGetFileSystemListInformationTest) {
     sigar_file_system_list_t fslist;
     sigar_file_system_list_get(mSigar, &fslist);
 
-    for (int i = 0; i < fileSystems.size(); ++i) {
+    for (size_t i = 0; i < fileSystems.size(); ++i) {
         std::cout << fileSystems[i].dirName << " " << fileSystems[i].devName << std::endl;
         EXPECT_EQ((int) fileSystems[i].type, (int) fslist.data[i].type);
         EXPECT_EQ(fileSystems[i].dirName, fslist.data[i].dir_name);
@@ -860,12 +861,12 @@ TEST_F(SicLinuxCollectorTest, SicGetFileSystemUsageTest) {
             std::cout << "Try Count: " << i << std::endl;
 
             if (ret == SIC_EXECUTABLE_SUCCESS && ret == ret1) {
-                EXPECT_LE(AbsMinus(fileSystemUsage.total, sigarFileSystemUsage.total), 1024);
-                EXPECT_LE(AbsMinus(fileSystemUsage.free, sigarFileSystemUsage.free), 1024);
-                EXPECT_LE(AbsMinus(fileSystemUsage.used, sigarFileSystemUsage.used), 1024);
-                EXPECT_LE(AbsMinus(fileSystemUsage.avail, sigarFileSystemUsage.avail), 1024);
-                EXPECT_LE(AbsMinus(fileSystemUsage.files, sigarFileSystemUsage.files), 100);
-                EXPECT_LE(AbsMinus(fileSystemUsage.freeFiles, sigarFileSystemUsage.free_files), 100);
+                absMinusExpectLessThan(fileSystemUsage.total, sigarFileSystemUsage.total, 1024);
+                absMinusExpectLessThan(fileSystemUsage.free, sigarFileSystemUsage.free, 1024);
+                absMinusExpectLessThan(fileSystemUsage.used, sigarFileSystemUsage.used, 1024);
+                absMinusExpectLessThan(fileSystemUsage.avail, sigarFileSystemUsage.avail, 1024);
+                absMinusExpectLessThan(fileSystemUsage.files, sigarFileSystemUsage.files, 100);
+                absMinusExpectLessThan(fileSystemUsage.freeFiles, sigarFileSystemUsage.free_files, 100);
             }
 
             /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -889,28 +890,28 @@ TEST_F(SicLinuxCollectorTest, SicGetFileSystemUsageTest) {
             }
 
             if (ret == SIC_EXECUTABLE_SUCCESS && ret == ret1 && (!diskUsage.devName.empty() || !diskUsage.dirName.empty())) {
-                EXPECT_LE(AbsMinus(diskUsage.time, sigarDiskUsage.time), 100);
-                EXPECT_LE(AbsMinus(diskUsage.rTime, sigarDiskUsage.rtime), 100);
-                EXPECT_LE(AbsMinus(diskUsage.wTime, sigarDiskUsage.wtime), 100);
-                EXPECT_LE(AbsMinus(diskUsage.qTime, sigarDiskUsage.qtime), 100);
-                EXPECT_LE(AbsMinus(diskUsage.reads, sigarDiskUsage.reads), 100);
-                EXPECT_LE(AbsMinus(diskUsage.writes, sigarDiskUsage.writes), 100);
-                EXPECT_LE(AbsMinus(diskUsage.writeBytes, sigarDiskUsage.write_bytes), 1024 * 1024);
-                EXPECT_LE(AbsMinus(diskUsage.readBytes, sigarDiskUsage.read_bytes), 1024 * 1024);
-                EXPECT_LE(AbsMinus(diskUsage.snapTime, sigarDiskUsage.snaptime), 100);
+                absMinusExpectLessThan(diskUsage.time, sigarDiskUsage.time, 100);
+                absMinusExpectLessThan(diskUsage.rTime, sigarDiskUsage.rtime, 100);
+                absMinusExpectLessThan(diskUsage.wTime, sigarDiskUsage.wtime, 100);
+                absMinusExpectLessThan(diskUsage.qTime, sigarDiskUsage.qtime, 100);
+                absMinusExpectLessThan(diskUsage.reads, sigarDiskUsage.reads, 100);
+                absMinusExpectLessThan(diskUsage.writes, sigarDiskUsage.writes, 100);
+                absMinusExpectLessThan(diskUsage.writeBytes, sigarDiskUsage.write_bytes, 1024 * 1024);
+                absMinusExpectLessThan(diskUsage.readBytes, sigarDiskUsage.read_bytes, 1024 * 1024);
+                absMinusExpectLessThan(diskUsage.snapTime, sigarDiskUsage.snaptime, 100);
                 if (std::isnan(sigarDiskUsage.service_time)) {
                     EXPECT_TRUE(diskUsage.serviceTime == 0.0 || std::isnan(diskUsage.serviceTime));
                 } else if (!std::isinf(sigarDiskUsage.service_time)) {
                     EXPECT_FALSE(std::isfinite(diskUsage.serviceTime));
                 } else {
-                    EXPECT_LE(AbsMinus(diskUsage.serviceTime, sigarDiskUsage.service_time), 100);
+                    absMinusExpectLessThan(diskUsage.serviceTime, sigarDiskUsage.service_time, 100);
                 }
                 if (std::isnan(sigarDiskUsage.queue)) {
                     EXPECT_TRUE(diskUsage.queue == 0.0 || std::isnan(diskUsage.queue));
                 } else if (!std::isfinite(sigarDiskUsage.queue)) {
                     EXPECT_FALSE(std::isfinite(diskUsage.queue));
                 } else {
-                    EXPECT_LE(AbsMinus(diskUsage.queue, sigarDiskUsage.queue), 100);
+                    absMinusExpectLessThan(diskUsage.queue, sigarDiskUsage.queue, 100);
                 }
             }
         }
@@ -968,11 +969,11 @@ TEST_F(SicLinuxCollectorTest, SicGetProcessStateTest) {
 
     SicProcessMemoryInformation information;
     collector->SicGetProcessMemoryInformation(111667, information);
-    EXPECT_EQ(information.resident, 16240640);
-    EXPECT_EQ(information.share, 5582848);
-    EXPECT_EQ(information.size, 1036840960);
-    EXPECT_EQ(information.minorFaults, 3120099);
-    EXPECT_EQ(information.majorFaults, 2);
+    EXPECT_EQ(information.resident, decltype(information.resident)(16240640));
+    EXPECT_EQ(information.share, decltype(information.share)(5582848));
+    EXPECT_EQ(information.size, decltype(information.size)(1036840960));
+    EXPECT_EQ(information.minorFaults, decltype(information.minorFaults)(3120099));
+    EXPECT_EQ(information.majorFaults, decltype(information.majorFaults)(2));
 }
 
 TEST_F(SicLinuxCollectorTest, SicGetProcessTest) {
@@ -1001,7 +1002,7 @@ TEST_F(SicLinuxCollectorTest, SicGetProcessTest) {
         EXPECT_EQ(sigarProcStat.ppid, processState.parentPid);
         EXPECT_EQ(sigarProcStat.name, processState.name);
         EXPECT_EQ(sigarProcStat.threads, processState.threads);
-        EXPECT_LE(AbsMinus(sigarProcStat.nice, processState.nice), 5);
+        absMinusExpectLessThan(sigarProcStat.nice, processState.nice, 5);
 
         sigar_proc_args_t sigarArgs;
         sigarRet = sigar_proc_args_get(mSigar, pid, &sigarArgs);
@@ -1009,7 +1010,7 @@ TEST_F(SicLinuxCollectorTest, SicGetProcessTest) {
         myRet = mSystemInformationCollector->SicGetProcessArgs(pid, processArgs);
         EXPECT_EQ(sigarRet, myRet);
         EXPECT_EQ(sigarArgs.number, processArgs.args.size());
-        for (int i = 0; i < processArgs.args.size(); ++i) {
+        for (size_t i = 0; i < processArgs.args.size(); ++i) {
             EXPECT_EQ(sigarArgs.data[i], processArgs.args[i]);
         }
 
@@ -1017,7 +1018,7 @@ TEST_F(SicLinuxCollectorTest, SicGetProcessTest) {
         sigar_proc_fd_get(mSigar, pid, &sigarProcFd);
         SicProcessFd processFd;
         mSystemInformationCollector->SicGetProcessFd(pid, processFd);
-        EXPECT_LE(AbsMinus(sigarProcFd.total, processFd.total), 2);
+        absMinusExpectLessThan(sigarProcFd.total, processFd.total, 2);
 
         sigar_proc_cred_name_t sigarProcCredName;
         sigar_proc_cred_name_get(mSigar, pid, &sigarProcCredName);
@@ -1123,7 +1124,7 @@ TEST_F(SicLinuxCollectorTest, SicReadNetFile) {
         for (auto n: netState.tcpStates) {
             sum += n;
         }
-        EXPECT_EQ(0, sum);
+        EXPECT_EQ(decltype(sum)(0), sum);
     }
     {
         SicNetState netState;
@@ -1200,7 +1201,7 @@ TEST_F(SicLinuxCollectorTest, GetDiskStat2) {
 
     SicDiskUsage disk{}, device{};
     _EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector, GetDiskStat(makedev(254, 1), "", disk, device));
-    EXPECT_EQ(disk.readBytes, 1851478 * 512);
+    EXPECT_EQ(disk.readBytes, decltype(disk.readBytes)(1851478 * 512));
 }
 
 TEST_F(SicLinuxCollectorTest, SicGetIOstat) {
@@ -1239,8 +1240,8 @@ TEST_F(SicLinuxCollectorTest, SicGetIOstat) {
             SicDiskUsage disk, deviceUsage;
             _EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector,
                        GetDiskStat(ioStat.st_rdev, "/pesudo-file", disk, deviceUsage));
-            EXPECT_EQ(31508, deviceUsage.reads);
-            EXPECT_EQ(31327, disk.reads);
+            EXPECT_EQ(decltype(deviceUsage.reads)(31508), deviceUsage.reads);
+            EXPECT_EQ(decltype(disk.reads)(31327), disk.reads);
         }
     }
 
@@ -1380,7 +1381,7 @@ TEST_F(SicLinuxCollectorTest, SicGetProcessCpuInformation) {
         // 走缓存
         SicProcessCpuInformation cpuInformation2;
         _EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector, SicGetProcessCpuInformation(GetPid(), cpuInformation2));
-        EXPECT_EQ(0, cpuInformation2.percent);
+        EXPECT_EQ(decltype(cpuInformation2.percent)(0), cpuInformation2.percent);
         // 跑1ms以使当前进程产生cpu使用
         int loopCount = 0;
         auto now = std::chrono::steady_clock::now();
@@ -1429,8 +1430,8 @@ TEST_F(SicLinuxCollectorTest, NowMillis) {
     std::cout << "system_clock::now(): " << millis1 << " ms" << std::endl
               << "     gettimeofday(): " << millis2 << " ms" << std::endl;
     uint64_t diff = millis2 - millis1;
-    EXPECT_LT(diff, 50);
-    EXPECT_GE(diff, 0);
+    EXPECT_LT(diff, uint32_t(50));
+    EXPECT_GE(diff, uint32_t(0));
 }
 
 TEST_F(SicLinuxCollectorTest, SicCleanProcessCpuCacheIfNecessary) {
@@ -1445,7 +1446,7 @@ TEST_F(SicLinuxCollectorTest, SicCleanProcessCpuCacheIfNecessary) {
     cache.entries[{1, false}].expireTime = now - 10_s; // 需要被清理掉
     cache.entries[{2, false}].expireTime = now + 1_min;
     collector.SicCleanProcessCpuCacheIfNecessary();
-    EXPECT_EQ(1, cache.entries.size());
+    EXPECT_EQ(decltype(cache.entries.size())(1), cache.entries.size());
 
     EXPECT_NE(cache.entries.end(), cache.entries.find({2, false}));
 }
@@ -1458,14 +1459,14 @@ TEST_F(SicLinuxCollectorTest, SicGetProcessThreads) {
         const_cast<fs::path &>(collector.PROCESS_DIR) = TEST_SIC_CONF_PATH / "conf";
         uint64_t threads = 0;
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector.SicGetProcessThreads(111667, threads));
-        EXPECT_EQ(25, threads);
+        EXPECT_EQ(decltype(threads)(25), threads);
     }
     {
         const_cast<fs::path &>(collector.PROCESS_DIR) =
                 TEST_SIC_CONF_PATH / "conf" / "proc_1_status_no_threads";
         uint64_t threads = {1};
         EXPECT_EQ(SIC_EXECUTABLE_FAILED, collector.SicGetProcessThreads(1, threads));
-        EXPECT_EQ(0, threads);
+        EXPECT_EQ(decltype(threads)(0), threads);
     }
 }
 
@@ -1515,11 +1516,11 @@ TEST_F(SicLinuxCollectorTest, SicUpdateNetState) {
         connInfo.state = SIC_TCP_LISTEN;
         connInfo.localPort = LISTEN_PORT;
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector.SicUpdateNetState(connInfo, netState));
-        EXPECT_EQ(1, collector.SicPtr()->netListenCache.size());
+        EXPECT_EQ(size_t(1), collector.SicPtr()->netListenCache.size());
         EXPECT_NE(collector.SicPtr()->netListenCache.find(80), collector.SicPtr()->netListenCache.end());
-        EXPECT_EQ(0, netState.tcpInboundTotal);
-        EXPECT_EQ(0, netState.tcpOutboundTotal);
-        EXPECT_EQ(0, netState.udpSession);
+        EXPECT_EQ(decltype(netState.tcpInboundTotal)(0), netState.tcpInboundTotal);
+        EXPECT_EQ(decltype(netState.tcpOutboundTotal)(0), netState.tcpOutboundTotal);
+        EXPECT_EQ(decltype(netState.udpSession)(0), netState.udpSession);
     }
     {
         SicNetConnectionInformation connInfo;
@@ -1527,11 +1528,11 @@ TEST_F(SicLinuxCollectorTest, SicUpdateNetState) {
         connInfo.state = SIC_TCP_ESTABLISHED;
         connInfo.localPort = 32786;
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector.SicUpdateNetState(connInfo, netState));
-        EXPECT_EQ(1, collector.SicPtr()->netListenCache.size());
+        EXPECT_EQ(size_t(1), collector.SicPtr()->netListenCache.size());
         EXPECT_NE(collector.SicPtr()->netListenCache.find(80), collector.SicPtr()->netListenCache.end());
-        EXPECT_EQ(0, netState.tcpInboundTotal);
-        EXPECT_EQ(1, netState.tcpOutboundTotal);
-        EXPECT_EQ(0, netState.udpSession);
+        EXPECT_EQ(decltype(netState.tcpInboundTotal)(0), netState.tcpInboundTotal);
+        EXPECT_EQ(decltype(netState.tcpOutboundTotal)(1), netState.tcpOutboundTotal);
+        EXPECT_EQ(decltype(netState.udpSession)(0), netState.udpSession);
     }
     {
         SicNetConnectionInformation connInfo;
@@ -1539,21 +1540,21 @@ TEST_F(SicLinuxCollectorTest, SicUpdateNetState) {
         connInfo.state = SIC_TCP_ESTABLISHED;
         connInfo.localPort = LISTEN_PORT;
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector.SicUpdateNetState(connInfo, netState));
-        EXPECT_EQ(1, collector.SicPtr()->netListenCache.size());
+        EXPECT_EQ(size_t(1), collector.SicPtr()->netListenCache.size());
         EXPECT_NE(collector.SicPtr()->netListenCache.find(80), collector.SicPtr()->netListenCache.end());
-        EXPECT_EQ(1, netState.tcpInboundTotal);
-        EXPECT_EQ(1, netState.tcpOutboundTotal);
-        EXPECT_EQ(0, netState.udpSession);
+        EXPECT_EQ(decltype(netState.tcpInboundTotal)(1), netState.tcpInboundTotal);
+        EXPECT_EQ(decltype(netState.tcpOutboundTotal)(1), netState.tcpOutboundTotal);
+        EXPECT_EQ(decltype(netState.udpSession)(0), netState.udpSession);
     }
     {
         SicNetConnectionInformation connInfo;
         connInfo.type = SIC_NET_CONN_UDP;
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector.SicUpdateNetState(connInfo, netState));
-        EXPECT_EQ(1, collector.SicPtr()->netListenCache.size());
+        EXPECT_EQ(size_t(1), collector.SicPtr()->netListenCache.size());
         EXPECT_NE(collector.SicPtr()->netListenCache.find(80), collector.SicPtr()->netListenCache.end());
-        EXPECT_EQ(1, netState.tcpInboundTotal);
-        EXPECT_EQ(1, netState.tcpOutboundTotal);
-        EXPECT_EQ(1, netState.udpSession);
+        EXPECT_EQ(decltype(netState.tcpInboundTotal)(1), netState.tcpInboundTotal);
+        EXPECT_EQ(decltype(netState.tcpOutboundTotal)(1), netState.tcpOutboundTotal);
+        EXPECT_EQ(decltype(netState.udpSession)(1), netState.udpSession);
     }
 
     {
@@ -1564,11 +1565,11 @@ TEST_F(SicLinuxCollectorTest, SicUpdateNetState) {
         connInfo.localPort = LISTEN_PORT;
         connInfo.localAddress.family = SicNetAddress::SIC_AF_INET6; // 不统计IPv6
         EXPECT_EQ(SIC_EXECUTABLE_SUCCESS, collector.SicUpdateNetState(connInfo, netState));
-        EXPECT_EQ(1, collector.SicPtr()->netListenCache.size());
+        EXPECT_EQ(size_t(1), collector.SicPtr()->netListenCache.size());
         EXPECT_NE(collector.SicPtr()->netListenCache.find(80), collector.SicPtr()->netListenCache.end());
-        EXPECT_EQ(1, netState.tcpInboundTotal);
-        EXPECT_EQ(1, netState.tcpOutboundTotal);
-        EXPECT_EQ(1, netState.udpSession);
+        EXPECT_EQ(decltype(netState.tcpInboundTotal)(1), netState.tcpInboundTotal);
+        EXPECT_EQ(decltype(netState.tcpOutboundTotal)(1), netState.tcpOutboundTotal);
+        EXPECT_EQ(decltype(netState.udpSession)(1), netState.udpSession);
     }
 }
 
@@ -1654,7 +1655,7 @@ TEST_F(SicLinuxCollectorTest, queryDevSerialId) {
 
     if (fs::exists("/dev/vda")) {
         std::map<std::string, std::string> maps = collector.queryDevSerialId("/dev/vda");
-        EXPECT_EQ(1, maps.size());
+        EXPECT_EQ(size_t(1), maps.size());
         std::cout << "/dev/vda serial id: " << maps["/dev/vda"] << std::endl;
     }
 }

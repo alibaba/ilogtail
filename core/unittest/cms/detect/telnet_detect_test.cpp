@@ -91,37 +91,37 @@ TEST_F(Detect_TelnetDetectTest, test52) {
 TEST_F(Detect_TelnetDetectTest, ToUnixRequestBody) {
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("1234567890\n1234567890123456789");
-        EXPECT_EQ(31, actual.size());
+        EXPECT_EQ(size_t(31), actual.size());
         EXPECT_EQ("1234567890\r\n1234567890123456789", actual);
     }
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("1\n2");
-        EXPECT_EQ(4, actual.size());
+        EXPECT_EQ(size_t(4), actual.size());
         EXPECT_EQ("1\r\n2", actual);
     }
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("\n2");
-        EXPECT_EQ(3, actual.size());
+        EXPECT_EQ(size_t(3), actual.size());
         EXPECT_EQ("\r\n2", actual);
     }
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("1\n");
-        EXPECT_EQ(3, actual.size());
+        EXPECT_EQ(size_t(3), actual.size());
         EXPECT_EQ("1\r\n", actual);
     }
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("\n");
-        EXPECT_EQ(2, actual.size());
+        EXPECT_EQ(size_t(2), actual.size());
         EXPECT_EQ("\r\n", actual);
     }
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("1");
-        EXPECT_EQ(1, actual.size());
+        EXPECT_EQ(size_t(1), actual.size());
         EXPECT_EQ("1", actual);
     }
     {
         std::string actual = TelnetDetect::ToUnixRequestBody("");
-        EXPECT_EQ(0, actual.size());
+        EXPECT_EQ(size_t(0), actual.size());
         EXPECT_EQ("", actual);
     }
 }

@@ -137,6 +137,9 @@ int SystemUtil::execCmd(const std::string &cmd, std::string &out) {
 }
 
 // 获取主控ip的策略，序号越小优先级越高
+#if defined(WIN32) || defined(__APPLE__) || defined(__FreeBSD__)
+#   define MAIN_IP_USE_UDP
+#else
 static const char *mainIpCommands[] = {
         "hostname -i 2>/dev/null", // 有可能会返回多个IP
         // 2>/dev/null 屏蔽『Device "bond0" does not exist.』
@@ -144,8 +147,9 @@ static const char *mainIpCommands[] = {
         "ip ad show lo    2>/dev/null | grep lo:nc | grep inet | grep -v inet6 | awk -F ' ' '{print $2}' | awk -F '/' '{print $1}'",
         "ip ad show eth0  2>/dev/null | grep inet  | grep -v inet6 | awk -F ' ' '{print $2}' | awk -F '/' '{print $1}'",
 };
+#endif
 std::string getMainIp(bool useLast, bool testPublicIp) {
-#if defined(WIN32) || defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(MAIN_IP_USE_UDP)
     string mainIp;
     NetWorker net(__FUNCTION__);
     if (0 == net.connect<UDP>("172.22.24.82", 16666)) {

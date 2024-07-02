@@ -164,10 +164,10 @@ TEST_F(SelfMonitorTest, GetProcessStat) {
 
     double cpuUsage = static_cast<double>((cpu2 - cpu1).count()) * 100.0 / static_cast<double>(end - start);
     cout << "cpuUsage=" << cpuUsage << "% (single cpu core)" << endl;
-    EXPECT_GT(cpuUsage, 50);
+    EXPECT_GT(cpuUsage, 50.0);
 
     cout << "memUsage=" << stat.rss / (1024.0 * 1024.0) << " MB" << endl;
-    EXPECT_GT(stat.rss, 1);
+    EXPECT_GT(stat.rss, decltype(stat.rss)(1));
 
     cout << "openFile=" << stat.fdNum << endl;
 #if !defined(__APPLE__) && !defined(__FreeBSD__)

@@ -89,13 +89,13 @@ TEST(CommonTimePeriodTest, RegMatchFetch) {
     {
         std::vector<std::string> ret;
         EXPECT_EQ(1, reg_match_fetch("1", "^([0-9]+)$", 1, ret));
-        EXPECT_EQ(1, ret.size());
+        EXPECT_EQ(size_t(1), ret.size());
         EXPECT_EQ(ret[0], "1");
     }
     {
         std::vector<std::string> ret;
         EXPECT_EQ(1, reg_match_fetch("12", "^([0-9]+)$", 1, ret));
-        EXPECT_EQ(1, ret.size());
+        EXPECT_EQ(size_t(1), ret.size());
         EXPECT_EQ(ret[0], "12");
     }
     {
@@ -105,7 +105,7 @@ TEST(CommonTimePeriodTest, RegMatchFetch) {
         EXPECT_TRUE(ret.empty());
 
         EXPECT_EQ(1, reg_match_fetch("12w", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12");
         EXPECT_EQ(ret[1], "w");
     }
@@ -116,7 +116,7 @@ TEST(CommonTimePeriodTest, RegMatchFetch) {
         EXPECT_TRUE(ret.empty());
 
         EXPECT_EQ(1, reg_match_fetch("12abcL", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12abc");
         EXPECT_EQ(ret[1], "L");
     }
@@ -127,7 +127,7 @@ TEST(CommonTimePeriodTest, RegMatchFetch) {
         EXPECT_TRUE(ret.empty());
 
         EXPECT_EQ(1, reg_match_fetch("12abc#23", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12abc");
         EXPECT_EQ(ret[1], "23");
     }
@@ -136,7 +136,7 @@ TEST(CommonTimePeriodTest, RegMatchFetch) {
         std::vector<std::string> ret;
 
         EXPECT_EQ(1, reg_match_fetch("12abZ*/2B", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12abZ*");
         EXPECT_EQ(ret[1], "2B");
     }
@@ -209,7 +209,7 @@ TEST(CommonTimePeriodTest, parse02Week) {
             for (const auto &it: cron.m_timeSlice) {
                 std::cout << it->toString({CRON_WEEKDAY}) << std::endl;
             }
-            EXPECT_EQ(cron.m_timeSlice.size(), 1);
+            EXPECT_EQ(cron.m_timeSlice.size(), size_t(1));
             auto zero = std::chrono::FromSeconds(tc.seconds);   // 2018-12-13 00:00:00.000000 周四
             EXPECT_TRUE(cron.in(zero));
             EXPECT_FALSE(cron.in(zero + 24_h));
@@ -236,7 +236,7 @@ TEST(CommonTimePeriodTest, parse03Month) {
             for (const auto &it: cron.m_timeSlice) {
                 std::cout << it->toString({CRON_MONTH}) << std::endl;
             }
-            EXPECT_EQ(cron.m_timeSlice.size(), 1);
+            EXPECT_EQ(cron.m_timeSlice.size(), size_t(1));
             auto zero = std::chrono::FromSeconds(tc.seconds);   // 2018-12-13 00:00:00.000000 周四
             EXPECT_TRUE(cron.in(zero));
             EXPECT_FALSE(cron.in(zero + 30 * 24_h));
@@ -271,7 +271,7 @@ TEST(CommonTimePeriodTest, parse04W) {
         // for (const auto &it: cron.m_timeSlice) {
         //     std::cout << it->toString({CRON_MONTHDAY}) << std::endl;
         // }
-        EXPECT_EQ(cron.m_timeSlice.size(), 1);
+        EXPECT_EQ(cron.m_timeSlice.size(), size_t(1));
 
         EXPECT_TRUE(cron.in(std::chrono::FromSeconds(tc.okTs)));
         EXPECT_FALSE(cron.in(std::chrono::FromSeconds(tc.failTs)));
@@ -291,7 +291,7 @@ TEST(CommonTimePeriodTest, parse05_L) {
         TimePeriod cron;
         EXPECT_TRUE(cron.parse(cronExpr.c_str()));
         std::cout << "cron: " << cronExpr << std::endl;
-        EXPECT_EQ(cron.m_timeSlice.size(), 1);
+        EXPECT_EQ(cron.m_timeSlice.size(), size_t(1));
         EXPECT_TRUE(cron.in(std::chrono::FromSeconds(1535644800))); // 2018-08-31 Friday
     }
     {
@@ -300,7 +300,7 @@ TEST(CommonTimePeriodTest, parse05_L) {
         TimePeriod cron;
         EXPECT_TRUE(cron.parse(cronExpr.c_str()));
         std::cout << "cron: " << cronExpr << std::endl;
-        EXPECT_EQ(cron.m_timeSlice.size(), 1);
+        EXPECT_EQ(cron.m_timeSlice.size(), size_t(1));
         EXPECT_FALSE(cron.in(std::chrono::FromSeconds(1535212800 - 24 * 60 * 60)));
         EXPECT_TRUE(cron.in(std::chrono::FromSeconds(1535212800))); // 2018-08-26 Sunday
         EXPECT_FALSE(cron.in(std::chrono::FromSeconds(1535212800 + 24 * 60 * 60)));
@@ -461,7 +461,7 @@ TEST(CommonTimePeriodTest, parse09_Year) {
 
     TimePeriod cron;
     EXPECT_TRUE(cron.parse(szCronExpr));
-    ASSERT_EQ(1, cron.m_timeSlice.size());
+    ASSERT_EQ(size_t(1), cron.m_timeSlice.size());
     std::string str = cron.m_timeSlice[0]->toString({CRON_YEAR});
     std::cout << str << std::endl;
     EXPECT_EQ(str, "year   : 2019,2020,2022-2024");
@@ -491,7 +491,7 @@ TEST(CommonTimePeriodTest, parse10_PoundSign) {
 
         TimePeriod cron;
         EXPECT_TRUE(cron.parse(szCronExpr));
-        ASSERT_EQ(1, cron.m_timeSlice.size());
+        ASSERT_EQ(size_t(1), cron.m_timeSlice.size());
 
         struct {
             int64_t ts;
@@ -520,7 +520,7 @@ TEST(CommonTimePeriodTest, parse11_PoundSign_Sunday) {
 
         TimePeriod cron;
         EXPECT_TRUE(cron.parse(szCronExpr));
-        ASSERT_EQ(1, cron.m_timeSlice.size());
+        ASSERT_EQ(size_t(1), cron.m_timeSlice.size());
 
         struct {
             int64_t ts;
@@ -541,7 +541,7 @@ TEST(CommonTimePeriodTest, parse12_WeekDayRange) {
 
     TimePeriod cron;
     EXPECT_TRUE(cron.parse(szCronExpr));
-    ASSERT_EQ(1, cron.m_timeSlice.size());
+    ASSERT_EQ(size_t(1), cron.m_timeSlice.size());
 
     struct {
         int64_t ts;
@@ -572,7 +572,7 @@ TEST(CommonTimePeriodTest, parse13_Slash) {
 
         TimePeriod cron;
         EXPECT_TRUE(cron.parse(szCronExpr));
-        ASSERT_EQ(1, cron.m_timeSlice.size());
+        ASSERT_EQ(size_t(1), cron.m_timeSlice.size());
 
         constexpr int64_t Day = 24 * 60 * 60;
         const int64_t start = 1672502400 - Day; // 2023-01-01
@@ -593,7 +593,7 @@ TEST(CommonTimePeriodTest, parse13_Slash_WeekDay) {
 
         TimePeriod cron;
         EXPECT_TRUE(cron.parse(szCronExpr));
-        ASSERT_EQ(1, cron.m_timeSlice.size());
+        ASSERT_EQ(size_t(1), cron.m_timeSlice.size());
         std::cout << cron.m_timeSlice[0]->toString({CRON_WEEKDAY}) << std::endl;
         EXPECT_EQ(cron.m_timeSlice[0]->toString({CRON_WEEKDAY}), "wday   : 1010,101");
 

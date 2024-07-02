@@ -30,9 +30,9 @@ TEST_F(CoreAliScriptMetricTest, AddConstructMetrics) {
     pAliScriptMetric.AddConstructMetrics(stringLabels, numberMetrics);
     vector<CommonMetric> commonMetrics;
     pAliScriptMetric.GetCommonMetrics(commonMetrics);
-    EXPECT_EQ(commonMetrics.size(), 2);
+    EXPECT_EQ(commonMetrics.size(), size_t(2));
     for (auto commonMetric : commonMetrics) {
-        EXPECT_EQ(commonMetric.tagMap.size(), 2);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
         EXPECT_EQ(commonMetric.tagMap["labelAKey"], "LabelAValue");
         EXPECT_EQ(commonMetric.tagMap["labelBKey"], "LabelBValue");
         auto it = metricMap.find(commonMetric.name);
@@ -64,12 +64,12 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric1) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "code");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
         commonMetric = commonMetrics[1];
         EXPECT_EQ(commonMetric.name, "result");
         EXPECT_EQ(commonMetric.value, 1);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
     }
 }
@@ -112,7 +112,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric2) {
     if (!commonMetrics.empty()) {
         EXPECT_EQ(commonMetric.name, "table");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 5);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(5));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
         EXPECT_EQ(commonMetric.tagMap["hostname"], SystemUtil::getHostname());
         EXPECT_EQ(commonMetric.tagMap["instance"], "TEST_INSTANCE");
@@ -141,7 +141,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric3) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "code");
         EXPECT_EQ(commonMetric.value, 110);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
     }
 }
@@ -167,7 +167,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric4) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "code");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 2);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
         EXPECT_EQ(commonMetric.tagMap["code"], "110");
     }
@@ -189,7 +189,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric5) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "code");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 2);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
         EXPECT_EQ(commonMetric.tagMap["result"], "1");
     }
@@ -211,13 +211,13 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric6) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "code");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 2);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
         EXPECT_EQ(commonMetric.tagMap["result"], "1");
         commonMetric = commonMetrics[1];
         EXPECT_EQ(commonMetric.name, "code");
         EXPECT_EQ(commonMetric.value, 1);
-        EXPECT_EQ(commonMetric.tagMap.size(), 2);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
         EXPECT_EQ(commonMetric.tagMap["table"], "t1");
         EXPECT_EQ(commonMetric.tagMap["result"], "0");
     }
@@ -256,21 +256,21 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric8) {
     vector<CommonMetric> commonMetrics;
     EXPECT_EQ(3, pAliScriptMetric->GetCommonMetrics(commonMetrics));
     CommonMetric commonMetric;
-    if (commonMetrics.size() == 3) {
+    if (commonMetrics.size() == size_t(3)) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "value");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["key"], "status");
         commonMetric = commonMetrics[1];
         EXPECT_EQ(commonMetric.name, "value");
         EXPECT_EQ(commonMetric.value, 269);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["key"], "jobs");
         commonMetric = commonMetrics[2];
         EXPECT_EQ(commonMetric.name, "value");
         EXPECT_EQ(commonMetric.value, 0.14848804473876953);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["key"], "elapsed_time");
     }
 }
@@ -299,21 +299,21 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMetric9) {
     vector<CommonMetric> commonMetrics;
     EXPECT_EQ(3, pAliScriptMetric->GetCommonMetrics(commonMetrics));
     CommonMetric commonMetric;
-    if (commonMetrics.size() == 3) {
+    if (commonMetrics.size() == size_t(3)) {
         commonMetric = commonMetrics[0];
         EXPECT_EQ(commonMetric.name, "new_name");
         EXPECT_EQ(commonMetric.value, 0);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["key"], "status");
         commonMetric = commonMetrics[1];
         EXPECT_EQ(commonMetric.name, "new_name");
         EXPECT_EQ(commonMetric.value, 269);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["key"], "jobs");
         commonMetric = commonMetrics[2];
         EXPECT_EQ(commonMetric.name, "new_name");
         EXPECT_EQ(commonMetric.value, 0.14848804473876953);
-        EXPECT_EQ(commonMetric.tagMap.size(), 1);
+        EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
         EXPECT_EQ(commonMetric.tagMap["key"], "elapsed_time");
     }
 }
@@ -351,7 +351,7 @@ TEST_F(CoreAliScriptMetricTest, AddTextMetric1) {
     commonMetric = commonMetrics[0];
     EXPECT_EQ(commonMetric.name, "state");
     EXPECT_EQ(commonMetric.value, 1);
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["msg"], "SSH-2.0-OpenSSH_5.3");
 }
 
@@ -379,12 +379,12 @@ TEST_F(CoreAliScriptMetricTest, AddTextMetric2) {
     commonMetric = commonMetrics[0];
     EXPECT_EQ(commonMetric.name, "state");
     EXPECT_EQ(commonMetric.value, 1);
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["msg"], "SSH-2.0-OpenSSH_5.3");
     commonMetric = commonMetrics[1];
     EXPECT_EQ(commonMetric.name, "msg");
     EXPECT_EQ(commonMetric.value, 0);
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["msg"], "SSH-2.0-OpenSSH_5.3");
 }
 
@@ -459,7 +459,7 @@ TEST_F(CoreAliScriptMetricTest, AddTextMetric) {
         const char *szText = "1706716800 a=b=c num=s";
         EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddTextMetric(szText));
 
-        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "numX");
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 0.0);
@@ -478,7 +478,7 @@ TEST_F(CoreAliScriptMetricTest, AddTextMetric) {
         const char *szText = "1706716800 class=3";
         EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddTextMetric(szText));
 
-        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "clazz");
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 3.0);
@@ -494,7 +494,7 @@ TEST_F(CoreAliScriptMetricTest, AddTextMetric) {
         const char *szText = "1706716800 folder=/tmp";
         EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddTextMetric(szText));
 
-        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "Folder");
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 0.0);
         std::map<std::string, std::string> expect{
@@ -510,7 +510,7 @@ TEST_F(CoreAliScriptMetricTest, AddTextMetric) {
         const char *szText = "1706716800 other=5";
         EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddTextMetric(szText));
 
-        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+        EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "Other");
         EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 5.0);
         EXPECT_TRUE(scriptMetric.mCommonMetrics[0].tagMap.empty());
@@ -535,7 +535,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject001) {
     const char *szJson = R"({"num":"s"})";
     EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "numX");
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 0.0);
@@ -568,7 +568,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject002) {
     const char *szJson = R"({"num":2})";
     EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "numX");
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 0.0);
@@ -601,7 +601,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject0030) {
     const char *szJson = R"({"class":3})";
     EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "clazz");
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 3.0);
@@ -617,7 +617,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject0031) {
     const char *szJson = R"({"class":"3"})";
     EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "clazz");
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 3.0);
@@ -633,7 +633,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject0032) {
     const char *szJson = R"({"class":"abcd"})";
     EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
 
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "clazz");
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 0.0);
@@ -651,7 +651,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject0033) {
     EXPECT_EQ(BaseParseMetric::ALIMONITOR_JSON_MSG_MEMBER_INVALID,
               scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 0);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(0));
 }
 
 TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject004) {
@@ -661,7 +661,7 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject004) {
     const char *szJson = R"({"other":5})";
     EXPECT_EQ(BaseParseMetric::PARSE_SUCCESS, scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 1);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(1));
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].name, "Other");
     EXPECT_EQ(scriptMetric.mCommonMetrics[0].value, 5.0);
     EXPECT_TRUE(scriptMetric.mCommonMetrics[0].tagMap.empty());
@@ -675,5 +675,5 @@ TEST_F(CoreAliScriptMetricTest, AddJsonMsgObject0041) {
     EXPECT_EQ(BaseParseMetric::ALIMONITOR_JSON_MSG_MEMBER_INVALID,
               scriptMetric.AddJsonMsgObject(json::parseObject(szJson)));
 
-    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), 0);
+    EXPECT_EQ(scriptMetric.mCommonMetrics.size(), size_t(0));
 }

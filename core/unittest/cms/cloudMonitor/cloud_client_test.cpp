@@ -70,11 +70,11 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
     EXPECT_EQ(nodeItem.operatingSystem, "Linux");
     auto ptr = SingletonTaskManager::Instance()->ProcessCollectItems().GetCopy();
     auto &processCollectItems = *ptr;
-    ASSERT_EQ(processCollectItems.size(), 2);
+    ASSERT_EQ(processCollectItems.size(), size_t(2));
     EXPECT_EQ(processCollectItems[0].name, "argusagent");
     EXPECT_EQ(processCollectItems[1].name, "argusagent_ut");
     vector<MetricItem> metricItems = *SingletonTaskManager::Instance()->MetricItems().Get();
-    ASSERT_EQ(metricItems.size(), 2);
+    ASSERT_EQ(metricItems.size(), size_t(2));
     EXPECT_EQ(metricItems[0].url, "https://metrichub-cms-cn-hangzhou.aliyuncs.com/agent/metrics/putLines");
     EXPECT_EQ(metricItems[0].gzip, false);
     EXPECT_EQ(metricItems[0].useProxy, false);
@@ -82,7 +82,7 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
     EXPECT_EQ(metricItems[1].gzip, false);
     EXPECT_EQ(metricItems[1].useProxy, true);
     vector<HttpItem> httpItems = SingletonTaskManager::Instance()->HttpItems().Values();
-    EXPECT_EQ(httpItems.size(), 5);
+    EXPECT_EQ(httpItems.size(), size_t(5));
     for (auto &httpItem: httpItems) {
         if (httpItem.taskId == "536177") {
             EXPECT_EQ(httpItem.timeout, std::chrono::seconds{10});
@@ -94,7 +94,7 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
         if (httpItem.taskId == "559862") {
             EXPECT_EQ(httpItem.uri, "http://www.baidu.com");
             EXPECT_EQ(httpItem.method, "POST");
-            EXPECT_EQ(httpItem.negative, true);
+            EXPECT_TRUE(httpItem.negative);
             EXPECT_EQ(httpItem.keyword, "bad");
             EXPECT_EQ(httpItem.header, "UTF-8");
             EXPECT_EQ(httpItem.requestBody, "helloworld");
@@ -110,11 +110,11 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
         }
     }
     vector<TelnetItem> telnetItems = SingletonTaskManager::Instance()->TelnetItems().Values();
-    ASSERT_EQ(telnetItems.size(), 1);
+    ASSERT_EQ(telnetItems.size(), size_t(1));
     EXPECT_EQ(telnetItems[0].taskId, "536176");
     EXPECT_EQ(telnetItems[0].uri, "telnet://10.137.71.2:22");
     std::vector<PingItem> pingItems = SingletonTaskManager::Instance()->PingItems().Values();
-    ASSERT_EQ(pingItems.size(), 1);
+    ASSERT_EQ(pingItems.size(), size_t(1));
     EXPECT_EQ(pingItems[0].taskId, "536175");
     EXPECT_EQ(pingItems[0].host, "10.137.71.2");
     HpcClusterItem hpcClusterItem;
@@ -122,9 +122,9 @@ TEST_F(Cms_CloudClientTest, DealHeartBeatResponse) {
     EXPECT_EQ(hpcClusterItem.clusterId, "hpc-uf671uizyvln4qc9qudt");
     EXPECT_EQ(hpcClusterItem.regionId, "cn-shanghai");
     EXPECT_EQ(hpcClusterItem.version, "1F2F5ECFD8AF2810F4F36112C9E2C0BC");
-    EXPECT_EQ(hpcClusterItem.isValid, true);
-    EXPECT_EQ(hpcClusterItem.hpcNodeInstances.size(), 1);
-    if (hpcClusterItem.hpcNodeInstances.size() == 1) {
+    EXPECT_TRUE(hpcClusterItem.isValid);
+    EXPECT_EQ(hpcClusterItem.hpcNodeInstances.size(), size_t(1));
+    if (hpcClusterItem.hpcNodeInstances.size() == size_t(1)) {
         EXPECT_EQ(hpcClusterItem.hpcNodeInstances[0].instanceId, "i-uf6ef1y46xhgd77hgt5u");
         EXPECT_EQ(hpcClusterItem.hpcNodeInstances[0].ip, "200.0.134.2");
     }
@@ -355,7 +355,7 @@ TEST_F(Cms_CloudClientTest, SendCoreDump) {
 
 #ifndef ONE_AGENT
     DumpCache dump(1, true);
-    ASSERT_EQ(1, dump.DumpFiles().size());
+    ASSERT_EQ(size_t(1), dump.DumpFiles().size());
     LogInfo("dumped: {}", dump.DumpFiles().at(0).string());
     auto lastCoreDown = dump.GetLastCoreDown(std::chrono::seconds{60 * 60});
     EXPECT_FALSE(lastCoreDown.filename.empty());

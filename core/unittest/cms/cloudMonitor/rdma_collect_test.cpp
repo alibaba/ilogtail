@@ -51,7 +51,7 @@ TEST_F(Cms_RdmaCollectTest, ParseLines) {
     EXPECT_TRUE(columns.empty());
 
     columns = RdmaCollect::ParseLines("tx_bytes: 17671048460258 (7190671265652/10480377194606)");
-    EXPECT_EQ(4, columns.size());
+    EXPECT_EQ(size_t(4), columns.size());
     EXPECT_EQ(columns[0], "tx_bytes");
     EXPECT_EQ(convert<int64_t>(columns[1]), int64_t(17671048460258));
     EXPECT_EQ(convert<int64_t>(columns[2]), int64_t(7190671265652));
@@ -60,12 +60,12 @@ TEST_F(Cms_RdmaCollectTest, ParseLines) {
     EXPECT_TRUE(RdmaCollect::ParseLines(": 17671048460258 (7190671265652/10480377194606)").empty());
 
     columns = RdmaCollect::ParseLines("tx_bytes  : 17671048460258");
-    EXPECT_EQ(2, columns.size());
+    EXPECT_EQ(size_t(2), columns.size());
     EXPECT_EQ(columns[0], "tx_bytes");
     EXPECT_EQ(convert<int64_t>(columns[1]), int64_t(17671048460258));
 
     columns = RdmaCollect::ParseLines("tx_bytes  : 0 ( 0 /3 )");
-    EXPECT_EQ(4, columns.size());
+    EXPECT_EQ(size_t(4), columns.size());
     EXPECT_EQ(columns[0], "tx_bytes");
     EXPECT_EQ(convert<int64_t>(columns[1]), int64_t(0));
     EXPECT_EQ(convert<int64_t>(columns[2]), int64_t(0));
@@ -147,7 +147,7 @@ TEST_F(Cms_RdmaCollectTest, CollectRdmaData) {
     hpcClusterItem.isValid = true;
     SingletonTaskManager::Instance()->SetHpcClusterItem(hpcClusterItem);
     EXPECT_TRUE(pShared->GetRdmaMetricData("bond0", pShared->mRdmaDataMap[0], metricData));
-    EXPECT_EQ(metricData.tagMap.size(), 5);
+    EXPECT_EQ(metricData.tagMap.size(), size_t(5));
     EXPECT_EQ(metricData.valueMap["num_of_qp_max"], NumOfQp.Max());
     EXPECT_EQ(metricData.valueMap["num_of_qp_min"], NumOfQp.Min());
     EXPECT_EQ(metricData.valueMap["num_of_qp_avg"], NumOfQp.Avg());
@@ -177,7 +177,7 @@ TEST_F(Cms_RdmaCollectTest, CollectRPingData) {
     pShared->mRPingFile = rpingFile;
     vector<RPingData> rPingdatas;
     pShared->CollectRPingData(rPingdatas);
-    ASSERT_EQ(rPingdatas.size(), 2);
+    ASSERT_EQ(rPingdatas.size(), size_t(2));
     EXPECT_EQ(rPingdatas[0].ip, "10.11.11.1");
     EXPECT_EQ(rPingdatas[0].ts, now);
     EXPECT_EQ(rPingdatas[0].rt, 10);
@@ -188,8 +188,8 @@ TEST_F(Cms_RdmaCollectTest, CollectRPingData) {
     cloudMonitor::RdmaCollect::GetRPingMetricData(rPingdatas[0], metricData);
     EXPECT_EQ(metricData.valueMap["rt"], 10);
     EXPECT_EQ(metricData.valueMap["rping_ts"], now);
-    EXPECT_EQ(metricData.valueMap.size(), 3);
-    EXPECT_EQ(metricData.tagMap.size(), 4);
+    EXPECT_EQ(metricData.valueMap.size(), size_t(3));
+    EXPECT_EQ(metricData.tagMap.size(), size_t(4));
     EXPECT_EQ(metricData.tagMap["ip"], "10.11.11.1");
 }
 
@@ -210,7 +210,7 @@ TEST_F(Cms_RdmaCollectTest, GetQosMetricData) {
     SingletonTaskManager::Instance()->SetHpcClusterItem(hpcClusterItem);
     pShared->mQosCheckFile = "exit 1";
     EXPECT_TRUE(pShared->GetQosMetricData(metricData));
-    EXPECT_EQ(metricData.tagMap.size(), 3);
+    EXPECT_EQ(metricData.tagMap.size(), size_t(3));
     EXPECT_EQ(metricData.valueMap["exitValue"], 1);
 }
 
@@ -269,18 +269,18 @@ TEST_F(Cms_RdmaCollectTest, Collect) {
         int ret = pShared->Collect(data);
         if (i % 5 != 0 && i % 6 != 0) {
             EXPECT_EQ(0, ret);
-        } else if (i % 5 == 0 && i % 6 != 0) {
+        } else if ((i % 5) == 0 && (i % 6) != 0) {
             //rdma和rping数据
             ModuleData::convertStringToCollectData(data, collectData);
-            EXPECT_EQ(collectData.dataVector.size(), 5);
-        } else if (i % 5 != 0 && i % 6 == 0) {
+            EXPECT_EQ(collectData.dataVector.size(), size_t(5));
+        } else if ((i % 5) != 0 && (i % 6) == 0) {
             //qos数据
             ModuleData::convertStringToCollectData(data, collectData);
-            EXPECT_EQ(collectData.dataVector.size(), 1);
+            EXPECT_EQ(collectData.dataVector.size(), size_t(1));
         } else {
             //全部数据
             ModuleData::convertStringToCollectData(data, collectData);
-            EXPECT_EQ(collectData.dataVector.size(), 6);
+            EXPECT_EQ(collectData.dataVector.size(), size_t(6));
         }
     }
 #endif

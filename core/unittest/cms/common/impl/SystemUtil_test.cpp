@@ -49,7 +49,7 @@ TEST_F(CommonSystemUtilTest, parseDmideCode) {
     string result;
 
     result = SystemUtil::parseDmideCode(content);
-    EXPECT_EQ(result.size(), 0);
+    EXPECT_EQ(result.size(), size_t(0));
 
     content = "dmidecode";
     result = SystemUtil::parseDmideCode(content);

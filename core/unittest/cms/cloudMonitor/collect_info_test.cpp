@@ -16,9 +16,9 @@ TEST(CmsCollectInfoTest, CompileTime) {
 
 TEST(CmsCollectInfoTest, GetSet) {
     cloudMonitor::CollectInfo ci;
-    EXPECT_EQ(0, ci.GetLastCommitCost());
+    EXPECT_EQ(double(0), ci.GetLastCommitCost());
     ci.SetLastCommitCost(1);
-    EXPECT_EQ(1, ci.GetLastCommitCost());
+    EXPECT_EQ(1.0, ci.GetLastCommitCost());
 
     EXPECT_EQ(0, ci.GetLastCommitCode());
     ci.SetLastCommitCode(1);
@@ -28,27 +28,27 @@ TEST(CmsCollectInfoTest, GetSet) {
     ci.SetLastCommitMsg("1");
     EXPECT_EQ("1", ci.GetLastCommitMsg());
 
-    EXPECT_EQ(0, ci.GetPutMetricFailCount());
+    EXPECT_EQ(size_t(0), ci.GetPutMetricFailCount());
     ci.SetPutMetricFailCount(1);
-    EXPECT_EQ(1, ci.GetPutMetricFailCount());
+    EXPECT_EQ(size_t(1), ci.GetPutMetricFailCount());
 
-    EXPECT_EQ(0, ci.GetPutMetricFailPerMinute());
+    EXPECT_EQ(double(0), ci.GetPutMetricFailPerMinute());
     ci.SetPutMetricFailPerMinute(1);
-    EXPECT_EQ(1, ci.GetPutMetricFailPerMinute());
+    EXPECT_EQ(double(1), ci.GetPutMetricFailPerMinute());
 
-    EXPECT_EQ(0, ci.GetPutMetricSuccCount());
+    EXPECT_EQ(size_t(0), ci.GetPutMetricSuccCount());
     ci.SetPutMetricSuccCount(1);
-    EXPECT_EQ(1, ci.GetPutMetricSuccCount());
+    EXPECT_EQ(size_t(1), ci.GetPutMetricSuccCount());
 
-    EXPECT_EQ(0, ci.GetPullConfigFailCount());
+    EXPECT_EQ(size_t(0), ci.GetPullConfigFailCount());
     ci.SetPullConfigFailCount(1);
-    EXPECT_EQ(1, ci.GetPullConfigFailCount());
+    EXPECT_EQ(size_t(1), ci.GetPullConfigFailCount());
 
-    EXPECT_EQ(0, ci.GetPullConfigFailPerMinute());
+    EXPECT_EQ(double(0), ci.GetPullConfigFailPerMinute());
     ci.SetPullConfigFailPerMinute(1);
-    EXPECT_EQ(1, ci.GetPullConfigFailPerMinute());
+    EXPECT_EQ(double(1), ci.GetPullConfigFailPerMinute());
 
-    EXPECT_EQ(0, ci.GetPullConfigSuccCount());
+    EXPECT_EQ(size_t(0), ci.GetPullConfigSuccCount());
     ci.SetPullConfigSuccCount(1);
-    EXPECT_EQ(1, ci.GetPullConfigSuccCount());
+    EXPECT_EQ(size_t(1), ci.GetPullConfigSuccCount());
 }

@@ -2,8 +2,6 @@
 #include "detect/ping_detect.h"
 #include "detect/protocol_adt.h"
 
-#include <thread>
-
 #include "common/Config.h"
 #include "common/Logger.h"
 #include "common/StringUtils.h"

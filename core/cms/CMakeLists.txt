@@ -18,7 +18,9 @@ project(cms)
 include(cms.cmake)
 
 # 严格的编译选项
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function -Wall")
+if (NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${DEFAULT_DEPS_ROOT}\" -Wno-unused-function -Wall")
+endif()
 
 file(GLOB_RECURSE LIB_SOURCE_FILES "${PROJECT_SOURCE_DIR}/*.c*")
 # sic

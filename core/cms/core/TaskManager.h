@@ -541,14 +541,8 @@ public:
     void GetHpcClusterItem(HpcClusterItem &s);
 
     //CloudAgentInfo
-    inline void SetCloudAgentInfo(const CloudAgentInfo &s)
-    {
-        mCloudAgentInfo = s;
-    }
-    inline void GetCloudAgentInfo(CloudAgentInfo &s)
-    {
-        s = mCloudAgentInfo;
-    }
+    void SetCloudAgentInfo(const CloudAgentInfo &s);
+    void GetCloudAgentInfo(CloudAgentInfo &s) const;
 
     //PingItems
     // void GetPingItems(std::vector<PingItem> &s, bool setChange = false);
@@ -735,7 +729,7 @@ private:
     // InstanceLock mHpcClusterItemLock;
     SafeT<HpcClusterItem> mHpcClusterItem;
     //CloudAgentInfo
-    CloudAgentInfo mCloudAgentInfo;
+    SafeShared<CloudAgentInfo> mCloudAgentInfo;
     //PingItem
     // std::unordered_map<std::string, PingItem> mPingItems;
     // std::atomic<bool> mPingItemChanged{false};
@@ -765,12 +759,12 @@ private:
     //topNItem
     // InstanceLock mTopNItemLock;
     // TopNItem mTopNItem;
-    SafeT<TopNItem> mTopNItem;
+    SafeShared<TopNItem> mTopNItem;
 
     //NodeItem
     // NodeItem mNodeItem;
     // InstanceLock mNodeItemLock;
-    SafeT<NodeItem> mNodeItem;
+    SafeShared<NodeItem> mNodeItem;
 
     //MetricItem
     // std::vector<MetricItem> mMetricItems;

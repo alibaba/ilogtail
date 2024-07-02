@@ -30,22 +30,21 @@ TEST(CommonTest, getCmdOutput) {
 
     // windows命令行到回车那里就结束了，以下的测试，在windows已无意义
     string cmd2 = "echo \"";
-    int i;
-    for (i = 0; i < 4096; i++) {
+    for (int i = 0; i < 4096; i++) {
         cmd2 += "aaaa\nbbbb\ncccc\n";
     }
     cmd2 += "\"";
     strbuf.clear();
     EXPECT_EQ(getCmdOutput(cmd2, strbuf), 0);
-    EXPECT_EQ(strbuf.size(), 4096 * 15 - 1);
+    EXPECT_EQ(strbuf.size(), size_t(4096 * 15 - 1));
     string cmd3 = "echo \"";
-    for (i = 0; i < 4096; i++) {
+    for (int i = 0; i < 4096; i++) {
         cmd3 += "aaaabbbbcccc";
     }
     cmd3 += "\"";
     strbuf.clear();
     EXPECT_EQ(getCmdOutput(cmd3, strbuf), 0);
-    EXPECT_EQ(strbuf.size(), 4096 * 12);
+    EXPECT_EQ(strbuf.size(), size_t(4096 * 12));
 #endif
 }
 
@@ -110,7 +109,7 @@ TEST(CommonTest, getTimeString) {
 
 TEST(CommonTest, GetMd5_01) {
     fs::path file = TEST_CONF_PATH / "conf" / "pinglist.json";
-    EXPECT_GT(fs::file_size(file), 2 * 1024);
+    EXPECT_GT(fs::file_size(file), boost::uintmax_t(2 * 1024));
     std::string md5;
     EXPECT_EQ(0, GetMd5(file.string(), md5));
     // 两种系统的路径分隔符不一样，导致md5也不一样

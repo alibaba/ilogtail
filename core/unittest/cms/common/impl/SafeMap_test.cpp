@@ -10,19 +10,19 @@ TEST(CommonSafeMapTest, StdMap) {
     SafeMap<int, int> data;
     // SafeMap<int, int> b(data); // SafeMap不支持拷贝、赋值、Move语义
     EXPECT_TRUE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 0);
+    EXPECT_EQ(data.Size(), size_t(0));
     std::cout << "data.size() = " << data.Size() << std::endl;
 
     data.Emplace(1, 2);
     EXPECT_FALSE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 1);
+    EXPECT_EQ(data.Size(), size_t(1));
     EXPECT_EQ(data[1], 2);
     EXPECT_TRUE(data.Contains(1));
     EXPECT_FALSE(data.Contains(-1));
 
     EXPECT_FALSE(data.MustSet(10, 20));
     EXPECT_FALSE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 2);
+    EXPECT_EQ(data.Size(), size_t(2));
     EXPECT_EQ(data[10], 20);
 
     data.Erase(10);
@@ -38,7 +38,7 @@ TEST(CommonSafeMapTest, StdMap) {
 TEST(CommonSafeMapTest, UnorderedMap) {
     SafeUnorderedMap<int, int> data;
     EXPECT_TRUE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 0);
+    EXPECT_EQ(data.Size(), size_t(0));
     std::cout << "data.size() = " << data.Size() << std::endl;
 
     data.Emplace(1, 2);
@@ -48,12 +48,12 @@ TEST(CommonSafeMapTest, UnorderedMap) {
     EXPECT_EQ(target, 2);
     EXPECT_FALSE(data.IfExist(3, [&](const int &v) { }));
     EXPECT_FALSE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 1);
+    EXPECT_EQ(data.Size(), size_t(1));
     EXPECT_EQ(data[1], 2);
 
     EXPECT_FALSE(data.MustSet(10, 20));
     EXPECT_FALSE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 2);
+    EXPECT_EQ(data.Size(), size_t(2));
     EXPECT_EQ(data[10], 20);
 
     data.Erase(10);
@@ -86,7 +86,7 @@ TEST(CommonSafeMapTest, UnorderedMap) {
             std::cout << "[" << it.first << "] = " << it.second << std::endl;
         }
     }}}
-    EXPECT_EQ(data.Size(), 3);
+    EXPECT_EQ(data.Size(), size_t(3));
     EXPECT_EQ(data[1], 2);
     EXPECT_EQ(data[3], 2);
     EXPECT_TRUE(data[2] == 1 || data[2] == 3);
@@ -104,7 +104,7 @@ TEST(CommonSafeMapTest, SetIfAbsent) {
     EXPECT_TRUE(data.IsEmpty());
     EXPECT_EQ(2, data.ComputeIfAbsent(1, [](){return 2;}));
     EXPECT_EQ(2, data.SetIfAbsent(1, 3));
-    EXPECT_EQ(1, data.GetCopy().size());
+    EXPECT_EQ(size_t(1), data.GetCopy().size());
 }
 
 TEST(CommonSafeMapTest, SetIfExist) {
@@ -142,7 +142,7 @@ TEST(CommonSafeMapTest, ThreadSafeTest) {
             std::cout << "[" << it.first << "] = " << it.second << std::endl;
         }
     }}}
-    EXPECT_EQ(data.Size(), 3);
+    EXPECT_EQ(data.Size(), size_t(3));
     EXPECT_EQ(data[1], 2);
     EXPECT_EQ(data[3], 2);
     EXPECT_TRUE(data[2] == 1 || data[2] == 3);
@@ -163,5 +163,5 @@ TEST(CommonSafeMapTest, Set) {
     };
 
     data = data2;
-    EXPECT_EQ(2, SyncCall(data, {return data.size();}));
+    EXPECT_EQ(size_t(2), SyncCall(data, {return data.size();}));
 }

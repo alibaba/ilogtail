@@ -25,7 +25,7 @@ public:
     typedef std::pair<std::string, std::string> ChanConf;
 
     ChannelManager();
-    ~ChannelManager();
+    VIRTUAL ~ChannelManager();
     void Start();
     void End();
     std::shared_ptr<OutputChannel> GetOutputChannel(const std::string &name) const;

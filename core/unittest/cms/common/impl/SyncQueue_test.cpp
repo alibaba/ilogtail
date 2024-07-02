@@ -27,20 +27,20 @@ TEST(CommonSyncQueueTest, NonBlockedSyncQueue01) {
     SyncQueue<int, Nonblock> queue(1);
 
     queue << 1 << 2;  // 不阻塞，但会抛弃旧的数据
-    EXPECT_EQ(1, queue.Size());
+    EXPECT_EQ(size_t(1), queue.Size());
 
     EXPECT_TRUE(queue.Push(3));
-    EXPECT_EQ(1, queue.Size());
-    EXPECT_EQ(2, queue.DiscardCount());
+    EXPECT_EQ(size_t(1), queue.Size());
+    EXPECT_EQ(size_t(2), queue.DiscardCount());
 
     int n;
     queue >> n;
     EXPECT_EQ(3, n);
-    EXPECT_EQ(0, queue.Size());
+    EXPECT_EQ(size_t(0), queue.Size());
 
     queue.Close();
     EXPECT_FALSE(queue.Push(4)); // close后的push不计入discardCount
-    EXPECT_EQ(2, queue.DiscardCount());
+    EXPECT_EQ(size_t(2), queue.DiscardCount());
 }
 
 // 非阻塞队列
@@ -49,23 +49,23 @@ TEST(CommonSyncQueueTest, NonBlockedSyncQueue02) {
     SyncQueue<int, Nonblock> queue(data, 1);
 
     queue << 1 << 2;  // 不阻塞，但会抛弃旧的数据
-    EXPECT_EQ(1, queue.Size());
+    EXPECT_EQ(size_t(1), queue.Size());
 
     EXPECT_TRUE(queue.Push(3));
-    EXPECT_EQ(1, queue.Size());
-    EXPECT_EQ(2, queue.DiscardCount());
+    EXPECT_EQ(size_t(1), queue.Size());
+    EXPECT_EQ(size_t(2), queue.DiscardCount());
 
     EXPECT_EQ(3, data.front());
 
     int n;
     queue >> n;
     EXPECT_EQ(3, n);
-    EXPECT_EQ(0, queue.Size());
+    EXPECT_EQ(size_t(0), queue.Size());
     EXPECT_TRUE(data.empty());
 
     queue.Close();
     EXPECT_FALSE(queue.Push(4)); // close后的push不计入discardCount
-    EXPECT_EQ(2, queue.DiscardCount());
+    EXPECT_EQ(size_t(2), queue.DiscardCount());
 }
 
 

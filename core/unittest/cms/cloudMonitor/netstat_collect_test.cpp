@@ -37,24 +37,25 @@ protected:
 TEST_F(Cms_NetStatCollectTest, Collect) {
     string data;
     int collectLen = p_shared->Collect(data);
-    EXPECT_EQ(collectLen > 0, true);
-    EXPECT_EQ(collectLen, data.size());
+    EXPECT_GT(collectLen, 0);
+    EXPECT_EQ(collectLen, int(data.size()));
     cout << "collectResult:" << data << endl;
     CollectData collectData;
     ModuleData::convertStringToCollectData(data, collectData);
     EXPECT_EQ(collectData.moduleName, p_shared->mModuleName);
-    int expectCount = 8;
 #ifdef ENABLE_UDP_SESSION
-    expectCount++;
+    constexpr const size_t expectCount = 9;
+#else
+    constexpr const size_t expectCount = 8;
 #endif
     EXPECT_EQ(collectData.dataVector.size(), expectCount);
-    for (int i = 0; i < expectCount; i++) {
-        if (i < 8) {
-            EXPECT_EQ(collectData.dataVector[i].valueMap.size(), 1);
-            EXPECT_EQ(collectData.dataVector[i].tagMap.size(), 3);
+    for (size_t i = 0; i < expectCount; i++) {
+        if (i < size_t(8)) {
+            EXPECT_EQ(collectData.dataVector[i].valueMap.size(), size_t(1));
+            EXPECT_EQ(collectData.dataVector[i].tagMap.size(), size_t(3));
         } else {
-            EXPECT_EQ(collectData.dataVector[i].valueMap.size(), 2);
-            EXPECT_EQ(collectData.dataVector[i].tagMap.size(), 2);
+            EXPECT_EQ(collectData.dataVector[i].valueMap.size(), size_t(2));
+            EXPECT_EQ(collectData.dataVector[i].tagMap.size(), size_t(2));
         }
     }
 }
@@ -66,10 +67,10 @@ TEST_F(Cms_NetStatCollectTest, netstat) {
     defer(cloudMonitor_netstat_exit(handler));
 
     char *buf = nullptr;
-    EXPECT_EQ(cloudMonitor_netstat_collect(handler, &buf) > 0, true);
+    EXPECT_GT(cloudMonitor_netstat_collect(handler, &buf), 0);
     cout << "result:" << buf << endl;
 }
 
 TEST_F(Cms_NetStatCollectTest, countSimpleTcpState) {
-    EXPECT_EQ(countSimpleTcpState(), 4);
+    EXPECT_EQ(countSimpleTcpState(), size_t(4));
 }

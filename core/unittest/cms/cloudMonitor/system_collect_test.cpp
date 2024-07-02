@@ -46,7 +46,7 @@ TEST_F(Cms_SystemCollectTest, Collect) {
 #else
         auto startTime = steady_clock::now();
         int64_t start = duration_cast<microseconds>(startTime.time_since_epoch()).count();
-        int64_t sum = 0;
+        volatile int64_t sum = 0;
         for (int64_t counter = 0; counter < start / 10000000; counter++) {
             sum += counter * start;
         }
@@ -62,7 +62,7 @@ TEST_F(Cms_SystemCollectTest, Collect) {
             CollectData collectData;
             ModuleData::convertStringToCollectData(collectStr, collectData);
             EXPECT_EQ(collectData.moduleName, p_shared->mModuleName);
-            EXPECT_EQ(collectData.dataVector.size(), 5);
+            EXPECT_EQ(collectData.dataVector.size(), size_t(5));
         }
 #endif
     }

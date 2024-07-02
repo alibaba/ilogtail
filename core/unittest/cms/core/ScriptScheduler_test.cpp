@@ -44,7 +44,7 @@ public:
         return 0;
     }
 
-    mutable size_t metricsCallCount = 0;
+    mutable int metricsCallCount = 0;
     mutable SyncQueue<std::string> queueMetric{10};
 
     int SendMetricsToNextModule(const std::vector<common::CommonMetric> &metrics,
@@ -184,7 +184,7 @@ TEST_F(CoreScriptSchedulerTest, schedule_checkFirstRun_01) {
     item.scheduleIntv = 15_s;
     item.mid = NewUuid();
     EXPECT_EQ(0, scheduler.schedule(item));
-    EXPECT_EQ(1, scheduler.m_state.Size());
+    EXPECT_EQ(size_t(1), scheduler.m_state.Size());
 }
 
 TEST_F(CoreScriptSchedulerTest, schedule_checkFirstRun_02) {
@@ -198,7 +198,7 @@ TEST_F(CoreScriptSchedulerTest, schedule_checkFirstRun_02) {
 
         ScriptScheduler scheduler;
         EXPECT_EQ(0, scheduler.schedule(item));
-        EXPECT_EQ(1, scheduler.m_state.Size());
+        EXPECT_EQ(size_t(1), scheduler.m_state.Size());
     }
 }
 
@@ -329,7 +329,7 @@ TEST_F(CoreScriptSchedulerTest, recycleKilled) {
     scheduler.m_killed.push_back(scheduler.createProcessWorker());
     scheduler.m_killed.push_back(scheduler.createProcessWorker());
     scheduler.recycleKilled();
-    EXPECT_EQ(1, scheduler.m_killed.size());
+    EXPECT_EQ(size_t(1), scheduler.m_killed.size());
 }
 
 namespace stub {
@@ -411,7 +411,7 @@ void initForCheckForEnd(stub::ScriptSchedulerStub &scheduler) {
         ASSERT_TRUE(scheduler.m_state.Contains(item.mid));
         mapItem[item.mid] = item;
     }
-    EXPECT_EQ(scheduler.m_state.Size(), 2);
+    EXPECT_EQ(scheduler.m_state.Size(), size_t(2));
     auto &state = scheduler.m_state;
     Sync(state)
             {
@@ -422,7 +422,7 @@ void initForCheckForEnd(stub::ScriptSchedulerStub &scheduler) {
                 }
             }}}
     scheduler.m_state.Erase(mapItem.begin()->first);
-    EXPECT_EQ(scheduler.m_state.Size(), 1);
+    EXPECT_EQ(scheduler.m_state.Size(), size_t(1));
     std::shared_ptr<ScriptScheduleState> item;
     EXPECT_TRUE(scheduler.m_state.Find(mapItem.rbegin()->first, item));
 }
@@ -465,7 +465,7 @@ TEST_F(CoreScriptSchedulerTest, checkForEnd002_exit_otuput_overflow) {
     pw.exited = true;
     pw.stdErr = "hello";
     EXPECT_EQ(0, scheduler.checkForEnd());
-    EXPECT_EQ(0, scheduler.m_killed.size());
+    EXPECT_EQ(size_t(0), scheduler.m_killed.size());
     EXPECT_EQ(E_OutputTooLong, scheduler.lastErrCode);
 }
 
@@ -483,7 +483,7 @@ TEST_F(CoreScriptSchedulerTest, checkForEnd002_timeout_shouldFinished_overflow) 
     pw.stdOut = "hello";
     item->shouldFinish = std::chrono::system_clock::now() - 1_min;
     EXPECT_EQ(0, scheduler.checkForEnd());
-    EXPECT_EQ(1, scheduler.m_killed.size());
+    EXPECT_EQ(size_t(1), scheduler.m_killed.size());
     EXPECT_EQ(E_TimeOut, scheduler.lastErrCode);
 }
 
@@ -505,7 +505,7 @@ TEST_F(CoreScriptSchedulerTest, checkForEnd002_timeout_maxOutputLen_overflow) {
     pw.stdOut = "hello";
     item->shouldFinish = std::chrono::system_clock::now() - 1_min;
     EXPECT_EQ(0, scheduler.checkForEnd());
-    EXPECT_EQ(1, scheduler.m_killed.size());
+    EXPECT_EQ(size_t(1), scheduler.m_killed.size());
     EXPECT_EQ(E_OutputTooLong, scheduler.lastErrCode);
 }
 
@@ -516,8 +516,8 @@ TEST_F(CoreScriptSchedulerTest, onTimer) {
     });
 
     const auto interval = 30_min;
-    constexpr const int itemCount = 2;
-    for (int i = 0; i < itemCount; i++) {
+    constexpr const size_t itemCount = 2;
+    for (size_t i = 0; i < itemCount; i++) {
         ScriptItem item;
         item.resultFormat = RAW_DATA_FORMAT;
         item.scheduleIntv = interval; // 30分钟
@@ -528,7 +528,7 @@ TEST_F(CoreScriptSchedulerTest, onTimer) {
     }
     const std::string wildMid = "mid-" + NewUuid().substr(0, 8);
     scheduler.m_state.Emplace(wildMid, std::make_shared<ScriptScheduleState>());
-    EXPECT_EQ(scheduler.m_state.Size(), 1);
+    EXPECT_EQ(scheduler.m_state.Size(), size_t(1));
 
     scheduler.onTimer();  // checkFirstRun
 

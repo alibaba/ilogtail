@@ -47,6 +47,11 @@ CloudChannel::~CloudChannel() {
     join();
 }
 
+NodeItem CloudChannel::nodeItem() const {
+    std::lock_guard<std::mutex> guard(this->mutex);
+    return mNodeItem;
+}
+
 int CloudChannel::addMessage(const std::string &name, const std::chrono::system_clock::time_point &timestamp,
                              int exitCode, const std::string &result, const std::string &conf,
                              bool reportStatus, const std::string &mid) {
@@ -64,7 +69,7 @@ int CloudChannel::addMessage(const std::string &name, const std::chrono::system_
         }
     }}}
     if (exceeded) {
-        LogWarn("drop msg while the size of msgQueue exceeds the maxSize({})。 agent: {}", mMaxMsgSize, mNodeItem.str());
+        LogWarn("drop msg while the size of msgQueue exceeds the maxSize({}). agent: {}", mMaxMsgSize, nodeItem().str());
     }
     return 0;
 }
@@ -183,8 +188,11 @@ void CloudChannel::doRun() {
         {
             CpuProfile("CloudChannel::doRun", timeProfile.lastTime());
 
-            SingletonTaskManager::Instance()->GetNodeItem(mNodeItem);
-            SingletonTaskManager::Instance()->GetCloudAgentInfo(mCloudAgentInfo);
+            {
+                std::lock_guard<std::mutex> guard(this->mutex);
+                SingletonTaskManager::Instance()->GetNodeItem(mNodeItem);
+                SingletonTaskManager::Instance()->GetCloudAgentInfo(mCloudAgentInfo);
+            }
 
             if (SingletonTaskManager::Instance()->MetricItems().Get(prevMetricItems)) {
                 mMetricItems = *prevMetricItems;
@@ -305,8 +313,9 @@ std::string CloudChannel::ToPayloadMetricData(const MetricData &metricData,
             content += " " + valueIt.first + "=" + ToPayloadString(valueIt.second);
         }
     }
-    content += " instanceId=" + HttpClient::UrlEncode(mNodeItem.instanceId);
-    content += " userId=" + mNodeItem.aliUid;
+    argus::NodeItem curNode = this->nodeItem();
+    content += " instanceId=" + HttpClient::UrlEncode(curNode.instanceId);
+    content += " userId=" + curNode.aliUid;
 
     std::string line = metricName +
                        " " + StringUtils::NumberToString(ToMillis(timestamp)) +

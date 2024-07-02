@@ -33,7 +33,7 @@ TEST_F(CmsGpuCollectTest, CollectUnit) {
     string xmlContent = ReadFileContent((TEST_CONF_PATH / "conf" / "cloudMonitor" / "gpu" / "gpu.xml").string());
     GpuData gpuData;
     EXPECT_TRUE(pShared.ParserGpuData(xmlContent, gpuData));
-    EXPECT_EQ(2, gpuData.gpus.size());
+    EXPECT_EQ(size_t(2), gpuData.gpus.size());
     EXPECT_EQ("418.39", gpuData.driverVersion);
     // for (auto &gpu: gpuData.gpus) {
     //     cout << "gpu_id=" << gpu.id << endl;
@@ -92,7 +92,7 @@ TEST_F(CmsGpuCollectTest, Parse) {
 
     CollectData cd;
     GpuCollect::PackageCollectData("gpu", gpuData, cd);
-    ASSERT_EQ(cd.dataVector.size(), 2);
+    ASSERT_EQ(cd.dataVector.size(), size_t(2));
 
     EXPECT_EQ(cd.dataVector[0].tagMap["temperature_gpu_temp"], "162");
     EXPECT_EQ(cd.dataVector[0].tagMap["power_readings_power_draw"], "131.43");
@@ -114,7 +114,7 @@ TEST_F(CmsGpuCollectTest, Parse535) {
 
     EXPECT_EQ(gpuData.driverVersion, "535.129.03");
     EXPECT_EQ(gpuData.gpus.size(), size_t(1));
-    EXPECT_EQ(gpuData.gpus.capacity(), 8);  // attached_gpus是8
+    EXPECT_EQ(gpuData.gpus.capacity(), size_t(8));  // attached_gpus是8
 
     auto print = [](const char *key, const std::map<std::string, std::string> &data) {
         std::cout << "  " << key << std::endl;
@@ -136,7 +136,7 @@ TEST_F(CmsGpuCollectTest, Parse535) {
 
     CollectData cd;
     GpuCollect::PackageCollectData("gpu", gpuData, cd);
-    ASSERT_EQ(cd.dataVector.size(), 1);
+    ASSERT_EQ(cd.dataVector.size(), size_t(1));
 
     EXPECT_EQ(cd.dataVector[0].tagMap["temperature_gpu_temp"], "24");
     EXPECT_EQ(cd.dataVector[0].tagMap["power_readings_power_draw"], "32.56");
@@ -272,12 +272,13 @@ TEST_F(CmsGpuCollectTest, Collect) {
         bool result;
         std::string xmlData;
 
-        explicit GpuCollectStub(bool r = true): result(r) {
 #ifdef WIN32
-            mGpuBinPath = "C:/Windows/explorer.exe";
+#       define GPU_BIN "C:\\Windows\\explorer.exe";
 #else
-            mGpuBinPath = "/bin/ls";
+#       define GPU_BIN "/bin/ls";
 #endif
+        explicit GpuCollectStub(bool r = true): result(r) {
+            this->mGpuBinPath = GPU_BIN;
         }
 
         bool GetGpuXmlData(const std::string &, std::string &data) const override {

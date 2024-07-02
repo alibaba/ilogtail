@@ -21,25 +21,25 @@ TEST(CommonSyncSharedTest, String_02) {
 TEST(CommonSyncSharedTest, Map) {
     SafeSharedMap<int, int> data;
     EXPECT_TRUE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 0);
+    EXPECT_EQ(data.Size(), size_t(0));
 
     data.Emplace(1, 1);
-    EXPECT_EQ(data.Values().size(), 1);
+    EXPECT_EQ(data.Values().size(), size_t(1));
     EXPECT_TRUE(data.Contains(1));
     EXPECT_FALSE(data.IsEmpty());
 
     std::map<int, int> v;
     EXPECT_TRUE(data.Find(1, v));
-    EXPECT_EQ(1, v.size());
+    EXPECT_EQ(size_t(1), v.size());
 }
 
 TEST(CommonSyncSharedTest, UnorderedMap) {
     SafeSharedUnorderedMap<int, int> data;
     EXPECT_TRUE(data.IsEmpty());
-    EXPECT_EQ(data.Size(), 0);
+    EXPECT_EQ(data.Size(), size_t(0));
 
     data.Emplace(1, 1);
-    EXPECT_EQ(data.Values().size(), 1);
+    EXPECT_EQ(data.Values().size(), size_t(1));
     EXPECT_TRUE(data.Contains(1));
     EXPECT_FALSE(data.IsEmpty());
 }
@@ -49,11 +49,11 @@ TEST(CommonSyncSharedTest, List) {
     EXPECT_TRUE(data.IsEmpty());
 
     data.PushBack(1);
-    EXPECT_EQ(1, data.Size());
+    EXPECT_EQ(size_t(1), data.Size());
     EXPECT_FALSE(data.IsEmpty());
 
     data.EmplaceBack(2);
-    EXPECT_EQ(2, data.Size());
+    EXPECT_EQ(size_t(2), data.Size());
     EXPECT_FALSE(data.IsEmpty());
 
     int v = SyncCall(data, { return *data->rbegin(); });

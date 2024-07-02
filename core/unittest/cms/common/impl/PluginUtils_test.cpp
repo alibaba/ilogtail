@@ -59,7 +59,7 @@ TEST(PluginUtilsTest, getValues) {
 	keys.clear();
 
 	EXPECT_EQ(-1, PluginUtils::getValues("123 abc", keys));
-	EXPECT_EQ(1, keys.size());
+	EXPECT_EQ(size_t(1), keys.size());
 	EXPECT_EQ(long(123), keys[0]);
 }
 
@@ -76,7 +76,7 @@ TEST(PluginUtilsTest, GetNumberFromFile) {
 	ASSERT_FALSE(fs::exists(file));
 	LogInfo("FILE: {}", file.string());
 	auto n = PluginUtils::GetNumberFromFile(file.string());
-	EXPECT_EQ(n, int64_t(0));
+	EXPECT_EQ(n, decltype(n)(0));
 
 	ASSERT_TRUE(WriteFileContent(file, fmt::format("{}", 123)));
 	EXPECT_EQ(uint64_t(123), PluginUtils::GetNumberFromFile(file.string()));

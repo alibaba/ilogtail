@@ -14,13 +14,13 @@ TEST(Cms_MetricCalculate2Test, Normal) {
         TcpExtMetric last;
         EXPECT_FALSE(obj.GetLastValue(last));
         EXPECT_FALSE((bool)obj.GetLastValue());
-        EXPECT_EQ(0, obj.Count());
+        EXPECT_EQ(decltype(obj.Count())(0), obj.Count());
     }
 
     TcpExtMetric metric;
     metric.delayedACKs = 1.0;
     obj.AddValue(metric);
-    EXPECT_EQ(1, obj.Count());
+    EXPECT_EQ(size_t(1), obj.Count());
     {
         TcpExtMetric last;
         EXPECT_TRUE(obj.GetLastValue(last));
@@ -38,7 +38,7 @@ TEST(Cms_MetricCalculate2Test, Normal) {
     TcpExtMetric metric2;
     metric2.delayedACKs = 3.0;
     obj.AddValue(metric2);
-    EXPECT_EQ(2, obj.Count());
+    EXPECT_EQ(size_t(2), obj.Count());
     {
         TcpExtMetric last;
         EXPECT_TRUE(obj.GetLastValue(last));
@@ -57,7 +57,7 @@ TEST(Cms_MetricCalculate2Test, Normal) {
         EXPECT_EQ(2.0, avg.delayedACKs);
     }
 
-    EXPECT_EQ(2, obj.Count());
+    EXPECT_EQ(size_t(2), obj.Count());
     obj.Reset();
-    EXPECT_EQ(0, obj.Count());
+    EXPECT_EQ(size_t(0), obj.Count());
 }

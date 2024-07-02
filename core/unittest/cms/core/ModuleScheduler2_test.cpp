@@ -111,7 +111,7 @@ TEST_F(Core_ModuleScheduler2Test, Do) {
     }
 
     EXPECT_GE(handler->m.count, 2);
-    EXPECT_EQ(scheduler.m_state.size(), 1);
+    EXPECT_EQ(scheduler.m_state.size(), size_t(1));
 }
 
 TEST_F(Core_ModuleScheduler2Test, GetStatus) {
@@ -334,7 +334,7 @@ TEST_F(Core_ModuleScheduler2Test, updateItems) {
     {
         scheduler2.updateItems(prev);
         EXPECT_EQ(prev.get(), scheduler2.mItems.get());
-        EXPECT_EQ(scheduler2.m_state.size(), 1);
+        EXPECT_EQ(scheduler2.m_state.size(), size_t(1));
     }
 
     LogInfo("{:->60}", "");

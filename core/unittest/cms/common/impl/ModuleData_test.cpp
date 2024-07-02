@@ -20,7 +20,7 @@ TEST(ModuleDataTest, convertStringToCollectData) {
     ASSERT_TRUE(ModuleData::convertStringToCollectData(s, collectData));
 
     EXPECT_EQ(collectData.moduleName, "disk");
-    EXPECT_EQ(8, collectData.dataVector.size());
+    EXPECT_EQ(size_t(8), collectData.dataVector.size());
     size_t index = 0;
     for (auto const &metric: collectData.dataVector) {
         std::string metricName;
@@ -46,14 +46,14 @@ TEST(ModuleDataTest, getMetricData) {
     MetricData metricData;
     ModuleData::getMetricData(ss, metricData);
 
-    ASSERT_EQ(2, metricData.valueMap.size());
+    ASSERT_EQ(size_t(2), metricData.valueMap.size());
     EXPECT_NE(metricData.valueMap.find("avg_avgqu-sz"), metricData.valueMap.end());
     std::cout << "avg_avgqu-sz: " << metricData.valueMap["avg_avgqu-sz"] << std::endl;
     EXPECT_TRUE(std::isinf(metricData.valueMap["avg_avgqu-sz"]));
 
     EXPECT_EQ(metricData.valueMap["avg_avgrq-sz"], 67.0667);
 
-    EXPECT_EQ(0, metricData.tagMap.size());
+    EXPECT_EQ(size_t(0), metricData.tagMap.size());
 
     std::cout << ModuleData::convert(metricData) << std::endl;
     EXPECT_EQ(ModuleData::convert(metricData), s);
@@ -95,7 +95,7 @@ TEST(ModuleDataTest, formatMetricData) {
         MetricData actual;
         ModuleData::getMetricData(ss, actual);
         EXPECT_TRUE(actual.tagMap.empty());
-        EXPECT_EQ(1, actual.valueMap.size());
+        EXPECT_EQ(size_t(1), actual.valueMap.size());
         EXPECT_EQ((pid_t) actual.valueMap["pid"], pid);
     }
     // 32位范围内int -> double不会损失精度
@@ -122,21 +122,21 @@ TEST(ModuleDataTest, WithoutMetricName) {
         const char *content = R"(ARGUS_MODULE_DATA process 1 1 MEMORY_RESIDENT_TOTAL 0 0)";
         CollectData data;
         ASSERT_TRUE(ModuleData::convertStringToCollectData(content, data));
-        EXPECT_EQ(1, data.dataVector.size());
+        EXPECT_EQ(size_t(1), data.dataVector.size());
     }
     std::cout << "-----------------------------------------------------" << std::endl;
     {
         const char *content = R"(ARGUS_MODULE_DATA process 1 1 MEMORY_RESIDENT_TOTAL 0 0)";
         CollectData data;
         ASSERT_FALSE(ModuleData::convertStringToCollectData(content, data, true));
-        EXPECT_EQ(0, data.dataVector.size());
+        EXPECT_EQ(size_t(0), data.dataVector.size());
     }
     std::cout << "-----------------------------------------------------" << std::endl;
     {
         const char *content = R"(ARGUS_MODULE_DATA process 2 1 MEMORY_RESIDENT_TOTAL 0 0)";
         CollectData data;
         ASSERT_FALSE(ModuleData::convertStringToCollectData(content, data));
-        EXPECT_EQ(1, data.dataVector.size());
+        EXPECT_EQ(size_t(1), data.dataVector.size());
     }
 }
 
@@ -168,8 +168,8 @@ TEST(ModuleDataTest, formatMetricData1) {
     cout << sStream.str() << endl;
     MetricData metricData1;
     ModuleData::getMetricData(sStream, metricData1);
-    EXPECT_EQ(3, metricData1.valueMap.size());
-    EXPECT_EQ(3, metricData1.tagMap.size());
+    EXPECT_EQ(size_t(3), metricData1.valueMap.size());
+    EXPECT_EQ(size_t(3), metricData1.tagMap.size());
     EXPECT_EQ(1.4, metricData1.valueMap["/dec/:m3"]);
     EXPECT_EQ("tag2:test", metricData1.tagMap["t2"]);
 }
@@ -184,8 +184,8 @@ TEST(ModuleDataTest, formatMetricData2) {
     cout << sStream.str() << endl;
     MetricData metricData1;
     ModuleData::getMetricData(sStream, metricData1);
-    EXPECT_EQ(3, metricData1.valueMap.size());
-    EXPECT_EQ(0, metricData1.tagMap.size());
+    EXPECT_EQ(size_t(3), metricData1.valueMap.size());
+    EXPECT_EQ(size_t(0), metricData1.tagMap.size());
     EXPECT_EQ(1.4, metricData1.valueMap["/dec/:m3"]);
 }
 
@@ -196,8 +196,8 @@ TEST(ModuleDataTest, formatMetricData3) {
     cout << sStream.str() << endl;
     MetricData metricData1;
     ModuleData::getMetricData(sStream, metricData1);
-    EXPECT_EQ(0, metricData1.valueMap.size());
-    EXPECT_EQ(0, metricData1.tagMap.size());
+    EXPECT_EQ(size_t(0), metricData1.valueMap.size());
+    EXPECT_EQ(size_t(0), metricData1.tagMap.size());
 }
 
 TEST(ModuleDataTest, convertCollectDataToString1) {
@@ -225,7 +225,7 @@ TEST(ModuleDataTest, convertCollectDataToString1) {
     CollectData collectData1;
     EXPECT_TRUE(ModuleData::convertStringToCollectData(content, collectData1));
     EXPECT_EQ(collectData.moduleName, collectData1.moduleName);
-    EXPECT_EQ(10, collectData1.dataVector.size());
+    EXPECT_EQ(size_t(10), collectData1.dataVector.size());
     for (size_t i = 0; i < collectData1.dataVector.size(); i++) {
         std::stringstream stri;
         stri << i;
@@ -252,5 +252,5 @@ TEST(ModuleDataTest, convertCollectDataToString2) {
     CollectData collectData1;
     ModuleData::convertStringToCollectData(content, collectData1);
     EXPECT_EQ(collectData.moduleName, collectData1.moduleName);
-    EXPECT_EQ(0, collectData1.dataVector.size());
+    EXPECT_EQ(size_t(0), collectData1.dataVector.size());
 }

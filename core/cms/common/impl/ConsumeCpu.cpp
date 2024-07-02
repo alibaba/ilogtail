@@ -12,7 +12,7 @@ void consumeCpu(int64_t millis) {
     steady_clock::time_point now = steady_clock::now();
     steady_clock::time_point expired = now + milliseconds{millis};
     do {
-        int64_t total = 0;
+        volatile int64_t total = 0;
         for (int64_t j = 0; j < base; j++) {
             total += j * j - j * 10;
         }

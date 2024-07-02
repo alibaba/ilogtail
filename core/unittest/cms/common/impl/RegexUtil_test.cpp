@@ -91,13 +91,13 @@ TEST(RegexUtilTest, MatchFetch) {
     {
         std::vector<std::string> ret;
         EXPECT_EQ(1, RegexUtil::match("1", "^([0-9]+)$", 1, ret));
-        EXPECT_EQ(1, ret.size());
+        EXPECT_EQ(size_t(1), ret.size());
         EXPECT_EQ(ret[0], "1");
     }
     {
         std::vector<std::string> ret;
         EXPECT_EQ(1, RegexUtil::match("12", "^([0-9]+)$", 1, ret));
-        EXPECT_EQ(1, ret.size());
+        EXPECT_EQ(size_t(1), ret.size());
         EXPECT_EQ(ret[0], "12");
     }
     {
@@ -107,7 +107,7 @@ TEST(RegexUtilTest, MatchFetch) {
         EXPECT_TRUE(ret.empty());
 
         EXPECT_EQ(1, RegexUtil::match("12w", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12");
         EXPECT_EQ(ret[1], "w");
     }
@@ -118,7 +118,7 @@ TEST(RegexUtilTest, MatchFetch) {
         EXPECT_TRUE(ret.empty());
 
         EXPECT_EQ(1, RegexUtil::match("12abcL", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12abc");
         EXPECT_EQ(ret[1], "L");
     }
@@ -129,7 +129,7 @@ TEST(RegexUtilTest, MatchFetch) {
         EXPECT_TRUE(ret.empty());
 
         EXPECT_EQ(1, RegexUtil::match("12abc#23", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12abc");
         EXPECT_EQ(ret[1], "23");
     }
@@ -138,7 +138,7 @@ TEST(RegexUtilTest, MatchFetch) {
         std::vector<std::string> ret;
 
         EXPECT_EQ(1, RegexUtil::match("12abZ*/2B", pattern, 2, ret));
-        EXPECT_EQ(2, ret.size());
+        EXPECT_EQ(size_t(2), ret.size());
         EXPECT_EQ(ret[0], "12abZ*");
         EXPECT_EQ(ret[1], "2B");
     }

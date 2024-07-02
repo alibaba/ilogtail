@@ -47,7 +47,7 @@ TEST_F(Cms_CloudChannelTest, GetSendMetricBody1) {
     }
     vector<string> bodyVector;
     CloudMetricConfig metricConfig;
-    EXPECT_EQ(2, pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
+    EXPECT_EQ(size_t(2), pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
     EXPECT_EQ(bodyVector[0].size(), strlen("test 0\n") * pChannel->mMetricSendSize);
     EXPECT_EQ(bodyVector[1], "test 0\n");
 }
@@ -62,7 +62,7 @@ TEST_F(Cms_CloudChannelTest, GetSendMetricBody2) {
     }
     vector<string> bodyVector;
     CloudMetricConfig metricConfig;
-    EXPECT_EQ(1, pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
+    EXPECT_EQ(size_t(1), pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
     EXPECT_EQ(bodyVector[0].size(), strlen("test 0\n") * (pChannel->mMetricSendSize - 1));
 }
 
@@ -76,7 +76,7 @@ TEST_F(Cms_CloudChannelTest, GetSendMetricBody3) {
     }
     vector<string> bodyVector;
     CloudMetricConfig metricConfig;
-    EXPECT_EQ(1, pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
+    EXPECT_EQ(size_t(1), pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
     EXPECT_EQ(bodyVector[0].size(), strlen("test 0\n") * pChannel->mMetricSendSize);
 }
 
@@ -92,7 +92,7 @@ TEST_F(Cms_CloudChannelTest, GetSendMetricBody4) {
     vector<string> bodyVector;
     CloudMetricConfig metricConfig;
     metricConfig.needTimestamp = true;
-    EXPECT_EQ(1, pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
+    EXPECT_EQ(size_t(1), pChannel->GetSendMetricBody(metrics, bodyVector, metricConfig));
     EXPECT_EQ(bodyVector[0], "test{label=\"a\\\\b\\\"c\\nd\"} 0 0\n");
 }
 
@@ -250,7 +250,7 @@ TEST_F(Cms_CloudChannelTest, AddCommonMetrics) {
     SingletonTaskManager::Instance()->SetNodeItem(nonEmptyNode);
 
     EXPECT_EQ(0, chan.AddCommonMetrics(metrics, szConfJson));
-    EXPECT_EQ(1, chan.sendMetricCount);
+    EXPECT_EQ(size_t(1), chan.sendMetricCount);
 }
 
 TEST_F(Cms_CloudChannelTest, GetSendMetricHeader) {
@@ -388,7 +388,7 @@ TEST_F(Cms_CloudChannelTest, ToPayloadMsgs_SkipInvalid) {
     SingletonLogger::Instance()->switchLogCache(true);
     defer(SingletonLogger::Instance()->switchLogCache(false));
     std::string body;
-    EXPECT_EQ(0, chan.ToPayloadMsgs(cloudMsgs, body));
+    EXPECT_EQ(size_t(0), chan.ToPayloadMsgs(cloudMsgs, body));
     std::string cache = SingletonLogger::Instance()->getLogCache();
     std::cout << cache;
     EXPECT_NE(std::string::npos, cache.find("skip invalid"));
@@ -408,7 +408,7 @@ TEST_F(Cms_CloudChannelTest, ToPayloadMsgs_SkipEmpty) {
     SingletonLogger::Instance()->switchLogCache(true);
     defer(SingletonLogger::Instance()->switchLogCache(false));
     std::string body;
-    EXPECT_EQ(0, chan.ToPayloadMsgs(cloudMsgs, body));
+    EXPECT_EQ(size_t(0), chan.ToPayloadMsgs(cloudMsgs, body));
     std::string cache = SingletonLogger::Instance()->getLogCache();
     std::cout << cache;
     EXPECT_NE(std::string::npos, cache.find("skip empty"));
@@ -431,7 +431,7 @@ TEST_F(Cms_CloudChannelTest, ToPayloadMsgs_ZeroLine) {
     SingletonLogger::Instance()->switchLogCache(true);
     defer(SingletonLogger::Instance()->switchLogCache(false));
     std::string body;
-    EXPECT_EQ(0, chan.ToPayloadMsgs(cloudMsgs, body));
+    EXPECT_EQ(size_t(0), chan.ToPayloadMsgs(cloudMsgs, body));
     std::string cache = SingletonLogger::Instance()->getLogCache();
     std::cout << cache;
     EXPECT_NE(std::string::npos, cache.find("skip empty invalid"));
@@ -462,7 +462,7 @@ TEST_F(Cms_CloudChannelTest, ToPayloadMsgs_Success) {
     chan.mNodeItem.aliUid = "1234567";
 
     std::string body;
-    EXPECT_EQ(1, chan.ToPayloadMsgs(cloudMsgs, body));
+    EXPECT_EQ(size_t(1), chan.ToPayloadMsgs(cloudMsgs, body));
     std::cout << body;
     const char *szExpect = "cpu_utilization 1706367779000 2.2 ns=acs_host targetIP=127.0.0.1 jumps=23 instanceId=i-123 userId=1234567\n";
     EXPECT_EQ(body, szExpect);

@@ -59,7 +59,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_003) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.timestamp, 0);
     EXPECT_EQ(commonMetric.value, 1.0);
@@ -70,7 +70,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_004) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.timestamp, 0);
     EXPECT_EQ(commonMetric.value, 1.0);
@@ -81,7 +81,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_005) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.timestamp, 0);
     EXPECT_EQ(fmt::format("{}", commonMetric.value), "2.54389726e-05");
@@ -93,7 +93,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_006) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.tagMap["name"], "hello");
     EXPECT_EQ(commonMetric.timestamp, 0);
@@ -117,7 +117,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_008) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.tagMap["name"], "hello");
     EXPECT_EQ(commonMetric.timestamp, 0);
@@ -129,7 +129,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_009) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.tagMap["name"], "hello");
     EXPECT_EQ(commonMetric.timestamp, 0);
@@ -142,7 +142,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_010) {
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.tagMap["name"], "hello");
     EXPECT_EQ(commonMetric.timestamp, 0);
@@ -155,7 +155,7 @@ TEST_F(CommonPrometheusMetricTest, ParseMetric_011_without_value) {
     CommonMetric commonMetric;
     EXPECT_EQ(59, PrometheusMetric::ParseMetric(str, commonMetric));
     EXPECT_EQ(commonMetric.name, "container_cpu_load_average_10s");
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxx");
     EXPECT_EQ(commonMetric.tagMap["name"], "hello");
     EXPECT_EQ(commonMetric.value, 0.0);
@@ -216,7 +216,7 @@ TEST_F(CommonPrometheusMetricTest,ParseMetric_100) {
     string str = R"(container_cpu_load_average_10s{id="xxxx",name="docker_ubuntu_16.10"} 1.0)";
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.timestamp, 0);
     EXPECT_EQ(commonMetric.value, 1.0);
 }
@@ -224,7 +224,7 @@ TEST_F(CommonPrometheusMetricTest,ParseMetric_101) {
     const std::string str = R"(container_cpu_load_average_10s{id="xxxx",name="docker_ubuntu_16.10"} -1.0 152222)";
     CommonMetric commonMetric;
     EXPECT_EQ(0,PrometheusMetric::ParseMetric(str,commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(),2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"],"xxxx");
     EXPECT_EQ(commonMetric.tagMap["name"],"docker_ubuntu_16.10");
     EXPECT_EQ(commonMetric.timestamp,152222);
@@ -235,7 +235,7 @@ TEST_F(CommonPrometheusMetricTest,ParseMetric_102)
     const string str = R"(container_cpu_load_average_10s{id="xxxx",name="{docker_ubuntu_16.10}"} 1.0)";
     CommonMetric commonMetric;
     EXPECT_EQ(0,PrometheusMetric::ParseMetric(str,commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(),2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.timestamp,0);
     EXPECT_EQ(commonMetric.value,1.0);
     EXPECT_EQ(commonMetric.tagMap["name"],"{docker_ubuntu_16.10}");
@@ -244,7 +244,7 @@ TEST_F(CommonPrometheusMetricTest,ParseMetric_103) {
     CommonMetric commonMetric;
     const std::string str = R"(container_cpu_load_average_10s{id="xxxx",name="=docker_ubuntu_16.10"} -1.0 152222)";
     EXPECT_EQ(0,PrometheusMetric::ParseMetric(str,commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(),2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.tagMap["id"],"xxxx");
     EXPECT_EQ(commonMetric.tagMap["name"],"=docker_ubuntu_16.10");
     EXPECT_EQ(commonMetric.timestamp,152222);
@@ -265,7 +265,7 @@ TEST_F(CommonPrometheusMetricTest,ParseMetric3) {
     LogDebug("metricValue: {}", commonMetric.value);
     LogDebug("metricTimestamp: {}", commonMetric.timestamp);
 
-    EXPECT_EQ(commonMetric.tagMap.size(), 7);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(7));
     EXPECT_EQ(commonMetric.tagMap["dnsnames"], ",*.4px.com,www.4px.com,4px.com,");
     EXPECT_EQ(commonMetric.tagMap["issuer_cn"], "GlobalSign RSA OV SSL CA 2018");
     EXPECT_NE(commonMetric.tagMap.find("ips"), commonMetric.tagMap.end());
@@ -306,7 +306,7 @@ TEST_F(CommonPrometheusMetricTest,MetricToLine_001) {
     string str = R"(container_cpu_load_average_10s{id="xxxx",name="docker_ubuntu_16.10"} 1.01 1602232053000)";
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.timestamp, 1602232053000);
     EXPECT_EQ(commonMetric.value, 1.01);
     string lineStr = PrometheusMetric::MetricToLine(commonMetric);
@@ -316,7 +316,7 @@ TEST_F(CommonPrometheusMetricTest,MetricToLine_002) {
     const string str = "container_cpu_load_average_10s{id=\"xxxx\"} 2.02 152222";
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(), 1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["id"], "xxxx");
     EXPECT_EQ(commonMetric.timestamp, 152222);
     string lineStr = PrometheusMetric::MetricToLine(commonMetric);
@@ -327,7 +327,7 @@ TEST_F(CommonPrometheusMetricTest,MetricToLine_003) {
     string str1      = "container_cpu_load_average_10s{id=\"xxxx\"} 2 152222";
     CommonMetric commonMetric;
     EXPECT_EQ(0,PrometheusMetric::ParseMetric(str,commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(),1);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(1));
     EXPECT_EQ(commonMetric.tagMap["id"],"xxxx");
     EXPECT_EQ(commonMetric.timestamp,152222);
     string lineStr = PrometheusMetric::MetricToLine(commonMetric);
@@ -338,7 +338,7 @@ TEST_F(CommonPrometheusMetricTest, MetricToLine_004) {
     string str = R"(container_cpu_load_average_10s{id="a\b\"c\n",name="docker_ubuntu_16.10"} 1.01 1602232053000)";
     CommonMetric commonMetric;
     EXPECT_EQ(0, PrometheusMetric::ParseMetric(str, commonMetric));
-    EXPECT_EQ(commonMetric.tagMap.size(), 2);
+    EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
     EXPECT_EQ(commonMetric.timestamp, 1602232053000);
     EXPECT_EQ(commonMetric.value, 1.01);
     string lineStr = PrometheusMetric::MetricToLine(commonMetric);

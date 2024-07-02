@@ -36,7 +36,7 @@ TEST_F(ExporterMetricTest,ParseLine){
    EXPECT_EQ(0,pMetric->ParseLine(str,commonMetric));
    EXPECT_EQ(commonMetric.name,"container_cpu_load_average_10s");
    EXPECT_EQ(commonMetric.value,1.0);
-   EXPECT_EQ(commonMetric.tagMap.size(),2);
+   EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
    EXPECT_EQ(commonMetric.tagMap["id"],"xxxx");
    EXPECT_EQ(commonMetric.tagMap["name"],"docker_ubuntu_16.10");
    ResetCommonMetric(commonMetric);
@@ -44,7 +44,7 @@ TEST_F(ExporterMetricTest,ParseLine){
    EXPECT_EQ(0,pMetric->ParseLine(str,commonMetric));
    EXPECT_EQ(commonMetric.name,"container_cpu_load_average_10s");
    EXPECT_EQ(commonMetric.value,1.0);
-   EXPECT_EQ(commonMetric.tagMap.size(),2);
+   EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
    EXPECT_EQ(commonMetric.tagMap["id"],"xxxx");
    EXPECT_EQ(commonMetric.tagMap["name"],"docker_ubuntu_16.10");
    ResetCommonMetric(commonMetric);
@@ -52,18 +52,18 @@ TEST_F(ExporterMetricTest,ParseLine){
    EXPECT_EQ(0,pMetric->ParseLine(str,commonMetric));
    EXPECT_EQ(commonMetric.name,"container_cpu_load_average_10s");
    EXPECT_EQ(commonMetric.value,1.0);
-   EXPECT_EQ(commonMetric.tagMap.size(),0);
+   EXPECT_EQ(commonMetric.tagMap.size(), size_t(0));
    ResetCommonMetric(commonMetric);
    str = "#container_cpu_load_average_10s 1.0";
    EXPECT_EQ(-1,pMetric->ParseLine(str,commonMetric));
-   EXPECT_EQ(commonMetric.name.size(),0);
+   EXPECT_EQ(commonMetric.name.size(), size_t(0));
   ResetCommonMetric(commonMetric);
   str.clear();
   FileUtils::ReadFileContent((TEST_CONF_PATH / "conf/exporter_task/exporter1.content").string(),str);
   LogInfo("{}", str);
   EXPECT_EQ(0,pMetric->ParseLine(str,commonMetric));
   EXPECT_EQ(commonMetric.name,"msdos_file_access_time_seconds");
-  EXPECT_EQ(commonMetric.tagMap.size(),2);
+  EXPECT_EQ(commonMetric.tagMap.size(), size_t(2));
   delete pMetric;
 }
 
@@ -128,7 +128,7 @@ TEST_F(ExporterMetricTest,AddMetric1){
   EXPECT_EQ(3,pMetric->GetCommonMetrics(commonMetrics));
   for(size_t i=0;i<commonMetrics.size();i++)
   {
-    EXPECT_EQ(commonMetrics[i].tagMap.size(),2);
+    EXPECT_EQ(commonMetrics[i].tagMap.size(), size_t(2));
     if(commonMetrics[i].name=="container_cpu_load_average_1s")
     {
       EXPECT_EQ(commonMetrics[i].value,1.0);
@@ -149,7 +149,7 @@ TEST_F(ExporterMetricTest,AddMetric1){
   EXPECT_EQ(3,pMetric->GetCommonMetrics(commonMetrics));
   for(size_t i=0;i<commonMetrics.size();i++)
   {
-    EXPECT_EQ(commonMetrics[i].tagMap.size(),2);
+    EXPECT_EQ(commonMetrics[i].tagMap.size(), size_t(2));
     if(commonMetrics[i].name=="container_cpu_load_average_1s")
     {
       EXPECT_EQ(commonMetrics[i].value,3.0);
@@ -171,7 +171,7 @@ TEST_F(ExporterMetricTest,AddMetric1){
   EXPECT_EQ(3,pMetric->GetCommonMetrics(commonMetrics));
   for(size_t i=0;i<commonMetrics.size();i++)
   {
-    EXPECT_EQ(commonMetrics[i].tagMap.size(),2);
+    EXPECT_EQ(commonMetrics[i].tagMap.size(), size_t(2));
     if(commonMetrics[i].name=="container_cpu_load_average_1s")
     {
       EXPECT_EQ(commonMetrics[i].value,3.0);
@@ -215,7 +215,7 @@ TEST_F(ExporterMetricTest,AddMetric2){
   EXPECT_EQ(2,pMetric->GetCommonMetrics(commonMetrics));
   for(size_t i=0;i<commonMetrics.size();i++)
   {
-    EXPECT_EQ(commonMetrics[i].tagMap.size(),2);
+    EXPECT_EQ(commonMetrics[i].tagMap.size(), size_t(2));
   }
   if(commonMetrics.size()>1){
     EXPECT_EQ(commonMetrics[0].value,1.0);
@@ -247,9 +247,9 @@ TEST_F(ExporterMetricTest,AddMetric3){
   EXPECT_EQ(2,pMetric->GetCommonMetrics(commonMetrics));
   for(size_t i=0;i<commonMetrics.size();i++)
   {
-    EXPECT_EQ(commonMetrics[i].tagMap.size(),2);
+    EXPECT_EQ(commonMetrics[i].tagMap.size(), size_t(2));
   }
-  if(commonMetrics.size()>1){
+  if (commonMetrics.size() > 1) {
     EXPECT_EQ(commonMetrics[0].value,1.0);
     EXPECT_EQ(commonMetrics[0].name,"cpu_1");
     EXPECT_EQ(commonMetrics[1].value,5.0);

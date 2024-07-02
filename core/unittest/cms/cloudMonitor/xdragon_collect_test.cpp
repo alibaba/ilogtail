@@ -32,14 +32,14 @@ protected:
 TEST_F(Cms_XDragonCollectTest, CheckEvn) {
     pShared->mIniFile = (TEST_CONF_PATH / "conf/cloudMonitor/xdragon/xdragon.ini").string();
     EXPECT_TRUE(pShared->CheckEvn());
-    EXPECT_EQ(10, pShared->mTotalCount);
+    EXPECT_EQ(size_t(10), pShared->mTotalCount);
     EXPECT_EQ("/bin/echo", pShared->mBinFile);
 }
 
 TEST_F(Cms_XDragonCollectTest, Collect) {
     pShared->mIniFile = (TEST_CONF_PATH / "conf/cloudMonitor/xdragon/xdragon.ini").string();
     EXPECT_EQ(0, pShared->Init());
-    EXPECT_EQ(10, pShared->mTotalCount);
+    EXPECT_EQ(decltype(pShared->mTotalCount)(10), pShared->mTotalCount);
     pShared->mBinFile = "/bin/echo helloworld";
     for (int i = 1; i <= 100; i++) {
         string data;

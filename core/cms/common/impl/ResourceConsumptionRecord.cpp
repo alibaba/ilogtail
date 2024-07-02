@@ -19,7 +19,7 @@ std::string ResourceConsumption::str() const {
 
 /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
-constexpr const int ResourceConsumptionRecorder::topN;
+constexpr const size_t ResourceConsumptionRecorder::topN;
 ResourceConsumptionRecorder::ResourceConsumptionRecorder() = default;
 
 // void ResourceConsumptionRecorder::EnableRecording(bool enable) {
