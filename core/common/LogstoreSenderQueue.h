@@ -410,7 +410,7 @@ public:
 
     void Feedback(int64_t key) override { mTrigger.Trigger(); }
 
-    bool IsValidToPush(int64_t key) override {
+    bool IsValidToPush(int64_t key) const override {
         PTScopedLock dataLock(mLock);
         auto iter = mLogstoreSenderQueueMap.find(key);
         if (iter == mLogstoreSenderQueueMap.end()) {
