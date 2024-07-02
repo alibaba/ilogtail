@@ -47,5 +47,7 @@ func All() {
 	_, _ = AllGeneratedLog(ctx)
 	_, _ = GoTestCache(ctx)
 	_, _ = DeleteContainers(ctx)
-	_ = subscriber.TestSubscriber.Stop()
+	if subscriber.TestSubscriber != nil {
+		_ = subscriber.TestSubscriber.Stop()
+	}
 }

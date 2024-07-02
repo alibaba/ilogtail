@@ -40,6 +40,7 @@ func LogCount(ctx context.Context, expect int) (context.Context, error) {
 	var count int
 	err = retry.Do(
 		func() error {
+			count = 0
 			groups, err = subscriber.TestSubscriber.GetData(from)
 			if err != nil {
 				return err
@@ -83,6 +84,7 @@ func LogCountAtLeast(ctx context.Context, expect int) (context.Context, error) {
 	var count int
 	err = retry.Do(
 		func() error {
+			count = 0
 			groups, err = subscriber.TestSubscriber.GetData(from)
 			if err != nil {
 				return err
@@ -126,6 +128,7 @@ func LogCountAtLeastWithFilter(ctx context.Context, expect int, filterKey string
 	var count int
 	err = retry.Do(
 		func() error {
+			count = 0
 			groups, err = subscriber.TestSubscriber.GetData(from)
 			if err != nil {
 				return err
@@ -136,6 +139,7 @@ func LogCountAtLeastWithFilter(ctx context.Context, expect int, filterKey string
 					for _, content := range log.Contents {
 						if content.Key == filterKey && content.Value == filterValue {
 							count++
+							break
 						}
 					}
 				}

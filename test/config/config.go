@@ -30,7 +30,6 @@ type Config struct {
 	// docker compose
 	Profile          bool     `mapstructure:"profile" yaml:"profile"`
 	CoveragePackages []string `mapstructure:"coverage_packages" yaml:"coverage_packages"`
-	TestingInterval  string   `mapstructure:"testing_interval" yaml:"testing_interval"`
 	// SLS
 	Project         string        `mapstructure:"project" yaml:"project"`
 	Logstore        string        `mapstructure:"logstore" yaml:"logstore"`

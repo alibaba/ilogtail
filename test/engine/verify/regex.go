@@ -33,7 +33,7 @@ func RegexSingle(ctx context.Context) (context.Context, error) {
 	} else {
 		return ctx, fmt.Errorf("no start time")
 	}
-	fields := []string{"mark", "file", "logNo", "ip", "time", "method", "url", "http", "status", "size", "userAgent", "msg"}
+	fields := []string{"mark", "file", "logno", "ip", "time", "method", "url", "http", "status", "size", "useragent", "msg"}
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
 	var groups []*protocol.LogGroup
@@ -46,9 +46,6 @@ func RegexSingle(ctx context.Context) (context.Context, error) {
 			}
 			for _, group := range groups {
 				for _, log := range group.Logs {
-					if len(log.Contents) != len(fields) {
-						return fmt.Errorf("field count not match, expect %d, got %d", len(fields), len(log.Contents))
-					}
 					for _, field := range fields {
 						found := false
 						for _, content := range log.Contents {

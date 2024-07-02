@@ -54,7 +54,7 @@ func AddLocalConfig(ctx context.Context, configName, c string) (context.Context,
 		}
 	} else {
 		command := fmt.Sprintf(`cd %s && cat << 'EOF' > %s.yaml
-	%s`, iLogtailLocalConfigDir, configName, c)
+%s`, iLogtailLocalConfigDir, configName, c)
 		if err := setup.Env.ExecOnLogtail(command); err != nil {
 			return ctx, err
 		}
