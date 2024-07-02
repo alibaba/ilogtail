@@ -89,9 +89,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/links.cmake)
 set(SUBDIR_SOURCE_FILES "")
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/common.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/common/links.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/input/input.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/input/links.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/processor/processor.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/processor/links.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/flusher.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
@@ -102,7 +106,7 @@ set(SUB_DIRECTORIES_LIST
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)
-        set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} shennong streamlog)
+        set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} shennong shennong/sdk streamlog aggregator)
     endif()
 elseif(MSVC)
     if (ENABLE_ENTERPRISE)
@@ -131,6 +135,11 @@ foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     file(GLOB TEMP_SOURCE_FILES ${DIR_NAME}/*.c ${DIR_NAME}/*.cc ${DIR_NAME}/*.cpp)
     list(APPEND SOURCE_FILES_LIST ${TEMP_SOURCE_FILES})
 endforeach (DIR_NAME)
+
+if (ENABLE_ENTERPRISE)
+    # remove several files in shennong/sdk
+    list(REMOVE_ITEM SOURCE_FILES_LIST ${CMAKE_CURRENT_SOURCE_DIR}/shennong/sdk/sample.cpp)
+endif()
 
 # remove several files in go_pipeline
 list(REMOVE_ITEM SOURCE_FILES_LIST ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.cpp ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.h)
@@ -211,5 +220,9 @@ add_subdirectory(common)
 
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
-    link_all(${LOGTAIL_TARGET})
+    all_link(${LOGTAIL_TARGET})
+    common_link(${LOGTAIL_TARGET})
+    input_link(${LOGTAIL_TARGET})
+    processor_link(${LOGTAIL_TARGET})
+    flusher_link(${LOGTAIL_TARGET})
 endif()

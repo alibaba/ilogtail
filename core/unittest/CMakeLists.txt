@@ -16,6 +16,10 @@ cmake_minimum_required(VERSION 3.22)
 project(unittest_base)
 
 include(${CMAKE_SOURCE_DIR}/links.cmake)
+include(${CMAKE_SOURCE_DIR}/common/links.cmake)
+include(${CMAKE_SOURCE_DIR}/processor/links.cmake)
+include(${CMAKE_SOURCE_DIR}/input/links.cmake)
+include(${CMAKE_SOURCE_DIR}/flusher/links.cmake)
 
 add_definitions(-DAPSARA_UNIT_TEST_MAIN)
 set(NO_TCMALLOC TRUE)
@@ -35,7 +39,11 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
 endif()
 
-link_all(${PROJECT_NAME})
+all_link(${PROJECT_NAME})
+common_link(${PROJECT_NAME})
+input_link(${PROJECT_NAME})
+processor_link(${PROJECT_NAME})
+flusher_link(${PROJECT_NAME})
 
 add_subdirectory(app_config)
 add_subdirectory(batch)
