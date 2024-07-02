@@ -42,7 +42,6 @@ void ScrapeWork::StartScrapeLoop() {
     // 以线程的方式实现
     if (!mScrapeLoopThread) {
         mScrapeLoopThread = CreateThread([this]() { scrapeLoop(); });
-        LOG_INFO(sLogger, ("start prometheus scrape loop", mTarget.mHash));
     }
 }
 
@@ -57,13 +56,11 @@ void ScrapeWork::StopScrapeLoop() {
 void ScrapeWork::scrapeLoop() {
     LOG_INFO(sLogger, ("start prometheus scrape loop", mTarget.mHash));
     uint64_t randSleep = getRandSleep();
-    LOG_INFO(sLogger, ("randSleep ms", randSleep / 1000ULL / 1000ULL)("target", mTarget.mHash));
     this_thread::sleep_for(chrono::nanoseconds(randSleep));
 
     while (!mFinished.load()) {
         uint64_t lastProfilingTime = GetCurrentTimeInNanoSeconds();
         // ReadLock lock(mScrapeLoopThreadRWL);
-        LOG_INFO(sLogger, ("scrape time", lastProfilingTime / 1000ULL / 1000ULL / 1000ULL)("target", mTarget.mHash));
         time_t defaultTs = time(nullptr);
 
         // scrape target by CurlClient
@@ -93,7 +90,6 @@ void ScrapeWork::scrapeLoop() {
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
         uint64_t timeToWait = (uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
             - elapsedTime % ((uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
-        LOG_INFO(sLogger, ("time to wait ms", timeToWait / 1000ULL / 1000ULL)("target", mTarget.mHash));
         this_thread::sleep_for(chrono::nanoseconds(timeToWait));
     }
     LOG_INFO(sLogger, ("stop prometheus scrape loop", mTarget.mHash));

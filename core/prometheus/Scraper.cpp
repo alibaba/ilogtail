@@ -89,7 +89,6 @@ void ScraperGroup::RemoveScrapeJob(const string& jobName) {
 void ScraperGroup::Start() {
     mFinished.store(false);
     mScraperThread = CreateThread([this]() { ProcessScrapeWorkUpdate(); });
-    LOG_INFO(sLogger, ("ScraperGroup Start", ""));
 }
 
 void ScraperGroup::Stop() {
