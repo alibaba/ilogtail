@@ -77,7 +77,7 @@ services:
       - ALICLOUD_LOG_PLUGIN_ENV_CONFIG=false
       - ALIYUN_LOGTAIL_USER_DEFINED_ID=1111
     healthcheck:
-      test: "cat /ilogtail/ilogtail.LOG"
+      test: "cat ilogtail.LOG"
       interval: 15s
       timeout: 5s
 `
