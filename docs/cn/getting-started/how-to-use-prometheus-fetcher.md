@@ -12,12 +12,11 @@ iLogtail 的采集配置全面兼容Prometheus[配置文件](https://prometheus.
 | --- | --- | --- |
 | Yaml | yaml格式的采集配置 |  |
 | ConfigFilePath | 采集配置文件路径，当Yaml参数生效时，此字段被忽略。 |  |
-| AuthorizationPath | 鉴权路径，如 consul_sd_config 配置中authorization 参数生效时的鉴权文件查找路径。 | 当Yaml 参数生效时，默认路径为程序运行目录；
-当ConfigFilePath参数生效时，默认路径为其配置文件所在路径。 |
+| AuthorizationPath | 鉴权路径，如 consul_sd_config 配置中authorization 参数生效时的鉴权文件查找路径。 | 当Yaml 参数生效时，默认路径为程序运行目录；当ConfigFilePath参数生效时，默认路径为其配置文件所在路径。 |
 
 以下是一个简单的prometheus 采集配置。
 
-```
+```json
 {
     "inputs":[
         {
@@ -43,7 +42,7 @@ iLogtail Prometheus 采集的Metrics 数据与日志同样遵循[iLogtail 的传
 | 传输字段 | 含义 |
 | --- | --- |
 | __name__ | 指标名，与Prometheus exporter 指标名相同。 |
-| __labels__ | 指标Label 熟悉，数据格式为{label_a_nane}#$#{label_a_value}|{label_b_nane}#$#{label_b_value}，例如instance#$#exporter:18080|job#$#prometheus |
+| __labels__ | 指标Label属性，数据格式为{label_a_nane}\#\$\#{label_a_value}\|{label_b_nane}\#\$\#{label_b_value}，例如instance\#\$\#exporter:18080\|job\#\$\#prometheus |
 | __time_nano__ | 采集时间 |
 | __value__ | 指标值 |
 
@@ -52,7 +51,7 @@ iLogtail Prometheus 采集的Metrics 数据与日志同样遵循[iLogtail 的传
 目前iLogtail 已经集成了prometheus 的E2E测试，可以在iLogtail 的根路径快速进行上手验证。
 测试命令：TEST_SCOPE=input_prometheus  TEST_DEBUG=true   make e2e（开启DEBUG 选项可以查看传输数据明细）_
 
-```
+```bash
 TEST_DEBUG=true TEST_PROFILE=false  ./scripts/e2e.sh behavior input_prometheus
 =========================================
 input_prometheus testing case
@@ -145,11 +144,13 @@ All testing cases are passed
 
 ## 本地Node Exporter 采集实战
 
-1. 准备Linux 环境。
-1. 下载NodeExporter，下载地址：[https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter) ，并进行启动，启动后可以通过curl 127.0.0.1:9100/metrics 查看NodeExporter 的Metrics指标。
-1. [下载](https://github.com/alibaba/ilogtail/releases)最新的ilogtail版本进行安装。
+1\. 准备Linux 环境。
 
-```shell
+2\. 下载NodeExporter，下载地址：[https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter) ，并进行启动，启动后可以通过curl 127.0.0.1:9100/metrics 查看NodeExporter 的Metrics指标。
+
+3\. [下载](https://github.com/alibaba/ilogtail/releases)最新的ilogtail版本进行安装。
+
+```bash
 # 解压tar包
 $ tar zxvf logtail-linux64.tar.gz
 
@@ -170,9 +171,9 @@ $ ll
 -rwxr-xr-x 1 500 500  2333024 LogtailInsight
 ```
 
-4. 创建采集配置目录。
+4\. 创建采集配置目录。
 
-```
+```bash
 # 1. 创建sys_conf_dir
 $ mkdir sys_conf_dir
 
@@ -199,9 +200,9 @@ $ ll
 drwxr-xr-x 2 root root sys_conf_dir
 ```
 
-5. 设置采集配置文件，将下列内如写入sys_conf_dir/user_local_config.json文件，上述核心配置为plugin部分，配置说明我们启动了Prometheus 采集插件，采集端口为9100，并且我们将采集到的数据保存于node_exporter.log 文件。
+5\. 设置采集配置文件，将下列内如写入sys_conf_dir/user_local_config.json文件，上述核心配置为plugin部分，配置说明我们启动了Prometheus 采集插件，采集端口为9100，并且我们将采集到的数据保存于node_exporter.log 文件。
 
-```
+```json
 {
     "metrics":{
         "##1.0##k8s-log-custom-test-project-helm-0":{
@@ -260,9 +261,9 @@ drwxr-xr-x 2 root root sys_conf_dir
 }
 ```
 
-5. 启动iLogtail，查看采集数据。
+6\. 启动iLogtail，查看采集数据。
 
-```
+```bash
 # 启动采集
 $ ./ilogtail_1.0.28
 $ ps -ef|grep logtail
@@ -288,10 +289,10 @@ tailf node_exporter.json
 ### iLogtail 采集Prometheus数据
 
 1. 参考[主机环境日志采集到SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md) 建立主机iLogtail与阿里云日志服务的链接。
-1. 主机下载NodeExporter，下载地址：[https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter) ，并进行启动，启动后可以通过curl 127.0.0.1:9100/metrics 查看NodeExporter 的Metrics指标。
-1. 创建日志服务MetricStore。![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045436-540723d4-9ec8-40b2-a823-395d8f4b9f14.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=899&id=u397c0ba6&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1798&originWidth=5078&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1687136&status=done&style=none&taskId=uf5326ee3-9abf-4992-a1b9-995f1b4dbbb&title=&width=2539)
-1. 创建Prometheus采集配置。![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941046161-d05cae9e-78ef-4868-b9eb-fc9d03933afa.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1327&id=uc5d8d99f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2654&originWidth=5104&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1619794&status=done&style=none&taskId=u7590c247-e470-4f14-849c-a2f87ffd181&title=&width=2552) ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045019-d9e639e1-af34-4b1f-b493-9e907d401021.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1016&id=YrIom&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2032&originWidth=5110&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1157627&status=done&style=none&taskId=u83af2842-a512-46e5-aeb5-cca81d292bf&title=&width=2555)
-1. 查看采集数据
+2. 主机下载NodeExporter，下载地址：[https://prometheus.io/download/#node_exporter](https://prometheus.io/download/#node_exporter) ，并进行启动，启动后可以通过curl 127.0.0.1:9100/metrics 查看NodeExporter 的Metrics指标。
+3. 创建日志服务MetricStore。![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045436-540723d4-9ec8-40b2-a823-395d8f4b9f14.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=899&id=u397c0ba6&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1798&originWidth=5078&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1687136&status=done&style=none&taskId=uf5326ee3-9abf-4992-a1b9-995f1b4dbbb&title=&width=2539)
+4. 创建Prometheus采集配置。![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941046161-d05cae9e-78ef-4868-b9eb-fc9d03933afa.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1327&id=uc5d8d99f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2654&originWidth=5104&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1619794&status=done&style=none&taskId=u7590c247-e470-4f14-849c-a2f87ffd181&title=&width=2552) ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045019-d9e639e1-af34-4b1f-b493-9e907d401021.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1016&id=YrIom&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2032&originWidth=5110&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1157627&status=done&style=none&taskId=u83af2842-a512-46e5-aeb5-cca81d292bf&title=&width=2555)
+5. 查看采集数据
 
 如下图所知，iLogtail 采集的NodeExporter 指标采用图表化展现，日志服务Metrics查询语言全面兼容PromQL，更多可视化用户请参考[https://help.aliyun.com/document_detail/252810.html](https://help.aliyun.com/document_detail/252810.html)。
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941045099-18a4e7f8-7b15-4b65-80d1-5ba482033f7e.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=688&id=u692a8d64&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1376&originWidth=5118&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1242472&status=done&style=none&taskId=u29f1caad-1026-412c-b72f-f19b4dad06f&title=&width=2559)
@@ -304,10 +305,8 @@ tailf node_exporter.json
 1. 使用Grafana Prometheus 数据源对接日志服务，参考[时序数据对接Grafana](https://help.aliyun.com/document_detail/173903.html)。
 1. 下载NodeExporter 看板Json文件，如[Node Exporter Full 看板](https://grafana.com/grafana/dashboards/1860)。
 1. 导入看板。
-
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941050539-053853c7-b41e-4878-9025-747bfeb4dbca.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=993&id=u50fa9b1d&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1986&originWidth=3582&originalType=binary&ratio=1&rotation=0&showTitle=false&size=485985&status=done&style=none&taskId=uda685e33-85bd-42a5-b971-f6bc5258f80&title=&width=1791)
-
-5. 查看指标数据，如下图所示，Grafana 展示了iLogtail 采集的指标数据。
+1. 查看指标数据，如下图所示，Grafana 展示了iLogtail 采集的指标数据。
 
 ![image.png](https://cdn.nlark.com/yuque/0/2022/png/22279413/1644941051766-a7480574-2ed3-4045-bd4a-527814075117.png#clientId=u7b2622d4-68ae-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=1006&id=u3f66e6fb&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2012&originWidth=3580&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1799336&status=done&style=none&taskId=uddc25eaf-ca05-4e3c-a728-a525af4efe7&title=&width=1790)
 
@@ -318,12 +317,7 @@ iLogtail 提供了完整Prometheus 指标采集能力，无需改造Exporter 指
 ## 参考文档
 
 - [Grafana安装指南](https://grafana.com/docs/grafana/latest/installation/)
-
 - [时序数据对接Grafana](https://help.aliyun.com/document_detail/173903.html)
 - [iLogtail 的传输层协议](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto)
 - [主机环境日志采集到SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md)
-​
-
-​
-
 ​
