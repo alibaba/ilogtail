@@ -24,19 +24,22 @@
 #include <unordered_set>
 #include <vector>
 
-#include "batch/Batcher.h"
 #include "batch/BatchStatus.h"
+#include "batch/Batcher.h"
 #include "common/LogstoreFeedbackKey.h"
 #include "compression/Compressor.h"
 #include "models/PipelineEventGroup.h"
 #include "plugin/interface/Flusher.h"
-#include "serializer/SLSSerializer.h"
 #include "queue/SenderQueueItem.h"
 #include "sender/ConcurrencyLimiter.h"
+#include "serializer/SLSSerializer.h"
 
 namespace logtail {
 
 class FlusherSLS : public Flusher {
+    // TODO: temporarily used here
+    friend class ProfileSender;
+
 public:
     enum class TelemetryType { LOG, METRIC };
 
