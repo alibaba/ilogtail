@@ -88,14 +88,15 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
             }
         }
     }
-    if (mScrapeConfig.isMember("bearer_token_file")) {
+    if (mScrapeConfig.isMember("authorization") && mScrapeConfig["authorization"].isObject()) {
+        string type = mScrapeConfig["authorization"]["type"].asString();
         string bearerToken;
-        bool b = ReadFile(mScrapeConfig["bearer_token_file"].asString(), bearerToken);
+        bool b = ReadFile(mScrapeConfig["authorization"]["credentials_file"].asString(), bearerToken);
         if (!b) {
-            LOG_ERROR(sLogger, ("read bearer_token_file failed, bearer_token_file", mScrapeConfig["bearer_token_file"].asString()));
+            LOG_ERROR(sLogger, ("read credentials_file failed, credentials_file", mScrapeConfig["authorization"]["credentials_file"].asString()));
         }
-        string mode = " Bearer ";
-        mHeaders["Authorization"] = mode + bearerToken;
+        mHeaders["Authorization"] = type + " " + bearerToken;
+        LOG_INFO(sLogger, ("read credentials_file success, credentials_file", mScrapeConfig["authorization"]["credentials_file"].asString())("Authorization", mHeaders["Authorization"]));
     }
     vector<string> sdConfigs
         = {"azure_sd_configs",       "consul_sd_configs",     "digitalocean_sd_configs", "docker_sd_configs",
@@ -110,7 +111,6 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
     httpSDConfig["url"] = httpPrefix + ToString(getenv("OPERATOR_HOST")) + ":" + ToString(getenv("OPERATOR_PORT"))
         + "/jobs/" + url_encode(mJobName) + "/targets?collector_id=" + ToString(getenv("POD_NAME"));
     httpSDConfig["follow_redirects"] = false;
-    LOG_INFO(sLogger,("ScrapeJob init", httpSDConfig.toStyledString()));
     for (const auto& sdConfig : sdConfigs) {
         mScrapeConfig.removeMember(sdConfig);
     }
@@ -134,7 +134,6 @@ void ScrapeJob::StartTargetsDiscoverLoop() {
     mFinished.store(false);
     if (!mTargetsDiscoveryLoopThread) {
         mTargetsDiscoveryLoopThread = CreateThread([this]() { TargetsDiscoveryLoop(); });
-        LOG_INFO(sLogger,("ScrapeJob start", mJobName));
     }
 }
 
@@ -173,14 +172,12 @@ void ScrapeJob::TargetsDiscoveryLoop() {
         if (!b1) {
             continue;
         }
-        LOG_INFO(sLogger,("FetchHttpData success", mJobName)("url", url));
         unordered_map<string, unique_ptr<ScrapeTarget>> newScrapeTargetsMap
             = unordered_map<string, unique_ptr<ScrapeTarget>>();
         bool b2 = ParseTargetGroups(readBuffer, url, newScrapeTargetsMap);
         if (!b2) {
             continue;
         }
-        LOG_INFO(sLogger,("ParseTargetGroups success", mJobName)("url", url));
         mScrapeTargetsMap = move(newScrapeTargetsMap);
     }
 }
@@ -321,8 +318,6 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         st.mQueryString = ConvertMapParamsToQueryString();
 
         newScrapeTargetsMap[st.mHash] = make_unique<ScrapeTarget>(st);
-
-        LOG_INFO(sLogger,("get target success", mJobName)("url", url)("target address", st.mTargets[0]));
     }
     return true;
 }
