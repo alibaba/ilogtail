@@ -52,7 +52,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 
     // 为每个job设置queueKey、inputIndex，inputIndex暂时用0代替
     mScrapeJobPtr->queueKey = mContext->GetProcessQueueKey();
-    mScrapeJobPtr->inputIndex = 0;
+    mScrapeJobPtr->inputIndex = pluginIdx;
 
     LOG_INFO(sLogger,("input config init success", mJobName));
     return true;
