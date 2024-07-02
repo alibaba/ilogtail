@@ -309,6 +309,7 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         st.mScrapeTimeout = GetIntSeconds(mScrapeTimeoutString);
 
         st.queueKey = queueKey;
+        st.inputIndex = inputIndex;
 
         bool b = BuildScrapeURL(result, st);
         if (!b) {
