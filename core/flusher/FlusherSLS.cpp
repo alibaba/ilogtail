@@ -520,7 +520,7 @@ void FlusherSLS::SerializeAndPush(BatchedEventsList&& groupList) {
     if (enablePackageList) {
         string errorMsg;
         mGroupListSerializer->Serialize(std::move(compressedLogGroups), serializedData, errorMsg);
-        PushToQueue(std::move(compressedData), packageSize, RawDataType::EVENT_GROUP_LIST);
+        PushToQueue(std::move(serializedData), packageSize, RawDataType::EVENT_GROUP_LIST);
     }
 }
 
