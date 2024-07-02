@@ -138,6 +138,7 @@ inline sdk::HttpMessage ScrapeWork:: scrape() {
 }
 
 void ScrapeWork::pushEventGroup(PipelineEventGroup&& eGroup) {
+    LOG_INFO(sLogger, ("push event group", mTarget.mHash));
     // parser.Parse返回unique_ptr但下面的构造函数接收右值引用，所以又一次拷贝消耗
     auto item = make_unique<ProcessQueueItem>(move(eGroup), mTarget.inputIndex);
     for (size_t i = 0; i < 1000; ++i) {
