@@ -10,7 +10,7 @@ namespace logtail {
 
 const string FlusherRemoteWrite::sName = "flusher_remote_write";
 
-FlusherRemoteWrite::FlusherRemoteWrite() : mRegion(Sender::Instance()->GetDefaultRegion()) {
+FlusherRemoteWrite::FlusherRemoteWrite() {
     LOG_INFO(sLogger, ("LOG_INFO flusher", ""));
 }
 

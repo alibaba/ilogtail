@@ -1,5 +1,6 @@
 #include <cstdlib>
 
+#include "common/TimeUtil.h"
 #include "flusher/FlusherRemoteWrite.h"
 #include "plugin/instance/FlusherInstance.h"
 #include "sdk/CurlAsynInstance.h"
@@ -32,7 +33,7 @@ void FlusherRemoteWriteTest::SimpleTest() {
     //   "Region": "cn-hangzhou"
     // }
     config["Endpoint"] = string(getenv("ENDPOINT"));
-    config["Scheme"] =  string(getenv("SCHEME"));
+    config["Scheme"] = string(getenv("SCHEME"));
     config["UserId"] = string(getenv("USER_ID"));
     config["ClusterId"] = string(getenv("CLUSTER_ID"));
     config["Region"] = string(getenv("REGION"));
@@ -43,7 +44,8 @@ void FlusherRemoteWriteTest::SimpleTest() {
     auto event = eGroup.AddMetricEvent();
     event->SetName("test_metric");
     event->SetValue(MetricValue(UntypedSingleValue{1.0}));
-    event->SetTimestamp(1719836022);
+    time_t currSeconds = GetCurrentTimeInNanoSeconds() / 1000 / 1000 / 1000;
+    event->SetTimestamp(currSeconds);
     event->SetTag(StringView("test_key_x"), StringView("test_value_x"));
     event->SetTag(StringView("__job__"), StringView("remote_write_job"));
     event->SetTag(StringView("__name__"), StringView("test_metric"));
