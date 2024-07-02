@@ -30,7 +30,13 @@
 | Convert.ProtocolFieldsRename | Map<String,String> | 否       | ilogtail日志协议字段重命名，可当前可重命名的字段：`contents`,`tags`和`time`                                                                                                                                    |
 | Concurrency                  | Int                | 否       | 向url发起请求的并发数，默认为`1`                                                                                                                                                                      |
 | QueueCapacity                  | Int                | 否       | 内部channel的缓存大小，默认为1024
-| AsyncIntercept                  | Boolean                | 否       | 异步过滤数据，默认为否
+| AsyncIntercept                  | Boolean                | 否       | 异步过滤数据，默认为否 |
+| DropEventWhenQueueFull         | Boolean                | 否       | 当队列满时是否丢弃数据，否则需要等待，默认为不丢弃 |
+| JitterInSec                  |  Int               | 否      | 引入随机 Jitter，打散流量, 默认不开启 |
+| Compression                  | string                | 否       | 压缩策略，目前支持gzip和snappy，默认不开启 |
+| ExemplarEvents                  | []string                 | 否       | 打印一些采样event，默认不开启 |
+
+
 
 ## 样例
 
