@@ -30,7 +30,7 @@ const string InputPrometheus::sName = "input_prometheus";
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     LOG_INFO(sLogger,("LOG_INFO input config", config.toStyledString()));
-    
+
     string errorMsg;
 
     // config["ScrapeConfig"]
@@ -50,8 +50,6 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 
     mJobName = mScrapeJobPtr->mJobName;
 
-    // 为每个job设置queueKey、inputIndex，inputIndex暂时用0代替
-    mScrapeJobPtr->queueKey = mContext->GetProcessQueueKey();
     mScrapeJobPtr->inputIndex = pluginIdx;
 
     LOG_INFO(sLogger,("input config init success", mJobName));
@@ -61,6 +59,9 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 /// @brief register scrape job by PrometheusInputRunner
 bool InputPrometheus::Start() {
     LOG_INFO(sLogger,("input config start", mJobName));
+
+    mScrapeJobPtr->queueKey = mContext->GetProcessQueueKey();
+
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput(mContext->GetConfigName(), move(mScrapeJobPtr));
     return true;
 }
