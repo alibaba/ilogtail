@@ -164,8 +164,11 @@ void PluginRegistry::LoadStaticPlugins() {
 #endif
 
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
+  
+    LOG_INFO(sLogger, ("FlusherPushGateway info", "start load FlusherPushGateway flusher"));
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherPushGateway>());
+  
     LOG_INFO(sLogger, ("FlusherArmsMetrics info", "start load FlusherArmsMetrics flusher"));
-
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherArmsMetrics>());
 
     LOG_INFO(sLogger, ("FlusherXTraceSpan info", "start load FlusherXTraceSpan flusher"));

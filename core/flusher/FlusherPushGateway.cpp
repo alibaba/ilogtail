@@ -62,6 +62,7 @@ bool FlusherPushGateway::Init(const Json::Value& config, Json::Value& optionalGo
 }
 
 void FlusherPushGateway::SerializeAndPush(BatchedEventsList&& groupList) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher SerializeAndPush", groupList.size()));
     for (auto& batchedEv : groupList) {
         string data, errMsg;
         mSerializer->Serialize(std::move(batchedEv), data, errMsg);
@@ -73,6 +74,7 @@ void FlusherPushGateway::SerializeAndPush(BatchedEventsList&& groupList) {
 }
 
 void FlusherPushGateway::SerializeAndPush(vector<BatchedEventsList>&& groupLists) {
+    LOG_INFO(sLogger, ("LOG_INFO flusher SerializeAndPush vector", groupLists.size()));
     for (auto& groupList : groupLists) {
         SerializeAndPush(std::move(groupList));
     }
@@ -96,6 +98,7 @@ void FlusherPushGateway::FlushAll() {
 }
 
 AsynRequest* FlusherPushGateway::BuildRequest(SenderQueueItem* item) const {
+    LOG_INFO(sLogger, ("LOG_INFO flusher BuildRequest", item->mData.size()));
     PromiseClosure* promiseClosure = new PromiseClosure;
     Response* response = new Response();
     string httpMethod = "POST";
