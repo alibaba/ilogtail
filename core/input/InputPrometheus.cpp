@@ -19,6 +19,7 @@
 #include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
+#include "prometheus/MockServer.h"
 #include "prometheus/PrometheusInputRunner.h"
 
 using namespace std;
@@ -29,7 +30,7 @@ const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    LOG_INFO(sLogger,("LOG_INFO input config", config.toStyledString()));
+    LOG_INFO(sLogger, ("LOG_INFO input config", config.toStyledString()));
 
     string errorMsg;
 
@@ -52,13 +53,19 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 
     mScrapeJobPtr->inputIndex = pluginIdx;
 
-    LOG_INFO(sLogger,("input config init success", mJobName));
+    LOG_INFO(sLogger, ("input config init success", mJobName));
+
+    // start mock server
+    if (std::getenv("PROMETHEUS_ILOGTAIL_MOCK_SERVER") == "TRUE") {
+        std::thread server_thread([]() { start_server(); });
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
     return true;
 }
 
 /// @brief register scrape job by PrometheusInputRunner
 bool InputPrometheus::Start() {
-    LOG_INFO(sLogger,("input config start", mJobName));
+    LOG_INFO(sLogger, ("input config start", mJobName));
 
     mScrapeJobPtr->queueKey = mContext->GetProcessQueueKey();
 
@@ -68,7 +75,7 @@ bool InputPrometheus::Start() {
 
 /// @brief unregister scrape job by PrometheusInputRunner
 bool InputPrometheus::Stop(bool isPipelineRemoving) {
-    LOG_INFO(sLogger,("input config stop", mJobName));
+    LOG_INFO(sLogger, ("input config stop", mJobName));
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput(mContext->GetConfigName());
     return true;
 }

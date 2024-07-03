@@ -32,7 +32,7 @@ namespace logtail {
 
 const std::string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
 
-unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content) {
+PipelineEventGroup TextParser::Parse(const string& content) {
     auto now = std::chrono::system_clock::now();
     auto duration_since_epoch = now.time_since_epoch();
     auto seconds_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(duration_since_epoch);
@@ -40,11 +40,11 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content) {
     return Parse(content, defaultTsInSecs);
 }
 
-unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const time_t defaultTsInSecs) {
+PipelineEventGroup TextParser::Parse(const string& content, const time_t defaultTsInSecs) {
     string line;
     string argName, argLabels, argUnwrappedLabels, argValue, argSuffix, argTimestamp;
     istringstream iss(content);
-    auto eGroup = make_unique<PipelineEventGroup>(mSourceBuffer);
+    auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     while (getline(iss, line)) {
         // trim line
         boost::algorithm::trim(line);
@@ -107,7 +107,7 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
             }
         }
 
-        MetricEvent* e = eGroup->AddMetricEvent();
+        MetricEvent* e = eGroup.AddMetricEvent();
         e->SetName(argName);
         e->SetTimestamp(timestamp);
         e->SetValue<UntypedSingleValue>(value);
@@ -127,9 +127,9 @@ unique_ptr<PipelineEventGroup> TextParser::Parse(const string& content, const ti
                 }
             }
         }
-        LOG_INFO(sLogger,
-                 ("__name__", e->GetName())("labels", argUnwrappedLabels)("value", e->GetValue<UntypedSingleValue>())(
-                     "timestamp", e->GetTimestamp()));
+        // LOG_INFO(sLogger,
+        //          ("__name__", e->GetName())("labels", argUnwrappedLabels)("value", e->GetValue<UntypedSingleValue>())(
+        //              "timestamp", e->GetTimestamp()));
     }
 
     return eGroup;

@@ -22,7 +22,6 @@ bool RemoteWriteEventGroupSerializer::Serialize(BatchedEvents&& p, std::string& 
         if (metricEvent->GetTag("__name__").empty()) {
             metricEvent->SetTag("__name__", metricEvent->GetName());
             LOG_WARNING(sLogger, ("metric event has no `__name__` label", metricEvent->GetName()));
-            continue;
         }
         for (auto it = metricEvent->LabelsBegin(); it != metricEvent->LabelsEnd(); ++it) {
             auto* l = ts->add_labels();

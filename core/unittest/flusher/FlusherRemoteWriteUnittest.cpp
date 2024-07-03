@@ -47,7 +47,6 @@ void FlusherRemoteWriteTest::SimpleTest() {
     time_t currSeconds = GetCurrentTimeInNanoSeconds() / 1000 / 1000 / 1000;
     event->SetTimestamp(currSeconds);
     event->SetTag(StringView("test_key_x"), StringView("test_value_x"));
-    event->SetTag(StringView("__job__"), StringView("remote_write_job"));
     event->SetTag(StringView("__name__"), StringView("test_metric"));
 
     flusherIns->Start();

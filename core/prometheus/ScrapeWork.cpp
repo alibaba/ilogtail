@@ -77,7 +77,7 @@ void ScrapeWork::scrapeLoop() {
 
             // 发送到对应的处理队列
             // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
-            pushEventGroup(move(*eventGroup));
+            pushEventGroup(move(eventGroup));
         } else {
             // scrape failed
             // TODO: scrape超时处理逻辑，和出错处理
@@ -109,7 +109,7 @@ uint64_t ScrapeWork::getRandSleep() {
     return randSleep;
 }
 
-inline sdk::HttpMessage ScrapeWork:: scrape() {
+inline sdk::HttpMessage ScrapeWork::scrape() {
     map<string, string> httpHeader;
     string reqBody;
     sdk::HttpMessage httpResponse;
@@ -117,16 +117,16 @@ inline sdk::HttpMessage ScrapeWork:: scrape() {
     // 使用CurlClient抓取目标
     try {
         mClient->Send(sdk::HTTP_GET,
-                     mTarget.mHost,
-                     mTarget.mPort,
-                     mTarget.mMetricsPath,
-                     mTarget.mQueryString,
-                     mTarget.mHeaders,
-                     reqBody,
-                     mTarget.mScrapeTimeout,
-                     httpResponse,
-                     "",
-                     mTarget.mScheme == "https");
+                      mTarget.mHost,
+                      mTarget.mPort,
+                      mTarget.mMetricsPath,
+                      mTarget.mQueryString,
+                      mTarget.mHeaders,
+                      reqBody,
+                      mTarget.mScrapeTimeout,
+                      httpResponse,
+                      "",
+                      mTarget.mScheme == "https");
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger, ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mTarget.mHash));
     }
@@ -134,13 +134,15 @@ inline sdk::HttpMessage ScrapeWork:: scrape() {
 }
 
 void ScrapeWork::pushEventGroup(PipelineEventGroup&& eGroup) {
-    LOG_INFO(sLogger, ("push event group", mTarget.mHash));
+    LOG_INFO(sLogger, ("push event group", mTarget.mHash)("target queueKey", to_string(mTarget.queueKey)));
     // parser.Parse返回unique_ptr但下面的构造函数接收右值引用，所以又一次拷贝消耗
     auto item = make_unique<ProcessQueueItem>(move(eGroup), mTarget.inputIndex);
     for (size_t i = 0; i < 1000; ++i) {
         if (ProcessQueueManager::GetInstance()->PushQueue(mTarget.queueKey, move(item)) == 0) {
+            LOG_INFO(sLogger, ("push event group success", mTarget.mHash)("", item.get()));
             break;
         }
+        // LOG_INFO(sLogger, ("push event group failed", mTarget.mHash)(to_string(i), item.get()));
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }

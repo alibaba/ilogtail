@@ -16,7 +16,7 @@ struct RemoteWriteResponseInfo {
 
 class RemoteWriteClosure : public sdk::LogsClosure {
 public:
-    void Done() override {}
+    void Done() override;
     void OnSuccess(sdk::Response* response) override;
     void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage) override;
     std::promise<RemoteWriteResponseInfo> mPromise;
@@ -47,6 +47,8 @@ private:
     std::string mUserId;
     std::string mClusterId;
     std::string mRegion;
+
+    logtail::LogstoreFeedBackKey mLogstoreKey;
 
     void SerializeAndPush(std::vector<BatchedEventsList>&& groupLists);
     void SerializeAndPush(BatchedEventsList&& groupList);

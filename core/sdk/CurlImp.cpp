@@ -186,9 +186,9 @@ namespace sdk {
         }
         httpMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
-        if (!httpMessage.IsLogServiceResponse()) {
-            throw LOGException(LOGE_REQUEST_ERROR, "Get invalid response");
-        }
+        // if (!httpMessage.IsLogServiceResponse()) {
+        //     throw LOGException(LOGE_REQUEST_ERROR, "Get invalid response");
+        // }
     }
 
 } // namespace sdk

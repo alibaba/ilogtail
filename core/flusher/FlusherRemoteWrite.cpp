@@ -42,12 +42,15 @@ bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGo
     mClusterId = config["ClusterId"].asString();
     mRegion = config["Region"].asString();
 
+    mLogstoreKey = GenerateLogstoreFeedBackKey("remote_write_project", "remote_write_log_store");
+    mSenderQueue = Sender::Instance()->GetSenderQueue(mLogstoreKey);
+
     mRemoteWritePath = "/prometheus/" + mUserId + "/" + mClusterId + "/" + mRegion + "/api/v2/write";
 
     // compressor
     mComperssor = CompressorFactory::GetInstance()->Create(config, *mContext, sName, CompressType::SNAPPY);
     DefaultFlushStrategyOptions strategy{
-        static_cast<uint32_t>(1024 * 1024), static_cast<uint32_t>(5000), static_cast<uint32_t>(1)};
+        static_cast<uint32_t>(1024), static_cast<uint32_t>(10), static_cast<uint32_t>(1)};
     if (!mBatcher.Init(Json::Value(), this, strategy, false)) {
         LOG_WARNING(sLogger, ("mBatcher init info:", "init err"));
         return false;
@@ -137,17 +140,23 @@ void FlusherRemoteWrite::PushToQueue(string&& data, size_t rawSize, RawDataType 
 #ifdef APSARA_UNIT_TEST_MAIN
     mItems.push_back(item);
 #else
-    Sender::Instance()->PutIntoBatchMap(item);
+    Sender::Instance()->PutIntoBatchMap(item, mRegion);
 #endif
 }
 
+void RemoteWriteClosure::Done() {
+    LOG_INFO(sLogger, ("remote write closure", "done"));
+}
+
 void RemoteWriteClosure::OnSuccess(sdk::Response* response) {
+    LOG_INFO(sLogger, ("remote write closure", "success"));
     mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, "", ""});
 }
 
 void RemoteWriteClosure::OnFail(sdk::Response* response,
                                 const std::string& errorCode,
                                 const std::string& errorMessage) {
+    LOG_INFO(sLogger, ("remote write closure fail", errorCode + errorMessage));
     mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, errorCode, errorMessage});
 }
 

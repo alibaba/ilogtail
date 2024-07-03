@@ -32,8 +32,8 @@ class TextParser {
                 mErr = std::make_shared<std::exception>(std::invalid_argument("invalid regex"));
             }
         }
-        std::unique_ptr<PipelineEventGroup> Parse(const std::string& content);
-        std::unique_ptr<PipelineEventGroup> Parse(const std::string& content, std::time_t defaultTs);
+        PipelineEventGroup Parse(const std::string& content);
+        PipelineEventGroup Parse(const std::string& content, std::time_t defaultTs);
 
         bool Ok() const;
         std::shared_ptr<std::exception> Err() const;
