@@ -93,10 +93,15 @@ ScrapeJob::ScrapeJob(const Json::Value& scrapeConfig) {
         string bearerToken;
         bool b = ReadFile(mScrapeConfig["authorization"]["credentials_file"].asString(), bearerToken);
         if (!b) {
-            LOG_ERROR(sLogger, ("read credentials_file failed, credentials_file", mScrapeConfig["authorization"]["credentials_file"].asString()));
+            LOG_ERROR(sLogger,
+                      ("read credentials_file failed, credentials_file",
+                       mScrapeConfig["authorization"]["credentials_file"].asString()));
         }
         mHeaders["Authorization"] = type + " " + bearerToken;
-        LOG_INFO(sLogger, ("read credentials_file success, credentials_file", mScrapeConfig["authorization"]["credentials_file"].asString())("Authorization", mHeaders["Authorization"]));
+        LOG_INFO(sLogger,
+                 ("read credentials_file success, credentials_file",
+                  mScrapeConfig["authorization"]["credentials_file"].asString())("Authorization",
+                                                                                 mHeaders["Authorization"]));
     }
     vector<string> sdConfigs
         = {"azure_sd_configs",       "consul_sd_configs",     "digitalocean_sd_configs", "docker_sd_configs",
@@ -299,6 +304,8 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         if (result.size() == 0) {
             continue;
         }
+        LOG_INFO(sLogger, ("target relabel keep", ""));
+
 
         ScrapeTarget st = ScrapeTarget(targets, result, source);
         st.mJobName = mJobName;
