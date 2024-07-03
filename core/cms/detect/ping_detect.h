@@ -26,7 +26,10 @@ public:
     int readEvent();
     VIRTUAL bool PingSend();
     VIRTUAL bool PingReceive();
-    VIRTUAL bool Init(bool enablePoll = true);
+    VIRTUAL bool Init(bool enablePoll);
+    bool Init() {
+        return Init(true);
+    }
     std::string const &GetTaskId() const;
     PingResult &GetPingResult();
 

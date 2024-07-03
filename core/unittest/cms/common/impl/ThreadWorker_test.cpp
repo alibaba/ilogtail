@@ -78,6 +78,6 @@ TEST(ThreadWorkerTest, WorkerKeepAliveLog) {
         WorkerKeepAliveLog ka("test-01", std::chrono::milliseconds{1});
         std::this_thread::sleep_for(std::chrono::microseconds{1100}); // 1.1 ms
         EXPECT_TRUE(ka.KeepAlive());
-        EXPECT_EQ(1, ka.Count());
+        EXPECT_EQ(size_t(1), ka.Count());
     }
 }

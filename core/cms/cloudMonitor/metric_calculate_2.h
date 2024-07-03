@@ -95,7 +95,7 @@ namespace cloudMonitor {
             return ret;
         }
 
-        unsigned int Count() const {
+        size_t Count() const {
             return mCount;
         }
 
@@ -114,7 +114,7 @@ namespace cloudMonitor {
         TMetric mMin;
         TMetric mTotal;
         TMetric mLast;
-        unsigned int mCount = 0;
+        size_t mCount = 0;
     };
 }
 #endif //ARGUSAGENT_METRIC_CALCULATE_2_H

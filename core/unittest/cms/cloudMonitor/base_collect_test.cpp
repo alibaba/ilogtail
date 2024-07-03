@@ -157,7 +157,7 @@ namespace cloudMonitor {
 #endif
         SicProcessState processState;
         EXPECT_EQ(0, p_shared->GetProcessState(pid, processState));
-        EXPECT_GT(processState.threads, 0);
+        EXPECT_GT(processState.threads, decltype(processState.threads)(0));
         SicProcessCpuInformation processCpu;
         EXPECT_EQ(0, p_shared->GetProcessCpu(pid, processCpu, true));
         cout << "GetProcessCpu" << endl;

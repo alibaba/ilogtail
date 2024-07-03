@@ -142,6 +142,10 @@ void ExitArgus(int status) {
     exit(status);
 }
 
+static std::string getOrDefault(const std::string &v, const std::string &def) {
+    return v.empty() ? def : v;
+}
+
 /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 namespace sic {
@@ -429,7 +433,7 @@ void completeSicMemoryInformation(SicMemoryInformation &memInfo,
                                   uint64_t available,
                                   const std::function<void(uint64_t &)> &fnGetMemoryRam) {
     const uint64_t mb = 1024 * 1024;
-    if (available != std::numeric_limits<decltype(available)>::max()) {
+    if (available != std::numeric_limits<uint64_t>::max()) {
         // 新内核，存在 MemAvailable
         memInfo.actualUsed = Diff(memInfo.total, available);
         memInfo.actualFree = available;
@@ -786,28 +790,36 @@ int LinuxSystemInformationCollector::SicGetInterfaceConfig(SicInterfaceConfig &i
         return SIC_EXECUTABLE_SUCCESS;
     }
 
+    enum {
+        Inet6Address,   // 长度为32的16进制IPv6地址
+        Inet6DevNo,     // netlink设备号
+        Inet6PrefixLen, // 16进制表示的 prefix length
+        Inet6Scope,     // scope
+    };
     for (auto &devLine: netInet6Lines) {
         std::vector<std::string> netInet6Metric = split(devLine, ' ', true);
         std::string inet6Name = netInet6Metric.back();
         inet6Name = TrimSpace(inet6Name);
         if (inet6Name == name) {
             // Doc: https://ata.atatech.org/articles/11020228072?spm=ata.25287382.0.0.1c647536bhA7NG#lyRD52DR
-            size_t index = 0;  // 长度为32的16进制IPv6地址
-            std::string addr = index < netInet6Metric.size() ? netInet6Metric[index] : "";
-            auto *addr6 = (unsigned char *) &(interfaceConfig.address6.addr.in6);
-            char *ptr = const_cast<char *>(addr.c_str());
+            if (Inet6Address < netInet6Metric.size()) {
+                auto *addr6 = (unsigned char *) &(interfaceConfig.address6.addr.in6);
 
-            for (int i = 0; i < 16; i++, ptr += 2) {
-                addr6[i] = (unsigned char) Hex2Int(std::string{ptr, ptr + 2});
+                std::string addr = netInet6Metric[Inet6Address];
+                const char *ptr = const_cast<char *>(addr.c_str());
+                const char *ptrEnd = ptr + addr.size();
+
+                constexpr const int addrLen = 16;
+                for (int i = 0; i < addrLen && ptr + 1 < ptrEnd; i++, ptr += 2) {
+                    addr6[i] = (unsigned char) Hex2Int(std::string{ptr, ptr + 2});
+                }
             }
-
-            index++; // netlink设备号skip index
-
-            index++; // 16进制表示的 prefix length
-            interfaceConfig.prefix6Length =
-                index < netInet6Metric.size() ? convertHex<int>(netInet6Metric[index]) : 0;
-            index++; // scope
-            interfaceConfig.scope6 = index < netInet6Metric.size() ? convertHex<int>(netInet6Metric[index]) : 0;
+            if (Inet6PrefixLen < netInet6Metric.size()) {
+                interfaceConfig.prefix6Length = convertHex<int>(netInet6Metric[Inet6PrefixLen]);
+            }
+            if (Inet6Scope < netInet6Metric.size()) {
+                interfaceConfig.scope6 = convertHex<int>(netInet6Metric[Inet6Scope]);
+            }
         }
     }
 
@@ -874,15 +886,17 @@ int LinuxSystemInformationCollector::SicReadNetFile(SicNetState &netState,
                                                     bool useServer,
                                                     const fs::path &path) {
     if (path.empty()) {
-        LogDebug("{}(type: {}, useClient: {}, useServer: {}): path is empty", __FUNCTION__, type, useClient, useServer);
+        LogDebug("{}(type: 0x{:x}, useClient: {}, useServer: {}): path is empty",
+                 __FUNCTION__, type, useClient, useServer);
         return SIC_EXECUTABLE_FAILED;
     }
 
     std::vector<std::string> netLines = {};
     int ret = GetFileLines(path, netLines, true, SicPtr()->errorMessage);
     if (ret != SIC_EXECUTABLE_SUCCESS || netLines.size() <= 1) {
-        LogDebug("{}(type: {}, useClient: {}, useServer: {}, path: {}) => {}, netLines.size: {}, {}", __FUNCTION__,
-            type, useClient, useServer, path.string(), ret, netLines.size(), SicPtr()->errorMessage);
+        LogDebug("{}(type: 0x{:x}, useClient: {}, useServer: {}, path: {}) => {}, netLines.size: {}: {}",
+                 __FUNCTION__, type, useClient, useServer, path.string(), ret, netLines.size(),
+                 getOrDefault(SicPtr()->errorMessage, "Success"));
         return ret;
     }
 
@@ -1231,7 +1245,7 @@ int LinuxSystemInformationCollector::CalDiskUsage(SicIODev &ioDev, SicDiskUsage 
         double interval = diskUsage.snapTime - ioDev.diskUsage.snapTime;
 
         diskUsage.serviceTime = -1;
-        if (diskUsage.time != std::numeric_limits<decltype(diskUsage.time)>::max()) {
+        if (diskUsage.time != std::numeric_limits<uint64_t>::max()) {
             uint64_t ios = Diff(diskUsage.reads, ioDev.diskUsage.reads)
                                      + Diff(diskUsage.writes, ioDev.diskUsage.writes);
             double tmp = ((double) ios) * HZ / interval;
@@ -1241,7 +1255,7 @@ int LinuxSystemInformationCollector::CalDiskUsage(SicIODev &ioDev, SicDiskUsage 
         }
 
         diskUsage.queue = -1;
-        if (diskUsage.qTime != std::numeric_limits<decltype(diskUsage.qTime)>::max()) {
+        if (diskUsage.qTime != std::numeric_limits<uint64_t>::max()) {
             // 浮点运算：0.0/0.0 => nan, 1.0/0.0 => inf
             double util = ((double) (diskUsage.qTime - ioDev.diskUsage.qTime)) / interval;
             diskUsage.queue = util / 1000.0;

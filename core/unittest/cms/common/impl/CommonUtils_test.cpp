@@ -5,13 +5,19 @@
 #include "common/Logger.h"
 #include "common/Chrono.h"
 
+#ifdef max
+#	undef max
+#endif
+#ifdef min
+#	undef min
+#endif
 using namespace common;
 using namespace std;
 
 TEST(CommonUtilsTest, GetTimeStrLocal) {
     string str = CommonUtils::GetTimeStr(NowMicros());
-    cout << "now=" << str << endl;
-    EXPECT_EQ(str.size() > 0, true);
+    cout << str << endl;
+    EXPECT_FALSE(str.empty());
     EXPECT_GE(str.substr(0, 2), "20"); // >= 2000年
 }
 
@@ -30,15 +36,16 @@ TEST(CommonUtilsTest, GetTimeStrGmt) {
 }
 
 TEST(CommonUtilsTest, convertLongLongToString) {
-    long long num = 9223372036854775807;
-    string str = "9223372036854775807";
-    string res;
-    res = convert(num);
-    EXPECT_EQ(res, str);
-    num = -9223372036854775808;
-    str = "-9223372036854775808";
-    res = convert(num);
-    EXPECT_EQ(res, str);
+    static_assert(sizeof(long long) == 8, "unexpected: sizeof(long long) =≠= 8");
+
+    long long num = std::numeric_limits<int64_t>::max(); // 9223372036854775807;
+    EXPECT_EQ(convert(num), "9223372036854775807");
+
+    // 编译器在处理负值的常量时，首先解析正值然后取负，所以需要特别注意其表示方式。
+    // 对于 -9223372036854775808 这个值，它在某些编译器中会被解析为无符号值 9223372036854775808UL，再应用负号。
+    // 但对于这个负值，通常你的意图是表示最小的 int64_t 值，即 INT64_MIN。
+    num = std::numeric_limits<int64_t>::min(); // -9223372036854775808LL;
+    EXPECT_EQ(convert(num), "-9223372036854775808");
 }
 
 TEST(CommonUtilsTest, ConvertStringToOneLine) {

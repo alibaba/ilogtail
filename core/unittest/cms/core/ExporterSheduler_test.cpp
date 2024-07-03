@@ -92,7 +92,7 @@ TEST_F(CoreExporterSchedulerTest, Test) {
     int tmp;
     pScheduler->chanSchedule.Take(tmp);
 
-    EXPECT_EQ(pScheduler->m_state.size(), 1);
+    EXPECT_EQ(pScheduler->m_state.size(), size_t(1));
     for (auto const &it: pScheduler->m_state) {
         cout << "key: " << it.first << endl;
     }
@@ -108,7 +108,7 @@ TEST_F(CoreExporterSchedulerTest, Test) {
     for (auto const &it: pScheduler->m_state) {
         cout << "key:" << it.first << endl;
     }
-    EXPECT_EQ(pScheduler->m_state.size(), 2);
+    EXPECT_EQ(pScheduler->m_state.size(), size_t(2));
 
     taskJson.clear();
     FileUtils::ReadFileContent((TEST_CONF_PATH / "conf/exporter_task/task3.json").string(), taskJson);
@@ -129,7 +129,7 @@ __argus_exporter_status__{__argus_exporter_name__="testName",__argus_exporter_co
 
 TEST_F(CoreExporterSchedulerTest, AliMetricCollector_Collect) {
     AliMetricCollector collector(ExporterItem{}, 1_s);
-    EXPECT_EQ(collector.activeIndex, 0);
+    EXPECT_EQ(collector.activeIndex, size_t(0));
     auto httpCurl = [](const common::HttpRequest &, common::HttpResponse &resp) -> int {
         resp.resCode = 403;
         return (int) HttpClient::Success;
@@ -138,7 +138,7 @@ TEST_F(CoreExporterSchedulerTest, AliMetricCollector_Collect) {
     int code = 0;
     std::string errMsg, result;
     EXPECT_FALSE(collector.collect(httpCurl, code, errMsg, result));
-    EXPECT_EQ(collector.activeIndex, 1);
+    EXPECT_EQ(collector.activeIndex, size_t(1));
 }
 
 TEST_F(CoreExporterSchedulerTest, schedulerOnce) {
@@ -152,7 +152,7 @@ TEST_F(CoreExporterSchedulerTest, schedulerOnce) {
         }
 
 
-        size_t addMetricCount = 0;
+        int addMetricCount = 0;
         ParseErrorType AddMetric(const std::string &metricStr) override {
             addMetricCount++;
             return ParseErrorType::PARSE_SUCCESS;

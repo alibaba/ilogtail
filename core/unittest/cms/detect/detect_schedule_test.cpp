@@ -58,9 +58,9 @@ TEST_F(DetectScheduleTest, PingCollect) {
 
     // std::this_thread::sleep_for(seconds{ 1 });
 
-    EXPECT_EQ(schedule()->mPingItems.Size(), 0);
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 0);
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
 
     TaskManager *pTask = SingletonTaskManager::Instance();
     std::unordered_map<std::string, PingItem> pingItems;
@@ -71,19 +71,19 @@ TEST_F(DetectScheduleTest, PingCollect) {
     std::this_thread::sleep_for(seconds{1});
 
     auto pred = [&]() {
-        return pTask->PingItems().Get() == schedule()->mPrevPingItems && schedule()->mPingItems.Size() == 3;
+        return pTask->PingItems().Get() == schedule()->mPrevPingItems && schedule()->mPingItems.Size() == size_t(3);
     };
     if (WaitFor(pred, seconds{5})) {
         std::this_thread::sleep_for(milliseconds{1500}); // 再等1.5秒，至少有一次ping结果
     }
 
-    EXPECT_EQ(schedule()->mPingItems.Size(), 3);
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 0);
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
 
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
-    EXPECT_EQ(schedule()->mPingDetectMap.Size(), 3);
-    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), 3);
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mPingDetectMap.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), size_t(3));
     if (schedule()->mTaskResult.Contains("ping001")) {
         EXPECT_GE(schedule()->mTaskResult["ping001"].front()->mPingResult.count, 1);
     }
@@ -109,13 +109,13 @@ TEST_F(DetectScheduleTest, PingCollect) {
     if (WaitFor(pred, seconds{5})) {
         std::this_thread::sleep_for(milliseconds{700});
     }
-    EXPECT_EQ(schedule()->mPingItems.Size(), 3);
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(3));
     EXPECT_GE(schedule()->mTaskResult.Size(), size_t(2));
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 0);
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(0));
 
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
     EXPECT_GE(schedule()->mPingDetectMap.Size(), size_t(3));
-    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), 3);
+    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), size_t(3));
     if (schedule()->mTaskResult.Contains("ping0001")) {
         EXPECT_GE(schedule()->mTaskResult["ping0001"].front()->mPingResult.count, 1);
     }
@@ -132,18 +132,18 @@ TEST_F(DetectScheduleTest, PingCollect) {
     CollectData collectData;
     schedule()->Collect(collectData);
     std::cout << "collectData: " << collectData.toJson() << std::endl;
-    EXPECT_EQ(collectData.dataVector.size(), 3);
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
+    EXPECT_EQ(collectData.dataVector.size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
     EXPECT_GE(schedule()->mPingDetectMap.Size(), size_t(3));
-    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), 3);
+    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), size_t(3));
 
     // SingletonDetectPingPoll::destroyInstance();
 }
 
 TEST_F(DetectScheduleTest, TelnetCollect) {
-    EXPECT_EQ(schedule()->mPingItems.Size(), 0);
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 0);
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
 
     TaskManager *pTask = SingletonTaskManager::Instance();
     std::unordered_map<std::string, TelnetItem> telnetItems;
@@ -153,13 +153,13 @@ TEST_F(DetectScheduleTest, TelnetCollect) {
     pTask->SetTelnetItems(std::make_shared<std::unordered_map<std::string, TelnetItem>>(telnetItems));
 
     auto pred = [&]() {
-        return pTask->TelnetItems().Get() == schedule()->mPrevTelnetItems && schedule()->mTelnetItems.Size() == 3;
+        return pTask->TelnetItems().Get() == schedule()->mPrevTelnetItems && schedule()->mTelnetItems.Size() == size_t(3);
     };
     if (WaitFor(pred, seconds{5})) {
         std::this_thread::sleep_for(milliseconds{1500});
     }
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 3);
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
     if (schedule()->mTaskResult.Contains("telnet001")) {
         cout << "status " << TELNET_SUCCESS << " : "
              << schedule()->mTaskResult["telnet001"].front()->mTelnetResult.status
@@ -213,11 +213,11 @@ TEST_F(DetectScheduleTest, TelnetCollect) {
              << schedule()->mTaskResult["telnet0003"].front()->mTelnetResult.latency <<
              endl;
     }
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 3);
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(3));
 #ifdef WIN32
-    const int expectResultSize = 2;  // 127.0.0.1:22 在windows下是不通的
+    constexpr const size_t expectResultSize = 2;  // 127.0.0.1:22 在windows下是不通的
 #else
-    const int expectResultSize = 3;
+    constexpr const size_t expectResultSize = 3;
 #endif
     EXPECT_EQ(schedule()->mTaskResult.Size(), expectResultSize);
     CollectData collectData;
@@ -228,25 +228,25 @@ TEST_F(DetectScheduleTest, TelnetCollect) {
 }
 
 TEST_F(DetectScheduleTest, HttpCollect) {
-    EXPECT_EQ(schedule()->mPingItems.Size(), 0);
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 0);
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
     TaskManager *pTask = SingletonTaskManager::Instance();
     std::unordered_map<std::string, HttpItem> httpItems;
     httpItems["http001"] = HttpItem("http001", HTTP "://www.baidu.com", seconds{1}, seconds{1});
     httpItems["http002"] = HttpItem("http002", HTTP "://www.taobao.com", seconds{1}, seconds{1});
     httpItems["http003"] = HttpItem("http003", HTTP "://10.137.71.5", seconds{1}, seconds{1}, "Got");
     pTask->SetHttpItems(std::make_shared<decltype(httpItems)>(httpItems));
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
 
     auto pred = [&]() {
-        return pTask->HttpItems().Get() == schedule()->mPrevHttpItems && schedule()->mHttpItems.Size() == 3;
+        return pTask->HttpItems().Get() == schedule()->mPrevHttpItems && schedule()->mHttpItems.Size() == size_t(3);
     };
     if (WaitFor(pred, seconds{5})) {
         std::this_thread::sleep_for(milliseconds{1500});
     }
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 3);
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
     auto printResult = [&](const decltype(schedule()->mTaskResult) &result, const std::string &taskId) {
         Sync(result)
                 {
@@ -273,19 +273,19 @@ TEST_F(DetectScheduleTest, HttpCollect) {
     if (WaitFor(pred, seconds{5})) {
         std::this_thread::sleep_for(milliseconds{800});
     }
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
     printResult(schedule()->mTaskResult, "http0001");
     printResult(schedule()->mTaskResult, "http0002");
     printResult(schedule()->mTaskResult, "http0003");
 
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 3);
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
-    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), 3);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskStatusMap.Size(), size_t(3));
     CollectData collectData;
     schedule()->Collect(collectData);
     std::cout << "collectData: " << collectData.toJson() << std::endl;
-    EXPECT_EQ(collectData.dataVector.size(), 3);
-    EXPECT_EQ(schedule()->mTaskResult.Size(), 3);
+    EXPECT_EQ(collectData.dataVector.size(), size_t(3));
+    EXPECT_EQ(schedule()->mTaskResult.Size(), size_t(3));
 }
 
 TEST_F(DetectScheduleTest, Collect00) {
@@ -316,9 +316,9 @@ TEST_F(DetectScheduleTest, Collect01) {
     curlVerbose = false;
     defer(curlVerbose = old);
 
-    EXPECT_EQ(schedule()->mPingItems.Size(), 0);
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 0);
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 0);
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(0));
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(0));
     std::unordered_map<std::string, PingItem> pingItems;
     std::unordered_map<std::string, TelnetItem> telnetItems;
     std::unordered_map<std::string, HttpItem> httpItems;
@@ -340,17 +340,17 @@ TEST_F(DetectScheduleTest, Collect01) {
     pTask->SetHttpItems(MakeCopyShared(httpItems));
 
     auto pred = [&]() {
-        return pTask->HttpItems().Get() == schedule()->mPrevHttpItems && schedule()->mHttpItems.Size() == 3
-               && pTask->TelnetItems().Get() == schedule()->mPrevTelnetItems && schedule()->mTelnetItems.Size() == 3
-               && pTask->PingItems().Get() == schedule()->mPrevPingItems && schedule()->mPingItems.Size() == 3;
+        return pTask->HttpItems().Get() == schedule()->mPrevHttpItems && schedule()->mHttpItems.Size() == size_t(3)
+               && pTask->TelnetItems().Get() == schedule()->mPrevTelnetItems && schedule()->mTelnetItems.Size() == size_t(3)
+               && pTask->PingItems().Get() == schedule()->mPrevPingItems && schedule()->mPingItems.Size() == size_t(3);
     };
     if (WaitFor(pred, seconds{5})) {
         std::this_thread::sleep_for(milliseconds{800});
     }
 
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 3);
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 3);
-    EXPECT_EQ(schedule()->mPingItems.Size(), 3);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(3));
     EXPECT_GT(schedule()->mTaskResult.Size(), size_t(0));
     //check ping
     if (schedule()->mTaskResult.Contains("ping001")) {
@@ -426,11 +426,11 @@ TEST_F(DetectScheduleTest, Collect01) {
         std::this_thread::sleep_for(milliseconds{800});
     }
 
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 3);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(3));
     EXPECT_GE(schedule()->mTaskResult.Size(), size_t(7)); // 实际应为9，允许失败2次
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 3);
-    EXPECT_EQ(schedule()->mPingItems.Size(), 3);
-    EXPECT_EQ(schedule()->mPingDetectMap.Size(), 3);
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mPingDetectMap.Size(), size_t(3));
     //check ping
     if (schedule()->mTaskResult.Contains("ping0001")) {
         EXPECT_GT(schedule()->mTaskResult["ping0001"].front()->mPingResult.count, 0);
@@ -472,11 +472,11 @@ TEST_F(DetectScheduleTest, Collect01) {
     CollectData collectData;
     schedule()->Collect(collectData);
     int64_t seconds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-    EXPECT_EQ(schedule()->mHttpItems.Size(), 3);
+    EXPECT_EQ(schedule()->mHttpItems.Size(), size_t(3));
     EXPECT_GT(schedule()->mTaskResult.Size(), size_t(6)); // 实际应为9, 允许失败3次
-    EXPECT_EQ(schedule()->mTelnetItems.Size(), 3);
-    EXPECT_EQ(schedule()->mPingItems.Size(), 3);
-    EXPECT_EQ(schedule()->mPingDetectMap.Size(), 3);
+    EXPECT_EQ(schedule()->mTelnetItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mPingItems.Size(), size_t(3));
+    EXPECT_EQ(schedule()->mPingDetectMap.Size(), size_t(3));
     size_t dataSize = collectData.dataVector.size();
     LogInfo("collectData.dataVector.size() => {}", dataSize);
     // 网络好的话，http和telnet可以执行2次，ping有固定间隔只能执行1次

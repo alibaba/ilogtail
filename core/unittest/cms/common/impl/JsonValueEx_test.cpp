@@ -135,7 +135,7 @@ TEST_F(CommJsonValueExTest, ParseArray) {
 
     json::Array arr1 = arr.at<json::Array>(1);
     EXPECT_FALSE(arr1.isNull());
-    EXPECT_EQ(arr1.size(), 2);
+    EXPECT_EQ(arr1.size(), size_t(2));
     EXPECT_EQ(arr1[0].asNumber<int>(), 1);
     EXPECT_EQ(arr1[1].asNumber<int>(), 2);
     EXPECT_TRUE(HasPrefix(arr1.toString(), "["));

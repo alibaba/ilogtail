@@ -26,7 +26,7 @@ TEST_F(Cms_ProxyManagerTest, proxyInfo1) {
     pConfig->Set("http.proxy.user", "user");
     ProxyManager pManager;
     // EXPECT_EQ(pManager.mProxyInfos.size(), pManager.DefaultConfigLen + 1);
-    EXPECT_EQ(pManager.mProxyInfos.front().user.size(), 0);
+    EXPECT_TRUE(pManager.mProxyInfos.front().user.empty());
     EXPECT_EQ(pManager.mHeartbeatUrl, "http://www.baidu.com/helloworld");
     EXPECT_EQ(pManager.mHeartbeatHost, "www.baidu.com");
 }
@@ -58,7 +58,7 @@ TEST_F(Cms_ProxyManagerTest, proxyInfo3) {
     pConfig->Set("http.proxy.user", "user");
     ProxyManager pManager;
     // EXPECT_EQ(pManager.mProxyInfos.size(), pManager.DefaultConfigLen + 1);
-    EXPECT_EQ(pManager.mProxyInfos.front().user.size(), 0);
+    EXPECT_EQ(pManager.mProxyInfos.front().user.size(), size_t(0));
     EXPECT_EQ(pManager.mHeartbeatUrl, "http://www.baidu.com");
     EXPECT_EQ(pManager.mHeartbeatHost, "www.baidu.com");
 }
@@ -150,7 +150,6 @@ TEST_F(Cms_ProxyManagerTest, InitWithHttpProxy) {
     {
         pConfig->loadConfig((TEST_CONF_PATH / "conf/cloudMonitor/cloudMonitorWithHttpProxy.conf").string());
         ProxyManager proxyManager;
-        EXPECT_EQ(2, 2);
         EXPECT_EQ(proxyManager.mIsAuto, false);
         EXPECT_EQ(proxyManager.mProxyInfo.scheme, "http");
         EXPECT_TRUE(proxyManager.mProxyInfo.schemeVersion.empty());

@@ -44,7 +44,7 @@ TEST_F(Cms_CpuCollectTest, Collect)
 
     for (int i = 0; i < maxCount + 1; i++) {
         auto start = chrono::system_clock::now();
-        uint64_t sum = 0;
+        volatile uint64_t sum = 0;
         int64_t micros = chrono::duration_cast<chrono::microseconds>(start.time_since_epoch()).count();
         for (int64_t j = 0; j < micros / 10000000; j++) {
             sum += j * micros;
@@ -103,5 +103,5 @@ TEST_F(Cms_CpuCollectTest, cpu) {
         cout << "result[:512]:" << std::string(buf).substr(0, 512) << endl;
     }
 
-    EXPECT_EQ(1, cpuCollectInstanceCount);
+    EXPECT_EQ(uint32_t(1), cpuCollectInstanceCount.load());
 }

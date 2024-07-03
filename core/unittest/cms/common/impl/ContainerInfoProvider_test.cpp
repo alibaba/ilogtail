@@ -28,13 +28,13 @@ TEST_F(CommonContainerInfoProviderTest,ParseDockerInspectInfos)
     string result;
     FileUtils::ReadFileContent((TEST_CONF_PATH / "conf/container/all.json").string(),result);
     pContainerInfoProviderPtr->ParseDockerInspectInfos(result,pContainerInfoProviderPtr->mContainerInspectInfos);
-    EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos.size(),22);
+    EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos.size(), size_t(22));
     if(pContainerInfoProviderPtr->mContainerInspectInfos.size()>1)
     {
         EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos[1].id,"618d7bdc433a6108df87d5bf4e7ea80c8706118b24e5987b493b9d83fc24616f");
         EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos[1].name,"paas-seed.SeedFlow__.seedflow.1606876691");
-        EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos[1].mounts.size(),16);
-        if(pContainerInfoProviderPtr->mContainerInspectInfos[1].mounts.size()==16)
+        EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos[1].mounts.size(), size_t(16));
+        if(pContainerInfoProviderPtr->mContainerInspectInfos[1].mounts.size()== size_t(16))
         {
             EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos[1].mounts[6].source,"/cloud/app/tianji/TianjiClient#/tool/1939741");
             EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos[1].mounts[6].dest,"/cloud/tool/tianji");
@@ -44,12 +44,12 @@ TEST_F(CommonContainerInfoProviderTest,ParseDockerInspectInfos)
 	pContainerInfoProviderPtr->mLastContainInspectInfoUpdate = NowMicros();
     vector<ContainerInspectInfo> containerInspectInfos;
     pContainerInfoProviderPtr->GetContainInspectInfos(containerInspectInfos);
-    EXPECT_EQ(containerInspectInfos.size(),22);
+    EXPECT_EQ(containerInspectInfos.size(), size_t(22));
     pContainerInfoProviderPtr->mLastContainInspectInfoUpdate = NowMicros()-pContainerInfoProviderPtr->mInterval-1000*1000;
     containerInspectInfos.clear();
     pContainerInfoProviderPtr->GetContainInspectInfos(containerInspectInfos);
-    EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos.size(),0);
-    EXPECT_EQ(containerInspectInfos.size(),0);
+    EXPECT_EQ(pContainerInfoProviderPtr->mContainerInspectInfos.size(), size_t(0));
+    EXPECT_EQ(containerInspectInfos.size(), size_t(0));
 }
 
 TEST_F(CommonContainerInfoProviderTest,GetContainerNodePath)

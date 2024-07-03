@@ -48,7 +48,7 @@ TEST_F(Core_TaskMonitorTest, LoadModuleTaskFromFile) {
     // map<string,ModuleItem> moduleCollectItemMap;
     TaskManager *pM = SingletonTaskManager::Instance();
     std::shared_ptr<std::map<std::string, ModuleItem>> moduleCollectItemMap = pM->ModuleItems();
-    EXPECT_EQ(2, moduleCollectItemMap->size());
+    EXPECT_EQ(size_t(2), moduleCollectItemMap->size());
     for (const auto &it: *moduleCollectItemMap) {
         string mid = it.first;
         ModuleItem item;
@@ -56,7 +56,7 @@ TEST_F(Core_TaskMonitorTest, LoadModuleTaskFromFile) {
             item = (*moduleCollectItemMap)[mid];
             EXPECT_EQ(item.scheduleExpr, "[* * * * * ?]");
             EXPECT_EQ(item.scheduleInterval.count(), 10000);
-            EXPECT_EQ(item.outputVector.size(), 2);
+            EXPECT_EQ(item.outputVector.size(), size_t(2));
             EXPECT_EQ(item.moduleArgs, "test para");
             EXPECT_EQ(item.name, "cpu");
             EXPECT_EQ(item.module, "cpu");
@@ -65,7 +65,7 @@ TEST_F(Core_TaskMonitorTest, LoadModuleTaskFromFile) {
             item = (*moduleCollectItemMap)[mid];
             EXPECT_EQ(item.scheduleInterval.count(), 20000);
             EXPECT_EQ(item.scheduleExpr, "[* * * * * ?]");
-            EXPECT_EQ(item.outputVector.size(), 2);
+            EXPECT_EQ(item.outputVector.size(), size_t(2));
             EXPECT_EQ(item.moduleArgs, "");
             EXPECT_EQ(item.name, "memory_sec");
             EXPECT_EQ(item.module, "memory");
@@ -82,7 +82,7 @@ TEST_F(Core_TaskMonitorTest, LoadScriptTaskFromFile) {
     EXPECT_EQ(3, pShared->LoadScriptTaskFromFile());
     TaskManager *pM = SingletonTaskManager::Instance();
     auto moduleScriptItemMap = pM->ScriptItems().Get();
-    EXPECT_EQ(3, moduleScriptItemMap->size());
+    EXPECT_EQ(size_t(3), moduleScriptItemMap->size());
     for (const auto &it: *moduleScriptItemMap) {
         cout << it.first << endl;
     }
@@ -95,7 +95,7 @@ TEST_F(Core_TaskMonitorTest, LoadScriptTaskFromFile) {
     EXPECT_FALSE(item.isAliScript);
     EXPECT_EQ(item.scheduleIntv, 2_min);
     EXPECT_EQ(item.timeOut, 20_s);
-    EXPECT_EQ(item.outputVector.size(), 1);
+    EXPECT_EQ(item.outputVector.size(), size_t(1));
     EXPECT_EQ(ToSeconds(item.firstSche), 1000);
     EXPECT_TRUE(item.reportStatus);
     EXPECT_EQ(item.duration, 6_min); // std::chrono::seconds{360});
@@ -103,20 +103,20 @@ TEST_F(Core_TaskMonitorTest, LoadScriptTaskFromFile) {
     EXPECT_EQ(item.scriptUser, "root");
     EXPECT_EQ(item.scriptUser, "root");
     EXPECT_EQ(item.resultFormat, PROMETHEUS_FORMAT);
-    EXPECT_EQ(item.labelAddInfos.size(), 1);
+    EXPECT_EQ(item.labelAddInfos.size(), size_t(1));
 
     mid = "argusagent_1.0_1bef6717483c7d6b5ee958bafbcab9c4";
     EXPECT_TRUE(moduleScriptItemMap->find(mid) != moduleScriptItemMap->end());
     item = (*moduleScriptItemMap)[mid];
     EXPECT_EQ(item.scheduleIntv, 100_s);
     EXPECT_EQ(item.timeOut, 20_s);
-    EXPECT_EQ(item.outputVector.size(), 1);
+    EXPECT_EQ(item.outputVector.size(), size_t(1));
     EXPECT_EQ(item.firstSche.time_since_epoch().count(), 0);
     EXPECT_FALSE(item.reportStatus);
     EXPECT_EQ(item.duration, std::chrono::seconds::zero());
     EXPECT_EQ(item.scheduleExpr, "[* * * * * ?]");
     EXPECT_EQ(item.resultFormat, RAW_FORMAT);
-    EXPECT_EQ(item.labelAddInfos.size(), 0);
+    EXPECT_EQ(item.labelAddInfos.size(), size_t(0));
     EXPECT_EQ(0, pShared->LoadScriptTaskFromFile());
 
     mid = "staragent_invalid_1.0_c1de9ee15dbdc6f0c58a24fabf9c6cc0";
@@ -140,7 +140,7 @@ TEST_F(Core_TaskMonitorTest, LoadAliScriptTaskFromFile) {
     EXPECT_TRUE(pM->AliScriptItems().Get(prevAliScriptItems));
     map<string, ScriptItem> ScriptItemMap = *pM->AliScriptItems().Get();
     EXPECT_FALSE(pM->AliScriptItems().Get(prevAliScriptItems));
-    ASSERT_EQ(1, ScriptItemMap.size());
+    ASSERT_EQ(size_t(1), ScriptItemMap.size());
     auto it = ScriptItemMap.begin();
     // const char *szMid = "ut-script-1_1624254278518_AliScript_9d029999345e714ef9be2f4fc1862f74";
     const char *szExpectMid = "ut-script-1_1624254278518_AliScript_1e82350f64421320435376fe354445c2";
@@ -153,7 +153,7 @@ TEST_F(Core_TaskMonitorTest, LoadAliScriptTaskFromFile) {
               "/home/staragent/plugins/Argus/local_data/libexec/alimonitor/check_xgw_table.sh 127.0.0.1");
     EXPECT_EQ(item.scheduleExpr, "[* * * * * ?]");
     EXPECT_EQ(item.scheduleIntv, std::chrono::seconds{300});
-    EXPECT_EQ(item.labelAddInfos.size(), 5);
+    EXPECT_EQ(item.labelAddInfos.size(), size_t(5));
     LabelAddInfo labelAddInfo = item.labelAddInfos[1];
     EXPECT_EQ(labelAddInfo.name, "__script_name__");
     EXPECT_EQ(labelAddInfo.value,
@@ -163,7 +163,7 @@ TEST_F(Core_TaskMonitorTest, LoadAliScriptTaskFromFile) {
     EXPECT_EQ(item.resultFormat, ALIMONITOR_JSON_FORMAT);
     EXPECT_TRUE(item.reportStatus);
     EXPECT_EQ(item.scriptUser, "root");
-    EXPECT_EQ(item.metricMetas.size(), 2);
+    EXPECT_EQ(item.metricMetas.size(), size_t(2));
     MetricMeta metricMeta = item.metricMetas[0];
     EXPECT_EQ(metricMeta.name, "table");
     EXPECT_EQ(metricMeta.type, 2);
@@ -179,11 +179,11 @@ TEST_F(Core_TaskMonitorTest, LoadReceiveTaskFromFile) {
     EXPECT_EQ(1, pShared->LoadReceiveTaskFromFile());
     TaskManager *pM = SingletonTaskManager::Instance();
     auto ItemMap = pM->ReceiveItems().Get();
-    EXPECT_EQ(1, ItemMap->size());
+    EXPECT_EQ(size_t(1), ItemMap->size());
     int mid = 1;
     EXPECT_TRUE(ItemMap->find(mid) != ItemMap->end());
     ReceiveItem item = (*ItemMap)[mid];
-    EXPECT_EQ(item.outputVector.size(), 1);
+    EXPECT_EQ(item.outputVector.size(), size_t(1));
     EXPECT_EQ(item.name, "staragent");
     EXPECT_EQ(0, pShared->LoadReceiveTaskFromFile());
 }
@@ -200,19 +200,19 @@ TEST_F(Core_TaskMonitorTest, LoadExporterTaskFromFile) {
     TaskManager *pM = SingletonTaskManager::Instance();
     // EXPECT_TRUE(pM->ExporterItemsChanged());
     vector<ExporterItem> items = *pM->ExporterItems();
-    EXPECT_EQ(items.size(), 1);
+    EXPECT_EQ(items.size(), size_t(1));
     ExporterItem item = items[0];
     EXPECT_EQ(item.target, "localhost:8080");
     EXPECT_EQ(item.interval, std::chrono::seconds{15});
     EXPECT_EQ(item.timeout, std::chrono::seconds{10});
-    EXPECT_EQ(item.metricFilterInfos.size(), 3);
+    EXPECT_EQ(item.metricFilterInfos.size(), size_t(3));
     MetricFilterInfo metricFilterInfo = item.metricFilterInfos[0];
     EXPECT_EQ(metricFilterInfo.name, "container_memory_rss");
-    EXPECT_EQ(metricFilterInfo.tagMap.size(), 1);
+    EXPECT_EQ(metricFilterInfo.tagMap.size(), size_t(1));
     EXPECT_EQ(metricFilterInfo.tagMap["id"],
               "/docker/8e0100346912f327f0cb1bd66589443a9b1d0f5ea188c117c0191c9c470a3d2e");
     EXPECT_EQ(metricFilterInfo.metricName, "container_memory_rss_rename");
-    EXPECT_EQ(item.labelAddInfos.size(), 3);
+    EXPECT_EQ(item.labelAddInfos.size(), size_t(3));
     LabelAddInfo labelAddInfo = item.labelAddInfos[1];
     EXPECT_EQ(labelAddInfo.name, "instance");
     EXPECT_EQ(labelAddInfo.value, "INSTANCE");
@@ -234,19 +234,19 @@ TEST_F(Core_TaskMonitorTest, LoadShennongExporterTaskFromFile) {
 
     vector<ExporterItem> items = *pM->ShennongExporterItems();
     // EXPECT_FALSE((bool)pM->ShennongExporterItems());
-    EXPECT_EQ(items.size(), 1);
+    EXPECT_EQ(items.size(), size_t(1));
     ExporterItem item = items[0];
     EXPECT_EQ(item.target, "localhost:8080");
     EXPECT_EQ(item.interval, std::chrono::seconds{15});
     EXPECT_EQ(item.timeout, std::chrono::seconds{10});
-    EXPECT_EQ(item.metricFilterInfos.size(), 3);
+    EXPECT_EQ(item.metricFilterInfos.size(), size_t(3));
     MetricFilterInfo metricFilterInfo = item.metricFilterInfos[0];
     EXPECT_EQ(metricFilterInfo.name, "container_memory_rss");
-    EXPECT_EQ(metricFilterInfo.tagMap.size(), 1);
+    EXPECT_EQ(metricFilterInfo.tagMap.size(), size_t(1));
     EXPECT_EQ(metricFilterInfo.tagMap["id"],
               "/docker/8e0100346912f327f0cb1bd66589443a9b1d0f5ea188c117c0191c9c470a3d2e");
     EXPECT_EQ(metricFilterInfo.metricName, "container_memory_rss_rename");
-    EXPECT_EQ(item.labelAddInfos.size(), 3);
+    EXPECT_EQ(item.labelAddInfos.size(), size_t(3));
     LabelAddInfo labelAddInfo = item.labelAddInfos[1];
     EXPECT_EQ(labelAddInfo.name, "instance");
     EXPECT_EQ(labelAddInfo.value, "INSTANCE");
@@ -269,8 +269,8 @@ TEST_F(Core_TaskMonitorTest, LoadHttpReceiveTaskFromFile) {
     EXPECT_TRUE(pM->GetHttpReceiveItem().Get(prevHttpReceiveItem));
     HttpReceiveItem item = *pM->GetHttpReceiveItem().Get();
     EXPECT_FALSE(pM->GetHttpReceiveItem().Get(prevHttpReceiveItem));
-    EXPECT_EQ(item.outputVector.size(), 1);
-    EXPECT_EQ(item.labelAddInfos.size(), 3);
+    EXPECT_EQ(item.outputVector.size(), size_t(1));
+    EXPECT_EQ(item.labelAddInfos.size(), size_t(3));
     cout << "exit LoadHttpReceiveTaskFromFiles" << endl;
 }
 
@@ -284,9 +284,9 @@ TEST_F(Core_TaskMonitorTest, ParseBaseMetricInfo) {
     EXPECT_TRUE(pTask->AliModuleItems().Get(prevAliMap));
     map<std::string, AliModuleItem> aliMap = *pTask->AliModuleItems().Get();
     EXPECT_FALSE(pTask->AliModuleItems().Get(prevAliMap));
-    EXPECT_EQ(aliMap.size(), 1);
+    EXPECT_EQ(aliMap.size(), size_t(1));
     for (const auto &it: aliMap) {
-        EXPECT_EQ(it.second.blacklist.size(), 1);
+        EXPECT_EQ(it.second.blacklist.size(), size_t(1));
         EXPECT_EQ(it.second.moduleName, "cpu");
         cout << "key=" << it.first
              << ", module: " << it.second.moduleName
@@ -341,11 +341,11 @@ TEST_F(Core_TaskMonitorTest, ParseUnifiedConfig) {
     std::shared_ptr<vector<ExporterItem>> prevExporterItems;
     EXPECT_TRUE(pM->ExporterItems());
     vector<ExporterItem> exporterItems = *pM->ExporterItems();
-    EXPECT_EQ(exporterItems.size(), 2);
+    EXPECT_EQ(exporterItems.size(), size_t(2));
     std::shared_ptr<HttpReceiveItem> prevHttpReceiveItem;
     EXPECT_TRUE(pM->GetHttpReceiveItem().Get(prevHttpReceiveItem));
     // EXPECT_TRUE(pM->ModuleItemChanged());
-    EXPECT_EQ(pM->ModuleItems()->size(), 2);
+    EXPECT_EQ(pM->ModuleItems()->size(), size_t(2));
     //与customTask等平级的scritpTask的解析是不需要的，被注释掉了。
     /*
     EXPECT_TRUE(pM->ScriptItemChanged());
@@ -354,7 +354,7 @@ TEST_F(Core_TaskMonitorTest, ParseUnifiedConfig) {
     std::shared_ptr<std::map<std::string, AliModuleItem>> prevAliModuleItems;
     EXPECT_TRUE(pM->AliModuleItems().Get(prevAliModuleItems));
     std::map<std::string, AliModuleItem> alimonitorItemMap = *pM->AliModuleItems().Get();
-    EXPECT_EQ(alimonitorItemMap.size(), 3);
+    EXPECT_EQ(alimonitorItemMap.size(), size_t(3));
 
     boost::system::error_code ec;
     fs::remove(pMonitor->mModuleTaskFile, ec);
@@ -374,7 +374,7 @@ TEST_F(Core_TaskMonitorTest, ParseUnifiedConfig_ExporterTask) {
     std::shared_ptr<vector<ExporterItem>> prevExporterItems;
     EXPECT_TRUE(pM->ExporterItems());
     vector<ExporterItem> items = *pM->ExporterItems();
-    EXPECT_EQ(4, items.size());
+    EXPECT_EQ(size_t(4), items.size());
     if (items.size() > 3) {
         EXPECT_EQ(items[0].name, "pod_collect1");
         EXPECT_EQ(items[1].name, "alimetrics");
@@ -395,17 +395,17 @@ TEST_F(Core_TaskMonitorTest, ParseUnifiedConfig_ScriptTask) {
     TaskManager *pM = SingletonTaskManager::Instance();
     // EXPECT_TRUE(pM->AliScriptItemChanged());
     std::shared_ptr<map<string, ScriptItem>> ScriptItemMap = pM->AliScriptItems().Get();
-    EXPECT_EQ(2, ScriptItemMap->size());
+    EXPECT_EQ(size_t(2), ScriptItemMap->size());
     if (ScriptItemMap->size() > 1) {
         auto it = ScriptItemMap->begin();
         ScriptItem item = it->second;
         EXPECT_EQ(item.name, "ut-script-1");
         EXPECT_EQ(item.scheduleExpr, "[* * 2-8 * * ?]");
-        EXPECT_EQ(item.outputVector.size(), 1);
+        EXPECT_EQ(item.outputVector.size(), size_t(1));
         if (!item.outputVector.empty()) {
             EXPECT_EQ(item.outputVector[0], make_pair(string("alimonitor"), string("")));
         }
-        EXPECT_EQ(item.labelAddInfos.size(), 6);
+        EXPECT_EQ(item.labelAddInfos.size(), size_t(6));
         if (!item.labelAddInfos.empty()) {
             EXPECT_EQ(item.labelAddInfos[0].name, "__task_name__");
             EXPECT_EQ(item.labelAddInfos[0].value, "ut-script-1");
@@ -419,7 +419,7 @@ TEST_F(Core_TaskMonitorTest, ParseUnifiedConfig_ScriptTask) {
         EXPECT_EQ(item.resultFormat, ALIMONITOR_JSON_FORMAT);
         EXPECT_TRUE(item.reportStatus);
         EXPECT_EQ(item.scriptUser, "root");
-        EXPECT_EQ(item.metricMetas.size(), 2);
+        EXPECT_EQ(item.metricMetas.size(), size_t(2));
         MetricMeta metricMeta = item.metricMetas[0];
         EXPECT_EQ(metricMeta.name, "table");
         EXPECT_EQ(metricMeta.type, 2);
@@ -479,9 +479,9 @@ TEST_F(Core_TaskMonitorTest, ParseModuleTaskInfo) {
     EXPECT_EQ(1, pShared->ParseModuleTaskInfo(
             R"({"moduleItem":[{"name":"test","cron":"[* * * * * ?]","interval":15,"output":[{"type":"prometheus"}]}]})",
             save));
-    EXPECT_EQ(data->size(), 1);
+    EXPECT_EQ(data->size(), size_t(1));
     std::cout << "mid: " << data->begin()->first << std::endl;
-    EXPECT_EQ(data->begin()->second.outputVector.size(), 1);
+    EXPECT_EQ(data->begin()->second.outputVector.size(), size_t(1));
     EXPECT_EQ(data->begin()->second.outputVector[0].first, "prometheus");
 }
 
@@ -492,7 +492,7 @@ TEST_F(Core_TaskMonitorTest, GetModuleItemMid) {
     // map<string,ModuleItem> moduleCollectItemMap;
     TaskManager *pM = SingletonTaskManager::Instance();
     auto moduleCollectItemMap = pM->ModuleItems();
-    EXPECT_EQ(1, moduleCollectItemMap->size());
+    EXPECT_EQ(size_t(1), moduleCollectItemMap->size());
 }
 
 TEST_F(Core_TaskMonitorTest, GetScriptItemMid) {
@@ -502,7 +502,7 @@ TEST_F(Core_TaskMonitorTest, GetScriptItemMid) {
     // map<string,ScriptItem> scriptItemMap;
     TaskManager *pM = SingletonTaskManager::Instance();
     std::shared_ptr<map<string, ScriptItem>> scriptItemMap = pM->ScriptItems().Get();
-    EXPECT_EQ(1, scriptItemMap->size());
+    EXPECT_EQ(size_t(1), scriptItemMap->size());
 }
 
 TEST_F(Core_TaskMonitorTest, GetExporterItemMid) {
@@ -511,7 +511,7 @@ TEST_F(Core_TaskMonitorTest, GetExporterItemMid) {
     pShared->mExporterTaskFile = (TEST_CONF_PATH / "conf" / "task/exporterTask.json").string();
     TaskManager *pM = SingletonTaskManager::Instance();
     vector<ExporterItem> exporterItems = *pM->ExporterItems();
-    EXPECT_EQ(2, exporterItems.size());
+    EXPECT_EQ(size_t(2), exporterItems.size());
     if (exporterItems.size() > 1) {
         EXPECT_EQ(exporterItems[0].mid, exporterItems[1].mid);
     }
@@ -523,7 +523,7 @@ TEST_F(Core_TaskMonitorTest, ParseCmsDetectTaskInfo) {
     EXPECT_EQ(0, pShared->ParseCmsDetectTaskInfo(jsonStr));
     map<string, string> addTags;
     SingletonTaskManager::Instance()->GetCmsDetectAddTags(addTags);
-    EXPECT_EQ(7, addTags.size());
+    EXPECT_EQ(size_t(7), addTags.size());
     EXPECT_EQ("1153704480835126", addTags["userId"]);
     EXPECT_EQ("instanceId", addTags["UDF_RENAME_SN"]);
     EXPECT_EQ("1", addTags["UDF_CC_NOCHECK"]);
@@ -534,8 +534,8 @@ TEST_F(Core_TaskMonitorTest, ParseCmsDetectTaskInfo) {
     vector<PingItem> pingItems = SingletonTaskManager::Instance()->PingItems().Values();
     vector<TelnetItem> telnetItems = SingletonTaskManager::Instance()->TelnetItems().Values();
     vector<HttpItem> httpItems = SingletonTaskManager::Instance()->HttpItems().Values();
-    EXPECT_EQ(2, pingItems.size());
-    if (pingItems.size() == 2) {
+    EXPECT_EQ(size_t(2), pingItems.size());
+    if (pingItems.size() == size_t(2)) {
         int index = ("cms-cloudmonitor.aliyun.com" == pingItems[0].host ? 0 : 1);
         EXPECT_EQ("cms-cloudmonitor.aliyun.com", pingItems[index].host);
         EXPECT_EQ("1476145651891863555", pingItems[index].taskId);
@@ -548,8 +548,8 @@ TEST_F(Core_TaskMonitorTest, ParseCmsDetectTaskInfo) {
         EXPECT_EQ("", pingItems[index].effective.string());
         EXPECT_TRUE(pingItems[index].effective.timePeriod.empty());
     }
-    EXPECT_EQ(3, httpItems.size());
-    if (httpItems.size() == 3) {
+    EXPECT_EQ(size_t(3), httpItems.size());
+    if (httpItems.size() == size_t(3)) {
         auto find = [&](const std::string &host) {
             for (size_t i = 0; i < httpItems.size(); i++) {
                 if (httpItems[i].uri == host) {
@@ -580,8 +580,8 @@ TEST_F(Core_TaskMonitorTest, ParseCmsDetectTaskInfo) {
             EXPECT_EQ("1476145651891863554", httpItems[index].taskId);
         }
     }
-    EXPECT_EQ(1, telnetItems.size());
-    if (telnetItems.size() == 1) {
+    EXPECT_EQ(size_t(1), telnetItems.size());
+    if (telnetItems.size() == size_t(1)) {
         EXPECT_EQ("telnet://10.137.69.8:22", telnetItems[0].uri);
         EXPECT_EQ("1476145651891863556", telnetItems[0].taskId);
     }
@@ -645,7 +645,7 @@ TEST_F(Core_TaskMonitorTest, ParseProcessInfo) {
         const auto &collectItems = SingletonTaskManager::Instance()->ProcessCollectItems();
         Sync(collectItems)
                 {
-                    EXPECT_EQ(collectItems->size(), 1);
+                    EXPECT_EQ(collectItems->size(), size_t(1));
                     EXPECT_EQ((*collectItems)[0].name, "test");
                 }}}
     }
@@ -815,7 +815,7 @@ TEST_F(Core_TaskMonitorTest, ParseCmsProcessTaskInfo) {
         EXPECT_EQ(0, TaskMonitor::ParseCmsProcessTaskInfo(szJson));
         std::map<std::string, std::string> tags;
         tm.GetCmsProcessAddTags(tags);
-        EXPECT_EQ(1, tags.size());
+        EXPECT_EQ(size_t(1), tags.size());
         EXPECT_EQ(tags["a"], "b");
     }
 }
@@ -860,7 +860,7 @@ TEST_F(Core_TaskMonitorTest, ParseCustomTaskInfo) {
 }])XX";
     std::unordered_map<std::string, std::vector<std::string>> content;
     EXPECT_EQ(0, taskMonitor.ParseCustomTaskInfo(szJson, content));
-    EXPECT_EQ(1, content.size());
+    EXPECT_EQ(size_t(1), content.size());
     EXPECT_NE(content.end(), content.find("udf"));
     EXPECT_EQ(content["udf"], std::vector<std::string>{"{}"});
 }
@@ -1021,9 +1021,9 @@ TEST_F(Core_TaskMonitorTest, ParseAliScriptTaskInfo_MetricFilters) {
 
     ASSERT_EQ(1, exitCode);
     auto aliScriptItems = tm.AliScriptItems().Get();
-    EXPECT_EQ(1, aliScriptItems->size());
+    EXPECT_EQ(size_t(1), aliScriptItems->size());
     const auto &filters = aliScriptItems->begin()->second.metricFilterInfos;
-    EXPECT_EQ(1, filters.size());
+    EXPECT_EQ(size_t(1), filters.size());
     EXPECT_EQ(filters[0].name, "hello");
 
     EXPECT_TRUE(StringUtils::Contain(cache, "invalid metricMeta"));
@@ -1092,7 +1092,7 @@ TEST_F(Core_TaskMonitorTest, ParseExporterTaskInfo) {
     defer(RemoveFile(taskMonitor.mExporterTaskFile));
     EXPECT_EQ(1, taskMonitor.ParseExporterTaskInfo(szJson, true));
     EXPECT_TRUE(fs::exists(taskMonitor.mExporterTaskFile));
-    EXPECT_EQ(tm.ExporterItems()->size(), 1);
+    EXPECT_EQ(tm.ExporterItems()->size(), size_t(1));
     EXPECT_EQ(tm.ExporterItems()->at(0).timeout, 2_s);
     EXPECT_EQ(tm.ExporterItems()->at(0).metricsPath, "/metrics");
 }
@@ -1161,7 +1161,7 @@ TEST_F(Core_TaskMonitorTest, LoadReceiveTaskFromFileRobust) {
             EXPECT_TRUE(StringUtils::Contain(cache, tc.expect));
         }
     }
-    EXPECT_EQ(tm.ReceiveItems().Size(), 1);
+    EXPECT_EQ(tm.ReceiveItems().Size(), size_t(1));
 }
 
 TEST_F(Core_TaskMonitorTest, ParseScriptTaskInfo) {
@@ -1216,5 +1216,5 @@ TEST_F(Core_TaskMonitorTest, ParseScriptTaskInfo) {
             EXPECT_TRUE(StringUtils::Contain(cache, tc.expect));
         }
     }
-    EXPECT_EQ(tm.ScriptItems().Size(), 1);
+    EXPECT_EQ(tm.ScriptItems().Size(), size_t(1));
 }

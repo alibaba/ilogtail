@@ -27,9 +27,6 @@ TEST(Core_TaskManagerTest, ModuleItem) {
     auto *old = SingletonArgusManager::swap(&am);
     defer(SingletonArgusManager::swap(old));
 
-    // am.mModuleScheduler = std::make_shared<ModuleScheduler2>();
-    // EXPECT_FALSE((bool)am.mModuleScheduler->mModuleItems);
-
     {
         // TaskManager tm;
         tm.SetModuleItems(std::make_shared<std::map<std::string, ModuleItem>>());

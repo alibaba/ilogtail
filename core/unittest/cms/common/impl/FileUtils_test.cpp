@@ -30,38 +30,19 @@ TEST_F(CommonFileUtilsTest, ReadFileLines) {
 }
 
 TEST_F(CommonFileUtilsTest, WriteFileContent) {
-#ifdef WIN32
-#   define ROOT_DIR "C:\\cloudmonitor_unit_test\\"
-#else
-#   define ROOT_DIR "/etc/cloudmonitor_test/"
-#endif
-    const char *file = ROOT_DIR "test.txt";
+    fs::path file = TEST_CONF_PATH / "tmp" / "test.txt";
+    const char *szFile = file.string().c_str();
     const std::string fileContent = "testhelloworld";
-    EXPECT_EQ(FileUtils::WriteFileContent(file, fileContent), fileContent.size());
-    // apr_pool_t *mp;
-    // apr_pool_create(&mp, NULL);
-    // apr_file_t *file;
-    // apr_status_t rv = apr_file_open(&file,"/etc/cloudmonitor_test/test.txt", APR_READ, APR_UREAD,mp);
-    // apr_off_t index =4;
-    // if (rv == APR_SUCCESS)
-    // {
-    //   apr_file_seek(file,SEEK_SET,&index);
-    //   EXPECT_EQ(FileUtils::GetFileSize(file),strlen("testhelloworld"));
-    //   index =0;
-    //   apr_file_seek(file,SEEK_CUR,&index);
-    //   EXPECT_EQ(index,4);
-    //   apr_file_close(file);
-    // }
-    // apr_pool_destroy(mp);
+    EXPECT_EQ(FileUtils::WriteFileContent(szFile, fileContent), (int)fileContent.size());
     EXPECT_EQ(fileContent.size(), fs::file_size(file));
+
     string result;
-    EXPECT_EQ(fileContent.size(), FileUtils::ReadFileContent(file, result));
-    // SystemUtil::execCmd("cat /etc/cloudmonitor_test/test.txt",result);
+    EXPECT_EQ((int)fileContent.size(), FileUtils::ReadFileContent(szFile, result));
     EXPECT_EQ(result, fileContent);
-    // SystemUtil::execCmd("rm -rf /etc/cloudmonitor_test",result);
+
     boost::system::error_code ec;
-    fs::remove_all(fs::path(file).parent_path(), ec);
-    EXPECT_FALSE(fs::exists(fs::path(file).remove_filename()));
+    fs::remove_all(file.parent_path(), ec);
+    EXPECT_FALSE(fs::exists(file.remove_filename()));
 }
 
 TEST_F(CommonFileUtilsTest, isDir) {
@@ -167,7 +148,7 @@ TEST_F(CommonFileUtilsTest, WriteFileContent2) {
     EXPECT_TRUE(boost::filesystem::exists(tmpFile));
 
     std::vector<std::string> lines = ReadFileLines(tmpFile);
-    ASSERT_EQ(1, lines.size());
+    ASSERT_EQ(size_t(1), lines.size());
     EXPECT_EQ(lines, std::vector<std::string>{"123"});
 
     boost::filesystem::remove(tmpFile);
@@ -184,7 +165,7 @@ TEST_F(CommonFileUtilsTest, FileOperation) {
         File file(tmpFile, File::ModeWriteText);
         ASSERT_GT(file.FileNo(), 0);
         EXPECT_FALSE(file.IsError());
-        EXPECT_EQ(5, file.Write("hello"));
+        EXPECT_EQ(size_t(5), file.Write("hello"));
     }
     fs::remove(tmpFile);
 }

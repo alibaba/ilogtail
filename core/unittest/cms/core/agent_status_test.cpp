@@ -26,7 +26,7 @@ TEST_F(AgentStatusTest,InitAgentStatus)
     Config *cfg = SingletonConfig::Instance();
     cfg->setBaseDir(TEST_CONF_PATH / "conf");
     AgentStatus status;
-    EXPECT_EQ(status.mMetricMap.Size(),3);
+    EXPECT_EQ(status.mMetricMap.Size(), size_t(3));
     EXPECT_EQ("resourceCount",status.mMetricMap[AGENT_RESOURCE_STATUS].metricName);
     EXPECT_EQ("coredumpCount",status.mMetricMap[AGENT_COREDUMP_STATUS].metricName);
     EXPECT_EQ("startCount",status.mMetricMap[AGENT_START_STATUS].metricName);
@@ -59,7 +59,7 @@ TEST_F(AgentStatusTest,LoadAgentStatus1)
     AppendAgentStatus(agentStatus, "resourceCount","7");
     AppendAgentStatus(agentStatus, "resourceCount1","8");
     AgentStatus pStatus;
-    EXPECT_EQ(pStatus.mMetricMap.Size(),3);
+    EXPECT_EQ(pStatus.mMetricMap.Size(), size_t(3));
     EXPECT_EQ(7,pStatus.mMetricMap[AGENT_RESOURCE_STATUS].count);
     EXPECT_EQ(0,pStatus.mMetricMap[AGENT_COREDUMP_STATUS].count);
     EXPECT_EQ(6,pStatus.mMetricMap[AGENT_START_STATUS].count);
@@ -117,10 +117,9 @@ TEST_F(AgentStatusTest,GetAgentStatus)
     status.InitAgentStatus();
     status.LoadAgentStatus();
     EXPECT_TRUE(status.GetAgentStatus());
-    for(int i=0;i<argus::AgentStatus::maxCount(AGENT_START_STATUS)-1;i++)
-    {
+    for (int i = 0; i < argus::AgentStatus::maxCount(AGENT_START_STATUS) - 1; i++) {
         status.UpdateAgentStatus(AGENT_START_STATUS);
-         EXPECT_TRUE(status.GetAgentStatus());
+        EXPECT_TRUE(status.GetAgentStatus());
     }
     status.UpdateAgentStatus(AGENT_START_STATUS);
     EXPECT_TRUE(status.GetAgentStatus());

@@ -20,27 +20,27 @@ TEST(Common_ThreadPoolTest, Option) {
 
 TEST(Common_ThreadPoolTest, Pool) {
     ThreadPool threadPool(ThreadPool::Option{}.min(1).max(0));
-    EXPECT_EQ(1, threadPool.threadCount());
+    EXPECT_EQ(size_t(1), threadPool.threadCount());
     EXPECT_EQ(threadPool.minThreadCount(), threadPool.maxThreadCount());
-    EXPECT_EQ(0, threadPool.taskCount());
+    EXPECT_EQ(size_t(0), threadPool.taskCount());
 
     std::mutex mutex;
     mutex.lock();
     std::atomic<int> count{0};
     threadPool.commit({}, [&]() {
-        EXPECT_EQ(0, threadPool.taskCount());
+        EXPECT_EQ(size_t(0), threadPool.taskCount());
         ++count;
         std::lock_guard<std::mutex> _guard(mutex);
     });
-    EXPECT_EQ(1, threadPool.threadCount());
+    EXPECT_EQ(size_t(1), threadPool.threadCount());
     mutex.unlock();
 }
 
 TEST(Common_ThreadPoolTest, AutoScale) {
     ThreadPool threadPool(ThreadPool::Option{}.min(1).max(3).maxIdle(std::chrono::milliseconds{50}));
-    EXPECT_EQ(1, threadPool.minThreadCount());
-    EXPECT_EQ(3, threadPool.maxThreadCount());
-    EXPECT_EQ(0, threadPool.taskCount());
+    EXPECT_EQ(size_t(1), threadPool.minThreadCount());
+    EXPECT_EQ(size_t(3), threadPool.maxThreadCount());
+    EXPECT_EQ(size_t(0), threadPool.taskCount());
 
     SyncQueue<bool> queueExit;
     SyncQueue<std::thread::id> queue, exited(3);
@@ -84,7 +84,7 @@ TEST(Common_ThreadPoolTest, AutoScale) {
 
     threadPool.stop();
     threadPool.join();
-    EXPECT_EQ(0, threadPool.threadCount());
+    EXPECT_EQ(size_t(0), threadPool.threadCount());
 }
 
 TEST(Common_ThreadPoolTest, CommitOnClosedThread) {

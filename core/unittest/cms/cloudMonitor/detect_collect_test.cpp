@@ -190,11 +190,11 @@ TEST_F(Cms_DetectCollectTest, InitFail) {
     {
         DetectCollect collector;
         EXPECT_EQ(0, collector.Init());
-        EXPECT_EQ(20, collector.mPDetectSchedule->mThreadPool->_maxThreadCount);
+        EXPECT_EQ(size_t(20), collector.mPDetectSchedule->mThreadPool->_maxThreadCount);
 #ifdef ENABLE_CLOUD_MONITOR
-        const int defaultMinThread = 1;
+        constexpr const size_t defaultMinThread = 1;
 #else
-        const int defaultMinThread = 10;
+        constexpr const size_t defaultMinThread = 10;
 #endif
         EXPECT_EQ(defaultMinThread, collector.mPDetectSchedule->mThreadPool->_initSize);
     }

@@ -124,11 +124,11 @@ TEST_F(FileChannelTest, clearMap) {
     p_shared->m_errorConfMap.Set("test1", std::chrono::system_clock::now() - intv);
     p_shared->m_errorConfMap.Set("test2", std::chrono::system_clock::now() - intv);
     p_shared->clearMap(std::chrono::microseconds{6000*1000});
-    EXPECT_EQ(2, p_shared->m_outputFileMap.Size());
-    EXPECT_EQ(2, p_shared->m_errorConfMap.Size());
+    EXPECT_EQ(size_t(2), p_shared->m_outputFileMap.Size());
+    EXPECT_EQ(size_t(2), p_shared->m_errorConfMap.Size());
     p_shared->clearMap(std::chrono::microseconds{1000*1000});
-    EXPECT_EQ(0, p_shared->m_outputFileMap.Size());
-    EXPECT_EQ(0, p_shared->m_errorConfMap.Size());
+    EXPECT_EQ(size_t(0), p_shared->m_outputFileMap.Size());
+    EXPECT_EQ(size_t(0), p_shared->m_errorConfMap.Size());
 }
 
 TEST_F(FileChannelTest, addScriptMessge) {
@@ -140,7 +140,7 @@ TEST_F(FileChannelTest, addScriptMessge) {
     EXPECT_LT(p_shared->m_errorConfMap["test1"] - now, std::chrono::seconds{1});
     p_shared->addMessage("test", seconds, 1, "test", "test2", false, "mid");
     EXPECT_LT(p_shared->m_errorConfMap["test2"] - now, std::chrono::seconds{1});
-    EXPECT_EQ(2, p_shared->m_errorConfMap.Size());
+    EXPECT_EQ(size_t(2), p_shared->m_errorConfMap.Size());
     //create map
     string conf1 = R"({"path":"/tmp/test/test.log", "size":1024000,"count":7})";
     string conf2 = R"({"size":1024000,"count":7,"path":"/tmp/test/test.log"})";
@@ -158,10 +158,10 @@ TEST_F(FileChannelTest, addScriptMessge) {
     EXPECT_LT(p_shared->m_outputFileMap[conf1]->lastTime - now, std::chrono::seconds{1});
     EXPECT_LT(p_shared->m_outputFileMap[conf2]->lastTime - now, std::chrono::seconds{1});
     // EXPECT_EQ(2,p_shared->m_outputFileMap[conf2]->count);
-    EXPECT_EQ(2, p_shared->m_outputMsgList.Size());
+    EXPECT_EQ(size_t(2), p_shared->m_outputMsgList.Size());
     const_cast<size_t &>(p_shared->m_maxMsgNumber) = 2;
     p_shared->addMessage("name1", seconds, 1, "result1", conf1, false, "mid");
-    EXPECT_EQ(2, p_shared->m_outputMsgList.Size());
+    EXPECT_EQ(size_t(2), p_shared->m_outputMsgList.Size());
     EXPECT_EQ(1, p_shared->m_discardCount);
 }
 
@@ -184,9 +184,9 @@ TEST_F(FileChannelTest, doRun) {
     EXPECT_NE(content1.find("name1|1|result1-2"), string::npos);
     EXPECT_NE(content2.find("name2|2|result2-1"), string::npos);
     EXPECT_NE(content2.find("name2|2|result2-1"), string::npos);
-    EXPECT_EQ(0, p_shared->m_outputMsgList.Size());
-    EXPECT_EQ(0, p_shared->m_errorConfMap.Size());
-    EXPECT_EQ(0, p_shared->m_outputFileMap.Size());
+    EXPECT_EQ(size_t(0), p_shared->m_outputMsgList.Size());
+    EXPECT_EQ(size_t(0), p_shared->m_errorConfMap.Size());
+    EXPECT_EQ(size_t(0), p_shared->m_outputFileMap.Size());
 
     boost::system::error_code ec;
     fs::remove("/tmp/test/test.log1", ec);

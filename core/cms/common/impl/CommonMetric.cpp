@@ -6,6 +6,9 @@
 #include "common/PrometheusMetric.h"
 
 namespace common {
+    CommonMetricBase::~CommonMetricBase() {
+    }
+
     std::string CommonMetricBase::toString(int tabNum) const {
         std::stringstream ss;
         ss << StringUtils::GetTab(tabNum) << name << "{";

@@ -63,11 +63,11 @@ TEST_F(Cms_ProcessCollectTest, CollectUnit) {
     //获取topN进程的pid排序
     vector<pid_t> sortPids;
     p_shared->CopyAndSortByCpu(pids, sortPids);
-    EXPECT_EQ(0, sortPids.size());
+    EXPECT_EQ(size_t(0), sortPids.size());
     //获取topN进程的信息
     vector<ProcessStat> processStats;
     EXPECT_EQ(0, p_shared->GetTopNProcessStat(sortPids, p_shared->mTopN, processStats));
-    EXPECT_EQ(0, processStats.size());
+    EXPECT_EQ(size_t(0), processStats.size());
     std::this_thread::sleep_for(std::chrono::seconds{2});
     p_shared->CopyAndSortByCpu(pids, sortPids);
     cout << "sortPidsSize=" << sortPids.size() << endl;
@@ -93,7 +93,7 @@ TEST_F(Cms_ProcessCollectTest, CollectUnit) {
     // 获取进程匹配数据
     vector<ProcessMatchInfo> processMatchInfos;
     p_shared->GetProcessMatchInfos(pids, processMatchInfos);
-    EXPECT_EQ(2, processMatchInfos.size());
+    EXPECT_EQ(size_t(2), processMatchInfos.size());
     for (const auto &processMatchInfo: processMatchInfos) {
         cout << "name=" << processMatchInfo.name << ", size=" << processMatchInfo.pids.size() << ": "
              << common::StringUtils::join(processMatchInfo.pids, ", ", "[", "]") << endl;
@@ -205,7 +205,7 @@ TEST_F(Cms_ProcessCollectTest, cpu) {
     CollectData collectData1;
     EXPECT_TRUE(ModuleData::convertStringToCollectData(data, collectData1));
     EXPECT_EQ(collectData1.moduleName, p_shared->mModuleName);
-    int expectCount = (isWin32? 1: 2);
+    size_t expectCount = (isWin32? 1: 2);
 #if !defined(WIN32) && defined(ENABLE_CMS_SYS_TASK)
     expectCount++;
 #endif
@@ -292,7 +292,7 @@ TEST_F(Cms_ProcessCollectTest, toolCollectTopFd) {
     std::cout << ss.str() << std::endl;
 
     json::Array array = json::parseArray(ss.str());
-    EXPECT_EQ(2, array.size());
+    EXPECT_EQ(size_t(2), array.size());
 }
 
 TEST_F(Cms_ProcessCollectTest, toolCollectTopCpu) {
@@ -311,7 +311,7 @@ TEST_F(Cms_ProcessCollectTest, toolCollectTopCpu) {
     std::cout << ss.str() << std::endl;
 
     json::Array array = json::parseArray(ss.str());
-    EXPECT_EQ(2, array.size());
+    EXPECT_EQ(size_t(2), array.size());
 }
 
 TEST_F(Cms_ProcessCollectTest, toolCollectTopMemory) {
@@ -330,7 +330,7 @@ TEST_F(Cms_ProcessCollectTest, toolCollectTopMemory) {
     std::cout << ss.str() << std::endl;
 
     json::Array array = json::parseArray(ss.str());
-    EXPECT_EQ(2, array.size());
+    EXPECT_EQ(size_t(2), array.size());
 }
 
 TEST_F(Cms_ProcessCollectTest, ProcessMatchInfo_isMatch) {

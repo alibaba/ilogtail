@@ -36,8 +36,8 @@ protected:
     void SetUp() override {
         SingletonConfig::Instance();
         p_shared = new DomainSocketCollect;
-        ArgusManager *pManager = SingletonArgusManager::Instance();
-        pManager->Start(false);
+
+        SingletonArgusManager::Instance()->Start(false);
         StartGlobalPoll();
     }
 

@@ -11,7 +11,8 @@
 TEST(CommonArithmeticTest, DeltaUnsigned) {
     EXPECT_EQ(Delta((uint32_t)1, std::numeric_limits<uint32_t>::max() - 1), (uint32_t)2);
     EXPECT_EQ(Delta((uint32_t)0, std::numeric_limits<uint32_t>::max() - 1), (uint32_t)1);
-    EXPECT_EQ(Delta<uint32_t>(1, 0), (uint32_t)1);
+    EXPECT_EQ(Delta<uint32_t>(1, (uint32_t)(0)), (uint32_t)1);
+    EXPECT_EQ(Delta(1, (int16_t)(0)), 1);
 
     EXPECT_EQ(Increase(0, 1), 1);
     EXPECT_EQ(Increase(0, -1), 0);

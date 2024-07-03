@@ -272,6 +272,18 @@ namespace argus {
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// 本地工具函数
+    template<typename T>
+    static bool safeGet(const SafeShared<T> &src, T &dst) {
+        std::shared_ptr<T> data;
+        bool ok = src.Get(data);
+        if (ok) {
+            dst = *data;
+        }
+        return ok;
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// AliModuleItem
     bool AliModuleItem::parseJson(const json::Object &obj) {
         this->moduleName = obj.getString("module_name");
@@ -484,24 +496,35 @@ namespace argus {
     }
 
     void TaskManager::SetTopNItem(const TopNItem &item) {
-        TopNItem newItem{item};
-        newItem.labelTags.clear();
-        BaseParseMetric::ParseAddLabelInfo(item.labelAddInfos, newItem.labelTags, nullptr);
+        auto newItem = std::make_shared<TopNItem>(item);
+        newItem->labelTags.clear();
+        BaseParseMetric::ParseAddLabelInfo(item.labelAddInfos, newItem->labelTags, nullptr);
 
         mTopNItem = newItem;
     }
 
     void TaskManager::GetTopNItem(TopNItem &item) {
-        item = mTopNItem.Get();
+        std::shared_ptr<TopNItem> data;
+        if (mTopNItem.Get(data)) {
+            item = *data;
+        }
     }
 
     //NodeItem
     void TaskManager::SetNodeItem(const NodeItem &s) {
-        mNodeItem = s;
+        mNodeItem.Set(std::make_shared<NodeItem>(s));
     }
 
     void TaskManager::GetNodeItem(NodeItem &s) {
-        s = mNodeItem.Get();
+        safeGet(mNodeItem, s);
+    }
+
+    void TaskManager::SetCloudAgentInfo(const CloudAgentInfo &s) {
+        mCloudAgentInfo = std::make_shared<CloudAgentInfo>(s);
+    }
+
+    void TaskManager::GetCloudAgentInfo(CloudAgentInfo &s) const {
+        safeGet(mCloudAgentInfo, s);
     }
 
     //MetricItems

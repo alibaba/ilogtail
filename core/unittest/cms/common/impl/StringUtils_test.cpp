@@ -159,7 +159,7 @@ TEST(CommonStringUtilsTest, convertWithUnit) {
 TEST(CommonStringUtilTest, split2) {
     string testStr1("  aa bb cc   dd    ee  ");
     vector<string> words = StringUtils::split(testStr1, ' ', false);
-    EXPECT_EQ(words.size(), 5);
+    EXPECT_EQ(words.size(), size_t(5));
     if (words.size() > 4) {
         EXPECT_EQ(words[0], "aa");
         EXPECT_EQ(words[1], "bb");
@@ -208,12 +208,12 @@ TEST(CommonStringUtilTest, trimSpaceCharacter) {
 TEST(CommonStringUtilTest, format) {
     {
         std::string s = fmt::sprintf(std::string("%d"), 22222);
-        EXPECT_EQ(5, s.size());
+        EXPECT_EQ(size_t(5), s.size());
         EXPECT_EQ(s, "22222");
     }
     {
         std::string s1(4096, '1');
-        EXPECT_EQ(s1.size(), 4096);
+        EXPECT_EQ(s1.size(), size_t(4096));
         std::string s = fmt::sprintf("]]] %s", s1.c_str());
         EXPECT_EQ(s.size(), s1.size() + 4);
         EXPECT_EQ(s.substr(s.size() - 5, 5), "11111");
@@ -255,24 +255,24 @@ TEST(CommonStringUtilTest, DoubleToString) {
 TEST(CommonStringUtilTest, SplitString) {
     {
         auto lines = StringUtils::splitString("123\n456", "\n");
-        EXPECT_EQ(2, lines.size());
+        EXPECT_EQ(size_t(2), lines.size());
         EXPECT_EQ(lines.at(0), "123");
         EXPECT_EQ(lines.at(1), "456");
     }
     {
         auto lines = StringUtils::splitString("123\n", "\n");
-        EXPECT_EQ(1, lines.size());
+        EXPECT_EQ(size_t(1), lines.size());
         EXPECT_EQ(lines.at(0), "123");
     }
     {
         auto lines = StringUtils::splitString("\n456", "\n");
-        EXPECT_EQ(2, lines.size());
+        EXPECT_EQ(size_t(2), lines.size());
         EXPECT_EQ(lines.at(0), "");
         EXPECT_EQ(lines.at(1), "456");
     }
     {
         auto lines = StringUtils::splitString("456", "\n");
-        EXPECT_EQ(1, lines.size());
+        EXPECT_EQ(size_t(1), lines.size());
         EXPECT_EQ(lines.at(0), "456");
     }
     {
@@ -285,20 +285,20 @@ TEST(CommonStringUtilTest, ParseCmdLine) {
     {
         std::vector<std::string> argv;
         StringUtils::ParseCmdLine("a.exe", argv);
-        EXPECT_EQ(argv.size(), 1);
+        EXPECT_EQ(argv.size(), size_t(1));
         EXPECT_EQ(argv[0], "a.exe");
     }
     {
         std::vector<std::string> argv;
         StringUtils::ParseCmdLine("a.exe 'abc'", argv);
-        EXPECT_EQ(argv.size(), 2);
+        EXPECT_EQ(argv.size(), size_t(2));
         EXPECT_EQ(argv[0], "a.exe");
         EXPECT_EQ(argv[1], "abc");
     }
     {
         std::vector<std::string> argv;
         StringUtils::ParseCmdLine(R"("C:\Program Files\a.exe" 'abc')", argv);
-        EXPECT_EQ(argv.size(), 2);
+        EXPECT_EQ(argv.size(), size_t(2));
         EXPECT_EQ(argv[0], "C:\\Program Files\\a.exe");
         EXPECT_EQ(argv[1], "abc");
     }
@@ -450,8 +450,8 @@ TEST(CommonStringUtilTest, ConvertStringToUnsignedLong) {
 }
 
 TEST(CommonStringUtilTest, ConvertHexStringToUnsignedLong) {
-    EXPECT_EQ(0, convertHex<unsigned long>("0"));
-    EXPECT_EQ(15, convertHex<unsigned long>("F"));
+    EXPECT_EQ(0UL, convertHex<unsigned long>("0"));
+    EXPECT_EQ(15UL, convertHex<unsigned long>("F"));
 
     int v = -1;
     EXPECT_FALSE(convertHex<int>("Z", v));
@@ -519,7 +519,7 @@ TEST(CommonStringUtilTest, Split) {
     }
     {
         auto words = StringUtils::split("A     B", ' ', false);
-        EXPECT_EQ(2, words.size());
+        EXPECT_EQ(size_t(2), words.size());
         EXPECT_EQ("A", words[0]);
         EXPECT_EQ("B", words[1]);
 
@@ -527,7 +527,7 @@ TEST(CommonStringUtilTest, Split) {
     {
         // 2个空格
         auto words = StringUtils::split("A  B", ' ', {false, true});
-        EXPECT_EQ(3, words.size());
+        EXPECT_EQ(size_t(3), words.size());
         EXPECT_EQ("A", words[0]);
         EXPECT_EQ("", words[1]);
         EXPECT_EQ("B", words.at(2));

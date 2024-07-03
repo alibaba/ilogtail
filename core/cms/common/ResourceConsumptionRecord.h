@@ -45,9 +45,9 @@ public:
 
 public:
 #ifdef ENABLE_COVERAGE
-    static constexpr const int topN = 10;
+    static constexpr const size_t topN = 10;
 #else
-    static constexpr const int topN = 20;
+    static constexpr const size_t topN = 20;
 #endif
 
 private:

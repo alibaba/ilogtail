@@ -14,20 +14,20 @@ using namespace argus;
 TEST(CoreLocalChannelTest, addMessage) {
     LocalChannel lc;
     lc.addMessage("1", std::chrono::system_clock::now(), 0, "", "", true, "");
-    EXPECT_EQ(lc.msgList.size(), 1);
-    EXPECT_EQ(lc.m_discardCount, 0);
+    EXPECT_EQ(lc.msgList.size(), size_t(1));
+    EXPECT_EQ(lc.m_discardCount, size_t(0));
 
     lc.m_maxCount = 1;
     lc.addMessage("2", std::chrono::system_clock::now(), 0, "", "", true, ""); // 失败
-    EXPECT_EQ(lc.msgList.size(), 1);
-    EXPECT_EQ(lc.m_discardCount, 1);
+    EXPECT_EQ(lc.msgList.size(), size_t(1));
+    EXPECT_EQ(lc.m_discardCount, size_t(1));
     EXPECT_EQ(lc.msgList.front().moduleName, "2");
 
     // result.size > mRecordSize直接丢弃
     lc.mRecordSize = 0;
     lc.addMessage("3", std::chrono::system_clock::now(), 0, "1", "", true, ""); // 失败
-    EXPECT_EQ(lc.msgList.size(), 1);
-    EXPECT_EQ(lc.m_discardCount, 1);
+    EXPECT_EQ(lc.msgList.size(), size_t(1));
+    EXPECT_EQ(lc.m_discardCount, size_t(1));
     EXPECT_EQ(lc.msgList.front().moduleName, "2");
 }
 

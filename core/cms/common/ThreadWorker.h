@@ -38,6 +38,7 @@ public:
 };
 
 namespace common {
+#include "test_support"
 class ThreadWorker {
     public:
         explicit ThreadWorker(bool end = true);
@@ -102,5 +103,6 @@ private:
     // bug : https://blog.csdn.net/pes2020/article/details/120722357#标准库条件变量等待时间受系统时间影响
     boost::condition_variable_any mCv;
 };
+#include "test_support"
 
 #endif

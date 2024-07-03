@@ -51,7 +51,6 @@
 #endif
 
 
-
 #ifdef WIN32
 #include <Windows.h>  // CloseHandle, GetCurrentThreadId
 #include <tlhelp32.h> // CreateToolhelp32Snapshot, Process32First

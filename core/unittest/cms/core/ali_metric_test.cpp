@@ -108,8 +108,8 @@ TEST_F(AliMetricTest, AddMetric) {
     SingletonTaskMonitor::Instance()->ParseExporterTaskInfo(config, false);
     TaskManager *pTask = SingletonTaskManager::Instance();
     vector<ExporterItem> items = *pTask->ExporterItems();
-    EXPECT_EQ(items.size(), 1);
-    if (items.size() == 1) {
+    EXPECT_EQ(items.size(), size_t(1));
+    if (items.size() == size_t(1)) {
         EXPECT_EQ(items[0].type, 1);
         unique_ptr<AliMetric> pAliMetricPtr(new AliMetric(items[0].metricFilterInfos, items[0].labelAddInfos));
         string result;
@@ -117,7 +117,7 @@ TEST_F(AliMetricTest, AddMetric) {
         pAliMetricPtr->AddMetric(result);
         vector<CommonMetric> commonMetrics;
         pAliMetricPtr->GetCommonMetrics(commonMetrics);
-        int metricNum = 2 + 19 + 2 + 9 + 3 + 3;
+        constexpr const size_t metricNum = 2 + 19 + 2 + 9 + 3 + 3;
         cout << "size=" << commonMetrics.size() << endl;
         EXPECT_EQ(metricNum, commonMetrics.size());
         CommonMetric metric;

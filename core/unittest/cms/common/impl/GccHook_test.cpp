@@ -67,7 +67,7 @@ TEST(CommonGccHookTest, tagFuncPtr) {
     EXPECT_LT((void *) func1, (void *) func2);
 
     std::set<tagFuncPtr> mySet{tagFuncPtr{(void *) func1, (void *) func2}};
-    EXPECT_EQ(1, mySet.size());
+    EXPECT_EQ(size_t(1), mySet.size());
     EXPECT_NE(mySet.end(), mySet.find(tagFuncPtr{(void *) func1}));
     EXPECT_NE(mySet.end(), mySet.find(tagFuncPtr{(char *) func1 + 1}));
     EXPECT_EQ(mySet.end(), mySet.find(tagFuncPtr{(void *) func2}));
