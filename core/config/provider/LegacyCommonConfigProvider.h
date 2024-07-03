@@ -24,17 +24,17 @@
 #include <vector>
 
 #include "config/provider/ConfigProvider.h"
-#include "config_server_pb/agent.pb.h"
+#include "config_server_pb/v1/agent.pb.h"
 
 namespace logtail {
 
-class CommonConfigProvider : public ConfigProvider {
+class LegacyCommonConfigProvider : public ConfigProvider {
 public:
-    CommonConfigProvider(const CommonConfigProvider&) = delete;
-    CommonConfigProvider& operator=(const CommonConfigProvider&) = delete;
+    LegacyCommonConfigProvider(const LegacyCommonConfigProvider&) = delete;
+    LegacyCommonConfigProvider& operator=(const LegacyCommonConfigProvider&) = delete;
 
-    static CommonConfigProvider* GetInstance() {
-        static CommonConfigProvider instance;
+    static LegacyCommonConfigProvider* GetInstance() {
+        static LegacyCommonConfigProvider instance;
         return &instance;
     }
 
@@ -51,8 +51,8 @@ private:
         std::int32_t port;
     };
 
-    CommonConfigProvider() = default;
-    ~CommonConfigProvider() = default;
+    LegacyCommonConfigProvider() = default;
+    ~LegacyCommonConfigProvider() = default;
 
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
@@ -62,7 +62,7 @@ private:
     bool GetConfigServerAvailable() { return mConfigServerAvailable; }
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
-    SendHeartbeat(const ConfigServerAddress& configServerAddress);
+    SendHeartBeat(const ConfigServerAddress& configServerAddress);
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> FetchPipelineConfig(
         const ConfigServerAddress& configServerAddress,
         const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs);

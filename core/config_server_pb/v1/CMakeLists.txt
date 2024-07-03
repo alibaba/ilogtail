@@ -15,7 +15,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(config_server_pb)
 
-file(GLOB LIB_SOURCE_FILES v1/*.cc v1/*.h v1/*.cpp v2/*.cc v2/*.h v2/*.cpp)
+file(GLOB LIB_SOURCE_FILES *.cc *.h *.cpp)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 link_protobuf(${PROJECT_NAME})

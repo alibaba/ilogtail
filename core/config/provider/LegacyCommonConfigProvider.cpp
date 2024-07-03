@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "config/provider/CommonConfigProvider.h"
+#include "config/provider/LegacyCommonConfigProvider.h"
 
 #include <json/json.h>
 
@@ -37,7 +37,7 @@ DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 namespace logtail {
 
-void CommonConfigProvider::Init(const string& dir) {
+void LegacyCommonConfigProvider::Init(const string& dir) {
     ConfigProvider::Init(dir);
 
     const Json::Value& confJson = AppConfig::GetInstance()->GetConfig();
@@ -78,10 +78,10 @@ void CommonConfigProvider::Init(const string& dir) {
         LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
     }
 
-    mThreadRes = async(launch::async, &CommonConfigProvider::CheckUpdateThread, this);
+    mThreadRes = async(launch::async, &LegacyCommonConfigProvider::CheckUpdateThread, this);
 }
 
-void CommonConfigProvider::Stop() {
+void LegacyCommonConfigProvider::Stop() {
     {
         lock_guard<mutex> lock(mThreadRunningMux);
         mIsThreadRunning = false;
@@ -89,14 +89,14 @@ void CommonConfigProvider::Stop() {
     mStopCV.notify_one();
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
-        LOG_INFO(sLogger, ("common config provider", "stopped successfully"));
+        LOG_INFO(sLogger, ("legacy common config provider", "stopped successfully"));
     } else {
-        LOG_WARNING(sLogger, ("common config provider", "forced to stopped"));
+        LOG_WARNING(sLogger, ("legacy common config provider", "forced to stopped"));
     }
 }
 
-void CommonConfigProvider::CheckUpdateThread() {
-    LOG_INFO(sLogger, ("common config provider", "started"));
+void LegacyCommonConfigProvider::CheckUpdateThread() {
+    LOG_INFO(sLogger, ("legacy common config provider", "started"));
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
     unique_lock<mutex> lock(mThreadRunningMux);
@@ -112,7 +112,7 @@ void CommonConfigProvider::CheckUpdateThread() {
     }
 }
 
-CommonConfigProvider::ConfigServerAddress CommonConfigProvider::GetOneConfigServerAddress(bool changeConfigServer) {
+LegacyCommonConfigProvider::ConfigServerAddress LegacyCommonConfigProvider::GetOneConfigServerAddress(bool changeConfigServer) {
     if (0 == mConfigServerAddresses.size()) {
         return ConfigServerAddress("", -1); // No address available
     }
@@ -130,13 +130,13 @@ CommonConfigProvider::ConfigServerAddress CommonConfigProvider::GetOneConfigServ
                                mConfigServerAddresses[mConfigServerAddressId].port);
 }
 
-void CommonConfigProvider::GetConfigUpdate() {
+void LegacyCommonConfigProvider::GetConfigUpdate() {
     if (GetConfigServerAvailable()) {
         ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
         google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults;
         google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails;
 
-        checkResults = SendHeartbeat(configServerAddress);
+        checkResults = SendHeartBeat(configServerAddress);
         if (checkResults.size() > 0) {
             LOG_DEBUG(sLogger, ("fetch pipeline config, config file number", checkResults.size()));
             configDetails = FetchPipelineConfig(configServerAddress, checkResults);
@@ -150,7 +150,7 @@ void CommonConfigProvider::GetConfigUpdate() {
 }
 
 google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
-CommonConfigProvider::SendHeartbeat(const ConfigServerAddress& configServerAddress) {
+LegacyCommonConfigProvider::SendHeartBeat(const ConfigServerAddress& configServerAddress) {
     configserver::proto::HeartBeatRequest heartBeatReq;
     configserver::proto::AgentAttributes attributes;
     string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
@@ -217,7 +217,7 @@ CommonConfigProvider::SendHeartbeat(const ConfigServerAddress& configServerAddre
     }
 }
 
-google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> CommonConfigProvider::FetchPipelineConfig(
+google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> LegacyCommonConfigProvider::FetchPipelineConfig(
     const ConfigServerAddress& configServerAddress,
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs) {
     configserver::proto::FetchPipelineConfigRequest fetchConfigReq;
@@ -281,7 +281,7 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> CommonConf
     }
 }
 
-void CommonConfigProvider::UpdateRemoteConfig(
+void LegacyCommonConfigProvider::UpdateRemoteConfig(
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails) {
     error_code ec;
@@ -289,7 +289,7 @@ void CommonConfigProvider::UpdateRemoteConfig(
     if (ec) {
         StopUsingConfigServer();
         LOG_ERROR(sLogger,
-                  ("failed to create dir for common configs", "stop receiving config from common config server")(
+                  ("failed to create dir for legacy common configs", "stop receiving config from legacy common config server")(
                       "dir", mSourceDir.string())("error code", ec.value())("error msg", ec.message()));
         return;
     }
