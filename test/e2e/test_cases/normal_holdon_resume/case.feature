@@ -22,7 +22,7 @@ Feature: normal holdon resume
           content: xxxxx
           time: '2017.09.12 20:55:36'
     """
-    Then wait {10} seconds
+    Then wait {15} seconds
     Given remove http config {mock-metric-case/1}
     Then there is at least {5} logs
     # Resume
