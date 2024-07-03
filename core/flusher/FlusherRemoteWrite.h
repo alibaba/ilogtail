@@ -14,13 +14,13 @@ struct RemoteWriteResponseInfo {
     std::string errorMessage;
 };
 
-class RemoteWriteClosure : public sdk::LogsClosure {
-public:
-    void Done() override;
-    void OnSuccess(sdk::Response* response) override;
-    void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage) override;
-    std::promise<RemoteWriteResponseInfo> mPromise;
-};
+// class RemoteWriteClosure : public sdk::LogsClosure {
+// public:
+//     void Done() override;
+//     void OnSuccess(sdk::Response* response) override;
+//     void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage) override;
+//     std::promise<RemoteWriteResponseInfo> mPromise;
+// };
 
 class FlusherRemoteWrite : public Flusher {
 public:

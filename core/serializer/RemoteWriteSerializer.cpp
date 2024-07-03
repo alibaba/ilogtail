@@ -20,7 +20,7 @@ bool RemoteWriteEventGroupSerializer::Serialize(BatchedEvents&& p, std::string& 
         auto* ts = req.add_timeseries();
         // check `__name__` label
         if (metricEvent->GetTag("__name__").empty()) {
-            metricEvent->SetTag("__name__", metricEvent->GetName());
+            // metricEvent->SetTag(string("__name__"), metricEvent->GetName().to_string());
             LOG_WARNING(sLogger, ("metric event has no `__name__` label", metricEvent->GetName()));
         }
         for (auto it = metricEvent->LabelsBegin(); it != metricEvent->LabelsEnd(); ++it) {
@@ -28,6 +28,10 @@ bool RemoteWriteEventGroupSerializer::Serialize(BatchedEvents&& p, std::string& 
             l->set_name(it->first.to_string());
             l->set_value(it->second.to_string());
         }
+        auto* l = ts->add_labels();
+        l->set_name("__name__");
+        l->set_value(metricEvent->GetName().to_string());
+
         auto* s = ts->add_samples();
         // 好像每个event只有一个sample
         s->set_value(metricEvent->GetValue<UntypedSingleValue>()->mValue);

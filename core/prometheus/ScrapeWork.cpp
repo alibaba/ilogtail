@@ -134,7 +134,7 @@ inline sdk::HttpMessage ScrapeWork::scrape() {
 }
 
 void ScrapeWork::pushEventGroup(PipelineEventGroup&& eGroup) {
-    LOG_INFO(sLogger, ("push event group", mTarget.mHash)("target queueKey", to_string(mTarget.queueKey)));
+    LOG_INFO(sLogger, ("push event group", mTarget.mHash)("target index", mTarget.inputIndex)("target queueKey", to_string(mTarget.queueKey)));
     // parser.Parse返回unique_ptr但下面的构造函数接收右值引用，所以又一次拷贝消耗
     auto item = make_unique<ProcessQueueItem>(move(eGroup), mTarget.inputIndex);
     for (size_t i = 0; i < 1000; ++i) {
@@ -142,7 +142,7 @@ void ScrapeWork::pushEventGroup(PipelineEventGroup&& eGroup) {
             LOG_INFO(sLogger, ("push event group success", mTarget.mHash)("", item.get()));
             break;
         }
-        // LOG_INFO(sLogger, ("push event group failed", mTarget.mHash)(to_string(i), item.get()));
+        LOG_INFO(sLogger, ("push event group failed", mTarget.mHash)(to_string(i), item.get()));
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }

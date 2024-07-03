@@ -50,7 +50,7 @@ bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGo
     // compressor
     mComperssor = CompressorFactory::GetInstance()->Create(config, *mContext, sName, CompressType::SNAPPY);
     DefaultFlushStrategyOptions strategy{
-        static_cast<uint32_t>(1024), static_cast<uint32_t>(10), static_cast<uint32_t>(1)};
+        static_cast<uint32_t>(1024000), static_cast<uint32_t>(1000), static_cast<uint32_t>(1)};
     if (!mBatcher.Init(Json::Value(), this, strategy, false)) {
         LOG_WARNING(sLogger, ("mBatcher init info:", "init err"));
         return false;
@@ -61,6 +61,7 @@ bool FlusherRemoteWrite::Init(const Json::Value& config, Json::Value& optionalGo
     LOG_INFO(sLogger, ("init info:", "prometheus remote write init successful !"));
 
     return true;
+    
 }
 
 void FlusherRemoteWrite::Send(PipelineEventGroup&& g) {
@@ -86,8 +87,9 @@ void FlusherRemoteWrite::FlushAll() {
 
 sdk::AsynRequest* FlusherRemoteWrite::BuildRequest(SenderQueueItem* item) const {
     LOG_INFO(sLogger, ("LOG_INFO flusher BuildRequest", sName));
-    RemoteWriteClosure* closure = new RemoteWriteClosure();
-    sdk::Response* response = new sdk::Response();
+    SendClosure* closure = new SendClosure;
+    closure->mDataPtr = item;
+    sdk::Response* response = new sdk::PostLogStoreLogsResponse();
     string httpMethod = "POST";
     bool httpsFlag = mScheme == "https";
     int32_t port = httpsFlag ? 443 : 80;
@@ -136,7 +138,7 @@ void FlusherRemoteWrite::SerializeAndPush(BatchedEventsList&& groupList) {
 void FlusherRemoteWrite::PushToQueue(string&& data, size_t rawSize, RawDataType type) {
     // TODO: mQueueKey && groupStrategy
     LOG_INFO(sLogger, ("LOG_INFO flusher PushToQueue", sName));
-    SenderQueueItem* item = new SenderQueueItem(std::move(data), rawSize, this, mContext->GetProcessQueueKey(), type);
+    SenderQueueItem* item = new SenderQueueItem(std::move(data), rawSize, this, mLogstoreKey, type);
 #ifdef APSARA_UNIT_TEST_MAIN
     mItems.push_back(item);
 #else
@@ -144,20 +146,20 @@ void FlusherRemoteWrite::PushToQueue(string&& data, size_t rawSize, RawDataType 
 #endif
 }
 
-void RemoteWriteClosure::Done() {
-    LOG_INFO(sLogger, ("remote write closure", "done"));
-}
+// void RemoteWriteClosure::Done() {
+//     LOG_INFO(sLogger, ("remote write closure", "done"));
+// }
 
-void RemoteWriteClosure::OnSuccess(sdk::Response* response) {
-    LOG_INFO(sLogger, ("remote write closure", "success"));
-    mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, "", ""});
-}
+// void RemoteWriteClosure::OnSuccess(sdk::Response* response) {
+//     LOG_INFO(sLogger, ("remote write closure", "success"));
+//     mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, "", ""});
+// }
 
-void RemoteWriteClosure::OnFail(sdk::Response* response,
-                                const std::string& errorCode,
-                                const std::string& errorMessage) {
-    LOG_INFO(sLogger, ("remote write closure fail", errorCode + errorMessage));
-    mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, errorCode, errorMessage});
-}
+// void RemoteWriteClosure::OnFail(sdk::Response* response,
+//                                 const std::string& errorCode,
+//                                 const std::string& errorMessage) {
+//     LOG_INFO(sLogger, ("remote write closure fail", errorCode + errorMessage));
+//     mPromise.set_value(RemoteWriteResponseInfo{response->statusCode, errorCode, errorMessage});
+// }
 
 } // namespace logtail

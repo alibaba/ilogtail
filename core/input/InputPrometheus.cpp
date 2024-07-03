@@ -51,7 +51,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 
     mJobName = mScrapeJobPtr->mJobName;
 
-    mScrapeJobPtr->inputIndex = pluginIdx;
+    mScrapeJobPtr->inputIndex = mIndex;
 
     LOG_INFO(sLogger, ("input config init success", mJobName));
 
