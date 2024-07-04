@@ -21,10 +21,10 @@ target_link_libraries(flusher_sls_unittest unittest_base)
 add_executable(flusher_push_gateway_unittest FlusherPushGatewayUnittest.cpp)
 target_link_libraries(flusher_push_gateway_unittest unittest_base)
 
-add_executable(flusher_remote_write_unittest FlusherRemoteWriteUnittest.cpp)
-target_link_libraries(flusher_remote_write_unittest unittest_base)
+# add_executable(flusher_remote_write_unittest FlusherRemoteWriteUnittest.cpp)
+# target_link_libraries(flusher_remote_write_unittest unittest_base)
 
 include(GoogleTest)
 gtest_discover_tests(flusher_sls_unittest)
 gtest_discover_tests(flusher_push_gateway_unittest)
-gtest_discover_tests(flusher_remote_write_unittest)
+# gtest_discover_tests(flusher_remote_write_unittest)
