@@ -13,11 +13,14 @@
 // limitations under the License.
 
 #include "CurlImp.h"
-#include "Exception.h"
+
+#include <curl/curl.h>
+
 #include "CurlAsynInstance.h"
 #include "DNSCache.h"
+#include "Exception.h"
 #include "app_config/AppConfig.h"
-#include <curl/curl.h>
+#include "logger/Logger.h"
 
 using namespace std;
 
@@ -102,6 +105,7 @@ namespace sdk {
         if (!queryString.empty()) {
             totalUrl.append("?").append(queryString);
         }
+        LOG_INFO(sLogger, ("total url", totalUrl));
         curl_easy_setopt(curl, CURLOPT_URL, totalUrl.c_str());
         for (const auto& iter : header) {
             headers = curl_slist_append(headers, (iter.first + ":" + iter.second).c_str());

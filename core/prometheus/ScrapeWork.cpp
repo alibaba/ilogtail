@@ -83,6 +83,11 @@ void ScrapeWork::scrapeLoop() {
             // scrape failed
             // TODO: scrape超时处理逻辑，和出错处理
             LOG_WARNING(sLogger, ("scrape failed, status code", httpResponse.statusCode)("target", mTarget.mHash));
+            string headerStr;
+            for (auto [k, v] : mTarget.mHeaders) {
+                headerStr += k + ":" + v + ";";
+            }
+            LOG_WARNING(sLogger, ("http header", headerStr));
             // continue;
         }
 
@@ -117,7 +122,8 @@ inline sdk::HttpMessage ScrapeWork::scrape() {
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusScrapeWork";
     LOG_INFO(sLogger,
              ("scrape url",
-              mTarget.mScheme + "://" + mTarget.mHost + "/" + mTarget.mMetricsPath + "?" + mTarget.mQueryString));
+              mTarget.mScheme + "://" + mTarget.mHost + ":" + to_string(mTarget.mPort) + mTarget.mMetricsPath + "?"
+                  + mTarget.mQueryString));
     // 使用CurlClient抓取目标
     try {
         mClient->Send(sdk::HTTP_GET,
