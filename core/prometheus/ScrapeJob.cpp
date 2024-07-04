@@ -304,7 +304,7 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         if (result.size() == 0) {
             continue;
         }
-        LOG_INFO(sLogger, ("target relabel keep", ""));
+        LOG_INFO(sLogger, ("target relabel keep", mJobName));
 
 
         ScrapeTarget st = ScrapeTarget(targets, result, source);

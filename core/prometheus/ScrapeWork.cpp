@@ -74,7 +74,7 @@ void ScrapeWork::scrapeLoop() {
             // text parser
             const auto& sourceBuffer = make_shared<SourceBuffer>();
             auto parser = TextParser(sourceBuffer);
-            auto eventGroup = parser.Parse(httpResponse.content, defaultTs);
+            auto eventGroup = parser.Parse(httpResponse.content, defaultTs, mTarget.mJobName, mTarget.mHost);
 
             // 发送到对应的处理队列
             // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
@@ -115,6 +115,9 @@ inline sdk::HttpMessage ScrapeWork::scrape() {
     string reqBody;
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusScrapeWork";
+    LOG_INFO(sLogger,
+             ("scrape url",
+              mTarget.mScheme + "://" + mTarget.mHost + "/" + mTarget.mMetricsPath + "?" + mTarget.mQueryString));
     // 使用CurlClient抓取目标
     try {
         mClient->Send(sdk::HTTP_GET,

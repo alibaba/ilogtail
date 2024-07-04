@@ -37,10 +37,11 @@ PipelineEventGroup TextParser::Parse(const string& content) {
     auto duration_since_epoch = now.time_since_epoch();
     auto seconds_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(duration_since_epoch);
     std::time_t defaultTsInSecs = seconds_since_epoch.count();
-    return Parse(content, defaultTsInSecs);
+    return Parse(content, defaultTsInSecs, "", "");
 }
 
-PipelineEventGroup TextParser::Parse(const string& content, const time_t defaultTsInSecs) {
+PipelineEventGroup
+TextParser::Parse(const string& content, const time_t defaultTsInSecs, const string& jobName, const string& instance) {
     string line;
     string argName, argLabels, argUnwrappedLabels, argValue, argSuffix, argTimestamp;
     istringstream iss(content);
@@ -127,9 +128,12 @@ PipelineEventGroup TextParser::Parse(const string& content, const time_t default
                 }
             }
         }
-        // LOG_INFO(sLogger,
-        //          ("__name__", e->GetName())("labels", argUnwrappedLabels)("value", e->GetValue<UntypedSingleValue>())(
-        //              "timestamp", e->GetTimestamp()));
+        if (!jobName.empty()) {
+            e->SetTag(string("job"), jobName);
+        }
+        if (!instance.empty()) {
+            e->SetTag(string("instance"), instance);
+        }
     }
 
     return eGroup;

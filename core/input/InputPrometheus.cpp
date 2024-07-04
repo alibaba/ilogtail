@@ -19,7 +19,6 @@
 #include "common/ParamExtractor.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
-#include "prometheus/MockServer.h"
 #include "prometheus/PrometheusInputRunner.h"
 
 using namespace std;
@@ -55,11 +54,6 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 
     LOG_INFO(sLogger, ("input config init success", mJobName));
 
-    // start mock server
-    if (string(std::getenv("PROMETHEUS_ILOGTAIL_MOCK_SERVER")) == string("TRUE")) {
-        std::thread server_thread([]() { start_server(); });
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
     return true;
 }
 

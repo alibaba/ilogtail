@@ -29,8 +29,8 @@ namespace logtail {
 class ScraperGroup {
 public:
     static ScraperGroup* GetInstance() {
-        static auto group = new ScraperGroup;
-        return group;
+        static ScraperGroup group;
+        return &group;
     }
 
     void UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr);
