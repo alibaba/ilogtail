@@ -220,9 +220,9 @@ add_subdirectory(common)
 
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
-    all_link(${LOGTAIL_TARGET})
-    common_link(${LOGTAIL_TARGET})
     input_link(${LOGTAIL_TARGET})
     processor_link(${LOGTAIL_TARGET})
     flusher_link(${LOGTAIL_TARGET})
+    all_link(${LOGTAIL_TARGET})
+    common_link(${LOGTAIL_TARGET})
 endif()

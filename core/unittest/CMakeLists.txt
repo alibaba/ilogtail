@@ -39,11 +39,11 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
 endif()
 
-all_link(${PROJECT_NAME})
-common_link(${PROJECT_NAME})
 input_link(${PROJECT_NAME})
 processor_link(${PROJECT_NAME})
 flusher_link(${PROJECT_NAME})
+all_link(${PROJECT_NAME})
+common_link(${PROJECT_NAME})
 
 add_subdirectory(app_config)
 add_subdirectory(batch)
