@@ -104,14 +104,14 @@ AsynRequest* FlusherPushGateway::BuildRequest(SenderQueueItem* item) const {
     string httpMethod = "POST";
     bool httpsFlag = mPushGatewayScheme == "https";
     int32_t port = httpsFlag ? 443 : 80;
-    auto headers = new std::map<std::string, std::string>;
-    headers->insert(std::make_pair("Content-Type", "text/plain; version=0.0.4; charset=utf-8"));
+    std::map<std::string, std::string> headers;
+    headers.insert(std::make_pair("Content-Type", "text/plain; version=0.0.4; charset=utf-8"));
     return new AsynRequest("POST",
                            mPushGatewayHost,
                            port,
                            mPushGatewayPath,
                            "",
-                           *headers,
+                           headers,
                            item->mData,
                            30,
                            "",
