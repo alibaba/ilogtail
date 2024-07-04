@@ -56,7 +56,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     LOG_INFO(sLogger, ("input config init success", mJobName));
 
     // start mock server
-    if (std::getenv("PROMETHEUS_ILOGTAIL_MOCK_SERVER") == "TRUE") {
+    if (string(std::getenv("PROMETHEUS_ILOGTAIL_MOCK_SERVER")) == string("TRUE")) {
         std::thread server_thread([]() { start_server(); });
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
