@@ -62,7 +62,6 @@ public:
 
     std::unordered_map<std::string, CommandInfo> mCommandInfoMap;
     int64_t mSequenceNum;
-    std::unordered_map<std::string, std::string> mAttributes;
 
     CommonConfigProvider(const CommonConfigProvider&) = delete;
     CommonConfigProvider& operator=(const CommonConfigProvider&) = delete;
