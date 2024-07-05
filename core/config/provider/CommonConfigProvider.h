@@ -128,7 +128,6 @@ private:
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::unordered_map<std::string, std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
-    std::string SendHeartBeat();
     std::string SendHttpRequest(const std::string& operation,
                            const std::string& reqBody,
                            const std::string& emptyResultString,
