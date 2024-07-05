@@ -203,7 +203,7 @@ void Application::Start() {
                     ("failed to create dir for local config",
                      "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
     }
-    ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
+    ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
 
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");

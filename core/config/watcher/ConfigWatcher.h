@@ -41,7 +41,9 @@ public:
     }
 
     ConfigDiff CheckConfigDiff();
-    void AddSource(const std::string& dir, std::mutex* mux = nullptr);
+    void AddPipelineSource(const std::string& dir, std::mutex* mux = nullptr);
+    void AddProcessSource(const std::string& dir, std::mutex* mux = nullptr);
+
     // for ut
     void SetPipelineManager(const PipelineManager* pm) { mPipelineManager = pm; }
     void ClearEnvironment();
@@ -50,8 +52,12 @@ private:
     ConfigWatcher();
     ~ConfigWatcher() = default;
 
-    std::vector<std::filesystem::path> mSourceDir;
-    std::unordered_map<std::string, std::mutex*> mDirMutexMap;
+    std::vector<std::filesystem::path> mPipelineConfigDir;
+    std::unordered_map<std::string, std::mutex*> mPipelineConfigDirMutexMap;
+
+    std::vector<std::filesystem::path> mProcessConfigDir;
+    std::unordered_map<std::string, std::mutex*> mProcessConfigDirMutexMap;
+
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mFileInfoMap;
     const PipelineManager* mPipelineManager = nullptr;
 };

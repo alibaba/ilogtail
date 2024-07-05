@@ -55,7 +55,6 @@ class CommonConfigProvider : public ConfigProvider {
 public:
     std::string sName;
 
-    std::filesystem::path mSourceDir;
     mutable std::mutex mMux;
     std::unordered_map<std::string, ConfigInfo> mPipelineConfigInfoMap;
     std::unordered_map<std::string, ConfigInfo> mProcessConfigInfoMap;
@@ -95,7 +94,8 @@ protected:
     virtual void FillAttributes(::configserver::proto::v2::AgentAttributes& attributes);
     virtual void UpdateRemoteConfig(const std::string& fetchConfigResponse);
     virtual void
-    UpdateRemoteConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs);
+    UpdateRemoteConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs,
+                       std::filesystem::path sourceDir);
 
     virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
     FetchProcessConfigFromServer(::configserver::proto::v2::HeartBeatResponse&);
@@ -129,14 +129,13 @@ private:
     const std::unordered_map<std::string, std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
     std::string SendHttpRequest(const std::string& operation,
-                           const std::string& reqBody,
-                           const std::string& emptyResultString,
-                           const std::string& configType);
+                                const std::string& reqBody,
+                                const std::string& emptyResultString,
+                                const std::string& configType);
 
     std::vector<ConfigServerAddress> mConfigServerAddresses;
     int mConfigServerAddressId = 0;
     std::unordered_map<std::string, std::string> mConfigServerTags;
-
 };
 
 } // namespace logtail

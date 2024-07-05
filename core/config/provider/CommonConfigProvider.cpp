@@ -182,11 +182,11 @@ void CommonConfigProvider::GetConfigUpdate() {
     auto pipelineConfig = FetchPipelineConfig(HeartBeatResponse);
     if (!pipelineConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch pipelineConfig, config file number", pipelineConfig.size()));
-        UpdateRemoteConfig(pipelineConfig);
+        UpdateRemoteConfig(pipelineConfig, mPipelineSourceDir);
     }
     if (!processConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch processConfig config, config file number", processConfig.size()));
-        UpdateRemoteConfig(processConfig);
+        UpdateRemoteConfig(processConfig, mProcessSourceDir);
     }
 }
 
@@ -301,21 +301,22 @@ CommonConfigProvider::FetchProcessConfig(configserver::proto::v2::HeartBeatRespo
 }
 
 void CommonConfigProvider::UpdateRemoteConfig(
-    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs) {
+    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs,
+    std::filesystem::path sourceDir) {
     error_code ec;
-    filesystem::create_directories(mSourceDir, ec);
+    filesystem::create_directories(sourceDir, ec);
     if (ec) {
         StopUsingConfigServer();
         LOG_ERROR(sLogger,
                   ("failed to create dir for common configs", "stop receiving config from common config server")(
-                      "dir", mSourceDir.string())("error code", ec.value())("error msg", ec.message()));
+                      "dir", sourceDir.string())("error code", ec.value())("error msg", ec.message()));
         return;
     }
 
     lock_guard<mutex> lock(mMux);
     for (const auto& config : configs) {
-        filesystem::path filePath = mSourceDir / (config.name() + ".yaml");
-        filesystem::path tmpFilePath = mSourceDir / (config.name() + ".yaml.new");
+        filesystem::path filePath = sourceDir / (config.name() + ".yaml");
+        filesystem::path tmpFilePath = sourceDir / (config.name() + ".yaml.new");
         if (config.version() == -1) {
             mConfigNameVersionMap.erase(config.name());
             filesystem::remove(filePath, ec);

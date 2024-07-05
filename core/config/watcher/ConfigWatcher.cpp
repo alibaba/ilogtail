@@ -33,7 +33,7 @@ ConfigWatcher::ConfigWatcher() : mPipelineManager(PipelineManager::GetInstance()
 ConfigDiff ConfigWatcher::CheckConfigDiff() {
     ConfigDiff diff;
     unordered_set<string> configSet;
-    for (const auto& dir : mSourceDir) {
+    for (const auto& dir : mPipelineConfigDir) {
         error_code ec;
         filesystem::file_status s = filesystem::status(dir, ec);
         if (ec) {
@@ -54,8 +54,8 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
         for (auto const& entry : filesystem::directory_iterator(dir, ec)) {
             // lock the dir if it is provided by config provider
             unique_lock<mutex> lock;
-            auto itr = mDirMutexMap.find(dir.string());
-            if (itr != mDirMutexMap.end()) {
+            auto itr = mPipelineConfigDirMutexMap.find(dir.string());
+            if (itr != mPipelineConfigDirMutexMap.end()) {
                 lock = unique_lock<mutex>(*itr->second, defer_lock);
                 lock.lock();
             }
@@ -205,15 +205,22 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
     return diff;
 }
 
-void ConfigWatcher::AddSource(const string& dir, mutex* mux) {
-    mSourceDir.emplace_back(dir);
+void ConfigWatcher::AddPipelineSource(const string& dir, mutex* mux) {
+    mPipelineConfigDir.emplace_back(dir);
     if (mux != nullptr) {
-        mDirMutexMap[dir] = mux;
+        mPipelineConfigDirMutexMap[dir] = mux;
+    }
+}
+
+void ConfigWatcher::AddProcessSource(const string& dir, mutex* mux) {
+    mPipelineConfigDir.emplace_back(dir);
+    if (mux != nullptr) {
+        mPipelineConfigDirMutexMap[dir] = mux;
     }
 }
 
 void ConfigWatcher::ClearEnvironment() {
-    mSourceDir.clear();
+    mPipelineConfigDir.clear();
     mFileInfoMap.clear();
 }
 
