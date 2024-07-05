@@ -342,4 +342,52 @@ void CommonConfigProvider::UpdateRemoteConfig(
     }
 }
 
+::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
+CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::HeartBeatResponse& heartBeatResponse) {
+    configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
+    string requestID = sdk::Base64Enconde(string("FetchProcessConfig").append(to_string(time(NULL))));
+    fetchConfigRequest.set_request_id(requestID);
+    fetchConfigRequest.set_instance_id(GetInstanceId());
+    for (const auto& config : heartBeatResponse.process_config_updates()) {
+        auto reqConfig = fetchConfigRequest.add_req_configs();
+        reqConfig->set_name(config.name());
+        reqConfig->set_version(config.version());
+    }
+    string operation = sdk::CONFIGSERVERAGENT;
+    operation.append("/").append("FetchProcessConfig");
+    string reqBody;
+    fetchConfigRequest.SerializeToString(&reqBody);
+    configserver::proto::v2::FetchConfigResponse emptyResult;
+    string emptyResultString;
+    emptyResult.SerializeToString(&emptyResultString);
+    string fetchConfigResponse = SendHttpRequest(operation, reqBody, emptyResultString, "FetchProcessConfig");
+    configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
+    fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
+    return std::move(fetchConfigResponsePb.config_details());
+}
+
+::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
+CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::HeartBeatResponse& heartBeatResponse) {
+    configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
+    string requestID = sdk::Base64Enconde(string("FetchPipelineConfig").append(to_string(time(NULL))));
+    fetchConfigRequest.set_request_id(requestID);
+    fetchConfigRequest.set_instance_id(GetInstanceId());
+    for (const auto& config : heartBeatResponse.pipeline_config_updates()) {
+        auto reqConfig = fetchConfigRequest.add_req_configs();
+        reqConfig->set_name(config.name());
+        reqConfig->set_version(config.version());
+    }
+    string operation = sdk::CONFIGSERVERAGENT;
+    operation.append("/").append("FetchPipelineConfig");
+    string reqBody;
+    fetchConfigRequest.SerializeToString(&reqBody);
+    configserver::proto::v2::FetchConfigResponse emptyResult;
+    string emptyResultString;
+    emptyResult.SerializeToString(&emptyResultString);
+    string fetchConfigResponse = SendHttpRequest(operation, reqBody, emptyResultString, "FetchPipelineConfig");
+    configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
+    fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
+    return std::move(fetchConfigResponsePb.config_details());
+}
+
 } // namespace logtail

@@ -92,7 +92,6 @@ protected:
 
     virtual std::string GetInstanceId();
     virtual void FillAttributes(::configserver::proto::v2::AgentAttributes& attributes);
-    virtual void UpdateRemoteConfig(const std::string& fetchConfigResponse);
     virtual void
     UpdateRemoteConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs,
                        std::filesystem::path sourceDir);
