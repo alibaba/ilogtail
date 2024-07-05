@@ -31,7 +31,7 @@ public:
     void DuplicateConfigs() const;
 
 protected:
-    void SetUp() override { ConfigWatcher::GetInstance()->AddSource(configDir.string()); }
+    void SetUp() override { ConfigWatcher::GetInstance()->AddPipelineSource(configDir.string()); }
 
     void TearDown() override { ConfigWatcher::GetInstance()->ClearEnvironment(); }
 
@@ -68,8 +68,8 @@ void ConfigWatcherUnittest::InvalidConfigFileFound() const {
 
 void ConfigWatcherUnittest::DuplicateConfigs() const {
     PluginRegistry::GetInstance()->LoadPlugins();
-    ConfigWatcher::GetInstance()->AddSource("dir1");
-    ConfigWatcher::GetInstance()->AddSource("dir2");
+    ConfigWatcher::GetInstance()->AddPipelineSource("dir1");
+    ConfigWatcher::GetInstance()->AddPipelineSource("dir2");
 
     filesystem::create_directories("config");
     filesystem::create_directories("dir1");

@@ -81,7 +81,7 @@ protected:
 
     void SetUp() override {
         filesystem::create_directories(configDir);
-        ConfigWatcher::GetInstance()->AddSource(configDir.string());
+        ConfigWatcher::GetInstance()->AddPipelineSource(configDir.string());
     }
 
     void TearDown() override {
