@@ -54,6 +54,7 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 #else
+#include "config/provider/CommonConfigProvider.h"
 #include "config/provider/LegacyCommonConfigProvider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
@@ -204,11 +205,13 @@ void Application::Start() {
                      "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
     }
     ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
+    ConfigWatcher::GetInstance()->AddProcessSource(localConfigPath.string());
 
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
+    CommonConfigProvider::GetInstance()->Init("common_v2");
     LegacyCommonConfigProvider::GetInstance()->Init("common");
 #endif
 
@@ -329,6 +332,7 @@ void Application::Exit() {
     EnterpriseConfigProvider::GetInstance()->Stop();
     LegacyConfigProvider::GetInstance()->Stop();
 #else
+    CommonConfigProvider::GetInstance()->Stop();
     LegacyCommonConfigProvider::GetInstance()->Stop();
 #endif
 
