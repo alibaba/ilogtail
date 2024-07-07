@@ -29,6 +29,7 @@
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
+#include "config/feedbacker/ConfigFeedbackReceiver.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
 
@@ -93,6 +94,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
         iter->second->RemoveProcessQueue();
         mPipelineNameEntityMap.erase(iter);
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(name, ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config));
@@ -107,8 +109,10 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
                 config.mLogstore,
                 config.mRegion);
             diff.mUnchanged.push_back(config.mName);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::FAILED);
             continue;
         }
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
                   "stop the old pipeline and start the new one")("config", config.mName));
@@ -131,10 +135,12 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
                  ("pipeline building for new config succeeded", "begin to start pipeline")("config", config.mName));
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
