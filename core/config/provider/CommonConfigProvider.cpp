@@ -123,6 +123,20 @@ void CommonConfigProvider::LoadConfigFile() {
             mPipelineConfigInfoMap[info.name] = info;
         }
     }
+    for (auto const& entry : filesystem::directory_iterator(mProcessSourceDir, ec)) {
+        Json::Value detail;
+        if (LoadConfigDetailFromFile(entry, detail)) {
+            ConfigInfo info;
+            info.name = entry.path().stem();
+            if (detail.isMember("version") && detail["version"].isInt64()) {
+                info.version = detail["version"].asInt64();
+            }
+            info.status = ConfigFeedbackStatus::APPLYING;
+            info.detail = detail.toStyledString();
+            lock_guard<mutex> infomaplock(mInfoMapMux);
+            mProcessConfigInfoMap[info.name] = info;
+        }
+    }
 }
 
 void CommonConfigProvider::CheckUpdateThread() {
