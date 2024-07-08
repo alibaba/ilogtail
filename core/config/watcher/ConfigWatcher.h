@@ -43,6 +43,7 @@ public:
     ConfigDiff CheckConfigDiff();
     void AddPipelineSource(const std::string& dir, std::mutex* mux = nullptr);
     void AddProcessSource(const std::string& dir, std::mutex* mux = nullptr);
+    void AddCommandSource(const std::string& dir, std::mutex* mux = nullptr);
 
     // for ut
     void SetPipelineManager(const PipelineManager* pm) { mPipelineManager = pm; }
@@ -58,10 +59,14 @@ private:
     std::vector<std::filesystem::path> mProcessConfigDir;
     std::unordered_map<std::string, std::mutex*> mProcessConfigDirMutexMap;
 
+    std::vector<std::filesystem::path> mCommandConfigDir;
+    std::unordered_map<std::string, std::mutex*> mCommandConfigDirMutexMap;
+
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mPipelineFileInfoMap;
     const PipelineManager* mPipelineManager = nullptr;
 
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mProcessFileInfoMap;
+    std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mCommandFileInfoMap;
 
     bool CheckDirectoryStatus(const std::filesystem::path& dir);
 };

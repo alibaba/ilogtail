@@ -226,12 +226,22 @@ void ConfigWatcher::AddProcessSource(const string& dir, mutex* mux) {
     }
 }
 
+void ConfigWatcher::AddCommandSource(const string& dir, mutex* mux) {
+    mCommandConfigDir.emplace_back(dir);
+    if (mux != nullptr) {
+        mCommandConfigDirMutexMap[dir] = mux;
+    }
+}
+
 void ConfigWatcher::ClearEnvironment() {
     mPipelineConfigDir.clear();
     mPipelineFileInfoMap.clear();
 
     mProcessConfigDir.clear();
     mProcessFileInfoMap.clear();
+
+    mCommandConfigDir.clear();
+    mCommandFileInfoMap.clear();
 }
 
 } // namespace logtail
