@@ -30,25 +30,32 @@ bool ReadFile(const string& filepath, string& content);
 ConfigWatcher::ConfigWatcher() : mPipelineManager(PipelineManager::GetInstance()) {
 }
 
+bool ConfigWatcher::CheckDirectoryStatus(const std::filesystem::path& dir) {
+    error_code ec;
+    filesystem::file_status s = filesystem::status(dir, ec);
+    if (ec) {
+        LOG_WARNING(sLogger,
+                    ("failed to get config dir path info", "skip current object")("dir path", dir.string())(
+                        "error code", ec.value())("error msg", ec.message()));
+        return false;
+    }
+    if (!filesystem::exists(s)) {
+        LOG_WARNING(sLogger, ("config dir path not existed", "skip current object")("dir path", dir.string()));
+        return false;
+    }
+    if (!filesystem::is_directory(s)) {
+        LOG_WARNING(sLogger, ("config dir path is not a directory", "skip current object")("dir path", dir.string()));
+        return false;
+    }
+    return true;
+}
+
 ConfigDiff ConfigWatcher::CheckConfigDiff() {
     ConfigDiff diff;
     unordered_set<string> configSet;
     for (const auto& dir : mPipelineConfigDir) {
         error_code ec;
-        filesystem::file_status s = filesystem::status(dir, ec);
-        if (ec) {
-            LOG_WARNING(sLogger,
-                        ("failed to get config dir path info", "skip current object")("dir path", dir.string())(
-                            "error code", ec.value())("error msg", ec.message()));
-            continue;
-        }
-        if (!filesystem::exists(s)) {
-            LOG_WARNING(sLogger, ("config dir path not existed", "skip current object")("dir path", dir.string()));
-            continue;
-        }
-        if (!filesystem::is_directory(s)) {
-            LOG_WARNING(sLogger,
-                        ("config dir path is not a directory", "skip current object")("dir path", dir.string()));
+        if (!CheckDirectoryStatus(dir)) {
             continue;
         }
         for (auto const& entry : filesystem::directory_iterator(dir, ec)) {
@@ -75,11 +82,11 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
             }
             configSet.insert(configName);
 
-            auto iter = mFileInfoMap.find(filepath);
+            auto iter = mPipelineFileInfoMap.find(filepath);
             uintmax_t size = filesystem::file_size(path, ec);
             filesystem::file_time_type mTime = filesystem::last_write_time(path, ec);
-            if (iter == mFileInfoMap.end()) {
-                mFileInfoMap[filepath] = make_pair(size, mTime);
+            if (iter == mPipelineFileInfoMap.end()) {
+                mPipelineFileInfoMap[filepath] = make_pair(size, mTime);
                 unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
                 if (!LoadConfigDetailFromFile(path, *detail)) {
                     continue;
@@ -105,7 +112,7 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                     ("new config found and passed topology check", "prepare to build pipeline")("config", configName));
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
-                mFileInfoMap[filepath] = make_pair(size, mTime);
+                mPipelineFileInfoMap[filepath] = make_pair(size, mTime);
                 unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
                 if (!LoadConfigDetailFromFile(path, *detail)) {
                     if (mPipelineManager->FindPipelineByName(configName)) {
@@ -187,10 +194,10 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                      ("existing valid config is removed", "prepare to stop current running pipeline")("config", name));
         }
     }
-    for (const auto& item : mFileInfoMap) {
+    for (const auto& item : mPipelineFileInfoMap) {
         string configName = filesystem::path(item.first).stem().string();
         if (configSet.find(configName) == configSet.end()) {
-            mFileInfoMap.erase(item.first);
+            mPipelineFileInfoMap.erase(item.first);
         }
     }
 
@@ -213,15 +220,18 @@ void ConfigWatcher::AddPipelineSource(const string& dir, mutex* mux) {
 }
 
 void ConfigWatcher::AddProcessSource(const string& dir, mutex* mux) {
-    mPipelineConfigDir.emplace_back(dir);
+    mProcessConfigDir.emplace_back(dir);
     if (mux != nullptr) {
-        mPipelineConfigDirMutexMap[dir] = mux;
+        mProcessConfigDirMutexMap[dir] = mux;
     }
 }
 
 void ConfigWatcher::ClearEnvironment() {
     mPipelineConfigDir.clear();
-    mFileInfoMap.clear();
+    mPipelineFileInfoMap.clear();
+
+    mProcessConfigDir.clear();
+    mProcessFileInfoMap.clear();
 }
 
 } // namespace logtail

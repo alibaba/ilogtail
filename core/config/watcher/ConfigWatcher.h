@@ -58,8 +58,12 @@ private:
     std::vector<std::filesystem::path> mProcessConfigDir;
     std::unordered_map<std::string, std::mutex*> mProcessConfigDirMutexMap;
 
-    std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mFileInfoMap;
+    std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mPipelineFileInfoMap;
     const PipelineManager* mPipelineManager = nullptr;
+
+    std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mProcessFileInfoMap;
+
+    bool CheckDirectoryStatus(const std::filesystem::path& dir);
 };
 
 } // namespace logtail
