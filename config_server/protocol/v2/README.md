@@ -7,11 +7,11 @@
 
 ## 管控协议
 
-/Agent/HeartBeat?InstanceId=$instance\_id&WaitForChange=(true|false)
+/Agent/Heartbeat?InstanceId=$instance\_id&WaitForChange=(true|false)
 
-### HeartBeatRequest 消息
+### HeartbeatRequest 消息
 
-    message HeartBeatRequest {
+    message HeartbeatRequest {
         bytes request_id = 1;
         uint64 sequence_num = 2;                    // Increment every request, for server to check sync status
         uint64 capabilities = 3;                    // Bitmask of flags defined by AgentCapabilities enum
@@ -92,9 +92,9 @@
         // bits before 2^16 (inclusive) are reserved for future official fields
     }
 
-### HeartBeatResponse 消息
+### HeartbeatResponse 消息
 
-    message HeartBeatResponse {
+    message HeartbeatResponse {
         bytes request_id = 1;  
         ServerErrorResponse error_response = 2;             // Set value indicates error
         uint64 capabilities = 3;                            // Bitmask of flags defined by ServerCapabilities enum

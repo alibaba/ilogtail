@@ -95,12 +95,12 @@ extern FetchConfigRequestDefaultTypeInternal _FetchConfigRequest_default_instanc
 class FetchConfigResponse;
 class FetchConfigResponseDefaultTypeInternal;
 extern FetchConfigResponseDefaultTypeInternal _FetchConfigResponse_default_instance_;
-class HeartBeatRequest;
-class HeartBeatRequestDefaultTypeInternal;
-extern HeartBeatRequestDefaultTypeInternal _HeartBeatRequest_default_instance_;
-class HeartBeatResponse;
-class HeartBeatResponseDefaultTypeInternal;
-extern HeartBeatResponseDefaultTypeInternal _HeartBeatResponse_default_instance_;
+class HeartbeatRequest;
+class HeartbeatRequestDefaultTypeInternal;
+extern HeartbeatRequestDefaultTypeInternal _HeartbeatRequest_default_instance_;
+class HeartbeatResponse;
+class HeartbeatResponseDefaultTypeInternal;
+extern HeartbeatResponseDefaultTypeInternal _HeartbeatResponse_default_instance_;
 class ServerErrorResponse;
 class ServerErrorResponseDefaultTypeInternal;
 extern ServerErrorResponseDefaultTypeInternal _ServerErrorResponse_default_instance_;
@@ -118,8 +118,8 @@ template<> ::configserver::proto::v2::ConfigDetail* Arena::CreateMaybeMessage<::
 template<> ::configserver::proto::v2::ConfigInfo* Arena::CreateMaybeMessage<::configserver::proto::v2::ConfigInfo>(Arena*);
 template<> ::configserver::proto::v2::FetchConfigRequest* Arena::CreateMaybeMessage<::configserver::proto::v2::FetchConfigRequest>(Arena*);
 template<> ::configserver::proto::v2::FetchConfigResponse* Arena::CreateMaybeMessage<::configserver::proto::v2::FetchConfigResponse>(Arena*);
-template<> ::configserver::proto::v2::HeartBeatRequest* Arena::CreateMaybeMessage<::configserver::proto::v2::HeartBeatRequest>(Arena*);
-template<> ::configserver::proto::v2::HeartBeatResponse* Arena::CreateMaybeMessage<::configserver::proto::v2::HeartBeatResponse>(Arena*);
+template<> ::configserver::proto::v2::HeartbeatRequest* Arena::CreateMaybeMessage<::configserver::proto::v2::HeartbeatRequest>(Arena*);
+template<> ::configserver::proto::v2::HeartbeatResponse* Arena::CreateMaybeMessage<::configserver::proto::v2::HeartbeatResponse>(Arena*);
 template<> ::configserver::proto::v2::ServerErrorResponse* Arena::CreateMaybeMessage<::configserver::proto::v2::ServerErrorResponse>(Arena*);
 }  // namespace protobuf
 }  // namespace google
@@ -835,24 +835,24 @@ class AgentAttributes : public ::google::protobuf::Message /* @@protoc_insertion
 };
 // -------------------------------------------------------------------
 
-class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:configserver.proto.v2.HeartBeatRequest) */ {
+class HeartbeatRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:configserver.proto.v2.HeartbeatRequest) */ {
  public:
-  HeartBeatRequest();
-  virtual ~HeartBeatRequest();
+  HeartbeatRequest();
+  virtual ~HeartbeatRequest();
 
-  HeartBeatRequest(const HeartBeatRequest& from);
+  HeartbeatRequest(const HeartbeatRequest& from);
 
-  inline HeartBeatRequest& operator=(const HeartBeatRequest& from) {
+  inline HeartbeatRequest& operator=(const HeartbeatRequest& from) {
     CopyFrom(from);
     return *this;
   }
   #if LANG_CXX11
-  HeartBeatRequest(HeartBeatRequest&& from) noexcept
-    : HeartBeatRequest() {
+  HeartbeatRequest(HeartbeatRequest&& from) noexcept
+    : HeartbeatRequest() {
     *this = ::std::move(from);
   }
 
-  inline HeartBeatRequest& operator=(HeartBeatRequest&& from) noexcept {
+  inline HeartbeatRequest& operator=(HeartbeatRequest&& from) noexcept {
     if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -862,34 +862,34 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   }
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
-  static const HeartBeatRequest& default_instance();
+  static const HeartbeatRequest& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const HeartBeatRequest* internal_default_instance() {
-    return reinterpret_cast<const HeartBeatRequest*>(
-               &_HeartBeatRequest_default_instance_);
+  static inline const HeartbeatRequest* internal_default_instance() {
+    return reinterpret_cast<const HeartbeatRequest*>(
+               &_HeartbeatRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     5;
 
-  void Swap(HeartBeatRequest* other);
-  friend void swap(HeartBeatRequest& a, HeartBeatRequest& b) {
+  void Swap(HeartbeatRequest* other);
+  friend void swap(HeartbeatRequest& a, HeartbeatRequest& b) {
     a.Swap(&b);
   }
 
   // implements Message ----------------------------------------------
 
-  inline HeartBeatRequest* New() const final {
-    return CreateMaybeMessage<HeartBeatRequest>(NULL);
+  inline HeartbeatRequest* New() const final {
+    return CreateMaybeMessage<HeartbeatRequest>(NULL);
   }
 
-  HeartBeatRequest* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<HeartBeatRequest>(arena);
+  HeartbeatRequest* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<HeartbeatRequest>(arena);
   }
   void CopyFrom(const ::google::protobuf::Message& from) final;
   void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const HeartBeatRequest& from);
-  void MergeFrom(const HeartBeatRequest& from);
+  void CopyFrom(const HeartbeatRequest& from);
+  void MergeFrom(const HeartbeatRequest& from);
   void Clear() final;
   bool IsInitialized() const final;
 
@@ -906,7 +906,7 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(HeartBeatRequest* other);
+  void InternalSwap(HeartbeatRequest* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -1076,7 +1076,7 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   ::google::protobuf::uint64 flags() const;
   void set_flags(::google::protobuf::uint64 value);
 
-  // @@protoc_insertion_point(class_scope:configserver.proto.v2.HeartBeatRequest)
+  // @@protoc_insertion_point(class_scope:configserver.proto.v2.HeartbeatRequest)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -1498,24 +1498,24 @@ class ServerErrorResponse : public ::google::protobuf::Message /* @@protoc_inser
 };
 // -------------------------------------------------------------------
 
-class HeartBeatResponse : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:configserver.proto.v2.HeartBeatResponse) */ {
+class HeartbeatResponse : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:configserver.proto.v2.HeartbeatResponse) */ {
  public:
-  HeartBeatResponse();
-  virtual ~HeartBeatResponse();
+  HeartbeatResponse();
+  virtual ~HeartbeatResponse();
 
-  HeartBeatResponse(const HeartBeatResponse& from);
+  HeartbeatResponse(const HeartbeatResponse& from);
 
-  inline HeartBeatResponse& operator=(const HeartBeatResponse& from) {
+  inline HeartbeatResponse& operator=(const HeartbeatResponse& from) {
     CopyFrom(from);
     return *this;
   }
   #if LANG_CXX11
-  HeartBeatResponse(HeartBeatResponse&& from) noexcept
-    : HeartBeatResponse() {
+  HeartbeatResponse(HeartbeatResponse&& from) noexcept
+    : HeartbeatResponse() {
     *this = ::std::move(from);
   }
 
-  inline HeartBeatResponse& operator=(HeartBeatResponse&& from) noexcept {
+  inline HeartbeatResponse& operator=(HeartbeatResponse&& from) noexcept {
     if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -1525,34 +1525,34 @@ class HeartBeatResponse : public ::google::protobuf::Message /* @@protoc_inserti
   }
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
-  static const HeartBeatResponse& default_instance();
+  static const HeartbeatResponse& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const HeartBeatResponse* internal_default_instance() {
-    return reinterpret_cast<const HeartBeatResponse*>(
-               &_HeartBeatResponse_default_instance_);
+  static inline const HeartbeatResponse* internal_default_instance() {
+    return reinterpret_cast<const HeartbeatResponse*>(
+               &_HeartbeatResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     9;
 
-  void Swap(HeartBeatResponse* other);
-  friend void swap(HeartBeatResponse& a, HeartBeatResponse& b) {
+  void Swap(HeartbeatResponse* other);
+  friend void swap(HeartbeatResponse& a, HeartbeatResponse& b) {
     a.Swap(&b);
   }
 
   // implements Message ----------------------------------------------
 
-  inline HeartBeatResponse* New() const final {
-    return CreateMaybeMessage<HeartBeatResponse>(NULL);
+  inline HeartbeatResponse* New() const final {
+    return CreateMaybeMessage<HeartbeatResponse>(NULL);
   }
 
-  HeartBeatResponse* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<HeartBeatResponse>(arena);
+  HeartbeatResponse* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<HeartbeatResponse>(arena);
   }
   void CopyFrom(const ::google::protobuf::Message& from) final;
   void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const HeartBeatResponse& from);
-  void MergeFrom(const HeartBeatResponse& from);
+  void CopyFrom(const HeartbeatResponse& from);
+  void MergeFrom(const HeartbeatResponse& from);
   void Clear() final;
   bool IsInitialized() const final;
 
@@ -1569,7 +1569,7 @@ class HeartBeatResponse : public ::google::protobuf::Message /* @@protoc_inserti
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(HeartBeatResponse* other);
+  void InternalSwap(HeartbeatResponse* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -1673,7 +1673,7 @@ class HeartBeatResponse : public ::google::protobuf::Message /* @@protoc_inserti
   ::google::protobuf::uint64 flags() const;
   void set_flags(::google::protobuf::uint64 value);
 
-  // @@protoc_insertion_point(class_scope:configserver.proto.v2.HeartBeatResponse)
+  // @@protoc_insertion_point(class_scope:configserver.proto.v2.HeartbeatResponse)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -2581,231 +2581,231 @@ AgentAttributes::mutable_extras() {
 
 // -------------------------------------------------------------------
 
-// HeartBeatRequest
+// HeartbeatRequest
 
 // bytes request_id = 1;
-inline void HeartBeatRequest::clear_request_id() {
+inline void HeartbeatRequest::clear_request_id() {
   request_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatRequest::request_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.request_id)
+inline const ::std::string& HeartbeatRequest::request_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.request_id)
   return request_id_.GetNoArena();
 }
-inline void HeartBeatRequest::set_request_id(const ::std::string& value) {
+inline void HeartbeatRequest::set_request_id(const ::std::string& value) {
   
   request_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.request_id)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.request_id)
 }
 #if LANG_CXX11
-inline void HeartBeatRequest::set_request_id(::std::string&& value) {
+inline void HeartbeatRequest::set_request_id(::std::string&& value) {
   
   request_id_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatRequest.request_id)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatRequest.request_id)
 }
 #endif
-inline void HeartBeatRequest::set_request_id(const char* value) {
+inline void HeartbeatRequest::set_request_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   request_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatRequest.request_id)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatRequest.request_id)
 }
-inline void HeartBeatRequest::set_request_id(const void* value, size_t size) {
+inline void HeartbeatRequest::set_request_id(const void* value, size_t size) {
   
   request_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatRequest.request_id)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatRequest.request_id)
 }
-inline ::std::string* HeartBeatRequest::mutable_request_id() {
+inline ::std::string* HeartbeatRequest::mutable_request_id() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.request_id)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.request_id)
   return request_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatRequest::release_request_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatRequest.request_id)
+inline ::std::string* HeartbeatRequest::release_request_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatRequest.request_id)
   
   return request_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatRequest::set_allocated_request_id(::std::string* request_id) {
+inline void HeartbeatRequest::set_allocated_request_id(::std::string* request_id) {
   if (request_id != NULL) {
     
   } else {
     
   }
   request_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), request_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatRequest.request_id)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatRequest.request_id)
 }
 
 // uint64 sequence_num = 2;
-inline void HeartBeatRequest::clear_sequence_num() {
+inline void HeartbeatRequest::clear_sequence_num() {
   sequence_num_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint64 HeartBeatRequest::sequence_num() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.sequence_num)
+inline ::google::protobuf::uint64 HeartbeatRequest::sequence_num() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.sequence_num)
   return sequence_num_;
 }
-inline void HeartBeatRequest::set_sequence_num(::google::protobuf::uint64 value) {
+inline void HeartbeatRequest::set_sequence_num(::google::protobuf::uint64 value) {
   
   sequence_num_ = value;
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.sequence_num)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.sequence_num)
 }
 
 // uint64 capabilities = 3;
-inline void HeartBeatRequest::clear_capabilities() {
+inline void HeartbeatRequest::clear_capabilities() {
   capabilities_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint64 HeartBeatRequest::capabilities() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.capabilities)
+inline ::google::protobuf::uint64 HeartbeatRequest::capabilities() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.capabilities)
   return capabilities_;
 }
-inline void HeartBeatRequest::set_capabilities(::google::protobuf::uint64 value) {
+inline void HeartbeatRequest::set_capabilities(::google::protobuf::uint64 value) {
   
   capabilities_ = value;
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.capabilities)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.capabilities)
 }
 
 // bytes instance_id = 4;
-inline void HeartBeatRequest::clear_instance_id() {
+inline void HeartbeatRequest::clear_instance_id() {
   instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatRequest::instance_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.instance_id)
+inline const ::std::string& HeartbeatRequest::instance_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.instance_id)
   return instance_id_.GetNoArena();
 }
-inline void HeartBeatRequest::set_instance_id(const ::std::string& value) {
+inline void HeartbeatRequest::set_instance_id(const ::std::string& value) {
   
   instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.instance_id)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.instance_id)
 }
 #if LANG_CXX11
-inline void HeartBeatRequest::set_instance_id(::std::string&& value) {
+inline void HeartbeatRequest::set_instance_id(::std::string&& value) {
   
   instance_id_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatRequest.instance_id)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatRequest.instance_id)
 }
 #endif
-inline void HeartBeatRequest::set_instance_id(const char* value) {
+inline void HeartbeatRequest::set_instance_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatRequest.instance_id)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatRequest.instance_id)
 }
-inline void HeartBeatRequest::set_instance_id(const void* value, size_t size) {
+inline void HeartbeatRequest::set_instance_id(const void* value, size_t size) {
   
   instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatRequest.instance_id)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatRequest.instance_id)
 }
-inline ::std::string* HeartBeatRequest::mutable_instance_id() {
+inline ::std::string* HeartbeatRequest::mutable_instance_id() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.instance_id)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.instance_id)
   return instance_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatRequest::release_instance_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatRequest.instance_id)
+inline ::std::string* HeartbeatRequest::release_instance_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatRequest.instance_id)
   
   return instance_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatRequest::set_allocated_instance_id(::std::string* instance_id) {
+inline void HeartbeatRequest::set_allocated_instance_id(::std::string* instance_id) {
   if (instance_id != NULL) {
     
   } else {
     
   }
   instance_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), instance_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatRequest.instance_id)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatRequest.instance_id)
 }
 
 // string agent_type = 5;
-inline void HeartBeatRequest::clear_agent_type() {
+inline void HeartbeatRequest::clear_agent_type() {
   agent_type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatRequest::agent_type() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.agent_type)
+inline const ::std::string& HeartbeatRequest::agent_type() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.agent_type)
   return agent_type_.GetNoArena();
 }
-inline void HeartBeatRequest::set_agent_type(const ::std::string& value) {
+inline void HeartbeatRequest::set_agent_type(const ::std::string& value) {
   
   agent_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.agent_type)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.agent_type)
 }
 #if LANG_CXX11
-inline void HeartBeatRequest::set_agent_type(::std::string&& value) {
+inline void HeartbeatRequest::set_agent_type(::std::string&& value) {
   
   agent_type_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatRequest.agent_type)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatRequest.agent_type)
 }
 #endif
-inline void HeartBeatRequest::set_agent_type(const char* value) {
+inline void HeartbeatRequest::set_agent_type(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   agent_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatRequest.agent_type)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatRequest.agent_type)
 }
-inline void HeartBeatRequest::set_agent_type(const char* value, size_t size) {
+inline void HeartbeatRequest::set_agent_type(const char* value, size_t size) {
   
   agent_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatRequest.agent_type)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatRequest.agent_type)
 }
-inline ::std::string* HeartBeatRequest::mutable_agent_type() {
+inline ::std::string* HeartbeatRequest::mutable_agent_type() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.agent_type)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.agent_type)
   return agent_type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatRequest::release_agent_type() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatRequest.agent_type)
+inline ::std::string* HeartbeatRequest::release_agent_type() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatRequest.agent_type)
   
   return agent_type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatRequest::set_allocated_agent_type(::std::string* agent_type) {
+inline void HeartbeatRequest::set_allocated_agent_type(::std::string* agent_type) {
   if (agent_type != NULL) {
     
   } else {
     
   }
   agent_type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), agent_type);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatRequest.agent_type)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatRequest.agent_type)
 }
 
 // .configserver.proto.v2.AgentAttributes attributes = 6;
-inline bool HeartBeatRequest::has_attributes() const {
+inline bool HeartbeatRequest::has_attributes() const {
   return this != internal_default_instance() && attributes_ != NULL;
 }
-inline void HeartBeatRequest::clear_attributes() {
+inline void HeartbeatRequest::clear_attributes() {
   if (GetArenaNoVirtual() == NULL && attributes_ != NULL) {
     delete attributes_;
   }
   attributes_ = NULL;
 }
-inline const ::configserver::proto::v2::AgentAttributes& HeartBeatRequest::_internal_attributes() const {
+inline const ::configserver::proto::v2::AgentAttributes& HeartbeatRequest::_internal_attributes() const {
   return *attributes_;
 }
-inline const ::configserver::proto::v2::AgentAttributes& HeartBeatRequest::attributes() const {
+inline const ::configserver::proto::v2::AgentAttributes& HeartbeatRequest::attributes() const {
   const ::configserver::proto::v2::AgentAttributes* p = attributes_;
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.attributes)
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.attributes)
   return p != NULL ? *p : *reinterpret_cast<const ::configserver::proto::v2::AgentAttributes*>(
       &::configserver::proto::v2::_AgentAttributes_default_instance_);
 }
-inline ::configserver::proto::v2::AgentAttributes* HeartBeatRequest::release_attributes() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatRequest.attributes)
+inline ::configserver::proto::v2::AgentAttributes* HeartbeatRequest::release_attributes() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatRequest.attributes)
   
   ::configserver::proto::v2::AgentAttributes* temp = attributes_;
   attributes_ = NULL;
   return temp;
 }
-inline ::configserver::proto::v2::AgentAttributes* HeartBeatRequest::mutable_attributes() {
+inline ::configserver::proto::v2::AgentAttributes* HeartbeatRequest::mutable_attributes() {
   
   if (attributes_ == NULL) {
     auto* p = CreateMaybeMessage<::configserver::proto::v2::AgentAttributes>(GetArenaNoVirtual());
     attributes_ = p;
   }
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.attributes)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.attributes)
   return attributes_;
 }
-inline void HeartBeatRequest::set_allocated_attributes(::configserver::proto::v2::AgentAttributes* attributes) {
+inline void HeartbeatRequest::set_allocated_attributes(::configserver::proto::v2::AgentAttributes* attributes) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
   if (message_arena == NULL) {
     delete attributes_;
@@ -2821,261 +2821,261 @@ inline void HeartBeatRequest::set_allocated_attributes(::configserver::proto::v2
     
   }
   attributes_ = attributes;
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatRequest.attributes)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatRequest.attributes)
 }
 
 // repeated .configserver.proto.v2.AgentGroupTag tags = 7;
-inline int HeartBeatRequest::tags_size() const {
+inline int HeartbeatRequest::tags_size() const {
   return tags_.size();
 }
-inline void HeartBeatRequest::clear_tags() {
+inline void HeartbeatRequest::clear_tags() {
   tags_.Clear();
 }
-inline ::configserver::proto::v2::AgentGroupTag* HeartBeatRequest::mutable_tags(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.tags)
+inline ::configserver::proto::v2::AgentGroupTag* HeartbeatRequest::mutable_tags(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.tags)
   return tags_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::AgentGroupTag >*
-HeartBeatRequest::mutable_tags() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatRequest.tags)
+HeartbeatRequest::mutable_tags() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatRequest.tags)
   return &tags_;
 }
-inline const ::configserver::proto::v2::AgentGroupTag& HeartBeatRequest::tags(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.tags)
+inline const ::configserver::proto::v2::AgentGroupTag& HeartbeatRequest::tags(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.tags)
   return tags_.Get(index);
 }
-inline ::configserver::proto::v2::AgentGroupTag* HeartBeatRequest::add_tags() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatRequest.tags)
+inline ::configserver::proto::v2::AgentGroupTag* HeartbeatRequest::add_tags() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatRequest.tags)
   return tags_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::AgentGroupTag >&
-HeartBeatRequest::tags() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatRequest.tags)
+HeartbeatRequest::tags() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatRequest.tags)
   return tags_;
 }
 
 // string running_status = 8;
-inline void HeartBeatRequest::clear_running_status() {
+inline void HeartbeatRequest::clear_running_status() {
   running_status_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatRequest::running_status() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.running_status)
+inline const ::std::string& HeartbeatRequest::running_status() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.running_status)
   return running_status_.GetNoArena();
 }
-inline void HeartBeatRequest::set_running_status(const ::std::string& value) {
+inline void HeartbeatRequest::set_running_status(const ::std::string& value) {
   
   running_status_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.running_status)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.running_status)
 }
 #if LANG_CXX11
-inline void HeartBeatRequest::set_running_status(::std::string&& value) {
+inline void HeartbeatRequest::set_running_status(::std::string&& value) {
   
   running_status_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatRequest.running_status)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatRequest.running_status)
 }
 #endif
-inline void HeartBeatRequest::set_running_status(const char* value) {
+inline void HeartbeatRequest::set_running_status(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   running_status_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatRequest.running_status)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatRequest.running_status)
 }
-inline void HeartBeatRequest::set_running_status(const char* value, size_t size) {
+inline void HeartbeatRequest::set_running_status(const char* value, size_t size) {
   
   running_status_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatRequest.running_status)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatRequest.running_status)
 }
-inline ::std::string* HeartBeatRequest::mutable_running_status() {
+inline ::std::string* HeartbeatRequest::mutable_running_status() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.running_status)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.running_status)
   return running_status_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatRequest::release_running_status() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatRequest.running_status)
+inline ::std::string* HeartbeatRequest::release_running_status() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatRequest.running_status)
   
   return running_status_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatRequest::set_allocated_running_status(::std::string* running_status) {
+inline void HeartbeatRequest::set_allocated_running_status(::std::string* running_status) {
   if (running_status != NULL) {
     
   } else {
     
   }
   running_status_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), running_status);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatRequest.running_status)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatRequest.running_status)
 }
 
 // int64 startup_time = 9;
-inline void HeartBeatRequest::clear_startup_time() {
+inline void HeartbeatRequest::clear_startup_time() {
   startup_time_ = GOOGLE_LONGLONG(0);
 }
-inline ::google::protobuf::int64 HeartBeatRequest::startup_time() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.startup_time)
+inline ::google::protobuf::int64 HeartbeatRequest::startup_time() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.startup_time)
   return startup_time_;
 }
-inline void HeartBeatRequest::set_startup_time(::google::protobuf::int64 value) {
+inline void HeartbeatRequest::set_startup_time(::google::protobuf::int64 value) {
   
   startup_time_ = value;
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.startup_time)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.startup_time)
 }
 
 // repeated .configserver.proto.v2.ConfigInfo pipeline_configs = 10;
-inline int HeartBeatRequest::pipeline_configs_size() const {
+inline int HeartbeatRequest::pipeline_configs_size() const {
   return pipeline_configs_.size();
 }
-inline void HeartBeatRequest::clear_pipeline_configs() {
+inline void HeartbeatRequest::clear_pipeline_configs() {
   pipeline_configs_.Clear();
 }
-inline ::configserver::proto::v2::ConfigInfo* HeartBeatRequest::mutable_pipeline_configs(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.pipeline_configs)
+inline ::configserver::proto::v2::ConfigInfo* HeartbeatRequest::mutable_pipeline_configs(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.pipeline_configs)
   return pipeline_configs_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigInfo >*
-HeartBeatRequest::mutable_pipeline_configs() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatRequest.pipeline_configs)
+HeartbeatRequest::mutable_pipeline_configs() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatRequest.pipeline_configs)
   return &pipeline_configs_;
 }
-inline const ::configserver::proto::v2::ConfigInfo& HeartBeatRequest::pipeline_configs(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.pipeline_configs)
+inline const ::configserver::proto::v2::ConfigInfo& HeartbeatRequest::pipeline_configs(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.pipeline_configs)
   return pipeline_configs_.Get(index);
 }
-inline ::configserver::proto::v2::ConfigInfo* HeartBeatRequest::add_pipeline_configs() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatRequest.pipeline_configs)
+inline ::configserver::proto::v2::ConfigInfo* HeartbeatRequest::add_pipeline_configs() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatRequest.pipeline_configs)
   return pipeline_configs_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigInfo >&
-HeartBeatRequest::pipeline_configs() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatRequest.pipeline_configs)
+HeartbeatRequest::pipeline_configs() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatRequest.pipeline_configs)
   return pipeline_configs_;
 }
 
 // repeated .configserver.proto.v2.ConfigInfo process_configs = 11;
-inline int HeartBeatRequest::process_configs_size() const {
+inline int HeartbeatRequest::process_configs_size() const {
   return process_configs_.size();
 }
-inline void HeartBeatRequest::clear_process_configs() {
+inline void HeartbeatRequest::clear_process_configs() {
   process_configs_.Clear();
 }
-inline ::configserver::proto::v2::ConfigInfo* HeartBeatRequest::mutable_process_configs(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.process_configs)
+inline ::configserver::proto::v2::ConfigInfo* HeartbeatRequest::mutable_process_configs(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.process_configs)
   return process_configs_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigInfo >*
-HeartBeatRequest::mutable_process_configs() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatRequest.process_configs)
+HeartbeatRequest::mutable_process_configs() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatRequest.process_configs)
   return &process_configs_;
 }
-inline const ::configserver::proto::v2::ConfigInfo& HeartBeatRequest::process_configs(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.process_configs)
+inline const ::configserver::proto::v2::ConfigInfo& HeartbeatRequest::process_configs(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.process_configs)
   return process_configs_.Get(index);
 }
-inline ::configserver::proto::v2::ConfigInfo* HeartBeatRequest::add_process_configs() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatRequest.process_configs)
+inline ::configserver::proto::v2::ConfigInfo* HeartbeatRequest::add_process_configs() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatRequest.process_configs)
   return process_configs_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigInfo >&
-HeartBeatRequest::process_configs() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatRequest.process_configs)
+HeartbeatRequest::process_configs() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatRequest.process_configs)
   return process_configs_;
 }
 
 // repeated .configserver.proto.v2.CommandInfo custom_commands = 12;
-inline int HeartBeatRequest::custom_commands_size() const {
+inline int HeartbeatRequest::custom_commands_size() const {
   return custom_commands_.size();
 }
-inline void HeartBeatRequest::clear_custom_commands() {
+inline void HeartbeatRequest::clear_custom_commands() {
   custom_commands_.Clear();
 }
-inline ::configserver::proto::v2::CommandInfo* HeartBeatRequest::mutable_custom_commands(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.custom_commands)
+inline ::configserver::proto::v2::CommandInfo* HeartbeatRequest::mutable_custom_commands(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.custom_commands)
   return custom_commands_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::CommandInfo >*
-HeartBeatRequest::mutable_custom_commands() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatRequest.custom_commands)
+HeartbeatRequest::mutable_custom_commands() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatRequest.custom_commands)
   return &custom_commands_;
 }
-inline const ::configserver::proto::v2::CommandInfo& HeartBeatRequest::custom_commands(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.custom_commands)
+inline const ::configserver::proto::v2::CommandInfo& HeartbeatRequest::custom_commands(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.custom_commands)
   return custom_commands_.Get(index);
 }
-inline ::configserver::proto::v2::CommandInfo* HeartBeatRequest::add_custom_commands() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatRequest.custom_commands)
+inline ::configserver::proto::v2::CommandInfo* HeartbeatRequest::add_custom_commands() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatRequest.custom_commands)
   return custom_commands_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::CommandInfo >&
-HeartBeatRequest::custom_commands() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatRequest.custom_commands)
+HeartbeatRequest::custom_commands() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatRequest.custom_commands)
   return custom_commands_;
 }
 
 // uint64 flags = 13;
-inline void HeartBeatRequest::clear_flags() {
+inline void HeartbeatRequest::clear_flags() {
   flags_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint64 HeartBeatRequest::flags() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.flags)
+inline ::google::protobuf::uint64 HeartbeatRequest::flags() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.flags)
   return flags_;
 }
-inline void HeartBeatRequest::set_flags(::google::protobuf::uint64 value) {
+inline void HeartbeatRequest::set_flags(::google::protobuf::uint64 value) {
   
   flags_ = value;
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.flags)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.flags)
 }
 
 // bytes opaque = 14;
-inline void HeartBeatRequest::clear_opaque() {
+inline void HeartbeatRequest::clear_opaque() {
   opaque_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatRequest::opaque() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatRequest.opaque)
+inline const ::std::string& HeartbeatRequest::opaque() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatRequest.opaque)
   return opaque_.GetNoArena();
 }
-inline void HeartBeatRequest::set_opaque(const ::std::string& value) {
+inline void HeartbeatRequest::set_opaque(const ::std::string& value) {
   
   opaque_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatRequest.opaque)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatRequest.opaque)
 }
 #if LANG_CXX11
-inline void HeartBeatRequest::set_opaque(::std::string&& value) {
+inline void HeartbeatRequest::set_opaque(::std::string&& value) {
   
   opaque_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatRequest.opaque)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatRequest.opaque)
 }
 #endif
-inline void HeartBeatRequest::set_opaque(const char* value) {
+inline void HeartbeatRequest::set_opaque(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   opaque_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatRequest.opaque)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatRequest.opaque)
 }
-inline void HeartBeatRequest::set_opaque(const void* value, size_t size) {
+inline void HeartbeatRequest::set_opaque(const void* value, size_t size) {
   
   opaque_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatRequest.opaque)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatRequest.opaque)
 }
-inline ::std::string* HeartBeatRequest::mutable_opaque() {
+inline ::std::string* HeartbeatRequest::mutable_opaque() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatRequest.opaque)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatRequest.opaque)
   return opaque_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatRequest::release_opaque() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatRequest.opaque)
+inline ::std::string* HeartbeatRequest::release_opaque() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatRequest.opaque)
   
   return opaque_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatRequest::set_allocated_opaque(::std::string* opaque) {
+inline void HeartbeatRequest::set_allocated_opaque(::std::string* opaque) {
   if (opaque != NULL) {
     
   } else {
     
   }
   opaque_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), opaque);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatRequest.opaque)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatRequest.opaque)
 }
 
 // -------------------------------------------------------------------
@@ -3452,97 +3452,97 @@ inline void ServerErrorResponse::set_allocated_error_message(::std::string* erro
 
 // -------------------------------------------------------------------
 
-// HeartBeatResponse
+// HeartbeatResponse
 
 // bytes request_id = 1;
-inline void HeartBeatResponse::clear_request_id() {
+inline void HeartbeatResponse::clear_request_id() {
   request_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatResponse::request_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.request_id)
+inline const ::std::string& HeartbeatResponse::request_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.request_id)
   return request_id_.GetNoArena();
 }
-inline void HeartBeatResponse::set_request_id(const ::std::string& value) {
+inline void HeartbeatResponse::set_request_id(const ::std::string& value) {
   
   request_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatResponse.request_id)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatResponse.request_id)
 }
 #if LANG_CXX11
-inline void HeartBeatResponse::set_request_id(::std::string&& value) {
+inline void HeartbeatResponse::set_request_id(::std::string&& value) {
   
   request_id_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatResponse.request_id)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatResponse.request_id)
 }
 #endif
-inline void HeartBeatResponse::set_request_id(const char* value) {
+inline void HeartbeatResponse::set_request_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   request_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatResponse.request_id)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatResponse.request_id)
 }
-inline void HeartBeatResponse::set_request_id(const void* value, size_t size) {
+inline void HeartbeatResponse::set_request_id(const void* value, size_t size) {
   
   request_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatResponse.request_id)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatResponse.request_id)
 }
-inline ::std::string* HeartBeatResponse::mutable_request_id() {
+inline ::std::string* HeartbeatResponse::mutable_request_id() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatResponse.request_id)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatResponse.request_id)
   return request_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatResponse::release_request_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatResponse.request_id)
+inline ::std::string* HeartbeatResponse::release_request_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatResponse.request_id)
   
   return request_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatResponse::set_allocated_request_id(::std::string* request_id) {
+inline void HeartbeatResponse::set_allocated_request_id(::std::string* request_id) {
   if (request_id != NULL) {
     
   } else {
     
   }
   request_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), request_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatResponse.request_id)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatResponse.request_id)
 }
 
 // .configserver.proto.v2.ServerErrorResponse error_response = 2;
-inline bool HeartBeatResponse::has_error_response() const {
+inline bool HeartbeatResponse::has_error_response() const {
   return this != internal_default_instance() && error_response_ != NULL;
 }
-inline void HeartBeatResponse::clear_error_response() {
+inline void HeartbeatResponse::clear_error_response() {
   if (GetArenaNoVirtual() == NULL && error_response_ != NULL) {
     delete error_response_;
   }
   error_response_ = NULL;
 }
-inline const ::configserver::proto::v2::ServerErrorResponse& HeartBeatResponse::_internal_error_response() const {
+inline const ::configserver::proto::v2::ServerErrorResponse& HeartbeatResponse::_internal_error_response() const {
   return *error_response_;
 }
-inline const ::configserver::proto::v2::ServerErrorResponse& HeartBeatResponse::error_response() const {
+inline const ::configserver::proto::v2::ServerErrorResponse& HeartbeatResponse::error_response() const {
   const ::configserver::proto::v2::ServerErrorResponse* p = error_response_;
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.error_response)
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.error_response)
   return p != NULL ? *p : *reinterpret_cast<const ::configserver::proto::v2::ServerErrorResponse*>(
       &::configserver::proto::v2::_ServerErrorResponse_default_instance_);
 }
-inline ::configserver::proto::v2::ServerErrorResponse* HeartBeatResponse::release_error_response() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatResponse.error_response)
+inline ::configserver::proto::v2::ServerErrorResponse* HeartbeatResponse::release_error_response() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatResponse.error_response)
   
   ::configserver::proto::v2::ServerErrorResponse* temp = error_response_;
   error_response_ = NULL;
   return temp;
 }
-inline ::configserver::proto::v2::ServerErrorResponse* HeartBeatResponse::mutable_error_response() {
+inline ::configserver::proto::v2::ServerErrorResponse* HeartbeatResponse::mutable_error_response() {
   
   if (error_response_ == NULL) {
     auto* p = CreateMaybeMessage<::configserver::proto::v2::ServerErrorResponse>(GetArenaNoVirtual());
     error_response_ = p;
   }
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatResponse.error_response)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatResponse.error_response)
   return error_response_;
 }
-inline void HeartBeatResponse::set_allocated_error_response(::configserver::proto::v2::ServerErrorResponse* error_response) {
+inline void HeartbeatResponse::set_allocated_error_response(::configserver::proto::v2::ServerErrorResponse* error_response) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
   if (message_arena == NULL) {
     delete error_response_;
@@ -3558,178 +3558,178 @@ inline void HeartBeatResponse::set_allocated_error_response(::configserver::prot
     
   }
   error_response_ = error_response;
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatResponse.error_response)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatResponse.error_response)
 }
 
 // uint64 capabilities = 3;
-inline void HeartBeatResponse::clear_capabilities() {
+inline void HeartbeatResponse::clear_capabilities() {
   capabilities_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint64 HeartBeatResponse::capabilities() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.capabilities)
+inline ::google::protobuf::uint64 HeartbeatResponse::capabilities() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.capabilities)
   return capabilities_;
 }
-inline void HeartBeatResponse::set_capabilities(::google::protobuf::uint64 value) {
+inline void HeartbeatResponse::set_capabilities(::google::protobuf::uint64 value) {
   
   capabilities_ = value;
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatResponse.capabilities)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatResponse.capabilities)
 }
 
 // repeated .configserver.proto.v2.ConfigDetail pipeline_config_updates = 4;
-inline int HeartBeatResponse::pipeline_config_updates_size() const {
+inline int HeartbeatResponse::pipeline_config_updates_size() const {
   return pipeline_config_updates_.size();
 }
-inline void HeartBeatResponse::clear_pipeline_config_updates() {
+inline void HeartbeatResponse::clear_pipeline_config_updates() {
   pipeline_config_updates_.Clear();
 }
-inline ::configserver::proto::v2::ConfigDetail* HeartBeatResponse::mutable_pipeline_config_updates(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatResponse.pipeline_config_updates)
+inline ::configserver::proto::v2::ConfigDetail* HeartbeatResponse::mutable_pipeline_config_updates(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatResponse.pipeline_config_updates)
   return pipeline_config_updates_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail >*
-HeartBeatResponse::mutable_pipeline_config_updates() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatResponse.pipeline_config_updates)
+HeartbeatResponse::mutable_pipeline_config_updates() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatResponse.pipeline_config_updates)
   return &pipeline_config_updates_;
 }
-inline const ::configserver::proto::v2::ConfigDetail& HeartBeatResponse::pipeline_config_updates(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.pipeline_config_updates)
+inline const ::configserver::proto::v2::ConfigDetail& HeartbeatResponse::pipeline_config_updates(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.pipeline_config_updates)
   return pipeline_config_updates_.Get(index);
 }
-inline ::configserver::proto::v2::ConfigDetail* HeartBeatResponse::add_pipeline_config_updates() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatResponse.pipeline_config_updates)
+inline ::configserver::proto::v2::ConfigDetail* HeartbeatResponse::add_pipeline_config_updates() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatResponse.pipeline_config_updates)
   return pipeline_config_updates_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail >&
-HeartBeatResponse::pipeline_config_updates() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatResponse.pipeline_config_updates)
+HeartbeatResponse::pipeline_config_updates() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatResponse.pipeline_config_updates)
   return pipeline_config_updates_;
 }
 
 // repeated .configserver.proto.v2.ConfigDetail process_config_updates = 5;
-inline int HeartBeatResponse::process_config_updates_size() const {
+inline int HeartbeatResponse::process_config_updates_size() const {
   return process_config_updates_.size();
 }
-inline void HeartBeatResponse::clear_process_config_updates() {
+inline void HeartbeatResponse::clear_process_config_updates() {
   process_config_updates_.Clear();
 }
-inline ::configserver::proto::v2::ConfigDetail* HeartBeatResponse::mutable_process_config_updates(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatResponse.process_config_updates)
+inline ::configserver::proto::v2::ConfigDetail* HeartbeatResponse::mutable_process_config_updates(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatResponse.process_config_updates)
   return process_config_updates_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail >*
-HeartBeatResponse::mutable_process_config_updates() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatResponse.process_config_updates)
+HeartbeatResponse::mutable_process_config_updates() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatResponse.process_config_updates)
   return &process_config_updates_;
 }
-inline const ::configserver::proto::v2::ConfigDetail& HeartBeatResponse::process_config_updates(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.process_config_updates)
+inline const ::configserver::proto::v2::ConfigDetail& HeartbeatResponse::process_config_updates(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.process_config_updates)
   return process_config_updates_.Get(index);
 }
-inline ::configserver::proto::v2::ConfigDetail* HeartBeatResponse::add_process_config_updates() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatResponse.process_config_updates)
+inline ::configserver::proto::v2::ConfigDetail* HeartbeatResponse::add_process_config_updates() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatResponse.process_config_updates)
   return process_config_updates_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail >&
-HeartBeatResponse::process_config_updates() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatResponse.process_config_updates)
+HeartbeatResponse::process_config_updates() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatResponse.process_config_updates)
   return process_config_updates_;
 }
 
 // repeated .configserver.proto.v2.CommandDetail custom_command_updates = 6;
-inline int HeartBeatResponse::custom_command_updates_size() const {
+inline int HeartbeatResponse::custom_command_updates_size() const {
   return custom_command_updates_.size();
 }
-inline void HeartBeatResponse::clear_custom_command_updates() {
+inline void HeartbeatResponse::clear_custom_command_updates() {
   custom_command_updates_.Clear();
 }
-inline ::configserver::proto::v2::CommandDetail* HeartBeatResponse::mutable_custom_command_updates(int index) {
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatResponse.custom_command_updates)
+inline ::configserver::proto::v2::CommandDetail* HeartbeatResponse::mutable_custom_command_updates(int index) {
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatResponse.custom_command_updates)
   return custom_command_updates_.Mutable(index);
 }
 inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::CommandDetail >*
-HeartBeatResponse::mutable_custom_command_updates() {
-  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartBeatResponse.custom_command_updates)
+HeartbeatResponse::mutable_custom_command_updates() {
+  // @@protoc_insertion_point(field_mutable_list:configserver.proto.v2.HeartbeatResponse.custom_command_updates)
   return &custom_command_updates_;
 }
-inline const ::configserver::proto::v2::CommandDetail& HeartBeatResponse::custom_command_updates(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.custom_command_updates)
+inline const ::configserver::proto::v2::CommandDetail& HeartbeatResponse::custom_command_updates(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.custom_command_updates)
   return custom_command_updates_.Get(index);
 }
-inline ::configserver::proto::v2::CommandDetail* HeartBeatResponse::add_custom_command_updates() {
-  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartBeatResponse.custom_command_updates)
+inline ::configserver::proto::v2::CommandDetail* HeartbeatResponse::add_custom_command_updates() {
+  // @@protoc_insertion_point(field_add:configserver.proto.v2.HeartbeatResponse.custom_command_updates)
   return custom_command_updates_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::CommandDetail >&
-HeartBeatResponse::custom_command_updates() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartBeatResponse.custom_command_updates)
+HeartbeatResponse::custom_command_updates() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.v2.HeartbeatResponse.custom_command_updates)
   return custom_command_updates_;
 }
 
 // uint64 flags = 7;
-inline void HeartBeatResponse::clear_flags() {
+inline void HeartbeatResponse::clear_flags() {
   flags_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint64 HeartBeatResponse::flags() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.flags)
+inline ::google::protobuf::uint64 HeartbeatResponse::flags() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.flags)
   return flags_;
 }
-inline void HeartBeatResponse::set_flags(::google::protobuf::uint64 value) {
+inline void HeartbeatResponse::set_flags(::google::protobuf::uint64 value) {
   
   flags_ = value;
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatResponse.flags)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatResponse.flags)
 }
 
 // bytes opaque = 8;
-inline void HeartBeatResponse::clear_opaque() {
+inline void HeartbeatResponse::clear_opaque() {
   opaque_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatResponse::opaque() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartBeatResponse.opaque)
+inline const ::std::string& HeartbeatResponse::opaque() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.v2.HeartbeatResponse.opaque)
   return opaque_.GetNoArena();
 }
-inline void HeartBeatResponse::set_opaque(const ::std::string& value) {
+inline void HeartbeatResponse::set_opaque(const ::std::string& value) {
   
   opaque_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartBeatResponse.opaque)
+  // @@protoc_insertion_point(field_set:configserver.proto.v2.HeartbeatResponse.opaque)
 }
 #if LANG_CXX11
-inline void HeartBeatResponse::set_opaque(::std::string&& value) {
+inline void HeartbeatResponse::set_opaque(::std::string&& value) {
   
   opaque_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartBeatResponse.opaque)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.v2.HeartbeatResponse.opaque)
 }
 #endif
-inline void HeartBeatResponse::set_opaque(const char* value) {
+inline void HeartbeatResponse::set_opaque(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   opaque_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartBeatResponse.opaque)
+  // @@protoc_insertion_point(field_set_char:configserver.proto.v2.HeartbeatResponse.opaque)
 }
-inline void HeartBeatResponse::set_opaque(const void* value, size_t size) {
+inline void HeartbeatResponse::set_opaque(const void* value, size_t size) {
   
   opaque_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartBeatResponse.opaque)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.v2.HeartbeatResponse.opaque)
 }
-inline ::std::string* HeartBeatResponse::mutable_opaque() {
+inline ::std::string* HeartbeatResponse::mutable_opaque() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartBeatResponse.opaque)
+  // @@protoc_insertion_point(field_mutable:configserver.proto.v2.HeartbeatResponse.opaque)
   return opaque_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatResponse::release_opaque() {
-  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartBeatResponse.opaque)
+inline ::std::string* HeartbeatResponse::release_opaque() {
+  // @@protoc_insertion_point(field_release:configserver.proto.v2.HeartbeatResponse.opaque)
   
   return opaque_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatResponse::set_allocated_opaque(::std::string* opaque) {
+inline void HeartbeatResponse::set_allocated_opaque(::std::string* opaque) {
   if (opaque != NULL) {
     
   } else {
     
   }
   opaque_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), opaque);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartBeatResponse.opaque)
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.v2.HeartbeatResponse.opaque)
 }
 
 // -------------------------------------------------------------------

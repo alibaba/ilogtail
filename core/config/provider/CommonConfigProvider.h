@@ -81,14 +81,14 @@ public:
     ~CommonConfigProvider() = default;
 
 protected:
-    virtual configserver::proto::v2::HeartBeatRequest PrepareHeartbeat();
-    virtual configserver::proto::v2::HeartBeatResponse SendHeartBeat(configserver::proto::v2::HeartBeatRequest);
+    virtual configserver::proto::v2::HeartbeatRequest PrepareHeartbeat();
+    virtual configserver::proto::v2::HeartbeatResponse SendHeartbeat(configserver::proto::v2::HeartbeatRequest);
 
     virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchProcessConfig(::configserver::proto::v2::HeartBeatResponse&);
+    FetchProcessConfig(::configserver::proto::v2::HeartbeatResponse&);
 
     virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchPipelineConfig(::configserver::proto::v2::HeartBeatResponse&);
+    FetchPipelineConfig(::configserver::proto::v2::HeartbeatResponse&);
 
     virtual std::string GetInstanceId();
     virtual void FillAttributes(::configserver::proto::v2::AgentAttributes& attributes);
@@ -97,9 +97,9 @@ protected:
                        std::filesystem::path sourceDir);
 
     virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchProcessConfigFromServer(::configserver::proto::v2::HeartBeatResponse&);
+    FetchProcessConfigFromServer(::configserver::proto::v2::HeartbeatResponse&);
     virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchPipelineConfigFromServer(::configserver::proto::v2::HeartBeatResponse&);
+    FetchPipelineConfigFromServer(::configserver::proto::v2::HeartbeatResponse&);
 
     void CheckUpdateThread();
     void GetConfigUpdate();

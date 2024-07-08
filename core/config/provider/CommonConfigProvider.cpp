@@ -35,7 +35,7 @@
 
 using namespace std;
 
-DEFINE_FLAG_INT32(heartBeat_update_interval, "second", 10);
+DEFINE_FLAG_INT32(heartbeat_update_interval, "second", 10);
 
 namespace logtail {
 
@@ -111,7 +111,7 @@ void CommonConfigProvider::CheckUpdateThread() {
     unique_lock<mutex> lock(mThreadRunningMux);
     while (mIsThreadRunning) {
         int32_t curTime = time(NULL);
-        if (curTime - lastCheckTime >= INT32_FLAG(heartBeat_update_interval)) {
+        if (curTime - lastCheckTime >= INT32_FLAG(heartbeat_update_interval)) {
             GetConfigUpdate();
             lastCheckTime = curTime;
         }
@@ -176,10 +176,10 @@ void CommonConfigProvider::GetConfigUpdate() {
     if (!GetConfigServerAvailable()) {
         return;
     }
-    auto heartBeatRequest = PrepareHeartbeat();
-    auto HeartBeatResponse = SendHeartBeat(heartBeatRequest);
-    auto processConfig = FetchProcessConfig(HeartBeatResponse);
-    auto pipelineConfig = FetchPipelineConfig(HeartBeatResponse);
+    auto heartbeatRequest = PrepareHeartbeat();
+    auto HeartbeatResponse = SendHeartbeat(heartbeatRequest);
+    auto processConfig = FetchProcessConfig(HeartbeatResponse);
+    auto pipelineConfig = FetchPipelineConfig(HeartbeatResponse);
     if (!pipelineConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch pipelineConfig, config file number", pipelineConfig.size()));
         UpdateRemoteConfig(pipelineConfig, mPipelineSourceDir);
@@ -190,34 +190,34 @@ void CommonConfigProvider::GetConfigUpdate() {
     }
 }
 
-configserver::proto::v2::HeartBeatRequest CommonConfigProvider::PrepareHeartbeat() {
-    configserver::proto::v2::HeartBeatRequest heartBeatReq;
-    string requestID = sdk::Base64Enconde(string("HeartBeat").append(to_string(time(NULL))));
-    heartBeatReq.set_request_id(requestID);
-    heartBeatReq.set_sequence_num(mSequenceNum);
-    heartBeatReq.set_capabilities(configserver::proto::v2::AcceptsProcessConfig
+configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat() {
+    configserver::proto::v2::HeartbeatRequest heartbeatReq;
+    string requestID = sdk::Base64Enconde(string("Heartbeat").append(to_string(time(NULL))));
+    heartbeatReq.set_request_id(requestID);
+    heartbeatReq.set_sequence_num(mSequenceNum);
+    heartbeatReq.set_capabilities(configserver::proto::v2::AcceptsProcessConfig
                                   | configserver::proto::v2::AcceptsPipelineConfig);
-    heartBeatReq.set_instance_id(GetInstanceId());
-    heartBeatReq.set_agent_type("LoongCollector");
-    FillAttributes(*heartBeatReq.mutable_attributes());
+    heartbeatReq.set_instance_id(GetInstanceId());
+    heartbeatReq.set_agent_type("LoongCollector");
+    FillAttributes(*heartbeatReq.mutable_attributes());
 
     for (auto tag : GetConfigServerTags()) {
-        configserver::proto::v2::AgentGroupTag* agentGroupTag = heartBeatReq.add_tags();
+        configserver::proto::v2::AgentGroupTag* agentGroupTag = heartbeatReq.add_tags();
         agentGroupTag->set_name(tag.first);
         agentGroupTag->set_value(tag.second);
     }
-    heartBeatReq.set_running_status("running");
-    heartBeatReq.set_startup_time(mStartTime);
+    heartbeatReq.set_running_status("running");
+    heartbeatReq.set_startup_time(mStartTime);
 
     for (const auto& configInfo : mPipelineConfigInfoMap) {
-        addConfigInfoToRequest(configInfo, heartBeatReq.add_pipeline_configs());
+        addConfigInfoToRequest(configInfo, heartbeatReq.add_pipeline_configs());
     }
     for (const auto& configInfo : mProcessConfigInfoMap) {
-        addConfigInfoToRequest(configInfo, heartBeatReq.add_process_configs());
+        addConfigInfoToRequest(configInfo, heartbeatReq.add_process_configs());
     }
 
     for (auto& configInfo : mCommandInfoMap) {
-        configserver::proto::v2::CommandInfo* command = heartBeatReq.add_custom_commands();
+        configserver::proto::v2::CommandInfo* command = heartbeatReq.add_custom_commands();
         command->set_type(configInfo.second.type);
         command->set_name(configInfo.second.name);
         switch (configInfo.second.status) {
@@ -232,22 +232,22 @@ configserver::proto::v2::HeartBeatRequest CommonConfigProvider::PrepareHeartbeat
         }
         command->set_message(configInfo.second.message);
     }
-    return heartBeatReq;
+    return heartbeatReq;
 }
 
-configserver::proto::v2::HeartBeatResponse
-CommonConfigProvider::SendHeartBeat(configserver::proto::v2::HeartBeatRequest heartBeatReq) {
+configserver::proto::v2::HeartbeatResponse
+CommonConfigProvider::SendHeartbeat(configserver::proto::v2::HeartbeatRequest heartbeatReq) {
     string operation = sdk::CONFIGSERVERAGENT;
-    operation.append("/").append("HeartBeat");
+    operation.append("/").append("Heartbeat");
     string reqBody;
-    heartBeatReq.SerializeToString(&reqBody);
-    configserver::proto::v2::HeartBeatResponse emptyResult;
+    heartbeatReq.SerializeToString(&reqBody);
+    configserver::proto::v2::HeartbeatResponse emptyResult;
     string emptyResultString;
     emptyResult.SerializeToString(&emptyResultString);
-    auto heartBeatResp = SendHttpRequest(operation, reqBody, emptyResultString, "SendHeartBeat");
-    configserver::proto::v2::HeartBeatResponse heartBeatRespPb;
-    heartBeatRespPb.ParseFromString(heartBeatResp);
-    return heartBeatRespPb;
+    auto heartbeatResp = SendHttpRequest(operation, reqBody, emptyResultString, "SendHeartbeat");
+    configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
+    heartbeatRespPb.ParseFromString(heartbeatResp);
+    return heartbeatRespPb;
 }
 
 string CommonConfigProvider::SendHttpRequest(const string& operation,
@@ -283,20 +283,20 @@ string CommonConfigProvider::SendHttpRequest(const string& operation,
 }
 
 ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchPipelineConfig(configserver::proto::v2::HeartBeatResponse& heartBeatResponse) {
-    if (heartBeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
-        return FetchPipelineConfigFromServer(heartBeatResponse);
+CommonConfigProvider::FetchPipelineConfig(configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
+    if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
+        return FetchPipelineConfigFromServer(heartbeatResponse);
     } else {
-        return std::move(heartBeatResponse.pipeline_config_updates());
+        return std::move(heartbeatResponse.pipeline_config_updates());
     }
 }
 
 ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchProcessConfig(configserver::proto::v2::HeartBeatResponse& heartBeatResponse) {
-    if (heartBeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
-        return FetchProcessConfigFromServer(heartBeatResponse);
+CommonConfigProvider::FetchProcessConfig(configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
+    if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
+        return FetchProcessConfigFromServer(heartbeatResponse);
     } else {
-        return std::move(heartBeatResponse.process_config_updates());
+        return std::move(heartbeatResponse.process_config_updates());
     }
 }
 
@@ -343,12 +343,12 @@ void CommonConfigProvider::UpdateRemoteConfig(
 }
 
 ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::HeartBeatResponse& heartBeatResponse) {
+CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
     configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
     string requestID = sdk::Base64Enconde(string("FetchProcessConfig").append(to_string(time(NULL))));
     fetchConfigRequest.set_request_id(requestID);
     fetchConfigRequest.set_instance_id(GetInstanceId());
-    for (const auto& config : heartBeatResponse.process_config_updates()) {
+    for (const auto& config : heartbeatResponse.process_config_updates()) {
         auto reqConfig = fetchConfigRequest.add_req_configs();
         reqConfig->set_name(config.name());
         reqConfig->set_version(config.version());
@@ -367,12 +367,12 @@ CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::He
 }
 
 ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::HeartBeatResponse& heartBeatResponse) {
+CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
     configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
     string requestID = sdk::Base64Enconde(string("FetchPipelineConfig").append(to_string(time(NULL))));
     fetchConfigRequest.set_request_id(requestID);
     fetchConfigRequest.set_instance_id(GetInstanceId());
-    for (const auto& config : heartBeatResponse.pipeline_config_updates()) {
+    for (const auto& config : heartbeatResponse.pipeline_config_updates()) {
         auto reqConfig = fetchConfigRequest.add_req_configs();
         reqConfig->set_name(config.name());
         reqConfig->set_version(config.version());
