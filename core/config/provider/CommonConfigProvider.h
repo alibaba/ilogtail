@@ -24,22 +24,16 @@
 #include <unordered_map>
 #include <vector>
 
+#include "config/feedbacker/ConfigFeedbackable.h"
 #include "config/provider/ConfigProvider.h"
 #include "config_server_pb/v2/agent.pb.h"
 
 namespace logtail {
 
-enum ConfigStatus {
-    UNSET = 0,
-    APPLYING = 1,
-    APPLIED = 2,
-    FAILED = 3,
-};
-
 struct ConfigInfo {
     std::string name;
     int64_t version;
-    ConfigStatus status;
+    ConfigFeedbackStatus status;
     std::string message;
     std::string detail;
 };
@@ -47,19 +41,13 @@ struct ConfigInfo {
 struct CommandInfo {
     std::string type;
     std::string name;
-    ConfigStatus status;
+    ConfigFeedbackStatus status;
     std::string message;
 };
 
-class CommonConfigProvider : public ConfigProvider {
+class CommonConfigProvider : public ConfigProvider, ConfigFeedbackable {
 public:
     std::string sName;
-
-    mutable std::mutex mMux;
-    std::unordered_map<std::string, ConfigInfo> mPipelineConfigInfoMap;
-    std::unordered_map<std::string, ConfigInfo> mProcessConfigInfoMap;
-
-    std::unordered_map<std::string, CommandInfo> mCommandInfoMap;
     int64_t mSequenceNum;
 
     CommonConfigProvider(const CommonConfigProvider&) = delete;
@@ -73,10 +61,10 @@ public:
     void Init(const std::string& dir) override;
     void Stop() override;
 
-    // virtual void FeedbackProcessConfigStatus(std::string name, ConfigInfo status);
-    // virtual void FeedbackPipelineConfigStatus(std::string name, ConfigInfo status);
-    // virtual void FeedbackCommandStatus(std::string type, std::string name, CommandInfo status);
-
+    void FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) override;
+    void FeedbackProcessConfigStatus(const std::string& name, ConfigFeedbackStatus status) override;
+    void
+    FeedbackCommandConfigStatus(const std::string& type, const std::string& name, ConfigFeedbackStatus status) override;
     CommonConfigProvider() = default;
     ~CommonConfigProvider() = default;
 
@@ -92,9 +80,10 @@ protected:
 
     virtual std::string GetInstanceId();
     virtual void FillAttributes(::configserver::proto::v2::AgentAttributes& attributes);
+    virtual void UpdateRemotePipelineConfig(
+        const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs);
     virtual void
-    UpdateRemoteConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs,
-                       std::filesystem::path sourceDir);
+    UpdateRemoteProcessConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs);
 
     virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
     FetchProcessConfigFromServer(::configserver::proto::v2::HeartbeatResponse&);
@@ -111,8 +100,13 @@ protected:
     mutable std::mutex mThreadRunningMux;
     bool mIsThreadRunning = true;
     mutable std::condition_variable mStopCV;
-    std::unordered_map<std::string, int64_t> mConfigNameVersionMap;
     bool mConfigServerAvailable = false;
+
+    mutable std::mutex mMux; // mutex for file dump
+    mutable std::mutex mInfoMapMux;
+    std::unordered_map<std::string, ConfigInfo> mPipelineConfigInfoMap;
+    std::unordered_map<std::string, ConfigInfo> mProcessConfigInfoMap;
+    std::unordered_map<std::string, CommandInfo> mCommandInfoMap;
 
 private:
     struct ConfigServerAddress {
@@ -131,6 +125,8 @@ private:
                                 const std::string& reqBody,
                                 const std::string& emptyResultString,
                                 const std::string& configType);
+    void LoadConfigFile();
+    bool DumpConfigFile(const configserver::proto::v2::ConfigDetail& config, const std::filesystem::path& sourceDir);
 
     std::vector<ConfigServerAddress> mConfigServerAddresses;
     int mConfigServerAddressId = 0;

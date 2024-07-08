@@ -20,13 +20,16 @@
 #include <iostream>
 #include <random>
 
-#include "Constants.h"
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
+#include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
 #include "common/UUIDUtil.h"
+#include "common/YamlUtil.h"
 #include "common/version.h"
+#include "config/Config.h"
+#include "config/feedbacker/ConfigFeedbackReceiver.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "sdk/Common.h"
@@ -39,11 +42,11 @@ DEFINE_FLAG_INT32(heartbeat_update_interval, "second", 10);
 
 namespace logtail {
 
-
 void CommonConfigProvider::Init(const string& dir) {
     string sName = "CommonConfigProvider";
 
     ConfigProvider::Init(dir);
+    LoadConfigFile();
 
     mSequenceNum = 0;
 
@@ -104,6 +107,38 @@ void CommonConfigProvider::Stop() {
     }
 }
 
+void CommonConfigProvider::LoadConfigFile() {
+    error_code ec;
+    for (auto const& entry : filesystem::directory_iterator(mPipelineSourceDir, ec)) {
+        Json::Value detail;
+        if (LoadConfigDetailFromFile(entry, detail)) {
+            ConfigInfo info;
+            info.name = entry.path().stem();
+            if (detail.isMember("version") && detail["version"].isInt64()) {
+                info.version = detail["version"].asInt64();
+            }
+            info.status = ConfigFeedbackStatus::APPLYING;
+            info.detail = detail.toStyledString();
+            lock_guard<mutex> infomaplock(mInfoMapMux);
+            mPipelineConfigInfoMap[info.name] = info;
+        }
+    }
+    for (auto const& entry : filesystem::directory_iterator(mProcessSourceDir, ec)) {
+        Json::Value detail;
+        if (LoadConfigDetailFromFile(entry, detail)) {
+            ConfigInfo info;
+            info.name = entry.path().stem();
+            if (detail.isMember("version") && detail["version"].isInt64()) {
+                info.version = detail["version"].asInt64();
+            }
+            info.status = ConfigFeedbackStatus::APPLYING;
+            info.detail = detail.toStyledString();
+            lock_guard<mutex> infomaplock(mInfoMapMux);
+            mProcessConfigInfoMap[info.name] = info;
+        }
+    }
+}
+
 void CommonConfigProvider::CheckUpdateThread() {
     LOG_INFO(sLogger, (sName, "started"));
     usleep((rand() % 10) * 100 * 1000);
@@ -155,18 +190,22 @@ void addConfigInfoToRequest(const std::pair<const string, logtail::ConfigInfo>& 
                             configserver::proto::v2::ConfigInfo* reqConfig) {
     reqConfig->set_name(configInfo.second.name);
     reqConfig->set_message(configInfo.second.message);
+    reqConfig->set_version(configInfo.second.version);
     switch (configInfo.second.status) {
-        case UNSET:
+        case ConfigFeedbackStatus::UNSET:
             reqConfig->set_status(configserver::proto::v2::ConfigStatus::UNSET);
             break;
-        case APPLYING:
+        case ConfigFeedbackStatus::APPLYING:
             reqConfig->set_status(configserver::proto::v2::ConfigStatus::APPLYING);
             break;
-        case APPLIED:
+        case ConfigFeedbackStatus::APPLIED:
             reqConfig->set_status(configserver::proto::v2::ConfigStatus::APPLIED);
             break;
-        case FAILED:
+        case ConfigFeedbackStatus::FAILED:
             reqConfig->set_status(configserver::proto::v2::ConfigStatus::FAILED);
+            break;
+        case ConfigFeedbackStatus::DELETED:
+            reqConfig->set_version(-1);
             break;
     }
     reqConfig->set_version(configInfo.second.version);
@@ -182,11 +221,11 @@ void CommonConfigProvider::GetConfigUpdate() {
     auto pipelineConfig = FetchPipelineConfig(HeartbeatResponse);
     if (!pipelineConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch pipelineConfig, config file number", pipelineConfig.size()));
-        UpdateRemoteConfig(pipelineConfig, mPipelineSourceDir);
+        UpdateRemotePipelineConfig(pipelineConfig);
     }
     if (!processConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch processConfig config, config file number", processConfig.size()));
-        UpdateRemoteConfig(processConfig, mProcessSourceDir);
+        UpdateRemoteProcessConfig(processConfig);
     }
 }
 
@@ -209,6 +248,7 @@ configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat
     heartbeatReq.set_running_status("running");
     heartbeatReq.set_startup_time(mStartTime);
 
+    lock_guard<mutex> infomaplock(mInfoMapMux);
     for (const auto& configInfo : mPipelineConfigInfoMap) {
         addConfigInfoToRequest(configInfo, heartbeatReq.add_pipeline_configs());
     }
@@ -220,15 +260,22 @@ configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat
         configserver::proto::v2::CommandInfo* command = heartbeatReq.add_custom_commands();
         command->set_type(configInfo.second.type);
         command->set_name(configInfo.second.name);
+        command->set_message(configInfo.second.message);
         switch (configInfo.second.status) {
-            case UNSET:
+            case ConfigFeedbackStatus::UNSET:
                 command->set_status(configserver::proto::v2::ConfigStatus::UNSET);
-            case APPLYING:
+                break;
+            case ConfigFeedbackStatus::APPLYING:
                 command->set_status(configserver::proto::v2::ConfigStatus::APPLYING);
-            case APPLIED:
+                break;
+            case ConfigFeedbackStatus::APPLIED:
                 command->set_status(configserver::proto::v2::ConfigStatus::APPLIED);
-            case FAILED:
+                break;
+            case ConfigFeedbackStatus::FAILED:
                 command->set_status(configserver::proto::v2::ConfigStatus::FAILED);
+                break;
+            case ConfigFeedbackStatus::DELETED:
+                break;
         }
         command->set_message(configInfo.second.message);
     }
@@ -296,14 +343,46 @@ CommonConfigProvider::FetchProcessConfig(configserver::proto::v2::HeartbeatRespo
     if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
         return FetchProcessConfigFromServer(heartbeatResponse);
     } else {
-        return std::move(heartbeatResponse.process_config_updates());
+        ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> result;
+        result.Swap(heartBeatResponse.mutable_process_config_updates());
+        return result;
     }
 }
 
-void CommonConfigProvider::UpdateRemoteConfig(
-    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs,
-    std::filesystem::path sourceDir) {
+bool CommonConfigProvider::DumpConfigFile(const configserver::proto::v2::ConfigDetail& config,
+                                          const filesystem::path& sourceDir) {
+    filesystem::path filePath = sourceDir / (config.name() + ".json");
+    filesystem::path tmpFilePath = sourceDir / (config.name() + ".json.new");
+    Json::Value detail;
+    std::string errorMsg;
+    if (!ParseConfigDetail(config.detail(), ".yaml", detail, errorMsg)) {
+        LOG_WARNING(sLogger, ("failed to parse config detail", config.detail()));
+        return false;
+    }
+    detail["version"] = config.version();
+    string configDetail = detail.toStyledString();
+    ofstream fout(tmpFilePath);
+    if (!fout) {
+        LOG_WARNING(sLogger, ("failed to open config file", filePath.string()));
+        return false;
+    }
+    fout << configDetail;
+
     error_code ec;
+    filesystem::rename(tmpFilePath, filePath, ec);
+    if (ec) {
+        LOG_WARNING(
+            sLogger,
+            ("failed to dump config file", filePath.string())("error code", ec.value())("error msg", ec.message()));
+        filesystem::remove(tmpFilePath, ec);
+    }
+    return true;
+}
+
+void CommonConfigProvider::UpdateRemotePipelineConfig(
+    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs) {
+    error_code ec;
+    const std::filesystem::path& sourceDir = mPipelineSourceDir;
     filesystem::create_directories(sourceDir, ec);
     if (ec) {
         StopUsingConfigServer();
@@ -314,29 +393,70 @@ void CommonConfigProvider::UpdateRemoteConfig(
     }
 
     lock_guard<mutex> lock(mMux);
+    lock_guard<mutex> infomaplock(mInfoMapMux);
     for (const auto& config : configs) {
-        filesystem::path filePath = sourceDir / (config.name() + ".yaml");
-        filesystem::path tmpFilePath = sourceDir / (config.name() + ".yaml.new");
+        filesystem::path filePath = sourceDir / (config.name() + ".json");
         if (config.version() == -1) {
-            mConfigNameVersionMap.erase(config.name());
+            mPipelineConfigInfoMap.erase(config.name());
             filesystem::remove(filePath, ec);
+            ConfigFeedbackReceiver::GetInstance().UnregisterPipelineConfig(config.name());
         } else {
-            string configDetail = config.detail();
-            mConfigNameVersionMap[config.name()] = config.version();
-            ofstream fout(tmpFilePath);
-            if (!fout) {
-                LOG_WARNING(sLogger, ("failed to open config file", filePath.string()));
+            if (!DumpConfigFile(config, sourceDir)) {
+                mPipelineConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
+                                                                   .version = config.version(),
+                                                                   .status = ConfigFeedbackStatus::FAILED,
+                                                                   .detail = config.detail()};
                 continue;
             }
-            fout << configDetail;
+            mPipelineConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
+                                                               .version = config.version(),
+                                                               .status = ConfigFeedbackStatus::APPLYING,
+                                                               .detail = config.detail()};
+            ConfigFeedbackReceiver::GetInstance().RegisterPipelineConfig(config.name(), this);
+        }
+    }
+}
 
-            error_code ec;
-            filesystem::rename(tmpFilePath, filePath, ec);
-            if (ec) {
-                LOG_WARNING(sLogger,
-                            ("failed to dump config file", filePath.string())("error code", ec.value())("error msg",
-                                                                                                        ec.message()));
-                filesystem::remove(tmpFilePath, ec);
+void CommonConfigProvider::UpdateRemoteProcessConfig(
+    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs) {
+    error_code ec;
+    const std::filesystem::path& sourceDir = mProcessSourceDir;
+    filesystem::create_directories(sourceDir, ec);
+    if (ec) {
+        StopUsingConfigServer();
+        LOG_ERROR(sLogger,
+                  ("failed to create dir for common configs", "stop receiving config from common config server")(
+                      "dir", sourceDir.string())("error code", ec.value())("error msg", ec.message()));
+        return;
+    }
+
+    lock_guard<mutex> lock(mMux);
+    lock_guard<mutex> infomaplock(mInfoMapMux);
+    for (const auto& config : configs) {
+        filesystem::path filePath = sourceDir / (config.name() + ".yaml");
+        if (config.version() == -1) {
+            mProcessConfigInfoMap.erase(config.name());
+            filesystem::remove(filePath, ec);
+            ConfigFeedbackReceiver::GetInstance().UnregisterProcessConfig(config.name());
+        } else {
+            filesystem::path filePath = sourceDir / (config.name() + ".json");
+            if (config.version() == -1) {
+                mProcessConfigInfoMap.erase(config.name());
+                filesystem::remove(filePath, ec);
+                ConfigFeedbackReceiver::GetInstance().UnregisterProcessConfig(config.name());
+            } else {
+                if (!DumpConfigFile(config, sourceDir)) {
+                    mProcessConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
+                                                                      .version = config.version(),
+                                                                      .status = ConfigFeedbackStatus::FAILED,
+                                                                      .detail = config.detail()};
+                    continue;
+                }
+                mProcessConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
+                                                                  .version = config.version(),
+                                                                  .status = ConfigFeedbackStatus::APPLYING,
+                                                                  .detail = config.detail()};
+                ConfigFeedbackReceiver::GetInstance().RegisterProcessConfig(config.name(), this);
             }
         }
     }
@@ -354,7 +474,7 @@ CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::He
         reqConfig->set_version(config.version());
     }
     string operation = sdk::CONFIGSERVERAGENT;
-    operation.append("/").append("FetchProcessConfig");
+    operation.append("/FetchProcessConfig");
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
     configserver::proto::v2::FetchConfigResponse emptyResult;
@@ -378,7 +498,7 @@ CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::H
         reqConfig->set_version(config.version());
     }
     string operation = sdk::CONFIGSERVERAGENT;
-    operation.append("/").append("FetchPipelineConfig");
+    operation.append("/FetchPipelineConfig");
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
     configserver::proto::v2::FetchConfigResponse emptyResult;
@@ -388,6 +508,37 @@ CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::H
     configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
     fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
     return std::move(fetchConfigResponsePb.config_details());
+}
+
+void CommonConfigProvider::FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
+    lock_guard<mutex> infomaplock(mInfoMapMux);
+    auto info = mPipelineConfigInfoMap.find(name);
+    if (info != mPipelineConfigInfoMap.end()) {
+        info->second.status = status;
+    }
+    LOG_DEBUG(sLogger,
+              ("CommonConfigProvider", "FeedbackPipelineConfigStatus")("name", name)("status", ToStringView(status)));
+}
+void CommonConfigProvider::FeedbackProcessConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
+    lock_guard<mutex> infomaplock(mInfoMapMux);
+    auto info = mProcessConfigInfoMap.find(name);
+    if (info != mProcessConfigInfoMap.end()) {
+        info->second.status = status;
+    }
+    LOG_DEBUG(sLogger,
+              ("CommonConfigProvider", "FeedbackProcessConfigStatus")("name", name)("status", ToStringView(status)));
+}
+void CommonConfigProvider::FeedbackCommandConfigStatus(const std::string& type,
+                                                       const std::string& name,
+                                                       ConfigFeedbackStatus status) {
+    lock_guard<mutex> infomaplock(mInfoMapMux);
+    auto info = mCommandInfoMap.find(type + '\1' + name);
+    if (info != mCommandInfoMap.end()) {
+        info->second.status = status;
+    }
+    LOG_DEBUG(sLogger,
+              ("CommonConfigProvider",
+               "FeedbackCommandConfigStatus")("type", type)("name", name)("status", ToStringView(status)));
 }
 
 } // namespace logtail
