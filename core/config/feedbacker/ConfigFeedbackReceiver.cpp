@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#pragma once
 
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 

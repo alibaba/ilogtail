@@ -334,7 +334,9 @@ CommonConfigProvider::FetchPipelineConfig(configserver::proto::v2::HeartbeatResp
     if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
         return FetchPipelineConfigFromServer(heartbeatResponse);
     } else {
-        return std::move(heartbeatResponse.pipeline_config_updates());
+        ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> result;
+        result.Swap(heartbeatResponse.mutable_pipeline_config_updates());
+        return result;
     }
 }
 
@@ -344,7 +346,7 @@ CommonConfigProvider::FetchProcessConfig(configserver::proto::v2::HeartbeatRespo
         return FetchProcessConfigFromServer(heartbeatResponse);
     } else {
         ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> result;
-        result.Swap(heartBeatResponse.mutable_process_config_updates());
+        result.Swap(heartbeatResponse.mutable_process_config_updates());
         return result;
     }
 }
