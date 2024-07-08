@@ -351,9 +351,9 @@ public:
     std::unique_ptr<Event> CreateFlushTimeoutEvent();
 
 protected:
-    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
-    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
-    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
+    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool tryRollback = true);
+    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool tryRollback = true);
+    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool tryRollback = true);
 
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);

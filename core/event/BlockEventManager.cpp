@@ -48,8 +48,9 @@ void BlockedEventManager::UpdateBlockEvent(const LogstoreFeedBackKey& logstoreKe
             .append(pEvent->GetConfigName());
         hashKey = HashSignatureString(key.c_str(), key.size());
     }
-    // LOG_DEBUG(sLogger, ("Add block event ", pEvent->GetSource())(pEvent->GetObject(),
-    // pEvent->GetInode())(pEvent->GetConfigName(), hashKey));
+    LOG_DEBUG(sLogger,
+              ("Add block event ", pEvent->GetSource())(pEvent->GetObject(),
+                                                        pEvent->GetInode())(pEvent->GetConfigName(), hashKey));
     ScopedSpinLock lock(mLock);
     mBlockEventMap[hashKey].Update(logstoreKey, pEvent, curTime);
 }
