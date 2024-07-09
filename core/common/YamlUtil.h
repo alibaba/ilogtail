@@ -23,6 +23,8 @@ namespace logtail {
 
 bool ParseYamlTable(const std::string& config, YAML::Node& yamlRoot, std::string& errorMsg);
 bool CheckYamlCycle(const YAML::Node& yamlRoot);
+bool UpdateLegacyConfigYaml(YAML::Node& yamlContent, std::string& errorMsg);
+void EmitYamlWithQuotes(const YAML::Node& node, YAML::Emitter& out);
 Json::Value ConvertYamlToJson(const YAML::Node& rootNode);
 Json::Value ParseScalar(const YAML::Node& node);
 

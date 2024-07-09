@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include "common/LogtailCommonFlags.h"
 
 namespace logtail {
 
