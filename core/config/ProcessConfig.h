@@ -45,6 +45,9 @@ struct ProcessConfig {
     ProcessConfig(const logtail::ProcessConfig& config) {
         mName = config.mName;
         mDetail = std::make_unique<Json::Value>(*config.mDetail);
+        mProject = "";
+        mLogstore = "";
+        mRegion = "";
     }
 
     ProcessConfig& operator=(ProcessConfig&& other) {
