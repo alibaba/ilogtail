@@ -37,7 +37,7 @@ using namespace std;
 
 namespace logtail {
 
-void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
+void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
@@ -195,7 +195,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #endif
 }
 
-shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configName) const {
+shared_ptr<Pipeline> PipelineManager::FindConfigByName(const string& configName) const {
     auto it = mPipelineNameEntityMap.find(configName);
     if (it != mPipelineNameEntityMap.end()) {
         return it->second;
@@ -203,7 +203,7 @@ shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configNam
     return nullptr;
 }
 
-vector<string> PipelineManager::GetAllPipelineNames() const {
+vector<string> PipelineManager::GetAllConfigNames() const {
     vector<string> res;
     for (const auto& item : mPipelineNameEntityMap) {
         res.push_back(item.first);
@@ -254,7 +254,7 @@ void PipelineManager::StopAllPipelines() {
     LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
 }
 
-shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
+shared_ptr<Pipeline> PipelineManager::BuildPipeline(PipelineConfig&& config) {
     shared_ptr<Pipeline> p = make_shared<Pipeline>();
     // only config.mDetail is removed, other members can be safely used later
     if (!p->Init(std::move(config))) {

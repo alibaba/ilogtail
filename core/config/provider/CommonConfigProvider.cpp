@@ -28,7 +28,7 @@
 #include "common/UUIDUtil.h"
 #include "common/YamlUtil.h"
 #include "common/version.h"
-#include "config/Config.h"
+#include "config/PipelineConfig.h"
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"

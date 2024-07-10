@@ -43,11 +43,13 @@
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
+#include "pipeline/ProcessConfigManager.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/daemon/LogProcess.h"
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
+#include "config/provider/EnterpriseConfigProviderV2.h"
 #include "config/provider/LegacyConfigProvider.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "shennong/ShennongManager.h"
@@ -194,20 +196,35 @@ void Application::Start() {
     // flusher_sls should always be loaded, since profiling will rely on this.
     Sender::Instance()->Init();
 
-    // add local config dir
-    filesystem::path localConfigPath
-        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
-    error_code ec;
-    filesystem::create_directories(localConfigPath, ec);
-    if (ec) {
-        LOG_WARNING(sLogger,
-                    ("failed to create dir for local config",
-                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+    {
+        // add local config dir
+        filesystem::path localConfigPath
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
+        error_code ec;
+        filesystem::create_directories(localConfigPath, ec);
+        if (ec) {
+            LOG_WARNING(sLogger,
+                        ("failed to create dir for local pipelineconfig",
+                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+        }
+        ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
     }
-    ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
-    ConfigWatcher::GetInstance()->AddProcessSource(localConfigPath.string());
+    {
+        // add local config dir
+        filesystem::path localConfigPath
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "processconfig" / "local";
+        error_code ec;
+        filesystem::create_directories(localConfigPath, ec);
+        if (ec) {
+            LOG_WARNING(sLogger,
+                        ("failed to create dir for local processconfig",
+                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+        }
+        ConfigWatcher::GetInstance()->AddProcessSource(localConfigPath.string());
+    }
 
 #ifdef __ENTERPRISE__
+    EnterpriseConfigProviderV2::GetInstance()->Init("enterprise_v2");
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
@@ -254,9 +271,13 @@ void Application::Start() {
             lastCheckTagsTime = curTime;
         }
         if (curTime - lastConfigCheckTime >= INT32_FLAG(config_scan_interval)) {
-            ConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
-            if (!diff.IsEmpty()) {
-                PipelineManager::GetInstance()->UpdatePipelines(diff);
+            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+            if (!pipelineConfigDiff.IsEmpty()) {
+                PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
+            }
+            ProcessConfigDiff processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
+            if (!processConfigDiff.IsEmpty()) {
+                ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
             }
             lastConfigCheckTime = curTime;
         }
@@ -329,6 +350,7 @@ void Application::Exit() {
     PluginRegistry::GetInstance()->UnloadPlugins();
 
 #ifdef __ENTERPRISE__
+    EnterpriseConfigProviderV2::GetInstance()->Stop();
     EnterpriseConfigProvider::GetInstance()->Stop();
     LegacyConfigProvider::GetInstance()->Stop();
 #else

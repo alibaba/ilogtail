@@ -42,11 +42,11 @@ private:
 const filesystem::path ConfigWatcherUnittest::configDir = "./config";
 
 void ConfigWatcherUnittest::InvalidConfigDirFound() const {
-    ConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
     APSARA_TEST_TRUE(diff.IsEmpty());
 
     { ofstream fout("config"); }
-    diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
+    diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
     APSARA_TEST_TRUE(diff.IsEmpty());
     filesystem::remove("config");
 }
@@ -61,7 +61,7 @@ void ConfigWatcherUnittest::InvalidConfigFileFound() const {
         ofstream fout(configDir / "invalid_format.json");
         fout << "[}";
     }
-    ConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
     APSARA_TEST_TRUE(diff.IsEmpty());
     filesystem::remove_all(configDir);
 }
@@ -93,7 +93,7 @@ void ConfigWatcherUnittest::DuplicateConfigs() const {
         )";
     }
     { ofstream fout("dir2/config.json"); }
-    ConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_EQUAL(1U, diff.mAdded.size());
 
