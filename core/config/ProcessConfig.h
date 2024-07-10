@@ -51,6 +51,9 @@ struct ProcessConfig {
         if (this != &other) {
             mName = std::move(other.mName);
             mDetail = std::move(other.mDetail);
+            mProject = "";
+            mLogstore = "";
+            mRegion = "";
         }
         return *this;
     }
