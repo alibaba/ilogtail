@@ -27,6 +27,7 @@ import (
 	"github.com/alibaba/ilogtail/test/engine/cleanup"
 	"github.com/alibaba/ilogtail/test/engine/control"
 	"github.com/alibaba/ilogtail/test/engine/setup"
+	"github.com/alibaba/ilogtail/test/engine/setup/monitor"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 	"github.com/alibaba/ilogtail/test/engine/trigger"
 	"github.com/alibaba/ilogtail/test/engine/verify"
@@ -87,10 +88,12 @@ func scenarioInitializer(ctx *godog.ScenarioContext) {
 
 	// When
 	ctx.When(`^generate \{(\d+)\} regex logs, with interval \{(\d+)\}ms$`, trigger.RegexSingle)
+	ctx.When(`^generate \{(\d+)\} logs every \{(\d+)\}ms, total \{(\d+)\}min, to file \{(.*)\}, template`, trigger.GenerateLogToFile)
 	ctx.When(`^generate \{(\d+)\} http logs, with interval \{(\d+)\}ms, url: \{(.*)\}, method: \{(.*)\}, body:`, trigger.HTTP)
 	ctx.When(`^add k8s label \{(.*)\}`, control.AddLabel)
 	ctx.When(`^remove k8s label \{(.*)\}`, control.RemoveLabel)
 	ctx.When(`^start docker-compose \{(\S+)\}`, setup.StartDockerComposeEnv)
+	ctx.When(`^start monitor \{(\S+)\}`, monitor.StartMonitor)
 
 	// Then
 	ctx.Then(`^there is \{(\d+)\} logs$`, verify.LogCount)
