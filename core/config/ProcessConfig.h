@@ -38,10 +38,10 @@ struct ProcessConfig {
 
     ProcessConfig(const std::string& name, std::unique_ptr<Json::Value>&& detail)
         : mName(name), mDetail(std::move(detail)) {
-            mProject = "";
-            mLogstore = "";
-            mRegion = "";
-        }
+        mProject = "";
+        mLogstore = "";
+        mRegion = "";
+    }
     ProcessConfig(const logtail::ProcessConfig& config) {
         mName = config.mName;
         mDetail = std::make_unique<Json::Value>(*config.mDetail);
