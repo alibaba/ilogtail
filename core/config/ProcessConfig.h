@@ -65,6 +65,9 @@ struct ProcessConfig {
         if (this != &other) {
             mName = other.mName;
             mDetail = std::make_unique<Json::Value>(*other.mDetail);
+            mProject = "";
+            mLogstore = "";
+            mRegion = "";
         }
         return *this;
     }
