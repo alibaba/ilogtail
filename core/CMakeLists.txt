@@ -105,10 +105,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
         batch application app_config checkpoint compression 
-        config config/watcher config/provider 
-        # config/common_provider 
-        # profile_sender
-        config_manager config_server_pb 
+        config config/watcher config/provider config_manager config_server_pb 
         container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
         queue reader sdk sender serializer sls_control fuse
