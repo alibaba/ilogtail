@@ -106,18 +106,18 @@ bool ProcessorSPL::Init(const Json::Value& config) {
                            mContext->GetRegion());                                       
     }
 
-    mSplExcuteErrorCount = GetMetricsRecordRef().CreateCounter("proc_spl_excute_error_count");
-    mSplExcuteTimeoutErrorCount = GetMetricsRecordRef().CreateCounter("proc_spl_excute_timeout_error_count");
-    mSplExcuteMemoryExceedErrorCount = GetMetricsRecordRef().CreateCounter("proc_spl_excute_memory_exceed_error_count");
+    mSplExcuteErrorCount = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_excute_error_count");
+    mSplExcuteTimeoutErrorCount = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_excute_timeout_error_count");
+    mSplExcuteMemoryExceedErrorCount = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_excute_memory_exceed_error_count");
 
     // spl raw statistic
-    mProcessMicros = GetMetricsRecordRef().CreateCounter("proc_spl_process_micros");
-    mInputMicros = GetMetricsRecordRef().CreateCounter("proc_spl_input_micros");
-    mOutputMicros = GetMetricsRecordRef().CreateCounter("proc_spl_output_micros");
-    mMemPeakBytes = GetMetricsRecordRef().CreateGauge("proc_spl_mem_peak_bytes");
-    mTotalTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_total_task_count");
-    mSuccTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_succ_task_count");
-    mFailTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_fail_task_count");
+    mProcessMicros = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_process_micros");
+    mInputMicros = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_input_micros");
+    mOutputMicros = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_output_micros");
+    mMemPeakBytes = GetMetricsRecordRef().GetOrCreateGauge("proc_spl_mem_peak_bytes");
+    mTotalTaskCount = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_total_task_count");
+    mSuccTaskCount = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_succ_task_count");
+    mFailTaskCount = GetMetricsRecordRef().GetOrCreateCounter("proc_spl_fail_task_count");
 
     return true;
 }

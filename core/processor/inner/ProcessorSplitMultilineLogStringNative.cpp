@@ -64,9 +64,9 @@ bool ProcessorSplitMultilineLogStringNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mProcMatchedEventsCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL);
-    mProcMatchedLinesCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL);
-    mProcUnmatchedLinesCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL);
+    mProcMatchedEventsCnt = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_RECORDS_TOTAL);
+    mProcMatchedLinesCnt = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_MATCHED_LINES_TOTAL);
+    mProcUnmatchedLinesCnt = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_SPLIT_MULTILINE_LOG_UNMATCHED_LINES_TOTAL);
 
     mSplitLines = &(mContext->GetProcessProfile().splitLines);
 

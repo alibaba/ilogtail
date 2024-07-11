@@ -75,9 +75,9 @@ bool ProcessorMergeMultilineLogNative::Init(const Json::Value& config) {
 
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 
-    mProcMergedEventsCnt = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL);
+    mProcMergedEventsCnt = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL);
     mProcUnmatchedEventsCnt
-        = GetMetricsRecordRef().CreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL);
+        = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL);
 
     return true;
 }

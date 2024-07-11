@@ -181,8 +181,8 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
-    mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
+    mProcFilterErrorTotal = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
+    mProcFilterRecordsTotal = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
 
     return true;
 }

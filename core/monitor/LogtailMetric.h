@@ -15,8 +15,9 @@
  */
 
 #pragma once
-#include <string>
 #include <atomic>
+#include <string>
+
 #include "common/Lock.h"
 #include "log_pb/sls_logs.pb.h"
 
@@ -33,7 +34,7 @@ public:
     uint64_t GetValue() const;
     const std::string& GetName() const;
     void Add(uint64_t val);
-    Counter* CopyAndReset();
+    Counter* Collect();
 };
 
 using CounterPtr = std::shared_ptr<Counter>;
@@ -48,7 +49,7 @@ public:
     uint64_t GetValue() const;
     const std::string& GetName() const;
     void Set(uint64_t val);
-    Gauge* CopyAndReset();
+    Gauge* Collect();
 };
 
 using GaugePtr = std::shared_ptr<Gauge>;
@@ -60,9 +61,12 @@ class MetricsRecord {
 private:
     LabelsPtr mLabels;
     std::atomic_bool mDeleted;
-    std::vector<CounterPtr> mCounters;
-    std::vector<GaugePtr> mGauges;
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, GaugePtr> mGauges;
     MetricsRecord* mNext = nullptr;
+
+    mutable ReadWriteLock mCountersReadWriteLock;
+    mutable ReadWriteLock mGaugesReadWriteLock;
 
 public:
     MetricsRecord(LabelsPtr labels);
@@ -70,11 +74,11 @@ public:
     void MarkDeleted();
     bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
-    const std::vector<CounterPtr>& GetCounters() const;
-    const std::vector<GaugePtr>& GetGauges() const;
-    CounterPtr CreateCounter(const std::string& name);
-    GaugePtr CreateGauge(const std::string& name);
-    MetricsRecord* CopyAndReset();
+    const std::unordered_map<std::string, CounterPtr>& GetCounters() const;
+    const std::unordered_map<std::string, GaugePtr>& GetGauges() const;
+    CounterPtr GetOrCreateCounter(const std::string& name);
+    GaugePtr GetOrCreateGauge(const std::string& name);
+    MetricsRecord* Collect();
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
 };
@@ -91,10 +95,12 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
-    CounterPtr CreateCounter(const std::string& name);
-    GaugePtr CreateGauge(const std::string& name);
+    CounterPtr GetOrCreateCounter(const std::string& name);
+    GaugePtr GetOrCreateGauge(const std::string& name);
     const MetricsRecord* operator->() const;
 };
+
+using MetricsRecordRefPtr = std::shared_ptr<MetricsRecordRef>;
 
 class WriteMetrics {
 private:

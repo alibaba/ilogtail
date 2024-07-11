@@ -115,11 +115,11 @@ bool ProcessorParseContainerLogNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcParseStdoutTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_STDOUT_TOTAL);
-    mProcParseStderrTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_STDERR_TOTAL);
+    mProcParseInSizeBytes = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcParseErrorTotal = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcParseStdoutTotal = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_PARSE_STDOUT_TOTAL);
+    mProcParseStderrTotal = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_PARSE_STDERR_TOTAL);
 
     return true;
 }

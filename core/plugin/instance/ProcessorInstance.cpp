@@ -34,9 +34,9 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
     }
 
     // should init plugin first， then could GetMetricsRecordRef from plugin
-    mProcInRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
-    mProcOutRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
-    mProcTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_TIME_MS);
+    mProcInRecordsTotal = mPlugin->GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
+    mProcOutRecordsTotal = mPlugin->GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
+    mProcTimeMS = mPlugin->GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_TIME_MS);
 
     return true;
 }

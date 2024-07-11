@@ -136,7 +136,7 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
                               mContext->GetRegion());
     }
 
-    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
+    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().GetOrCreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
 
     return true;
 }
