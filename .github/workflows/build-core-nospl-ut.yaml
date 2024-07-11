@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build Core Unit Test Without SPL
+name: Build Core NoSPL Unit Test
 
 on:
   pull_request:
@@ -66,10 +66,10 @@ jobs:
         with:
           submodules: true
 
-      - name: Build Unit Test Without SPL
+      - name: Build NoSPL Unit Test
         env:
           BUILD_LOGTAIL: OFF
-          BUILD_LOGTAIL_UT: ON
+          BUILD_LOGTAIL_NOSPL_UT: ON
           # ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
@@ -78,7 +78,7 @@ jobs:
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
         run: make core
 
-      - name: Unit Test Without SPL
+      - name: NoSPL Unit Test
         run: make unittest_core
 
   result:

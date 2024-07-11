@@ -69,11 +69,10 @@ jobs:
       - name: Build SPL Unit Test
         env:
           BUILD_LOGTAIL: OFF
-          BUILD_LOGTAIL_UT: ON
+          BUILD_LOGTAIL_SPL_UT: ON
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
-          ONLY_SPL_UT: ON
           MAKE_JOBS: 16
           # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
         run: make core

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 macro(all_link target_name)
-    if (BUILD_LOGTAIL_UT)
+    if (BUILD_LOGTAIL_NOSPL_UT OR BUILD_LOGTAIL_SPL_UT)
         link_gtest(${target_name})
     endif ()
     link_protobuf(${target_name})

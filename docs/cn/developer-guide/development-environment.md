@@ -144,10 +144,10 @@ cmake -D CMAKE_BUILD_TYPE=Debug ..
 
 同理，若需要明确需要代码优化，则将上面的Debug改为Release。
 
-默认的编译开关没有打开UT，如果需要编译UT，需要增加BUILD_LOGTAIL_UT开关。替换上述第2行为
+默认的编译开关没有打开UT，如果需要编译UT，需要增加BUILD_LOGTAIL_NOSPL_UT或BUILD_LOGTAIL_SPL_UT开关。替换上述第2行为
 
 ```bash
-cmake -DBUILD_LOGTAIL_UT=ON ..
+cmake -DBUILD_LOGTAIL_NOSPL_UT=ON ..
 ```
 
 - 制作镜像
