@@ -273,12 +273,10 @@ void ProcessorParseJsonNativeUnittest::TestAddLog() {
 
 void ProcessorParseJsonNativeUnittest::TestProcessJsonEscapedNullByte() {
     // make config
-    Json::Value config;
-    config["SourceKey"] = "content";
-    config["KeepingSourceWhenParseFail"] = true;
-    config["KeepingSourceWhenParseSucceed"] = false;
-    config["CopingRawLog"] = false;
-    config["RenamedSourceKey"] = "rawLog";
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mAdvancedConfig.mRawLogTag = "__raw__";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -298,14 +296,16 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonEscapedNullByte() {
         ]
     })";
     eventGroup.FromJsonString(inJson);
+
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
-    processorInstance.Process(eventGroupList);
+    processorInstance.Process(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -325,7 +325,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonEscapedNullByte() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 void ProcessorParseJsonNativeUnittest::TestProcessJson() {
