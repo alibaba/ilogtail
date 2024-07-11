@@ -16,11 +16,10 @@ func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, t
 	if !filepath.IsAbs(path) {
 		path = filepath.Join(config.CaseHome, path)
 	}
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
 	if err != nil {
 		return ctx, err
 	}
-	defer file.Close()
 
 	// interval = templateLen / speed
 	interval := time.Microsecond * time.Duration(len(templateStr)/speed)
@@ -33,8 +32,14 @@ func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, t
 	for {
 		select {
 		case <-ctx.Done(): // 上下文取消
+			if err := file.Close(); err != nil {
+				return ctx, err
+			}
 			return ctx, ctx.Err()
 		case <-timeout: // 总时间到
+			if err := file.Close(); err != nil {
+				return ctx, err
+			}
 			return ctx, nil
 		default:
 			if err := limiter.Wait(ctx); err != nil {

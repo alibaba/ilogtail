@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 
@@ -51,20 +52,28 @@ func StopMonitor(ctx context.Context) (context.Context, error) {
 
 func monitoring(client *client.Client, containerName string) {
 	// create csv file
-	reportDir := config.CaseHome + "/report/"
-	if _, err := os.Stat(reportDir); os.IsNotExist(err) {
+	reportDir := filepath.Join(config.CaseHome, "report")
+	reportDir, err := filepath.Abs(reportDir)
+	if err != nil {
+		log.Fatalf("Failed to get absolute path: %s", err)
+	}
+	if _, err = os.Stat(reportDir); os.IsNotExist(err) {
 		// 文件夹不存在，创建文件夹
-		err := os.MkdirAll(reportDir, 0755) // 使用适当的权限
+		err := os.MkdirAll(reportDir, 0750) // 使用适当的权限
 		if err != nil {
 			log.Fatalf("Failed to create folder: %s", err)
 		}
 	}
-	file, err := os.OpenFile(reportDir+"performance.csv", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	reportDir = filepath.Join(reportDir, "performance.csv")
+	reportDir, err = filepath.Abs(reportDir)
+	if err != nil {
+		log.Fatalf("Failed to get absolute path: %s", err)
+	}
+	file, err := os.OpenFile(reportDir+"performance.csv", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
 		return
 	}
-	defer file.Close()
 	header := "CPU Usage Max(%),CPU Usage Avg(%), Memory Usage Max(MB), Memory Usage Avg(MB)\n"
 	_, err = file.WriteString(header)
 	if err != nil {
@@ -81,6 +90,9 @@ func monitoring(client *client.Client, containerName string) {
 		select {
 		case <-stopCh:
 			fmt.Fprintln(file, monitorStatistic.cpu.maxVal, ",", monitorStatistic.cpu.avgVal, ",", monitorStatistic.mem.maxVal, ",", monitorStatistic.mem.avgVal)
+			if err = file.Close(); err != nil {
+				fmt.Println("Error closing file:", err)
+			}
 			return
 		case <-ticker.C:
 			// 获取容器信息
