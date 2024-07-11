@@ -1,5 +1,5 @@
 #include "provider.h"
-#include "config/provider/CommonConfigProvider.h"
+#include "config/common_provider/CommonConfigProvider.h"
 
 namespace logtail {
 
