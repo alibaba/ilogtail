@@ -33,6 +33,11 @@ option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHOUTSPL "Build Logtail and UT without SPL")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
 
+# provider选项和路径变量定义
+option(USE_EXTERNAL_PROVIDER "Use an external provider module" OFF)
+set(EXTERNAL_PROVIDER_PATH "" CACHE PATH "Path to the external provider module")
+
+
 if (ENABLE_ENTERPRISE)
     message(STATUS "Enable Enterprise Feature.")
     add_definitions(-D__ENTERPRISE__)
@@ -99,7 +104,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint compression config config/provider config/watcher config_manager config_server_pb 
+        batch application app_config checkpoint compression config 
+        # config/provider 
+        config/watcher config_manager config_server_pb 
         container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
         profile_sender queue reader sdk sender serializer sls_control fuse
@@ -168,6 +175,7 @@ if (LINUX)
     endif()
 endif()
 
+
 # Logtail executable or shared library.
 if (BUILD_LOGTAIL)
     if (ENABLE_ENTERPRISE)
@@ -218,6 +226,19 @@ endif ()
 add_subdirectory(go_pipeline)
 add_subdirectory(common)
 
+
+if(USE_EXTERNAL_PROVIDER)
+    if(EXTERNAL_PROVIDER_PATH STREQUAL "")
+        message(FATAL_ERROR "External provider path must be specified when USE_EXTERNAL_PROVIDER is ON")
+    endif()
+    add_subdirectory(${EXTERNAL_PROVIDER_PATH} provider)
+    include_directories(${EXTERNAL_PROVIDER_PATH})
+else()
+    add_subdirectory(provider)
+endif()
+
+
+
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     input_link(${LOGTAIL_TARGET})
@@ -225,4 +246,5 @@ if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     flusher_link(${LOGTAIL_TARGET})
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})
+    target_link_libraries(${LOGTAIL_TARGET} provider)
 endif()

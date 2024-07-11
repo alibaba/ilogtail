@@ -33,7 +33,7 @@
 
 using namespace std;
 
-DEFINE_FLAG_INT32(config_update_interval, "second", 10);
+DECLARE_FLAG_INT32(config_update_interval);
 
 namespace logtail {
 
