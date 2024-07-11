@@ -80,12 +80,12 @@ jobs:
       - name: Unit Test
         run: make unittest_core
 
-      - name: Generate Coverage Report
-        uses: codecov/codecov-action@v4.0.1
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@v1.3.0
         with:
-          file: coverage_core.info
-          token: ${{ secrets.CODECOV_TOKEN }}
-
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage_core.info
+  
   result:
     runs-on: arc-runner-set-ilogtail
     timeout-minutes: 90
