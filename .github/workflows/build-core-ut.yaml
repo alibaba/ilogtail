@@ -80,6 +80,12 @@ jobs:
       - name: Unit Test
         run: make unittest_core
 
+      - name: Generate Coverage Report
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          file: coverage_core.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   result:
     runs-on: arc-runner-set-ilogtail
     timeout-minutes: 90
