@@ -1,0 +1,11 @@
+sources:
+  input_file:
+    type: file
+    include:
+      - /home/vector-log/*.log
+
+sinks:
+  my_sink_id:
+    type: blackhole
+    inputs:
+      - input_file

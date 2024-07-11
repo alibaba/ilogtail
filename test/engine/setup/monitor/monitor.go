@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -24,20 +25,20 @@ var stopCh chan bool
 var isMonitoring atomic.Bool
 
 func StartMonitor(ctx context.Context, containerName string) (context.Context, error) {
-	stopCh = make(chan bool)
-	isMonitoring.Store(true)
 	// connect to cadvisor
 	client, err := client.NewClient("http://localhost:8080/")
 	if err != nil {
 		return ctx, err
 	}
 	// 获取机器信息
-	_, err = client.MachineInfo()
+	request := &v1.ContainerInfoRequest{NumStats: 10}
+	_, err = client.DockerContainer(containerName, request)
 	if err != nil {
-		// 处理错误
+		fmt.Println("Error getting container info:", err)
 		return ctx, err
 	}
-	// fmt.Println("Machine Info:", machineInfo)
+	stopCh = make(chan bool)
+	isMonitoring.Store(true)
 	fmt.Println("Start monitoring container:", containerName)
 	go monitoring(client, containerName)
 	return ctx, nil
@@ -59,26 +60,10 @@ func monitoring(client *client.Client, containerName string) {
 	}
 	if _, err = os.Stat(reportDir); os.IsNotExist(err) {
 		// 文件夹不存在，创建文件夹
-		err := os.MkdirAll(reportDir, 0750) // 使用适当的权限
+		err = os.MkdirAll(reportDir, 0750)
 		if err != nil {
 			log.Fatalf("Failed to create folder: %s", err)
 		}
-	}
-	reportDir = filepath.Join(reportDir, "performance.csv")
-	reportDir, err = filepath.Abs(reportDir)
-	if err != nil {
-		log.Fatalf("Failed to get absolute path: %s", err)
-	}
-	file, err := os.OpenFile(reportDir+"performance.csv", os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
-	if err != nil {
-		fmt.Println("Error creating file:", err)
-		return
-	}
-	header := "CPU Usage Max(%),CPU Usage Avg(%), Memory Usage Max(MB), Memory Usage Avg(MB)\n"
-	_, err = file.WriteString(header)
-	if err != nil {
-		fmt.Println("Error writring file header:", err)
-		return
 	}
 	// new ticker
 	ticker := time.NewTicker(interval * time.Second)
@@ -89,9 +74,16 @@ func monitoring(client *client.Client, containerName string) {
 	for {
 		select {
 		case <-stopCh:
-			fmt.Fprintln(file, monitorStatistic.cpu.maxVal, ",", monitorStatistic.cpu.avgVal, ",", monitorStatistic.mem.maxVal, ",", monitorStatistic.mem.avgVal)
-			if err = file.Close(); err != nil {
-				fmt.Println("Error closing file:", err)
+			isMonitoring.Store(false)
+			var builder strings.Builder
+			builder.WriteString("Metric,Value\n")
+			builder.WriteString(fmt.Sprintf("%s,%f\n", "CPU Usage Max(%)", monitorStatistic.cpu.maxVal))
+			builder.WriteString(fmt.Sprintf("%s,%f\n", "CPU Usage Avg(%)", monitorStatistic.cpu.avgVal))
+			builder.WriteString(fmt.Sprintf("%s,%f\n", "Memory Usage Max(MB)", monitorStatistic.mem.maxVal))
+			builder.WriteString(fmt.Sprintf("%s,%f\n", "Memory Usage Avg(MB)", monitorStatistic.mem.avgVal))
+			err = os.WriteFile(filepath.Join(reportDir, "monitor.csv"), []byte(builder.String()), 0600)
+			if err != nil {
+				log.Default().Printf("Failed to write monitor result: %s", err)
 			}
 			return
 		case <-ticker.C:

@@ -28,4 +28,4 @@ services:
     privileged: true
     devices:
       - /dev/kmsg
-    restart: unless-stopped
+    restart: always

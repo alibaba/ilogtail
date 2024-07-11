@@ -78,6 +78,7 @@ func TestMain(m *testing.M) {
 func scenarioInitializer(ctx *godog.ScenarioContext) {
 	// Given
 	ctx.Given(`^\{(\S+)\} environment$`, setup.InitEnv)
+	ctx.Given(`^docker-compose type \{(\S+)\}$`, setup.SetDockerComposeType)
 	ctx.Given(`^iLogtail depends on containers \{(.*)\}`, setup.SetDockerComposeDependOn)
 	ctx.Given(`^iLogtail container mount \{(.*)\} to \{(.*)\}`, setup.MountVolume)
 	ctx.Given(`^iLogtail expose port \{(.*)\} to \{(.*)\}`, setup.ExposePort)

@@ -1,0 +1,17 @@
+filebeat.inputs:
+- type: filestream
+  id: input-file
+  paths:
+    - /home/filebeat/a.log
+
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      process_array: false
+      max_depth: 1
+      target: ""
+      overwrite_keys: false
+      add_error_key: true
+
+output.discard:
+  enabled: true

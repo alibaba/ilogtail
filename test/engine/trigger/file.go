@@ -4,50 +4,48 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
-	"github.com/alibaba/ilogtail/test/config"
 	"golang.org/x/time/rate"
+
+	"github.com/alibaba/ilogtail/test/config"
 )
 
 func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, templateStr string) (context.Context, error) {
-	// 打开或创建文件
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(config.CaseHome, path)
-	}
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
-	if err != nil {
-		return ctx, err
-	}
+	// clear file
+	path = filepath.Join(config.CaseHome, path)
+	path = filepath.Clean(path)
+	_ = os.WriteFile(path, []byte{}, 0600)
+
+	command := fmt.Sprintf("echo '%s' >> %s", templateStr, path)
 
 	// interval = templateLen / speed
 	interval := time.Microsecond * time.Duration(len(templateStr)/speed)
 
 	limiter := rate.NewLimiter(rate.Every(interval), 1)
 
-	// 总时间控制
 	timeout := time.After(time.Minute * time.Duration(totalTime))
 
 	for {
 		select {
-		case <-ctx.Done(): // 上下文取消
-			if err := file.Close(); err != nil {
-				return ctx, err
-			}
+		// context is done
+		case <-ctx.Done():
+			// clear file
+			_ = os.WriteFile(path, []byte{}, 0600)
 			return ctx, ctx.Err()
-		case <-timeout: // 总时间到
-			if err := file.Close(); err != nil {
-				return ctx, err
-			}
+		// all time is done
+		case <-timeout:
+			// clear file
+			_ = os.WriteFile(path, []byte{}, 0600)
 			return ctx, nil
 		default:
 			if err := limiter.Wait(ctx); err != nil {
 				return ctx, err
 			}
-			if _, err := fmt.Fprintln(file, templateStr); err != nil {
-				return ctx, err
-			}
+			cmd := exec.Command("sh", "-c", command)
+			_ = cmd.Run()
 		}
 	}
 }
