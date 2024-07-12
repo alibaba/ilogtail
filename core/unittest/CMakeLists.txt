@@ -72,9 +72,22 @@ add_subdirectory(sdk)
 add_subdirectory(sender)
 add_subdirectory(serializer)
 
+if(USE_EXTERNAL_PROVIDER)
+    if(EXTERNAL_PROVIDER_PATH STREQUAL "")
+        message(FATAL_ERROR "External provider path must be specified when USE_EXTERNAL_PROVIDER is ON")
+    endif()
+    add_subdirectory(${EXTERNAL_PROVIDER_PATH} provider)
+    include_directories(${EXTERNAL_PROVIDER_PATH})
+else()
+    add_subdirectory(provider)
+endif()
+
+target_link_libraries(${PROJECT_NAME} provider)
+
 if (LINUX)
     if (NOT WITHOUTSPL)
         add_subdirectory(spl)
     endif ()
     add_subdirectory(observer)
 endif ()
+

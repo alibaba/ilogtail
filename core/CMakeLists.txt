@@ -235,7 +235,6 @@ else()
     add_subdirectory(provider)
 endif()
 
-target_link_libraries(${LOGTAIL_TARGET} provider)
 
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
@@ -244,4 +243,5 @@ if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     flusher_link(${LOGTAIL_TARGET})
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})    
+    target_link_libraries(${LOGTAIL_TARGET} provider)
 endif()
