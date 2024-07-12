@@ -211,6 +211,16 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
     endif()
 endif ()
 
+if(USE_EXTERNAL_PROVIDER)
+    if(EXTERNAL_PROVIDER_PATH STREQUAL "")
+        message(FATAL_ERROR "External provider path must be specified when USE_EXTERNAL_PROVIDER is ON")
+    endif()
+    add_subdirectory(${EXTERNAL_PROVIDER_PATH} provider)
+    include_directories(${EXTERNAL_PROVIDER_PATH})
+else()
+    add_subdirectory(provider)
+endif()
+
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
     message(STATUS "Build unittest.")
@@ -223,18 +233,6 @@ endif ()
 # add_subdirectory(helper)
 add_subdirectory(go_pipeline)
 add_subdirectory(common)
-
-
-if(USE_EXTERNAL_PROVIDER)
-    if(EXTERNAL_PROVIDER_PATH STREQUAL "")
-        message(FATAL_ERROR "External provider path must be specified when USE_EXTERNAL_PROVIDER is ON")
-    endif()
-    add_subdirectory(${EXTERNAL_PROVIDER_PATH} provider)
-    include_directories(${EXTERNAL_PROVIDER_PATH})
-else()
-    add_subdirectory(provider)
-endif()
-
 
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
