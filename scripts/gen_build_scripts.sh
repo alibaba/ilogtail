@@ -105,6 +105,7 @@ function generateCopyScript() {
     fi
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
       echo 'docker cp "$id":/src/core/build core/build' >>$COPY_SCRIPT_FILE
+      echo 'docker cp "$id":/src/core/log_pb core/log_pb' >>$COPY_SCRIPT_FILE
     fi
   else
     echo 'docker cp "$id":/src/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
