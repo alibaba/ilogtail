@@ -37,7 +37,3 @@ search_files() {
 # Maybe some unittest depend on relative paths, so execute in the unittest directory
 cd $TARGET_ARTIFACT_PATH
 search_files .
-
-# coverage
-docker build -t unittest_coverage -f ./docker/Dockerfile_coverage .
-docker run -v $(pwd):/src unittest_coverage
