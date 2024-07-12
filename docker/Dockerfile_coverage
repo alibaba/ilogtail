@@ -16,15 +16,16 @@ FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edit
 
 WORKDIR /src
 
+USER root
+
 # install python3.8
 RUN cd /opt && curl -O https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz && \
     tar -zxvf Python-3.8.12.tgz && cd Python-3.8.12 && \
     mkdir /usr/local/python3 && \
     ./configure --prefix=/usr/local/python3 && \
     make clean && make && make install && \
-    mv /usr/bin/python3 /usr/bin/python3.bak && mv /usr/bin/pip3 /usr/bin/pip3.bak && \
-    ln -s /usr/local/python3/bin/python3.8 /usr/bin/python3 && \
-    ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
+    cp /usr/local/python3/bin/python3.8 /usr/bin/python3 && \
+    cp /usr/local/python3/bin/pip3 /usr/bin/pip3
 RUN pip3 install gcovr==7.0
 
 ENTRYPOINT ["gcovr --root . --lcov coverage.lcov"]
