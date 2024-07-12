@@ -141,6 +141,16 @@ foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     list(APPEND SOURCE_FILES_LIST ${TEMP_SOURCE_FILES})
 endforeach (DIR_NAME)
 
+if(USE_EXTERNAL_PROVIDER)
+    if(EXTERNAL_PROVIDER_PATH STREQUAL "")
+        message(FATAL_ERROR "External provider path must be specified when USE_EXTERNAL_PROVIDER is ON")
+    endif()
+    add_subdirectory(${EXTERNAL_PROVIDER_PATH} provider)
+    include_directories(${EXTERNAL_PROVIDER_PATH})
+else()
+    add_subdirectory(provider)
+endif()
+
 if (ENABLE_ENTERPRISE)
     # remove several files in shennong/sdk
     list(REMOVE_ITEM SOURCE_FILES_LIST ${CMAKE_CURRENT_SOURCE_DIR}/shennong/sdk/sample.cpp)
@@ -210,16 +220,6 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
         endif()
     endif()
 endif ()
-
-if(USE_EXTERNAL_PROVIDER)
-    if(EXTERNAL_PROVIDER_PATH STREQUAL "")
-        message(FATAL_ERROR "External provider path must be specified when USE_EXTERNAL_PROVIDER is ON")
-    endif()
-    add_subdirectory(${EXTERNAL_PROVIDER_PATH} provider)
-    include_directories(${EXTERNAL_PROVIDER_PATH})
-else()
-    add_subdirectory(provider)
-endif()
 
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
