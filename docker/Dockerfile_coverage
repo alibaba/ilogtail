@@ -28,4 +28,4 @@ RUN cd /opt && curl -O https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tg
     cp /usr/local/python3/bin/pip3 /usr/bin/pip3
 RUN pip3 install gcovr==7.0
 
-ENTRYPOINT ["gcovr --root . --lcov coverage.lcov"]
+ENTRYPOINT ["bash", "-c", "gcovr --root . --lcov coverage.lcov"]
