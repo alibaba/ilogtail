@@ -32,8 +32,8 @@ cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT stat
 option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHOUTSPL "Build Logtail and UT without SPL")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
-
 option(USE_EXTERNAL_PROVIDER "Use an external provider module" OFF) # whether to use external provider
+
 set(EXTERNAL_PROVIDER_PATH "" CACHE PATH "Path to the external provider module") # external provider path
 
 
