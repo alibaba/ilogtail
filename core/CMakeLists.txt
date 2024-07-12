@@ -33,9 +33,8 @@ option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHOUTSPL "Build Logtail and UT without SPL")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
 
-# provider选项和路径变量定义
-option(USE_EXTERNAL_PROVIDER "Use an external provider module" OFF)
-set(EXTERNAL_PROVIDER_PATH "" CACHE PATH "Path to the external provider module")
+option(USE_EXTERNAL_PROVIDER "Use an external provider module" OFF) # whether to use external provider
+set(EXTERNAL_PROVIDER_PATH "" CACHE PATH "Path to the external provider module") # external provider path
 
 
 if (ENABLE_ENTERPRISE)
@@ -105,7 +104,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
         batch application app_config checkpoint compression 
-        config config/watcher config/provider config_manager config_server_pb 
+        config config/watcher config_manager config/provider
         container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
         queue reader sdk sender serializer sls_control fuse

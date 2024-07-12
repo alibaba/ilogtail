@@ -4,11 +4,15 @@ project(provider)
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 
 set(PROVIDER_SUB_DIRECTORIES_LIST    
-    profile_sender config/provider config/common_provider 
+    profile_sender config/common_provider config_server_pb 
 )
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
-    file(GLOB TEMP_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/../${DIR_NAME}/*.cpp")
+    file(GLOB TEMP_SOURCE_FILES 
+        "${CMAKE_CURRENT_SOURCE_DIR}/../${DIR_NAME}/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../${DIR_NAME}/*.cc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../${DIR_NAME}/*.c"
+        )
     list(APPEND LIB_SOURCE_FILES ${TEMP_SOURCE_FILES})
 endforeach()
 

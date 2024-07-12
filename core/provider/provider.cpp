@@ -3,11 +3,6 @@
 
 namespace logtail {
 
-// AttributesProvider* GetAttributesProvider() {
-//     static AttributesProvider instance;
-//     return &instance;
-// };
-
 ConfigProvider* GetRemoteConfigProvider() {   
     return CommonConfigProvider::GetInstance();
 };
