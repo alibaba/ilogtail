@@ -191,6 +191,7 @@ void Application::Start() {
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
 #endif
+    SenderQueueInterface::SetFeedback(ProcessQueueManager::GetInstance());
     // flusher_sls should always be loaded, since profiling will rely on this.
     Sender::Instance()->Init();
 
