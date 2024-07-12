@@ -74,8 +74,8 @@ CounterPtr MetricsRecord::GetOrCreateCounter(const std::string& name) {
             return it->second;
         }
     }
-    CounterPtr counterPtr = std::make_shared<Counter>(name);
     WriteLock lock(mCountersReadWriteLock);
+    CounterPtr counterPtr = std::make_shared<Counter>(name);
     mCounters.emplace(name, counterPtr);
     return counterPtr;
 }
@@ -87,8 +87,8 @@ GaugePtr MetricsRecord::GetOrCreateGauge(const std::string& name) {
             return it->second;
         }
     }
-    GaugePtr gaugePtr = std::make_shared<Gauge>(name);
     WriteLock lock(mGaugesReadWriteLock);
+    GaugePtr gaugePtr = std::make_shared<Gauge>(name);
     mGauges.emplace(name, gaugePtr);
     return gaugePtr;
 }
@@ -150,6 +150,10 @@ MetricsRecordRef::~MetricsRecordRef() {
 
 void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
+}
+
+const LabelsPtr& MetricsRecordRef::GetLabels() const {
+    return mMetrics->GetLabels();
 }
 
 CounterPtr MetricsRecordRef::GetOrCreateCounter(const std::string& name) {

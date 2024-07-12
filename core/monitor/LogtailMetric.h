@@ -95,6 +95,7 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
+    const LabelsPtr& GetLabels() const;
     CounterPtr GetOrCreateCounter(const std::string& name);
     GaugePtr GetOrCreateGauge(const std::string& name);
     const MetricsRecord* operator->() const;

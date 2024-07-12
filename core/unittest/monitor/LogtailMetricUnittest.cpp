@@ -264,7 +264,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     while (tmp) {
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
             std::pair<std::string, std::string> pair = *item;
-            LOG_INFO(sLogger, ("key", pair.first)("value", pair.second));
+            LOG_INFO(sLogger, ("step", "assert WriteMetrics count")("label_key", pair.first)("label_key", pair.second));
         }
         tmp = tmp->GetNext();
         count++;
@@ -276,7 +276,8 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
         std::unordered_map<std::string, CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
-            APSARA_TEST_EQUAL(values.at(0)->GetValue(), 0);
+            APSARA_TEST_EQUAL(values.begin()->second->GetValue(), 0);
+            LOG_INFO(sLogger, ("step", "assert writeMetric value")("counter_name", values.begin()->second->GetName())("counter_value", values.begin()->second->GetValue()));
         }
     }
 
@@ -284,6 +285,10 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     tmp = ReadMetrics::GetInstance()->GetHead();
     count = 0;
     while (tmp) {
+        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+            std::pair<std::string, std::string> pair = *item;
+            LOG_INFO(sLogger, ("step", "assert ReadMetrics count")("label_key", pair.first)("label_key", pair.second));
+        }
         tmp = tmp->GetNext();
         count++;
     }
@@ -295,7 +300,8 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
         std::unordered_map<std::string, CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
-            APSARA_TEST_EQUAL(values.at(0)->GetValue(), 111);
+            APSARA_TEST_EQUAL(values.begin()->second->GetValue(), 111);
+            LOG_INFO(sLogger, ("step", "assert readMetric value")("counter_name", values.begin()->second->GetName())("counter_value", values.begin()->second->GetValue()));
         }
     }
 
@@ -305,6 +311,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     fileCounter->Add(111UL);
 
     APSARA_TEST_EQUAL(fileCounter->GetValue(), 333);
+    LOG_INFO(sLogger, ("step", "after dosnapshot, add value again")("counter_name", fileCounter->GetName())("counter_value", fileCounter->GetValue()));
 
     MetricExportor::GetInstance()->PushMetrics(true);
     // assert ReadMetrics count
@@ -322,7 +329,8 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
         std::unordered_map<std::string, CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
-            APSARA_TEST_EQUAL(values.at(0)->GetValue(), 333);
+            APSARA_TEST_EQUAL(values.begin()->second->GetValue(), 333);
+            LOG_INFO(sLogger, ("step", "assert readMetric value")("counter_name", values.begin()->second->GetName())("counter_value", values.begin()->second->GetValue()));
         }
     }
     delete fileMetric1;

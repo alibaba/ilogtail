@@ -36,6 +36,10 @@ private:
     mutable std::shared_mutex mutex;
 
     GaugePtr mSizeGauge;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PluginMetricManagerUnittest;
+#endif
 };
 using PluginMetricManagerPtr = std::shared_ptr<PluginMetricManager>;
 
