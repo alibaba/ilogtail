@@ -81,7 +81,7 @@ jobs:
         run: make unittest_core
 
       - name: Unit Test Coverage
-        run: docker build -t unittest_coverage -f ./docker/Dockerfile_coverage . && docker run -v $(pwd):/src unittest_coverage
+        run: ls && docker build -t unittest_coverage -f ./docker/Dockerfile_coverage . && docker run -v $(pwd):/src unittest_coverage
 
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v3
