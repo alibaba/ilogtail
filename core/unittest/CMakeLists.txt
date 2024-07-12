@@ -71,6 +71,7 @@ add_subdirectory(reader)
 add_subdirectory(sdk)
 add_subdirectory(sender)
 add_subdirectory(serializer)
+add_subdirectory(prometheus)
 
 if (LINUX)
     if (NOT WITHOUTSPL)
