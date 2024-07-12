@@ -70,26 +70,25 @@ jobs:
         env:
           BUILD_LOGTAIL: OFF
           BUILD_LOGTAIL_UT: ON
-          ENABLE_COMPATIBLE_MODE: OFF
+          ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
           MAKE_JOBS: 16
-          # BUILD_TYPE: Debug # TODO: Uncomment when memory management is refined
-        run: make core
+        run: CURRENT_DIR=$(pwd) && sed -i "s|/src|$CURRENT_DIR|g" docker/Dockerfile_build && make core PATH_IN_DOCKER=$(pwd)
 
       - name: Unit Test
         run: make unittest_core
 
       - name: Unit Test Coverage
-        run: docker build -t unittest_coverage -f ./docker/Dockerfile_coverage . && docker run -v $(pwd):/src unittest_coverage
+        run: docker build -t unittest_coverage -f ./docker/Dockerfile_coverage . && docker run -v $(pwd):$(pwd) unittest_coverage bash -c "cd $(pwd)/core && gcovr --root . --lcov coverage.lcov --txt coverage.txt"
+
+      - name: Setup Python3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
       - name: Report code coverage
-        uses: zgosalvez/github-actions-report-lcov@v3
-        with:
-          coverage-files: coverage.info
-          minimum-coverage: 80
-          working-directory: .
-          update-comment: true
+        run: python3 tools/coverage-diff/main.py core/coverage.txt
 
   result:
     runs-on: arc-runner-set-ilogtail
