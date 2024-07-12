@@ -77,6 +77,19 @@ bool Mkdir(const std::string& dirPath) {
 #endif
 }
 
+bool Rename(const std::string& oldPath, const std::string& newPath) {
+    boost::filesystem::path old_path(oldPath);
+    boost::filesystem::path new_path(newPath);
+    if (boost::filesystem::exists(old_path)) {
+        try {
+            boost::filesystem::rename(old_path, new_path);
+        } catch (const boost::filesystem::filesystem_error& e) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool IsRelativePath(const std::string& path) {
     boost::filesystem::path checkPointFilePath(path);
     return checkPointFilePath.is_relative();
