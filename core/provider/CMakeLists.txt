@@ -30,8 +30,11 @@ foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
     list(APPEND LIB_SOURCE_FILES ${TEMP_SOURCE_FILES})
 endforeach()
 
-# ${SOURCE_FILES_LIST} is required here; otherwise, build core UT will fail.
-add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES_LIST} ${LIB_SOURCE_FILES})
+if (BUILD_LOGTAIL_UT)
+    add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES} ${SOURCE_FILES_LIST})
+else ()
+    add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
+endif ()
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
     target_include_directories(provider PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../${DIR_NAME})
