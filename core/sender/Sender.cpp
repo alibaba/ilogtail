@@ -1894,7 +1894,7 @@ bool Sender::TestEndpoint(const std::string& region, const std::string& endpoint
 bool Sender::IsProfileData(const string& region, const std::string& project, const std::string& logstore) {
     if ((logstore == "shennong_log_profile" || logstore == "logtail_alarm" || logstore == "logtail_status_profile"
          || logstore == "logtail_suicide_profile")
-        && (project == GetProfileSenderProvider()->GetProfileProjectName(region) || region == ""))
+        && (project == GetProfileSender()->GetProfileProjectName(region) || region == ""))
         return true;
     else
         return false;

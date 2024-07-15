@@ -44,9 +44,9 @@ void MetricExportor::PushMetrics(bool forceSend) {
         logGroup->set_source(LogFileProfiler::mIpAddr);
         logGroup->set_topic(METRIC_TOPIC_TYPE);
         if (METRIC_REGION_DEFAULT == iter->first) {
-            GetProfileSenderProvider()->SendToProfileProject(GetProfileSenderProvider()->GetDefaultProfileRegion(), *logGroup);
+            GetProfileSender()->SendToProfileProject(GetProfileSender()->GetDefaultProfileRegion(), *logGroup);
         } else {
-            GetProfileSenderProvider()->SendToProfileProject(iter->first, *logGroup);
+            GetProfileSender()->SendToProfileProject(iter->first, *logGroup);
         }
         delete logGroup;
     }

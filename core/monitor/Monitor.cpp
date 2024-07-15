@@ -275,7 +275,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "plugin_stats", PipelineManager::GetInstance()->GetPluginStatistics());
     // Metrics.
     vector<string> allProfileRegion;
-    GetProfileSenderProvider()->GetAllProfileRegion(allProfileRegion);
+    GetProfileSender()->GetAllProfileRegion(allProfileRegion);
     UpdateMetric("region", allProfileRegion);
 #ifdef __ENTERPRISE__
     UpdateMetric("config_update_count", EnterpriseConfigProvider::GetInstance()->GetConfigUpdateTotalCount());
@@ -321,10 +321,10 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
         }
 
         if (i == allProfileRegion.size() - 1) {
-            GetProfileSenderProvider()->SendToProfileProject(allProfileRegion[i], logGroup);
+            GetProfileSender()->SendToProfileProject(allProfileRegion[i], logGroup);
         } else {
             LogGroup copyLogGroup = logGroup;
-            GetProfileSenderProvider()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
+            GetProfileSender()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
         }
     }
     return true;

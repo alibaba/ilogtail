@@ -274,7 +274,7 @@ void LogIntegrity::SendLogIntegrityInfo() {
 
                 // send integrity log group
                 bool sendSucceeded
-                    = GetProfileSenderProvider()->SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
+                    = GetProfileSender()->SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
                 if (!sendSucceeded) {
                     LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
                                                            "push data integrity data into batch map fail",
@@ -840,7 +840,7 @@ void LogIntegrity::SendOutDatedFileIntegrityInfo() {
 
             // send integrity log group
             bool sendSucceeded
-                = GetProfileSenderProvider()->SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
+                = GetProfileSender()->SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
             if (!sendSucceeded) {
                 LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
                                                        "push data integrity data into batch map fail",

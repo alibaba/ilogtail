@@ -91,39 +91,18 @@ namespace sdk {
         if (curl == NULL)
             return NULL;
 
-        string totalURL = "";
-
-
-        if (url.find("http://") == std::string::npos && url.find("https://") == std::string::npos) {
-            // url is some string like: "/Agent/Heartbeat", use ip:port+url to compose the total url.
-            string protocol = httpsFlag ? "https://" : "http://";
-            totalURL.append(protocol);
-            if (!host.empty()) {
-                string hostIP;
-                if (AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled() && dnsCache->GetIPFromDnsCache(host, hostIP)) {
-                    totalURL.append(hostIP);
-                } else {
-                    totalURL.append(host);
-                }
-                totalURL.append(url); 
-            }
-        } else {            
-            totalURL.append(url); // directly use the input url. url is some stirng like: https://agent.org/Agent/Heartbeart
+        string totalUrl = httpsFlag ? "https://" : "http://";
+        std::string hostIP;
+        if (AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled() && dnsCache->GetIPFromDnsCache(host, hostIP)) {
+            totalUrl.append(hostIP);
+        } else {
+            totalUrl.append(host);
         }
-        
+        totalUrl.append(url);
         if (!queryString.empty()) {
-            totalURL.append("?").append(queryString);
+            totalUrl.append("?").append(queryString);
         }
-        curl_easy_setopt(curl, CURLOPT_URL, totalURL.c_str());
-
-        if (port <= 0) { // Assuming 0 is not a valid port
-            curl_easy_setopt(curl, CURLOPT_PORT, port);
-        }
-
-        if (headers != NULL) {
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        }        
-                 
+        curl_easy_setopt(curl, CURLOPT_URL, totalUrl.c_str());
         for (const auto& iter : header) {
             headers = curl_slist_append(headers, (iter.first + ":" + iter.second).c_str());
         }
@@ -142,10 +121,7 @@ namespace sdk {
         curl_easy_setopt(curl, CURLOPT_TCP_NODELAY, 1);
         curl_easy_setopt(curl, CURLOPT_NETRC, CURL_NETRC_IGNORED);
 
-        // Determine if the TOTAL URL has a HTTPS prefix
-        bool urlContainHTTPS = totalURL.find("https://") != std::string::npos;
-
-        if (urlContainHTTPS) {
+        if (httpsFlag) {
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
         }

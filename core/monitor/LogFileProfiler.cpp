@@ -260,7 +260,7 @@ void LogFileProfiler::SendProfileData(bool forceSend) {
             }
         }
         UpdateDumpData(logGroup, detail, logstore);
-        GetProfileSenderProvider()->SendToProfileProject(region, logGroup);
+        GetProfileSender()->SendToProfileProject(region, logGroup);
     } while (true);
     DumpToLocal(curTime, forceSend, detail, logstore);
     mLastSendTime = curTime;

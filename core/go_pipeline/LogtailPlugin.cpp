@@ -161,22 +161,22 @@ int LogtailPlugin::SendPbV2(const char* configName,
     FlusherSLS* pConfig = NULL;
     if (configNameStr == alarmConfig->mLogstore) {
         pConfig = alarmConfig;
-        pConfig->mProject = GetProfileSenderProvider()->GetDefaultProfileProjectName();
-        pConfig->mRegion = GetProfileSenderProvider()->GetDefaultProfileRegion();
+        pConfig->mProject = GetProfileSender()->GetDefaultProfileProjectName();
+        pConfig->mRegion = GetProfileSender()->GetDefaultProfileRegion();
         if (pConfig->mProject.empty()) {
             return 0;
         }
     } else if (configNameStr == profileConfig->mLogstore) {
         pConfig = profileConfig;
-        pConfig->mProject = GetProfileSenderProvider()->GetDefaultProfileProjectName();
-        pConfig->mRegion = GetProfileSenderProvider()->GetDefaultProfileRegion();
+        pConfig->mProject = GetProfileSender()->GetDefaultProfileProjectName();
+        pConfig->mRegion = GetProfileSender()->GetDefaultProfileRegion();
         if (pConfig->mProject.empty()) {
             return 0;
         }
     } else if (configNameStr == containerConfig->mLogstore) {
         pConfig = containerConfig;
-        pConfig->mProject = GetProfileSenderProvider()->GetDefaultProfileProjectName();
-        pConfig->mRegion = GetProfileSenderProvider()->GetDefaultProfileRegion();
+        pConfig->mProject = GetProfileSender()->GetDefaultProfileProjectName();
+        pConfig->mRegion = GetProfileSender()->GetDefaultProfileRegion();
         if (pConfig->mProject.empty()) {
             return 0;
         }

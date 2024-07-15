@@ -23,7 +23,7 @@ ConfigProvider* GetRemoteConfigProvider() {
     return CommonConfigProvider::GetInstance();
 };
 
-ProfileSender* GetProfileSenderProvider() {
+ProfileSender* GetProfileSender() {
     return ProfileSender::GetInstance();
 };
 

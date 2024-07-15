@@ -23,6 +23,6 @@ namespace logtail {
 
 ConfigProvider* GetRemoteConfigProvider();
 
-ProfileSender* GetProfileSenderProvider();    
+ProfileSender* GetProfileSender();    
 
 } // namespace logtail 
