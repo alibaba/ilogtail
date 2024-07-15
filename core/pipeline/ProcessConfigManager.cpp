@@ -15,29 +15,27 @@
  */
 
 #include "pipeline/ProcessConfigManager.h"
-#include "app_config/AppConfig.h"
 
 using namespace std;
 
 namespace logtail {
 
 ProcessConfigManager::ProcessConfigManager() {
-
 }
 
 void ProcessConfigManager::UpdateProcessConfigs(ProcessConfigDiff& diff) {
     bool changed = false;
-    for (auto & config : diff.mAdded) {
+    for (auto& config : diff.mAdded) {
         std::shared_ptr<ProcessConfig> configTmp(new ProcessConfig(config.mName, std::move(config.mDetail)));
         mProcessConfigMap[config.mName] = configTmp;
         changed = true;
     }
-    for (auto & config : diff.mModified) {
+    for (auto& config : diff.mModified) {
         std::shared_ptr<ProcessConfig> configTmp(new ProcessConfig(config.mName, std::move(config.mDetail)));
         mProcessConfigMap[config.mName] = configTmp;
         changed = true;
     }
-    for (auto & configName : diff.mRemoved) {
+    for (auto& configName : diff.mRemoved) {
         mProcessConfigMap.erase(configName);
         changed = true;
     }
@@ -50,16 +48,12 @@ void ProcessConfigManager::Update() {
     for (const auto& config : mProcessConfigMap) {
         for (auto it = config.second.get()->mDetail.get()->begin(); it != config.second.get()->mDetail.get()->end();
              ++it) {
-            if (it.name() == "max_bytes_per_sec" && it->isInt64()) {
-                AppConfig::GetInstance()->SetMaxBytePerSec(it->asInt64());
-            } else if (it.name() == "mem_usage_limit" && it->isDouble()) {
-                AppConfig::GetInstance()->SetMemUsageUpLimit(it->asDouble());
-            } else if (it.name() == "cpu_usage_limit" && it->isDouble()) {
-                AppConfig::GetInstance()->SetCpuUsageUpLimit(it->asDouble());
-            }
+            mConfig[it.name()] = *it;
         }
     }
-    AppConfig::GetInstance()->CheckAndAdjustParameters();
+    for (const auto& callback : callbacks) {
+        callback();
+    }
 }
 
 std::shared_ptr<ProcessConfig> ProcessConfigManager::FindConfigByName(const string& configName) const {
@@ -78,5 +72,85 @@ vector<string> ProcessConfigManager::GetAllConfigNames() const {
     return res;
 }
 
+bool ProcessConfigManager::GetProcessConfigBoolValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isBool()) {
+        isExist = true;
+        return mConfig[key].asBool();
+    }
+    isExist = false;
+    return false;
+}
+
+int ProcessConfigManager::GetProcessConfigIntValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isInt()) {
+        isExist = true;
+        return mConfig[key].asInt();
+    }
+    isExist = false;
+    return 0;
+}
+
+int64_t ProcessConfigManager::GetProcessConfigInt64Value(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isInt64()) {
+        isExist = true;
+        return mConfig[key].asInt64();
+    }
+    isExist = false;
+    return 0;
+}
+
+unsigned int ProcessConfigManager::GetProcessConfigUIntValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isUInt()) {
+        isExist = true;
+        return mConfig[key].asUInt();
+    }
+    isExist = false;
+    return 0;
+}
+
+uint64_t ProcessConfigManager::GetProcessConfigUInt64Value(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isUInt64()) {
+        isExist = true;
+        return mConfig[key].asUInt64();
+    }
+    isExist = false;
+    return 0;
+}
+
+double ProcessConfigManager::GetProcessConfigRealValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isDouble()) {
+        isExist = true;
+        return mConfig[key].asDouble();
+    }
+    isExist = false;
+    return 0.0;
+}
+
+std::string ProcessConfigManager::GetProcessConfigStringValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isString()) {
+        isExist = true;
+        return mConfig[key].asString();
+    }
+    isExist = false;
+    return "";
+}
+
+Json::Value ProcessConfigManager::GetProcessConfigArrayValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isArray()) {
+        isExist = true;
+        return mConfig[key];
+    }
+    isExist = false;
+    return Json::Value(Json::arrayValue);
+}
+
+Json::Value ProcessConfigManager::GetProcessConfigObjectValue(const std::string key, bool& isExist) {
+    if (mConfig.isMember(key) && mConfig[key].isObject()) {
+        isExist = true;
+        return mConfig[key];
+    }
+    isExist = false;
+    return Json::Value(Json::objectValue);
+}
 
 } // namespace logtail

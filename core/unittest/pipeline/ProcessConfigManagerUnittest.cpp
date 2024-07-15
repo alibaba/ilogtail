@@ -31,6 +31,7 @@ public:
 };
 
 void ProcessConfigManagerUnittest::TestUpdateProcessConfigs() const {
+    AppConfig::GetInstance();
     // Added
     {
         ProcessConfigDiff configDiff;

@@ -26,6 +26,7 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
+#include "pipeline/ProcessConfigManager.h"
 #include "reader/LogFileReader.h"
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
@@ -184,6 +185,32 @@ AppConfig::AppConfig() {
     mForceQuitReadTimeout = 7200;
     LoadEnvTags();
     CheckPurageContainerMode();
+    ProcessConfigManager::GetInstance()->RegisterCallback(std::bind(&AppConfig::GetProcessConfig, this));
+}
+
+void AppConfig::GetProcessConfig() {
+    {
+        bool isExist;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("max_bytes_per_sec", isExist);
+        if (isExist) {
+            mMaxBytePerSec = res;
+        }
+    }
+    {
+        bool isExist;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("mem_usage_limit", isExist);
+        if (isExist) {
+            mMemUsageUpLimit = res;
+        }
+    }
+    {
+        bool isExist;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("cpu_usage_limit", isExist);
+        if (isExist) {
+            mCpuUsageUpLimit = res;
+        }
+    }
+    CheckAndAdjustParameters();
 }
 
 void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson) {
