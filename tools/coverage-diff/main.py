@@ -4,14 +4,14 @@ import subprocess
 def get_changed_files():
     try:
         # Run the git command to get the list of changed files
-        result = subprocess.Popen('git diff --name-only', shell=True,
+        result = subprocess.Popen('git diff --name-only -r HEAD^1 HEAD', shell=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Split the result by new line to get each file name
-        out, err = result.communicate()  
+        out, err = result.communicate()
         changed_files = out.splitlines()
         result_files = []
         for file in changed_files:
-            fileStr = str(file)
+            fileStr = file.decode('utf-8')
             if fileStr.startswith('core'):
                 result_files.append(fileStr[5:])
         return result_files

@@ -65,15 +65,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+          fetch-depth: 2
 
       - name: Build Unit Test
         env:
           BUILD_LOGTAIL: OFF
           BUILD_LOGTAIL_UT: ON
-          ENABLE_COMPATIBLE_MODE: ON
+          ENABLE_COMPATIBLE_MODE: OFF
           ENABLE_STATIC_LINK_CRT: ON
           WITHOUTGDB: ON
-          MAKE_JOBS: 16
+          MAKE_JOBS: 8
         run: CURRENT_DIR=$(pwd) && sed -i "s|/src|$CURRENT_DIR|g" docker/Dockerfile_build && make core PATH_IN_DOCKER=$(pwd)
 
       - name: Unit Test
