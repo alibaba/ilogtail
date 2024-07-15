@@ -58,9 +58,7 @@ void TextParserUnittest::TestMetricEvent() const {
 UNIT_TEST_CASE(TextParserUnittest, TestMetricEvent)
 
 void TextParserUnittest::TestSampleRegex() const {
-    const auto &srcBuf = make_shared<SourceBuffer>();
-    const auto &parser = TextParser(srcBuf);
-    APSARA_TEST_TRUE(parser.Ok());
+    const auto &parser = TextParser();
     string name, labels, unwrapped_labels, value, suffix, timestamp;
     APSARA_TEST_TRUE(RE2::FullMatch(R"""(go_gc_duration_seconds{quantile="0"} 0)""", parser.mSampleRegex, RE2::Arg(&name), RE2::Arg(&labels), RE2::Arg(&unwrapped_labels), RE2::Arg(&value), RE2::Arg(&suffix), RE2::Arg(&timestamp)));
     APSARA_TEST_STREQ("go_gc_duration_seconds", name.data());
@@ -125,9 +123,7 @@ void TextParserUnittest::TestSampleRegex() const {
 UNIT_TEST_CASE(TextParserUnittest, TestSampleRegex)
 
 void TextParserUnittest::TestParseMultipleLines() const {
-    const auto &srcBuf = make_shared<SourceBuffer>();
-    auto parser = TextParser(srcBuf);
-    APSARA_TEST_TRUE(parser.Ok());
+    auto parser = TextParser();
     const auto eGroup = parser.Parse(R"""(
 # begin
 
@@ -148,9 +144,7 @@ test_metric8{k1="v1", k2="v2", } 9.9410452992e+10 1715829785083
 UNIT_TEST_CASE(TextParserUnittest, TestParseMultipleLines)
 
 void TextParserUnittest::TestParseMetricWithTagsAndTimestamp() const {
-    const auto &srcBuf = make_shared<SourceBuffer>();
-    auto parser = TextParser(srcBuf);
-    APSARA_TEST_TRUE(parser.Ok());
+    auto parser = TextParser();
     const auto eGroup = parser.Parse(R"""(test_metric{k1="v1", k2="v2"} 9.9410452992e+10 1715829785083)""");
     const auto &events = &eGroup.GetEvents();
     APSARA_TEST_EQUAL(1UL, events->size());
@@ -165,9 +159,7 @@ void TextParserUnittest::TestParseMetricWithTagsAndTimestamp() const {
 UNIT_TEST_CASE(TextParserUnittest, TestParseMetricWithTagsAndTimestamp)
 
 void TextParserUnittest::TestParseMetricWithManyTags() const {
-    const auto &srcBuf = make_shared<SourceBuffer>();
-    auto parser = TextParser(srcBuf);
-    APSARA_TEST_TRUE(parser.Ok());
+    auto parser = TextParser();
     const auto eGroup = parser.Parse(R"""(container_blkio_device_usage_total{container="",device="/dev/nvme0n1",id="/",image="",major="259",minor="0",name="",namespace="",operation="Async",pod=""} 9.9410452992e+10 1715829785083)""");
     const auto &events = &eGroup.GetEvents();
     APSARA_TEST_EQUAL(1UL, events->size());

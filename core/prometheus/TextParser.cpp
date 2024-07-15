@@ -16,15 +16,19 @@
 
 #include "prometheus/TextParser.h"
 
+#include <re2/re2.h>
+
 #include <boost/algorithm/string.hpp>
 #include <chrono>
 #include <cmath>
+#include <exception>
+#include <memory>
 #include <sstream>
 #include <string>
 
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "models/MetricEvent.h"
-#include "re2/re2.h"
 
 using namespace std;
 
@@ -48,7 +52,8 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     while (getline(iss, line)) {
         // trim line
-        boost::algorithm::trim(line);
+        // boost::algorithm::trim(line);
+        line = TrimString(line);
 
         // skip any empty line
         if (line.empty()) {
@@ -68,14 +73,17 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
         // argValue = "9.9410452992e+10"
         // argSuffix = " 1715829785083"
         // argTimestamp = "1715829785083"
-        RE2::FullMatch(line,
-                       mSampleRegex,
-                       RE2::Arg(&argName),
-                       RE2::Arg(&argLabels),
-                       RE2::Arg(&argUnwrappedLabels),
-                       RE2::Arg(&argValue),
-                       RE2::Arg(&argSuffix),
-                       RE2::Arg(&argTimestamp));
+        if (RE2::FullMatch(line,
+                           mSampleRegex,
+                           RE2::Arg(&argName),
+                           RE2::Arg(&argLabels),
+                           RE2::Arg(&argUnwrappedLabels),
+                           RE2::Arg(&argValue),
+                           RE2::Arg(&argSuffix),
+                           RE2::Arg(&argTimestamp))
+            == false) {
+            continue;
+        }
 
         // skip any sample that has no name
         if (argName.empty()) {
@@ -83,10 +91,11 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
         }
 
         // skip any sample that has a NaN value
-        double value;
+        double value = 0;
         try {
             value = stod(argValue);
         } catch (const exception&) {
+            LOG_WARNING(sLogger, ("invalid value", argValue));
             continue;
         }
         if (isnan(value)) {
@@ -117,13 +126,15 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
             string kvPair;
             istringstream iss(argUnwrappedLabels);
             while (getline(iss, kvPair, ',')) {
-                boost::algorithm::trim(kvPair);
+                // boost::algorithm::trim(kvPair);
+                kvPair = TrimString(kvPair);
 
                 size_t equalsPos = kvPair.find('=');
                 if (equalsPos != string::npos) {
                     string key = kvPair.substr(0, equalsPos);
                     string value = kvPair.substr(equalsPos + 1);
-                    boost::trim_if(value, boost::is_any_of("\""));
+                    // boost::trim_if(value, boost::is_any_of("\""));
+                    value = TrimString(value, '\"', '\"');
                     e->SetTag(key, value);
                 }
             }
@@ -137,14 +148,6 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
     }
 
     return eGroup;
-}
-
-bool TextParser::Ok() const {
-    return mErr == nullptr;
-}
-
-std::shared_ptr<std::exception> TextParser::Err() const {
-    return mErr;
 }
 
 } // namespace logtail
