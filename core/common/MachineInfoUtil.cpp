@@ -168,10 +168,10 @@ std::string GetHostName() {
     return std::string(hostname);
 }
 
-std::unordered_set<std::string> GetNicIpv4IPList() {
+std::unordered_set<std::string> GetNicIpv4IPSet() {
     struct ifaddrs* ifAddrStruct = NULL;
     void* tmpAddrPtr = NULL;
-    std::unordered_set<std::string> ipList;
+    std::unordered_set<std::string> ipSet;
     getifaddrs(&ifAddrStruct);
     for (struct ifaddrs* ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr == NULL) {
@@ -187,11 +187,11 @@ std::unordered_set<std::string> GetNicIpv4IPList() {
             if (0 == strcmp("lo", ifa->ifa_name) || ip.empty() || StartWith(ip, "127.")) {
                 continue;
             }
-            ipList.insert(std::move(ip));
+            ipSet.insert(std::move(ip));
         }
     }
     freeifaddrs(ifAddrStruct);
-    return ipList;
+    return ipSet;
 }
 
 std::string GetHostIpByHostName() {
@@ -222,22 +222,33 @@ std::string GetHostIpByHostName() {
     freeaddrinfo(res);
 
     std::string firstIp;
-    char ipStr[INET_ADDRSTRLEN + 1];
-    ipStr[INET_ADDRSTRLEN] = '\0';
+    char ipStr[INET_ADDRSTRLEN + 1] = "";
 #if defined(__linux__)
-    auto ipList = GetNicIpv4IPList();
-#endif
+    auto ipSet = GetNicIpv4IPSet();
     for (size_t i = 0; i < addrs.size(); ++i) {
         auto p = inet_ntop(AF_INET, &addrs[i].sin_addr, ipStr, INET_ADDRSTRLEN);
         if (p == nullptr) {
             continue;
         }
         auto tmp = std::string(ipStr);
-#if defined(__linux__)
-        if (ipList.find(tmp) != ipList.end()) {
+        if (ipSet.find(tmp) != ipSet.end()) {
             return tmp;
         }
+        if (i == 0) {
+            firstIp = tmp;
+            if (ipSet.empty()) {
+                LOG_INFO(sLogger, ("no entry from getifaddrs", "use first entry from getaddrinfo"));
+                return firstIp;
+            }
+        }
+    }
 #elif defined(_MSC_VER)
+    for (size_t i = 0; i < addrs.size(); ++i) {
+        auto p = inet_ntop(AF_INET, &addrs[i].sin_addr, ipStr, INET_ADDRSTRLEN);
+        if (p == nullptr) {
+            continue;
+        }
+        auto tmp = std::string(ipStr);
         // According to RFC 1918 (http://www.faqs.org/rfcs/rfc1918.html), private IP ranges are as bellow:
         //   10.0.0.0        -   10.255.255.255  (10/8 prefix)
         //   172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
@@ -252,17 +263,11 @@ std::string GetHostIpByHostName() {
             || tmp.find("172.31.") == 0) {
             return tmp;
         }
-#endif
         if (i == 0) {
             firstIp = tmp;
-#if defined(__linux__)
-            if (ipList.empty()) {
-                LOG_INFO(sLogger, ("no entry from getifaddrs", "use first entry from getaddrinfo"));
-                return firstIp;
-            }
-#endif
         }
     }
+#endif
     LOG_INFO(sLogger, ("no entry from getaddrinfo matches entry from getifaddrs", "use first entry from getaddrinfo"));
     return firstIp;
 }
@@ -322,9 +327,9 @@ std::string GetAnyAvailableIP() {
 #if defined(__linux__)
     std::string retIP;
     char host[NI_MAXHOST];
-    auto ipList = GetNicIpv4IPList();
-    if (!ipList.empty()) {
-        for (auto& ip : ipList) {
+    auto ipSet = GetNicIpv4IPSet();
+    if (!ipSet.empty()) {
+        for (auto& ip : ipSet) {
             struct sockaddr_in sa;
             sa.sin_family = AF_INET;
             sa.sin_port = 0;
