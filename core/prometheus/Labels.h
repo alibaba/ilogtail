@@ -36,39 +36,27 @@ struct Label {
 using LabelMap = std::map<std::string, std::string>;
 /// @brief Labels is a sorted set of labels. Order has to be guaranteed upon instantiation
 class Labels {
-private:
-    LabelMap labels;
-
-    // 现阶段metricEventPtr永远为空
-    MetricEvent* metricEventPtr = nullptr;
-
 public:
     Labels();
-    size_t size() const;
-    // void Bytes();
-    // void MatchLabels();
+    size_t Size() const;
     std::string Hash();
     void RemoveMetaLabels();
-    // void HashForLabels();
-    // void HashWithoutLabels();
-    // void BytesWithlabels();
-    // void BytesWithoutLabels();
-    // void Copy();
-    // void Has();
 
     std::string Get(const std::string&);
     void Reset(MetricEvent*);
-    void push_back(const Label&);
+    void Push(const Label&);
 
     void Range(const std::function<void(Label)>&);
 
-    // 提供对内部 set 的迭代器的访问
-    // LabelMap::iterator begin() { return labels.begin(); }
-    // LabelMap::iterator end() { return labels.end(); }
-
     // 为常量对象提供只读访问
-    LabelMap::const_iterator begin() const;
-    LabelMap::const_iterator end() const;
+    LabelMap::const_iterator Begin() const;
+    LabelMap::const_iterator End() const;
+
+private:
+    LabelMap mLabels;
+
+    // TODO: 现阶段metricEventPtr永远为空，后续作为适配器直接操作MetricEvent提高效率
+    MetricEvent* mMetricEventPtr = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LabelsUnittest;
@@ -76,12 +64,6 @@ public:
 };
 
 class LabelsBuilder {
-private:
-    Labels base;
-
-    std::vector<std::string> deleteLabelNameList;
-    std::vector<Label> addLabelList;
-
 public:
     LabelsBuilder();
     // LabelsBuilder(Labels);
@@ -97,6 +79,12 @@ public:
     Labels labels();
 
     void Range(const std::function<void(Label)>& closure);
+
+private:
+    Labels mBase;
+
+    std::vector<std::string> mDeleteLabelNameList;
+    std::vector<Label> mAddLabelList;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LabelsBuilderUnittest;

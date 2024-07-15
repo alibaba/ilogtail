@@ -25,7 +25,7 @@ namespace logtail {
 class LabelsUnittest : public testing::Test {
 public:
     void TestGet();
-    void Testpush_back();
+    void TestPush();
     void TestRange();
 
 private:
@@ -42,7 +42,7 @@ public:
 
 void LabelsUnittest::TestGet() {
     Labels labels;
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
 
     // 不存在返回空值
     APSARA_TEST_EQUAL("", labels.Get("hosts"));
@@ -51,10 +51,10 @@ void LabelsUnittest::TestGet() {
     APSARA_TEST_EQUAL("172.17.0.3:9100", labels.Get("host"));
 }
 
-void LabelsUnittest::Testpush_back() {
+void LabelsUnittest::TestPush() {
     Labels labels;
 
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
 
     // 存在Label{"host", "172.17.0.3:9100"}
     APSARA_TEST_EQUAL("172.17.0.3:9100", labels.Get("host"));
@@ -62,26 +62,28 @@ void LabelsUnittest::Testpush_back() {
 
 void LabelsUnittest::TestRange() {
     Labels labels;
+    map<string, string> testMap;
+    testMap["host"] = "172.17.0.3:9100";
+    testMap["ip"] = "172.17.0.3";
+    testMap["port"] = "9100";
 
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
-    string name = "host";
-    string value;
-    labels.Range([&name, &value](Label l) {
-        if (l.name == name) {
-            value = l.value;
-        }
-    });
+    labels.Push(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"ip", "172.17.0.3"});
+    labels.Push(Label{"port", "9100"});
 
-    APSARA_TEST_EQUAL("172.17.0.3:9100", value);
+    map<string, string> resMap;
+    labels.Range([&resMap](Label l) { resMap[l.name] = l.value; });
+
+    APSARA_TEST_EQUAL(testMap, resMap);
 }
 
 
 void LabelsBuilderUnittest::TestReset() {
     LabelsBuilder lb;
     Labels labels;
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
     lb.Reset(labels);
-    APSARA_TEST_EQUAL("172.17.0.3:9100", lb.base.Get("host"));
+    APSARA_TEST_EQUAL("172.17.0.3:9100", lb.mBase.Get("host"));
 }
 
 void LabelsBuilderUnittest::TestDeleteLabel() {
@@ -91,7 +93,7 @@ void LabelsBuilderUnittest::TestDeleteLabel() {
     vector<string> nameList{"host"};
     lb.DeleteLabel(nameList);
 
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
     lb.Reset(labels);
     APSARA_TEST_EQUAL("", lb.labels().Get("host"));
 }
@@ -99,7 +101,7 @@ void LabelsBuilderUnittest::TestDeleteLabel() {
 void LabelsBuilderUnittest::TestSet() {
     LabelsBuilder lb;
     Labels labels;
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
     lb.Reset(labels);
     APSARA_TEST_EQUAL("172.17.0.3:9100", lb.Get("host"));
 
@@ -115,7 +117,7 @@ void LabelsBuilderUnittest::TestSet() {
 void LabelsBuilderUnittest::TestGet() {
     LabelsBuilder lb;
     Labels labels;
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
     lb.Reset(labels);
     APSARA_TEST_EQUAL("172.17.0.3:9100", lb.Get("host"));
 }
@@ -123,7 +125,7 @@ void LabelsBuilderUnittest::TestGet() {
 void LabelsBuilderUnittest::TestLabels() {
     LabelsBuilder lb;
     Labels labels;
-    labels.push_back(Label{"host", "172.17.0.3:9100"});
+    labels.Push(Label{"host", "172.17.0.3:9100"});
     lb.Reset(labels);
 
     vector<string> nameList{"host"};
@@ -134,7 +136,7 @@ void LabelsBuilderUnittest::TestLabels() {
 }
 
 UNIT_TEST_CASE(LabelsUnittest, TestGet)
-UNIT_TEST_CASE(LabelsUnittest, Testpush_back)
+UNIT_TEST_CASE(LabelsUnittest, TestPush)
 UNIT_TEST_CASE(LabelsUnittest, TestRange)
 
 UNIT_TEST_CASE(LabelsBuilderUnittest, TestReset)

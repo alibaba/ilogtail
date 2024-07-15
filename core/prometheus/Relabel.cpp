@@ -16,6 +16,8 @@
 
 #include "Relabel.h"
 
+#include <openssl/md5.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/regex.hpp>
@@ -24,7 +26,7 @@
 #include <string>
 
 #include "ParamExtractor.h"
-#include "openssl/md5.h"
+#include "logger/Logger.h"
 
 using namespace std;
 
@@ -89,33 +91,33 @@ RelabelConfig::RelabelConfig(const Json::Value& config) {
     // }
 
     if (config.isMember("source_labels") && config["source_labels"].isArray()) {
-        GetOptionalListParam<string>(config, "source_labels", sourceLabels, errorMsg);
+        GetOptionalListParam<string>(config, "source_labels", mSourceLabels, errorMsg);
     }
 
     if (config.isMember("separator") && config["separator"].isString()) {
-        separator = config["separator"].asString();
+        mSeparator = config["separator"].asString();
     }
 
     if (config.isMember("target_label") && config["target_label"].isString()) {
-        targetLabel = config["target_label"].asString();
+        mTargetLabel = config["target_label"].asString();
     }
 
     if (config.isMember("regex") && config["regex"].isString()) {
         string re = config["regex"].asString();
-        regex = boost::regex(re);
+        mRegex = boost::regex(re);
     }
 
     if (config.isMember("replacement") && config["replacement"].isString()) {
-        replacement = config["replacement"].asString();
+        mReplacement = config["replacement"].asString();
     }
 
     if (config.isMember("action") && config["action"].isString()) {
         string actionString = config["action"].asString();
-        action = StringToAction(actionString);
+        mAction = StringToAction(actionString);
     }
 
     if (config.isMember("modulus") && config["modulus"].isUInt64()) {
-        modulus = config["modulus"].asUInt64();
+        mModulus = config["modulus"].asUInt64();
     }
 }
 
@@ -155,64 +157,62 @@ bool relabel::ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>
 
 bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
     vector<string> values;
-    for (auto item : cfg.sourceLabels) {
+    for (auto item : cfg.mSourceLabels) {
         values.push_back(lb.Get(item));
     }
-    string val = boost::algorithm::join(values, cfg.separator);
+    string val = boost::algorithm::join(values, cfg.mSeparator);
 
-    switch (cfg.action) {
+    switch (cfg.mAction) {
         case Action::drop: {
-            if (boost::regex_match(val, cfg.regex)) {
+            if (boost::regex_match(val, cfg.mRegex)) {
                 return false;
             }
             break;
         }
         case Action::keep: {
-            if (!boost::regex_match(val, cfg.regex)) {
+            if (!boost::regex_match(val, cfg.mRegex)) {
                 return false;
             }
             break;
         }
         case Action::dropequal: {
-            if (lb.Get(cfg.targetLabel) == val) {
+            if (lb.Get(cfg.mTargetLabel) == val) {
                 return false;
             }
             break;
         }
         case Action::keepequal: {
-            if (lb.Get(cfg.targetLabel) != val) {
+            if (lb.Get(cfg.mTargetLabel) != val) {
                 return false;
             }
             break;
         }
         case Action::replace: {
-            bool indexes = boost::regex_search(val, cfg.regex);
+            bool indexes = boost::regex_search(val, cfg.mRegex);
             // If there is no match no replacement must take place.
             if (!indexes) {
                 break;
             }
-            // target := model.LabelName(cfg.Regex.ExpandString([]byte{}, cfg.TargetLabel, val, indexes))
             // boost::format_all标志会因此再次匹配，此处禁用
             LabelName target
-                = LabelName(boost::regex_replace(val, cfg.regex, cfg.targetLabel, boost::format_first_only));
-            if (!target.isValid()) {
+                = LabelName(boost::regex_replace(val, cfg.mRegex, cfg.mTargetLabel, boost::format_first_only));
+            if (!target.Validate()) {
                 break;
             }
-            // res := cfg.Regex.ExpandString([]byte{}, cfg.Replacement, val, indexes)
-            string res = boost::regex_replace(val, cfg.regex, cfg.replacement, boost::format_first_only);
+            string res = boost::regex_replace(val, cfg.mRegex, cfg.mReplacement, boost::format_first_only);
             if (res.size() == 0) {
-                lb.DeleteLabel(target.labelName);
+                lb.DeleteLabel(target.mLabelName);
                 break;
             }
-            lb.Set(target.labelName, string(res));
+            lb.Set(target.mLabelName, string(res));
             break;
         }
         case Action::lowercase: {
-            lb.Set(cfg.targetLabel, boost::to_lower_copy(val));
+            lb.Set(cfg.mTargetLabel, boost::to_lower_copy(val));
             break;
         }
         case Action::uppercase: {
-            lb.Set(cfg.targetLabel, boost::to_upper_copy(val));
+            lb.Set(cfg.mTargetLabel, boost::to_upper_copy(val));
             break;
         }
         case Action::hashmod: {
@@ -223,16 +223,15 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             for (int i = 8; i < MD5_DIGEST_LENGTH; ++i) {
                 hashVal = (hashVal << 8) | digest[i];
             }
-            uint64_t mod = hashVal % cfg.modulus;
-            lb.Set(cfg.targetLabel, to_string(mod));
+            uint64_t mod = hashVal % cfg.mModulus;
+            lb.Set(cfg.mTargetLabel, to_string(mod));
             break;
         }
         case Action::labelmap: {
             lb.Range([&cfg, &lb](Label label) {
-                if (boost::regex_match(label.name, cfg.regex)) {
-                    // res := cfg.Regex.ReplaceAllString(l.Name, cfg.Replacement)
+                if (boost::regex_match(label.name, cfg.mRegex)) {
                     string res = boost::regex_replace(
-                        label.name, cfg.regex, cfg.replacement, boost::match_default | boost::format_all);
+                        label.name, cfg.mRegex, cfg.mReplacement, boost::match_default | boost::format_all);
                     lb.Set(res, label.value);
                 }
             });
@@ -240,7 +239,7 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
         }
         case Action::labeldrop: {
             lb.Range([&cfg, &lb](Label label) {
-                if (boost::regex_match(label.name, cfg.regex)) {
+                if (boost::regex_match(label.name, cfg.mRegex)) {
                     lb.DeleteLabel(label.name);
                 }
             });
@@ -248,7 +247,7 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
         }
         case Action::labelkeep: {
             lb.Range([&cfg, &lb](Label label) {
-                if (!boost::regex_match(label.name, cfg.regex)) {
+                if (!boost::regex_match(label.name, cfg.mRegex)) {
                     lb.DeleteLabel(label.name);
                 }
             });
@@ -256,18 +255,18 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
         }
         default:
             // error
-            printf("relabel: unknown relabel action type %s\n", ActionToString(cfg.action).c_str());
+            LOG_ERROR(sLogger, ("relabel: unknown relabel action type", ActionToString(cfg.mAction)));
             break;
     }
     return true;
 }
 LabelName::LabelName() {
 }
-LabelName::LabelName(std::string labelName) : labelName(labelName) {
+LabelName::LabelName(std::string labelName) : mLabelName(labelName) {
 }
 
 // TODO: UTF8Validation
-bool LabelName::isValid() {
+bool LabelName::Validate() {
     return true;
 }
 } // namespace logtail

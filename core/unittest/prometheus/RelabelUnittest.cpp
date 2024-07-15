@@ -85,22 +85,22 @@ void RelabelConfigUnittest::TestRelabelConfig() {
 
     RelabelConfig config = RelabelConfig(configJson);
 
-    APSARA_TEST_EQUAL(Action::keep, config.action);
+    APSARA_TEST_EQUAL(Action::keep, config.mAction);
     // APSARA_TEST_EQUAL("node-exporter", config.regex.get_data());
-    APSARA_TEST_EQUAL("$1", config.replacement);
-    APSARA_TEST_EQUAL(";", config.separator);
-    APSARA_TEST_EQUAL((size_t)1, config.sourceLabels.size());
-    APSARA_TEST_EQUAL("__meta_kubernetes_pod_label_app", config.sourceLabels[0]);
-    APSARA_TEST_EQUAL("__address__", config.targetLabel);
-    APSARA_TEST_EQUAL((uint64_t)222, config.modulus);
+    APSARA_TEST_EQUAL("$1", config.mReplacement);
+    APSARA_TEST_EQUAL(";", config.mSeparator);
+    APSARA_TEST_EQUAL((size_t)1, config.mSourceLabels.size());
+    APSARA_TEST_EQUAL("__meta_kubernetes_pod_label_app", config.mSourceLabels[0]);
+    APSARA_TEST_EQUAL("__address__", config.mTargetLabel);
+    APSARA_TEST_EQUAL((uint64_t)222, config.mModulus);
 }
 
 void RelabelConfigUnittest::TestProcess() {
     Json::Value configJson;
     string configStr, errorMsg;
     Labels labels;
-    labels.push_back(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    labels.push_back(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
+    labels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
+    labels.Push(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
     vector<RelabelConfig> cfgs;
 
     // single relabel replace
@@ -125,7 +125,7 @@ void RelabelConfigUnittest::TestProcess() {
     Labels result;
     relabel::Process(labels, cfgs, result);
 
-    APSARA_TEST_EQUAL((size_t)3, result.size());
+    APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3:9100", result.Get("__address__"));
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
@@ -147,7 +147,7 @@ void RelabelConfigUnittest::TestProcess() {
     cfgs.push_back(config);
     relabel::Process(labels, cfgs, result);
 
-    APSARA_TEST_EQUAL((size_t)2, result.size());
+    APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
 
     // single relabel drop
@@ -166,7 +166,7 @@ void RelabelConfigUnittest::TestProcess() {
     cfgs.clear();
     cfgs.push_back(config);
     relabel::Process(labels, cfgs, result);
-    APSARA_TEST_EQUAL((size_t)0, result.size());
+    APSARA_TEST_EQUAL((size_t)0, result.Size());
     APSARA_TEST_EQUAL("", result.Get("__meta_kubernetes_pod_label_app"));
 
     configStr.clear();
@@ -183,7 +183,7 @@ void RelabelConfigUnittest::TestProcess() {
     cfgs.clear();
     cfgs.push_back(config);
     relabel::Process(labels, cfgs, result);
-    APSARA_TEST_EQUAL((size_t)3, result.size());
+    APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("k8s_app"));
 
     // multi relabel
@@ -222,7 +222,7 @@ void RelabelConfigUnittest::TestProcess() {
     cfgs.push_back(config);
 
     relabel::Process(labels, cfgs, result);
-    APSARA_TEST_EQUAL((size_t)0, result.size());
+    APSARA_TEST_EQUAL((size_t)0, result.Size());
     APSARA_TEST_EQUAL("", result.Get("__address__"));
 }
 
