@@ -27,16 +27,75 @@ namespace logtail {
 
 class ProcessConfigManagerUnittest : public testing::Test {
 public:
-    void TestUpdateProcessConfigs() const;
+    void TestUpdateProcessConfigs();
+    void GetProcessConfig();
 };
 
-void ProcessConfigManagerUnittest::TestUpdateProcessConfigs() const {
+void ProcessConfigManagerUnittest::GetProcessConfig() {
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigBoolValue("bool", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, false);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigIntValue("int", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, -1);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("int64", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, -1000000);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUIntValue("uint", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, 10000);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUInt64Value("uint64", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, 100000000000);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigRealValue("double", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, 123123.1);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigStringValue("string", isExist);
+        APSARA_TEST_TRUE(isExist);
+        APSARA_TEST_EQUAL(res, "string");
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigArrayValue("array", isExist);
+        APSARA_TEST_TRUE(isExist);
+    }
+    {
+        bool isExist = false;
+        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigObjectValue("object", isExist);
+        APSARA_TEST_TRUE(isExist);
+    }
+}
+
+void ProcessConfigManagerUnittest::TestUpdateProcessConfigs() {
     AppConfig::GetInstance();
+    ProcessConfigManager::GetInstance()->RegisterCallback(
+        std::bind(&ProcessConfigManagerUnittest::GetProcessConfig, this));
+
     // Added
     {
         ProcessConfigDiff configDiff;
         std::string content
-            = R"({"enable": true,"max_bytes_per_sec": 1234, "mem_usage_limit":456, "cpu_usage_limit":2})";
+            = R"({"enable":true,"max_bytes_per_sec":1234,"mem_usage_limit":456,"cpu_usage_limit":2,"bool":false,"int":-1,"int64":-1000000,"uint":10000,"uint64":100000000000,"double":123123.1,"string":"string","array":[1,2,3],"object":{"a":1}})";
         std::string errorMsg;
         unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
         APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
@@ -60,7 +119,7 @@ void ProcessConfigManagerUnittest::TestUpdateProcessConfigs() const {
     {
         ProcessConfigDiff configDiff;
         std::string content
-            = R"({"enable": true,"max_bytes_per_sec": 1234, "mem_usage_limit":456, "cpu_usage_limit":2})";
+            = R"({"enable": true,"max_bytes_per_sec": 209715200, "mem_usage_limit":123, "cpu_usage_limit":4,"bool":false,"int":-1,"int64":-1000000,"uint":10000,"uint64":100000000000,"double":123123.1,"string":"string","array":[1,2,3],"object":{"a":1}})";
         std::string errorMsg;
         unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
         APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
@@ -73,11 +132,11 @@ void ProcessConfigManagerUnittest::TestUpdateProcessConfigs() const {
         APSARA_TEST_NOT_EQUAL(nullptr, ProcessConfigManager::GetInstance()->FindConfigByName("test1"));
         APSARA_TEST_EQUAL(nullptr, ProcessConfigManager::GetInstance()->FindConfigByName("test3"));
 
-        APSARA_TEST_EQUAL(1234U, AppConfig::GetInstance()->GetMaxBytePerSec());
-        APSARA_TEST_EQUAL(456U, AppConfig::GetInstance()->GetMemUsageUpLimit());
-        APSARA_TEST_EQUAL(2U, AppConfig::GetInstance()->GetCpuUsageUpLimit());
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->IsSendRandomSleep(), BOOL_FLAG(enable_send_tps_smoothing));
-        APSARA_TEST_EQUAL(AppConfig::GetInstance()->IsSendFlowControl(), BOOL_FLAG(enable_flow_control));
+        APSARA_TEST_EQUAL(209715200U, AppConfig::GetInstance()->GetMaxBytePerSec());
+        APSARA_TEST_EQUAL(123U, AppConfig::GetInstance()->GetMemUsageUpLimit());
+        APSARA_TEST_EQUAL(4U, AppConfig::GetInstance()->GetCpuUsageUpLimit());
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->IsSendRandomSleep(), false);
+        APSARA_TEST_EQUAL(AppConfig::GetInstance()->IsSendFlowControl(), false);
         APSARA_TEST_NOT_EQUAL(nullptr, ProcessConfigManager::GetInstance()->FindConfigByName("test1"));
     }
 
