@@ -1139,6 +1139,12 @@ void AppConfig::CheckAndAdjustParameters() {
         if (mSendRandomSleep)
             mSendRandomSleep = false;
         LOG_INFO(sLogger, ("send flow control", "disable")("send random sleep", "disable"));
+    } else {
+        mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
+        mSendFlowControl = BOOL_FLAG(enable_flow_control);
+        LOG_INFO(sLogger,
+                 ("send flow control", mSendFlowControl ? "enable" : "disable")(
+                     "send random sleep", mSendRandomSleep ? "enable" : "disable"));
     }
 }
 

@@ -41,9 +41,9 @@ public:
     std::vector<std::string> GetAllConfigNames() const;
 
 private:
-    ProcessConfigManager() = default;
+    ProcessConfigManager();
     ~ProcessConfigManager() = default;
-    std::unordered_map<std::string, std::shared_ptr<ProcessConfig>> mProcessConfigMap;
+    std::map<std::string, std::shared_ptr<ProcessConfig>> mProcessConfigMap;
     std::shared_ptr<ProcessConfig> BuildProcessConfig(ProcessConfig&& config);
     void Update();
 };
