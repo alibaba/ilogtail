@@ -46,6 +46,11 @@ private:
     std::map<std::string, std::shared_ptr<ProcessConfig>> mProcessConfigMap;
     std::shared_ptr<ProcessConfig> BuildProcessConfig(ProcessConfig&& config);
     void Update();
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    // friend class PipelineManagerMock;
+    friend class ProcessConfigManagerUnittest;
+#endif
 };
 
 } // namespace logtail
