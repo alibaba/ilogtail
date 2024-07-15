@@ -32,57 +32,115 @@ public:
 };
 
 void ProcessConfigManagerUnittest::GetProcessConfig() {
+    // Exist
     {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigBoolValue("bool", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, false);
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigBoolValue("bool", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, false);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigIntValue("int", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, -1);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("int64", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, -1000000);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUIntValue("uint", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, 10000);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUInt64Value("uint64", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, 100000000000);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigRealValue("double", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, 123123.1);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigStringValue("string", isExist);
+            APSARA_TEST_TRUE(isExist);
+            APSARA_TEST_EQUAL(res, "string");
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigArrayValue("array", isExist);
+            APSARA_TEST_TRUE(isExist);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigObjectValue("object", isExist);
+            APSARA_TEST_TRUE(isExist);
+        }
     }
+    // not Exist
     {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigIntValue("int", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, -1);
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("int64", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, -1000000);
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUIntValue("uint", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, 10000);
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUInt64Value("uint64", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, 100000000000);
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigRealValue("double", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, 123123.1);
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigStringValue("string", isExist);
-        APSARA_TEST_TRUE(isExist);
-        APSARA_TEST_EQUAL(res, "string");
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigArrayValue("array", isExist);
-        APSARA_TEST_TRUE(isExist);
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigObjectValue("object", isExist);
-        APSARA_TEST_TRUE(isExist);
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigBoolValue("bool1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, false);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigIntValue("int1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, 0);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("int641", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, 0);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUIntValue("uint1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, 0);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigUInt64Value("uint641", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, 0);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigRealValue("double1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, 0);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigStringValue("string1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+            APSARA_TEST_EQUAL(res, "");
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigArrayValue("array1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+        }
+        {
+            bool isExist = false;
+            auto res = ProcessConfigManager::GetInstance()->GetProcessConfigObjectValue("object1", isExist);
+            APSARA_TEST_TRUE(!isExist);
+        }
     }
 }
 
