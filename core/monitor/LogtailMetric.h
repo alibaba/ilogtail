@@ -21,6 +21,7 @@
 #include "common/Lock.h"
 #include "log_pb/sls_logs.pb.h"
 
+using namespace sls_logs;
 
 namespace logtail {
 
@@ -74,13 +75,15 @@ public:
     void MarkDeleted();
     bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
-    const std::unordered_map<std::string, CounterPtr>& GetCounters() const;
-    const std::unordered_map<std::string, GaugePtr>& GetGauges() const;
+    const std::unordered_map<std::string, CounterPtr> GetCounters() const;
+    const std::unordered_map<std::string, GaugePtr> GetGauges() const;
     CounterPtr GetOrCreateCounter(const std::string& name);
     GaugePtr GetOrCreateGauge(const std::string& name);
     MetricsRecord* Collect();
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
+    void ReportAsLog(Log* logPtr);
+    void ReportAsMap(std::unordered_map<std::string, std::string>& metricsMap);
 };
 
 class MetricsRecordRef {

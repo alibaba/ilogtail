@@ -20,9 +20,6 @@
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
 
-
-using namespace sls_logs;
-
 namespace logtail {
 
 Counter::Counter(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
@@ -105,12 +102,12 @@ const LabelsPtr& MetricsRecord::GetLabels() const {
     return mLabels;
 }
 
-const std::unordered_map<std::string, CounterPtr>& MetricsRecord::GetCounters() const {
+const std::unordered_map<std::string, CounterPtr> MetricsRecord::GetCounters() const {
     ReadLock lock(mCountersReadWriteLock);
     return mCounters;
 }
 
-const std::unordered_map<std::string, GaugePtr>& MetricsRecord::GetGauges() const {
+const std::unordered_map<std::string, GaugePtr> MetricsRecord::GetGauges() const {
     ReadLock lock(mGaugesReadWriteLock);
     return mGauges;
 }
@@ -140,6 +137,54 @@ MetricsRecord* MetricsRecord::GetNext() const {
 
 void MetricsRecord::SetNext(MetricsRecord* next) {
     mNext = next;
+}
+
+void MetricsRecord::ReportAsLog(Log* logPtr) {
+    for (auto item = mLabels->begin(); item != mLabels->end(); ++item) {
+        std::pair<std::string, std::string> pair = *item;
+        Log_Content* contentPtr = logPtr->add_contents();
+        contentPtr->set_key(LABEL_PREFIX + pair.first);
+        contentPtr->set_value(pair.second);
+    }
+    {
+        ReadLock lock(mCountersReadWriteLock);
+        for (auto& item : mCounters) {
+            CounterPtr counter = item.second;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(VALUE_PREFIX + counter->GetName());
+            contentPtr->set_value(ToString(counter->GetValue()));
+        }
+    }
+    {
+        ReadLock lock(mGaugesReadWriteLock);
+        for (auto& item : mGauges) {
+            GaugePtr gauge = item.second;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
+            contentPtr->set_value(ToString(gauge->GetValue()));
+        }
+    }
+}
+
+void MetricsRecord::ReportAsMap(std::unordered_map<std::string, std::string>& metricsMap) {
+    for (auto item = mLabels->begin(); item != mLabels->end(); ++item) {
+        std::pair<std::string, std::string> pair = *item;
+        metricsMap.emplace(LABEL_PREFIX + pair.first, pair.second);
+    }
+    {
+        ReadLock lock(mCountersReadWriteLock);
+        for (auto& item : mCounters) {
+            CounterPtr counter = item.second;
+            metricsMap.emplace(VALUE_PREFIX + counter->GetName(), ToString(counter->GetValue()));
+        }
+    }
+    {
+        ReadLock lock(mGaugesReadWriteLock);
+        for (auto& item : mGauges) {
+            GaugePtr gauge = item.second;
+            metricsMap.emplace(VALUE_PREFIX + gauge->GetName(), ToString(gauge->GetValue()));
+        }
+    }
 }
 
 MetricsRecordRef::~MetricsRecordRef() {
@@ -331,25 +376,7 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
         auto now = GetCurrentLogtailTime();
         SetLogTime(logPtr,
                    AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
-        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
-            std::pair<std::string, std::string> pair = *item;
-            Log_Content* contentPtr = logPtr->add_contents();
-            contentPtr->set_key(LABEL_PREFIX + pair.first);
-            contentPtr->set_value(pair.second);
-        }
-
-        for (auto& item : tmp->GetCounters()) {
-            CounterPtr counter = item.second;
-            Log_Content* contentPtr = logPtr->add_contents();
-            contentPtr->set_key(VALUE_PREFIX + counter->GetName());
-            contentPtr->set_value(ToString(counter->GetValue()));
-        }
-        for (auto& item : tmp->GetGauges()) {
-            GaugePtr gauge = item.second;
-            Log_Content* contentPtr = logPtr->add_contents();
-            contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
-            contentPtr->set_value(ToString(gauge->GetValue()));
-        }
+        tmp->ReportAsLog(logPtr);
         tmp = tmp->GetNext();
     }
 }
