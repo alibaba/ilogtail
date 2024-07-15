@@ -44,7 +44,6 @@ public:
     bool GetProcessConfigBoolValue(const std::string key, bool& isExist);
     int GetProcessConfigIntValue(const std::string key, bool& isExist);
     int64_t GetProcessConfigInt64Value(const std::string key, bool& isExist);
-
     unsigned int GetProcessConfigUIntValue(const std::string key, bool& isExist);
     uint64_t GetProcessConfigUInt64Value(const std::string key, bool& isExist);
     double GetProcessConfigRealValue(const std::string key, bool& isExist);
