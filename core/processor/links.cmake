@@ -1,4 +1,5 @@
-# Copyright 2022 iLogtail Authors
+
+# Copyright 2024 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,17 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# This file is used to link external source files in processor directory
 
-cmake_minimum_required(VERSION 3.22)
-project(checkpoint)
-
-file(GLOB LIB_SOURCE_FILES *.cpp *.h)
-append_source_files(LIB_SOURCE_FILES)
-add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} common)
-target_link_libraries(${PROJECT_NAME} logger)
-target_link_libraries(${PROJECT_NAME} monitor)
-target_link_libraries(${PROJECT_NAME} config_manager)
-target_link_libraries(${PROJECT_NAME} app_config)
-target_link_libraries(${PROJECT_NAME} input)
-link_leveldb(${PROJECT_NAME})
+macro(processor_link target_name)
+    link_re2(${target_name})
+    if (LINUX AND NOT WITHOUTSPL)
+        link_spl(${target_name})
+    endif ()
+    if (LINUX AND NOT WITHOUTSPL)
+        target_link_libraries(${target_name} spl)
+    endif ()
+    link_ssl(${target_name}) # must after link_spl
+    link_crypto(${target_name}) # must after link_spl
+endmacro()
