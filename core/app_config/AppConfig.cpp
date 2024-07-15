@@ -190,21 +190,21 @@ AppConfig::AppConfig() {
 
 void AppConfig::GetProcessConfig() {
     {
-        bool isExist;
+        bool isExist = false;
         auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("max_bytes_per_sec", isExist);
         if (isExist) {
             mMaxBytePerSec = res;
         }
     }
     {
-        bool isExist;
+        bool isExist = false;
         auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("mem_usage_limit", isExist);
         if (isExist) {
             mMemUsageUpLimit = res;
         }
     }
     {
-        bool isExist;
+        bool isExist = false;
         auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("cpu_usage_limit", isExist);
         if (isExist) {
             mCpuUsageUpLimit = res;
