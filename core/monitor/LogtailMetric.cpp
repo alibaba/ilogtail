@@ -56,7 +56,7 @@ const std::string& Gauge::GetName() const {
 }
 
 Gauge* Gauge::Collect() {
-    return new Gauge(mName, mVal.exchange(0));
+    return new Gauge(mName, mVal);
 }
 
 void Gauge::Set(uint64_t value) {
