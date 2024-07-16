@@ -20,7 +20,6 @@
 
 #include <string>
 
-#include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
 
 namespace logtail {
