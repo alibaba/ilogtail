@@ -187,7 +187,7 @@ void Application::Init() {
 }
 
 void Application::Start() {
-    LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S")); // LCOV_EXCL_START
+    LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
@@ -317,7 +317,7 @@ void Application::Start() {
         ConfigManager::GetInstance()->DeleteHandlers();
 
         this_thread::sleep_for(chrono::seconds(1));
-    } // LCOV_EXCL_STOP
+    }
 }
 
 void Application::GenerateInstanceId() {

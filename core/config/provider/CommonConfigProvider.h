@@ -70,13 +70,14 @@ public:
 
 protected:
     virtual configserver::proto::v2::HeartbeatRequest PrepareHeartbeat();
-    virtual configserver::proto::v2::HeartbeatResponse SendHeartbeat(configserver::proto::v2::HeartbeatRequest);
+    virtual bool SendHeartbeat(const configserver::proto::v2::HeartbeatRequest&,
+                               configserver::proto::v2::HeartbeatResponse&);
 
-    virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchProcessConfig(::configserver::proto::v2::HeartbeatResponse&);
+    virtual bool FetchProcessConfig(::configserver::proto::v2::HeartbeatResponse&,
+                                    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>&);
 
-    virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchPipelineConfig(::configserver::proto::v2::HeartbeatResponse&);
+    virtual bool FetchPipelineConfig(::configserver::proto::v2::HeartbeatResponse&,
+                                     ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>&);
 
     virtual std::string GetInstanceId();
     virtual void FillAttributes(::configserver::proto::v2::AgentAttributes& attributes);
@@ -85,14 +86,15 @@ protected:
     virtual void
     UpdateRemoteProcessConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs);
 
-    virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchProcessConfigFromServer(::configserver::proto::v2::HeartbeatResponse&);
-    virtual ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-    FetchPipelineConfigFromServer(::configserver::proto::v2::HeartbeatResponse&);
+    virtual bool
+    FetchProcessConfigFromServer(::configserver::proto::v2::HeartbeatResponse&,
+                                 ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>&);
+    virtual bool
+    FetchPipelineConfigFromServer(::configserver::proto::v2::HeartbeatResponse&,
+                                  ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>&);
 
     void CheckUpdateThread();
     void GetConfigUpdate();
-    bool GetConfigServerAvailable() { return mConfigServerAvailable; }
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
 
     int32_t mStartTime;
@@ -119,12 +121,11 @@ private:
     };
 
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
-    const std::unordered_map<std::string, std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
-    std::string SendHttpRequest(const std::string& operation,
-                                const std::string& reqBody,
-                                const std::string& emptyResultString,
-                                const std::string& configType);
+    bool SendHttpRequest(const std::string& operation,
+                         const std::string& reqBody,
+                         const std::string& configType,
+                         std::string& resp);
     void LoadConfigFile();
     bool DumpConfigFile(const configserver::proto::v2::ConfigDetail& config, const std::filesystem::path& sourceDir);
 

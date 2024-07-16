@@ -55,15 +55,31 @@ void CommonConfigProvider::Init(const string& dir) {
     const Json::Value& confJson = AppConfig::GetInstance()->GetConfig();
 
     // configserver path
-    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isArray()) {
-        for (Json::Value::ArrayIndex i = 0; i < confJson["ilogtail_configserver_address"].size(); ++i) {
+    /*** demo
+     * {
+     *     "config_server_list" : [
+     *         {
+     *             "cluster" : "community",
+     *             "endpoint_list" : ["test.config.com:80"]
+     *         }
+     * }
+     */
+    if (confJson.isObject() && confJson.isMember("config_server_list") && confJson["config_server_list"].isArray()
+        && confJson["config_server_list"].size() > 0 && confJson["config_server_list"][0].isObject()
+        && confJson["config_server_list"][0].isMember("endpoint_list")
+        && confJson["config_server_list"][0]["endpoint_list"].isArray()) {
+        for (Json::Value::ArrayIndex i = 0; i < confJson["config_server_list"][0]["endpoint_list"].size(); ++i) {
+            if (!confJson["config_server_list"][0]["endpoint_list"][i].isString()) {
+                continue;
+            }
             vector<string> configServerAddress
-                = SplitString(TrimString(confJson["ilogtail_configserver_address"][i].asString()), ":");
+                = SplitString(TrimString(confJson["config_server_list"][0]["endpoint_list"][i].asString()), ":");
 
             if (configServerAddress.size() != 2) {
-                LOG_WARNING(sLogger,
-                            ("ilogtail_configserver_address", "format error")(
-                                "wrong address", TrimString(confJson["ilogtail_configserver_address"][i].asString())));
+                LOG_WARNING(
+                    sLogger,
+                    ("configserver_address", "format error")(
+                        "wrong address", TrimString(confJson["config_server_list"][0]["endpoint_list"][i].asString())));
                 continue;
             }
 
@@ -71,14 +87,14 @@ void CommonConfigProvider::Init(const string& dir) {
             int32_t port = atoi(configServerAddress[1].c_str());
 
             if (port < 1 || port > 65535)
-                LOG_WARNING(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
+                LOG_WARNING(sLogger, ("configserver_address", "illegal port")("port", port));
             else
                 mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
         }
 
         mConfigServerAvailable = true;
         LOG_INFO(sLogger,
-                 ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
+                 ("configserver_address", confJson["config_server_list"][0]["endpoint_list"].toStyledString()));
     }
 
     // tags for configserver
@@ -116,7 +132,8 @@ void CommonConfigProvider::LoadConfigFile() {
         if (LoadConfigDetailFromFile(entry, detail)) {
             ConfigInfo info;
             info.name = entry.path().stem();
-            if (detail.isMember(CommonConfigProvider::configVersion) && detail[CommonConfigProvider::configVersion].isInt64()) {
+            if (detail.isMember(CommonConfigProvider::configVersion)
+                && detail[CommonConfigProvider::configVersion].isInt64()) {
                 info.version = detail[CommonConfigProvider::configVersion].asInt64();
             }
             info.status = ConfigFeedbackStatus::APPLYING;
@@ -130,7 +147,8 @@ void CommonConfigProvider::LoadConfigFile() {
         if (LoadConfigDetailFromFile(entry, detail)) {
             ConfigInfo info;
             info.name = entry.path().stem();
-            if (detail.isMember(CommonConfigProvider::configVersion) && detail[CommonConfigProvider::configVersion].isInt64()) {
+            if (detail.isMember(CommonConfigProvider::configVersion)
+                && detail[CommonConfigProvider::configVersion].isInt64()) {
                 info.version = detail[CommonConfigProvider::configVersion].asInt64();
             }
             info.status = ConfigFeedbackStatus::APPLYING;
@@ -214,18 +232,21 @@ void addConfigInfoToRequest(const std::pair<const string, logtail::ConfigInfo>& 
 }
 
 void CommonConfigProvider::GetConfigUpdate() {
-    if (!GetConfigServerAvailable()) {
+    if (!mConfigServerAvailable) {
         return;
     }
     auto heartbeatRequest = PrepareHeartbeat();
-    auto HeartbeatResponse = SendHeartbeat(heartbeatRequest);
-    auto processConfig = FetchProcessConfig(HeartbeatResponse);
-    auto pipelineConfig = FetchPipelineConfig(HeartbeatResponse);
-    if (!pipelineConfig.empty()) {
+    configserver::proto::v2::HeartbeatResponse heartbeatResponse;
+    if (!SendHeartbeat(heartbeatRequest, heartbeatResponse)) {
+        return;
+    }
+    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> pipelineConfig;
+    if (FetchPipelineConfig(heartbeatResponse, pipelineConfig) && !pipelineConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch pipelineConfig, config file number", pipelineConfig.size()));
         UpdateRemotePipelineConfig(pipelineConfig);
     }
-    if (!processConfig.empty()) {
+    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> processConfig;
+    if (FetchProcessConfig(heartbeatResponse, processConfig) && !processConfig.empty()) {
         LOG_DEBUG(sLogger, ("fetch processConfig config, config file number", processConfig.size()));
         UpdateRemoteProcessConfig(processConfig);
     }
@@ -242,7 +263,7 @@ configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat
     heartbeatReq.set_agent_type("LoongCollector");
     FillAttributes(*heartbeatReq.mutable_attributes());
 
-    for (auto tag : GetConfigServerTags()) {
+    for (auto tag : mConfigServerTags) {
         configserver::proto::v2::AgentGroupTag* agentGroupTag = heartbeatReq.add_tags();
         agentGroupTag->set_name(tag.first);
         agentGroupTag->set_value(tag.second);
@@ -284,25 +305,28 @@ configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat
     return heartbeatReq;
 }
 
-configserver::proto::v2::HeartbeatResponse
-CommonConfigProvider::SendHeartbeat(configserver::proto::v2::HeartbeatRequest heartbeatReq) {
+bool CommonConfigProvider::SendHeartbeat(const configserver::proto::v2::HeartbeatRequest& heartbeatReq,
+                                         configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
     string operation = sdk::CONFIGSERVERAGENT;
     operation.append("/").append("Heartbeat");
     string reqBody;
     heartbeatReq.SerializeToString(&reqBody);
     configserver::proto::v2::HeartbeatResponse emptyResult;
-    string emptyResultString;
-    emptyResult.SerializeToString(&emptyResultString);
-    auto heartbeatResp = SendHttpRequest(operation, reqBody, emptyResultString, "SendHeartbeat");
-    configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
-    heartbeatRespPb.ParseFromString(heartbeatResp);
-    return heartbeatRespPb;
+    std::string heartbeatResp;
+    if (SendHttpRequest(operation, reqBody, "SendHeartbeat", heartbeatResp)) {
+        configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
+        heartbeatRespPb.ParseFromString(heartbeatResp);
+        heartbeatResponse.Swap(&heartbeatRespPb);
+        return true;
+    } else {
+        return false;
+    }
 }
 
-string CommonConfigProvider::SendHttpRequest(const string& operation,
-                                             const string& reqBody,
-                                             const string& emptyResultString,
-                                             const string& configType) {
+bool CommonConfigProvider::SendHttpRequest(const string& operation,
+                                           const string& reqBody,
+                                           const string& configType,
+                                           std::string& resp) {
     ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
     map<string, string> httpHeader;
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
@@ -322,34 +346,35 @@ string CommonConfigProvider::SendHttpRequest(const string& operation,
                     httpResponse,
                     "",
                     false);
-        return httpResponse.content;
+        resp.swap(httpResponse.content);
+        return true;
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger,
                     (configType, "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage())(
                         "host", configServerAddress.host)("port", configServerAddress.port));
-        return emptyResultString;
+        return false;
     }
 }
 
-::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchPipelineConfig(configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
+bool CommonConfigProvider::FetchPipelineConfig(
+    configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
+    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& result) {
     if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
-        return FetchPipelineConfigFromServer(heartbeatResponse);
+        return FetchPipelineConfigFromServer(heartbeatResponse, result);
     } else {
-        ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> result;
         result.Swap(heartbeatResponse.mutable_pipeline_config_updates());
-        return result;
+        return true;
     }
 }
 
-::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchProcessConfig(configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
+bool CommonConfigProvider::FetchProcessConfig(
+    configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
+    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& result) {
     if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
-        return FetchProcessConfigFromServer(heartbeatResponse);
+        return FetchProcessConfigFromServer(heartbeatResponse, result);
     } else {
-        ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> result;
         result.Swap(heartbeatResponse.mutable_process_config_updates());
-        return result;
+        return true;
     }
 }
 
@@ -466,8 +491,9 @@ void CommonConfigProvider::UpdateRemoteProcessConfig(
     }
 }
 
-::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
+bool CommonConfigProvider::FetchProcessConfigFromServer(
+    ::configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
+    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& res) {
     configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
     string requestID = sdk::Base64Enconde(string("FetchProcessConfig").append(to_string(time(NULL))));
     fetchConfigRequest.set_request_id(requestID);
@@ -482,16 +508,19 @@ CommonConfigProvider::FetchProcessConfigFromServer(::configserver::proto::v2::He
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
     configserver::proto::v2::FetchConfigResponse emptyResult;
-    string emptyResultString;
-    emptyResult.SerializeToString(&emptyResultString);
-    string fetchConfigResponse = SendHttpRequest(operation, reqBody, emptyResultString, "FetchProcessConfig");
-    configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
-    fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
-    return std::move(fetchConfigResponsePb.config_details());
+    string fetchConfigResponse;
+    if (SendHttpRequest(operation, reqBody, "FetchProcessConfig", fetchConfigResponse)) {
+        configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
+        fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
+        res.Swap(fetchConfigResponsePb.mutable_config_details());
+        return true;
+    }
+    return false;
 }
 
-::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>
-CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
+bool CommonConfigProvider::FetchPipelineConfigFromServer(
+    ::configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
+    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& res) {
     configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
     string requestID = sdk::Base64Enconde(string("FetchPipelineConfig").append(to_string(time(NULL))));
     fetchConfigRequest.set_request_id(requestID);
@@ -506,12 +535,14 @@ CommonConfigProvider::FetchPipelineConfigFromServer(::configserver::proto::v2::H
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
     configserver::proto::v2::FetchConfigResponse emptyResult;
-    string emptyResultString;
-    emptyResult.SerializeToString(&emptyResultString);
-    string fetchConfigResponse = SendHttpRequest(operation, reqBody, emptyResultString, "FetchPipelineConfig");
-    configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
-    fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
-    return std::move(fetchConfigResponsePb.config_details());
+    string fetchConfigResponse;
+    if (SendHttpRequest(operation, reqBody, "FetchPipelineConfig", fetchConfigResponse)) {
+        configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
+        fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
+        res.Swap(fetchConfigResponsePb.mutable_config_details());
+        return true;
+    }
+    return false;
 }
 
 void CommonConfigProvider::FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
