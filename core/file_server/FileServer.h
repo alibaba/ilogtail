@@ -22,6 +22,7 @@
 
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
+#include "monitor/PluginMetricManager.h"
 #include "pipeline/PipelineContext.h"
 #include "reader/FileReaderOptions.h"
 
@@ -64,6 +65,17 @@ public:
     void SaveContainerInfo(const std::string& pipeline, const std::shared_ptr<std::vector<ContainerInfo>>& info);
     std::shared_ptr<std::vector<ContainerInfo>> GetAndRemoveContainerInfo(const std::string& pipeline);
     void ClearContainerInfo();
+
+    ReusableMetricsRecordRef GetOrCreateReusableMetricsRecordRef(const std::string& name, MetricLabels& labels);
+    void ReleaseReusableMetricsRecordRef(const std::string& name, MetricLabels& labels);
+
+    PluginMetricManagerPtr GetPluginMetricManager(const std::string& name) const;
+    const std::unordered_map<std::string, PluginMetricManagerPtr>& GetAllMetricRecordSetDefinitions() const {
+        return mPipelineNamePluginMetricManagersMap;
+    }
+    void AddPluginMetricManager(const std::string& name, PluginMetricManagerPtr PluginMetricManager);
+    void RemovePluginMetricManager(const std::string& name);
+
     // 过渡使用
     void Resume(bool isConfigUpdate = true);
     void Stop();
@@ -82,6 +94,7 @@ private:
     std::unordered_map<std::string, FileReaderConfig> mPipelineNameFileReaderConfigsMap;
     std::unordered_map<std::string, MultilineConfig> mPipelineNameMultilineConfigsMap;
     std::unordered_map<std::string, std::shared_ptr<std::vector<ContainerInfo>>> mAllContainerInfoMap;
+    std::unordered_map<std::string, PluginMetricManagerPtr> mPipelineNamePluginMetricManagersMap;
     // 过渡使用
     std::unordered_map<std::string, uint32_t> mPipelineNameEOConcurrencyMap;
 };

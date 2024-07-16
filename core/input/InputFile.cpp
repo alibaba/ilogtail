@@ -23,6 +23,7 @@
 #include "common/ParamExtractor.h"
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
 #include "plugin/PluginRegistry.h"
@@ -38,6 +39,11 @@ DEFINE_FLAG_INT32(max_exactly_once_concurrency, "", 512);
 namespace logtail {
 
 const string InputFile::sName = "input_file";
+
+const std::vector<std::string> fileMetricRecordCounterKeys
+    = {INPUT_RECORDS_TOTAL, INPUT_RECORDS_SIZE_BYTES, INPUT_BATCH_TOTAL, INPUT_READ_TOTAL};
+const std::vector<std::string> fileMetricRecordGaugeKeys
+    = {INPUT_FILE_SIZE_BYTES, INPUT_FILE_READ_DELAY_TIME_MS, INPUT_FILE_OFFSET_BYTES};
 
 bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
@@ -155,10 +161,16 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
         mContext->SetExactlyOnceFlag(true);
     }
 
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateGauge(INPUT_FILE_MONITOR_TOTAL);
+    mPluginMetricManager = std::make_shared<PluginMetricManager>(
+        GetMetricsRecordRef()->GetLabels(), fileMetricRecordCounterKeys, fileMetricRecordGaugeKeys);
+    mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
+
     return CreateInnerProcessors(pluginIdx);
 }
 
 bool InputFile::Start() {
+    FileServer::GetInstance()->AddPluginMetricManager(mContext->GetConfigName(), mPluginMetricManager);
     if (mEnableContainerDiscovery) {
         mFileDiscovery.SetContainerInfo(
             FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
@@ -178,6 +190,7 @@ bool InputFile::Stop(bool isPipelineRemoving) {
     FileServer::GetInstance()->RemoveFileReaderConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveExactlyOnceConcurrency(mContext->GetConfigName());
+    FileServer::GetInstance()->RemovePluginMetricManager(mContext->GetConfigName());
     return true;
 }
 

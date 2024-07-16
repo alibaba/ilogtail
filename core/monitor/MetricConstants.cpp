@@ -34,6 +34,21 @@ const std::string LABEL_CONFIG_NAME = "config_name";
 const std::string LABEL_PLUGIN_NAME = "plugin_name";
 const std::string LABEL_PLUGIN_ID = "plugin_id";
 
+// input file plugin labels
+const std::string LABEL_FILE_DEV = "file_dev";
+const std::string LABEL_FILE_INODE = "file_inode";
+const std::string LABEL_FILE_NAME = "file_name";
+
+// input file metrics
+const std::string INPUT_RECORDS_TOTAL = "input_records_total"; 
+const std::string INPUT_RECORDS_SIZE_BYTES = "input_records_size_bytes";
+const std::string INPUT_BATCH_TOTAL = "input_batch_total"; 
+const std::string INPUT_READ_TOTAL = "input_read_total"; 
+const std::string INPUT_FILE_SIZE_BYTES = "input_file_size_bytes";
+const std::string INPUT_FILE_READ_DELAY_TIME_MS = "input_file_read_delay_time_ms";
+const std::string INPUT_FILE_OFFSET_BYTES = "input_file_offset_bytes";
+const std::string INPUT_FILE_MONITOR_TOTAL = "input_file_monitor_total";
+
 // processor common metrics
 const std::string METRIC_PROC_IN_RECORDS_TOTAL = "proc_in_records_total";
 const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES = "proc_in_records_size_bytes";

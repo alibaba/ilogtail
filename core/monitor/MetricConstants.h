@@ -36,6 +36,21 @@ extern const std::string LABEL_CONFIG_NAME;
 extern const std::string LABEL_PLUGIN_NAME;
 extern const std::string LABEL_PLUGIN_ID;
 
+// input file plugin labels
+extern const std::string LABEL_FILE_DEV;
+extern const std::string LABEL_FILE_INODE;
+extern const std::string LABEL_FILE_NAME;
+
+// input file metrics
+extern const std::string INPUT_RECORDS_TOTAL; 
+extern const std::string INPUT_RECORDS_SIZE_BYTES;
+extern const std::string INPUT_BATCH_TOTAL; 
+extern const std::string INPUT_READ_TOTAL; 
+extern const std::string INPUT_FILE_SIZE_BYTES;
+extern const std::string INPUT_FILE_READ_DELAY_TIME_MS;
+extern const std::string INPUT_FILE_OFFSET_BYTES;
+extern const std::string INPUT_FILE_MONITOR_TOTAL;
+
 // processor common metrics
 extern const std::string METRIC_PROC_IN_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES;

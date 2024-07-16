@@ -185,6 +185,42 @@ void FileServer::ClearContainerInfo() {
     mAllContainerInfoMap.clear();
 }
 
+// 获取“ReusableMetricsRecordRef”指标记录对象
+ReusableMetricsRecordRef FileServer::GetOrCreateReusableMetricsRecordRef(const std::string& name, MetricLabels& labels) {
+    PluginMetricManagerPtr filePluginMetricManager = GetPluginMetricManager(name);
+    if (filePluginMetricManager != nullptr) {
+        return filePluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
+    }
+    return nullptr;
+}
+
+// 释放“ReusableMetricsRecordRef”指标记录对象
+void FileServer::ReleaseReusableMetricsRecordRef(const std::string& name, MetricLabels& labels) {
+    PluginMetricManagerPtr filePluginMetricManager = GetPluginMetricManager(name);
+    if (filePluginMetricManager != nullptr) {
+        filePluginMetricManager->ReleaseReusableMetricsRecordRef(labels);
+    }
+}
+
+// 获取“PluginMetricManager”指标管理器
+PluginMetricManagerPtr FileServer::GetPluginMetricManager(const std::string& name) const {
+    auto itr = mPipelineNamePluginMetricManagersMap.find(name);
+    if (itr != mPipelineNamePluginMetricManagersMap.end()) {
+        return itr->second;
+    }
+    return nullptr;
+}
+
+// 添加“PluginMetricManager”指标管理器
+void FileServer::AddPluginMetricManager(const std::string& name, PluginMetricManagerPtr PluginMetricManager) {
+    mPipelineNamePluginMetricManagersMap[name] = PluginMetricManager;
+}
+
+// 移除“PluginMetricManager”指标管理器
+void FileServer::RemovePluginMetricManager(const std::string& name) {
+    mPipelineNamePluginMetricManagersMap.erase(name);
+}
+
 // 获取给定名称的“ExactlyOnce”并发级别
 uint32_t FileServer::GetExactlyOnceConcurrency(const string& name) const {
     auto itr = mPipelineNameEOConcurrencyMap.find(name);

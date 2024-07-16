@@ -148,10 +148,10 @@ void ReusableMetricsRecord::Init(MetricLabels& labels,
                                  std::vector<std::string>& counterKeys,
                                  std::vector<std::string>& gaugeKeys) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-    for (auto counterKey: counterKeys) {
+    for (auto counterKey : counterKeys) {
         mCounters[counterKey] = mMetricsRecordRef.CreateCounter(counterKey);
     }
-    for (auto gaugeKey: gaugeKeys) {
+    for (auto gaugeKey : gaugeKeys) {
         mGauges[gaugeKey] = mMetricsRecordRef.CreateGauge(gaugeKey);
     }
 }
@@ -166,6 +166,7 @@ CounterPtr ReusableMetricsRecord::GetCounter(const std::string& name) {
     if (it != mCounters.end()) {
         return it->second;
     }
+    LOG_ERROR(sLogger, ("failed to get counter from MetricsRecord, name", name));
     return nullptr;
 }
 
@@ -174,6 +175,7 @@ GaugePtr ReusableMetricsRecord::GetGauge(const std::string& name) {
     if (it != mGauges.end()) {
         return it->second;
     }
+    LOG_ERROR(sLogger, ("failed to get gauge from MetricsRecord, name", name));
     return nullptr;
 }
 
