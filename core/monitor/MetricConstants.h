@@ -28,6 +28,14 @@ extern const std::string METRIC_TOPIC_FIELD_NAME;
 extern const std::string LABEL_PREFIX;
 extern const std::string VALUE_PREFIX;
 
+// common plugin labels
+extern const std::string LABEL_PROJECT;
+extern const std::string LABEL_LOGSTORE;
+extern const std::string LABEL_REGION;
+extern const std::string LABEL_CONFIG_NAME;
+extern const std::string LABEL_PLUGIN_NAME;
+extern const std::string LABEL_PLUGIN_ID;
+
 // processor common metrics
 extern const std::string METRIC_PROC_IN_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES;

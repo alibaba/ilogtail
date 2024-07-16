@@ -26,6 +26,13 @@ const std::string METRIC_TOPIC_FIELD_NAME = "__topic__";
 const std::string LABEL_PREFIX = "label.";
 const std::string VALUE_PREFIX = "value.";
 
+// common plugin labels
+const std::string LABEL_PROJECT = "project";
+const std::string LABEL_LOGSTORE = "logstore";
+const std::string LABEL_REGION = "region";
+const std::string LABEL_CONFIG_NAME = "config_name";
+const std::string LABEL_PLUGIN_NAME = "plugin_name";
+const std::string LABEL_PLUGIN_ID = "plugin_id";
 
 // processor common metrics
 const std::string METRIC_PROC_IN_RECORDS_TOTAL = "proc_in_records_total";

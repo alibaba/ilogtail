@@ -15,8 +15,9 @@
  */
 
 #pragma once
-#include <string>
 #include <atomic>
+#include <string>
+
 #include "common/Lock.h"
 #include "log_pb/sls_logs.pb.h"
 
@@ -33,7 +34,7 @@ public:
     uint64_t GetValue() const;
     const std::string& GetName() const;
     void Add(uint64_t val);
-    Counter* CopyAndReset();
+    Counter* Collect();
 };
 
 using CounterPtr = std::shared_ptr<Counter>;
@@ -48,7 +49,7 @@ public:
     uint64_t GetValue() const;
     const std::string& GetName() const;
     void Set(uint64_t val);
-    Gauge* CopyAndReset();
+    Gauge* Collect();
 };
 
 using GaugePtr = std::shared_ptr<Gauge>;
@@ -74,7 +75,7 @@ public:
     const std::vector<GaugePtr>& GetGauges() const;
     CounterPtr CreateCounter(const std::string& name);
     GaugePtr CreateGauge(const std::string& name);
-    MetricsRecord* CopyAndReset();
+    MetricsRecord* Collect();
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
 };
@@ -82,6 +83,8 @@ public:
 class MetricsRecordRef {
 private:
     MetricsRecord* mMetrics = nullptr;
+    std::vector<CounterPtr> mCounters;
+    std::vector<GaugePtr> mGauges;
 
 public:
     ~MetricsRecordRef();
@@ -91,10 +94,25 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
+    const LabelsPtr& GetLabels() const;
     CounterPtr CreateCounter(const std::string& name);
     GaugePtr CreateGauge(const std::string& name);
     const MetricsRecord* operator->() const;
 };
+
+class ReusableMetricsRecord {
+private:
+    MetricsRecordRef mMetricsRecordRef;
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, GaugePtr> mGauges;
+
+public:
+    void Init(MetricLabels& labels, std::vector<std::string>& counterKeys, std::vector<std::string>& gaugeKeys);
+    const LabelsPtr& GetLabels() const;
+    CounterPtr GetCounter(const std::string& name);
+    GaugePtr GetGauge(const std::string& name);
+};
+using ReusableMetricsRecordRef = std::shared_ptr<ReusableMetricsRecord>;
 
 class WriteMetrics {
 private:
