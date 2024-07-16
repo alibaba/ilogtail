@@ -32,12 +32,12 @@ public:
     TextParser() : mSampleRegex(SAMPLE_RE) {}
     PipelineEventGroup Parse(const std::string& content);
 
-private:
+
     PipelineEventGroup Parse(const std::string& content,
                              std::time_t defaultTs,
                              const std::string& jobName = "",
                              const std::string& instance = "");
-
+private:
     RE2 mSampleRegex;
 
 #ifdef APSARA_UNIT_TEST_MAIN
