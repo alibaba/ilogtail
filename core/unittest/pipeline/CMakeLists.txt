@@ -25,7 +25,7 @@ add_executable(pipeline_manager_unittest PipelineManagerUnittest.cpp)
 target_link_libraries(pipeline_manager_unittest ${UT_BASE_TARGET})
 
 add_executable(process_config_manager_unittest ProcessConfigManagerUnittest.cpp)
-target_link_libraries(process_config_manager_unittest unittest_base)
+target_link_libraries(process_config_manager_unittest ${UT_BASE_TARGET})
 
 include(GoogleTest)
 gtest_discover_tests(global_config_unittest)

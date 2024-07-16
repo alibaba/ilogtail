@@ -36,7 +36,7 @@ if (ENABLE_ENTERPRISE)
 endif ()
 
 add_executable(config_feedbackable_unittest ConfigFeedbackableUnittest.cpp)
-target_link_libraries(config_feedbackable_unittest unittest_base)
+target_link_libraries(config_feedbackable_unittest ${UT_BASE_TARGET})
 
 include(GoogleTest)
 gtest_discover_tests(config_unittest)
