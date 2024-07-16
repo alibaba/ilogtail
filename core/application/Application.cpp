@@ -49,7 +49,6 @@
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
-#include "config/provider/EnterpriseConfigProviderV2.h"
 #include "config/provider/LegacyConfigProvider.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "shennong/ShennongManager.h"
@@ -224,7 +223,6 @@ void Application::Start() {
     }
 
 #ifdef __ENTERPRISE__
-    EnterpriseConfigProviderV2::GetInstance()->Init("enterprise_v2");
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
@@ -350,7 +348,6 @@ void Application::Exit() {
     PluginRegistry::GetInstance()->UnloadPlugins();
 
 #ifdef __ENTERPRISE__
-    EnterpriseConfigProviderV2::GetInstance()->Stop();
     EnterpriseConfigProvider::GetInstance()->Stop();
     LegacyConfigProvider::GetInstance()->Stop();
 #else
