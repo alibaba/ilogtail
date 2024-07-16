@@ -40,7 +40,7 @@ void ConfigFeedbackReceiver::RegisterCommand(const std::string& type,
                                              const std::string& name,
                                              ConfigFeedbackable* feedbackable) {
     std::lock_guard<std::mutex> lock(mMutex);
-    mCommandFeedbackableMap[type + '\1' + name] = feedbackable;
+    mCommandFeedbackableMap[GenerateCommandFeedBackKey(type, name)] = feedbackable;
 }
 
 void ConfigFeedbackReceiver::UnregisterPipelineConfig(const std::string& name) {
@@ -55,7 +55,7 @@ void ConfigFeedbackReceiver::UnregisterProcessConfig(const std::string& name) {
 
 void ConfigFeedbackReceiver::UnregisterCommand(const std::string& type, const std::string& name) {
     std::lock_guard<std::mutex> lock(mMutex);
-    mCommandFeedbackableMap.erase(type + '\1' + name);
+    mCommandFeedbackableMap.erase(GenerateCommandFeedBackKey(type, name));
 }
 
 void ConfigFeedbackReceiver::FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
@@ -78,10 +78,14 @@ void ConfigFeedbackReceiver::FeedbackCommandConfigStatus(const std::string& type
                                                          const std::string& name,
                                                          ConfigFeedbackStatus status) {
     std::lock_guard<std::mutex> lock(mMutex);
-    auto iter = mCommandFeedbackableMap.find(type + '\1' + name);
+    auto iter = mCommandFeedbackableMap.find(GenerateCommandFeedBackKey(type, name));
     if (iter != mCommandFeedbackableMap.end()) {
         iter->second->FeedbackCommandConfigStatus(type, name, status);
     }
+}
+
+std::string GenerateCommandFeedBackKey(const std::string& type, const std::string& name) {
+    return type + '\1' + name;
 }
 
 } // namespace logtail

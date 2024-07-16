@@ -23,6 +23,8 @@
 
 namespace logtail {
 
+std::string GenerateCommandFeedBackKey(const std::string& type, const std::string& name);
+
 class ConfigFeedbackReceiver {
 public:
     static ConfigFeedbackReceiver& GetInstance();

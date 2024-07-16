@@ -536,7 +536,7 @@ void CommonConfigProvider::FeedbackCommandConfigStatus(const std::string& type,
                                                        const std::string& name,
                                                        ConfigFeedbackStatus status) {
     lock_guard<mutex> infomaplock(mInfoMapMux);
-    auto info = mCommandInfoMap.find(type + '\1' + name);
+    auto info = mCommandInfoMap.find(GenerateCommandFeedBackKey(type, name));
     if (info != mCommandInfoMap.end()) {
         info->second.status = status;
     }
