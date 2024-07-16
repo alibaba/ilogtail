@@ -15,6 +15,7 @@
  */
 
 #include "pipeline/ProcessConfigManager.h"
+#include "config/feedbacker/ConfigFeedbackReceiver.h"
 
 using namespace std;
 
@@ -28,15 +29,18 @@ void ProcessConfigManager::UpdateProcessConfigs(ProcessConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
         std::shared_ptr<ProcessConfig> configTmp(new ProcessConfig(config.mName, std::move(config.mDetail)));
         mProcessConfigMap[config.mName] = configTmp;
+        ConfigFeedbackReceiver::GetInstance().FeedbackProcessConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         changed = true;
     }
     for (auto& config : diff.mModified) {
         std::shared_ptr<ProcessConfig> configTmp(new ProcessConfig(config.mName, std::move(config.mDetail)));
         mProcessConfigMap[config.mName] = configTmp;
+        ConfigFeedbackReceiver::GetInstance().FeedbackProcessConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         changed = true;
     }
     for (auto& configName : diff.mRemoved) {
         mProcessConfigMap.erase(configName);
+        ConfigFeedbackReceiver::GetInstance().FeedbackProcessConfigStatus(configName, ConfigFeedbackStatus::DELETED);
         changed = true;
     }
     if (changed) {
