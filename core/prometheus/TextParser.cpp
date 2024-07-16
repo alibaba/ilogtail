@@ -55,7 +55,6 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     while (getline(iss, line)) {
         // trim line
-        // boost::algorithm::trim(line);
         line = TrimString(line);
 
         // skip any empty line
@@ -98,7 +97,7 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
         try {
             value = stod(argValue);
         } catch (const exception&) {
-            LOG_WARNING(sLogger, ("invalid value", argValue));
+            LOG_WARNING(sLogger, ("invalid value", argValue)("raw line", line));
             continue;
         }
         if (isnan(value)) {
@@ -116,7 +115,7 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
                 timestamp = stol(argTimestamp) / 1000;
                 // TODO: convert milli-second part into nano-second
             } catch (const exception&) {
-                LOG_WARNING(sLogger, ("invalid value", argTimestamp));
+                LOG_WARNING(sLogger, ("invalid value", argTimestamp)("raw line", line));
                 continue;
             }
         }
@@ -130,14 +129,12 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
             string kvPair;
             istringstream iss(argUnwrappedLabels);
             while (getline(iss, kvPair, ',')) {
-                // boost::algorithm::trim(kvPair);
                 kvPair = TrimString(kvPair);
 
                 size_t equalsPos = kvPair.find('=');
                 if (equalsPos != string::npos) {
                     string key = kvPair.substr(0, equalsPos);
                     string value = kvPair.substr(equalsPos + 1);
-                    // boost::trim_if(value, boost::is_any_of("\""));
                     value = TrimString(value, '\"', '\"');
                     e->SetTag(key, value);
                 }
