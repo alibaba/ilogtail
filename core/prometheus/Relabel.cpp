@@ -121,6 +121,7 @@ RelabelConfig::RelabelConfig(const Json::Value& config) {
     }
 }
 
+// TODO: validation config
 bool RelabelConfig::Validate() {
     return true;
 }
