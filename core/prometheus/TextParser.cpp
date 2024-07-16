@@ -35,6 +35,8 @@ using namespace std;
 namespace logtail {
 
 const std::string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
+const string JOB = "job";
+const string INSTANCE = "instance";
 
 PipelineEventGroup TextParser::Parse(const string& content) {
     auto now = std::chrono::system_clock::now();
@@ -44,6 +46,7 @@ PipelineEventGroup TextParser::Parse(const string& content) {
     return Parse(content, defaultTsInSecs, "", "");
 }
 
+// TODO: jobName和instance在后续移动到接近业务的位置
 PipelineEventGroup
 TextParser::Parse(const string& content, const time_t defaultTsInSecs, const string& jobName, const string& instance) {
     string line;
@@ -113,6 +116,7 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
                 timestamp = stol(argTimestamp) / 1000;
                 // TODO: convert milli-second part into nano-second
             } catch (const exception&) {
+                LOG_WARNING(sLogger, ("invalid value", argTimestamp));
                 continue;
             }
         }
@@ -140,10 +144,10 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
             }
         }
         if (!jobName.empty()) {
-            e->SetTag(string("job"), jobName);
+            e->SetTag(JOB, jobName);
         }
         if (!instance.empty()) {
-            e->SetTag(string("instance"), instance);
+            e->SetTag(INSTANCE, instance);
         }
     }
 

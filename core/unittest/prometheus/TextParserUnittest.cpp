@@ -15,6 +15,7 @@
  */
 
 #include <string>
+#include "MetricEvent.h"
 #include "unittest/Unittest.h"
 #include "models/PipelineEventGroup.h"
 #include "prometheus/TextParser.h"
@@ -145,9 +146,15 @@ UNIT_TEST_CASE(TextParserUnittest, TestParseMultipleLines)
 
 void TextParserUnittest::TestParseMetricWithTagsAndTimestamp() const {
     auto parser = TextParser();
-    const auto eGroup = parser.Parse(R"""(test_metric{k1="v1", k2="v2"} 9.9410452992e+10 1715829785083)""");
+    const auto eGroup = parser.Parse(R"""(
+    test_metric{k1="v1", k2="v2"} 9.9410452992e+10 1715829785083
+    test_metric2{k1="v1", k2="v2"} 2.0 1715829785083
+    test_metric3{k1="v1",k2="v2"} 4.2 1715829785083
+    )""");
+
+    // test_metric
     const auto &events = &eGroup.GetEvents();
-    APSARA_TEST_EQUAL(1UL, events->size());
+    APSARA_TEST_EQUAL(3UL, events->size());
     const auto &event = events->front();
     const auto &metric = event.Get<MetricEvent>();
     APSARA_TEST_STREQ("test_metric", metric->GetName().data());
@@ -155,6 +162,24 @@ void TextParserUnittest::TestParseMetricWithTagsAndTimestamp() const {
     APSARA_TEST_TRUE(isDoubleEqual(9.9410452992e+10, metric->GetValue<UntypedSingleValue>()->mValue));
     APSARA_TEST_STREQ("v1", metric->GetTag("k1").data());
     APSARA_TEST_STREQ("v2", metric->GetTag("k2").data());
+
+    // test_metric2
+    auto &event2 = events->at(1);
+    const auto &metric2 = event2.Get<MetricEvent>();
+    APSARA_TEST_STREQ("test_metric2", metric2->GetName().data());
+    APSARA_TEST_EQUAL(1715829785, metric2->GetTimestamp());
+    APSARA_TEST_TRUE(isDoubleEqual(2.0, metric2->GetValue<UntypedSingleValue>()->mValue));
+    APSARA_TEST_STREQ("v1", metric2->GetTag("k1").data());
+    APSARA_TEST_STREQ("v2", metric2->GetTag("k2").data());
+
+    // test_metric3
+    auto &event3 = events->at(2);
+    const auto &metric3 = event3.Get<MetricEvent>();
+    APSARA_TEST_STREQ("test_metric3", metric3->GetName().data());
+    APSARA_TEST_EQUAL(1715829785, metric3->GetTimestamp());
+    APSARA_TEST_TRUE(isDoubleEqual(4.2, metric3->GetValue<UntypedSingleValue>()->mValue));
+    APSARA_TEST_STREQ("v1", metric3->GetTag("k1").data());
+    APSARA_TEST_STREQ("v2", metric3->GetTag("k2").data());
 }
 UNIT_TEST_CASE(TextParserUnittest, TestParseMetricWithTagsAndTimestamp)
 
