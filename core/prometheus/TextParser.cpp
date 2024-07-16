@@ -34,6 +34,7 @@ using namespace std;
 
 namespace logtail {
 
+// TODO: 830移除正则依赖
 const std::string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
 const string JOB = "job";
 const string INSTANCE = "instance";
