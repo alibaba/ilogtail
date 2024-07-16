@@ -22,14 +22,9 @@
 
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
-#include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
-#include "common/UUIDUtil.h"
-#include "common/YamlUtil.h"
 #include "common/version.h"
-#include "config/PipelineConfig.h"
-#include "config/feedbacker/ConfigFeedbackReceiver.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "sdk/Common.h"
@@ -38,48 +33,25 @@
 
 using namespace std;
 
-DEFINE_FLAG_INT32(heartbeat_update_interval, "second", 10);
+DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 namespace logtail {
 
-std::string CommonConfigProvider::configVersion = "version";
-
 void CommonConfigProvider::Init(const string& dir) {
-    string sName = "CommonConfigProvider";
-
     ConfigProvider::Init(dir);
-    LoadConfigFile();
-
-    mSequenceNum = 0;
 
     const Json::Value& confJson = AppConfig::GetInstance()->GetConfig();
 
     // configserver path
-    /*** demo
-     * {
-     *     "config_server_list" : [
-     *         {
-     *             "cluster" : "community",
-     *             "endpoint_list" : ["test.config.com:80"]
-     *         }
-     * }
-     */
-    if (confJson.isObject() && confJson.isMember("config_server_list") && confJson["config_server_list"].isArray()
-        && confJson["config_server_list"].size() > 0 && confJson["config_server_list"][0].isObject()
-        && confJson["config_server_list"][0].isMember("endpoint_list")
-        && confJson["config_server_list"][0]["endpoint_list"].isArray()) {
-        for (Json::Value::ArrayIndex i = 0; i < confJson["config_server_list"][0]["endpoint_list"].size(); ++i) {
-            if (!confJson["config_server_list"][0]["endpoint_list"][i].isString()) {
-                continue;
-            }
+    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isArray()) {
+        for (Json::Value::ArrayIndex i = 0; i < confJson["ilogtail_configserver_address"].size(); ++i) {
             vector<string> configServerAddress
-                = SplitString(TrimString(confJson["config_server_list"][0]["endpoint_list"][i].asString()), ":");
+                = SplitString(TrimString(confJson["ilogtail_configserver_address"][i].asString()), ":");
 
             if (configServerAddress.size() != 2) {
-                LOG_WARNING(
-                    sLogger,
-                    ("configserver_address", "format error")(
-                        "wrong address", TrimString(confJson["config_server_list"][0]["endpoint_list"][i].asString())));
+                LOG_WARNING(sLogger,
+                            ("ilogtail_configserver_address", "format error")(
+                                "wrong address", TrimString(confJson["ilogtail_configserver_address"][i].asString())));
                 continue;
             }
 
@@ -87,26 +59,24 @@ void CommonConfigProvider::Init(const string& dir) {
             int32_t port = atoi(configServerAddress[1].c_str());
 
             if (port < 1 || port > 65535)
-                LOG_WARNING(sLogger, ("configserver_address", "illegal port")("port", port));
+                LOG_WARNING(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
             else
                 mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
         }
 
         mConfigServerAvailable = true;
         LOG_INFO(sLogger,
-                 ("configserver_address", confJson["config_server_list"][0]["endpoint_list"].toStyledString()));
+                 ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }
 
     // tags for configserver
     if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
         Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
-            mConfigServerTags[*it] = confJson["ilogtail_tags"][*it].asString();
+            mConfigServerTags.push_back(confJson["ilogtail_tags"][*it].asString());
         }
         LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
     }
-
-    GetConfigUpdate();
 
     mThreadRes = async(launch::async, &CommonConfigProvider::CheckUpdateThread, this);
 }
@@ -119,54 +89,20 @@ void CommonConfigProvider::Stop() {
     mStopCV.notify_one();
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
-        LOG_INFO(sLogger, (sName, "stopped successfully"));
+        LOG_INFO(sLogger, ("common config provider", "stopped successfully"));
     } else {
-        LOG_WARNING(sLogger, (sName, "forced to stopped"));
-    }
-}
-
-void CommonConfigProvider::LoadConfigFile() {
-    error_code ec;
-    for (auto const& entry : filesystem::directory_iterator(mPipelineSourceDir, ec)) {
-        Json::Value detail;
-        if (LoadConfigDetailFromFile(entry, detail)) {
-            ConfigInfo info;
-            info.name = entry.path().stem();
-            if (detail.isMember(CommonConfigProvider::configVersion)
-                && detail[CommonConfigProvider::configVersion].isInt64()) {
-                info.version = detail[CommonConfigProvider::configVersion].asInt64();
-            }
-            info.status = ConfigFeedbackStatus::APPLYING;
-            info.detail = detail.toStyledString();
-            lock_guard<mutex> infomaplock(mInfoMapMux);
-            mPipelineConfigInfoMap[info.name] = info;
-        }
-    }
-    for (auto const& entry : filesystem::directory_iterator(mProcessSourceDir, ec)) {
-        Json::Value detail;
-        if (LoadConfigDetailFromFile(entry, detail)) {
-            ConfigInfo info;
-            info.name = entry.path().stem();
-            if (detail.isMember(CommonConfigProvider::configVersion)
-                && detail[CommonConfigProvider::configVersion].isInt64()) {
-                info.version = detail[CommonConfigProvider::configVersion].asInt64();
-            }
-            info.status = ConfigFeedbackStatus::APPLYING;
-            info.detail = detail.toStyledString();
-            lock_guard<mutex> infomaplock(mInfoMapMux);
-            mProcessConfigInfoMap[info.name] = info;
-        }
+        LOG_WARNING(sLogger, ("common config provider", "forced to stopped"));
     }
 }
 
 void CommonConfigProvider::CheckUpdateThread() {
-    LOG_INFO(sLogger, (sName, "started"));
+    LOG_INFO(sLogger, ("common config provider", "started"));
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
     unique_lock<mutex> lock(mThreadRunningMux);
     while (mIsThreadRunning) {
         int32_t curTime = time(NULL);
-        if (curTime - lastCheckTime >= INT32_FLAG(heartbeat_update_interval)) {
+        if (curTime - lastCheckTime >= INT32_FLAG(config_update_interval)) {
             GetConfigUpdate();
             lastCheckTime = curTime;
         }
@@ -194,146 +130,62 @@ CommonConfigProvider::ConfigServerAddress CommonConfigProvider::GetOneConfigServ
                                mConfigServerAddresses[mConfigServerAddressId].port);
 }
 
-string CommonConfigProvider::GetInstanceId() {
-    return CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(mStartTime);
-}
-
-void CommonConfigProvider::FillAttributes(configserver::proto::v2::AgentAttributes& attributes) {
-    attributes.set_hostname(LogFileProfiler::mHostname);
-    attributes.set_ip(LogFileProfiler::mIpAddr);
-    attributes.set_version(ILOGTAIL_VERSION);
-    google::protobuf::Map<string, string>* extras = attributes.mutable_extras();
-    extras->insert({"osDetail", LogFileProfiler::mOsDetail});
-}
-
-void addConfigInfoToRequest(const std::pair<const string, logtail::ConfigInfo>& configInfo,
-                            configserver::proto::v2::ConfigInfo* reqConfig) {
-    reqConfig->set_name(configInfo.second.name);
-    reqConfig->set_message(configInfo.second.message);
-    reqConfig->set_version(configInfo.second.version);
-    switch (configInfo.second.status) {
-        case ConfigFeedbackStatus::UNSET:
-            reqConfig->set_status(configserver::proto::v2::ConfigStatus::UNSET);
-            break;
-        case ConfigFeedbackStatus::APPLYING:
-            reqConfig->set_status(configserver::proto::v2::ConfigStatus::APPLYING);
-            break;
-        case ConfigFeedbackStatus::APPLIED:
-            reqConfig->set_status(configserver::proto::v2::ConfigStatus::APPLIED);
-            break;
-        case ConfigFeedbackStatus::FAILED:
-            reqConfig->set_status(configserver::proto::v2::ConfigStatus::FAILED);
-            break;
-        case ConfigFeedbackStatus::DELETED:
-            reqConfig->set_version(-1);
-            break;
-    }
-    reqConfig->set_version(configInfo.second.version);
-}
-
 void CommonConfigProvider::GetConfigUpdate() {
-    if (!mConfigServerAvailable) {
-        return;
-    }
-    auto heartbeatRequest = PrepareHeartbeat();
-    configserver::proto::v2::HeartbeatResponse heartbeatResponse;
-    if (!SendHeartbeat(heartbeatRequest, heartbeatResponse)) {
-        return;
-    }
-    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> pipelineConfig;
-    if (FetchPipelineConfig(heartbeatResponse, pipelineConfig) && !pipelineConfig.empty()) {
-        LOG_DEBUG(sLogger, ("fetch pipelineConfig, config file number", pipelineConfig.size()));
-        UpdateRemotePipelineConfig(pipelineConfig);
-    }
-    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail> processConfig;
-    if (FetchProcessConfig(heartbeatResponse, processConfig) && !processConfig.empty()) {
-        LOG_DEBUG(sLogger, ("fetch processConfig config, config file number", processConfig.size()));
-        UpdateRemoteProcessConfig(processConfig);
+    if (GetConfigServerAvailable()) {
+        ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
+        google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults;
+        google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails;
+
+        checkResults = SendHeartbeat(configServerAddress);
+        if (checkResults.size() > 0) {
+            LOG_DEBUG(sLogger, ("fetch pipeline config, config file number", checkResults.size()));
+            configDetails = FetchPipelineConfig(configServerAddress, checkResults);
+            if (checkResults.size() > 0) {
+                UpdateRemoteConfig(checkResults, configDetails);
+            } else
+                configServerAddress = GetOneConfigServerAddress(true);
+        } else
+            configServerAddress = GetOneConfigServerAddress(true);
     }
 }
 
-configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat() {
-    configserver::proto::v2::HeartbeatRequest heartbeatReq;
-    string requestID = sdk::Base64Enconde(string("Heartbeat").append(to_string(time(NULL))));
-    heartbeatReq.set_request_id(requestID);
-    heartbeatReq.set_sequence_num(mSequenceNum);
-    heartbeatReq.set_capabilities(configserver::proto::v2::AcceptsProcessConfig
-                                  | configserver::proto::v2::AcceptsPipelineConfig);
-    heartbeatReq.set_instance_id(GetInstanceId());
-    heartbeatReq.set_agent_type("LoongCollector");
-    FillAttributes(*heartbeatReq.mutable_attributes());
+google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
+CommonConfigProvider::SendHeartbeat(const ConfigServerAddress& configServerAddress) {
+    configserver::proto::HeartBeatRequest heartBeatReq;
+    configserver::proto::AgentAttributes attributes;
+    string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
+    heartBeatReq.set_request_id(requestID);
+    heartBeatReq.set_agent_id(Application::GetInstance()->GetInstanceId());
+    heartBeatReq.set_agent_type("iLogtail");
+    attributes.set_version(ILOGTAIL_VERSION);
+    attributes.set_ip(LogFileProfiler::mIpAddr);
+    heartBeatReq.mutable_attributes()->MergeFrom(attributes);
+    heartBeatReq.mutable_tags()->MergeFrom({GetConfigServerTags().begin(), GetConfigServerTags().end()});
+    heartBeatReq.set_running_status("");
+    heartBeatReq.set_startup_time(0);
+    heartBeatReq.set_interval(INT32_FLAG(config_update_interval));
 
-    for (auto tag : mConfigServerTags) {
-        configserver::proto::v2::AgentGroupTag* agentGroupTag = heartbeatReq.add_tags();
-        agentGroupTag->set_name(tag.first);
-        agentGroupTag->set_value(tag.second);
+    google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> pipelineConfigs;
+    for (unordered_map<string, int64_t>::iterator it = mConfigNameVersionMap.begin(); it != mConfigNameVersionMap.end();
+         it++) {
+        configserver::proto::ConfigInfo* info = pipelineConfigs.Add();
+        info->set_type(configserver::proto::PIPELINE_CONFIG);
+        info->set_name(it->first);
+        info->set_version(it->second);
     }
-    heartbeatReq.set_running_status("running");
-    heartbeatReq.set_startup_time(mStartTime);
+    heartBeatReq.mutable_pipeline_configs()->MergeFrom(pipelineConfigs);
 
-    lock_guard<mutex> infomaplock(mInfoMapMux);
-    for (const auto& configInfo : mPipelineConfigInfoMap) {
-        addConfigInfoToRequest(configInfo, heartbeatReq.add_pipeline_configs());
-    }
-    for (const auto& configInfo : mProcessConfigInfoMap) {
-        addConfigInfoToRequest(configInfo, heartbeatReq.add_process_configs());
-    }
-
-    for (auto& configInfo : mCommandInfoMap) {
-        configserver::proto::v2::CommandInfo* command = heartbeatReq.add_custom_commands();
-        command->set_type(configInfo.second.type);
-        command->set_name(configInfo.second.name);
-        command->set_message(configInfo.second.message);
-        switch (configInfo.second.status) {
-            case ConfigFeedbackStatus::UNSET:
-                command->set_status(configserver::proto::v2::ConfigStatus::UNSET);
-                break;
-            case ConfigFeedbackStatus::APPLYING:
-                command->set_status(configserver::proto::v2::ConfigStatus::APPLYING);
-                break;
-            case ConfigFeedbackStatus::APPLIED:
-                command->set_status(configserver::proto::v2::ConfigStatus::APPLIED);
-                break;
-            case ConfigFeedbackStatus::FAILED:
-                command->set_status(configserver::proto::v2::ConfigStatus::FAILED);
-                break;
-            case ConfigFeedbackStatus::DELETED:
-                break;
-        }
-        command->set_message(configInfo.second.message);
-    }
-    return heartbeatReq;
-}
-
-bool CommonConfigProvider::SendHeartbeat(const configserver::proto::v2::HeartbeatRequest& heartbeatReq,
-                                         configserver::proto::v2::HeartbeatResponse& heartbeatResponse) {
     string operation = sdk::CONFIGSERVERAGENT;
-    operation.append("/").append("Heartbeat");
-    string reqBody;
-    heartbeatReq.SerializeToString(&reqBody);
-    configserver::proto::v2::HeartbeatResponse emptyResult;
-    std::string heartbeatResp;
-    if (SendHttpRequest(operation, reqBody, "SendHeartbeat", heartbeatResp)) {
-        configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
-        heartbeatRespPb.ParseFromString(heartbeatResp);
-        heartbeatResponse.Swap(&heartbeatRespPb);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool CommonConfigProvider::SendHttpRequest(const string& operation,
-                                           const string& reqBody,
-                                           const string& configType,
-                                           std::string& resp) {
-    ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
+    operation.append("/").append("HeartBeat");
     map<string, string> httpHeader;
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    string reqBody;
+    heartBeatReq.SerializeToString(&reqBody);
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "ConfigServer";
-    sdk::CurlClient client;
 
+    sdk::CurlClient client;
+    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> emptyResult;
     try {
         client.Send(sdk::HTTP_POST,
                     configServerAddress.host,
@@ -346,234 +198,142 @@ bool CommonConfigProvider::SendHttpRequest(const string& operation,
                     httpResponse,
                     "",
                     false);
-        resp.swap(httpResponse.content);
-        return true;
+        configserver::proto::HeartBeatResponse heartBeatResp;
+        heartBeatResp.ParseFromString(httpResponse.content);
+
+        if (0 != strcmp(heartBeatResp.request_id().c_str(), requestID.c_str()))
+            return emptyResult;
+
+        LOG_DEBUG(sLogger,
+                  ("SendHeartBeat", "success")("reqBody", reqBody)("requestId", heartBeatResp.request_id())(
+                      "statusCode", heartBeatResp.code()));
+
+        return heartBeatResp.pipeline_check_results();
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger,
-                    (configType, "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage())(
-                        "host", configServerAddress.host)("port", configServerAddress.port));
-        return false;
+                    ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())(
+                        "errMsg", e.GetMessage())("host", configServerAddress.host)("port", configServerAddress.port));
+        return emptyResult;
     }
 }
 
-bool CommonConfigProvider::FetchPipelineConfig(
-    configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
-    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& result) {
-    if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
-        return FetchPipelineConfigFromServer(heartbeatResponse, result);
-    } else {
-        result.Swap(heartbeatResponse.mutable_pipeline_config_updates());
-        return true;
+google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> CommonConfigProvider::FetchPipelineConfig(
+    const ConfigServerAddress& configServerAddress,
+    const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs) {
+    configserver::proto::FetchPipelineConfigRequest fetchConfigReq;
+    string requestID
+        = sdk::Base64Enconde(Application::GetInstance()->GetInstanceId().append("_").append(to_string(time(NULL))));
+    fetchConfigReq.set_request_id(requestID);
+    fetchConfigReq.set_agent_id(Application::GetInstance()->GetInstanceId());
+
+    google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> configInfos;
+    for (int i = 0; i < requestConfigs.size(); i++) {
+        if (requestConfigs[i].check_status() != configserver::proto::DELETED) {
+            configserver::proto::ConfigInfo* info = configInfos.Add();
+            info->set_type(configserver::proto::PIPELINE_CONFIG);
+            info->set_name(requestConfigs[i].name());
+            info->set_version(requestConfigs[i].new_version());
+            info->set_context(requestConfigs[i].context());
+        }
+    }
+    fetchConfigReq.mutable_req_configs()->MergeFrom(configInfos);
+
+    string operation = sdk::CONFIGSERVERAGENT;
+    operation.append("/").append("FetchPipelineConfig");
+    map<string, string> httpHeader;
+    httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    string reqBody;
+    fetchConfigReq.SerializeToString(&reqBody);
+    sdk::HttpMessage httpResponse;
+    httpResponse.header[sdk::X_LOG_REQUEST_ID] = "ConfigServer";
+
+    sdk::CurlClient client;
+    google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> emptyResult;
+    try {
+        client.Send(sdk::HTTP_POST,
+                    configServerAddress.host,
+                    configServerAddress.port,
+                    operation,
+                    "",
+                    httpHeader,
+                    reqBody,
+                    INT32_FLAG(sls_client_send_timeout),
+                    httpResponse,
+                    "",
+                    false);
+
+        configserver::proto::FetchPipelineConfigResponse fetchConfigResp;
+        fetchConfigResp.ParseFromString(httpResponse.content);
+
+        if (0 != strcmp(fetchConfigResp.request_id().c_str(), requestID.c_str()))
+            return emptyResult;
+
+        LOG_DEBUG(sLogger,
+                  ("GetConfigUpdateInfos", "success")("reqBody", reqBody)("requestId", fetchConfigResp.request_id())(
+                      "statusCode", fetchConfigResp.code()));
+
+        return fetchConfigResp.config_details();
+    } catch (const sdk::LOGException& e) {
+        LOG_WARNING(sLogger,
+                    ("GetConfigUpdateInfos", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg",
+                                                                                                      e.GetMessage()));
+        return emptyResult;
     }
 }
 
-bool CommonConfigProvider::FetchProcessConfig(
-    configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
-    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& result) {
-    if (heartbeatResponse.flags() & ::configserver::proto::v2::FetchPipelineConfigDetail) {
-        return FetchProcessConfigFromServer(heartbeatResponse, result);
-    } else {
-        result.Swap(heartbeatResponse.mutable_process_config_updates());
-        return true;
-    }
-}
-
-bool CommonConfigProvider::DumpConfigFile(const configserver::proto::v2::ConfigDetail& config,
-                                          const filesystem::path& sourceDir) {
-    filesystem::path filePath = sourceDir / (config.name() + ".json");
-    filesystem::path tmpFilePath = sourceDir / (config.name() + ".json.new");
-    Json::Value detail;
-    std::string errorMsg;
-    if (!ParseConfigDetail(config.detail(), ".yaml", detail, errorMsg)) {
-        LOG_WARNING(sLogger, ("failed to parse config detail", config.detail()));
-        return false;
-    }
-    detail[CommonConfigProvider::configVersion] = config.version();
-    string configDetail = detail.toStyledString();
-    ofstream fout(tmpFilePath);
-    if (!fout) {
-        LOG_WARNING(sLogger, ("failed to open config file", filePath.string()));
-        return false;
-    }
-    fout << configDetail;
-
+void CommonConfigProvider::UpdateRemoteConfig(
+    const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
+    const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails) {
     error_code ec;
-    filesystem::rename(tmpFilePath, filePath, ec);
-    if (ec) {
-        LOG_WARNING(
-            sLogger,
-            ("failed to dump config file", filePath.string())("error code", ec.value())("error msg", ec.message()));
-        filesystem::remove(tmpFilePath, ec);
-    }
-    return true;
-}
-
-void CommonConfigProvider::UpdateRemotePipelineConfig(
-    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs) {
-    error_code ec;
-    const std::filesystem::path& sourceDir = mPipelineSourceDir;
-    filesystem::create_directories(sourceDir, ec);
+    filesystem::create_directories(mPipelineSourceDir, ec);
     if (ec) {
         StopUsingConfigServer();
         LOG_ERROR(sLogger,
                   ("failed to create dir for common configs", "stop receiving config from common config server")(
-                      "dir", sourceDir.string())("error code", ec.value())("error msg", ec.message()));
+                      "dir", mPipelineSourceDir.string())("error code", ec.value())("error msg", ec.message()));
         return;
     }
 
     lock_guard<mutex> lock(mPipelineMux);
-    lock_guard<mutex> infomaplock(mInfoMapMux);
-    for (const auto& config : configs) {
-        filesystem::path filePath = sourceDir / (config.name() + ".json");
-        if (config.version() == -1) {
-            mPipelineConfigInfoMap.erase(config.name());
-            filesystem::remove(filePath, ec);
-            ConfigFeedbackReceiver::GetInstance().UnregisterPipelineConfig(config.name());
-        } else {
-            if (!DumpConfigFile(config, sourceDir)) {
-                mPipelineConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
-                                                                   .version = config.version(),
-                                                                   .status = ConfigFeedbackStatus::FAILED,
-                                                                   .detail = config.detail()};
-                continue;
-            }
-            mPipelineConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
-                                                               .version = config.version(),
-                                                               .status = ConfigFeedbackStatus::APPLYING,
-                                                               .detail = config.detail()};
-            ConfigFeedbackReceiver::GetInstance().RegisterPipelineConfig(config.name(), this);
-        }
-    }
-}
-
-void CommonConfigProvider::UpdateRemoteProcessConfig(
-    const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs) {
-    error_code ec;
-    const std::filesystem::path& sourceDir = mProcessSourceDir;
-    filesystem::create_directories(sourceDir, ec);
-    if (ec) {
-        StopUsingConfigServer();
-        LOG_ERROR(sLogger,
-                  ("failed to create dir for common configs", "stop receiving config from common config server")(
-                      "dir", sourceDir.string())("error code", ec.value())("error msg", ec.message()));
-        return;
-    }
-
-    lock_guard<mutex> lock(mProcessMux);
-    lock_guard<mutex> infomaplock(mInfoMapMux);
-    for (const auto& config : configs) {
-        filesystem::path filePath = sourceDir / (config.name() + ".yaml");
-        if (config.version() == -1) {
-            mProcessConfigInfoMap.erase(config.name());
-            filesystem::remove(filePath, ec);
-            ConfigFeedbackReceiver::GetInstance().UnregisterProcessConfig(config.name());
-        } else {
-            filesystem::path filePath = sourceDir / (config.name() + ".json");
-            if (config.version() == -1) {
-                mProcessConfigInfoMap.erase(config.name());
+    for (const auto& checkResult : checkResults) {
+        filesystem::path filePath = mPipelineSourceDir / (checkResult.name() + ".yaml");
+        filesystem::path tmpFilePath = mPipelineSourceDir / (checkResult.name() + ".yaml.new");
+        switch (checkResult.check_status()) {
+            case configserver::proto::DELETED:
+                mConfigNameVersionMap.erase(checkResult.name());
                 filesystem::remove(filePath, ec);
-                ConfigFeedbackReceiver::GetInstance().UnregisterProcessConfig(config.name());
-            } else {
-                if (!DumpConfigFile(config, sourceDir)) {
-                    mProcessConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
-                                                                      .version = config.version(),
-                                                                      .status = ConfigFeedbackStatus::FAILED,
-                                                                      .detail = config.detail()};
+                break;
+            case configserver::proto::NEW:
+            case configserver::proto::MODIFIED: {
+                string configDetail;
+                for (const auto& detail : configDetails) {
+                    if (detail.name() == checkResult.name()) {
+                        configDetail = detail.detail();
+                        break;
+                    }
+                }
+                mConfigNameVersionMap[checkResult.name()] = checkResult.new_version();
+                ofstream fout(tmpFilePath);
+                if (!fout) {
+                    LOG_WARNING(sLogger, ("failed to open config file", filePath.string()));
                     continue;
                 }
-                mProcessConfigInfoMap[config.name()] = ConfigInfo{.name = config.name(),
-                                                                  .version = config.version(),
-                                                                  .status = ConfigFeedbackStatus::APPLYING,
-                                                                  .detail = config.detail()};
-                ConfigFeedbackReceiver::GetInstance().RegisterProcessConfig(config.name(), this);
+                fout << configDetail;
+
+                error_code ec;
+                filesystem::rename(tmpFilePath, filePath, ec);
+                if (ec) {
+                    LOG_WARNING(sLogger,
+                                ("failed to dump config file",
+                                 filePath.string())("error code", ec.value())("error msg", ec.message()));
+                    filesystem::remove(tmpFilePath, ec);
+                }
+                break;
             }
+            default:
+                break;
         }
     }
-}
-
-bool CommonConfigProvider::FetchProcessConfigFromServer(
-    ::configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
-    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& res) {
-    configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
-    string requestID = sdk::Base64Enconde(string("FetchProcessConfig").append(to_string(time(NULL))));
-    fetchConfigRequest.set_request_id(requestID);
-    fetchConfigRequest.set_instance_id(GetInstanceId());
-    for (const auto& config : heartbeatResponse.process_config_updates()) {
-        auto reqConfig = fetchConfigRequest.add_req_configs();
-        reqConfig->set_name(config.name());
-        reqConfig->set_version(config.version());
-    }
-    string operation = sdk::CONFIGSERVERAGENT;
-    operation.append("/FetchProcessConfig");
-    string reqBody;
-    fetchConfigRequest.SerializeToString(&reqBody);
-    configserver::proto::v2::FetchConfigResponse emptyResult;
-    string fetchConfigResponse;
-    if (SendHttpRequest(operation, reqBody, "FetchProcessConfig", fetchConfigResponse)) {
-        configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
-        fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
-        res.Swap(fetchConfigResponsePb.mutable_config_details());
-        return true;
-    }
-    return false;
-}
-
-bool CommonConfigProvider::FetchPipelineConfigFromServer(
-    ::configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
-    ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& res) {
-    configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
-    string requestID = sdk::Base64Enconde(string("FetchPipelineConfig").append(to_string(time(NULL))));
-    fetchConfigRequest.set_request_id(requestID);
-    fetchConfigRequest.set_instance_id(GetInstanceId());
-    for (const auto& config : heartbeatResponse.pipeline_config_updates()) {
-        auto reqConfig = fetchConfigRequest.add_req_configs();
-        reqConfig->set_name(config.name());
-        reqConfig->set_version(config.version());
-    }
-    string operation = sdk::CONFIGSERVERAGENT;
-    operation.append("/FetchPipelineConfig");
-    string reqBody;
-    fetchConfigRequest.SerializeToString(&reqBody);
-    configserver::proto::v2::FetchConfigResponse emptyResult;
-    string fetchConfigResponse;
-    if (SendHttpRequest(operation, reqBody, "FetchPipelineConfig", fetchConfigResponse)) {
-        configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
-        fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
-        res.Swap(fetchConfigResponsePb.mutable_config_details());
-        return true;
-    }
-    return false;
-}
-
-void CommonConfigProvider::FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
-    lock_guard<mutex> infomaplock(mInfoMapMux);
-    auto info = mPipelineConfigInfoMap.find(name);
-    if (info != mPipelineConfigInfoMap.end()) {
-        info->second.status = status;
-    }
-    LOG_DEBUG(sLogger,
-              ("CommonConfigProvider", "FeedbackPipelineConfigStatus")("name", name)("status", ToStringView(status)));
-}
-void CommonConfigProvider::FeedbackProcessConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
-    lock_guard<mutex> infomaplock(mInfoMapMux);
-    auto info = mProcessConfigInfoMap.find(name);
-    if (info != mProcessConfigInfoMap.end()) {
-        info->second.status = status;
-    }
-    LOG_DEBUG(sLogger,
-              ("CommonConfigProvider", "FeedbackProcessConfigStatus")("name", name)("status", ToStringView(status)));
-}
-void CommonConfigProvider::FeedbackCommandConfigStatus(const std::string& type,
-                                                       const std::string& name,
-                                                       ConfigFeedbackStatus status) {
-    lock_guard<mutex> infomaplock(mInfoMapMux);
-    auto info = mCommandInfoMap.find(GenerateCommandFeedBackKey(type, name));
-    if (info != mCommandInfoMap.end()) {
-        info->second.status = status;
-    }
-    LOG_DEBUG(sLogger,
-              ("CommonConfigProvider",
-               "FeedbackCommandConfigStatus")("type", type)("name", name)("status", ToStringView(status)));
 }
 
 } // namespace logtail
