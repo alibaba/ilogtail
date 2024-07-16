@@ -108,6 +108,7 @@ protected:
     std::unordered_map<std::string, CommandInfo> mCommandInfoMap;
 
 private:
+    static std::string configVersion;
     struct ConfigServerAddress {
         ConfigServerAddress() = default;
         ConfigServerAddress(const std::string& config_server_host, const std::int32_t& config_server_port)

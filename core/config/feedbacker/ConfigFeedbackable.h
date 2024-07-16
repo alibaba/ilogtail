@@ -27,7 +27,7 @@ std::string_view ToStringView(ConfigFeedbackStatus status);
 
 class ConfigFeedbackable {
 public:
-    virtual ~ConfigFeedbackable() = default;
+    virtual ~ConfigFeedbackable() = default; // LCOV_EXCL_LINE
     virtual void FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) = 0;
     virtual void FeedbackProcessConfigStatus(const std::string& name, ConfigFeedbackStatus status) = 0;
     virtual void

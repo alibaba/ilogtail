@@ -59,7 +59,7 @@
 #include "application/Application.h"
 #include "config_manager/ConfigManager.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "pipeline/PipelineManager.h"
+#include "pipeline/PipelineConfigManager.h"
 #include "plugin/PluginRegistry.h"
 #include "file_server/FileServer.h"
 #include "input/InputContainerStdio.h"

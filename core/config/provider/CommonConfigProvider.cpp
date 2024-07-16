@@ -42,6 +42,8 @@ DEFINE_FLAG_INT32(heartbeat_update_interval, "second", 10);
 
 namespace logtail {
 
+std::string CommonConfigProvider::configVersion = "version";
+
 void CommonConfigProvider::Init(const string& dir) {
     string sName = "CommonConfigProvider";
 
@@ -114,8 +116,8 @@ void CommonConfigProvider::LoadConfigFile() {
         if (LoadConfigDetailFromFile(entry, detail)) {
             ConfigInfo info;
             info.name = entry.path().stem();
-            if (detail.isMember("version") && detail["version"].isInt64()) {
-                info.version = detail["version"].asInt64();
+            if (detail.isMember(CommonConfigProvider::configVersion) && detail[CommonConfigProvider::configVersion].isInt64()) {
+                info.version = detail[CommonConfigProvider::configVersion].asInt64();
             }
             info.status = ConfigFeedbackStatus::APPLYING;
             info.detail = detail.toStyledString();
@@ -128,8 +130,8 @@ void CommonConfigProvider::LoadConfigFile() {
         if (LoadConfigDetailFromFile(entry, detail)) {
             ConfigInfo info;
             info.name = entry.path().stem();
-            if (detail.isMember("version") && detail["version"].isInt64()) {
-                info.version = detail["version"].asInt64();
+            if (detail.isMember(CommonConfigProvider::configVersion) && detail[CommonConfigProvider::configVersion].isInt64()) {
+                info.version = detail[CommonConfigProvider::configVersion].asInt64();
             }
             info.status = ConfigFeedbackStatus::APPLYING;
             info.detail = detail.toStyledString();
@@ -361,7 +363,7 @@ bool CommonConfigProvider::DumpConfigFile(const configserver::proto::v2::ConfigD
         LOG_WARNING(sLogger, ("failed to parse config detail", config.detail()));
         return false;
     }
-    detail["version"] = config.version();
+    detail[CommonConfigProvider::configVersion] = config.version();
     string configDetail = detail.toStyledString();
     ofstream fout(tmpFilePath);
     if (!fout) {
