@@ -18,7 +18,7 @@ project(provider)
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 
 set(PROVIDER_SUB_DIRECTORIES_LIST    
-    profile_sender config/common_provider config_server_pb 
+    profile_sender config/common_provider config_server_pb/v1 config_server_pb/v2
 )
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
