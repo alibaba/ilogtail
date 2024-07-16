@@ -36,7 +36,8 @@ protected:
 
     std::filesystem::path mPipelineSourceDir;
     std::filesystem::path mProcessSourceDir;
-    mutable std::mutex mMux;
+    mutable std::mutex mPipelineMux;
+    mutable std::mutex mProcessMux;
 };
 
 } // namespace logtail

@@ -294,7 +294,7 @@ void LegacyCommonConfigProvider::UpdateRemoteConfig(
         return;
     }
 
-    lock_guard<mutex> lock(mMux);
+    lock_guard<mutex> lock(mPipelineMux);
     for (const auto& checkResult : checkResults) {
         filesystem::path filePath = mPipelineSourceDir / (checkResult.name() + ".yaml");
         filesystem::path tmpFilePath = mPipelineSourceDir / (checkResult.name() + ".yaml.new");

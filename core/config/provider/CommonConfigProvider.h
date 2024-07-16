@@ -102,7 +102,6 @@ protected:
     mutable std::condition_variable mStopCV;
     bool mConfigServerAvailable = false;
 
-    mutable std::mutex mMux; // mutex for file dump
     mutable std::mutex mInfoMapMux;
     std::unordered_map<std::string, ConfigInfo> mPipelineConfigInfoMap;
     std::unordered_map<std::string, ConfigInfo> mProcessConfigInfoMap;

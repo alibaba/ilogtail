@@ -394,7 +394,7 @@ void CommonConfigProvider::UpdateRemotePipelineConfig(
         return;
     }
 
-    lock_guard<mutex> lock(mMux);
+    lock_guard<mutex> lock(mPipelineMux);
     lock_guard<mutex> infomaplock(mInfoMapMux);
     for (const auto& config : configs) {
         filesystem::path filePath = sourceDir / (config.name() + ".json");
@@ -432,7 +432,7 @@ void CommonConfigProvider::UpdateRemoteProcessConfig(
         return;
     }
 
-    lock_guard<mutex> lock(mMux);
+    lock_guard<mutex> lock(mProcessMux);
     lock_guard<mutex> infomaplock(mInfoMapMux);
     for (const auto& config : configs) {
         filesystem::path filePath = sourceDir / (config.name() + ".yaml");
