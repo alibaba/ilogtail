@@ -18,7 +18,6 @@
 #include <json/json.h>
 
 #include <boost/regex.hpp>
-#include <set>
 #include <string>
 
 #include "Labels.h"
