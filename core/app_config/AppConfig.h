@@ -255,7 +255,6 @@ public:
         static AppConfig singleton;
         return &singleton;
     }
-    void GetProcessConfig();
 
     void LoadAppConfig(const std::string& ilogtailConfigFile);
 

@@ -26,7 +26,6 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "pipeline/ProcessConfigManager.h"
 #include "reader/LogFileReader.h"
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
@@ -185,32 +184,6 @@ AppConfig::AppConfig() {
     mForceQuitReadTimeout = 7200;
     LoadEnvTags();
     CheckPurageContainerMode();
-    ProcessConfigManager::GetInstance()->RegisterCallback(std::bind(&AppConfig::GetProcessConfig, this));
-}
-
-void AppConfig::GetProcessConfig() {
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("max_bytes_per_sec", isExist);
-        if (isExist) {
-            mMaxBytePerSec = res;
-        }
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("mem_usage_limit", isExist);
-        if (isExist) {
-            mMemUsageUpLimit = res;
-        }
-    }
-    {
-        bool isExist = false;
-        auto res = ProcessConfigManager::GetInstance()->GetProcessConfigInt64Value("cpu_usage_limit", isExist);
-        if (isExist) {
-            mCpuUsageUpLimit = res;
-        }
-    }
-    CheckAndAdjustParameters();
 }
 
 void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson) {
@@ -1166,12 +1139,6 @@ void AppConfig::CheckAndAdjustParameters() {
         if (mSendRandomSleep)
             mSendRandomSleep = false;
         LOG_INFO(sLogger, ("send flow control", "disable")("send random sleep", "disable"));
-    } else {
-        mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
-        mSendFlowControl = BOOL_FLAG(enable_flow_control);
-        LOG_INFO(sLogger,
-                 ("send flow control", mSendFlowControl ? "enable" : "disable")(
-                     "send random sleep", mSendRandomSleep ? "enable" : "disable"));
     }
 }
 
