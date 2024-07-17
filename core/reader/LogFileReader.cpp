@@ -199,7 +199,7 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mLineParsers.emplace_back(baseLineParsePtr);
 }
 
-void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
+void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray) {
     if (checkConfigFlag) {
         size_t index = mHostLogPath.rfind(PATH_SEPARATOR);
         if (index == string::npos || index == mHostLogPath.size() - 1) {
@@ -241,6 +241,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
+    checkPointPtr->mPositionInReaderArray = idxInReaderArray;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -284,12 +285,14 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
             mContainerStopped = checkPointPtr->mContainerStopped;
+            mIdxInReaderArrayFromLastCpt = checkPointPtr->mPositionInReaderArray;
             LOG_INFO(sLogger,
                      ("recover log reader status from checkpoint, project", GetProject())("logstore", GetLogstore())(
-                         "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
-                         "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
-                         "real file path", mRealLogPath)("last file position", mLastFilePos));
+                         "config", GetConfigName())("log reader queue name", mHostLogPath)("file device",
+                                                                                           ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file signature size", mLastFileSignatureSize)("real file path", mRealLogPath)(
+                         "last file position", mLastFilePos)("index in reader array", mIdxInReaderArrayFromLastCpt));
             // if file is open or
             // last update time is new and the file's container is not stopped we
             // we should use first modify

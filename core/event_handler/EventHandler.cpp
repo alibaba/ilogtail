@@ -289,7 +289,8 @@ ModifyHandler::ModifyHandler(const std::string& configName, const FileDiscoveryC
     : mConfigName(configName) {
     if (pConfig.first && pConfig.second->GetGlobalConfig().mProcessPriority > 0
         && pConfig.second->GetGlobalConfig().mProcessPriority <= ProcessQueueManager::sMaxPriority) {
-        mReadFileTimeSlice = (1 << (ProcessQueueManager::sMaxPriority - pConfig.second->GetGlobalConfig().mProcessPriority + 1))
+        mReadFileTimeSlice
+            = (1 << (ProcessQueueManager::sMaxPriority - pConfig.second->GetGlobalConfig().mProcessPriority + 1))
             * INT64_FLAG(read_file_time_slice);
     } else {
         mReadFileTimeSlice = INT64_FLAG(read_file_time_slice);
@@ -402,21 +403,6 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
     if (readerPtr.get() == NULL)
         return LogFileReaderPtr();
 
-    // new log
-    bool backFlag = false;
-    if (readerPtr->GetRealLogPath().empty() || readerPtr->GetRealLogPath() == readerPtr->GetHostLogPath()) {
-        backFlag = true;
-        // if reader is a new file(not from checkpoint), and file is rotate file, reset file pos
-        if (readerArray.size() > 0 && !readerPtr->IsFromCheckPoint()) {
-            LOG_DEBUG(sLogger, ("file rotate, reset new reader pos", PathJoin(path, name)));
-            readerPtr->ResetLastFilePos();
-        }
-    } else {
-        backFlag = false;
-        // rotate log, push front
-        LOG_DEBUG(sLogger, ("rotator log, push front", readerPtr->GetRealLogPath()));
-    }
-
     // need check skip flag first and if flag is false then open fd
     if (!readerPtr->NeedSkipFirstModify()) {
         if (!readerPtr->UpdateFilePtr()) {
@@ -448,9 +434,36 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         }
     }
 
-    backFlag ? readerArray.push_back(readerPtr) : readerArray.push_front(readerPtr);
+    int32_t idx = readerPtr->GetIdxInReaderArrayFromLastCpt();
+    // new reader
+    if (idx == -1) {
+        if (!(readerPtr->GetRealLogPath().empty() || readerPtr->GetRealLogPath() == readerPtr->GetHostLogPath())) {
+            LOG_ERROR(sLogger,
+                      ("unexpected real log path", readerPtr->GetRealLogPath())("host log path",
+                                                                                readerPtr->GetHostLogPath()));
+        }
+        // if reader is a new file(not from checkpoint), and file is rotate file, reset file pos
+        if (readerArray.size() > 0 && !readerPtr->IsFromCheckPoint()) {
+            LOG_DEBUG(sLogger, ("file rotate, reset new reader pos", PathJoin(path, name)));
+            readerPtr->ResetLastFilePos();
+        }
+        readerArray.push_back(readerPtr);
+        mDevInodeReaderMap[devInode] = readerPtr;
+        // reader not in reader array
+    } else if (idx == -2) {
+        mRotatorReaderMap[devInode] = readerPtr;
+        // reader in reader array
+    } else if (idx >= 0) {
+        readerArray.push_back(readerPtr);
+        mDevInodeReaderMap[devInode] = readerPtr;
+        std::sort(readerArray.begin(), readerArray.end(), ModifyHandler::CompareReaderByIdxFromCpt);
+    } else {
+        LOG_ERROR(sLogger,
+                  ("unexpected idx", idx)("real log path", readerPtr->GetRealLogPath())("host log path",
+                                                                                        readerPtr->GetHostLogPath()));
+        return LogFileReaderPtr();
+    }
     readerPtr->SetReaderArray(&readerArray);
-    mDevInodeReaderMap[devInode] = readerPtr;
 
     LOG_INFO(sLogger,
              ("log reader creation succeed",
@@ -536,6 +549,7 @@ void ModifyHandler::Handle(const Event& event) {
             }
         }
     } else if (event.IsModify()) {
+        LOG_INFO(sLogger, ("handle modify event", event.GetInode()));
         // devInode cannot be found, this means a rotate file(like a.log.1) has event, and reader for rotate file is
         // moved to mRotatorReaderMap
         if (devInode.IsValid() && devInodeIter == mDevInodeReaderMap.end()) {
@@ -947,11 +961,18 @@ void ModifyHandler::HandleTimeOut() {
 bool ModifyHandler::DumpReaderMeta(bool isRotatorReader, bool checkConfigFlag) {
     if (!isRotatorReader) {
         for (DevInodeLogFileReaderMap::iterator it = mDevInodeReaderMap.begin(); it != mDevInodeReaderMap.end(); ++it) {
-            it->second->DumpMetaToMem(checkConfigFlag);
+            int32_t idxInReaderArray = -2;
+            for (size_t i = 0; i < it->second->GetReaderArray()->size(); ++i) {
+                if (it->second->GetReaderArray()->at(i) == it->second) {
+                    idxInReaderArray = i;
+                    break;
+                }
+            }
+            it->second->DumpMetaToMem(checkConfigFlag, idxInReaderArray);
         }
     } else {
         for (DevInodeLogFileReaderMap::iterator it = mRotatorReaderMap.begin(); it != mRotatorReaderMap.end(); ++it) {
-            it->second->DumpMetaToMem(checkConfigFlag);
+            it->second->DumpMetaToMem(checkConfigFlag, -2);
         }
     }
     return true;

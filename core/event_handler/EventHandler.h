@@ -74,6 +74,17 @@ private:
         return left->GetLastUpdateTime() < right->GetLastUpdateTime();
     }
 
+    static bool CompareReaderByIdxFromCpt(const std::shared_ptr<LogFileReader> left, const std::shared_ptr<LogFileReader> right) {
+        // new reader is always at the end of the array
+        if (left->GetIdxInReaderArrayFromLastCpt() == -1) {
+            return false;
+        }
+        if (right->GetIdxInReaderArrayFromLastCpt() == -1) {
+            return true;
+        }
+        return left->GetIdxInReaderArrayFromLastCpt() < right->GetIdxInReaderArrayFromLastCpt();
+    }
+
     LogFileReaderPtr CreateLogFileReaderPtr(const std::string& path,
                                             const std::string& name,
                                             const DevInode& devInode,
