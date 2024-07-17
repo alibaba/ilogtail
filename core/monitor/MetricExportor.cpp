@@ -71,7 +71,7 @@ void PrintMetricsToLocalFile() {
         std::tm now_tm = *std::localtime(&now_time);
         std::ostringstream oss;
         oss << metricsFileNamePrefix << std::put_time(&now_tm, "%Y-%m-%d_%H-%M-%S") << ".json";
-        std::string filePath = outputDirectory + "/" + oss.str();
+        std::string filePath = PathJoin(outputDirectory, oss.str());
 
         // 写入文件
         std::ofstream outFile(filePath);
