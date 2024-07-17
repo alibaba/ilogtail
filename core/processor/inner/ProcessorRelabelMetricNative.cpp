@@ -33,8 +33,8 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
     if (config.isMember("metric_relabel_configs") && config["metric_relabel_configs"].isArray()
         && config["metric_relabel_configs"].size() > 0) {
         for (const auto& item : config["metric_relabel_configs"]) {
-            relabelConfigs.emplace_back(item);
-            if (!relabelConfigs.back().Validate()) {
+            mRelabelConfigs.emplace_back(item);
+            if (!mRelabelConfigs.back().Validate()) {
                 errorMsg = "metric_relabel_configs is invalid";
                 LOG_ERROR(sLogger, ("init prometheus processor failed", errorMsg));
                 return false;
@@ -88,11 +88,13 @@ void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
     string errorMsg;
     // process metricEvent
     Labels labels;
+
+    // TODO: 使用Labels类作为对MetricEvent操作的适配器
     labels.Reset(&sourceEvent);
     Labels result;
 
     // if keep this sourceEvent
-    if (relabel::Process(labels, relabelConfigs, result)) {
+    if (relabel::Process(labels, mRelabelConfigs, result)) {
         // modify sourceEvent by result
 
         // if k/v in labels by not result, then delete it

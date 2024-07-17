@@ -36,8 +36,9 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::vector<RelabelConfig> relabelConfigs;
     void ProcessEvent(PipelineEventGroup& metricGroup, PipelineEventPtr&& e, EventsContainer& newEvents);
+
+    std::vector<RelabelConfig> mRelabelConfigs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorRelabelMetricNativeUnittest;
