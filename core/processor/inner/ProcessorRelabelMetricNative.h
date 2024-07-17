@@ -16,8 +16,11 @@
 
 #pragma once
 
-#include "common/Constants.h"
-#include "plugin/interface/Processor.h"
+#include <string>
+
+#include "PipelineEventGroup.h"
+#include "PipelineEventPtr.h"
+#include "Processor.h"
 #include "prometheus/Relabel.h"
 
 namespace logtail {

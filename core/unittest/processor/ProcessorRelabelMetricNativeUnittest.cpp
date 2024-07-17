@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-#include "common/Constants.h"
+#include "MetricEvent.h"
+#include "TextParser.h"
 #include "common/JsonUtil.h"
-#include "config/Config.h"
 #include "processor/inner/ProcessorRelabelMetricNative.h"
-#include "prometheus/TextParser.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -35,16 +34,15 @@ public:
 };
 
 void ProcessorRelabelMetricNativeUnittest::TestInit() {
-    // make config
     Json::Value config;
-    config["test"] = "test";
-
     ProcessorRelabelMetricNative processor;
     processor.SetContext(mContext);
 
-    // fatal test
+    // error config
+    config["test"] = "test";
     APSARA_TEST_FALSE(processor.Init(config));
 
+    // success config
     string configStr, errorMsg;
     configStr = configStr + R"(
         {
@@ -119,10 +117,7 @@ void ProcessorRelabelMetricNativeUnittest::TestProcess() {
     APSARA_TEST_TRUE(processor.Init(config));
 
     // make events
-
-    const auto& srcBuf = make_shared<SourceBuffer>();
-    auto parser = TextParser(srcBuf);
-    APSARA_TEST_TRUE(parser.Ok());
+    auto parser = TextParser();
     auto eventGroup = parser.Parse(R"""(
 # begin
 
@@ -145,6 +140,14 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
 
     // judge result
     APSARA_TEST_EQUAL((size_t)7, eventGroup.GetEvents().size());
+    APSARA_TEST_EQUAL("test_metric1", eventGroup.GetEvents().at(0).Cast<MetricEvent>().GetName());
+    APSARA_TEST_EQUAL("test_metric2", eventGroup.GetEvents().at(1).Cast<MetricEvent>().GetName());
+    APSARA_TEST_EQUAL("test_metric3", eventGroup.GetEvents().at(2).Cast<MetricEvent>().GetName());
+    APSARA_TEST_EQUAL("test_metric4", eventGroup.GetEvents().at(3).Cast<MetricEvent>().GetName());
+    APSARA_TEST_EQUAL("test_metric5", eventGroup.GetEvents().at(4).Cast<MetricEvent>().GetName());
+    APSARA_TEST_EQUAL("test_metric6", eventGroup.GetEvents().at(5).Cast<MetricEvent>().GetName());
+    APSARA_TEST_EQUAL("test_metric7", eventGroup.GetEvents().at(6).Cast<MetricEvent>().GetName());
+    // test_metric8 is dropped by relabel config
 }
 
 UNIT_TEST_CASE(ProcessorRelabelMetricNativeUnittest, TestInit)

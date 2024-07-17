@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "ProcessorRelabelMetricNative.h"
 
 #include <json/json.h>
 
-#include "common/ParamExtractor.h"
+#include "PipelineEventGroup.h"
+#include "PipelineEventPtr.h"
 #include "models/MetricEvent.h"
+
 using namespace std;
 namespace logtail {
 
@@ -27,7 +28,7 @@ const string ProcessorRelabelMetricNative::sName = "processor_relabel_metric_nat
 
 // only for inner processor
 bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
-    LOG_INFO(sLogger, ("LOG_INFO processor config", config.toStyledString()));
+    LOG_INFO(sLogger, ("processor init", config.toStyledString()));
     std::string errorMsg;
     if (config.isMember("metric_relabel_configs") && config["metric_relabel_configs"].isArray()
         && config["metric_relabel_configs"].size() > 0) {
@@ -46,7 +47,7 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
 }
 
 void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
-    LOG_INFO(sLogger, ("LOG_INFO processor process", sName)("config", mContext->GetConfigName()));
+    LOG_INFO(sLogger, ("processor process", sName)("config", mContext->GetConfigName()));
     if (metricGroup.GetEvents().empty()) {
         return;
     }
