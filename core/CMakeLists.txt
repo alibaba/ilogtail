@@ -32,7 +32,6 @@ cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT stat
 option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHOUTSPL "Build Logtail and UT without SPL")
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
-option(ENABLE_METRICS_FILE_OUTPUT "print self monitor metrics to file")
 
 if (ENABLE_ENTERPRISE)
     message(STATUS "Enable Enterprise Feature.")
@@ -44,10 +43,6 @@ endif ()
 
 if (WITHOUTSPL)
     add_definitions(-D__EXCLUDE_SPL__)
-endif()
-
-if (ENABLE_METRICS_FILE_OUTPUT)
-    add_definitions(-D__ENABLE_METRICS_FILE_OUTPUT__)
 endif()
 
 # Default C/CXX flags.

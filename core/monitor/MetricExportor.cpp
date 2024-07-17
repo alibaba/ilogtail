@@ -14,29 +14,66 @@
 
 #include "MetricExportor.h"
 
+#include <filesystem>
+
 #include "LogFileProfiler.h"
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
+#include "common/FileSystemUtil.h"
+#include "common/RuntimeUtil.h"
 #include "config_manager/ConfigManager.h"
 #include "log_pb/sls_logs.pb.h"
 #include "sender/Sender.h"
-#ifdef __ENABLE_METRICS_FILE_OUTPUT__
-#include <filesystem>
-#include "common/FileSystemUtil.h"
-#include "common/RuntimeUtil.h"
-#endif
 
 using namespace sls_logs;
 using namespace std;
 
+DECLARE_FLAG_STRING(metrics_report_method);
+
 namespace logtail {
 
-#ifdef __ENABLE_METRICS_FILE_OUTPUT__
+MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
+}
+
+void MetricExportor::PushMetrics(bool forceSend) {
+    int32_t curTime = time(NULL);
+    if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
+        return;
+    }
+    ReadMetrics::GetInstance()->UpdateMetrics();
+
+    if ("sls" == STRING_FLAG(metrics_report_method)) {
+        SendToSLS();
+    } else if ("file" == STRING_FLAG(metrics_report_method)) {
+        SendToLocalFile();
+    }
+}
+
+void MetricExportor::SendToSLS() {
+    std::map<std::string, sls_logs::LogGroup*> logGroupMap;
+    ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
+
+    std::map<std::string, sls_logs::LogGroup*>::iterator iter;
+    for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
+        sls_logs::LogGroup* logGroup = iter->second;
+        logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
+        logGroup->set_source(LogFileProfiler::mIpAddr);
+        logGroup->set_topic(METRIC_TOPIC_TYPE);
+        if (METRIC_REGION_DEFAULT == iter->first) {
+            ProfileSender::GetInstance()->SendToProfileProject(ProfileSender::GetInstance()->GetDefaultProfileRegion(),
+                                                               *logGroup);
+        } else {
+            ProfileSender::GetInstance()->SendToProfileProject(iter->first, *logGroup);
+        }
+        delete logGroup;
+    }
+}
+
 const std::string metricsDirName = "self_metrics";
 const std::string metricsFileNamePrefix = "self-metrics-";
 const size_t maxFiles = 60; // 每分钟记录一次，最多保留1h的记录
 
-void PrintMetricsToLocalFile() {
+void MetricExportor::SendToLocalFile() {
     std::string metricsContent;
     ReadMetrics::GetInstance()->ReadAsFileBuffer(metricsContent);
     if (!metricsContent.empty()) {
@@ -82,40 +119,6 @@ void PrintMetricsToLocalFile() {
             outFile.close();
         }
     }
-}
-#endif
-
-MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
-}
-
-void MetricExportor::PushMetrics(bool forceSend) {
-    int32_t curTime = time(NULL);
-    if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
-        return;
-    }
-    ReadMetrics::GetInstance()->UpdateMetrics();
-
-    std::map<std::string, sls_logs::LogGroup*> logGroupMap;
-    ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
-
-    std::map<std::string, sls_logs::LogGroup*>::iterator iter;
-    for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
-        sls_logs::LogGroup* logGroup = iter->second;
-        logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
-        logGroup->set_source(LogFileProfiler::mIpAddr);
-        logGroup->set_topic(METRIC_TOPIC_TYPE);
-        if (METRIC_REGION_DEFAULT == iter->first) {
-            ProfileSender::GetInstance()->SendToProfileProject(ProfileSender::GetInstance()->GetDefaultProfileRegion(),
-                                                               *logGroup);
-        } else {
-            ProfileSender::GetInstance()->SendToProfileProject(iter->first, *logGroup);
-        }
-        delete logGroup;
-    }
-
-#ifdef __ENABLE_METRICS_FILE_OUTPUT__
-    PrintMetricsToLocalFile();
-#endif
 }
 
 } // namespace logtail
