@@ -18,7 +18,6 @@
 #include <json/json.h>
 
 #include <boost/regex.hpp>
-#include <set>
 #include <string>
 
 #include "Labels.h"
@@ -48,9 +47,9 @@ public:
     LabelName();
     LabelName(std::string);
 
-    bool isValid();
+    bool Validate();
 
-    std::string labelName;
+    std::string mLabelName;
 
 private:
 };
@@ -64,20 +63,20 @@ public:
 
     // A list of labels from which values are taken and concatenated
     // with the configured separator in order.
-    std::vector<std::string> sourceLabels;
+    std::vector<std::string> mSourceLabels;
     // Separator is the string between concatenated values from the source labels.
-    std::string separator;
+    std::string mSeparator;
     // Regex against which the concatenation is matched.
-    boost::regex regex;
+    boost::regex mRegex;
     // Modulus to take of the hash of concatenated values from the source labels.
-    uint64_t modulus = 0;
+    uint64_t mModulus = 0;
     // TargetLabel is the label to which the resulting string is written in a replacement.
     // Regexp interpolation is allowed for the replace action.
-    std::string targetLabel;
+    std::string mTargetLabel;
     // Replacement is the regex replacement pattern to be used.
-    std::string replacement;
+    std::string mReplacement;
     // Action is the action to be performed for the relabeling.
-    Action action;
+    Action mAction;
 
 private:
 };
