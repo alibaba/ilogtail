@@ -38,9 +38,6 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY AND WITHSPL)
     return()
 endif()
 
-set(UT_LINK OFF)
-set(UT_LINK_NEED_SPL OFF)
-
 if (ENABLE_ENTERPRISE)
     message(STATUS "Enable Enterprise Feature.")
     add_definitions(-D__ENTERPRISE__)
@@ -225,7 +222,7 @@ add_subdirectory(common)
 # Link libraries.
 if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     input_link(${LOGTAIL_TARGET})
-    processor_link(${LOGTAIL_TARGET} ${UT_LINK} ${UT_LINK_NEED_SPL})
+    processor_link(${LOGTAIL_TARGET} ${WITHSPL})
     flusher_link(${LOGTAIL_TARGET})
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})
