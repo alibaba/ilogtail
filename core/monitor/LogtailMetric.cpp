@@ -365,6 +365,42 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
     }
 }
 
+void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
+    ReadLock lock(mReadWriteLock);
+
+    std::ostringstream oss;
+
+    MetricsRecord* tmp = mHead;
+    while (tmp) {
+        Json::Value metricsRecordValue;
+        auto now = GetCurrentLogtailTime();
+        metricsRecordValue["time"]
+            = AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec;
+
+        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+            std::pair<std::string, std::string> pair = *item;
+            metricsRecordValue[LABEL_PREFIX + pair.first] = pair.second;
+        }
+
+        for (auto& item : tmp->GetCounters()) {
+            CounterPtr counter = item;
+            metricsRecordValue[VALUE_PREFIX + counter->GetName()] = ToString(counter->GetValue());
+        }
+
+        for (auto& item : tmp->GetGauges()) {
+            GaugePtr gauge = item;
+            metricsRecordValue[VALUE_PREFIX + gauge->GetName()] = ToString(gauge->GetValue());
+        }
+
+        Json::StreamWriterBuilder writer;
+        writer["indentation"] = "";
+        std::string jsonString = Json::writeString(writer, metricsRecordValue);
+        oss << jsonString << '\n';
+
+        tmp = tmp->GetNext();
+    }
+    metricsContent = oss.str();
+}
 
 void ReadMetrics::UpdateMetrics() {
     MetricsRecord* snapshot = WriteMetrics::GetInstance()->DoSnapshot();

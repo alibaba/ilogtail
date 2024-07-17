@@ -160,6 +160,7 @@ public:
         return ptr;
     }
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
+    void ReadAsFileBuffer(std::string& metricsContent) const;
     void UpdateMetrics();
 
 #ifdef APSARA_UNIT_TEST_MAIN
