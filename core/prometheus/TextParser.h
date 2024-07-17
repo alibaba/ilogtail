@@ -18,7 +18,8 @@
 
 #include <re2/re2.h>
 
-#include "models/MetricEvent.h"
+#include <string>
+
 #include "models/PipelineEventGroup.h"
 
 namespace logtail {
@@ -27,24 +28,15 @@ extern const std::string SAMPLE_RE;
 
 class TextParser {
 public:
-    TextParser(const std::shared_ptr<SourceBuffer>& sourceBuffer)
-        : mSourceBuffer(sourceBuffer), mSampleRegex(SAMPLE_RE) {
-        if (!mSampleRegex.ok()) {
-            mErr = std::make_shared<std::exception>(std::invalid_argument("invalid regex"));
-        }
-    }
+    TextParser() : mSampleRegex(SAMPLE_RE) {}
     PipelineEventGroup Parse(const std::string& content);
+
+
     PipelineEventGroup Parse(const std::string& content,
                              std::time_t defaultTs,
                              const std::string& jobName = "",
                              const std::string& instance = "");
-
-    bool Ok() const;
-    std::shared_ptr<std::exception> Err() const;
-
 private:
-    std::shared_ptr<std::exception> mErr;
-    std::shared_ptr<SourceBuffer> mSourceBuffer;
     RE2 mSampleRegex;
 
 #ifdef APSARA_UNIT_TEST_MAIN
