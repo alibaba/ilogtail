@@ -22,7 +22,7 @@
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
-#include "config/Config.h"
+#include "config/PipelineConfig.h"
 #include "event/Event.h"
 #include "event_handler/EventHandler.h"
 #include "file_server/FileServer.h"
@@ -65,7 +65,7 @@ protected:
         // init pipeline and config
         unique_ptr<Json::Value> configJson;
         string configStr, errorMsg;
-        unique_ptr<Config> config;
+        unique_ptr<PipelineConfig> config;
         unique_ptr<Pipeline> pipeline;
         list<ProcessQueue>::iterator que;
 
@@ -99,7 +99,7 @@ protected:
         APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
         Json::Value inputConfigJson = (*configJson)["inputs"][0];
 
-        config.reset(new Config(mConfigName, std::move(configJson)));
+        config.reset(new PipelineConfig(mConfigName, std::move(configJson)));
         APSARA_TEST_TRUE(config->Parse());
         pipeline.reset(new Pipeline());
         APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
