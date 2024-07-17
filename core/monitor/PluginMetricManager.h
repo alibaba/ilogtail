@@ -23,12 +23,8 @@ namespace logtail {
 
 class PluginMetricManager {
 public:
-    PluginMetricManager(const LabelsPtr defaultLabels,
-                        std::vector<std::string> counterKeys,
-                        std::vector<std::string> gaugeKeys)
-        : mDefaultLabels(defaultLabels->begin(), defaultLabels->end()),
-          mCounterKeys(counterKeys),
-          mGaugeKeys(gaugeKeys) {}
+    PluginMetricManager(const LabelsPtr defaultLabels, std::unordered_map<std::string, MetricType> metricKeys)
+        : mDefaultLabels(defaultLabels->begin(), defaultLabels->end()), mMetricKeys(metricKeys) {}
 
     ReusableMetricsRecordRef GetOrCreateReusableMetricsRecordRef(MetricLabels labels);
     void ReleaseReusableMetricsRecordRef(MetricLabels labels);
@@ -39,8 +35,7 @@ private:
     std::string GenerateKey(MetricLabels& labels);
 
     MetricLabels mDefaultLabels;
-    std::vector<std::string> mCounterKeys;
-    std::vector<std::string> mGaugeKeys;
+    std::unordered_map<std::string, MetricType> mMetricKeys;
     std::unordered_map<std::string, ReusableMetricsRecordRef> mReusableMetricsRecordRefsMap;
     mutable std::shared_mutex mutex;
 

@@ -144,15 +144,20 @@ const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
 
-void ReusableMetricsRecord::Init(MetricLabels& labels,
-                                 std::vector<std::string>& counterKeys,
-                                 std::vector<std::string>& gaugeKeys) {
+// ReusableMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
+void ReusableMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-    for (auto counterKey : counterKeys) {
-        mCounters[counterKey] = mMetricsRecordRef.CreateCounter(counterKey);
-    }
-    for (auto gaugeKey : gaugeKeys) {
-        mGauges[gaugeKey] = mMetricsRecordRef.CreateGauge(gaugeKey);
+    for (auto metric : metricKeys) {
+        switch (metric.second) {
+            case MetricType::METRIC_TYPE_COUNTER:
+                mCounters[metric.first] = mMetricsRecordRef.CreateCounter(metric.first);
+                break;
+            case MetricType::METRIC_TYPE_GAUGE:
+                mGauges[metric.first] = mMetricsRecordRef.CreateGauge(metric.first);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -160,13 +165,11 @@ const LabelsPtr& ReusableMetricsRecord::GetLabels() const {
     return mMetricsRecordRef->GetLabels();
 }
 
-
 CounterPtr ReusableMetricsRecord::GetCounter(const std::string& name) {
     auto it = mCounters.find(name);
     if (it != mCounters.end()) {
         return it->second;
     }
-    LOG_ERROR(sLogger, ("failed to get counter from MetricsRecord, name", name));
     return nullptr;
 }
 
@@ -175,7 +178,6 @@ GaugePtr ReusableMetricsRecord::GetGauge(const std::string& name) {
     if (it != mGauges.end()) {
         return it->second;
     }
-    LOG_ERROR(sLogger, ("failed to get gauge from MetricsRecord, name", name));
     return nullptr;
 }
 

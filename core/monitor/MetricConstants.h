@@ -24,8 +24,6 @@ extern const std::string METRIC_REGION_DEFAULT;
 extern const std::string METRIC_SLS_LOGSTORE_NAME;
 extern const std::string METRIC_TOPIC_TYPE;
 extern const std::string METRIC_TOPIC_FIELD_NAME;
-extern const std::string METRIC_TYPE_COUNTER;
-extern const std::string METRIC_TYPE_GAUGE;
 
 extern const std::string LABEL_PREFIX;
 extern const std::string VALUE_PREFIX;

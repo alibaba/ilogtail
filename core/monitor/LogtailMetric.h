@@ -24,6 +24,11 @@
 
 namespace logtail {
 
+enum class MetricType {
+    METRIC_TYPE_COUNTER,
+    METRIC_TYPE_GAUGE,
+};
+
 class Counter {
 private:
     std::string mName;
@@ -107,7 +112,7 @@ private:
     std::unordered_map<std::string, GaugePtr> mGauges;
 
 public:
-    void Init(MetricLabels& labels, std::vector<std::string>& counterKeys, std::vector<std::string>& gaugeKeys);
+    void Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys);
     const LabelsPtr& GetLabels() const;
     CounterPtr GetCounter(const std::string& name);
     GaugePtr GetGauge(const std::string& name);

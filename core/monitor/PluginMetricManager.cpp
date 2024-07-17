@@ -34,7 +34,7 @@ ReusableMetricsRecordRef PluginMetricManager::GetOrCreateReusableMetricsRecordRe
         newLabels.insert(newLabels.end(), labels.begin(), labels.end());
 
         ReusableMetricsRecordRef ptr = std::make_shared<ReusableMetricsRecord>();
-        ptr->Init(newLabels, mCounterKeys, mGaugeKeys);
+        ptr->Init(newLabels, mMetricKeys);
 
         mReusableMetricsRecordRefsMap.emplace(key, ptr);
         if (mSizeGauge != nullptr) {
