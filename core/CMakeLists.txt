@@ -30,7 +30,7 @@ option(ENABLE_ENTERPRISE "enable enterprise feature")
 cmake_dependent_option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" OFF "LINUX" OFF)
 cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" OFF "LINUX" OFF)
 option(WITHOUTGDB "Build Logtail without gdb")
-option(WITHSPL "Link Logtail with SPL" ON)
+option(WITHSPL "Build Logtail and UT with SPL" ON)
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
 
 if (BUILD_LOGTAIL_SHARED_LIBRARY AND WITHSPL)
@@ -217,14 +217,6 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
     endif()
 endif ()
 
-# Logtail UT.
-if (BUILD_LOGTAIL_UT)
-    message(STATUS "Build unittest.")
-    include(CTest)
-    enable_testing()
-    add_subdirectory(unittest)
-endif ()
-
 # Generate independent libraries.
 # add_subdirectory(helper)
 add_subdirectory(go_pipeline)
@@ -238,3 +230,11 @@ if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})
 endif()
+
+# Logtail UT.
+if (BUILD_LOGTAIL_UT)
+    message(STATUS "Build unittest.")
+    include(CTest)
+    enable_testing()
+    add_subdirectory(unittest)
+endif ()

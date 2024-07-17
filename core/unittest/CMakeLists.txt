@@ -23,12 +23,6 @@ if (MSVC)
 endif ()
 set(UT_LINK ON)
 
-include(${CMAKE_SOURCE_DIR}/links.cmake)
-include(${CMAKE_SOURCE_DIR}/common/links.cmake)
-include(${CMAKE_SOURCE_DIR}/processor/links.cmake)
-include(${CMAKE_SOURCE_DIR}/input/links.cmake)
-include(${CMAKE_SOURCE_DIR}/flusher/links.cmake)
-
 macro(add_core_subdir)
     add_subdirectory(app_config)
     add_subdirectory(batch)
