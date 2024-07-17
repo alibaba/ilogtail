@@ -14,19 +14,12 @@
 # limitations under the License.
 # This file is used to link external source files in processor directory
 
-macro(processor_link target_name ut_link ut_link_need_spl)
+macro(processor_link target_name link_withspl)
     link_re2(${target_name})
-    if(${ut_link})
-        if(${ut_link_need_spl})
-            link_spl(${target_name})
-            target_link_libraries(${target_name} spl)
-        endif()
-    else ()
-        if (LINUX AND WITHSPL)
-            link_spl(${target_name})
-            target_link_libraries(${target_name} spl)
-        endif ()
-    endif()
+    if (LINUX AND ${link_withspl})
+        link_spl(${target_name})
+        target_link_libraries(${target_name} spl)
+    endif ()
     link_ssl(${target_name}) # must after link_spl
     link_crypto(${target_name}) # must after link_spl
 endmacro()
