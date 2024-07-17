@@ -25,6 +25,7 @@ endif ()
 
 # Options.
 option(BUILD_LOGTAIL "Build Logtail executable and tools" ON)
+# Used under the Android environment.
 option(BUILD_LOGTAIL_SHARED_LIBRARY "Build Logtail shared library")
 option(ENABLE_ENTERPRISE "enable enterprise feature")
 cmake_dependent_option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" OFF "LINUX" OFF)
@@ -97,8 +98,8 @@ endif ()
 include(${CMAKE_CURRENT_SOURCE_DIR}/utils.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/links.cmake)
-set(SUBDIR_SOURCE_FILES_CORE "")
-set(SUBDIR_SOURCE_FILES_SPL "")
+set(PLUGIN_SOURCE_FILES_CORE "")
+set(PLUGIN_SOURCE_FILES_SPL "")
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/common.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/links.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/input/input.cmake)
@@ -144,35 +145,35 @@ endforeach (DIR_NAME)
 
 foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     file(GLOB TEMP_SOURCE_FILES ${DIR_NAME}/*.c ${DIR_NAME}/*.cc ${DIR_NAME}/*.cpp)
-    list(APPEND SOURCE_FILES_LIST ${TEMP_SOURCE_FILES})
+    list(APPEND FRAMEWORK_SOURCE_FILES ${TEMP_SOURCE_FILES})
 endforeach (DIR_NAME)
 
 if (ENABLE_ENTERPRISE)
     # remove several files in shennong/sdk
-    list(REMOVE_ITEM SOURCE_FILES_LIST ${CMAKE_CURRENT_SOURCE_DIR}/shennong/sdk/sample.cpp)
+    list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shennong/sdk/sample.cpp)
 endif()
 
 # remove several files in go_pipeline
-list(REMOVE_ITEM SOURCE_FILES_LIST ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.cpp ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.h)
+list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.cpp ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/LogtailPluginAdapter.h)
 
 if(MSVC)
     # remove linux event listener
     file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Linux.cpp event_listener/*_Linux.h)
-    list(REMOVE_ITEM SOURCE_FILES_LIST ${REMOVE_EVENT_LISTENER_SOURCES})
+    list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
 elseif(UNIX)
     # remove windows event listener
     file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Windows.cpp event_listener/*_Windows.h)
-    list(REMOVE_ITEM SOURCE_FILES_LIST ${REMOVE_EVENT_LISTENER_SOURCES})
+    list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
     if (LINUX)
         # observer
         file(GLOB_RECURSE APPEND_OBSERVER_SOURCES observer/*)
-        list(APPEND SOURCE_FILES_LIST ${APPEND_OBSERVER_SOURCES})
+        list(APPEND FRAMEWORK_SOURCE_FILES ${APPEND_OBSERVER_SOURCES})
         if (WITHSPL)
-            set(SRC_FILES ${SUBDIR_SOURCE_FILES_SPL})
+            set(SRC_FILES ${PLUGIN_SOURCE_FILES_SPL})
         endif()
     endif()
 endif()
-set(SRC_FILES ${SRC_FILES} ${SOURCE_FILES_LIST} ${SUBDIR_SOURCE_FILES_CORE})
+set(SRC_FILES ${SRC_FILES} ${FRAMEWORK_SOURCE_FILES} ${PLUGIN_SOURCE_FILES_CORE})
 
 # Generate SPL library.
 if (LINUX)
