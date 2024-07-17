@@ -40,6 +40,8 @@ public:
 
     bool SetLabels(const Labels& labels);
     void SetPipelineInfo(QueueKey queueKey, size_t inputIndex);
+
+    // TODO: 分析后续是否可以删掉
     void SetHostAndPort(const std::string& host, uint32_t port);
 
     std::string GetHash();
@@ -71,6 +73,7 @@ private:
     friend class ScrapeWork;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeTargetUnittest;
+    friend class ScrapeJobUnittest;
 #endif
 };
 
@@ -102,6 +105,7 @@ private:
     friend class ScrapeWorkUnittest;
     friend class PrometheusInputRunnerUnittest;
     friend class InputPrometheusUnittest;
+    friend class ScrapeJobUnittest;
 #endif
 };
 

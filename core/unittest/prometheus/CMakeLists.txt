@@ -24,6 +24,9 @@ target_link_libraries(relabel_unittest unittest_base)
 add_executable(textparser_unittest TextParserUnittest.cpp)
 target_link_libraries(textparser_unittest unittest_base)
 
+add_executable(scrape_job_unittest ScrapeJobUnittest.cpp)
+target_link_libraries(scrape_job_unittest unittest_base)
+
 add_executable(scrape_work_unittest ScrapeWorkUnittest.cpp)
 target_link_libraries(scrape_work_unittest unittest_base)
 
@@ -33,3 +36,4 @@ gtest_discover_tests(labels_unittest)
 gtest_discover_tests(relabel_unittest)
 gtest_discover_tests(textparser_unittest)
 gtest_discover_tests(scrape_work_unittest)
+gtest_discover_tests(scrape_job_unittest)
