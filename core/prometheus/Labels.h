@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <string>
@@ -24,6 +25,9 @@
 #include "models/MetricEvent.h"
 
 namespace logtail {
+
+const uint64_t prime64 = 1099511628211;
+const uint64_t offset64 = 14695981039346656037ULL;
 
 // Label is a key/value pair of strings.
 struct Label {
@@ -38,7 +42,7 @@ class Labels {
 public:
     Labels();
     size_t Size() const;
-    std::string Hash();
+    uint64_t Hash();
     void RemoveMetaLabels();
 
     std::string Get(const std::string&);
