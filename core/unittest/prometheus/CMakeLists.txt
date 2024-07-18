@@ -30,6 +30,9 @@ target_link_libraries(scrape_job_unittest unittest_base)
 add_executable(scrape_work_unittest ScrapeWorkUnittest.cpp)
 target_link_libraries(scrape_work_unittest unittest_base)
 
+add_executable(scraper_unittest ScraperUnittest.cpp)
+target_link_libraries(scraper_unittest unittest_base)
+
 include(GoogleTest)
 
 gtest_discover_tests(labels_unittest)
@@ -37,3 +40,4 @@ gtest_discover_tests(relabel_unittest)
 gtest_discover_tests(textparser_unittest)
 gtest_discover_tests(scrape_work_unittest)
 gtest_discover_tests(scrape_job_unittest)
+gtest_discover_tests(scraper_unittest)

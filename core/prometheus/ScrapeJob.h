@@ -41,7 +41,7 @@ public:
     void StartTargetsDiscoverLoop();
     void StopTargetsDiscoverLoop();
 
-    std::unordered_map<std::string, std::unique_ptr<ScrapeTarget>> GetScrapeTargetsMapCopy();
+    std::unordered_map<std::string, ScrapeTarget> GetScrapeTargetsMapCopy();
 
     std::string mJobName;
     std::string mScheme;
@@ -97,9 +97,9 @@ private:
     std::string ConvertMapParamsToQueryString() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void SetMockHTTPClient(sdk::HTTPClient* httpClient);
     friend class ScrapeJobUnittest;
     friend class PrometheusInputRunnerUnittest;
+    friend class ScraperGroupUnittest;
 #endif
 };
 

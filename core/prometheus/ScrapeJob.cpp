@@ -162,13 +162,13 @@ void ScrapeJob::StopTargetsDiscoverLoop() {
     mScrapeTargetsMap.clear();
 }
 
-unordered_map<string, unique_ptr<ScrapeTarget>> ScrapeJob::GetScrapeTargetsMapCopy() {
+unordered_map<string, ScrapeTarget> ScrapeJob::GetScrapeTargetsMapCopy() {
     lock_guard<mutex> lock(mMutex);
 
-    std::unordered_map<std::string, std::unique_ptr<ScrapeTarget>> copy;
+    unordered_map<string, ScrapeTarget> copy;
 
-    for (const auto& pair : mScrapeTargetsMap) {
-        copy[pair.first] = std::make_unique<ScrapeTarget>(*pair.second);
+    for (const auto& [targetHash, targetPtr] : mScrapeTargetsMap) {
+        copy.emplace(targetHash, *targetPtr);
     }
 
     return copy;
@@ -334,11 +334,5 @@ string ScrapeJob::ConvertMapParamsToQueryString() const {
     }
     return ss.str();
 }
-
-#ifdef APSARA_UNIT_TEST_MAIN
-void ScrapeJob::SetMockHTTPClient(sdk::HTTPClient* httpClient) {
-    mClient.reset(httpClient);
-}
-#endif
 
 } // namespace logtail

@@ -128,9 +128,7 @@ protected:
         setenv("OPERATOR_HOST", "127.0.0.1", 1);
         setenv("OPERATOR_PORT", "12345", 1);
         std::string errMsg;
-        if (ParseJsonTable(mConfigString, mConfig, errMsg)) {
-            std::cout << "JSON parsing succeeded." << std::endl;
-        } else {
+        if (!ParseJsonTable(mConfigString, mConfig, errMsg)) {
             std::cerr << "JSON parsing failed." << std::endl;
         }
     }
@@ -232,16 +230,16 @@ void ScrapeJobUnittest::ScrapeJobTargetsDiscovery() {
 
     const auto& scrapeTargetsMap = scrapeJobPtr->GetScrapeTargetsMapCopy();
     APSARA_TEST_EQUAL(scrapeTargetsMap.size(), 1u);
-    for (const auto& pair : scrapeTargetsMap) {
-        APSARA_TEST_TRUE(pair.first.find("192.168.22.7") != std::string::npos);
-        APSARA_TEST_EQUAL(pair.second->mLabels.Size(), 6UL);
-        APSARA_TEST_EQUAL(pair.second->mJobName, "_kube-state-metrics");
-        APSARA_TEST_EQUAL(pair.second->mMetricsPath, "/metrics");
-        APSARA_TEST_EQUAL(pair.second->mScheme, "http");
-        APSARA_TEST_EQUAL(pair.second->mHost, "192.168.22.7");
-        APSARA_TEST_EQUAL(pair.second->mPort, 8080UL);
-        APSARA_TEST_EQUAL(pair.second->mScrapeInterval, 30);
-        APSARA_TEST_EQUAL(pair.second->mScrapeTimeout, 30);
+    for (const auto& [hashTarget, target] : scrapeTargetsMap) {
+        APSARA_TEST_TRUE(hashTarget.find("192.168.22.7") != std::string::npos);
+        APSARA_TEST_EQUAL(target.mLabels.Size(), 6UL);
+        APSARA_TEST_EQUAL(target.mJobName, "_kube-state-metrics");
+        APSARA_TEST_EQUAL(target.mMetricsPath, "/metrics");
+        APSARA_TEST_EQUAL(target.mScheme, "http");
+        APSARA_TEST_EQUAL(target.mHost, "192.168.22.7");
+        APSARA_TEST_EQUAL(target.mPort, 8080UL);
+        APSARA_TEST_EQUAL(target.mScrapeInterval, 30);
+        APSARA_TEST_EQUAL(target.mScrapeTimeout, 30);
     }
 
     scrapeJobPtr->StopTargetsDiscoverLoop();

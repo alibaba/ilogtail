@@ -37,6 +37,7 @@ public:
                  int interval,
                  int timeout,
                  const std::map<std::string, std::string>& headers);
+    ScrapeTarget() = default;
 
     bool SetLabels(const Labels& labels);
     void SetPipelineInfo(QueueKey queueKey, size_t inputIndex);
