@@ -36,3 +36,5 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
+- [public] [both] [updated] add chenge log check to github ci
