@@ -23,6 +23,7 @@
 #include <string>
 
 #include "FeedbackQueueKey.h"
+#include "StringTools.h"
 #include "TextParser.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -104,7 +105,7 @@ bool ScrapeTarget::SetLabels(const Labels& labels) {
     // set URL
     mTargetURL = mScheme + "://" + mHost + ":" + to_string(mPort) + mMetricsPath
         + (mQueryString.empty() ? "" : "?" + mQueryString);
-    mHash = mJobName + mTargetURL + mLabels.Hash();
+    mHash = mJobName + mTargetURL + ToString(mLabels.Hash());
 
     return true;
 }
