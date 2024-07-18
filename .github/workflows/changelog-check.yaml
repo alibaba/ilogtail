@@ -1,0 +1,33 @@
+name: Check Changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Check if changelog exists in PR
+        id: check_for_changelog
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          if git diff --name-only origin/${{ github.base_ref }} | grep -q 'CHANGELOG.md'; then
+            echo "Changelog file found."
+            echo "changelog_exists=true" >> $GITHUB_ENV
+          else
+            echo "Changelog file not found."
+            echo "changelog_exists=false" >> $GITHUB_ENV
+          fi
+
+      - name: Fail if no changelog
+        if: env.changelog_exists == 'false'
+        run: |
+          echo "Error: No CHANGELOG.md file found in this Pull Request."
+          exit 1
