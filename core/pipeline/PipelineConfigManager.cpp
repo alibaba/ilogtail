@@ -19,6 +19,7 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "observer/ObserverManager.h"
 #endif
@@ -41,31 +42,36 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
+    static bool isPrometheusInputRunnerStarted = false;
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     static bool isInputStreamStarted = false;
 #endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
          isInputContainerStdioChanged = false;
+    bool isInputPrometheusChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged);
     }
     for (const auto& config : diff.mModified) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged);
     }
     for (const auto& config : diff.mAdded) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -109,7 +115,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mLogstore,
                 config.mRegion);
             diff.mUnchanged.push_back(config.mName);
-            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::FAILED);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
         ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
@@ -135,7 +142,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
-            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::FAILED);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
@@ -163,6 +171,12 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         } else {
             FileServer::GetInstance()->Start();
             isFileServerStarted = true;
+        }
+    }
+    if (isInputPrometheusChanged) {
+        if (!isPrometheusInputRunnerStarted) {
+            PrometheusInputRunner::GetInstance()->Start();
+            isPrometheusInputRunnerStarted = true;
         }
     }
 #if defined(__linux__) && !defined(__ANDROID__)
@@ -233,6 +247,7 @@ void PipelineManager::StopAllPipelines() {
     ObserverManager::GetInstance()->HoldOn(true);
 #endif
     FileServer::GetInstance()->Stop();
+    PrometheusInputRunner::GetInstance()->Stop();
 
     Sender::Instance()->SetQueueUrgent();
     bool logProcessFlushFlag = false;
@@ -289,7 +304,8 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
                                           bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged) {
+                                          bool& isInputContainerStdioChanged,
+                                          bool& isInputPrometheusChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -299,6 +315,8 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
+    } else if (inputType == "input_prometheus") {
+        isInputPrometheusChanged = true;
     }
 }
 

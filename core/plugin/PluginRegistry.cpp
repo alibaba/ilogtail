@@ -27,6 +27,7 @@
 #include "flusher/FlusherSLS.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
+#include "input/InputPrometheus.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "input/InputObserverNetwork.h"
 #ifdef __ENTERPRISE__
@@ -116,6 +117,7 @@ bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
 
 void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
+    RegisterInputCreator(new StaticInputCreator<InputPrometheus>());
 #if defined(__linux__) && !defined(__ANDROID__)
     RegisterInputCreator(new StaticInputCreator<InputContainerStdio>());
     RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());

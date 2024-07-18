@@ -75,6 +75,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeTargetUnittest;
     friend class ScrapeJobUnittest;
+    friend class InputPrometheusUnittest;
 #endif
 };
 
