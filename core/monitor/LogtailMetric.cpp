@@ -136,6 +136,7 @@ const LabelsPtr& MetricsRecordRef::GetLabels() const {
 CounterPtr MetricsRecordRef::CreateCounter(const std::string& name) {
     return mMetrics->CreateCounter(name);
 }
+
 GaugePtr MetricsRecordRef::CreateGauge(const std::string& name) {
     return mMetrics->CreateGauge(name);
 }
