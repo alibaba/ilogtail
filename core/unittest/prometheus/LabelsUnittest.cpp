@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <string>
 
 #include "prometheus/Labels.h"
@@ -57,12 +58,23 @@ void LabelsUnittest::TestRemoveMetaLabels() {
 
 void LabelsUnittest::TestHash() {
     Labels labels;
+
     labels.Push(Label{"host", "172.17.0.3:9100"});
     labels.Push(Label{"ip", "172.17.0.3"});
     labels.Push(Label{"port", "9100"});
+    uint64_t hash = labels.Hash();
 
-    APSARA_TEST_EQUAL(3UL, labels.Size());
-    APSARA_TEST_EQUAL("3", labels.Hash());
+    // 以字典序生成hash值
+    uint64_t expect = offset64;
+    string raw;
+    raw = raw + "host" + "\xff" + "172.17.0.3:9100" + "\xff" + "ip" + "\xff" + "172.17.0.3" + "\xff" + "port" + "\xff"
+        + "9100" + "\xff";
+    for (auto i : raw) {
+        expect ^= (uint64_t)i;
+        expect *= prime64;
+    }
+
+    APSARA_TEST_EQUAL(expect, hash);
 }
 
 void LabelsUnittest::TestGet() {

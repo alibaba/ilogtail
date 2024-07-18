@@ -17,6 +17,7 @@
 #include "Labels.h"
 
 #include <algorithm>
+#include <cstdint>
 
 using namespace std;
 namespace logtail {
@@ -201,8 +202,15 @@ void LabelsBuilder::Range(const std::function<void(Label)>& closure) {
     }
 }
 
-string Labels::Hash() {
-    return to_string(mLabels.size());
+uint64_t Labels::Hash() {
+    string hash = "";
+    uint64_t sum = offset64;
+    Range([&hash](Label l) { hash += l.name + "\xff" + l.value + "\xff"; });
+    for (auto i : hash) {
+        sum ^= (uint64_t)i;
+        sum *= prime64;
+    }
+    return sum;
 }
 
 void Labels::RemoveMetaLabels() {
