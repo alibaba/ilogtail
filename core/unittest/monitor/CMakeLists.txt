@@ -26,3 +26,4 @@ target_link_libraries(plugin_metric_manager_unittest unittest_base)
 
 include(GoogleTest)
 gtest_discover_tests(logtail_metric_unittest)
+gtest_discover_tests(plugin_metric_manager_unittest)

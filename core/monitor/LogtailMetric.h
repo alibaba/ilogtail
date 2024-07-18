@@ -105,7 +105,7 @@ public:
     const MetricsRecord* operator->() const;
 };
 
-class ReusableMetricsRecord {
+class ReentrantMetricsRecord {
 private:
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
@@ -117,7 +117,7 @@ public:
     CounterPtr GetCounter(const std::string& name);
     GaugePtr GetGauge(const std::string& name);
 };
-using ReusableMetricsRecordRef = std::shared_ptr<ReusableMetricsRecord>;
+using ReentrantMetricsRecordRef = std::shared_ptr<ReentrantMetricsRecord>;
 
 class WriteMetrics {
 private:

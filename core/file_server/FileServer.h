@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "common/Lock.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
 #include "monitor/PluginMetricManager.h"
@@ -41,6 +42,7 @@ public:
     void Start();
     void Pause(bool isConfigUpdate = true);
 
+    // for plugin
     FileDiscoveryConfig GetFileDiscoveryConfig(const std::string& name) const;
     const std::unordered_map<std::string, FileDiscoveryConfig>& GetAllFileDiscoveryConfigs() const {
         return mPipelineNameFileDiscoveryConfigsMap;
@@ -66,15 +68,16 @@ public:
     std::shared_ptr<std::vector<ContainerInfo>> GetAndRemoveContainerInfo(const std::string& pipeline);
     void ClearContainerInfo();
 
-    ReusableMetricsRecordRef GetOrCreateReusableMetricsRecordRef(const std::string& name, MetricLabels& labels);
-    void ReleaseReusableMetricsRecordRef(const std::string& name, MetricLabels& labels);
-
     PluginMetricManagerPtr GetPluginMetricManager(const std::string& name) const;
     const std::unordered_map<std::string, PluginMetricManagerPtr>& GetAllMetricRecordSetDefinitions() const {
         return mPipelineNamePluginMetricManagersMap;
     }
     void AddPluginMetricManager(const std::string& name, PluginMetricManagerPtr PluginMetricManager);
     void RemovePluginMetricManager(const std::string& name);
+
+    // for reader, event_handler ...
+    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& name, MetricLabels& labels);
+    void ReleaseReentrantMetricsRecordRef(const std::string& name, MetricLabels& labels);
 
     // 过渡使用
     void Resume(bool isConfigUpdate = true);
@@ -89,6 +92,8 @@ private:
     ~FileServer() = default;
 
     void PauseInner();
+
+    mutable ReadWriteLock mReadWriteLock;
 
     std::unordered_map<std::string, FileDiscoveryConfig> mPipelineNameFileDiscoveryConfigsMap;
     std::unordered_map<std::string, FileReaderConfig> mPipelineNameFileReaderConfigsMap;

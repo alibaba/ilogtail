@@ -29,12 +29,10 @@ public:
         defaultLabels->emplace_back(LABEL_PLUGIN_NAME, "default_plugin");
         defaultLabels->emplace_back(LABEL_PLUGIN_ID, "default_id");
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(*defaultLabels));
-        std::vector<std::string> counterKeys;
-        counterKeys.emplace_back("default_counter");
-        std::vector<std::string> gaugeKeys;
-        gaugeKeys.emplace_back("default_gauge");
-        pluginMetricManager
-            = std::make_shared<PluginMetricManager>(mMetricsRecordRef->GetLabels(), counterKeys, gaugeKeys);
+        std::unordered_map<std::string, MetricType> metricKeys;
+        metricKeys.emplace("default_counter", MetricType::METRIC_TYPE_COUNTER);
+        metricKeys.emplace("default_gauge", MetricType::METRIC_TYPE_GAUGE);
+        pluginMetricManager = std::make_shared<PluginMetricManager>(mMetricsRecordRef->GetLabels(), metricKeys);
     }
 
     void TearDown() {}
@@ -43,7 +41,7 @@ public:
     void TestGetOrCreateMetricsRecordRefPtr();
     void TestReleaseMetricsRecordRefPtr();
     void TestRegisterSizeGauge();
-    void TestReusableMetricsRecord();
+    void TestReentrantMetricsRecord();
 
 private:
     MetricsRecordRef mMetricsRecordRef;
@@ -54,26 +52,26 @@ APSARA_UNIT_TEST_CASE(PluginMetricManagerUnittest, TestInitPluginMetricManager, 
 APSARA_UNIT_TEST_CASE(PluginMetricManagerUnittest, TestGetOrCreateMetricsRecordRefPtr, 1);
 APSARA_UNIT_TEST_CASE(PluginMetricManagerUnittest, TestReleaseMetricsRecordRefPtr, 2);
 APSARA_UNIT_TEST_CASE(PluginMetricManagerUnittest, TestRegisterSizeGauge, 3);
-APSARA_UNIT_TEST_CASE(PluginMetricManagerUnittest, TestReusableMetricsRecord, 4);
+APSARA_UNIT_TEST_CASE(PluginMetricManagerUnittest, TestReentrantMetricsRecord, 4);
 
 void PluginMetricManagerUnittest::TestInitPluginMetricManager() {
     APSARA_TEST_EQUAL(pluginMetricManager->mDefaultLabels.size(), 6);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 0);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(), 0);
 }
 
 void PluginMetricManagerUnittest::TestGetOrCreateMetricsRecordRefPtr() {
     MetricLabels labels;
     labels.emplace_back("test_label", "test_value");
 
-    auto ptr_1 = pluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
+    auto ptr_1 = pluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
     APSARA_TEST_NOT_EQUAL(ptr_1, nullptr);
     APSARA_TEST_EQUAL(ptr_1->GetLabels()->size(), 7);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 1);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(), 1);
     APSARA_TEST_EQUAL(ptr_1.use_count(), 2);
 
-    auto ptr_2 = pluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
+    auto ptr_2 = pluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
     APSARA_TEST_EQUAL(ptr_2->GetLabels()->size(), 7);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 1);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(), 1);
     APSARA_TEST_EQUAL(ptr_2.use_count(), 3);
     APSARA_TEST_EQUAL(ptr_1.use_count(), ptr_2.use_count());
 }
@@ -82,15 +80,15 @@ void PluginMetricManagerUnittest::TestReleaseMetricsRecordRefPtr() {
     MetricLabels labels;
     labels.emplace_back("test_label", "test_value");
 
-    auto ptr = pluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
+    auto ptr = pluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
     APSARA_TEST_NOT_EQUAL(ptr, nullptr);
     APSARA_TEST_EQUAL(ptr->GetLabels()->size(), 7);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 1);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(), 1);
 
-    pluginMetricManager->ReleaseReusableMetricsRecordRef(labels);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 0);
+    pluginMetricManager->ReleaseReentrantMetricsRecordRef(labels);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(), 0);
 
-    auto ptr2 = pluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
+    auto ptr2 = pluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
     APSARA_TEST_NOT_EQUAL(ptr2, nullptr);
     APSARA_TEST_NOT_EQUAL(ptr, ptr2); // Should not be the same if the first one was released
 }
@@ -102,19 +100,19 @@ void PluginMetricManagerUnittest::TestRegisterSizeGauge() {
     MetricLabels labels;
     labels.emplace_back("test_label", "test_value");
 
-    auto ptr = pluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
+    auto ptr = pluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
     APSARA_TEST_EQUAL(sizeGauge->GetValue(), 1); // One entry should be in the map
 
-    pluginMetricManager->ReleaseReusableMetricsRecordRef(labels);
+    pluginMetricManager->ReleaseReentrantMetricsRecordRef(labels);
     APSARA_TEST_EQUAL(sizeGauge->GetValue(), 0); // The entry should have been removed
 }
 
-void PluginMetricManagerUnittest::TestReusableMetricsRecord() {
+void PluginMetricManagerUnittest::TestReentrantMetricsRecord() {
     MetricLabels labels;
     labels.emplace_back("test_label", "test_value");
 
-    auto ptr = pluginMetricManager->GetOrCreateReusableMetricsRecordRef(labels);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 1); // One entry should be in the map
+    auto ptr = pluginMetricManager->GetOrCreateReentrantMetricsRecordRef(labels);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(), 1); // One entry should be in the map
     APSARA_TEST_EQUAL(ptr->GetLabels()->size(), 7);
 
     auto counter_valid = ptr->GetCounter("default_counter");
@@ -123,8 +121,9 @@ void PluginMetricManagerUnittest::TestReusableMetricsRecord() {
     auto counter_invalid = ptr->GetCounter("invalid_counter");
     APSARA_TEST_EQUAL(counter_invalid, nullptr);
 
-    pluginMetricManager->ReleaseReusableMetricsRecordRef(labels);
-    APSARA_TEST_EQUAL(pluginMetricManager->mReusableMetricsRecordRefsMap.size(), 0); // The entry should have been removed
+    pluginMetricManager->ReleaseReentrantMetricsRecordRef(labels);
+    APSARA_TEST_EQUAL(pluginMetricManager->mReentrantMetricsRecordRefsMap.size(),
+                      0); // The entry should have been removed
 }
 
 } // namespace logtail

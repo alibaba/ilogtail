@@ -144,8 +144,8 @@ const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
 
-// ReusableMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
-void ReusableMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys) {
+// ReentrantMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
+void ReentrantMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys) {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
     for (auto metric : metricKeys) {
         switch (metric.second) {
@@ -161,11 +161,11 @@ void ReusableMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::s
     }
 }
 
-const LabelsPtr& ReusableMetricsRecord::GetLabels() const {
+const LabelsPtr& ReentrantMetricsRecord::GetLabels() const {
     return mMetricsRecordRef->GetLabels();
 }
 
-CounterPtr ReusableMetricsRecord::GetCounter(const std::string& name) {
+CounterPtr ReentrantMetricsRecord::GetCounter(const std::string& name) {
     auto it = mCounters.find(name);
     if (it != mCounters.end()) {
         return it->second;
@@ -173,7 +173,7 @@ CounterPtr ReusableMetricsRecord::GetCounter(const std::string& name) {
     return nullptr;
 }
 
-GaugePtr ReusableMetricsRecord::GetGauge(const std::string& name) {
+GaugePtr ReentrantMetricsRecord::GetGauge(const std::string& name) {
     auto it = mGauges.find(name);
     if (it != mGauges.end()) {
         return it->second;

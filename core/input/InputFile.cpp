@@ -40,16 +40,6 @@ namespace logtail {
 
 const string InputFile::sName = "input_file";
 
-const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
-    // {INPUT_RECORDS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-    {INPUT_RECORDS_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
-    // {INPUT_BATCH_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-    {INPUT_READ_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-    {INPUT_FILE_SIZE_BYTES, MetricType::METRIC_TYPE_GAUGE},
-    // {INPUT_FILE_READ_DELAY_TIME_MS, MetricType::METRIC_TYPE_GAUGE},
-    {INPUT_FILE_OFFSET_BYTES, MetricType::METRIC_TYPE_GAUGE},
-};
-
 bool InputFile::DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo,
                                              const PipelineContext*,
                                              const FileDiscoveryOptions* fileDiscovery) {
@@ -167,6 +157,15 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
     }
 
     mInputFileMonitorTotal = GetMetricsRecordRef().CreateGauge(INPUT_FILE_MONITOR_TOTAL);
+    static const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
+        // {INPUT_RECORDS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {INPUT_RECORDS_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+        // {INPUT_BATCH_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {INPUT_READ_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {INPUT_FILE_SIZE_BYTES, MetricType::METRIC_TYPE_GAUGE},
+        // {INPUT_FILE_READ_DELAY_TIME_MS, MetricType::METRIC_TYPE_GAUGE},
+        {INPUT_FILE_OFFSET_BYTES, MetricType::METRIC_TYPE_GAUGE},
+    };
     mPluginMetricManager
         = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
     mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);

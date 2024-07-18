@@ -206,7 +206,7 @@ void LogFileReader::SetMetrics() {
     mMetricLabels = {{LABEL_FILE_NAME, GetConvertedPath()},
                      {LABEL_FILE_DEV, std::to_string(GetDevInode().dev)},
                      {LABEL_FILE_INODE, std::to_string(GetDevInode().inode)}};
-    mMetricsRecordRef = FileServer::GetInstance()->GetOrCreateReusableMetricsRecordRef(GetConfigName(), mMetricLabels);
+    mMetricsRecordRef = FileServer::GetInstance()->GetOrCreateReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
     if (mMetricsRecordRef == nullptr) {
         LOG_ERROR(sLogger,
                   ("failed to init metrics", "cannot get config's metricRecordRef")("config name", GetConfigName()));
@@ -2282,7 +2282,7 @@ LogFileReader::~LogFileReader() {
                  "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                  "file size", mLastFileSize)("last file position", mLastFilePos));
     CloseFilePtr();
-    FileServer::GetInstance()->ReleaseReusableMetricsRecordRef(GetConfigName(), mMetricLabels);
+    FileServer::GetInstance()->ReleaseReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
 
     // Mark GC so that corresponding resources can be released.
     // For config update, reader will be recreated, which will retrieve these

@@ -17,13 +17,13 @@
 
 namespace logtail {
 
-ReusableMetricsRecordRef PluginMetricManager::GetOrCreateReusableMetricsRecordRef(MetricLabels labels) {
+ReentrantMetricsRecordRef PluginMetricManager::GetOrCreateReentrantMetricsRecordRef(MetricLabels labels) {
     std::string key = GenerateKey(labels);
     // try get
     {
         std::shared_lock lock(mutex);
-        auto it = mReusableMetricsRecordRefsMap.find(key);
-        if (it != mReusableMetricsRecordRefsMap.end()) {
+        auto it = mReentrantMetricsRecordRefsMap.find(key);
+        if (it != mReentrantMetricsRecordRefsMap.end()) {
             return it->second;
         }
     }
@@ -33,24 +33,24 @@ ReusableMetricsRecordRef PluginMetricManager::GetOrCreateReusableMetricsRecordRe
         MetricLabels newLabels = mDefaultLabels;
         newLabels.insert(newLabels.end(), labels.begin(), labels.end());
 
-        ReusableMetricsRecordRef ptr = std::make_shared<ReusableMetricsRecord>();
+        ReentrantMetricsRecordRef ptr = std::make_shared<ReentrantMetricsRecord>();
         ptr->Init(newLabels, mMetricKeys);
 
-        mReusableMetricsRecordRefsMap.emplace(key, ptr);
+        mReentrantMetricsRecordRefsMap.emplace(key, ptr);
         if (mSizeGauge != nullptr) {
-            mSizeGauge->Set(mReusableMetricsRecordRefsMap.size());
+            mSizeGauge->Set(mReentrantMetricsRecordRefsMap.size());
         }
         return ptr;
     }
 }
 
-void PluginMetricManager::ReleaseReusableMetricsRecordRef(MetricLabels labels) {
+void PluginMetricManager::ReleaseReentrantMetricsRecordRef(MetricLabels labels) {
     std::string key = GenerateKey(labels);
     // try get
     {
         std::shared_lock lock(mutex);
-        auto it = mReusableMetricsRecordRefsMap.find(key);
-        if (it == mReusableMetricsRecordRefsMap.end()) {
+        auto it = mReentrantMetricsRecordRefsMap.find(key);
+        if (it == mReentrantMetricsRecordRefsMap.end()) {
             return;
         } else if (it->second.use_count() > 2) {
             // mMetricsRecordRefMaps中一次引用，待删除的实例中有一次引用
@@ -61,9 +61,9 @@ void PluginMetricManager::ReleaseReusableMetricsRecordRef(MetricLabels labels) {
     // delete
     {
         std::unique_lock lock(mutex);
-        mReusableMetricsRecordRefsMap.erase(key);
+        mReentrantMetricsRecordRefsMap.erase(key);
         if (mSizeGauge != nullptr) {
-            mSizeGauge->Set(mReusableMetricsRecordRefsMap.size());
+            mSizeGauge->Set(mReentrantMetricsRecordRefsMap.size());
         }
     }
 }

@@ -537,7 +537,7 @@ protected:
 
     MetricLabels mMetricLabels;
     bool mMetricsEnabled;
-    ReusableMetricsRecordRef mMetricsRecordRef;
+    ReentrantMetricsRecordRef mMetricsRecordRef;
     CounterPtr mInputRecordsSizeBytesCounter;
     CounterPtr mInputReadTotalCounter;
     GaugePtr mInputFileSizeBytesGauge;
