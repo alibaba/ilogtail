@@ -73,10 +73,10 @@ void PrometheusInputRunner::Start() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
     while (true) {
         map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
         sdk::HttpMessage httpResponse;
         // TODO: 等待curlImpl删除返回头校验
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+        httpResponse.header[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
                           mOperatorHost,
@@ -99,7 +99,7 @@ void PrometheusInputRunner::Start() {
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    LOG_INFO(sLogger, ("Register Success", ToString(getenv("POD_NAME"))));
+    LOG_INFO(sLogger, ("Register Success", mPodName));
     ScraperGroup::GetInstance()->Start();
 }
 
@@ -108,10 +108,10 @@ void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     for (int retry = 0; retry < 3; ++retry) {
         map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
         sdk::HttpMessage httpResponse;
         // TODO: 等待curlImpl删除返回头校验
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+        httpResponse.header[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
                           mOperatorHost,
@@ -134,7 +134,7 @@ void PrometheusInputRunner::Stop() {
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    LOG_INFO(sLogger, ("Unregister Success", ToString(getenv("POD_NAME"))));
+    LOG_INFO(sLogger, ("Unregister Success", mPodName));
     ScraperGroup::GetInstance()->Stop();
     mPrometheusInputsMap.clear();
 }
