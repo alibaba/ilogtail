@@ -1165,12 +1165,12 @@ void EventDispatcherBase::DumpAllHandlersMeta(bool remove) {
     }
 }
 void EventDispatcherBase::UpdateConfig() {
-    static bool isFirstUpdate = false;
+    static bool hasFirstUpdate = false;
     if (ConfigManager::GetInstance()->IsUpdateContainerPaths())
         ConfigManager::GetInstance()->StartUpdateConfig();
     if (ConfigManager::GetInstance()->IsUpdateConfig() == false)
         return;
-    if (!isFirstUpdate) {
+    if (!hasFirstUpdate) {
         // for downgrade use: here we assume remote config must exist, and all remote config has been fetched, so we can safely load local config
         // if no remote config exist, user need to manually recover local config files before starting iLogtail, which is a very rare case
 
@@ -1208,7 +1208,7 @@ void EventDispatcherBase::UpdateConfig() {
 
         // finally, we manually load the local config
         ConfigManager::GetInstance()->GetLocalConfigUpdate();
-        isFirstUpdate = true;
+        hasFirstUpdate = true;
     }
 #if defined(__linux__)
     if (mStreamLogManagerPtr != NULL) {
