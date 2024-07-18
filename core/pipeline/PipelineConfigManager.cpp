@@ -92,6 +92,12 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     }
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
+    if (isInputPrometheusChanged) {
+        if (!isPrometheusInputRunnerStarted) {
+            PrometheusInputRunner::GetInstance()->Start();
+            isPrometheusInputRunnerStarted = true;
+        }
+    }
 #endif
 
     for (const auto& name : diff.mRemoved) {
@@ -173,12 +179,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
             isFileServerStarted = true;
         }
     }
-    if (isInputPrometheusChanged) {
-        if (!isPrometheusInputRunnerStarted) {
-            PrometheusInputRunner::GetInstance()->Start();
-            isPrometheusInputRunnerStarted = true;
-        }
-    }
+
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {

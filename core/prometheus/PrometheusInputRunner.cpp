@@ -16,13 +16,11 @@
 
 #include "PrometheusInputRunner.h"
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 #include "common/StringTools.h"
-#include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "prometheus/Scraper.h"
 #include "sdk/Common.h"
@@ -95,6 +93,13 @@ void PrometheusInputRunner::Start() {
         if (httpResponse.statusCode != 200) {
             LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
         } else {
+            // register success
+            // 解析unRegisterMs时间戳
+            if (httpResponse.content.empty()) {
+                LOG_ERROR(sLogger, ("unregister failed, content is empty", ""));
+            } else {
+                ScraperGroup::GetInstance()->mUnRegisterMs = stoll(httpResponse.content);
+            }
             break;
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));

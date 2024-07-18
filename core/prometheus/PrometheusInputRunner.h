@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -32,9 +33,11 @@ public:
         return &instance;
     }
 
+    // input plugin update
     void UpdateScrapeInput(const std::string& inputName, std::unique_ptr<ScrapeJob> scrapeJob);
     void RemoveScrapeInput(const std::string& inputName);
 
+    // target discover and scrape
     void Start();
     void Stop();
     bool HasRegisteredPlugin();

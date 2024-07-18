@@ -17,6 +17,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -44,6 +45,9 @@ public:
 
     void Start();
     void Stop();
+
+    // 无损升级/重启
+    uint64_t mUnRegisterMs;
 
 private:
     ScraperGroup();

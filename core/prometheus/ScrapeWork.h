@@ -71,6 +71,7 @@ private:
     QueueKey mQueueKey;
     size_t mInputIndex;
 
+
     friend class ScrapeWork;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeTargetUnittest;
@@ -91,8 +92,11 @@ public:
     void StartScrapeLoop();
     void StopScrapeLoop();
 
+    void SetUnRegisterMs(uint64_t unRegisterMs);
+
 private:
     void ScrapeLoop();
+    void ScrapeAndPush();
 
     uint64_t GetRandSleep();
     sdk::HttpMessage Scrape();
@@ -102,6 +106,9 @@ private:
     std::atomic<bool> mFinished;
     std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;
+
+    // 无损升级
+    uint64_t mUnRegisterMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeWorkUnittest;

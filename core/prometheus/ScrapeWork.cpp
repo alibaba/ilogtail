@@ -184,36 +184,22 @@ void ScrapeWork::StopScrapeLoop() {
 void ScrapeWork::ScrapeLoop() {
     LOG_INFO(sLogger, ("start prometheus scrape loop", mTarget.mHash));
     uint64_t randSleep = GetRandSleep();
+    // 无损升级
+    // 如果下一次采集点（randSleep +
+    // currentTime）在下线时间+一次采集周期（mUnRegisterMs+mScrapeInterval）之后，则立马采集一次补点
+    if (randSleep + GetCurrentTimeInNanoSeconds() > (uint64_t)mUnRegisterMs * 1000ULL * 1000ULL
+            + (uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL) {
+        ScrapeAndPush();
+        // 更新randSleep
+        randSleep = GetRandSleep();
+    }
+
     this_thread::sleep_for(chrono::nanoseconds(randSleep));
 
     while (!mFinished.load()) {
         uint64_t lastProfilingTime = GetCurrentTimeInNanoSeconds();
-        time_t defaultTs = time(nullptr);
 
-        // scrape target by CurlClient
-        // TODO: scrape超时处理逻辑，和出错处理
-        auto httpResponse = Scrape();
-        if (httpResponse.statusCode == 200) {
-            // TODO: 生成自监控指标，但走下面pushEventGroup链路的指标 up指标
-
-            // text parser
-            auto parser = TextParser();
-            auto eventGroup = parser.Parse(httpResponse.content, defaultTs, mTarget.mJobName, mTarget.mHost);
-
-            // 发送到对应的处理队列
-            // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
-            PushEventGroup(std::move(eventGroup));
-        } else {
-            // scrape failed
-            // TODO: scrape超时处理逻辑，和出错处理
-            string headerStr;
-            for (auto [k, v] : mTarget.mHeaders) {
-                headerStr += k + ":" + v + ";";
-            }
-            LOG_WARNING(sLogger,
-                        ("scrape failed, status code", httpResponse.statusCode)("target", mTarget.mHash)("http header",
-                                                                                                         headerStr));
-        }
+        ScrapeAndPush();
 
         // 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
@@ -222,6 +208,35 @@ void ScrapeWork::ScrapeLoop() {
         this_thread::sleep_for(chrono::nanoseconds(timeToWait));
     }
     LOG_INFO(sLogger, ("stop prometheus scrape loop", mTarget.mHash));
+}
+
+void ScrapeWork::ScrapeAndPush() {
+    time_t defaultTs = time(nullptr);
+
+    // scrape target by CurlClient
+    // TODO: scrape超时处理逻辑，和出错处理
+    auto httpResponse = Scrape();
+    if (httpResponse.statusCode == 200) {
+        // TODO: 生成自监控指标，但走下面pushEventGroup链路的指标 up指标
+
+        // text parser
+        auto parser = TextParser();
+        auto eventGroup = parser.Parse(httpResponse.content, defaultTs, mTarget.mJobName, mTarget.mHost);
+
+        // 发送到对应的处理队列
+        // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
+        PushEventGroup(std::move(eventGroup));
+    } else {
+        // scrape failed
+        // TODO: scrape超时处理逻辑，和出错处理
+        string headerStr;
+        for (auto [k, v] : mTarget.mHeaders) {
+            headerStr += k + ":" + v + ";";
+        }
+        LOG_WARNING(
+            sLogger,
+            ("scrape failed, status code", httpResponse.statusCode)("target", mTarget.mHash)("http header", headerStr));
+    }
 }
 
 uint64_t ScrapeWork::GetRandSleep() {
@@ -275,6 +290,10 @@ void ScrapeWork::PushEventGroup(PipelineEventGroup&& eGroup) {
     }
     // TODO: 如果push失败如何处理
     LOG_INFO(sLogger, ("push event group failed", mTarget.mHash));
+}
+
+void ScrapeWork::SetUnRegisterMs(uint64_t unRegisterMs) {
+    mUnRegisterMs = unRegisterMs;
 }
 
 

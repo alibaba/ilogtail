@@ -62,6 +62,7 @@ void ScraperGroup::UpdateScrapeWork(const string& jobName) {
         if (sWMap.find(targetHash) == sWMap.end()) {
             LOG_INFO(sLogger, ("Start new scrape target", targetHash));
             sWMap[targetHash] = make_unique<ScrapeWork>(target);
+            sWMap[targetHash]->SetUnRegisterMs(mUnRegisterMs);
             sWMap[targetHash]->StartScrapeLoop();
         }
     }
