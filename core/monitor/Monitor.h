@@ -22,7 +22,7 @@
 #include <string>
 
 #include "MetricStore.h"
-#include "profile_sender/ProfileSender.h"
+#include "provider/provider.h"
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif

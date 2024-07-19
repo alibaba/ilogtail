@@ -33,6 +33,7 @@ cmake_dependent_option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT stat
 option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHSPL "Build Logtail and UT with SPL" ON)
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
+set(PROVIDER_PATH "provider" CACHE PATH "Path to the provider module") # external provider path can be set with -DPROVIDER_PATH
 
 if (BUILD_LOGTAIL_SHARED_LIBRARY AND WITHSPL)
     message(FATEL_ERROR, "Generating logtail shared library is not supported to be linked with SPL. WITHSPL should be set OFF.")
@@ -109,12 +110,12 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/processor/links.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/flusher.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 
-# Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
+# Subdirectories (modules). except for common, input, processor, flusher, observer, helper, spl, and provider.
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher config_manager config_server_pb/v1 config_server_pb/v2 
+        batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher config_manager 
         container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
-        profile_sender queue reader sdk sender serializer sls_control fuse
+        queue reader sdk sender serializer sls_control fuse
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)
@@ -147,6 +148,9 @@ foreach (DIR_NAME ${SUB_DIRECTORIES_LIST})
     file(GLOB TEMP_SOURCE_FILES ${DIR_NAME}/*.c ${DIR_NAME}/*.cc ${DIR_NAME}/*.cpp)
     list(APPEND FRAMEWORK_SOURCE_FILES ${TEMP_SOURCE_FILES})
 endforeach (DIR_NAME)
+
+# add provider
+add_subdirectory("${PROVIDER_PATH}" "${CMAKE_BINARY_DIR}/provider")
 
 if (ENABLE_ENTERPRISE)
     # remove several files in shennong/sdk
@@ -181,6 +185,7 @@ if (LINUX)
         add_subdirectory(spl)
     endif()
 endif()
+
 
 # Logtail executable or shared library.
 if (BUILD_LOGTAIL)
@@ -227,6 +232,7 @@ if(BUILD_LOGTAIL OR BUILD_LOGTAIL_SHARED_LIBRARY)
     flusher_link(${LOGTAIL_TARGET})
     all_link(${LOGTAIL_TARGET})
     common_link(${LOGTAIL_TARGET})
+    target_link_libraries(${LOGTAIL_TARGET} provider)
 endif()
 
 # Logtail UT.
@@ -236,3 +242,4 @@ if (BUILD_LOGTAIL_UT)
     enable_testing()
     add_subdirectory(unittest)
 endif ()
+
