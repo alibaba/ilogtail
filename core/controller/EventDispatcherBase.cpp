@@ -1165,10 +1165,51 @@ void EventDispatcherBase::DumpAllHandlersMeta(bool remove) {
     }
 }
 void EventDispatcherBase::UpdateConfig() {
+    static bool hasFirstUpdate = false;
     if (ConfigManager::GetInstance()->IsUpdateContainerPaths())
         ConfigManager::GetInstance()->StartUpdateConfig();
     if (ConfigManager::GetInstance()->IsUpdateConfig() == false)
         return;
+    if (!hasFirstUpdate) {
+        // for downgrade use: here we assume remote config must exist, and all remote config has been fetched, so we can safely load local config
+        // if no remote config exist, user need to manually recover local config files before starting iLogtail, which is a very rare case
+
+        // recover user_config.d
+        static std::string localConfigDirPath = AppConfig::GetInstance()->GetLocalUserConfigDirPath();
+        fsutil::Dir localConfigDir(localConfigDirPath);
+        if (localConfigDir.Open()) {
+            fsutil::Entry ent;
+            while (ent = localConfigDir.ReadNext()) {
+                if (!ent.IsRegFile()) {
+                    continue;
+                }
+                std::string flName = ent.Name();
+                if (!EndWith(flName, ".json.bak")) {
+                    continue;
+                }
+                std::string fullPath = localConfigDirPath + flName;
+                if (!Rename(fullPath, localConfigDirPath + flName.substr(0, flName.size() - 4))) {
+                    LOG_WARNING(sLogger, ("failed to recover local dir config file, path", fullPath));
+                } else {
+                    LOG_INFO(sLogger, ("recover local dir config file succeeded, path", fullPath));
+                }
+            }
+        }
+
+        // recover user_local_config.json
+        std::string localConfigPath = AppConfig::GetInstance()->GetLocalUserConfigPath() + ".bak";
+        if (CheckExistance(localConfigPath)) {
+            if (!Rename(localConfigPath, AppConfig::GetInstance()->GetLocalUserConfigPath())) {
+                LOG_WARNING(sLogger, ("failed to recover local user config, path", localConfigPath));
+            } else {
+                LOG_INFO(sLogger, ("recover local user config, path", localConfigPath));
+            }
+        }
+
+        // finally, we manually load the local config
+        ConfigManager::GetInstance()->GetLocalConfigUpdate();
+        hasFirstUpdate = true;
+    }
 #if defined(__linux__)
     if (mStreamLogManagerPtr != NULL) {
         ((StreamLogManager*)mStreamLogManagerPtr)->ShutdownConfigUsage();

@@ -68,6 +68,8 @@ inline bool IsEEXIST(int e) {
 #endif
 }
 
+bool Rename(const std::string& oldPath, const std::string& newPath);
+
 bool IsRelativePath(const std::string& path);
 // . -> /usr/local/ilogtail/.
 // ./a.txt -> /usr/local/ilogtail/./a.txt
