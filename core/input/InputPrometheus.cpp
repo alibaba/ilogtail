@@ -21,6 +21,10 @@
 #include <memory>
 #include <string>
 
+#include "PluginRegistry.h"
+#include "ProcessorInstance.h"
+#include "inner/ProcessorRelabelMetricNative.h"
+#include "json/value.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
@@ -56,7 +60,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     mScrapeJobPtr->mInputIndex = mIndex;
     LOG_INFO(sLogger, ("input config init success", mJobName));
 
-    return true;
+    return CreateInnerProcessors(config, pluginIdx);
 }
 
 /// @brief register scrape job by PrometheusInputRunner
@@ -74,6 +78,17 @@ bool InputPrometheus::Stop(bool isPipelineRemoving) {
     LOG_INFO(sLogger, ("input config stop", mJobName));
 
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput(mContext->GetConfigName());
+    return true;
+}
+
+bool InputPrometheus::CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx) {
+    unique_ptr<ProcessorInstance> processor;
+    processor
+        = PluginRegistry::GetInstance()->CreateProcessor(ProcessorRelabelMetricNative::sName, to_string(++pluginIdx));
+    if (!processor->Init(inputConfig, *mContext)) {
+        return false;
+    }
+    mInnerProcessors.emplace_back(std::move(processor));
     return true;
 }
 

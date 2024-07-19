@@ -42,7 +42,7 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
         }
         return true;
     } else {
-        return false;
+        return true;
     }
 }
 

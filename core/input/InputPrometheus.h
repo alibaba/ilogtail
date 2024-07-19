@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -20,6 +21,7 @@ public:
     std::string mJobName;
 
 private:
+    bool CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx);
     // only one job is supported
     std::unique_ptr<ScrapeJob> mScrapeJobPtr;
 
