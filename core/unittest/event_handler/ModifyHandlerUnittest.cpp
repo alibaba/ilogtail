@@ -261,10 +261,19 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
     handlerPtr->DumpReaderMeta(false, false);
     // clear reader map
     handlerPtr.reset(new ModifyHandler(mConfigName, mConfig));
-    // recover reader from checkpoint
+    // new reader
     handlerPtr->CreateLogFileReaderPtr(gRootDir,
                                        basicLogName,
-                                       devInode1,
+                                       devInode,
+                                       std::make_pair(&readerOpts, &ctx),
+                                       std::make_pair(&multilineOpts, &ctx),
+                                       std::make_pair(&discoveryOpts, &ctx),
+                                       0,
+                                       false);
+    // recover reader from checkpoint, random order
+    handlerPtr->CreateLogFileReaderPtr(gRootDir,
+                                       basicLogName,
+                                       devInode4,
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),
@@ -280,24 +289,15 @@ void ModifyHandlerUnittest::TestRecoverReaderFromCheckpoint() {
                                        false);
     handlerPtr->CreateLogFileReaderPtr(gRootDir,
                                        basicLogName,
+                                       devInode1,
+                                       std::make_pair(&readerOpts, &ctx),
+                                       std::make_pair(&multilineOpts, &ctx),
+                                       std::make_pair(&discoveryOpts, &ctx),
+                                       0,
+                                       false);
+    handlerPtr->CreateLogFileReaderPtr(gRootDir,
+                                       basicLogName,
                                        devInode3,
-                                       std::make_pair(&readerOpts, &ctx),
-                                       std::make_pair(&multilineOpts, &ctx),
-                                       std::make_pair(&discoveryOpts, &ctx),
-                                       0,
-                                       false);
-    handlerPtr->CreateLogFileReaderPtr(gRootDir,
-                                       basicLogName,
-                                       devInode4,
-                                       std::make_pair(&readerOpts, &ctx),
-                                       std::make_pair(&multilineOpts, &ctx),
-                                       std::make_pair(&discoveryOpts, &ctx),
-                                       0,
-                                       false);
-    // new reader
-    handlerPtr->CreateLogFileReaderPtr(gRootDir,
-                                       basicLogName,
-                                       devInode,
                                        std::make_pair(&readerOpts, &ctx),
                                        std::make_pair(&multilineOpts, &ctx),
                                        std::make_pair(&discoveryOpts, &ctx),

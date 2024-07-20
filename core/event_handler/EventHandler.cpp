@@ -457,7 +457,6 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
     if (backFlag) {
         readerArray.push_back(readerPtr);
         mDevInodeReaderMap[devInode] = readerPtr;
-        readerPtr->SetReaderArray(&readerArray);
         // reader not in reader array
     } else if (idx == -2) {
         mRotatorReaderMap[devInode] = readerPtr;
@@ -466,13 +465,13 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         readerArray.push_back(readerPtr);
         mDevInodeReaderMap[devInode] = readerPtr;
         std::sort(readerArray.begin(), readerArray.end(), ModifyHandler::CompareReaderByIdxFromCpt);
-        readerPtr->SetReaderArray(&readerArray);
     } else {
         LOG_ERROR(sLogger,
                   ("unexpected idx", idx)("real log path", readerPtr->GetRealLogPath())("host log path",
                                                                                         readerPtr->GetHostLogPath()));
         return LogFileReaderPtr();
     }
+    readerPtr->SetReaderArray(&readerArray);
 
     LOG_INFO(sLogger,
              ("log reader creation succeed",
@@ -558,7 +557,6 @@ void ModifyHandler::Handle(const Event& event) {
             }
         }
     } else if (event.IsModify()) {
-        LOG_INFO(sLogger, ("handle modify event", event.GetInode()));
         // devInode cannot be found, this means a rotate file(like a.log.1) has event, and reader for rotate file is
         // moved to mRotatorReaderMap
         if (devInode.IsValid() && devInodeIter == mDevInodeReaderMap.end()) {
