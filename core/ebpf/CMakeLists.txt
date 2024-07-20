@@ -1,4 +1,4 @@
-# Copyright 2022 iLogtail Authors
+# Copyright 2023 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.22)
-project(app_config_unittest)
+# cmake_minimum_required(VERSION 3.22)
+# project(ebpf)
 
-# add_executable(app_config_unittest AppConfigUnittest.cpp)
+# file(GLOB_RECURSE LIB_SOURCE_FILES *.cpp *.h)
+# append_source_files(LIB_SOURCE_FILES)
+# add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
+# target_link_libraries(${PROJECT_NAME} common)
+# target_link_libraries(${PROJECT_NAME} logger)
+# target_link_libraries(${PROJECT_NAME} pipeline)

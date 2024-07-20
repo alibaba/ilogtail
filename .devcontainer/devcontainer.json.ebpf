@@ -1,0 +1,26 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "USERNAME": "${localEnv:USER}"
+    }
+  },
+  "mounts": [
+    "type=bind,source=/,target=/host",
+    "type=bind,source=/sys,target=/sys"
+  ],
+  "initializeCommand": ".devcontainer/gen_env.sh",
+  "runArgs": [ "--privileged", "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+  "onCreateCommand": "sudo chown -R $(id -un):$(id -gn) /root",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.Go",
+        "ms-vscode.cpptools-extension-pack",
+        "DavidAnson.vscode-markdownlint",
+        "redhat.vscode-yaml",
+        "bmalehorn.shell-syntax"
+      ]
+    }
+  }
+}

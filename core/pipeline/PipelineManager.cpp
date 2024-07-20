@@ -21,6 +21,7 @@
 #include "go_pipeline/LogtailPlugin.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "observer/ObserverManager.h"
+#include "ebpf/eBPFServer.h"
 #endif
 #include "processor/daemon/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -85,6 +86,9 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     }
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
+#if defined(__linux__) && !defined(__ANDROID__)
+    logtail::ebpf::eBPFServer::GetInstance()->Init();
+#endif
 #endif
 
     for (const auto& name : diff.mRemoved) {
@@ -230,6 +234,7 @@ void PipelineManager::StopAllPipelines() {
 #endif
 #if defined(__linux__) && !defined(__ANDROID__)
     ObserverManager::GetInstance()->HoldOn(true);
+    ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
 
