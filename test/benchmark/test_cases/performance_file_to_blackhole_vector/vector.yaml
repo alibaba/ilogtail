@@ -4,8 +4,25 @@ sources:
     include:
       - /home/vector-log/*.log
 
-sinks:
-  my_sink_id:
-    type: blackhole
+transforms:
+  transform_json:
+    type: remap
     inputs:
       - input_file
+    source: |-
+      . = parse_json!(string!(.message))
+  filter_agent:
+    type: filter
+    inputs:
+      - transform_json
+    condition: 
+      type: "vrl"
+      source: ."usr-agent" == "no-agent"
+
+sinks:
+  output_std:
+    type: console
+    inputs:
+      - filter_agent
+    encoding:
+      codec: json

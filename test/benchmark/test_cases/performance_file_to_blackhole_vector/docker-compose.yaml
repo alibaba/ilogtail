@@ -6,4 +6,3 @@ services:
     volumes:
       - ./vector.yaml:/etc/vector/vector.yaml
       - ./a.log:/home/vector-log/a.log
-    restart: always

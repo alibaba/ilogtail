@@ -1,6 +1,9 @@
 package monitor
 
 import (
+	"encoding/json"
+	"fmt"
+
 	v1 "github.com/google/cadvisor/info/v1"
 )
 
@@ -25,13 +28,15 @@ func (s *Info) Add(val float64) {
 }
 
 type Statistic struct {
+	name     string
 	cpu      Info
 	mem      Info
 	lastStat *v1.ContainerStats
 }
 
-func NewMonitorStatistic() *Statistic {
+func NewMonitorStatistic(name string) *Statistic {
 	return &Statistic{
+		name:     name,
 		cpu:      Info{},
 		mem:      Info{},
 		lastStat: nil,
@@ -56,4 +61,29 @@ func calculateCPUUsageRate(lastStat, stat *v1.ContainerStats) float64 {
 	cpuUsageTotal := stat.Cpu.Usage.Total - lastStat.Cpu.Usage.Total
 	cpuUsageRateTotal := float64(cpuUsageTotal) * 100 / float64(stat.Timestamp.Sub(lastStat.Timestamp).Nanoseconds())
 	return cpuUsageRateTotal
+}
+
+type StatisticItem struct {
+	Name  string  `json:"name"`
+	Value float64 `json:"value"`
+	Unit  string  `json:"unit"`
+}
+
+func (m *Statistic) MarshalJSON() ([]byte, error) {
+	items := []StatisticItem{
+		{"CPU_Usage_Max-" + m.name, m.cpu.maxVal, "%"},
+		{"CPU_Usage_Avg-" + m.name, m.cpu.avgVal, "%"},
+		{"Memory_Usage_Max-" + m.name, m.mem.maxVal, "MB"},
+		{"Memory_Usage_Avg-" + m.name, m.mem.avgVal, "MB"},
+	}
+
+	// Serialize the slice to JSON
+	jsonData, err := json.MarshalIndent(items, "", "    ")
+	if err != nil {
+		fmt.Println("Error serializing statistics:", err)
+		return nil, err
+	}
+
+	// Output the JSON string
+	return jsonData, nil
 }

@@ -3,10 +3,8 @@ package monitor
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -53,38 +51,21 @@ func StopMonitor(ctx context.Context) (context.Context, error) {
 
 func monitoring(client *client.Client, containerName string) {
 	// create csv file
-	reportDir := filepath.Join(config.CaseHome, "report")
-	reportDir, err := filepath.Abs(reportDir)
-	if err != nil {
-		log.Fatalf("Failed to get absolute path: %s", err)
-	}
-	if _, err = os.Stat(reportDir); os.IsNotExist(err) {
-		// 文件夹不存在，创建文件夹
-		err = os.MkdirAll(reportDir, 0750)
-		if err != nil {
-			log.Fatalf("Failed to create folder: %s", err)
-		}
-	}
+	root, _ := filepath.Abs(".")
+	reportDir := root + "/report/"
+	benchmarkFile := reportDir + config.CaseName + "_benchmark.json"
 	// new ticker
 	ticker := time.NewTicker(interval * time.Second)
 	defer ticker.Stop()
 	// read from cadvisor per interval seconds
 	request := &v1.ContainerInfoRequest{NumStats: 10}
-	monitorStatistic := NewMonitorStatistic()
+	monitorStatistic := NewMonitorStatistic(config.CaseName)
 	for {
 		select {
 		case <-stopCh:
 			isMonitoring.Store(false)
-			var builder strings.Builder
-			builder.WriteString("Metric,Value\n")
-			builder.WriteString(fmt.Sprintf("%s,%f\n", "CPU Usage Max(%)", monitorStatistic.cpu.maxVal))
-			builder.WriteString(fmt.Sprintf("%s,%f\n", "CPU Usage Avg(%)", monitorStatistic.cpu.avgVal))
-			builder.WriteString(fmt.Sprintf("%s,%f\n", "Memory Usage Max(MB)", monitorStatistic.mem.maxVal))
-			builder.WriteString(fmt.Sprintf("%s,%f\n", "Memory Usage Avg(MB)", monitorStatistic.mem.avgVal))
-			err = os.WriteFile(filepath.Join(reportDir, "monitor.csv"), []byte(builder.String()), 0600)
-			if err != nil {
-				log.Default().Printf("Failed to write monitor result: %s", err)
-			}
+			bytes, _ := monitorStatistic.MarshalJSON()
+			_ = os.WriteFile(benchmarkFile, bytes, 0600)
 			return
 		case <-ticker.C:
 			// 获取容器信息
