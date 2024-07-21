@@ -80,14 +80,8 @@ jobs:
           WITHOUTGDB: ON
         run: make benchmark
 
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          name: benchmark
-          tool: "customSmallerIsBetter"
-          output-file-path: "test/benchmark/report/combined_benchmark.json"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+      - name: Show benchmark result
+        run: cat test/benchmark/report/combined_benchmark.json
 
   result:
     runs-on: ubuntu-latest
