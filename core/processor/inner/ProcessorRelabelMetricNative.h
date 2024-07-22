@@ -40,9 +40,6 @@ private:
 
     std::vector<RelabelConfig> mRelabelConfigs;
 
-    int64_t mScrapeLimit;
-    int64_t mMaxScrapeSize;
-
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorRelabelMetricNativeUnittest;
 #endif

@@ -17,6 +17,7 @@
 #include "input/InputPrometheus.h"
 
 #include <json/json.h>
+#include <json/value.h>
 
 #include <memory>
 #include <string>
@@ -24,7 +25,6 @@
 #include "PluginRegistry.h"
 #include "ProcessorInstance.h"
 #include "inner/ProcessorRelabelMetricNative.h"
-#include "json/value.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
