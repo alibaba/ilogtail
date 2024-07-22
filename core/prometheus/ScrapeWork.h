@@ -32,20 +32,10 @@ namespace logtail {
 
 class ScrapeTarget {
 public:
-    ScrapeTarget(const std::string& jobName,
-                 const std::string& metricsPath,
-                 const std::string& scheme,
-                 const std::string& queryString,
-                 int interval,
-                 int timeout,
-                 const std::map<std::string, std::string>& headers);
-    ScrapeTarget() = default;
-
-    bool SetLabels(const Labels& labels);
-    void SetPipelineInfo(QueueKey queueKey, size_t inputIndex);
-
-    // TODO: 分析后续是否可以删掉
-    void SetHostAndPort(const std::string& host, uint32_t port);
+    ScrapeTarget(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+                 std::unique_ptr<Labels> labelsPtr,
+                 QueueKey queueKey,
+                 size_t inputIndex);
 
     std::string GetHash();
     std::string GetJobName();
@@ -55,19 +45,14 @@ public:
     bool operator<(const ScrapeTarget& other) const;
 
 private:
-    Labels mLabels;
+    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
+    std::unique_ptr<Labels> mLabelsPtr;
 
-    std::string mJobName;
-    std::string mMetricsPath;
-    std::string mScheme;
-    std::string mQueryString;
-    int mScrapeInterval;
-    int mScrapeTimeout;
-    std::map<std::string, std::string> mHeaders;
-    uint32_t mPort;
-
+    // target info
     std::string mHost;
-    std::string mTargetURL;
+    uint32_t mPort;
+    std::string mQueryString;
+
     std::string mHash;
 
     QueueKey mQueueKey;
@@ -105,7 +90,6 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
 
     ScrapeTarget mTarget;
-    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::atomic<bool> mFinished;
     std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;

@@ -218,28 +218,18 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         }
 
         // Relabel Config
-        Labels result;
-        bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
+        std::unique_ptr<Labels> resultPtr = make_unique<Labels>();
+        bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, *resultPtr);
         if (!keep) {
             continue;
         }
-        result.RemoveMetaLabels();
-        if (result.Size() == 0) {
+        resultPtr->RemoveMetaLabels();
+        if (resultPtr->Size() == 0) {
             continue;
         }
         LOG_INFO(sLogger, ("target relabel keep", mJobName));
 
-        ScrapeTarget st = ScrapeTarget(mJobName,
-                                       mMetricsPath,
-                                       mScheme,
-                                       ConvertMapParamsToQueryString(),
-                                       GetIntSeconds(mScrapeIntervalString),
-                                       GetIntSeconds(mScrapeTimeoutString),
-                                       mHeaders);
-        if (!st.SetLabels(result)) {
-            continue;
-        }
-        st.SetPipelineInfo(mQueueKey, mInputIndex);
+        ScrapeTarget st(mScrapeConfigPtr, std::move(resultPtr), mQueueKey, mInputIndex);
 
         newScrapeTargetsMap[st.GetHash()] = make_unique<ScrapeTarget>(st);
     }
@@ -255,21 +245,6 @@ int ScrapeJob::GetIntSeconds(const string& str) const {
         return 60 * value;
     }
     return 30;
-}
-
-string ScrapeJob::ConvertMapParamsToQueryString() const {
-    stringstream ss;
-    for (auto it = mParams.begin(); it != mParams.end(); ++it) {
-        const auto& key = it->first;
-        const auto& values = it->second;
-        for (const auto& value : values) {
-            if (ss.tellp() != 0) {
-                ss << "&";
-            }
-            ss << key << "=" << value;
-        }
-    }
-    return ss.str();
 }
 
 } // namespace logtail

@@ -36,88 +36,40 @@ using namespace std;
 
 namespace logtail {
 
-ScrapeTarget::ScrapeTarget(const std::string& jobName,
-                           const std::string& metricsPath,
-                           const std::string& scheme,
-                           const std::string& queryString,
-                           int interval,
-                           int timeout,
-                           const map<string, string>& headers)
-    : mJobName(jobName),
-      mMetricsPath(metricsPath),
-      mScheme(scheme),
-      mQueryString(queryString),
-      mScrapeInterval(interval),
-      mScrapeTimeout(timeout),
-      mHeaders(headers) {
-    mPort = mScheme == "http" ? 80 : 443;
-}
+ScrapeTarget::ScrapeTarget(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+                           std::unique_ptr<Labels> labelsPtr,
+                           QueueKey queueKey,
+                           size_t inputIndex)
+    : mScrapeConfigPtr(scrapeConfigPtr),
+      mLabelsPtr(std::move(labelsPtr)),
+      mQueueKey(queueKey),
+      mInputIndex(inputIndex) {
+    mPort = mScrapeConfigPtr->mScheme == "http" ? 80 : 443;
 
-bool ScrapeTarget::SetLabels(const Labels& labels) {
-    mLabels = labels;
-
-    // TODO: 移到更合适的地方去
-    if (mLabels.Get("job").empty()) {
-        mLabels.Push(Label{"job", mJobName});
-    }
-
-    //
-    string address = mLabels.Get("__address__");
-    if (address.empty()) {
-        return false;
-    }
-
-    // st.mScheme
-    if (address.find("http://") == 0) {
-        mScheme = "http";
-        address = address.substr(strlen("http://"));
-    } else if (address.find("https://") == 0) {
-        mScheme = "https";
-        address = address.substr(strlen("https://"));
-    }
-
-    // st.mMetricsPath
-    auto n = address.find('/');
-    if (n != string::npos) {
-        mMetricsPath = address.substr(n);
-        address = address.substr(0, n);
-    }
-    if (mMetricsPath.find('/') != 0) {
-        mMetricsPath = "/" + mMetricsPath;
-    }
-
-    // st.mHost & st.mPort
+    // host & port
+    string address = mLabelsPtr->Get("__address__");
     auto m = address.find(':');
     if (m != string::npos) {
         mHost = address.substr(0, m);
         mPort = stoi(address.substr(m + 1));
-    } else {
-        mHost = address;
-        if (mScheme == "http") {
-            mPort = 80;
-        } else if (mScheme == "https") {
-            mPort = 443;
-        } else {
-            return false;
+    }
+
+    // query string
+    for (auto it = mScrapeConfigPtr->mParams.begin(); it != mScrapeConfigPtr->mParams.end(); ++it) {
+        const auto& key = it->first;
+        const auto& values = it->second;
+        for (const auto& value : values) {
+            if (!mQueryString.empty()) {
+                mQueryString += "&";
+            }
+            mQueryString = mQueryString + key + "=" + value;
         }
     }
 
-    // set URL
-    mTargetURL = mScheme + "://" + mHost + ":" + to_string(mPort) + mMetricsPath
-        + (mQueryString.empty() ? "" : "?" + mQueryString);
-    mHash = mJobName + mTargetURL + ToString(mLabels.Hash());
-
-    return true;
-}
-
-void ScrapeTarget::SetPipelineInfo(QueueKey queueKey, size_t index) {
-    mQueueKey = queueKey;
-    mInputIndex = index;
-}
-
-void ScrapeTarget::SetHostAndPort(const std::string& host, uint32_t port) {
-    mHost = host;
-    mPort = port;
+    // URL
+    string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mHost + ":" + to_string(mPort)
+        + mScrapeConfigPtr->mMetricsPath + (mQueryString.empty() ? "" : "?" + mQueryString);
+    mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabelsPtr->Hash());
 }
 
 string ScrapeTarget::GetHash() {
@@ -125,7 +77,7 @@ string ScrapeTarget::GetHash() {
 }
 
 string ScrapeTarget::GetJobName() {
-    return mJobName;
+    return mScrapeConfigPtr->mJobName;
 }
 
 string ScrapeTarget::GetHost() {
@@ -133,32 +85,11 @@ string ScrapeTarget::GetHost() {
 }
 
 map<string, string> ScrapeTarget::GetHeaders() {
-    return mHeaders;
+    return mScrapeConfigPtr->mHeaders;
 }
 
 bool ScrapeTarget::operator<(const ScrapeTarget& other) const {
-    if (mHash != other.mHash) {
-        return mHash < other.mHash;
-    }
-    if (mJobName != other.mJobName) {
-        return mJobName < other.mJobName;
-    }
-    if (mScrapeInterval != other.mScrapeInterval) {
-        return mScrapeInterval < other.mScrapeInterval;
-    }
-    if (mScrapeTimeout != other.mScrapeTimeout) {
-        return mScrapeTimeout < other.mScrapeTimeout;
-    }
-    if (mScheme != other.mScheme) {
-        return mScheme < other.mScheme;
-    }
-    if (mMetricsPath != other.mMetricsPath) {
-        return mMetricsPath < other.mMetricsPath;
-    }
-    if (mHost != other.mHost) {
-        return mHost < other.mHost;
-    }
-    return mPort < other.mPort;
+    return mHash < other.mHash;
 }
 
 ScrapeWork::ScrapeWork(const ScrapeTarget& target) : mTarget(target) {
