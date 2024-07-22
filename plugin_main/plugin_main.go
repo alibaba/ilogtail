@@ -61,7 +61,8 @@ func main() {
 		fmt.Println("init err")
 		return
 	}
-	instance.Run()
+	stopCh := make(chan struct{})
+	instance.Run(stopCh)
 
 	// load the static configs.
 	for i, cfg := range pluginCfgs {

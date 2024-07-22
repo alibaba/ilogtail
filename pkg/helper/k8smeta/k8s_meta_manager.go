@@ -72,19 +72,18 @@ func (m *MetaManager) Init(configPath string) (err error) {
 	return nil
 }
 
-func (m *MetaManager) Run() {
-	stopCh := make(chan struct{})
+func (m *MetaManager) Run(stopCh <-chan struct{}) {
 
 	m.ServiceProcessor.watch(stopCh)
 	m.PodProcessor.watch(stopCh)
 
 	// 最后
-	m.runServer()
+	m.runServer(stopCh)
 }
 
-func (m *MetaManager) runServer() {
+func (m *MetaManager) runServer(stopCh <-chan struct{}) {
 	// meta server需要注册的handler
 	metadataHandler := NewMetadataHandler(m.PodProcessor.metaStore)
 	m.PodProcessor.metaStore.DeferredDeleteHandler = metadataHandler.watchCache.handlePodDelete
-	go metadataHandler.K8sServerRun()
+	go metadataHandler.K8sServerRun(stopCh)
 }

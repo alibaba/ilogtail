@@ -23,7 +23,7 @@ func NewMetadataHandler(store K8sMetaStore) *metadataHandler {
 	return metadataHandler
 }
 
-func (m *metadataHandler) K8sServerRun() error {
+func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	portEnv := os.Getenv("KUBERNETES_METADATA_PORT")
 	if len(portEnv) == 0 {
 		return nil
@@ -36,8 +36,6 @@ func (m *metadataHandler) K8sServerRun() error {
 		Addr: ":" + strconv.Itoa(port),
 	}
 	mux := http.NewServeMux()
-
-	stopCh := make(chan struct{})
 
 	// TODO: add port in ip endpoint
 	mux.HandleFunc("/metadata/ip", m.ServeHTTP)
