@@ -19,6 +19,7 @@
 #include <curl/curl.h>
 
 #include "Common.h"
+#include "Constants.h"
 #include "CurlImp.h"
 #include "Exception.h"
 #include "ScrapeWork.h"
@@ -58,31 +59,37 @@ ScrapeJob::ScrapeJob() {
 /// @brief Construct from json config
 bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
     mScrapeConfig = scrapeConfig;
-    if (mScrapeConfig.isMember("job_name") && mScrapeConfig["job_name"].isString()) {
-        mJobName = mScrapeConfig["job_name"].asString();
+    if (mScrapeConfig.isMember(ilogtail::prometheus::JOB_NAME)
+        && mScrapeConfig[ilogtail::prometheus::JOB_NAME].isString()) {
+        mJobName = mScrapeConfig[ilogtail::prometheus::JOB_NAME].asString();
     }
-    if (mScrapeConfig.isMember("scheme") && mScrapeConfig["scheme"].isString()) {
-        mScheme = mScrapeConfig["scheme"].asString();
+    if (mScrapeConfig.isMember(ilogtail::prometheus::SCHEME)
+        && mScrapeConfig[ilogtail::prometheus::SCHEME].isString()) {
+        mScheme = mScrapeConfig[ilogtail::prometheus::SCHEME].asString();
     } else {
-        mScheme = "http";
+        mScheme = ilogtail::prometheus::HTTP_SCHEME;
     }
-    if (mScrapeConfig.isMember("metrics_path") && mScrapeConfig["metrics_path"].isString()) {
-        mMetricsPath = mScrapeConfig["metrics_path"].asString();
+    if (mScrapeConfig.isMember(ilogtail::prometheus::METRICS_PATH)
+        && mScrapeConfig[ilogtail::prometheus::METRICS_PATH].isString()) {
+        mMetricsPath = mScrapeConfig[ilogtail::prometheus::METRICS_PATH].asString();
     } else {
         mMetricsPath = "/metrics";
     }
-    if (mScrapeConfig.isMember("scrape_interval") && mScrapeConfig["scrape_interval"].isString()) {
-        mScrapeIntervalString = mScrapeConfig["scrape_interval"].asString();
+    if (mScrapeConfig.isMember(ilogtail::prometheus::SCRAPE_INTERVAL)
+        && mScrapeConfig[ilogtail::prometheus::SCRAPE_INTERVAL].isString()) {
+        mScrapeIntervalString = mScrapeConfig[ilogtail::prometheus::SCRAPE_INTERVAL].asString();
     } else {
         mScrapeIntervalString = "30s";
     }
-    if (mScrapeConfig.isMember("scrape_timeout") && mScrapeConfig["scrape_timeout"].isString()) {
-        mScrapeTimeoutString = mScrapeConfig["scrape_timeout"].asString();
+    if (mScrapeConfig.isMember(ilogtail::prometheus::SCRAPE_TIMEOUT)
+        && mScrapeConfig[ilogtail::prometheus::SCRAPE_TIMEOUT].isString()) {
+        mScrapeTimeoutString = mScrapeConfig[ilogtail::prometheus::SCRAPE_TIMEOUT].asString();
     } else {
         mScrapeTimeoutString = "10s";
     }
-    if (mScrapeConfig.isMember("params") && mScrapeConfig["params"].isObject()) {
-        const Json::Value& params = mScrapeConfig["params"];
+    if (mScrapeConfig.isMember(ilogtail::prometheus::PARAMS)
+        && mScrapeConfig[ilogtail::prometheus::PARAMS].isObject()) {
+        const Json::Value& params = mScrapeConfig[ilogtail::prometheus::PARAMS];
         if (params.isObject()) {
             for (const auto& key : params.getMemberNames()) {
                 const Json::Value& values = params[key];
@@ -96,20 +103,25 @@ bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
             }
         }
     }
-    if (mScrapeConfig.isMember("authorization") && mScrapeConfig["authorization"].isObject()) {
-        string type = mScrapeConfig["authorization"]["type"].asString();
+    if (mScrapeConfig.isMember(ilogtail::prometheus::AUTHORIZATION)
+        && mScrapeConfig[ilogtail::prometheus::AUTHORIZATION].isObject()) {
+        string type = mScrapeConfig[ilogtail::prometheus::AUTHORIZATION][ilogtail::prometheus::TYPE].asString();
         string bearerToken;
-        bool b = ReadFile(mScrapeConfig["authorization"]["credentials_file"].asString(), bearerToken);
+        bool b = ReadFile(
+            mScrapeConfig[ilogtail::prometheus::AUTHORIZATION][ilogtail::prometheus::CREDENTIALS_FILE].asString(),
+            bearerToken);
         if (!b) {
             LOG_ERROR(sLogger,
                       ("read credentials_file failed, credentials_file",
-                       mScrapeConfig["authorization"]["credentials_file"].asString()));
+                       mScrapeConfig[ilogtail::prometheus::AUTHORIZATION][ilogtail::prometheus::CREDENTIALS_FILE]
+                           .asString()));
         }
-        mHeaders["Authorization"] = type + " " + bearerToken;
-        LOG_INFO(sLogger,
-                 ("read credentials_file success, credentials_file",
-                  mScrapeConfig["authorization"]["credentials_file"].asString())("Authorization",
-                                                                                 mHeaders["Authorization"]));
+        mHeaders[sdk::AUTHORIZATION] = type + " " + bearerToken;
+        LOG_INFO(
+            sLogger,
+            ("read credentials_file success, credentials_file",
+             mScrapeConfig[ilogtail::prometheus::AUTHORIZATION][ilogtail::prometheus::CREDENTIALS_FILE].asString())(
+                sdk::AUTHORIZATION, mHeaders[sdk::AUTHORIZATION]));
     }
 
     // TODO: 实现服务发现
@@ -122,15 +134,15 @@ bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
            "openstack_sd_configs",   "ovhcloud_sd_configs",   "puppetdb_sd_configs",     "scaleway_sd_configs",
            "serverset_sd_configs",   "triton_sd_configs",     "uyuni_sd_configs",        "static_configs"};
     Json::Value httpSDConfig;
-    string httpPrefix = "http://";
-    httpSDConfig["url"] = httpPrefix + ToString(getenv("OPERATOR_HOST")) + ":" + ToString(getenv("OPERATOR_PORT"))
-        + "/jobs/" + url_encode(mJobName) + "/targets?collector_id=" + ToString(getenv("POD_NAME"));
+    httpSDConfig["url"] = ilogtail::prometheus::HTTP_PREFIX + ToString(getenv(ilogtail::prometheus::OPERATOR_HOST))
+        + ":" + ToString(getenv(ilogtail::prometheus::OPERATOR_PORT)) + "/jobs/" + url_encode(mJobName)
+        + "/targets?collector_id=" + ToString(getenv(ilogtail::prometheus::POD_NAME));
     httpSDConfig["follow_redirects"] = false;
     for (const auto& sdConfig : sdConfigs) {
         mScrapeConfig.removeMember(sdConfig);
     }
     mScrapeConfig["http_sd_configs"].append(httpSDConfig);
-    for (const auto& relabelConfig : mScrapeConfig["relabel_configs"]) {
+    for (const auto& relabelConfig : mScrapeConfig[ilogtail::prometheus::RELABEL_CONFIGS]) {
         mRelabelConfigs.push_back(RelabelConfig(relabelConfig));
     }
 
@@ -198,14 +210,15 @@ void ScrapeJob::TargetsDiscoveryLoop() {
 
 bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     map<string, string> httpHeader;
-    httpHeader["Accept"] = "application/json";
-    httpHeader["X-Prometheus-Refresh-Interval-Seconds"] = ToString(sRefeshIntervalSeconds);
-    httpHeader["User-Agent"] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+    httpHeader[ilogtail::prometheus::ACCEPT_HEADER] = "application/json";
+    httpHeader[ilogtail::prometheus::PROMETHEUS_REFRESH_HEADER] = ToString(sRefeshIntervalSeconds);
+    httpHeader[ilogtail::prometheus::USER_AGENT_HEADER]
+        = "matrix_prometheus_" + ToString(getenv(ilogtail::prometheus::POD_NAME));
     sdk::HttpMessage httpResponse;
     // TODO: 等待框架删除对respond返回头的 X_LOG_REQUEST_ID 检查
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
 
-    bool httpsFlag = mScheme == "https";
+    bool httpsFlag = mScheme == ilogtail::prometheus::HTTPS_SCHEME;
     try {
         mClient->Send(sdk::HTTP_GET,
                       mOperatorHost,
@@ -220,8 +233,8 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
                       httpsFlag);
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger,
-                    ("http service discovery from operator failed", e.GetMessage())("errCode",
-                                                                                    e.GetErrorCode())("job", mJobName));
+                    ("http service discovery from operator failed",
+                     e.GetMessage())("errCode", e.GetErrorCode())(ilogtail::prometheus::JOB, mJobName));
         return false;
     }
     readBuffer = httpResponse.content;
@@ -236,27 +249,28 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
     istringstream s(response);
     if (!Json::parseFromStream(readerBuilder, s, &root, &errs)) {
         LOG_ERROR(sLogger,
-                  ("http service discovery from operator failed", "Failed to parse JSON: " + errs)("job", mJobName));
+                  ("http service discovery from operator failed",
+                   "Failed to parse JSON: " + errs)(ilogtail::prometheus::JOB, mJobName));
         return false;
     }
     for (const auto& element : root) {
         if (!element.isObject()) {
-            LOG_ERROR(
-                sLogger,
-                ("http service discovery from operator failed", "Invalid target group item found")("job", mJobName));
+            LOG_ERROR(sLogger,
+                      ("http service discovery from operator failed",
+                       "Invalid target group item found")(ilogtail::prometheus::JOB, mJobName));
             return false;
         }
 
         // Parse targets
         vector<string> targets;
-        if (element.isMember("targets") && element["targets"].isArray()) {
-            for (const auto& target : element["targets"]) {
+        if (element.isMember(ilogtail::prometheus::TARGETS) && element[ilogtail::prometheus::TARGETS].isArray()) {
+            for (const auto& target : element[ilogtail::prometheus::TARGETS]) {
                 if (target.isString()) {
                     targets.push_back(target.asString());
                 } else {
-                    LOG_ERROR(
-                        sLogger,
-                        ("http service discovery from operator failed", "Invalid target item found")("job", mJobName));
+                    LOG_ERROR(sLogger,
+                              ("http service discovery from operator failed",
+                               "Invalid target item found")(ilogtail::prometheus::JOB, mJobName));
                     return false;
                 }
             }
@@ -264,19 +278,19 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
 
         // Parse labels
         Labels labels;
-        labels.Push(Label{"job", mJobName});
-        labels.Push(Label{"__address__", targets[0]});
-        labels.Push(Label{"__scheme__", mScheme});
-        labels.Push(Label{"__metrics_path__", mMetricsPath});
-        labels.Push(Label{"__scrape_interval__", mScrapeIntervalString});
-        labels.Push(Label{"__scrape_timeout__", mScrapeTimeoutString});
+        labels.Push(Label{ilogtail::prometheus::JOB, mJobName});
+        labels.Push(Label{ilogtail::prometheus::__ADDRESS__, targets[0]});
+        labels.Push(Label{ilogtail::prometheus::__SCHEME__, mScheme});
+        labels.Push(Label{ilogtail::prometheus::__METRICS_PATH__, mMetricsPath});
+        labels.Push(Label{ilogtail::prometheus::__SCRAPE_INTERVAL__, mScrapeIntervalString});
+        labels.Push(Label{ilogtail::prometheus::__SCRAPE_TIMEOUT__, mScrapeTimeoutString});
         for (const auto& pair : mParams) {
-            labels.Push(Label{"__param_" + pair.first, pair.second[0]});
+            labels.Push(Label{ilogtail::prometheus::__PARAM_ + pair.first, pair.second[0]});
         }
 
-        if (element.isMember("labels") && element["labels"].isObject()) {
-            for (const auto& labelKey : element["labels"].getMemberNames()) {
-                labels.Push(Label{labelKey, element["labels"][labelKey].asString()});
+        if (element.isMember(ilogtail::prometheus::LABELS) && element[ilogtail::prometheus::LABELS].isObject()) {
+            for (const auto& labelKey : element[ilogtail::prometheus::LABELS].getMemberNames()) {
+                labels.Push(Label{labelKey, element[ilogtail::prometheus::LABELS][labelKey].asString()});
             }
         }
 
