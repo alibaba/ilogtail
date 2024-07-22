@@ -81,12 +81,6 @@ RelabelConfig::RelabelConfig() {
 
 RelabelConfig::RelabelConfig(const Json::Value& config) {
     string errorMsg;
-    // Json::Value sourceLabelsJson = config["source_labels"];
-    // if (sourceLabelsJson.isArray() && sourceLabelsJson.size() > 0) {
-    //     for (const auto& item : sourceLabelsJson) {
-    //         sourceLabels.emplace_back(item);
-    //     }
-    // }
 
     if (config.isMember("source_labels") && config["source_labels"].isArray()) {
         GetOptionalListParam<string>(config, "source_labels", mSourceLabels, errorMsg);
