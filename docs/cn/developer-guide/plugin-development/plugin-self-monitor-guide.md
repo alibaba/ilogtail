@@ -3,7 +3,7 @@ iLogtail提供了指标接口，可以方便地为插件增加一些自监控指
 
 接口：
 
-<https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/self_metric.go>
+<https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/self_metrics.go>
 
 实现：
 
