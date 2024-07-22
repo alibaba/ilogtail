@@ -25,6 +25,11 @@ namespace logtail {
 Labels::Labels() : mMetricEventPtr(nullptr) {
 }
 
+Labels::Labels(const Labels& other) {
+    mMetricEventPtr = other.mMetricEventPtr;
+    mLabels = other.mLabels;
+}
+
 size_t Labels::Size() const {
     if (mMetricEventPtr) {
         return mMetricEventPtr->TagsSize();

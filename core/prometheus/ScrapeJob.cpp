@@ -119,7 +119,7 @@ void ScrapeJob::TargetsDiscoveryLoop() {
         if (!FetchHttpData(readBuffer)) {
             continue;
         }
-        unordered_map<string, unique_ptr<ScrapeTarget>> newScrapeTargetsMap;
+        unordered_map<string, shared_ptr<ScrapeTarget>> newScrapeTargetsMap;
         if (!ParseTargetGroups(readBuffer, newScrapeTargetsMap)) {
             continue;
         }
@@ -160,7 +160,7 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
 }
 
 bool ScrapeJob::ParseTargetGroups(const string& response,
-                                  unordered_map<string, unique_ptr<ScrapeTarget>>& newScrapeTargetsMap) const {
+                                  unordered_map<string, shared_ptr<ScrapeTarget>>& newScrapeTargetsMap) const {
     Json::CharReaderBuilder readerBuilder;
     JSONCPP_STRING errs;
     Json::Value root;
@@ -218,7 +218,7 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         }
 
         // Relabel Config
-        std::unique_ptr<Labels> resultPtr = make_unique<Labels>();
+        std::shared_ptr<Labels> resultPtr = shared_ptr<Labels>();
         bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, *resultPtr);
         if (!keep) {
             continue;
@@ -229,9 +229,9 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         }
         LOG_INFO(sLogger, ("target relabel keep", mJobName));
 
-        ScrapeTarget st(mScrapeConfigPtr, std::move(resultPtr), mQueueKey, mInputIndex);
+        auto scrapeTargetPtr = std::make_shared<ScrapeTarget>(mScrapeConfigPtr, resultPtr, mQueueKey, mInputIndex);
 
-        newScrapeTargetsMap[st.GetHash()] = make_unique<ScrapeTarget>(st);
+        newScrapeTargetsMap[scrapeTargetPtr->GetHash()] = scrapeTargetPtr;
     }
     return true;
 }

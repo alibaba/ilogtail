@@ -33,20 +33,17 @@ namespace logtail {
 class ScrapeTarget {
 public:
     ScrapeTarget(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                 std::unique_ptr<Labels> labelsPtr,
+                 std::shared_ptr<Labels> labelsPtr,
                  QueueKey queueKey,
                  size_t inputIndex);
 
     std::string GetHash();
-    std::string GetJobName();
-    std::string GetHost();
-    std::map<std::string, std::string> GetHeaders();
 
     bool operator<(const ScrapeTarget& other) const;
 
 private:
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
-    std::unique_ptr<Labels> mLabelsPtr;
+    std::shared_ptr<Labels> mLabelsPtr;
 
     // target info
     std::string mHost;
@@ -69,7 +66,7 @@ private:
 
 class ScrapeWork {
 public:
-    ScrapeWork(const ScrapeTarget&);
+    ScrapeWork(std::shared_ptr<ScrapeTarget>);
 
     ScrapeWork(const ScrapeWork&) = delete;
     ScrapeWork(ScrapeWork&& other) noexcept = delete;
@@ -89,7 +86,7 @@ private:
     sdk::HttpMessage Scrape();
     void PushEventGroup(PipelineEventGroup&&);
 
-    ScrapeTarget mTarget;
+    std::shared_ptr<ScrapeTarget> mTargetPtr;
     std::atomic<bool> mFinished;
     std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;

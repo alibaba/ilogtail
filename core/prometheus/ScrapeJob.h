@@ -58,15 +58,15 @@ public:
     size_t mInputIndex;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void AddScrapeTarget(std::string hash, ScrapeTarget& target) {
+    void AddScrapeTarget(std::string hash, std::unique_ptr<ScrapeTarget> target) {
         std::lock_guard<std::mutex> lock(mMutex);
-        mScrapeTargetsMap[hash] = std::make_unique<ScrapeTarget>(target);
+        mScrapeTargetsMap[hash] = std::move(target);
     }
 #endif
 
 private:
     std::mutex mMutex;
-    std::unordered_map<std::string, std::unique_ptr<ScrapeTarget>> mScrapeTargetsMap;
+    std::unordered_map<std::string, std::shared_ptr<ScrapeTarget>> mScrapeTargetsMap;
 
     std::atomic<bool> mFinished;
     ThreadPtr mTargetsDiscoveryLoopThread;
@@ -79,7 +79,7 @@ private:
 
     bool FetchHttpData(std::string& readBuffer) const;
     bool ParseTargetGroups(const std::string& response,
-                           std::unordered_map<std::string, std::unique_ptr<ScrapeTarget>>& newScrapeTargetsMap) const;
+                           std::unordered_map<std::string, std::shared_ptr<ScrapeTarget>>& newScrapeTargetsMap) const;
     int GetIntSeconds(const std::string& str) const;
     std::string ConvertMapParamsToQueryString() const;
 

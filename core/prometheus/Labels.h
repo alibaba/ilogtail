@@ -41,6 +41,7 @@ using LabelMap = std::map<std::string, std::string>;
 class Labels {
 public:
     Labels();
+    Labels(const Labels&);
     size_t Size() const;
     uint64_t Hash();
     void RemoveMetaLabels();
