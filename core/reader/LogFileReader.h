@@ -146,6 +146,8 @@ public:
     LogFormat mFileLogFormat = LogFormat::TEXT;
 
     static size_t BUFFER_SIZE;
+    static const int32_t CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY = -1;
+    static const int32_t CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY = -2;
     std::vector<BaseLineParse*> mLineParsers = {};
     template <typename T>
     T* GetParser(size_t size) {
@@ -480,7 +482,7 @@ protected:
     time_t mLastMTime = 0;
     std::string mCache;
     // >= 0: index of reader array, -1: new reader, -2: not in reader array
-    int32_t mIdxInReaderArrayFromLastCpt = -1;
+    int32_t mIdxInReaderArrayFromLastCpt = CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY;
     // std::string mProjectName;
     std::string mTopicName;
     time_t mLastUpdateTime;

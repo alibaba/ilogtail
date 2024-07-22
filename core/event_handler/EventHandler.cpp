@@ -376,7 +376,7 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         return LogFileReaderPtr();
 
     if (readerArray.size() >= readerConfig.first->mRotatorQueueSize
-        && readerPtr->GetIdxInReaderArrayFromLastCpt() == -1) {
+        && readerPtr->GetIdxInReaderArrayFromLastCpt() == LogFileReader::CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY) {
         int32_t nowTime = time(NULL);
         if (nowTime - mLastOverflowErrorTime > INT32_FLAG(rotate_overflow_error_interval)) {
             mLastOverflowErrorTime = nowTime;
@@ -457,13 +457,13 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         readerArray.push_back(readerPtr);
         mDevInodeReaderMap[devInode] = readerPtr;
         // reader not in reader array
-    } else if (idx == -2) {
+    } else if (idx == LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY) {
         mRotatorReaderMap[devInode] = readerPtr;
         // reader in reader array
     } else if (idx >= 0) {
         readerArray.push_back(readerPtr);
         mDevInodeReaderMap[devInode] = readerPtr;
-        std::sort(readerArray.begin(), readerArray.end(), ModifyHandler::CompareReaderByIdxFromCpt);
+        std::stable_sort(readerArray.begin(), readerArray.end(), ModifyHandler::CompareReaderByIdxFromCpt);
     } else {
         LOG_ERROR(sLogger,
                   ("unexpected idx", idx)("real log path", readerPtr->GetRealLogPath())("host log path",

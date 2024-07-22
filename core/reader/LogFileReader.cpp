@@ -285,6 +285,7 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
             mContainerStopped = checkPointPtr->mContainerStopped;
+            // new property to recover reader exactly from checkpoint
             mIdxInReaderArrayFromLastCpt = checkPointPtr->mPositionInReaderArray;
             LOG_INFO(sLogger,
                      ("recover log reader status from checkpoint, project", GetProject())("logstore", GetLogstore())(

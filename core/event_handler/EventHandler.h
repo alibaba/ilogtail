@@ -76,12 +76,15 @@ private:
 
     static bool CompareReaderByIdxFromCpt(const std::shared_ptr<LogFileReader> left,
                                           const std::shared_ptr<LogFileReader> right) {
-        // new reader is always at the end of the array
-        if (right->GetIdxInReaderArrayFromLastCpt() == -1) {
-            return true;
-        }
-        if (left->GetIdxInReaderArrayFromLastCpt() == -1) {
+        if (left->GetIdxInReaderArrayFromLastCpt() == right->GetIdxInReaderArrayFromLastCpt()) {
             return false;
+        }
+        // new reader is always at the end of the array
+        if (left->GetIdxInReaderArrayFromLastCpt() == LogFileReader::CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY) {
+            return false;
+        }
+        if (right->GetIdxInReaderArrayFromLastCpt() == LogFileReader::CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY) {
+            return true;
         }
         return left->GetIdxInReaderArrayFromLastCpt() < right->GetIdxInReaderArrayFromLastCpt();
     }
