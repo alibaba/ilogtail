@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 
+#include "Constants.h"
 #include "FeedbackQueueKey.h"
 #include "StringTools.h"
 #include "TextParser.h"
@@ -50,30 +51,30 @@ ScrapeTarget::ScrapeTarget(const std::string& jobName,
       mScrapeInterval(interval),
       mScrapeTimeout(timeout),
       mHeaders(headers) {
-    mPort = mScheme == "http" ? 80 : 443;
+    mPort = mScheme == ilogtail::prometheus::HTTP_SCHEME ? 80 : 443;
 }
 
 bool ScrapeTarget::SetLabels(const Labels& labels) {
     mLabels = labels;
 
     // TODO: 移到更合适的地方去
-    if (mLabels.Get("job").empty()) {
-        mLabels.Push(Label{"job", mJobName});
+    if (mLabels.Get(ilogtail::prometheus::JOB).empty()) {
+        mLabels.Push(Label{ilogtail::prometheus::JOB, mJobName});
     }
 
     //
-    string address = mLabels.Get("__address__");
+    string address = mLabels.Get(ilogtail::prometheus::__ADDRESS__);
     if (address.empty()) {
         return false;
     }
 
     // st.mScheme
-    if (address.find("http://") == 0) {
-        mScheme = "http";
-        address = address.substr(strlen("http://"));
-    } else if (address.find("https://") == 0) {
-        mScheme = "https";
-        address = address.substr(strlen("https://"));
+    if (address.find(ilogtail::prometheus::HTTP_PREFIX) == 0) {
+        mScheme = ilogtail::prometheus::HTTP_SCHEME;
+        address = address.substr(ilogtail::prometheus::HTTP_PREFIX.length());
+    } else if (address.find(ilogtail::prometheus::HTTPS_PREFIX) == 0) {
+        mScheme = ilogtail::prometheus::HTTPS_SCHEME;
+        address = address.substr(ilogtail::prometheus::HTTPS_PREFIX.length());
     }
 
     // st.mMetricsPath
@@ -93,9 +94,9 @@ bool ScrapeTarget::SetLabels(const Labels& labels) {
         mPort = stoi(address.substr(m + 1));
     } else {
         mHost = address;
-        if (mScheme == "http") {
+        if (mScheme == ilogtail::prometheus::HTTP_SCHEME) {
             mPort = 80;
-        } else if (mScheme == "https") {
+        } else if (mScheme == ilogtail::prometheus::HTTPS_SCHEME) {
             mPort = 443;
         } else {
             return false;
@@ -260,7 +261,7 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
                       mTarget.mScrapeTimeout,
                       httpResponse,
                       "",
-                      mTarget.mScheme == "https");
+                      mTarget.mScheme == ilogtail::prometheus::HTTPS_SCHEME);
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger, ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mTarget.mHash));
     }
