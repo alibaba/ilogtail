@@ -19,11 +19,12 @@
 #include <json/json.h>
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
-#include "Relabel.h"
+#include "ScrapeConfig.h"
 #include "ScrapeWork.h"
 
 
@@ -44,17 +45,8 @@ public:
 
     std::unordered_map<std::string, ScrapeTarget> GetScrapeTargetsMapCopy();
 
-    // from scrape config
     std::string mJobName;
-    std::string mScheme;
-    std::string mMetricsPath;
-    std::string mScrapeIntervalString;
-    std::string mScrapeTimeoutString;
-    std::map<std::string, std::vector<std::string>> mParams;
-    // in bytes
-    int64_t mMaxScrapeSize;
-    int64_t mSampleLimit;
-    int64_t mSeriesLimit;
+    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     // from environment variable
     std::string mOperatorHost;
@@ -66,26 +58,13 @@ public:
     size_t mInputIndex;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    ScrapeJob(std::string jobName, std::string metricsPath, std::string scheme, int interval, int timeout)
-        : mJobName(jobName),
-          mScheme(scheme),
-          mMetricsPath(metricsPath),
-          mScrapeIntervalString(std::to_string(interval) + "s"),
-          mScrapeTimeoutString(std::to_string(timeout) + "s") {}
-
     void AddScrapeTarget(std::string hash, ScrapeTarget& target) {
         std::lock_guard<std::mutex> lock(mMutex);
         mScrapeTargetsMap[hash] = std::make_unique<ScrapeTarget>(target);
     }
-
-    const Json::Value& GetScrapeConfig() { return mScrapeConfig; }
 #endif
 
 private:
-    Json::Value mScrapeConfig;
-    std::vector<RelabelConfig> mRelabelConfigs;
-    std::map<std::string, std::string> mHeaders;
-
     std::mutex mMutex;
     std::unordered_map<std::string, std::unique_ptr<ScrapeTarget>> mScrapeTargetsMap;
 

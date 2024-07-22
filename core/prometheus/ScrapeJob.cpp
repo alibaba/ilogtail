@@ -18,13 +18,13 @@
 
 #include <curl/curl.h>
 
+#include <memory>
 #include <string>
 
 #include "Common.h"
 #include "CurlImp.h"
 #include "Exception.h"
 #include "ScrapeWork.h"
-#include "common/FileSystemUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -59,108 +59,11 @@ ScrapeJob::ScrapeJob() {
 
 /// @brief Construct from json config
 bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
-    mScrapeConfig = scrapeConfig;
-    if (mScrapeConfig.isMember("job_name") && mScrapeConfig["job_name"].isString()) {
-        mJobName = mScrapeConfig["job_name"].asString();
+    mScrapeConfigPtr = std::make_shared<ScrapeConfig>();
+    if (!mScrapeConfigPtr->Init(scrapeConfig)) {
+        return false;
     }
-    if (mScrapeConfig.isMember("scheme") && mScrapeConfig["scheme"].isString()) {
-        mScheme = mScrapeConfig["scheme"].asString();
-    } else {
-        mScheme = "http";
-    }
-    if (mScrapeConfig.isMember("metrics_path") && mScrapeConfig["metrics_path"].isString()) {
-        mMetricsPath = mScrapeConfig["metrics_path"].asString();
-    } else {
-        mMetricsPath = "/metrics";
-    }
-    if (mScrapeConfig.isMember("scrape_interval") && mScrapeConfig["scrape_interval"].isString()) {
-        mScrapeIntervalString = mScrapeConfig["scrape_interval"].asString();
-    } else {
-        mScrapeIntervalString = "30s";
-    }
-    if (mScrapeConfig.isMember("scrape_timeout") && mScrapeConfig["scrape_timeout"].isString()) {
-        mScrapeTimeoutString = mScrapeConfig["scrape_timeout"].asString();
-    } else {
-        mScrapeTimeoutString = "10s";
-    }
-    if (mScrapeConfig.isMember("params") && mScrapeConfig["params"].isObject()) {
-        const Json::Value& params = mScrapeConfig["params"];
-        if (params.isObject()) {
-            for (const auto& key : params.getMemberNames()) {
-                const Json::Value& values = params[key];
-                if (values.isArray()) {
-                    vector<string> valueList;
-                    for (const auto& value : values) {
-                        valueList.push_back(value.asString());
-                    }
-                    mParams[key] = valueList;
-                }
-            }
-        }
-    }
-    if (mScrapeConfig.isMember("authorization") && mScrapeConfig["authorization"].isObject()) {
-        string type = mScrapeConfig["authorization"]["type"].asString();
-        string bearerToken;
-        bool b = ReadFile(mScrapeConfig["authorization"]["credentials_file"].asString(), bearerToken);
-        if (!b) {
-            LOG_ERROR(sLogger,
-                      ("read credentials_file failed, credentials_file",
-                       mScrapeConfig["authorization"]["credentials_file"].asString()));
-        }
-        mHeaders["Authorization"] = type + " " + bearerToken;
-        LOG_INFO(sLogger,
-                 ("read credentials_file success, credentials_file",
-                  mScrapeConfig["authorization"]["credentials_file"].asString())("Authorization",
-                                                                                 mHeaders["Authorization"]));
-    }
-    if (mScrapeConfig.isMember("max_scrape_size") && mScrapeConfig["max_scrape_size"].isString()) {
-        string tmpMaxScrapeSize = mScrapeConfig["max_scrape_size"].asString();
-        if (tmpMaxScrapeSize.empty()) {
-            mMaxScrapeSize = -1;
-        } else if (EndWith(tmpMaxScrapeSize, "MiB") || EndWith(tmpMaxScrapeSize, "M")
-                   || EndWith(tmpMaxScrapeSize, "MB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("M"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024;
-        } else {
-            mMaxScrapeSize = -1;
-        }
-    } else {
-        mMaxScrapeSize = -1;
-    }
-
-    if (mScrapeConfig.isMember("sample_limit") && mScrapeConfig["sample_limit"].isInt64()) {
-        mSampleLimit = mScrapeConfig["sample_limit"].asInt64();
-    } else {
-        mSampleLimit = -1;
-    }
-    if (mScrapeConfig.isMember("series_limit") && mScrapeConfig["series_limit"].isInt64()) {
-        mSeriesLimit = mScrapeConfig["series_limit"].asInt64();
-    } else {
-        mSeriesLimit = -1;
-    }
-
-
-    // TODO: 实现服务发现
-    vector<string> sdConfigs
-        = {"azure_sd_configs",       "consul_sd_configs",     "digitalocean_sd_configs", "docker_sd_configs",
-           "dockerswarm_sd_configs", "dns_sd_configs",        "ec2_sd_configs",          "eureka_sd_configs",
-           "file_sd_configs",        "gce_sd_configs",        "hetzner_sd_configs",      "http_sd_configs",
-           "ionos_sd_configs",       "kubernetes_sd_configs", "kuma_sd_configs",         "lightsail_sd_configs",
-           "linode_sd_configs",      "marathon_sd_configs",   "nerve_sd_configs",        "nomad_sd_configs",
-           "openstack_sd_configs",   "ovhcloud_sd_configs",   "puppetdb_sd_configs",     "scaleway_sd_configs",
-           "serverset_sd_configs",   "triton_sd_configs",     "uyuni_sd_configs",        "static_configs"};
-    Json::Value httpSDConfig;
-    string httpPrefix = "http://";
-    httpSDConfig["url"] = httpPrefix + ToString(getenv("OPERATOR_HOST")) + ":" + ToString(getenv("OPERATOR_PORT"))
-        + "/jobs/" + url_encode(mJobName) + "/targets?collector_id=" + ToString(getenv("POD_NAME"));
-    httpSDConfig["follow_redirects"] = false;
-    for (const auto& sdConfig : sdConfigs) {
-        mScrapeConfig.removeMember(sdConfig);
-    }
-    mScrapeConfig["http_sd_configs"].append(httpSDConfig);
-    for (const auto& relabelConfig : mScrapeConfig["relabel_configs"]) {
-        mRelabelConfigs.push_back(RelabelConfig(relabelConfig));
-    }
+    mJobName = mScrapeConfigPtr->mJobName;
 
     return Validation();
 }
@@ -171,7 +74,7 @@ bool ScrapeJob::Validation() const {
     return !mJobName.empty();
 }
 
-/// @brief Sort by name
+/// @brief JobName must be unique
 bool ScrapeJob::operator<(const ScrapeJob& other) const {
     return mJobName < other.mJobName;
 }
@@ -233,7 +136,7 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     // TODO: 等待框架删除对respond返回头的 X_LOG_REQUEST_ID 检查
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
 
-    bool httpsFlag = mScheme == "https";
+    bool httpsFlag = mScrapeConfigPtr->mScheme == "https";
     try {
         mClient->Send(sdk::HTTP_GET,
                       mOperatorHost,
@@ -294,11 +197,17 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         Labels labels;
         labels.Push(Label{"job", mJobName});
         labels.Push(Label{"__address__", targets[0]});
-        labels.Push(Label{"__scheme__", mScheme});
-        labels.Push(Label{"__metrics_path__", mMetricsPath});
-        labels.Push(Label{"__scrape_interval__", mScrapeIntervalString});
-        labels.Push(Label{"__scrape_timeout__", mScrapeTimeoutString});
-        for (const auto& pair : mParams) {
+        labels.Push(Label{"__scheme__", mScrapeConfigPtr->mScheme});
+        labels.Push(Label{"__metrics_path__", mScrapeConfigPtr->mMetricsPath});
+        labels.Push(Label{"__scrape_interval__",
+                          (mScrapeConfigPtr->mScrapeInterval % 60 == 0)
+                              ? ToString(mScrapeConfigPtr->mScrapeInterval / 60) + "m"
+                              : ToString(mScrapeConfigPtr->mScrapeInterval) + "s"});
+        labels.Push(Label{"__scrape_timeout__",
+                          (mScrapeConfigPtr->mScrapeTimeout % 60 == 0)
+                              ? ToString(mScrapeConfigPtr->mScrapeTimeout / 60) + "m"
+                              : ToString(mScrapeConfigPtr->mScrapeTimeout) + "s"});
+        for (const auto& pair : mScrapeConfigPtr->mParams) {
             labels.Push(Label{"__param_" + pair.first, pair.second[0]});
         }
 
@@ -310,7 +219,7 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
 
         // Relabel Config
         Labels result;
-        bool keep = relabel::Process(labels, mRelabelConfigs, result);
+        bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
         if (!keep) {
             continue;
         }

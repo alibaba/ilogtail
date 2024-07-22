@@ -18,9 +18,11 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "Labels.h"
+#include "ScrapeConfig.h"
 #include "common/Thread.h"
 #include "models/PipelineEventGroup.h"
 #include "queue/FeedbackQueueKey.h"
@@ -103,6 +105,7 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
 
     ScrapeTarget mTarget;
+    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::atomic<bool> mFinished;
     std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;
