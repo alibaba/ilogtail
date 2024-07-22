@@ -364,12 +364,6 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
     }
     LogFileReaderPtrArray& readerArray = mNameReaderMap[name];
 
-    LOG_INFO(sLogger,
-             ("start to create log reader, project",
-              readerConfig.second->GetProjectName())("logstore", readerConfig.second->GetLogstoreName())(
-                 "config", readerConfig.second->GetConfigName())("log reader queue name", PathJoin(path, name))(
-                 "file device", ToString(devInode.dev))("file inode", ToString(devInode.inode)));
-
     LogFileReaderPtr readerPtr(LogFileReader::CreateLogFileReader(path,
                                                                   name,
                                                                   devInode,
@@ -378,6 +372,8 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
                                                                   discoveryConfig,
                                                                   exactlyonceConcurrency,
                                                                   forceBeginingFlag));
+    if (readerPtr.get() == NULL)
+        return LogFileReaderPtr();
 
     if (readerArray.size() >= readerConfig.first->mRotatorQueueSize
         && readerPtr->GetIdxInReaderArrayFromLastCpt() == -1) {
@@ -403,8 +399,11 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         return LogFileReaderPtr();
     }
 
-    if (readerPtr.get() == NULL)
-        return LogFileReaderPtr();
+    LOG_INFO(sLogger,
+             ("start to create log reader, project",
+              readerConfig.second->GetProjectName())("logstore", readerConfig.second->GetLogstoreName())(
+                 "config", readerConfig.second->GetConfigName())("log reader queue name", PathJoin(path, name))(
+                 "file device", ToString(devInode.dev))("file inode", ToString(devInode.inode)));
 
     // new log
     bool backFlag = false;
