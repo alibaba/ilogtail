@@ -22,7 +22,9 @@
 #include <map>
 #include <string>
 
+#include "Constants.h"
 #include "FeedbackQueueKey.h"
+#include "StringTools.h"
 #include "TextParser.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -49,30 +51,30 @@ ScrapeTarget::ScrapeTarget(const std::string& jobName,
       mScrapeInterval(interval),
       mScrapeTimeout(timeout),
       mHeaders(headers) {
-    mPort = mScheme == "http" ? 80 : 443;
+    mPort = mScheme == ilogtail::prometheus::HTTP_SCHEME ? 80 : 443;
 }
 
 bool ScrapeTarget::SetLabels(const Labels& labels) {
     mLabels = labels;
 
     // TODO: 移到更合适的地方去
-    if (mLabels.Get("job").empty()) {
-        mLabels.Push(Label{"job", mJobName});
+    if (mLabels.Get(ilogtail::prometheus::JOB).empty()) {
+        mLabels.Push(Label{ilogtail::prometheus::JOB, mJobName});
     }
 
     //
-    string address = mLabels.Get("__address__");
+    string address = mLabels.Get(ilogtail::prometheus::__ADDRESS__);
     if (address.empty()) {
         return false;
     }
 
     // st.mScheme
-    if (address.find("http://") == 0) {
-        mScheme = "http";
-        address = address.substr(strlen("http://"));
-    } else if (address.find("https://") == 0) {
-        mScheme = "https";
-        address = address.substr(strlen("https://"));
+    if (address.find(ilogtail::prometheus::HTTP_PREFIX) == 0) {
+        mScheme = ilogtail::prometheus::HTTP_SCHEME;
+        address = address.substr(ilogtail::prometheus::HTTP_PREFIX.length());
+    } else if (address.find(ilogtail::prometheus::HTTPS_PREFIX) == 0) {
+        mScheme = ilogtail::prometheus::HTTPS_SCHEME;
+        address = address.substr(ilogtail::prometheus::HTTPS_PREFIX.length());
     }
 
     // st.mMetricsPath
@@ -92,9 +94,9 @@ bool ScrapeTarget::SetLabels(const Labels& labels) {
         mPort = stoi(address.substr(m + 1));
     } else {
         mHost = address;
-        if (mScheme == "http") {
+        if (mScheme == ilogtail::prometheus::HTTP_SCHEME) {
             mPort = 80;
-        } else if (mScheme == "https") {
+        } else if (mScheme == ilogtail::prometheus::HTTPS_SCHEME) {
             mPort = 443;
         } else {
             return false;
@@ -104,7 +106,7 @@ bool ScrapeTarget::SetLabels(const Labels& labels) {
     // set URL
     mTargetURL = mScheme + "://" + mHost + ":" + to_string(mPort) + mMetricsPath
         + (mQueryString.empty() ? "" : "?" + mQueryString);
-    mHash = mJobName + mTargetURL + mLabels.Hash();
+    mHash = mJobName + mTargetURL + ToString(mLabels.Hash());
 
     return true;
 }
@@ -167,6 +169,7 @@ ScrapeWork::ScrapeWork(const ScrapeTarget& target) : mTarget(target) {
 void ScrapeWork::StartScrapeLoop() {
     mFinished.store(false);
     // 以线程的方式实现
+    // TODO: 以时间触发器&异步的方式改造
     if (!mScrapeLoopThread) {
         mScrapeLoopThread = CreateThread([this]() { ScrapeLoop(); });
     }
@@ -214,7 +217,7 @@ void ScrapeWork::ScrapeLoop() {
                                                                                                          headerStr));
         }
 
-        // 需要校验花费的时间是否比采集间隔短
+        // TODO: 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
         uint64_t timeToWait = (uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
             - elapsedTime % ((uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
@@ -226,12 +229,16 @@ void ScrapeWork::ScrapeLoop() {
 uint64_t ScrapeWork::GetRandSleep() {
     // 根据target信息构造hash输入
     const string& key = mTarget.mHash;
+    // 计算hash值
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
+    // hash值占最大值的比例为一个0-1之间的数，再乘以采集间隔，得到一个随机的等待时间
     uint64_t randSleep = ((double)1.0) * mTarget.mScrapeInterval * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    // 计算sleep开始的时间节点
     uint64_t sleepOffset = GetCurrentTimeInNanoSeconds() % (mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
     if (randSleep < sleepOffset) {
         randSleep += mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL;
     }
+    // 计算应当sleep的时间
     randSleep -= sleepOffset;
     return randSleep;
 }
@@ -254,7 +261,7 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
                       mTarget.mScrapeTimeout,
                       httpResponse,
                       "",
-                      mTarget.mScheme == "https");
+                      mTarget.mScheme == ilogtail::prometheus::HTTPS_SCHEME);
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger, ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mTarget.mHash));
     }

@@ -16,6 +16,7 @@
 
 
 #include "Labels.h"
+#include "StringTools.h"
 #include "prometheus/ScrapeWork.h"
 #include "sdk/Common.h"
 #include "unittest/Unittest.h"
@@ -125,7 +126,7 @@ void ScrapeTargetUnittest::OnSetLabels() {
     APSARA_TEST_EQUAL(target.mHost, "192.168.0.1");
     APSARA_TEST_EQUAL(target.mPort, 1234UL);
 
-    APSARA_TEST_EQUAL("test_jobhttp://192.168.0.1:1234/metrics" + labels.Hash(), target.GetHash());
+    APSARA_TEST_EQUAL("test_jobhttp://192.168.0.1:1234/metrics" + ToString(labels.Hash()), target.GetHash());
 }
 
 class ScrapeWorkUnittest : public testing::Test {
