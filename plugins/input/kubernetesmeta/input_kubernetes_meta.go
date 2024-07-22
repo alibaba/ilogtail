@@ -16,10 +16,8 @@ package kubernetesmeta
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	kruise "github.com/openkruise/kruise-api/client/informers/externalversions"
@@ -68,7 +66,6 @@ type InputKubernetesMeta struct {
 	LabelSelectors         string
 	IntervalMs             int
 	EnableOpenKruise       bool
-	EnableHTTPServer       bool
 	Labels                 map[string]string
 	context                pipeline.Context
 	informerFactory        informers.SharedInformerFactory
@@ -143,32 +140,6 @@ func (in *InputKubernetesMeta) Init(context pipeline.Context) (int, error) {
 	in.ingressRelationMapping = make(map[string]map[string]map[string]struct{}, 16)
 	in.ingressMapping = make(map[string]string, 16)
 
-	// http server
-	if in.EnableHTTPServer {
-		portEnv := os.Getenv("KUBERNETES_METADATA_PORT")
-		if len(portEnv) == 0 {
-			return 0, fmt.Errorf("KUBERNETES_METADATA_PORT is not set")
-		}
-		port, err := strconv.Atoi(portEnv)
-		if err != nil {
-			return 0, fmt.Errorf("KUBERNETES_METADATA_PORT is not a valid port number")
-		}
-		server := &http.Server{ //nolint:gosec
-			Addr: ":" + strconv.Itoa(port),
-		}
-		mux := http.NewServeMux()
-		// TODO: add port in ip endpoint
-		mux.Handle("/metadata/ip", &metadataHandler{
-			watchClient: NewWatchClient(in.informerFactory, defaultDeleteGracePeriod, in.informerStopChan),
-		})
-		mux.Handle("/metadata/containerid", &metadataHandler{
-			watchClient: NewWatchClient(in.informerFactory, defaultDeleteGracePeriod, in.informerStopChan),
-		})
-		server.Handler = mux
-		go func() {
-			_ = server.ListenAndServe()
-		}()
-	}
 	return 0, nil
 }
 
@@ -299,7 +270,6 @@ func init() {
 			Configmap:             true,
 			Secret:                true,
 			IntervalMs:            defaultIntervalMs,
-			EnableHTTPServer:      false,
 		}
 	}
 }
