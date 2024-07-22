@@ -136,7 +136,7 @@ void LegacyCommonConfigProvider::GetConfigUpdate() {
         google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults;
         google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails;
 
-        checkResults = SendHeartBeat(configServerAddress);
+        checkResults = SendHeartbeat(configServerAddress);
         if (checkResults.size() > 0) {
             LOG_DEBUG(sLogger, ("fetch pipeline config, config file number", checkResults.size()));
             configDetails = FetchPipelineConfig(configServerAddress, checkResults);
@@ -150,7 +150,7 @@ void LegacyCommonConfigProvider::GetConfigUpdate() {
 }
 
 google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
-LegacyCommonConfigProvider::SendHeartBeat(const ConfigServerAddress& configServerAddress) {
+LegacyCommonConfigProvider::SendHeartbeat(const ConfigServerAddress& configServerAddress) {
     configserver::proto::HeartBeatRequest heartBeatReq;
     configserver::proto::AgentAttributes attributes;
     string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
@@ -205,13 +205,13 @@ LegacyCommonConfigProvider::SendHeartBeat(const ConfigServerAddress& configServe
             return emptyResult;
 
         LOG_DEBUG(sLogger,
-                  ("SendHeartBeat", "success")("reqBody", reqBody)("requestId", heartBeatResp.request_id())(
+                  ("SendHeartbeat", "success")("reqBody", reqBody)("requestId", heartBeatResp.request_id())(
                       "statusCode", heartBeatResp.code()));
 
         return heartBeatResp.pipeline_check_results();
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger,
-                    ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())(
+                    ("SendHeartbeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())(
                         "errMsg", e.GetMessage())("host", configServerAddress.host)("port", configServerAddress.port));
         return emptyResult;
     }

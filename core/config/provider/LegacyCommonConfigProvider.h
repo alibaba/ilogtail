@@ -62,7 +62,7 @@ private:
     bool GetConfigServerAvailable() { return mConfigServerAvailable; }
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
-    SendHeartBeat(const ConfigServerAddress& configServerAddress);
+    SendHeartbeat(const ConfigServerAddress& configServerAddress);
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> FetchPipelineConfig(
         const ConfigServerAddress& configServerAddress,
         const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs);
