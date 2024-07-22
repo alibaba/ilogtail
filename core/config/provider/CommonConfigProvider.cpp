@@ -140,7 +140,7 @@ void CommonConfigProvider::LoadConfigFile() {
             }
             info.status = ConfigFeedbackStatus::APPLYING;
             info.detail = detail.toStyledString();
-            lock_guard<mutex> infomaplock(mInfoMapMux);
+            lock_guard<mutex> infomaplock(mPipelineInfoMapMux);
             mPipelineConfigInfoMap[info.name] = info;
         }
     }
@@ -155,7 +155,7 @@ void CommonConfigProvider::LoadConfigFile() {
             }
             info.status = ConfigFeedbackStatus::APPLYING;
             info.detail = detail.toStyledString();
-            lock_guard<mutex> infomaplock(mInfoMapMux);
+            lock_guard<mutex> infomaplock(mProcessInfoMapMux);
             mProcessConfigInfoMap[info.name] = info;
         }
     }
@@ -274,10 +274,11 @@ configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat
     heartbeatReq.set_running_status("running");
     heartbeatReq.set_startup_time(mStartTime);
 
-    lock_guard<mutex> infomaplock(mInfoMapMux);
+    lock_guard<mutex> pipelineinfomaplock(mPipelineInfoMapMux);
     for (const auto& configInfo : mPipelineConfigInfoMap) {
         addConfigInfoToRequest(configInfo, heartbeatReq.add_pipeline_configs());
     }
+    lock_guard<mutex> processinfomaplock(mProcessInfoMapMux);
     for (const auto& configInfo : mProcessConfigInfoMap) {
         addConfigInfoToRequest(configInfo, heartbeatReq.add_process_configs());
     }
@@ -388,7 +389,7 @@ bool CommonConfigProvider::DumpConfigFile(const configserver::proto::v2::ConfigD
     filesystem::path tmpFilePath = sourceDir / (config.name() + ".json.new");
     Json::Value detail;
     std::string errorMsg;
-    if (!ParseConfigDetail(config.detail(), ".yaml", detail, errorMsg)) {
+    if (!ParseConfigDetail(config.detail(), ".json", detail, errorMsg)) {
         LOG_WARNING(sLogger, ("failed to parse config detail", config.detail()));
         return false;
     }
@@ -426,7 +427,7 @@ void CommonConfigProvider::UpdateRemotePipelineConfig(
     }
 
     lock_guard<mutex> lock(mPipelineMux);
-    lock_guard<mutex> infomaplock(mInfoMapMux);
+    lock_guard<mutex> infomaplock(mPipelineInfoMapMux);
     for (const auto& config : configs) {
         filesystem::path filePath = sourceDir / (config.name() + ".json");
         if (config.version() == -1) {
@@ -464,9 +465,9 @@ void CommonConfigProvider::UpdateRemoteProcessConfig(
     }
 
     lock_guard<mutex> lock(mProcessMux);
-    lock_guard<mutex> infomaplock(mInfoMapMux);
+    lock_guard<mutex> infomaplock(mProcessInfoMapMux);
     for (const auto& config : configs) {
-        filesystem::path filePath = sourceDir / (config.name() + ".yaml");
+        filesystem::path filePath = sourceDir / (config.name() + ".json");
         if (config.version() == -1) {
             mProcessConfigInfoMap.erase(config.name());
             filesystem::remove(filePath, ec);
@@ -548,7 +549,7 @@ bool CommonConfigProvider::FetchPipelineConfigFromServer(
 }
 
 void CommonConfigProvider::FeedbackPipelineConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
-    lock_guard<mutex> infomaplock(mInfoMapMux);
+    lock_guard<mutex> infomaplock(mPipelineInfoMapMux);
     auto info = mPipelineConfigInfoMap.find(name);
     if (info != mPipelineConfigInfoMap.end()) {
         info->second.status = status;
@@ -557,7 +558,7 @@ void CommonConfigProvider::FeedbackPipelineConfigStatus(const std::string& name,
               ("CommonConfigProvider", "FeedbackPipelineConfigStatus")("name", name)("status", ToStringView(status)));
 }
 void CommonConfigProvider::FeedbackProcessConfigStatus(const std::string& name, ConfigFeedbackStatus status) {
-    lock_guard<mutex> infomaplock(mInfoMapMux);
+    lock_guard<mutex> infomaplock(mProcessInfoMapMux);
     auto info = mProcessConfigInfoMap.find(name);
     if (info != mProcessConfigInfoMap.end()) {
         info->second.status = status;
@@ -568,7 +569,7 @@ void CommonConfigProvider::FeedbackProcessConfigStatus(const std::string& name, 
 void CommonConfigProvider::FeedbackCommandConfigStatus(const std::string& type,
                                                        const std::string& name,
                                                        ConfigFeedbackStatus status) {
-    lock_guard<mutex> infomaplock(mInfoMapMux);
+    lock_guard<mutex> infomaplock(mCommondInfoMapMux);
     auto info = mCommandInfoMap.find(GenerateCommandFeedBackKey(type, name));
     if (info != mCommandInfoMap.end()) {
         info->second.status = status;

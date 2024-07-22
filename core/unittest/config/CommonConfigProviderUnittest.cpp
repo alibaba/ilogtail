@@ -22,6 +22,8 @@
 #include "config/provider/CommonConfigProvider.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "gmock/gmock.h"
+#include "pipeline/PipelineConfigManager.h"
+#include "pipeline/ProcessConfigManager.h"
 #include "unittest/Unittest.h"
 
 using namespace testing;
@@ -413,27 +415,42 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
         APSARA_TEST_EQUAL(provider.mPipelineConfigInfoMap["config1"].status, ConfigFeedbackStatus::APPLYING);
         APSARA_TEST_EQUAL(provider.mPipelineConfigInfoMap["config2"].status, ConfigFeedbackStatus::FAILED);
 
+        // 处理 pipelineconfig
         PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
-        APSARA_TEST_FALSE(pipelineConfigDiff.IsEmpty());
+        PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
+        APSARA_TEST_TRUE(!pipelineConfigDiff.IsEmpty());
         APSARA_TEST_EQUAL(1U, pipelineConfigDiff.mAdded.size());
         APSARA_TEST_EQUAL(pipelineConfigDiff.mAdded[0].mName, "config1");
-
+        APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames().size(), 1);
+        APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames()[0], "config1");
+        // 再次处理 pipelineconfig
         pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+        PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
         APSARA_TEST_TRUE(pipelineConfigDiff.IsEmpty());
         APSARA_TEST_TRUE(pipelineConfigDiff.mAdded.empty());
+        APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames().size(), 1);
+        APSARA_TEST_EQUAL(PipelineManager::GetInstance()->GetAllConfigNames()[0], "config1");
 
 
         APSARA_TEST_EQUAL(provider.mProcessConfigInfoMap.size(), 2);
         APSARA_TEST_EQUAL(provider.mProcessConfigInfoMap["processconfig1"].status, ConfigFeedbackStatus::APPLYING);
         APSARA_TEST_EQUAL(provider.mProcessConfigInfoMap["processconfig2"].status, ConfigFeedbackStatus::FAILED);
 
+        // 处理 processconfig
         ProcessConfigDiff processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
-        APSARA_TEST_FALSE(processConfigDiff.IsEmpty());
+        ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
+        APSARA_TEST_TRUE(!processConfigDiff.IsEmpty());
         APSARA_TEST_EQUAL(1U, processConfigDiff.mAdded.size());
         APSARA_TEST_EQUAL(processConfigDiff.mAdded[0].mName, "processconfig1");
+        APSARA_TEST_EQUAL(ProcessConfigManager::GetInstance()->GetAllConfigNames().size(), 1);
+        APSARA_TEST_EQUAL(ProcessConfigManager::GetInstance()->GetAllConfigNames()[0], "processconfig1");
+        // 再次处理 processconfig
         processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
+        ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
         APSARA_TEST_TRUE(processConfigDiff.IsEmpty());
         APSARA_TEST_TRUE(processConfigDiff.mAdded.empty());
+        APSARA_TEST_EQUAL(ProcessConfigManager::GetInstance()->GetAllConfigNames().size(), 1);
+        APSARA_TEST_EQUAL(ProcessConfigManager::GetInstance()->GetAllConfigNames()[0], "processconfig1");
 
         provider.Stop();
     }
@@ -495,6 +512,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
 
                   configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
                   heartbeatRespPb.set_capabilities(configserver::proto::v2::ResponseFlags::ReportFullState);
+                  // pipeline
                   {
                       auto pipeline = heartbeatRespPb.mutable_pipeline_config_updates();
                       auto configDetail = pipeline->Add();
@@ -542,6 +560,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                 }
                 )");
                   }
+                  // processconfig
                   {
                       auto processconfig = heartbeatRespPb.mutable_process_config_updates();
                       auto configDetail = processconfig->Add();
@@ -563,6 +582,7 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                             }
                         )");
                   }
+                  // commandconfig
                   {
                       auto commandconfig = heartbeatRespPb.mutable_custom_command_updates();
                       auto configDetail = commandconfig->Add();
@@ -610,23 +630,34 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
 
         APSARA_TEST_TRUE(provider.mPipelineConfigInfoMap.empty());
 
+        // 处理pipelineConfigDiff
         PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
-        APSARA_TEST_TRUE(pipelineConfigDiff.IsEmpty());
+        PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
+        APSARA_TEST_TRUE(!pipelineConfigDiff.IsEmpty());
         APSARA_TEST_EQUAL(1U, pipelineConfigDiff.mRemoved.size());
         APSARA_TEST_EQUAL(pipelineConfigDiff.mRemoved[0], "config1");
-
+        APSARA_TEST_TRUE(PipelineManager::GetInstance()->GetAllConfigNames().empty());
+        // 再次处理pipelineConfigDiff
         pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+        PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
         APSARA_TEST_TRUE(pipelineConfigDiff.IsEmpty());
         APSARA_TEST_TRUE(pipelineConfigDiff.mRemoved.empty());
-
+        APSARA_TEST_TRUE(PipelineManager::GetInstance()->GetAllConfigNames().empty());
 
         APSARA_TEST_TRUE(provider.mProcessConfigInfoMap.empty());
-
+        // 处理processConfigDiff
         ProcessConfigDiff processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
-        APSARA_TEST_TRUE(processConfigDiff.IsEmpty());
+        ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
+        APSARA_TEST_TRUE(ProcessConfigManager::GetInstance()->GetAllConfigNames().empty());
+        std::cout << processConfigDiff.mAdded.size() << '\t' << processConfigDiff.mRemoved.size() << '\t'
+                  << processConfigDiff.mModified.size() << '\t' << processConfigDiff.mUnchanged.size() << std::endl;
         APSARA_TEST_EQUAL(1U, processConfigDiff.mRemoved.size());
         APSARA_TEST_EQUAL(processConfigDiff.mRemoved[0], "processconfig1");
+
+        // 再次处理processConfigDiff
         processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
+        ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
+        APSARA_TEST_TRUE(ProcessConfigManager::GetInstance()->GetAllConfigNames().empty());
         APSARA_TEST_TRUE(processConfigDiff.IsEmpty());
         APSARA_TEST_TRUE(processConfigDiff.mRemoved.empty());
 
