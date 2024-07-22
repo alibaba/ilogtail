@@ -66,6 +66,7 @@ macro(ut_link ut_link_withspl)
     flusher_link(${UT_BASE_TARGET})
     all_link(${UT_BASE_TARGET})
     common_link(${UT_BASE_TARGET})
+    target_link_libraries(${UT_BASE_TARGET} provider)
 endmacro()
 
 set(SOURCE_FILES_CORE ${FRAMEWORK_SOURCE_FILES} ${PLUGIN_SOURCE_FILES_CORE})
@@ -89,7 +90,7 @@ if (UNIX)
         target_compile_options(${UT_BASE_TARGET} PRIVATE -Werror)
         add_core_subdir()
         set(UT_LINK_WITHSPL OFF)
-        ut_link(${UT_LINK_WITHSPL})
+        ut_link(${UT_LINK_WITHSPL})       
     else ()
         # add core subdir
         set(UT_BASE_TARGET "unittest_base")
@@ -103,3 +104,4 @@ elseif (MSVC)
     # For MSVC, use /W4 for a high level of warnings, and treat warnings as errors.
     # target_compile_options(${UT_BASE_TARGET} PRIVATE /W4 /WX)
 endif()
+

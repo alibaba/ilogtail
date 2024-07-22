@@ -24,7 +24,7 @@
 #include "common/version.h"
 #include "config_manager/ConfigManager.h"
 #include "log_pb/sls_logs.pb.h"
-#include "profile_sender/ProfileSender.h"
+#include "provider/provider.h"
 #include "sender/Sender.h"
 
 DEFINE_FLAG_INT32(logtail_alarm_interval, "the interval of two same type alarm message", 30);
@@ -194,7 +194,7 @@ void LogtailAlarm::SendAllRegionAlarm() {
             }
             // check sender queue status, if invalid jump this region
             LogstoreFeedBackKey alarmPrjLogstoreKey = GenerateLogstoreFeedBackKey(
-                ProfileSender::GetInstance()->GetProfileProjectName(region), string("logtail_alarm"));
+                GetProfileSender()->GetProfileProjectName(region), string("logtail_alarm"));
             if (!Sender::Instance()->GetSenderFeedBackInterface()->IsValidToPush(alarmPrjLogstoreKey)) {
                 // jump this region
                 ++sendRegionIndex;
@@ -263,7 +263,7 @@ void LogtailAlarm::SendAllRegionAlarm() {
             continue;
         }
         // this is an anonymous send and non lock send
-        ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
+        GetProfileSender()->SendToProfileProject(region, logGroup);
     } while (true);
 }
 

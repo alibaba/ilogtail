@@ -55,7 +55,7 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 #else
-#include "config/provider/CommonConfigProvider.h"
+#include "provider/provider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
 
@@ -225,7 +225,7 @@ void Application::Start() { // GCOVR_EXCL_START
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
-    CommonConfigProvider::GetInstance()->Init("common");
+    GetRemoteConfigProvider()->Init("common");
 #endif
 
     LogtailAlarm::GetInstance()->Init();
@@ -349,7 +349,7 @@ void Application::Exit() {
     EnterpriseConfigProvider::GetInstance()->Stop();
     LegacyConfigProvider::GetInstance()->Stop();
 #else
-    CommonConfigProvider::GetInstance()->Stop();
+    GetRemoteConfigProvider()->Stop();
 #endif
 
     LogtailMonitor::GetInstance()->Stop();
