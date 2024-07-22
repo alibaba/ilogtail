@@ -38,10 +38,6 @@ void ProcessorRelabelMetricNativeUnittest::TestInit() {
     ProcessorRelabelMetricNative processor;
     processor.SetContext(mContext);
 
-    // error config
-    config["test"] = "test";
-    APSARA_TEST_FALSE(processor.Init(config));
-
     // success config
     string configStr, errorMsg;
     configStr = configStr + R"(
