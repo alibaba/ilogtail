@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #pragma once
-#include <shared_mutex>
+#include <mutex>
 #include <unordered_map>
 
 #include "LogtailMetric.h"
@@ -37,7 +37,7 @@ private:
     MetricLabels mDefaultLabels;
     std::unordered_map<std::string, MetricType> mMetricKeys;
     std::unordered_map<std::string, ReentrantMetricsRecordRef> mReentrantMetricsRecordRefsMap;
-    mutable std::shared_mutex mutex;
+    mutable std::mutex mutex;
 
     GaugePtr mSizeGauge;
 

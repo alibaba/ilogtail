@@ -18,53 +18,45 @@
 namespace logtail {
 
 ReentrantMetricsRecordRef PluginMetricManager::GetOrCreateReentrantMetricsRecordRef(MetricLabels labels) {
+    std::lock_guard<std::mutex> lock(mutex);
+
     std::string key = GenerateKey(labels);
     // try get
-    {
-        std::shared_lock lock(mutex);
-        auto it = mReentrantMetricsRecordRefsMap.find(key);
-        if (it != mReentrantMetricsRecordRefsMap.end()) {
-            return it->second;
-        }
+    auto it = mReentrantMetricsRecordRefsMap.find(key);
+    if (it != mReentrantMetricsRecordRefsMap.end()) {
+        return it->second;
     }
     // create
-    {
-        std::unique_lock lock(mutex);
-        MetricLabels newLabels = mDefaultLabels;
-        newLabels.insert(newLabels.end(), labels.begin(), labels.end());
+    MetricLabels newLabels = mDefaultLabels;
+    newLabels.insert(newLabels.end(), labels.begin(), labels.end());
 
-        ReentrantMetricsRecordRef ptr = std::make_shared<ReentrantMetricsRecord>();
-        ptr->Init(newLabels, mMetricKeys);
+    ReentrantMetricsRecordRef ptr = std::make_shared<ReentrantMetricsRecord>();
+    ptr->Init(newLabels, mMetricKeys);
 
-        mReentrantMetricsRecordRefsMap.emplace(key, ptr);
-        if (mSizeGauge != nullptr) {
-            mSizeGauge->Set(mReentrantMetricsRecordRefsMap.size());
-        }
-        return ptr;
+    mReentrantMetricsRecordRefsMap.emplace(key, ptr);
+    if (mSizeGauge != nullptr) {
+        mSizeGauge->Set(mReentrantMetricsRecordRefsMap.size());
     }
+    return ptr;
 }
 
 void PluginMetricManager::ReleaseReentrantMetricsRecordRef(MetricLabels labels) {
+    std::lock_guard<std::mutex> lock(mutex);
+
     std::string key = GenerateKey(labels);
     // try get
-    {
-        std::shared_lock lock(mutex);
-        auto it = mReentrantMetricsRecordRefsMap.find(key);
-        if (it == mReentrantMetricsRecordRefsMap.end()) {
-            return;
-        } else if (it->second.use_count() > 2) {
-            // mMetricsRecordRefMaps中一次引用，待删除的实例中有一次引用
-            // 如果引用数大于二，说明还有其他地方在使用这个MetricsRecordRef，mMetricsRecordRefMaps中就不将它删除
-            return;
-        }
+    auto it = mReentrantMetricsRecordRefsMap.find(key);
+    if (it == mReentrantMetricsRecordRefsMap.end()) {
+        return;
+    } else if (it->second.use_count() > 2) {
+        // mMetricsRecordRefMaps中一次引用，待删除的实例中有一次引用
+        // 如果引用数大于二，说明还有其他地方在使用这个MetricsRecordRef，mMetricsRecordRefMaps中就不将它删除
+        return;
     }
     // delete
-    {
-        std::unique_lock lock(mutex);
-        mReentrantMetricsRecordRefsMap.erase(key);
-        if (mSizeGauge != nullptr) {
-            mSizeGauge->Set(mReentrantMetricsRecordRefsMap.size());
-        }
+    mReentrantMetricsRecordRefsMap.erase(key);
+    if (mSizeGauge != nullptr) {
+        mSizeGauge->Set(mReentrantMetricsRecordRefsMap.size());
     }
 }
 
