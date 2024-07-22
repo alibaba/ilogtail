@@ -193,12 +193,12 @@ void WriteMetrics::PreparePluginCommonLabels(const std::string& projectName,
                                              const std::string& pluginName,
                                              const std::string& pluginID,
                                              MetricLabels& labels) {
-    labels.emplace_back(std::make_pair(LABEL_PROJECT, projectName));
-    labels.emplace_back(std::make_pair(LABEL_LOGSTORE, logstoreName));
-    labels.emplace_back(std::make_pair(LABEL_REGION, region));
-    labels.emplace_back(std::make_pair(LABEL_CONFIG_NAME, configName));
-    labels.emplace_back(std::make_pair(LABEL_PLUGIN_NAME, pluginName));
-    labels.emplace_back(std::make_pair(LABEL_PLUGIN_ID, pluginID));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_PROJECT, projectName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_LOGSTORE, logstoreName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_REGION, region));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_CONFIG_NAME, configName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_NAME, pluginName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_ID, pluginID));
 }
 
 void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels) {

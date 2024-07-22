@@ -203,9 +203,9 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
 }
 
 void LogFileReader::SetMetrics() {
-    mMetricLabels = {{LABEL_FILE_NAME, GetConvertedPath()},
-                     {LABEL_FILE_DEV, std::to_string(GetDevInode().dev)},
-                     {LABEL_FILE_INODE, std::to_string(GetDevInode().inode)}};
+    mMetricLabels = {{METRIC_LABEL_FILE_NAME, GetConvertedPath()},
+                     {METRIC_LABEL_FILE_DEV, std::to_string(GetDevInode().dev)},
+                     {METRIC_LABEL_FILE_INODE, std::to_string(GetDevInode().inode)}};
     mMetricsRecordRef = FileServer::GetInstance()->GetOrCreateReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
     if (mMetricsRecordRef == nullptr) {
         LOG_ERROR(sLogger,
@@ -216,10 +216,10 @@ void LogFileReader::SetMetrics() {
     
     mMetricsEnabled = true;
 
-    mInputRecordsSizeBytesCounter = mMetricsRecordRef->GetCounter(INPUT_RECORDS_SIZE_BYTES);
-    mInputReadTotalCounter = mMetricsRecordRef->GetCounter(INPUT_READ_TOTAL);
-    mInputFileSizeBytesGauge = mMetricsRecordRef->GetGauge(INPUT_FILE_SIZE_BYTES);
-    mInputFileOffsetBytesGauge = mMetricsRecordRef->GetGauge(INPUT_FILE_OFFSET_BYTES);
+    mInputRecordsSizeBytesCounter = mMetricsRecordRef->GetCounter(METRIC_INPUT_RECORDS_SIZE_BYTES);
+    mInputReadTotalCounter = mMetricsRecordRef->GetCounter(METRIC_INPUT_READ_TOTAL);
+    mInputFileSizeBytesGauge = mMetricsRecordRef->GetGauge(METRIC_INPUT_FILE_SIZE_BYTES);
+    mInputFileOffsetBytesGauge = mMetricsRecordRef->GetGauge(METRIC_INPUT_FILE_OFFSET_BYTES);
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
