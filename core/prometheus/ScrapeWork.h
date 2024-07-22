@@ -17,7 +17,6 @@
 #pragma once
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <string>
 
@@ -30,48 +29,20 @@
 
 namespace logtail {
 
-class ScrapeTarget {
-public:
-    ScrapeTarget(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                 std::shared_ptr<Labels> labelsPtr,
-                 QueueKey queueKey,
-                 size_t inputIndex);
-
-    std::string GetHash();
-
-    bool operator<(const ScrapeTarget& other) const;
-
-private:
-    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
-    std::shared_ptr<Labels> mLabelsPtr;
-
-    // target info
-    std::string mHost;
-    uint32_t mPort;
-    std::string mQueryString;
-
-    std::string mHash;
-
-    QueueKey mQueueKey;
-    size_t mInputIndex;
-
-
-    friend class ScrapeWork;
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class ScrapeTargetUnittest;
-    friend class ScrapeJobUnittest;
-    friend class InputPrometheusUnittest;
-#endif
-};
-
 class ScrapeWork {
 public:
-    ScrapeWork(std::shared_ptr<ScrapeTarget>);
+    ScrapeWork();
+    bool Init(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+              std::shared_ptr<Labels> labelsPtr,
+              QueueKey queueKey,
+              size_t inputIndex);
 
     ScrapeWork(const ScrapeWork&) = delete;
     ScrapeWork(ScrapeWork&& other) noexcept = delete;
     ScrapeWork& operator=(const ScrapeWork&) = delete;
     ScrapeWork& operator=(ScrapeWork&&) noexcept = delete;
+
+    bool operator<(const ScrapeWork& other) const;
 
     void StartScrapeLoop();
     void StopScrapeLoop();
@@ -86,7 +57,18 @@ private:
     sdk::HttpMessage Scrape();
     void PushEventGroup(PipelineEventGroup&&);
 
-    std::shared_ptr<ScrapeTarget> mTargetPtr;
+    std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
+    std::shared_ptr<Labels> mLabelsPtr;
+
+    // target info
+    std::string mHost;
+    uint32_t mPort;
+    std::string mQueryString;
+    std::string mHash;
+
+    QueueKey mQueueKey;
+    size_t mInputIndex;
+
     std::atomic<bool> mFinished;
     std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;

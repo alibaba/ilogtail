@@ -38,12 +38,18 @@ using namespace std;
 
 namespace logtail {
 
-ScrapeTarget::ScrapeTarget(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                           std::shared_ptr<Labels> labelsPtr,
-                           QueueKey queueKey,
-                           size_t inputIndex)
-    : mScrapeConfigPtr(scrapeConfigPtr), mLabelsPtr(labelsPtr), mQueueKey(queueKey), mInputIndex(inputIndex) {
-    mPort = mScrapeConfigPtr->mScheme == "http" ? 80 : 443;
+ScrapeWork::ScrapeWork() {
+    mClient = make_unique<sdk::CurlClient>();
+}
+
+bool ScrapeWork::Init(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+                      std::shared_ptr<Labels> labelsPtr,
+                      QueueKey queueKey,
+                      size_t inputIndex) {
+    mScrapeConfigPtr = scrapeConfigPtr;
+    mLabelsPtr = labelsPtr;
+    mQueueKey = queueKey;
+    mInputIndex = inputIndex;
 
     // host & port
     string address = mLabelsPtr->Get("__address__");
@@ -69,18 +75,11 @@ ScrapeTarget::ScrapeTarget(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mHost + ":" + to_string(mPort)
         + mScrapeConfigPtr->mMetricsPath + (mQueryString.empty() ? "" : "?" + mQueryString);
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabelsPtr->Hash());
+    return true;
 }
 
-string ScrapeTarget::GetHash() {
-    return mHash;
-}
-
-bool ScrapeTarget::operator<(const ScrapeTarget& other) const {
+bool ScrapeWork::operator<(const ScrapeWork& other) const {
     return mHash < other.mHash;
-}
-
-ScrapeWork::ScrapeWork(std::shared_ptr<ScrapeTarget> targetPtr) : mTargetPtr(targetPtr) {
-    mClient = make_unique<sdk::CurlClient>();
 }
 
 void ScrapeWork::StartScrapeLoop() {
@@ -100,13 +99,13 @@ void ScrapeWork::StopScrapeLoop() {
 
 /// @brief scrape target loop
 void ScrapeWork::ScrapeLoop() {
-    LOG_INFO(sLogger, ("start prometheus scrape loop", mTargetPtr->mHash));
+    LOG_INFO(sLogger, ("start prometheus scrape loop", mHash));
     uint64_t randSleep = GetRandSleep();
     // 无损升级
     // 如果下一次采集点（randSleep +
     // currentTime）在下线时间+一次采集周期（mUnRegisterMs+mScrapeInterval）之后，则立马采集一次补点
     if (randSleep + GetCurrentTimeInNanoSeconds() > (uint64_t)mUnRegisterMs * 1000ULL * 1000ULL
-            + (uint64_t)mTargetPtr->mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL) {
+            + (uint64_t)mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL) {
         ScrapeAndPush();
         // 更新randSleep
         randSleep = GetRandSleep();
@@ -121,11 +120,11 @@ void ScrapeWork::ScrapeLoop() {
 
         // 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
-        uint64_t timeToWait = (uint64_t)mTargetPtr->mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
-            - elapsedTime % ((uint64_t)mTargetPtr->mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
+        uint64_t timeToWait = (uint64_t)mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
+            - elapsedTime % ((uint64_t)mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
         this_thread::sleep_for(chrono::nanoseconds(timeToWait));
     }
-    LOG_INFO(sLogger, ("stop prometheus scrape loop", mTargetPtr->mHash));
+    LOG_INFO(sLogger, ("stop prometheus scrape loop", mHash));
 }
 
 void ScrapeWork::ScrapeAndPush() {
@@ -139,8 +138,7 @@ void ScrapeWork::ScrapeAndPush() {
 
         // text parser
         auto parser = TextParser();
-        auto eventGroup
-            = parser.Parse(httpResponse.content, defaultTs, mTargetPtr->mScrapeConfigPtr->mJobName, mTargetPtr->mHost);
+        auto eventGroup = parser.Parse(httpResponse.content, defaultTs, mScrapeConfigPtr->mJobName, mHost);
 
         // 发送到对应的处理队列
         // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
@@ -149,25 +147,23 @@ void ScrapeWork::ScrapeAndPush() {
         // scrape failed
         // TODO: scrape超时处理逻辑，和出错处理
         string headerStr;
-        for (auto [k, v] : mTargetPtr->mScrapeConfigPtr->mHeaders) {
+        for (auto [k, v] : mScrapeConfigPtr->mHeaders) {
             headerStr += k + ":" + v + ";";
         }
         LOG_WARNING(sLogger,
-                    ("scrape failed, status code", httpResponse.statusCode)("target", mTargetPtr->mHash)("http header",
-                                                                                                         headerStr));
+                    ("scrape failed, status code", httpResponse.statusCode)("target", mHash)("http header", headerStr));
     }
 }
 
 uint64_t ScrapeWork::GetRandSleep() {
     // 根据target信息构造hash输入
-    const string& key = mTargetPtr->mHash;
+    const string& key = mHash;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
-    uint64_t randSleep
-        = ((double)1.0) * mTargetPtr->mScrapeConfigPtr->mScrapeInterval * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    uint64_t randSleep = ((double)1.0) * mScrapeConfigPtr->mScrapeInterval * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
     uint64_t sleepOffset
-        = GetCurrentTimeInNanoSeconds() % (mTargetPtr->mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
+        = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
     if (randSleep < sleepOffset) {
-        randSleep += mTargetPtr->mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL;
+        randSleep += mScrapeConfigPtr->mScrapeInterval * 1000ULL * 1000ULL * 1000ULL;
     }
     randSleep -= sleepOffset;
     return randSleep;
@@ -182,36 +178,34 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
     // 使用CurlClient抓取目标
     try {
         mClient->Send(sdk::HTTP_GET,
-                      mTargetPtr->mHost,
-                      mTargetPtr->mPort,
-                      mTargetPtr->mScrapeConfigPtr->mMetricsPath,
-                      mTargetPtr->mQueryString,
-                      mTargetPtr->mScrapeConfigPtr->mHeaders,
+                      mHost,
+                      mPort,
+                      mScrapeConfigPtr->mMetricsPath,
+                      mQueryString,
+                      mScrapeConfigPtr->mHeaders,
                       reqBody,
-                      mTargetPtr->mScrapeConfigPtr->mScrapeTimeout,
+                      mScrapeConfigPtr->mScrapeTimeout,
                       httpResponse,
                       "",
-                      mTargetPtr->mScrapeConfigPtr->mScheme == "https");
+                      mScrapeConfigPtr->mScheme == "https");
     } catch (const sdk::LOGException& e) {
-        LOG_WARNING(sLogger,
-                    ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mTargetPtr->mHash));
+        LOG_WARNING(sLogger, ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mHash));
     }
     return httpResponse;
 }
 
 void ScrapeWork::PushEventGroup(PipelineEventGroup&& eGroup) {
     LOG_INFO(sLogger,
-             ("push event group", mTargetPtr->mHash)("target index", mTargetPtr->mInputIndex)(
-                 "target queueKey", to_string(mTargetPtr->mQueueKey)));
-    auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mTargetPtr->mInputIndex);
+             ("push event group", mHash)("target index", mInputIndex)("target queueKey", to_string(mQueueKey)));
+    auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
     for (size_t i = 0; i < 1000; ++i) {
-        if (ProcessQueueManager::GetInstance()->PushQueue(mTargetPtr->mQueueKey, std::move(item)) == 0) {
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item)) == 0) {
             return;
         }
         this_thread::sleep_for(chrono::milliseconds(10));
     }
     // TODO: 如果push失败如何处理
-    LOG_INFO(sLogger, ("push event group failed", mTargetPtr->mHash));
+    LOG_INFO(sLogger, ("push event group failed", mHash));
 }
 
 void ScrapeWork::SetUnRegisterMs(uint64_t unRegisterMs) {

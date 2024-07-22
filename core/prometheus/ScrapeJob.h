@@ -43,7 +43,7 @@ public:
     void StartTargetsDiscoverLoop();
     void StopTargetsDiscoverLoop();
 
-    std::unordered_map<std::string, ScrapeTarget> GetScrapeTargetsMapCopy();
+    std::unordered_map<std::string, ScrapeWork> GetScrapeTargetsMapCopy();
 
     std::string mJobName;
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
@@ -66,7 +66,7 @@ public:
 
 private:
     std::mutex mMutex;
-    std::unordered_map<std::string, std::shared_ptr<ScrapeTarget>> mScrapeTargetsMap;
+    std::unordered_map<std::string, std::shared_ptr<ScrapeWork>> mScrapeTargetsMap;
 
     std::atomic<bool> mFinished;
     ThreadPtr mTargetsDiscoveryLoopThread;
@@ -79,7 +79,7 @@ private:
 
     bool FetchHttpData(std::string& readBuffer) const;
     bool ParseTargetGroups(const std::string& response,
-                           std::unordered_map<std::string, std::shared_ptr<ScrapeTarget>>& newScrapeTargetsMap) const;
+                           std::unordered_map<std::string, std::shared_ptr<ScrapeWork>>& newScrapeTargetsMap) const;
     int GetIntSeconds(const std::string& str) const;
     std::string ConvertMapParamsToQueryString() const;
 
