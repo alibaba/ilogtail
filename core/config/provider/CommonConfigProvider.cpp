@@ -45,10 +45,12 @@ namespace logtail {
 std::string CommonConfigProvider::configVersion = "version";
 
 void CommonConfigProvider::Init(const string& dir) {
-    string sName = "CommonConfigProvider";
+    sName = "CommonConfigProvider";
 
     ConfigProvider::Init(dir);
     LoadConfigFile();
+
+    mStartTime = Application::GetInstance()->GetStartTime();
 
     mSequenceNum = 0;
 
@@ -195,7 +197,7 @@ CommonConfigProvider::ConfigServerAddress CommonConfigProvider::GetOneConfigServ
 }
 
 string CommonConfigProvider::GetInstanceId() {
-    return CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(mStartTime);
+    return Application::GetInstance()->GetInstanceId();
 }
 
 void CommonConfigProvider::FillAttributes(configserver::proto::v2::AgentAttributes& attributes) {
@@ -250,6 +252,7 @@ void CommonConfigProvider::GetConfigUpdate() {
         LOG_DEBUG(sLogger, ("fetch processConfig config, config file number", processConfig.size()));
         UpdateRemoteProcessConfig(processConfig);
     }
+    ++mSequenceNum;
 }
 
 configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat() {
@@ -311,7 +314,6 @@ bool CommonConfigProvider::SendHeartbeat(const configserver::proto::v2::Heartbea
     operation.append("/").append("Heartbeat");
     string reqBody;
     heartbeatReq.SerializeToString(&reqBody);
-    configserver::proto::v2::HeartbeatResponse emptyResult;
     std::string heartbeatResp;
     if (SendHttpRequest(operation, reqBody, "SendHeartbeat", heartbeatResp)) {
         configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
@@ -327,6 +329,7 @@ bool CommonConfigProvider::SendHttpRequest(const string& operation,
                                            const string& reqBody,
                                            const string& configType,
                                            std::string& resp) {
+    // LCOV_EXCL_START
     ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
     map<string, string> httpHeader;
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
@@ -354,6 +357,7 @@ bool CommonConfigProvider::SendHttpRequest(const string& operation,
                         "host", configServerAddress.host)("port", configServerAddress.port));
         return false;
     }
+    // LCOV_EXCL_STOP
 }
 
 bool CommonConfigProvider::FetchPipelineConfig(
@@ -507,7 +511,6 @@ bool CommonConfigProvider::FetchProcessConfigFromServer(
     operation.append("/FetchProcessConfig");
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
-    configserver::proto::v2::FetchConfigResponse emptyResult;
     string fetchConfigResponse;
     if (SendHttpRequest(operation, reqBody, "FetchProcessConfig", fetchConfigResponse)) {
         configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
@@ -534,7 +537,6 @@ bool CommonConfigProvider::FetchPipelineConfigFromServer(
     operation.append("/FetchPipelineConfig");
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
-    configserver::proto::v2::FetchConfigResponse emptyResult;
     string fetchConfigResponse;
     if (SendHttpRequest(operation, reqBody, "FetchPipelineConfig", fetchConfigResponse)) {
         configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;

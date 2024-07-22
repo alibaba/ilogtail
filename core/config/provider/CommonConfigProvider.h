@@ -122,16 +122,28 @@ private:
 
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
 
+#ifdef APSARA_UNIT_TEST_MAIN
+    virtual bool SendHttpRequest(const std::string& operation,
+                                 const std::string& reqBody,
+                                 const std::string& configType,
+                                 std::string& resp);
+#else
     bool SendHttpRequest(const std::string& operation,
                          const std::string& reqBody,
                          const std::string& configType,
                          std::string& resp);
+#endif
+
     void LoadConfigFile();
     bool DumpConfigFile(const configserver::proto::v2::ConfigDetail& config, const std::filesystem::path& sourceDir);
 
     std::vector<ConfigServerAddress> mConfigServerAddresses;
     int mConfigServerAddressId = 0;
-    std::unordered_map<std::string, std::string> mConfigServerTags;
+    std::map<std::string, std::string> mConfigServerTags;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class CommonConfigProviderUnittest;
+#endif
 };
 
 } // namespace logtail
