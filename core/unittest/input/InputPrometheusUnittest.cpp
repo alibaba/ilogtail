@@ -14,12 +14,15 @@
 
 #include <json/json.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
 #include "PluginRegistry.h"
+#include "Relabel.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
+#include "inner/ProcessorRelabelMetricNative.h"
 #include "input/InputPrometheus.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -108,12 +111,14 @@ public:
     void OnSuccessfulInit();
     void OnFailedInit();
     void OnPipelineUpdate();
-
-    // TODO: move to E2E test
-    void TestScrapeData();
+    void TestCreateInnerProcessor();
 
 protected:
     static void SetUpTestCase() {
+        setenv("POD_NAME", "matrix-test", 1);
+        setenv("OPERATOR_HOST", "127.0.0.1", 1);
+        setenv("OPERATOR_PORT", "12345", 1);
+
         AppConfig::GetInstance()->mPurageContainerMode = true;
         PluginRegistry::GetInstance()->LoadPlugins();
     }
@@ -121,87 +126,13 @@ protected:
         p.mName = "test_config";
         ctx.SetConfigName("test_config");
         ctx.SetPipeline(p);
-
-        setenv("POD_NAME", "matrix-test", 1);
-        setenv("OPERATOR_HOST", "127.0.0.1", 1);
-        setenv("OPERATOR_PORT", "12345", 1);
-
-        string errMsg;
-        if (ParseJsonTable(mConfigString, mConfig, errMsg)) {
-            std::cout << "JSON parsing succeeded." << std::endl;
-            // std::cout << mConfig.toStyledString() << std::endl;
-        } else {
-            std::cerr << "JSON parsing failed." << std::endl;
-        }
     }
-    void TearDown() override {
+    static void TearDownTestCase() {
         unsetenv("POD_NAME");
         unsetenv("OPERATOR_HOST");
         unsetenv("OPERATOR_PORT");
         PluginRegistry::GetInstance()->UnloadPlugins();
     }
-    uint32_t mPluginIndex = 0;
-    Json::Value mConfig;
-    std::string mConfigString = R"JSON(
-{
-    "Type": "input_prometheus",
-    "ScrapeConfig": {
-        "enable_http2": true,
-        "follow_redirects": true,
-        "honor_timestamps": false,
-        "job_name": "_kube-state-metrics",
-        "kubernetes_sd_configs": [
-            {
-                "enable_http2": true,
-                "follow_redirects": true,
-                "kubeconfig_file": "",
-                "namespaces": {
-                    "names": [
-                        "arms-prom"
-                    ],
-                    "own_namespace": false
-                },
-                "role": "pod"
-            }
-        ],
-        "metrics_path": "/metrics",
-        "relabel_configs": [
-            {
-                "action": "keep",
-                "regex": "kube-state-metrics",
-                "replacement": "$1",
-                "separator": ";",
-                "source_labels": [
-                    "__meta_kubernetes_pod_label_k8s_app"
-                ]
-            },
-            {
-                "action": "keep",
-                "regex": "8080",
-                "replacement": "$1",
-                "separator": ";",
-                "source_labels": [
-                    "__meta_kubernetes_pod_container_port_number"
-                ]
-            },
-            {
-                "action": "replace",
-                "regex": "([^:]+)(?::\\d+)?;(\\d+)",
-                "replacement": "$1:$2",
-                "separator": ";",
-                "source_labels": [
-                    "__address__",
-                    "__meta_kubernetes_pod_container_port_number"
-                ],
-                "target_label": "__address__"
-            }
-        ],
-        "scheme": "http",
-        "scrape_interval": "3s",
-        "scrape_timeout": "3s"
-    }
-}
-    )JSON";
 
 private:
     Pipeline p;
@@ -211,6 +142,7 @@ private:
 void InputPrometheusUnittest::OnSuccessfulInit() {
     unique_ptr<InputPrometheus> input;
     Json::Value configJson, optionalGoPipeline;
+    uint32_t pluginIndex = 0;
     string configStr, errorMsg;
     // only mandatory param
     configStr = R"(
@@ -234,18 +166,17 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_TRUE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
     APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
     APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mMetricsPath);
     APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeIntervalString);
     APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeTimeoutString);
-
-    PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void InputPrometheusUnittest::OnFailedInit() {
     unique_ptr<InputPrometheus> input;
     Json::Value configJson, optionalGoPipeline;
+    uint32_t pluginIndex = 0;
     string configStr, errorMsg;
     // only mandatory param
     configStr = R"(
@@ -257,7 +188,7 @@ void InputPrometheusUnittest::OnFailedInit() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_FALSE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
     // with invalid ScrapeConfig
     configStr = R"(
@@ -281,14 +212,13 @@ void InputPrometheusUnittest::OnFailedInit() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-    APSARA_TEST_FALSE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
-
-    PrometheusInputRunner::GetInstance()->Stop();
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 }
 
 void InputPrometheusUnittest::OnPipelineUpdate() {
     unique_ptr<InputPrometheus> input;
     Json::Value configJson, optionalGoPipeline;
+    uint32_t pluginIndex = 0;
     string configStr, errorMsg;
     configStr = R"(
         {
@@ -311,8 +241,7 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     input.reset(new InputPrometheus());
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
-
-    APSARA_TEST_TRUE(input->Init(configJson, mPluginIndex, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
     APSARA_TEST_TRUE(input->Start());
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_config")
@@ -325,9 +254,166 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
+void InputPrometheusUnittest::TestCreateInnerProcessor() {
+    unique_ptr<InputPrometheus> input;
+    Json::Value configJson, optionalGoPipeline;
+    uint32_t pluginIndex = 0;
+    string configStr, errorMsg;
+    {
+        // only mandatory param
+        configStr = R"(
+        {
+            "Type": "input_prometheus",
+            "ScrapeConfig": {
+                "job_name": "_arms-prom/node-exporter/0",
+                "metrics_path": "/metrics",
+                "scheme": "http",
+                "scrape_interval": "15s",
+                "scrape_timeout": "15s",
+                "scrape_targets": [
+                    {
+                        "host": "172.17.0.3:9100",
+                    }
+                ]
+            }
+        }
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        input.reset(new InputPrometheus());
+        input->SetContext(ctx);
+        input->SetMetricsRecordRef(InputPrometheus::sName, "1");
+
+        APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
+        APSARA_TEST_EQUAL(1U, input->mInnerProcessors.size());
+        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(0U,
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                              ->mRelabelConfigs.size());
+    }
+    {
+        // with metric relabel config
+        configStr = R"JSON(
+            {
+                "Type": "input_prometheus",
+                "ScrapeConfig": {
+                    "enable_http2": true,
+                    "follow_redirects": true,
+                    "honor_timestamps": false,
+                    "job_name": "_kube-state-metrics",
+                    "kubernetes_sd_configs": [
+                        {
+                            "enable_http2": true,
+                            "follow_redirects": true,
+                            "kubeconfig_file": "",
+                            "namespaces": {
+                                "names": [
+                                    "arms-prom"
+                                ],
+                                "own_namespace": false
+                            },
+                            "role": "pod"
+                        }
+                    ],
+                    "metrics_path": "/metrics",
+                    "relabel_configs": [
+                        {
+                            "action": "keep",
+                            "regex": "kube-state-metrics",
+                            "replacement": "$1",
+                            "separator": ";",
+                            "source_labels": [
+                                "__meta_kubernetes_pod_label_k8s_app"
+                            ]
+                        },
+                        {
+                            "action": "keep",
+                            "regex": "8080",
+                            "replacement": "$1",
+                            "separator": ";",
+                            "source_labels": [
+                                "__meta_kubernetes_pod_container_port_number"
+                            ]
+                        },
+                        {
+                            "action": "replace",
+                            "regex": "([^:]+)(?::\\d+)?;(\\d+)",
+                            "replacement": "$1:$2",
+                            "separator": ";",
+                            "source_labels": [
+                                "__address__",
+                                "__meta_kubernetes_pod_container_port_number"
+                            ],
+                            "target_label": "__address__"
+                        }
+                    ],
+                    "metric_relabel_configs": [
+                        {
+                            "action": "keep",
+                            "regex": "kube-state-metrics",
+                            "replacement": "$1",
+                            "separator": ";",
+                            "source_labels": [
+                                "__meta_kubernetes_pod_label_k8s_app"
+                            ]
+                        },
+                        {
+                            "action": "keep",
+                            "regex": "8080",
+                            "replacement": "$1",
+                            "separator": ";",
+                            "source_labels": [
+                                "__meta_kubernetes_pod_container_port_number"
+                            ]
+                        },
+                        {
+                            "action": "replace",
+                            "regex": "([^:]+)(?::\\d+)?;(\\d+)",
+                            "replacement": "$1:$2",
+                            "separator": ";",
+                            "source_labels": [
+                                "__address__",
+                                "__meta_kubernetes_pod_container_port_number"
+                            ],
+                            "target_label": "__address__"
+                        }
+                    ],
+                    "scheme": "http",
+                    "scrape_interval": "3s",
+                    "scrape_timeout": "3s"
+                }
+            }
+        )JSON";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        input.reset(new InputPrometheus());
+        input->SetContext(ctx);
+        input->SetMetricsRecordRef(InputPrometheus::sName, "1");
+
+        APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
+        APSARA_TEST_EQUAL(1U, input->mInnerProcessors.size());
+        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[0]->mPlugin->Name());
+        APSARA_TEST_EQUAL(3U,
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                              ->mRelabelConfigs.size());
+        APSARA_TEST_EQUAL(Action::keep,
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                              ->mRelabelConfigs[0]
+                              .mAction);
+        APSARA_TEST_EQUAL(Action::keep,
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                              ->mRelabelConfigs[1]
+                              .mAction);
+        APSARA_TEST_EQUAL(Action::replace,
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                              ->mRelabelConfigs[2]
+                              .mAction);
+    }
+}
+
 UNIT_TEST_CASE(InputPrometheusUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputPrometheusUnittest, OnFailedInit)
 UNIT_TEST_CASE(InputPrometheusUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputPrometheusUnittest, TestCreateInnerProcessor)
 
 } // namespace logtail
 

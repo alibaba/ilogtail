@@ -60,7 +60,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     mScrapeJobPtr->mInputIndex = mIndex;
     LOG_INFO(sLogger, ("input config init success", mJobName));
 
-    return CreateInnerProcessors(config, pluginIdx);
+    return CreateInnerProcessors(scrapeConfig, pluginIdx);
 }
 
 /// @brief register scrape job by PrometheusInputRunner
