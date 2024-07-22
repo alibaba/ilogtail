@@ -168,6 +168,7 @@ ScrapeWork::ScrapeWork(const ScrapeTarget& target) : mTarget(target) {
 void ScrapeWork::StartScrapeLoop() {
     mFinished.store(false);
     // 以线程的方式实现
+    // TODO: 以时间触发器&异步的方式改造
     if (!mScrapeLoopThread) {
         mScrapeLoopThread = CreateThread([this]() { ScrapeLoop(); });
     }
@@ -215,7 +216,7 @@ void ScrapeWork::ScrapeLoop() {
                                                                                                          headerStr));
         }
 
-        // 需要校验花费的时间是否比采集间隔短
+        // TODO: 需要校验花费的时间是否比采集间隔短
         uint64_t elapsedTime = GetCurrentTimeInNanoSeconds() - lastProfilingTime;
         uint64_t timeToWait = (uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL
             - elapsedTime % ((uint64_t)mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
@@ -227,12 +228,16 @@ void ScrapeWork::ScrapeLoop() {
 uint64_t ScrapeWork::GetRandSleep() {
     // 根据target信息构造hash输入
     const string& key = mTarget.mHash;
+    // 计算hash值
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
+    // hash值占最大值的比例为一个0-1之间的数，再乘以采集间隔，得到一个随机的等待时间
     uint64_t randSleep = ((double)1.0) * mTarget.mScrapeInterval * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    // 计算sleep开始的时间节点
     uint64_t sleepOffset = GetCurrentTimeInNanoSeconds() % (mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL);
     if (randSleep < sleepOffset) {
         randSleep += mTarget.mScrapeInterval * 1000ULL * 1000ULL * 1000ULL;
     }
+    // 计算应当sleep的时间
     randSleep -= sleepOffset;
     return randSleep;
 }
