@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/pkg/helper"
-	"github.com/alibaba/ilogtail/pkg/logger"
-
 	api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	core "k8s.io/client-go/listers/core/v1"
+
+	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 var (
@@ -213,6 +213,10 @@ func (in *InputKubernetesMeta) collectNamespaces(lister interface{}, selector la
 	}
 	return
 }
+
+
+
+
 
 // collectPersistentVolumeClaims list the kubernetes PersistentVolumeClaims by the label selector and collect the core metadata.
 func (in *InputKubernetesMeta) collectPersistentVolumeClaims(lister interface{}, selector labels.Selector) (nodes []*helper.MetaNode, err error) {

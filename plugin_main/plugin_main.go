@@ -21,6 +21,7 @@ import (
 	"runtime"
 
 	"github.com/alibaba/ilogtail/pkg/doc"
+	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/signals"
@@ -53,6 +54,15 @@ func main() {
 	} else if InitPluginBaseV2(globalCfg) != 0 {
 		return
 	}
+	// TODO: for golang debug
+	instance := k8smeta.GetMetaManagerInstance()
+	err = instance.Init("/workspaces/kubeconfig")
+	if err != nil {
+		fmt.Println("init err")
+		return
+	}
+	instance.Run()
+
 	// load the static configs.
 	for i, cfg := range pluginCfgs {
 		p := fmt.Sprintf("PluginProject_%d", i)
@@ -63,6 +73,7 @@ func main() {
 			return
 		}
 	}
+
 	Resume()
 
 	// handle the first shutdown signal gracefully, and exit directly if FileIOFlag is true

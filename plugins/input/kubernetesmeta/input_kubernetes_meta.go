@@ -41,21 +41,27 @@ const (
 )
 
 type InputKubernetesMeta struct {
-	Pod                    bool
-	Node                   bool
-	Service                bool
-	Deployment             bool
-	DaemonSet              bool
-	StatefulSet            bool
-	Configmap              bool
-	Secret                 bool
-	Job                    bool
-	CronJob                bool
-	Namespace              bool
-	PersistentVolume       bool
-	PersistentVolumeClaim  bool
-	StorageClass           bool
-	Ingress                bool
+	// entity switch
+	Pod                   bool
+	Node                  bool
+	Service               bool
+	Deployment            bool
+	DaemonSet             bool
+	StatefulSet           bool
+	Configmap             bool
+	Secret                bool
+	Job                   bool
+	CronJob               bool
+	Namespace             bool
+	PersistentVolume      bool
+	PersistentVolumeClaim bool
+	StorageClass          bool
+	Ingress               bool
+	// entity link switch
+	DeploymentPodLink bool
+	// raw, entity, default
+	DataFormat string
+
 	DisableReportParents   bool
 	KubeConfigPath         string
 	SelectedNamespaces     []string
