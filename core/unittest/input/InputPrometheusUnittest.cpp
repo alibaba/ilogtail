@@ -171,6 +171,43 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mMetricsPath);
     APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeIntervalString);
     APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeTimeoutString);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mMaxScrapeSize);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mSeriesLimit);
+
+    // all useful config
+    configStr = R"(
+        {
+            "Type": "input_prometheus",
+            "ScrapeConfig": {
+                "job_name": "_arms-prom/node-exporter/0",
+                "metrics_path": "/metrics",
+                "scheme": "http",
+                "scrape_interval": "15s",
+                "scrape_timeout": "15s",
+                "scrape_targets": [
+                    {
+                        "host": "172.17.0.3:9100",
+                    }
+                ],
+                "max_scrape_size": "10MiB",
+                "sample_limit": 1000000,
+                "series_limit": 1000000
+            }
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    input.reset(new InputPrometheus());
+    input->SetContext(ctx);
+    input->SetMetricsRecordRef(InputPrometheus::sName, "1");
+    APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
+    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mMetricsPath);
+    APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeIntervalString);
+    APSARA_TEST_EQUAL("15s", input->mScrapeJobPtr->mScrapeTimeoutString);
+    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mScrapeJobPtr->mMaxScrapeSize);
+    APSARA_TEST_EQUAL(1000000, input->mScrapeJobPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(1000000, input->mScrapeJobPtr->mSeriesLimit);
 }
 
 void InputPrometheusUnittest::OnFailedInit() {

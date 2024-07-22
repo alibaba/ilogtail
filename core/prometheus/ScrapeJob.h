@@ -18,6 +18,7 @@
 
 #include <json/json.h>
 
+#include <cstdint>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -43,17 +44,24 @@ public:
 
     std::unordered_map<std::string, ScrapeTarget> GetScrapeTargetsMapCopy();
 
+    // from scrape config
     std::string mJobName;
     std::string mScheme;
     std::string mMetricsPath;
     std::string mScrapeIntervalString;
     std::string mScrapeTimeoutString;
     std::map<std::string, std::vector<std::string>> mParams;
+    // in bytes
+    int64_t mMaxScrapeSize;
+    int64_t mSampleLimit;
+    int64_t mSeriesLimit;
 
+    // from environment variable
     std::string mOperatorHost;
     uint32_t mOperatorPort;
     std::string mPodName;
 
+    // from pipeline context
     QueueKey mQueueKey;
     size_t mInputIndex;
 

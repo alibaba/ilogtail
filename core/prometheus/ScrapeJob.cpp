@@ -18,6 +18,8 @@
 
 #include <curl/curl.h>
 
+#include <string>
+
 #include "Common.h"
 #include "CurlImp.h"
 #include "Exception.h"
@@ -111,6 +113,32 @@ bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
                   mScrapeConfig["authorization"]["credentials_file"].asString())("Authorization",
                                                                                  mHeaders["Authorization"]));
     }
+    if (mScrapeConfig.isMember("max_scrape_size") && mScrapeConfig["max_scrape_size"].isString()) {
+        string tmpMaxScrapeSize = mScrapeConfig["max_scrape_size"].asString();
+        if (tmpMaxScrapeSize.empty()) {
+            mMaxScrapeSize = -1;
+        } else if (EndWith(tmpMaxScrapeSize, "MiB") || EndWith(tmpMaxScrapeSize, "M")
+                   || EndWith(tmpMaxScrapeSize, "MB")) {
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("M"));
+            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024;
+        } else {
+            mMaxScrapeSize = -1;
+        }
+    } else {
+        mMaxScrapeSize = -1;
+    }
+
+    if (mScrapeConfig.isMember("sample_limit") && mScrapeConfig["sample_limit"].isInt64()) {
+        mSampleLimit = mScrapeConfig["sample_limit"].asInt64();
+    } else {
+        mSampleLimit = -1;
+    }
+    if (mScrapeConfig.isMember("series_limit") && mScrapeConfig["series_limit"].isInt64()) {
+        mSeriesLimit = mScrapeConfig["series_limit"].asInt64();
+    } else {
+        mSeriesLimit = -1;
+    }
+
 
     // TODO: 实现服务发现
     vector<string> sdConfigs
