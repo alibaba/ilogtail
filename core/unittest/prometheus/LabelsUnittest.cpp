@@ -134,7 +134,7 @@ void LabelsBuilderUnittest::TestDeleteLabel() {
 
     labels.Push(Label{"host", "172.17.0.3:9100"});
     lb.Reset(labels);
-    APSARA_TEST_EQUAL("", lb.labels().Get("host"));
+    APSARA_TEST_EQUAL("", lb.GetLabels().Get("host"));
 }
 
 void LabelsBuilderUnittest::TestSet() {
@@ -173,7 +173,7 @@ void LabelsBuilderUnittest::TestLabels() {
     lb.DeleteLabel(nameList);
 
 
-    APSARA_TEST_EQUAL("", lb.labels().Get("host"));
+    APSARA_TEST_EQUAL("", lb.GetLabels().Get("host"));
 }
 
 void LabelsBuilderUnittest::TestRange() {

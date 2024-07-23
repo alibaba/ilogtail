@@ -24,50 +24,51 @@
 #include <string>
 
 #include "ParamExtractor.h"
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 
 using namespace std;
 
 #define ENUM_TO_STRING_CASE(EnumValue) \
-    { Action::EnumValue, #EnumValue }
+    { Action::EnumValue, ToLowerCaseString(#EnumValue) }
 
 #define STRING_TO_ENUM__CASE(EnumValue) \
-    { #EnumValue, Action::EnumValue }
+    { ToLowerCaseString(#EnumValue), Action::EnumValue }
 
 namespace logtail {
 
 Action StringToAction(string action) {
-    static std::map<string, Action> actionStrings{STRING_TO_ENUM__CASE(replace),
-                                                  STRING_TO_ENUM__CASE(keep),
-                                                  STRING_TO_ENUM__CASE(drop),
-                                                  STRING_TO_ENUM__CASE(keepequal),
-                                                  STRING_TO_ENUM__CASE(dropequal),
-                                                  STRING_TO_ENUM__CASE(hashmod),
-                                                  STRING_TO_ENUM__CASE(labelmap),
-                                                  STRING_TO_ENUM__CASE(labeldrop),
-                                                  STRING_TO_ENUM__CASE(labelkeep),
-                                                  STRING_TO_ENUM__CASE(lowercase),
-                                                  STRING_TO_ENUM__CASE(uppercase)};
+    static std::map<string, Action> actionStrings{STRING_TO_ENUM__CASE(REPLACE),
+                                                  STRING_TO_ENUM__CASE(KEEP),
+                                                  STRING_TO_ENUM__CASE(DROP),
+                                                  STRING_TO_ENUM__CASE(KEEPEQUAL),
+                                                  STRING_TO_ENUM__CASE(DROPEQUAL),
+                                                  STRING_TO_ENUM__CASE(HASHMOD),
+                                                  STRING_TO_ENUM__CASE(LABELMAP),
+                                                  STRING_TO_ENUM__CASE(LABELDROP),
+                                                  STRING_TO_ENUM__CASE(LABELKEEP),
+                                                  STRING_TO_ENUM__CASE(LOWERCASE),
+                                                  STRING_TO_ENUM__CASE(UPPERCASE)};
 
     auto it = actionStrings.find(action);
     if (it != actionStrings.end()) {
         return it->second;
     }
-    return Action::undefined;
+    return Action::UNDEFINED;
 }
 
 std::string ActionToString(Action action) {
-    static std::map<Action, std::string> actionStrings{ENUM_TO_STRING_CASE(replace),
-                                                       ENUM_TO_STRING_CASE(keep),
-                                                       ENUM_TO_STRING_CASE(drop),
-                                                       ENUM_TO_STRING_CASE(keepequal),
-                                                       ENUM_TO_STRING_CASE(dropequal),
-                                                       ENUM_TO_STRING_CASE(hashmod),
-                                                       ENUM_TO_STRING_CASE(labelmap),
-                                                       ENUM_TO_STRING_CASE(labeldrop),
-                                                       ENUM_TO_STRING_CASE(labelkeep),
-                                                       ENUM_TO_STRING_CASE(lowercase),
-                                                       ENUM_TO_STRING_CASE(uppercase)};
+    static std::map<Action, std::string> actionStrings{ENUM_TO_STRING_CASE(REPLACE),
+                                                       ENUM_TO_STRING_CASE(KEEP),
+                                                       ENUM_TO_STRING_CASE(DROP),
+                                                       ENUM_TO_STRING_CASE(KEEPEQUAL),
+                                                       ENUM_TO_STRING_CASE(DROPEQUAL),
+                                                       ENUM_TO_STRING_CASE(HASHMOD),
+                                                       ENUM_TO_STRING_CASE(LABELMAP),
+                                                       ENUM_TO_STRING_CASE(LABELDROP),
+                                                       ENUM_TO_STRING_CASE(LABELKEEP),
+                                                       ENUM_TO_STRING_CASE(LOWERCASE),
+                                                       ENUM_TO_STRING_CASE(UPPERCASE)};
 
     auto it = actionStrings.find(action);
     if (it != actionStrings.end()) {
@@ -81,12 +82,6 @@ RelabelConfig::RelabelConfig() {
 
 RelabelConfig::RelabelConfig(const Json::Value& config) {
     string errorMsg;
-    // Json::Value sourceLabelsJson = config["source_labels"];
-    // if (sourceLabelsJson.isArray() && sourceLabelsJson.size() > 0) {
-    //     for (const auto& item : sourceLabelsJson) {
-    //         sourceLabels.emplace_back(item);
-    //     }
-    // }
 
     if (config.isMember("source_labels") && config["source_labels"].isArray()) {
         GetOptionalListParam<string>(config, "source_labels", mSourceLabels, errorMsg);
@@ -138,7 +133,7 @@ bool relabel::Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs
         ret = Labels();
         return false;
     }
-    ret = lb.labels();
+    ret = lb.GetLabels();
     return true;
 }
 
@@ -162,31 +157,31 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
     string val = boost::algorithm::join(values, cfg.mSeparator);
 
     switch (cfg.mAction) {
-        case Action::drop: {
+        case Action::DROP: {
             if (boost::regex_match(val, cfg.mRegex)) {
                 return false;
             }
             break;
         }
-        case Action::keep: {
+        case Action::KEEP: {
             if (!boost::regex_match(val, cfg.mRegex)) {
                 return false;
             }
             break;
         }
-        case Action::dropequal: {
+        case Action::DROPEQUAL: {
             if (lb.Get(cfg.mTargetLabel) == val) {
                 return false;
             }
             break;
         }
-        case Action::keepequal: {
+        case Action::KEEPEQUAL: {
             if (lb.Get(cfg.mTargetLabel) != val) {
                 return false;
             }
             break;
         }
-        case Action::replace: {
+        case Action::REPLACE: {
             bool indexes = boost::regex_search(val, cfg.mRegex);
             // If there is no match no replacement must take place.
             if (!indexes) {
@@ -206,15 +201,15 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             lb.Set(target.mLabelName, string(res));
             break;
         }
-        case Action::lowercase: {
+        case Action::LOWERCASE: {
             lb.Set(cfg.mTargetLabel, boost::to_lower_copy(val));
             break;
         }
-        case Action::uppercase: {
+        case Action::UPPERCASE: {
             lb.Set(cfg.mTargetLabel, boost::to_upper_copy(val));
             break;
         }
-        case Action::hashmod: {
+        case Action::HASHMOD: {
             uint8_t digest[MD5_DIGEST_LENGTH];
             MD5((uint8_t*)val.c_str(), val.length(), (uint8_t*)&digest);
             // Use only the last 8 bytes of the hash to give the same result as earlier versions of this code.
@@ -226,7 +221,7 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             lb.Set(cfg.mTargetLabel, to_string(mod));
             break;
         }
-        case Action::labelmap: {
+        case Action::LABELMAP: {
             lb.Range([&cfg, &lb](Label label) {
                 if (boost::regex_match(label.name, cfg.mRegex)) {
                     string res = boost::regex_replace(
@@ -236,7 +231,7 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             });
             break;
         }
-        case Action::labeldrop: {
+        case Action::LABELDROP: {
             lb.Range([&cfg, &lb](Label label) {
                 if (boost::regex_match(label.name, cfg.mRegex)) {
                     lb.DeleteLabel(label.name);
@@ -244,7 +239,7 @@ bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             });
             break;
         }
-        case Action::labelkeep: {
+        case Action::LABELKEEP: {
             lb.Range([&cfg, &lb](Label label) {
                 if (!boost::regex_match(label.name, cfg.mRegex)) {
                     lb.DeleteLabel(label.name);
