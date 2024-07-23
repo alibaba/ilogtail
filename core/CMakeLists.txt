@@ -23,12 +23,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(LINUX TRUE)
 endif ()
 
-if(DEFINED APSARA_UNIT_TEST_MAIN)
-    add_definitions(-DVIRTUAL=virtual)
-else()
-    add_definitions(-DVIRTUAL=)
-endif()
-
 # Options.
 option(BUILD_LOGTAIL "Build Logtail executable and tools" ON)
 # Used under the Android environment.
@@ -75,6 +69,9 @@ if (UNIX)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
         SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
         SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+        add_definitions(-DVIRTUAL=virtual)
+    else()
+        add_definitions(-DVIRTUAL= )
     endif ()
 elseif (MSVC)
     add_definitions(-DNOMINMAX)
