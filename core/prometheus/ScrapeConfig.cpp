@@ -129,6 +129,18 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         mRelabelConfigs.emplace_back(relabelConfig);
     }
 
+    // build query string
+    for (auto it = mParams.begin(); it != mParams.end(); ++it) {
+        const auto& key = it->first;
+        const auto& values = it->second;
+        for (const auto& value : values) {
+            if (!mQueryString.empty()) {
+                mQueryString += "&";
+            }
+            mQueryString = mQueryString + key + "=" + value;
+        }
+    }
+
     return true;
 }
 } // namespace logtail

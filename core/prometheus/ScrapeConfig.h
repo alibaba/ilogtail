@@ -29,6 +29,8 @@ public:
     std::map<std::string, std::vector<std::string>> mParams;
     std::map<std::string, std::string> mHeaders;
 
+    std::string mQueryString;
+
     ScrapeConfig();
     bool Init(const Json::Value& config);
 

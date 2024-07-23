@@ -43,38 +43,19 @@ ScrapeWork::ScrapeWork() {
 }
 
 bool ScrapeWork::Init(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                      std::shared_ptr<Labels> labelsPtr,
+                      const ScrapeTarget& scrapeTarget,
                       QueueKey queueKey,
                       size_t inputIndex) {
     mScrapeConfigPtr = scrapeConfigPtr;
-    mLabelsPtr = labelsPtr;
+    mScrapeTarget = scrapeTarget;
     mQueueKey = queueKey;
     mInputIndex = inputIndex;
 
-    // host & port
-    string address = mLabelsPtr->Get("__address__");
-    auto m = address.find(':');
-    if (m != string::npos) {
-        mHost = address.substr(0, m);
-        mPort = stoi(address.substr(m + 1));
-    }
-
-    // query string
-    for (auto it = mScrapeConfigPtr->mParams.begin(); it != mScrapeConfigPtr->mParams.end(); ++it) {
-        const auto& key = it->first;
-        const auto& values = it->second;
-        for (const auto& value : values) {
-            if (!mQueryString.empty()) {
-                mQueryString += "&";
-            }
-            mQueryString = mQueryString + key + "=" + value;
-        }
-    }
-
     // URL
-    string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mHost + ":" + to_string(mPort)
-        + mScrapeConfigPtr->mMetricsPath + (mQueryString.empty() ? "" : "?" + mQueryString);
-    mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabelsPtr->Hash());
+    string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mScrapeTarget.mHost + ":" + ToString(mScrapeTarget.mPort)
+        + mScrapeConfigPtr->mMetricsPath
+        + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
+    mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mScrapeTarget.mLabels.Hash());
     return true;
 }
 

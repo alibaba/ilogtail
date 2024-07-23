@@ -22,6 +22,7 @@
 
 #include "Labels.h"
 #include "ScrapeConfig.h"
+#include "ScrapeTarget.h"
 #include "common/Thread.h"
 #include "models/PipelineEventGroup.h"
 #include "queue/FeedbackQueueKey.h"
@@ -33,7 +34,7 @@ class ScrapeWork {
 public:
     ScrapeWork();
     bool Init(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-              std::shared_ptr<Labels> labelsPtr,
+              const ScrapeTarget& scrapeTarget,
               QueueKey queueKey,
               size_t inputIndex);
 
@@ -58,12 +59,9 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
-    std::shared_ptr<Labels> mLabelsPtr;
+    ScrapeTarget mScrapeTarget;
 
-    // target info
-    std::string mHost;
-    uint32_t mPort;
-    std::string mQueryString;
+
     std::string mHash;
 
     QueueKey mQueueKey;
