@@ -37,7 +37,7 @@ struct SenderQueueItem {
     RawDataType mType = RawDataType::EVENT_GROUP;
     bool mBufferOrNot = true;
     std::shared_ptr<Pipeline> mPipeline; // not null only during pipeline update
-    const Flusher* mFlusher = nullptr;
+    Flusher* mFlusher = nullptr;
     QueueKey mQueueKey;
 
     SendingStatus mStatus = SendingStatus::IDLE;
@@ -47,7 +47,7 @@ struct SenderQueueItem {
 
     SenderQueueItem(std::string&& data,
                     size_t rawSize,
-                    const Flusher* flusher,
+                    Flusher* flusher,
                     QueueKey key,
                     RawDataType type = RawDataType::EVENT_GROUP,
                     bool bufferOrNot = true)

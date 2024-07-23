@@ -21,6 +21,8 @@
 #include "Closure.h"
 #include "Common.h"
 #include "log_pb/sls_logs.pb.h"
+#include "sink/http/HttpRequest.h"
+#include "CurlImp.h"
 
 namespace logtail {
 namespace sdk {
@@ -119,26 +121,26 @@ namespace sdk {
          * @param compressType compression type
          * @return request_id.
          */
-        AsynRequest* CreatePostLogStoreLogsRequest(const std::string& project,
-                                                   const std::string& logstore,
-                                                   sls_logs::SlsCompressType compressType,
-                                                   const std::string& compressedLogGroup,
-                                                   uint32_t rawSize,
-                                                   PostLogStoreLogsClosure* callBack,
-                                                   const std::string& hashKey = "",
-                                                   int64_t hashKeySeqID = kInvalidHashKeySeqID);
+        std::unique_ptr<HttpRequest> CreatePostLogStoreLogsRequest(const std::string& project,
+                                                                   const std::string& logstore,
+                                                                   sls_logs::SlsCompressType compressType,
+                                                                   const std::string& compressedLogGroup,
+                                                                   uint32_t rawSize,
+                                                                   SenderQueueItem* item,
+                                                                   const std::string& hashKey = "",
+                                                                   int64_t hashKeySeqID = kInvalidHashKeySeqID);
         /** Async Put data to LOG service. Unsuccessful opertaion will cause an LOGException.
          * @param project The project name
          * @param logstore The logstore name
          * @param packageListData data of logPackageList, consist of several LogGroup
          * @return request_id.
          */
-        AsynRequest* CreatePostLogStoreLogPackageListRequest(const std::string& project,
-                                                             const std::string& logstore,
-                                                             sls_logs::SlsCompressType compressType,
-                                                             const std::string& packageListData,
-                                                             PostLogStoreLogsClosure* callBack,
-                                                             const std::string& hashKey = "");
+        std::unique_ptr<HttpRequest> CreatePostLogStoreLogPackageListRequest(const std::string& project,
+                                                                             const std::string& logstore,
+                                                                             sls_logs::SlsCompressType compressType,
+                                                                             const std::string& packageListData,
+                                                                             SenderQueueItem* item,
+                                                                             const std::string& hashKey = "");
 
         PostLogStoreLogsResponse PostLogUsingWebTracking(const std::string& project,
                                                          const std::string& logstore,
@@ -161,13 +163,13 @@ namespace sdk {
                          HttpMessage& httpMessage,
                          std::string* realIpPtr = NULL);
 
-        AsynRequest* CreateAsynPostLogStoreLogsRequest(const std::string& project,
-                                                       const std::string& logstore,
-                                                       const std::string& body,
-                                                       std::map<std::string, std::string>& httpHeader,
-                                                       PostLogStoreLogsClosure* callBack,
-                                                       const std::string& hashKey,
-                                                       int64_t hashKeySeqID);
+        std::unique_ptr<HttpRequest> CreateAsynPostLogStoreLogsRequest(const std::string& project,
+                                                                       const std::string& logstore,
+                                                                       const std::string& body,
+                                                                       std::map<std::string, std::string>& httpHeader,
+                                                                       const std::string& hashKey,
+                                                                       int64_t hashKeySeqID,
+                                                                       SenderQueueItem* item);
 
         // PingSLSServer sends a trivial data packet to SLS for some inner purposes.
         PostLogStoreLogsResponse
@@ -204,7 +206,7 @@ namespace sdk {
 
         SpinLock mSpinLock;
 
-        HTTPClient* mClient;
+        CurlClient* mClient;
     };
 
 } // namespace sdk

@@ -90,7 +90,8 @@ public:
         return true;
     }
     bool FlushAll() override { return mIsValid; }
-    sdk::AsynRequest* BuildRequest(SenderQueueItem* item) const override { return nullptr; }
+    std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const override { return nullptr; }
+    void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override {}
 
     bool mIsValid = true;
     std::vector<size_t> mFlushedQueues;
@@ -98,11 +99,33 @@ public:
 
 const std::string FlusherMock::sName = "flusher_mock";
 
+class FlusherHttpMock : public Flusher {
+public:
+    static const std::string sName;
+
+    const std::string& Name() const override { return sName; }
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override { return true; }
+    bool Send(PipelineEventGroup&& g) override { return mIsValid; }
+    bool Flush(size_t key) override {
+        mFlushedQueues.push_back(key);
+        return true;
+    }
+    bool FlushAll() override { return mIsValid; }
+    std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const override { return nullptr; }
+    void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override {}
+
+    bool mIsValid = true;
+    std::vector<size_t> mFlushedQueues;
+};
+
+const std::string FlusherHttpMock::sName = "flusher_http_mock";
+
 void LoadPluginMock() {
     PluginRegistry::GetInstance()->RegisterInputCreator(new StaticInputCreator<InputMock>());
     PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorInnerMock>());
     PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMock>());
-    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>());
+    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>(), SinkType::UNKNOWN);
+    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherHttpMock>(), SinkType::HTTP);
 }
 
 } // namespace logtail

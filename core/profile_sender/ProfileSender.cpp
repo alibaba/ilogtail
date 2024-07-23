@@ -26,7 +26,7 @@
 #include "profile_sender/EnterpriseProfileSender.h"
 #endif
 #include "sdk/Exception.h"
-#include "sender/Sender.h"
+#include "sender/FlusherRunner.h"
 #include "sls_control/SLSControl.h"
 // TODO: temporarily used
 #include "compression/CompressorFactory.h"
@@ -118,13 +118,22 @@ FlusherSLS* ProfileSender::GetFlusher(const string& region) {
     return &iter->second;
 }
 
+bool ProfileSender::IsProfileData(const string& region, const string& project, const string& logstore) {
+    if ((logstore == "shennong_log_profile" || logstore == "logtail_alarm" || logstore == "logtail_status_profile"
+         || logstore == "logtail_suicide_profile")
+        && (project == GetProfileProjectName(region) || region == ""))
+        return true;
+    else
+        return false;
+}
+
 void ProfileSender::SendToProfileProject(const string& region, sls_logs::LogGroup& logGroup) {
     if (0 == logGroup.category().compare("logtail_status_profile")) {
         SendRunningStatus(logGroup);
     }
 
     // Opensource is not necessary to synchronize data with SLS
-    Sender::Instance()->RestLastSenderTime();
+    FlusherRunner::GetInstance()->RestLastSenderTime();
     return;
 }
 
@@ -181,20 +190,6 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
                   ("SendToProfileProject", "fail")("logBody", logBody)("errCode", e.GetErrorCode())("errMsg",
                                                                                                     e.GetMessage()));
     }
-}
-
-bool ProfileSender::SendInstantly(sls_logs::LogGroup& logGroup,
-                                  const string& aliuid,
-                                  const string& region,
-                                  const string& projectName,
-                                  const string& logstore) {
-    return true;
-}
-
-void ProfileSender::SendToLineCountProject(const string& region,
-                                           const string& projectName,
-                                           sls_logs::LogGroup& logGroup) {
-    return;
 }
 
 } // namespace logtail

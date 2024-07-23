@@ -85,6 +85,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueManagerUnittest;
+    friend class FlusherRunnerUnittest;
 #endif
 };
 

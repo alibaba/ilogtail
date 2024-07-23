@@ -32,7 +32,7 @@ namespace sdk {
 
     class PostLogStoreLogsClosure : public LogsClosure {
     public:
-        virtual void Done();
+        virtual void Done() {}
         virtual void OnSuccess(Response* response) {}
         virtual void OnFail(Response* response, const std::string& errorCode, const std::string& errorMessage) {}
     };

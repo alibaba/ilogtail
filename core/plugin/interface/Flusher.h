@@ -25,7 +25,8 @@
 #include "plugin/interface/Plugin.h"
 #include "queue/FeedbackQueueKey.h"
 #include "queue/SenderQueueItem.h"
-#include "sdk/Common.h"
+#include "sink/http/HttpRequest.h"
+#include "sink/http/HttpResponse.h"
 
 namespace logtail {
 
@@ -39,20 +40,21 @@ public:
     virtual bool Send(PipelineEventGroup&& g) = 0;
     virtual bool Flush(size_t key) = 0;
     virtual bool FlushAll() = 0;
-    virtual sdk::AsynRequest* BuildRequest(SenderQueueItem* item) const = 0;
-    // virtual void OnSucess() {}
-    // virtual void OnFail() = 0;
+    virtual std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const = 0;
+    virtual void OnSendDone(const HttpResponse& response, SenderQueueItem* item) = 0;
 
     QueueKey GetQueueKey() const { return mQueueKey; }
 
 protected:
     void GenerateQueueKey(const std::string& target);
     bool PushToQueue(std::unique_ptr<SenderQueueItem>&& item, uint32_t retryTimes = 500);
+    void DealSenderQueueItemAfterSend(SenderQueueItem* item, bool keep);
 
     QueueKey mQueueKey;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherInstanceUnittest;
+    friend class FlusherRunnerUnittest;
 #endif
 };
 

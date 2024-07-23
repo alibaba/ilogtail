@@ -385,22 +385,5 @@ namespace sdk {
         Response* mResponse;
     };
 
-    class HTTPClient {
-    public:
-        virtual ~HTTPClient() {}
-        virtual void Send(const std::string& httpMethod,
-                          const std::string& host,
-                          const int32_t port,
-                          const std::string& url,
-                          const std::string& queryString,
-                          const std::map<std::string, std::string>& header,
-                          const std::string& body,
-                          const int32_t timeout,
-                          HttpMessage& httpMessage,
-                          const std::string& intf,
-                          const bool httpsFlag)
-            = 0;
-    };
-
 } // namespace sdk
 } // namespace logtail

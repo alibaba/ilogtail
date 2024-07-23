@@ -24,7 +24,7 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
-#include "flusher/FlusherSLS.h"
+#include "flusher/sls/FlusherSLS.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
 #if defined(__linux__) && !defined(__ANDROID__)
@@ -51,6 +51,7 @@
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
+#include "sender/FlusherRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__) && !defined(__EXCLUDE_SPL__)
 #include "processor/ProcessorSPL.h"
 #endif
@@ -143,7 +144,7 @@ void PluginRegistry::LoadStaticPlugins() {
     }
 #endif
 
-    RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>(), SinkType::HTTP);
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
@@ -174,8 +175,9 @@ void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
     RegisterCreator(PROCESSOR_PLUGIN, creator);
 }
 
-void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator) {
+void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator, SinkType type) {
     RegisterCreator(FLUSHER_PLUGIN, creator);
+    FlusherRunner::GetInstance()->RegisterSink(creator->Name(), type);
 }
 
 PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const string pluginName) {
