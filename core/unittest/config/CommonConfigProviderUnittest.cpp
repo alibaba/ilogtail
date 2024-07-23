@@ -648,8 +648,6 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
         ProcessConfigDiff processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
         ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
         APSARA_TEST_TRUE(ProcessConfigManager::GetInstance()->GetAllConfigNames().empty());
-        std::cout << processConfigDiff.mAdded.size() << '\t' << processConfigDiff.mRemoved.size() << '\t'
-                  << processConfigDiff.mModified.size() << '\t' << processConfigDiff.mUnchanged.size() << std::endl;
         APSARA_TEST_EQUAL(1U, processConfigDiff.mRemoved.size());
         APSARA_TEST_EQUAL(processConfigDiff.mRemoved[0], "processconfig1");
 
