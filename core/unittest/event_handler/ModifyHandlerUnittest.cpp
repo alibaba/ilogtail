@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "unittest/Unittest.h"
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <string>
+
 #include <memory>
-#include "common/Flags.h"
+#include <string>
+
 #include "common/FileSystemUtil.h"
+#include "common/Flags.h"
 #include "event/Event.h"
 #include "event_handler/EventHandler.h"
 #include "reader/LogFileReader.h"
+#include "unittest/Unittest.h"
 
 using namespace std;
 
