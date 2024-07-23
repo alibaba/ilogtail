@@ -20,7 +20,6 @@
 #include <memory>
 #include <string>
 
-#include "Labels.h"
 #include "ScrapeConfig.h"
 #include "ScrapeTarget.h"
 #include "common/Thread.h"
@@ -32,11 +31,10 @@ namespace logtail {
 
 class ScrapeWork {
 public:
-    ScrapeWork();
-    bool Init(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-              const ScrapeTarget& scrapeTarget,
-              QueueKey queueKey,
-              size_t inputIndex);
+    ScrapeWork(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+               const ScrapeTarget& scrapeTarget,
+               QueueKey queueKey,
+               size_t inputIndex);
 
     ScrapeWork(const ScrapeWork&) = delete;
     ScrapeWork(ScrapeWork&& other) noexcept = delete;

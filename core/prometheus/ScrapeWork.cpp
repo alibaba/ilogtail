@@ -29,6 +29,7 @@
 #include "TextParser.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
+#include "prometheus/ScrapeTarget.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
 #include "sdk/CurlImp.h"
@@ -38,25 +39,18 @@ using namespace std;
 
 namespace logtail {
 
-ScrapeWork::ScrapeWork() {
+ScrapeWork::ScrapeWork(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+                       const ScrapeTarget& scrapeTarget,
+                       QueueKey queueKey,
+                       size_t inputIndex)
+    : mScrapeConfigPtr(scrapeConfigPtr), mScrapeTarget(scrapeTarget), mQueueKey(queueKey), mInputIndex(inputIndex) {
     mClient = make_unique<sdk::CurlClient>();
-}
-
-bool ScrapeWork::Init(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                      const ScrapeTarget& scrapeTarget,
-                      QueueKey queueKey,
-                      size_t inputIndex) {
-    mScrapeConfigPtr = scrapeConfigPtr;
-    mScrapeTarget = scrapeTarget;
-    mQueueKey = queueKey;
-    mInputIndex = inputIndex;
 
     // URL
     string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mScrapeTarget.mHost + ":" + ToString(mScrapeTarget.mPort)
         + mScrapeConfigPtr->mMetricsPath
         + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mScrapeTarget.mLabels.Hash());
-    return true;
 }
 
 bool ScrapeWork::operator<(const ScrapeWork& other) const {
