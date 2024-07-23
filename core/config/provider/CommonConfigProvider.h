@@ -81,9 +81,9 @@ protected:
 
     virtual std::string GetInstanceId();
     virtual void FillAttributes(::configserver::proto::v2::AgentAttributes& attributes);
-    virtual void UpdateRemotePipelineConfig(
+    void UpdateRemotePipelineConfig(
         const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs);
-    virtual void
+    void
     UpdateRemoteProcessConfig(const google::protobuf::RepeatedPtrField<configserver::proto::v2::ConfigDetail>& configs);
 
     virtual bool
