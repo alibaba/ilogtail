@@ -43,7 +43,7 @@ public:
 void ActionConverterUnittest::TestStringToAction() {
     // replace
     std::string actionString = "replace";
-    Action expectedAction = Action::replace;
+    Action expectedAction = Action::REPLACE;
 
     // Act
     Action result = StringToAction(actionString);
@@ -54,7 +54,7 @@ void ActionConverterUnittest::TestStringToAction() {
 
 void ActionConverterUnittest::TestActionToString() {
     // replace
-    Action action = Action::replace;
+    Action action = Action::REPLACE;
     std::string expectedString = "replace";
 
     // Act
@@ -87,7 +87,7 @@ void RelabelConfigUnittest::TestRelabelConfig() {
 
     APSARA_TEST_EQUAL(true, config.Validate());
 
-    APSARA_TEST_EQUAL(Action::keep, config.mAction);
+    APSARA_TEST_EQUAL(Action::KEEP, config.mAction);
     // APSARA_TEST_EQUAL("node-exporter", config.regex.get_data());
     APSARA_TEST_EQUAL("$1", config.mReplacement);
     APSARA_TEST_EQUAL(";", config.mSeparator);

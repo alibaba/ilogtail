@@ -157,7 +157,7 @@ void LabelsBuilder::Reset(MetricEvent* metricEvent) {
     });
 }
 
-Labels LabelsBuilder::labels() {
+Labels LabelsBuilder::GetLabels() {
     if (mDeleteLabelNameList.empty() && mAddLabelList.empty()) {
         return mBase;
     }

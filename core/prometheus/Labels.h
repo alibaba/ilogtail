@@ -79,7 +79,7 @@ public:
     void Reset(Labels);
     void Reset(MetricEvent*);
 
-    Labels labels();
+    Labels GetLabels();
 
     void Range(const std::function<void(Label)>& closure);
 
