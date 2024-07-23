@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,33 @@
  */
 
 #pragma once
+
+#include <re2/re2.h>
+
 #include <string>
+
+#include "models/PipelineEventGroup.h"
 
 namespace logtail {
 
-typedef int64_t LogstoreFeedBackKey;
+extern const std::string SAMPLE_RE;
 
-LogstoreFeedBackKey GenerateLogstoreFeedBackKey(const std::string& project, const std::string& logStore);
+class TextParser {
+public:
+    TextParser() : mSampleRegex(SAMPLE_RE) {}
+    PipelineEventGroup Parse(const std::string& content);
+
+
+    PipelineEventGroup Parse(const std::string& content,
+                             std::time_t defaultTs,
+                             const std::string& jobName = "",
+                             const std::string& instance = "");
+private:
+    RE2 mSampleRegex;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class TextParserUnittest;
+#endif
+};
 
 } // namespace logtail

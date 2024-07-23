@@ -1,4 +1,4 @@
-# Copyright 2022 iLogtail Authors
+# Copyright 2024 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.22)
-project(config_sdk_unittest)
+project(prometheus_unittest)
 
-add_executable(config_sdk_unittest config_sdk_unittest.cpp)
-target_link_libraries(config_sdk_unittest ${UT_BASE_TARGET})
+add_executable(textparser_unittest TextParserUnittest.cpp)
+target_link_libraries(textparser_unittest unittest_base)
 
 include(GoogleTest)
-gtest_discover_tests(config_sdk_unittest)
+
+gtest_discover_tests(textparser_unittest)

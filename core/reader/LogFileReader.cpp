@@ -48,6 +48,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
+#include "monitor/MetricConstants.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/ProcessQueueManager.h"
@@ -55,7 +56,6 @@
 #include "rapidjson/document.h"
 #include "reader/JsonLogFileReader.h"
 #include "sdk/Common.h"
-#include "sender/Sender.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -170,6 +170,8 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
         }
 #endif
 
+        reader->SetMetrics();
+
         reader->InitReader(
             readerConfig.first->mTailingAllMatchedFiles, LogFileReader::BACKWARD_TO_FIXED_POS, exactlyonceConcurrency);
     }
@@ -199,7 +201,27 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mLineParsers.emplace_back(baseLineParsePtr);
 }
 
-void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
+void LogFileReader::SetMetrics() {
+    mMetricLabels = {{METRIC_LABEL_FILE_NAME, GetConvertedPath()},
+                     {METRIC_LABEL_FILE_DEV, std::to_string(GetDevInode().dev)},
+                     {METRIC_LABEL_FILE_INODE, std::to_string(GetDevInode().inode)}};
+    mMetricsRecordRef = FileServer::GetInstance()->GetOrCreateReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
+    if (mMetricsRecordRef == nullptr) {
+        LOG_ERROR(sLogger,
+                  ("failed to init metrics", "cannot get config's metricRecordRef")("config name", GetConfigName()));
+        mMetricsEnabled = false;
+        return;
+    }
+    
+    mMetricsEnabled = true;
+
+    mInputRecordsSizeBytesCounter = mMetricsRecordRef->GetCounter(METRIC_INPUT_RECORDS_SIZE_BYTES);
+    mInputReadTotalCounter = mMetricsRecordRef->GetCounter(METRIC_INPUT_READ_TOTAL);
+    mInputFileSizeBytesGauge = mMetricsRecordRef->GetGauge(METRIC_INPUT_FILE_SIZE_BYTES);
+    mInputFileOffsetBytesGauge = mMetricsRecordRef->GetGauge(METRIC_INPUT_FILE_OFFSET_BYTES);
+}
+
+void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray) {
     if (checkConfigFlag) {
         size_t index = mHostLogPath.rfind(PATH_SEPARATOR);
         if (index == string::npos || index == mHostLogPath.size() - 1) {
@@ -241,6 +263,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
+    checkPointPtr->mPositionInReaderArray = idxInReaderArray;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -284,12 +307,15 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
             mContainerStopped = checkPointPtr->mContainerStopped;
+            // new property to recover reader exactly from checkpoint
+            mIdxInReaderArrayFromLastCpt = checkPointPtr->mPositionInReaderArray;
             LOG_INFO(sLogger,
                      ("recover log reader status from checkpoint, project", GetProject())("logstore", GetLogstore())(
-                         "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
-                         "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
-                         "real file path", mRealLogPath)("last file position", mLastFilePos));
+                         "config", GetConfigName())("log reader queue name", mHostLogPath)("file device",
+                                                                                           ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file signature size", mLastFileSignatureSize)("real file path", mRealLogPath)(
+                         "last file position", mLastFilePos)("index in reader array", mIdxInReaderArrayFromLastCpt));
             // if file is open or
             // last update time is new and the file's container is not stopped we
             // we should use first modify
@@ -2217,17 +2243,27 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
 }
 
 std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
-    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir,
-                                                   mHostLogPathFile,
-                                                   EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY,
-                                                   -1,
-                                                   0,
-                                                   mDevInode.dev,
-                                                   mDevInode.inode));
+    auto result = std::make_unique<Event>(mHostLogPathDir,
+                                          mHostLogPathFile,
+                                          EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY,
+                                          -1,
+                                          0,
+                                          mDevInode.dev,
+                                          mDevInode.inode);
     result->SetLastFilePos(mLastFilePos);
     result->SetLastReadPos(GetLastReadPos());
     return result;
 }
+
+void LogFileReader::ReportMetrics(uint64_t readSize) {
+    if (mMetricsEnabled) {
+        mInputReadTotalCounter->Add(1);
+        mInputRecordsSizeBytesCounter->Add(readSize);
+        mInputFileOffsetBytesGauge->Set(GetLastFilePos());
+        mInputFileSizeBytesGauge->Set(GetFileSize());
+    }
+}
+
 
 LogFileReader::~LogFileReader() {
     // if (mLogBeginRegPtr != NULL) {
@@ -2249,6 +2285,7 @@ LogFileReader::~LogFileReader() {
                  "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                  "file size", mLastFileSize)("last file position", mLastFilePos));
     CloseFilePtr();
+    FileServer::GetInstance()->ReleaseReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
 
     // Mark GC so that corresponding resources can be released.
     // For config update, reader will be recreated, which will retrieve these
@@ -2533,7 +2570,7 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, GetHostLogPath());
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
     }
-    group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(GetSourceId()));
+    group.SetMetadata(EventGroupMetaKey::SOURCE_ID, GetSourceId());
 
     // for source-specific info without fixed key, we store them in tags directly
     // for log, these includes:
