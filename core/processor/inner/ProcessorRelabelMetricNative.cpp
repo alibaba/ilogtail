@@ -47,13 +47,12 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
 }
 
 void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
-    LOG_INFO(sLogger, ("processor process", sName)("config", mContext->GetConfigName()));
     if (metricGroup.GetEvents().empty()) {
         return;
     }
     EventsContainer newEvents;
     for (PipelineEventPtr& e : metricGroup.MutableEvents()) {
-        ProcessEvent(metricGroup, std::move(e), newEvents);
+        ProcessEvent(metricGroup, e, newEvents);
     }
     metricGroup.SwapEvents(newEvents);
     return;
@@ -76,7 +75,7 @@ bool ProcessorRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) c
 }
 
 void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
-                                                PipelineEventPtr&& e,
+                                                PipelineEventPtr& e,
                                                 EventsContainer& newEvents) {
     LOG_INFO(sLogger, ("processor ProcessEvent", sName)("config", mContext->GetConfigName()));
     if (!IsSupportedEvent(e)) {
@@ -109,7 +108,6 @@ void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
 
         // set metricEvent name
         if (!result.Get("__name__").empty()) {
-            LOG_INFO(sLogger, ("processor set name", result.Get("__name__"))("config", mContext->GetConfigName()));
             sourceEvent.SetName(result.Get("__name__"));
         }
         newEvents.emplace_back(std::move(e));
