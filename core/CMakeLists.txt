@@ -51,6 +51,7 @@ if (NOT WITHSPL)
     add_definitions(-D__EXCLUDE_SPL__)
 endif()
 
+add_definitions(-DVIRTUAL= )
 # Default C/CXX flags.
 if (UNIX)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
@@ -231,11 +232,8 @@ endif()
 
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
-    add_definitions(-DVIRTUAL=virtual)
     message(STATUS "Build unittest.")
     include(CTest)
     enable_testing()
     add_subdirectory(unittest)
-else()
-    add_definitions(-DVIRTUAL= )
 endif ()

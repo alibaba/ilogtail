@@ -40,6 +40,7 @@ target_link_libraries(config_feedbackable_unittest ${UT_BASE_TARGET})
 
 add_executable(common_config_provider_unittest CommonConfigProviderUnittest.cpp)
 target_link_libraries(common_config_provider_unittest ${UT_BASE_TARGET})
+target_compile_definitions(common_config_provider_unittest PRIVATE VIRTUAL=virtual)
 
 include(GoogleTest)
 gtest_discover_tests(config_unittest)
