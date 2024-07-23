@@ -231,11 +231,11 @@ endif()
 
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
+    add_definitions(-DVIRTUAL=virtual)
     message(STATUS "Build unittest.")
     include(CTest)
     enable_testing()
     add_subdirectory(unittest)
-    add_definitions(-DVIRTUAL=virtual)
 else()
     add_definitions(-DVIRTUAL= )
 endif ()
