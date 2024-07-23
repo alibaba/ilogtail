@@ -230,7 +230,6 @@ void addConfigInfoToRequest(const std::pair<const string, logtail::ConfigInfo>& 
             reqConfig->set_version(-1);
             break;
     }
-    reqConfig->set_version(configInfo.second.version);
 }
 
 void CommonConfigProvider::GetConfigUpdate() {
