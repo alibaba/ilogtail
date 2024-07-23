@@ -128,6 +128,7 @@ private:
     VIRTUAL bool SendHttpRequest(const std::string& operation,
                                  const std::string& reqBody,
                                  const std::string& configType,
+                                 const std::string& requestId,
                                  std::string& resp);
     void LoadConfigFile();
     bool DumpConfigFile(const configserver::proto::v2::ConfigDetail& config, const std::filesystem::path& sourceDir);

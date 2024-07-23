@@ -33,7 +33,7 @@ namespace logtail {
 
 class MockCommonConfigProvider : public CommonConfigProvider {
 public:
-    MOCK_METHOD4(SendHttpRequest, bool(const std::string&, const std::string&, const std::string&, std::string&));
+    MOCK_METHOD5(SendHttpRequest, bool(const std::string&, const std::string&, const std::string&, const std::string&, std::string&));
 };
 
 class CommonConfigProviderUnittest : public ::testing::Test {
@@ -381,10 +381,11 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                   heartbeatRespPb.SerializeToString(&resp);
               };
 
-        EXPECT_CALL(provider, SendHttpRequest(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        EXPECT_CALL(provider, SendHttpRequest(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
             .WillRepeatedly(::testing::DoAll(::testing::Invoke([setResponse](const string& operation,
                                                                              const string& reqBody,
                                                                              const string& configType,
+                                                                             const std::string& requestId,
                                                                              std::string& resp) {
                                                  setResponse(operation, reqBody, configType, resp);
                                              }),
@@ -598,10 +599,11 @@ void CommonConfigProviderUnittest::TestGetConfigUpdateAndConfigWatcher() {
                   heartbeatRespPb.SerializeToString(&resp);
               };
 
-        EXPECT_CALL(provider, SendHttpRequest(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+        EXPECT_CALL(provider, SendHttpRequest(::testing::_, ::testing::_, ::testing::_, ::testing::_, ::testing::_))
             .WillRepeatedly(::testing::DoAll(::testing::Invoke([setResponse](const string& operation,
                                                                              const string& reqBody,
                                                                              const string& configType,
+                                                                             const std::string& requestId,
                                                                              std::string& resp) {
                                                  setResponse(operation, reqBody, configType, resp);
                                              }),

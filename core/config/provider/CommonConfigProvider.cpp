@@ -38,7 +38,7 @@
 
 using namespace std;
 
-DEFINE_FLAG_INT32(heartbeat_update_interval, "second", 10);
+DEFINE_FLAG_INT32(heartbeat_interval, "second", 10);
 
 namespace logtail {
 
@@ -88,10 +88,11 @@ void CommonConfigProvider::Init(const string& dir) {
             string host = configServerAddress[0];
             int32_t port = atoi(configServerAddress[1].c_str());
 
-            if (port < 1 || port > 65535)
+            if (port < 1 || port > 65535) {
                 LOG_WARNING(sLogger, ("configserver_address", "illegal port")("port", port));
-            else
-                mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
+                continue;
+            } 
+            mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
         }
 
         mConfigServerAvailable = true;
@@ -168,7 +169,7 @@ void CommonConfigProvider::CheckUpdateThread() {
     unique_lock<mutex> lock(mThreadRunningMux);
     while (mIsThreadRunning) {
         int32_t curTime = time(NULL);
-        if (curTime - lastCheckTime >= INT32_FLAG(heartbeat_update_interval)) {
+        if (curTime - lastCheckTime >= INT32_FLAG(heartbeat_interval)) {
             GetConfigUpdate();
             lastCheckTime = curTime;
         }
@@ -256,7 +257,7 @@ void CommonConfigProvider::GetConfigUpdate() {
 
 configserver::proto::v2::HeartbeatRequest CommonConfigProvider::PrepareHeartbeat() {
     configserver::proto::v2::HeartbeatRequest heartbeatReq;
-    string requestID = sdk::Base64Enconde(string("Heartbeat").append(to_string(time(NULL))));
+    string requestID = CalculateRandomUUID();
     heartbeatReq.set_request_id(requestID);
     heartbeatReq.set_sequence_num(mSequenceNum);
     heartbeatReq.set_capabilities(configserver::proto::v2::AcceptsProcessConfig
@@ -315,7 +316,7 @@ bool CommonConfigProvider::SendHeartbeat(const configserver::proto::v2::Heartbea
     string reqBody;
     heartbeatReq.SerializeToString(&reqBody);
     std::string heartbeatResp;
-    if (SendHttpRequest(operation, reqBody, "SendHeartbeat", heartbeatResp)) {
+    if (SendHttpRequest(operation, reqBody, "SendHeartbeat", heartbeatReq.request_id(), heartbeatResp)) {
         configserver::proto::v2::HeartbeatResponse heartbeatRespPb;
         heartbeatRespPb.ParseFromString(heartbeatResp);
         heartbeatResponse.Swap(&heartbeatRespPb);
@@ -328,13 +329,14 @@ bool CommonConfigProvider::SendHeartbeat(const configserver::proto::v2::Heartbea
 bool CommonConfigProvider::SendHttpRequest(const string& operation,
                                            const string& reqBody,
                                            const string& configType,
+                                           const std::string& requestId,
                                            std::string& resp) {
     // LCOV_EXCL_START
     ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
     map<string, string> httpHeader;
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
     sdk::HttpMessage httpResponse;
-    httpResponse.header[sdk::X_LOG_REQUEST_ID] = "ConfigServer";
+    httpResponse.header[sdk::X_LOG_REQUEST_ID] = requestId;
     sdk::CurlClient client;
 
     try {
@@ -499,7 +501,7 @@ bool CommonConfigProvider::FetchProcessConfigFromServer(
     ::configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
     ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& res) {
     configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
-    string requestID = sdk::Base64Enconde(string("FetchProcessConfig").append(to_string(time(NULL))));
+    string requestID = CalculateRandomUUID();
     fetchConfigRequest.set_request_id(requestID);
     fetchConfigRequest.set_instance_id(GetInstanceId());
     for (const auto& config : heartbeatResponse.process_config_updates()) {
@@ -512,7 +514,7 @@ bool CommonConfigProvider::FetchProcessConfigFromServer(
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
     string fetchConfigResponse;
-    if (SendHttpRequest(operation, reqBody, "FetchProcessConfig", fetchConfigResponse)) {
+    if (SendHttpRequest(operation, reqBody, "FetchProcessConfig", fetchConfigRequest.request_id(), fetchConfigResponse)) {
         configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
         fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
         res.Swap(fetchConfigResponsePb.mutable_config_details());
@@ -525,7 +527,7 @@ bool CommonConfigProvider::FetchPipelineConfigFromServer(
     ::configserver::proto::v2::HeartbeatResponse& heartbeatResponse,
     ::google::protobuf::RepeatedPtrField< ::configserver::proto::v2::ConfigDetail>& res) {
     configserver::proto::v2::FetchConfigRequest fetchConfigRequest;
-    string requestID = sdk::Base64Enconde(string("FetchPipelineConfig").append(to_string(time(NULL))));
+    string requestID = CalculateRandomUUID();
     fetchConfigRequest.set_request_id(requestID);
     fetchConfigRequest.set_instance_id(GetInstanceId());
     for (const auto& config : heartbeatResponse.pipeline_config_updates()) {
@@ -538,7 +540,7 @@ bool CommonConfigProvider::FetchPipelineConfigFromServer(
     string reqBody;
     fetchConfigRequest.SerializeToString(&reqBody);
     string fetchConfigResponse;
-    if (SendHttpRequest(operation, reqBody, "FetchPipelineConfig", fetchConfigResponse)) {
+    if (SendHttpRequest(operation, reqBody, "FetchPipelineConfig", fetchConfigRequest.request_id(), fetchConfigResponse)) {
         configserver::proto::v2::FetchConfigResponse fetchConfigResponsePb;
         fetchConfigResponsePb.ParseFromString(fetchConfigResponse);
         res.Swap(fetchConfigResponsePb.mutable_config_details());
