@@ -23,6 +23,12 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(LINUX TRUE)
 endif ()
 
+if(DEFINED APSARA_UNIT_TEST_MAIN)
+    add_definitions(-DVIRTUAL=virtual)
+else()
+    add_definitions(-DVIRTUAL=)
+endif()
+
 # Options.
 option(BUILD_LOGTAIL "Build Logtail executable and tools" ON)
 # Used under the Android environment.

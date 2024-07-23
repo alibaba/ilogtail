@@ -22,6 +22,7 @@
 #include "config/provider/CommonConfigProvider.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "gmock/gmock.h"
+#include "pipeline/PipelineManager.h"
 #include "pipeline/ProcessConfigManager.h"
 #include "unittest/Unittest.h"
 

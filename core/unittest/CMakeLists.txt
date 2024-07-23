@@ -16,6 +16,13 @@ cmake_minimum_required(VERSION 3.22)
 project(unittest_base)
 
 add_definitions(-DAPSARA_UNIT_TEST_MAIN)
+
+if(DEFINED APSARA_UNIT_TEST_MAIN)
+    add_definitions(-DVIRTUAL=virtual)
+else()
+    add_definitions(-DVIRTUAL=)
+endif()
+
 set(NO_TCMALLOC TRUE)
 add_definitions(-DLOGTAIL_NO_TC_MALLOC)
 if (MSVC)
