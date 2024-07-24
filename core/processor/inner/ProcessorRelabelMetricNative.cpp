@@ -17,6 +17,8 @@
 
 #include <json/json.h>
 
+#include <cstddef>
+
 #include "PipelineEventGroup.h"
 #include "PipelineEventPtr.h"
 #include "models/MetricEvent.h"
@@ -50,11 +52,19 @@ void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     if (metricGroup.GetEvents().empty()) {
         return;
     }
-    EventsContainer newEvents;
-    for (PipelineEventPtr& e : metricGroup.MutableEvents()) {
-        ProcessEvent(metricGroup, e, newEvents);
+
+    EventsContainer& events = metricGroup.MutableEvents();
+
+    size_t wIdx = 0;
+    for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
+        if (!ProcessEvent(events[rIdx])) {
+            if (wIdx != rIdx) {
+                events[wIdx] = std::move(events[rIdx]);
+            }
+            ++wIdx;
+        }
     }
-    metricGroup.SwapEvents(newEvents);
+    events.resize(wIdx);
     return;
 }
 
@@ -74,18 +84,13 @@ bool ProcessorRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) c
     return false;
 }
 
-void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
-                                                PipelineEventPtr& e,
-                                                EventsContainer& newEvents) {
+bool ProcessorRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
     LOG_INFO(sLogger, ("processor ProcessEvent", sName)("config", mContext->GetConfigName()));
     if (!IsSupportedEvent(e)) {
-        newEvents.emplace_back(std::move(e));
-        return;
+        return false;
     }
     MetricEvent& sourceEvent = e.Cast<MetricEvent>();
 
-    string errorMsg;
-    // process metricEvent
     Labels labels;
 
     // TODO: 使用Labels类作为对MetricEvent操作的适配器
@@ -94,8 +99,6 @@ void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
 
     // if keep this sourceEvent
     if (relabel::Process(labels, mRelabelConfigs, result)) {
-        // modify sourceEvent by result
-
         // if k/v in labels by not result, then delete it
         labels.Range([&result, &sourceEvent](const Label& label) {
             if (result.Get(label.name).empty()) {
@@ -110,8 +113,9 @@ void ProcessorRelabelMetricNative::ProcessEvent(PipelineEventGroup& metricGroup,
         if (!result.Get("__name__").empty()) {
             sourceEvent.SetName(result.Get("__name__"));
         }
-        newEvents.emplace_back(std::move(e));
+        return true;
     }
+    return false;
 }
 
 } // namespace logtail
