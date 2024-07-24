@@ -57,7 +57,7 @@ void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
 
     size_t wIdx = 0;
     for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
-        if (!ProcessEvent(events[rIdx])) {
+        if (ProcessEvent(events[rIdx])) {
             if (wIdx != rIdx) {
                 events[wIdx] = std::move(events[rIdx]);
             }
