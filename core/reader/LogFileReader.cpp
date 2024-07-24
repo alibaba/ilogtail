@@ -56,7 +56,6 @@
 #include "rapidjson/document.h"
 #include "reader/JsonLogFileReader.h"
 #include "sdk/Common.h"
-#include "sender/Sender.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -222,7 +221,7 @@ void LogFileReader::SetMetrics() {
     mInputFileOffsetBytesGauge = mMetricsRecordRef->GetGauge(METRIC_INPUT_FILE_OFFSET_BYTES);
 }
 
-void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
+void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray) {
     if (checkConfigFlag) {
         size_t index = mHostLogPath.rfind(PATH_SEPARATOR);
         if (index == string::npos || index == mHostLogPath.size() - 1) {
@@ -264,6 +263,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
+    checkPointPtr->mPositionInReaderArray = idxInReaderArray;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -307,12 +307,15 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
             mContainerStopped = checkPointPtr->mContainerStopped;
+            // new property to recover reader exactly from checkpoint
+            mIdxInReaderArrayFromLastCpt = checkPointPtr->mPositionInReaderArray;
             LOG_INFO(sLogger,
                      ("recover log reader status from checkpoint, project", GetProject())("logstore", GetLogstore())(
-                         "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
-                         "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
-                         "real file path", mRealLogPath)("last file position", mLastFilePos));
+                         "config", GetConfigName())("log reader queue name", mHostLogPath)("file device",
+                                                                                           ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file signature size", mLastFileSignatureSize)("real file path", mRealLogPath)(
+                         "last file position", mLastFilePos)("index in reader array", mIdxInReaderArrayFromLastCpt));
             // if file is open or
             // last update time is new and the file's container is not stopped we
             // we should use first modify
@@ -2240,13 +2243,13 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
 }
 
 std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
-    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir,
-                                                   mHostLogPathFile,
-                                                   EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY,
-                                                   -1,
-                                                   0,
-                                                   mDevInode.dev,
-                                                   mDevInode.inode));
+    auto result = std::make_unique<Event>(mHostLogPathDir,
+                                          mHostLogPathFile,
+                                          EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY,
+                                          -1,
+                                          0,
+                                          mDevInode.dev,
+                                          mDevInode.inode);
     result->SetLastFilePos(mLastFilePos);
     result->SetLastReadPos(GetLastReadPos());
     return result;
@@ -2567,7 +2570,7 @@ void LogFileReader::SetEventGroupMetaAndTag(PipelineEventGroup& group) {
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, GetHostLogPath());
         group.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE, ToString(GetDevInode().inode));
     }
-    group.SetMetadata(EventGroupMetaKey::SOURCE_ID, ToString(GetSourceId()));
+    group.SetMetadata(EventGroupMetaKey::SOURCE_ID, GetSourceId());
 
     // for source-specific info without fixed key, we store them in tags directly
     // for log, these includes:
