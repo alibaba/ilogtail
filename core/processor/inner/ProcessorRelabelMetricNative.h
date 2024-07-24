@@ -36,7 +36,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvent(PipelineEventGroup& metricGroup, PipelineEventPtr&& e, EventsContainer& newEvents);
+    bool ProcessEvent( PipelineEventPtr& e);
 
     std::vector<RelabelConfig> mRelabelConfigs;
 

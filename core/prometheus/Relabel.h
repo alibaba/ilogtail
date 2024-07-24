@@ -20,26 +20,26 @@
 #include <boost/regex.hpp>
 #include <string>
 
-#include "Labels.h"
+#include "prometheus/Labels.h"
 
 namespace logtail {
 
 enum class Action {
-    replace,
-    keep,
-    drop,
-    keepequal,
-    dropequal,
-    hashmod,
-    labelmap,
-    labeldrop,
-    labelkeep,
-    lowercase,
-    uppercase,
-    undefined
+    REPLACE,
+    KEEP,
+    DROP,
+    KEEPEQUAL,
+    DROPEQUAL,
+    HASHMOD,
+    LABELMAP,
+    LABELDROP,
+    LABELKEEP,
+    LOWERCASE,
+    UPPERCASE,
+    UNDEFINED
 };
 
-std::string ActionToString(Action action);
+const std::string& ActionToString(Action action);
 Action StringToAction(std::string action);
 
 class LabelName {
