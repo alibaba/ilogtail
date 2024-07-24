@@ -32,7 +32,7 @@ enum class MetricType {
 class Counter {
 private:
     std::string mName;
-    std::atomic_long mVal;
+    std::atomic_uint64_t mVal;
 
 public:
     Counter(const std::string& name, uint64_t val);
@@ -47,13 +47,13 @@ using CounterPtr = std::shared_ptr<Counter>;
 class Gauge {
 private:
     std::string mName;
-    std::atomic_long mVal;
+    std::atomic<double> mVal;
 
 public:
-    Gauge(const std::string& name, uint64_t val);
-    uint64_t GetValue() const;
+    Gauge(const std::string& name, double val);
+    double GetValue() const;
     const std::string& GetName() const;
-    void Set(uint64_t val);
+    void Set(double val);
     Gauge* Collect();
 };
 
@@ -70,12 +70,15 @@ private:
     std::vector<GaugePtr> mGauges;
     MetricsRecord* mNext = nullptr;
 
+    mutable std::mutex mLabelsMutex;
+
 public:
     MetricsRecord(LabelsPtr labels);
     MetricsRecord() = default;
     void MarkDeleted();
     bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
+    void SetLabels(LabelsPtr labels);
     const std::vector<CounterPtr>& GetCounters() const;
     const std::vector<GaugePtr>& GetGauges() const;
     CounterPtr CreateCounter(const std::string& name);
@@ -88,8 +91,6 @@ public:
 class MetricsRecordRef {
 private:
     MetricsRecord* mMetrics = nullptr;
-    std::vector<CounterPtr> mCounters;
-    std::vector<GaugePtr> mGauges;
 
 public:
     ~MetricsRecordRef();
@@ -99,6 +100,7 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
+    void SetLabels(LabelsPtr labels);
     const LabelsPtr& GetLabels() const;
     CounterPtr CreateCounter(const std::string& name);
     GaugePtr CreateGauge(const std::string& name);

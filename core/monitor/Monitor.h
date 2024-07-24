@@ -21,6 +21,8 @@
 #include <mutex>
 #include <string>
 
+#include "LogtailMetric.h"
+#include "MetricConstants.h"
 #include "MetricStore.h"
 #include "profile_sender/ProfileSender.h"
 #if defined(_MSC_VER)
@@ -156,8 +158,14 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
+    GaugePtr mGlobalCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
+    GaugePtr mGlobalMemoryGauge;
+
+    GaugePtr mGlobalPluginTotal;
+    GaugePtr mGlobalEnvConfigTotal;
+    GaugePtr mGlobalUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
@@ -177,6 +185,34 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ConfigUpdatorUnittest;
 #endif
+};
+
+class LoongCollectorMonitor {
+public:
+    static LoongCollectorMonitor* GetInstance();
+
+    void Init();
+    void Stop();
+
+    void UpdateLabel(std::string key, std::string value);
+    CounterPtr GetCounter(std::string key);
+    GaugePtr GetGauge(std::string key);
+
+private:
+    MetricLabels GenLabels();
+
+    bool isReady;
+    mutable std::mutex mMetricRecordLabelsMutex;
+    // MetricRecord
+    MetricsRecordRef mMetricsRecordRef;
+    // labels
+    std::unordered_map<std::string, std::string> mLabels;
+    // metrics
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, GaugePtr> mGauges;
+
+    // GaugePtr mGlobalCrdConfigTotal;
+    // GaugePtr mGlobalConsoleConfigTotal;
 };
 
 } // namespace logtail

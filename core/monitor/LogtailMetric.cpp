@@ -29,7 +29,7 @@ Counter::Counter(const std::string& name, uint64_t val = 0) : mName(name), mVal(
 }
 
 uint64_t Counter::GetValue() const {
-    return mVal;
+    return mVal.load();
 }
 
 const std::string& Counter::GetName() const {
@@ -41,14 +41,14 @@ Counter* Counter::Collect() {
 }
 
 void Counter::Add(uint64_t value) {
-    mVal += value;
+    mVal.fetch_add(value);
 }
 
-Gauge::Gauge(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
+Gauge::Gauge(const std::string& name, double val = 0) : mName(name), mVal(val) {
 }
 
-uint64_t Gauge::GetValue() const {
-    return mVal;
+double Gauge::GetValue() const {
+    return mVal.load();
 }
 
 const std::string& Gauge::GetName() const {
@@ -59,8 +59,8 @@ Gauge* Gauge::Collect() {
     return new Gauge(mName, mVal);
 }
 
-void Gauge::Set(uint64_t value) {
-    mVal = value;
+void Gauge::Set(double value) {
+    mVal.store(value);
 }
 
 MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
@@ -87,7 +87,13 @@ bool MetricsRecord::IsDeleted() const {
 }
 
 const LabelsPtr& MetricsRecord::GetLabels() const {
+    std::lock_guard<std::mutex> lock(mLabelsMutex);
     return mLabels;
+}
+
+void MetricsRecord::SetLabels(LabelsPtr labels) {
+    std::lock_guard<std::mutex> lock(mLabelsMutex);
+    mLabels = labels;
 }
 
 const std::vector<CounterPtr>& MetricsRecord::GetCounters() const {
@@ -99,7 +105,11 @@ const std::vector<GaugePtr>& MetricsRecord::GetGauges() const {
 }
 
 MetricsRecord* MetricsRecord::Collect() {
-    MetricsRecord* metrics = new MetricsRecord(mLabels);
+    MetricsRecord* metrics;
+    {
+        std::lock_guard<std::mutex> lock(mLabelsMutex);
+        metrics = new MetricsRecord(mLabels);
+    }
     for (auto& item : mCounters) {
         CounterPtr newPtr(item->Collect());
         metrics->mCounters.emplace_back(newPtr);
@@ -127,6 +137,10 @@ MetricsRecordRef::~MetricsRecordRef() {
 
 void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
+}
+
+void MetricsRecordRef::SetLabels(LabelsPtr labels) {
+    mMetrics->SetLabels(labels);
 }
 
 const LabelsPtr& MetricsRecordRef::GetLabels() const {
