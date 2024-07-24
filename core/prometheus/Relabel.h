@@ -20,7 +20,7 @@
 #include <boost/regex.hpp>
 #include <string>
 
-#include "Labels.h"
+#include "prometheus/Labels.h"
 
 namespace logtail {
 
@@ -39,7 +39,7 @@ enum class Action {
     UNDEFINED
 };
 
-std::string ActionToString(Action action);
+const std::string& ActionToString(Action action);
 Action StringToAction(std::string action);
 
 class LabelName {

@@ -23,7 +23,7 @@
 #include <boost/regex.hpp>
 #include <string>
 
-#include "ParamExtractor.h"
+#include "common/ParamExtractor.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 
@@ -57,7 +57,7 @@ Action StringToAction(string action) {
     return Action::UNDEFINED;
 }
 
-std::string ActionToString(Action action) {
+const std::string& ActionToString(Action action) {
     static std::map<Action, std::string> actionStrings{ENUM_TO_STRING_CASE(REPLACE),
                                                        ENUM_TO_STRING_CASE(KEEP),
                                                        ENUM_TO_STRING_CASE(DROP),
@@ -69,12 +69,12 @@ std::string ActionToString(Action action) {
                                                        ENUM_TO_STRING_CASE(LABELKEEP),
                                                        ENUM_TO_STRING_CASE(LOWERCASE),
                                                        ENUM_TO_STRING_CASE(UPPERCASE)};
-
+    static string undefined = "undefined";
     auto it = actionStrings.find(action);
     if (it != actionStrings.end()) {
         return it->second;
     }
-    return "undefined";
+    return undefined;
 }
 
 RelabelConfig::RelabelConfig() {
