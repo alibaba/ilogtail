@@ -24,7 +24,7 @@
 #include "Common.h"
 #include "CurlImp.h"
 #include "Exception.h"
-#include "ScrapeWork.h"
+#include "JsonUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -57,7 +57,6 @@ ScrapeJob::ScrapeJob() {
     mClient = make_unique<sdk::CurlClient>();
 }
 
-/// @brief Construct from json config
 bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
     mScrapeConfigPtr = std::make_shared<ScrapeConfig>();
     if (!mScrapeConfigPtr->Init(scrapeConfig)) {
@@ -69,12 +68,10 @@ bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
 }
 
 
-// TODO: completely validate logic
 bool ScrapeJob::Validation() const {
     return !mJobName.empty();
 }
 
-/// @brief JobName must be unique
 bool ScrapeJob::operator<(const ScrapeJob& other) const {
     return mJobName < other.mJobName;
 }
@@ -123,6 +120,7 @@ void ScrapeJob::TargetsDiscoveryLoop() {
         if (!ParseTargetGroups(readBuffer, newScrapeTargetsMap)) {
             continue;
         }
+        lock_guard<mutex> lock(mMutex);
         mScrapeTargetsMap = std::move(newScrapeTargetsMap);
     }
 }
@@ -162,10 +160,10 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
 bool ScrapeJob::ParseTargetGroups(const string& response,
                                   unordered_map<string, ScrapeTarget>& newScrapeTargetsMap) const {
     Json::CharReaderBuilder readerBuilder;
-    JSONCPP_STRING errs;
+    string errs;
     Json::Value root;
     istringstream s(response);
-    if (!Json::parseFromStream(readerBuilder, s, &root, &errs)) {
+    if (!ParseJsonTable(response, root, errs)) {
         LOG_ERROR(sLogger,
                   ("http service discovery from operator failed", "Failed to parse JSON: " + errs)("job", mJobName));
         return false;

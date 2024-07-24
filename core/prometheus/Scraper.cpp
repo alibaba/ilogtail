@@ -74,15 +74,14 @@ void ScraperGroup::UpdateScrapeWork(const string& jobName) {
 void ScraperGroup::UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr) {
     RemoveScrapeJob(scrapeJobPtr->mJobName);
 
-    lock_guard<mutex> lock(mMutex);
-
     scrapeJobPtr->StartTargetsDiscoverLoop();
+
+    lock_guard<mutex> lock(mMutex);
     mScrapeJobMap[scrapeJobPtr->mJobName] = std::move(scrapeJobPtr);
 }
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
     lock_guard<mutex> lock(mMutex);
-
     if (mScrapeJobMap.find(jobName) != mScrapeJobMap.end()) {
         mScrapeJobMap[jobName]->StopTargetsDiscoverLoop();
         for (auto& [_, work] : mScrapeWorkMap[jobName]) {

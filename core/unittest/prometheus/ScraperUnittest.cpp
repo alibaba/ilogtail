@@ -17,6 +17,8 @@
 #include <string>
 #include <thread>
 
+#include "JsonUtil.h"
+#include "StringTools.h"
 #include "prometheus/Labels.h"
 #include "prometheus/ScrapeWork.h"
 #include "prometheus/Scraper.h"
@@ -60,6 +62,60 @@ void MockScraperHttpClient::Send(const std::string& httpMethod,
                                  const std::string& intf,
                                  const bool httpsFlag) {
     httpMessage.statusCode = 200;
+    if (StartWith(url, "/jobs/")) {
+        httpMessage.content = R"JSON({
+        {
+            "targets": [
+                "192.168.22.7:8080"
+            ],
+            "labels": {
+                "__meta_kubernetes_pod_controller_kind": "ReplicaSet",
+                "__meta_kubernetes_pod_container_image": "registry-vpc.cn-hangzhou.aliyuncs.com/acs/kube-state-metrics:v2.3.0-a71f78c-aliyun",
+                "__meta_kubernetes_namespace": "arms-prom",
+                "__meta_kubernetes_pod_labelpresent_pod_template_hash": "true",
+                "__meta_kubernetes_pod_uid": "00d1897f-d442-47c4-8423-e9bf32dea173",
+                "__meta_kubernetes_pod_container_init": "false",
+                "__meta_kubernetes_pod_container_port_protocol": "TCP",
+                "__meta_kubernetes_pod_host_ip": "192.168.21.234",
+                "__meta_kubernetes_pod_controller_name": "kube-state-metrics-64cf88c8f4",
+                "__meta_kubernetes_pod_annotation_k8s_aliyun_com_pod_ips": "192.168.22.7",
+                "__meta_kubernetes_pod_ready": "true",
+                "__meta_kubernetes_pod_node_name": "cn-hangzhou.192.168.21.234",
+                "__meta_kubernetes_pod_annotationpresent_k8s_aliyun_com_pod_ips": "true",
+                "__address__": "192.168.22.7:8080",
+                "__meta_kubernetes_pod_labelpresent_k8s_app": "true",
+                "__meta_kubernetes_pod_label_k8s_app": "kube-state-metrics",
+                "__meta_kubernetes_pod_container_id": "containerd://57c4dfd8d9ea021defb248dfbc5cc3bd3758072c4529be351b8cc6838bdff02f",
+                "__meta_kubernetes_pod_container_port_number": "8080",
+                "__meta_kubernetes_pod_ip": "192.168.22.7",
+                "__meta_kubernetes_pod_phase": "Running",
+                "__meta_kubernetes_pod_container_name": "kube-state-metrics",
+                "__meta_kubernetes_pod_container_port_name": "http-metrics",
+                "__meta_kubernetes_pod_label_pod_template_hash": "64cf88c8f4",
+                "__meta_kubernetes_pod_name": "kube-state-metrics-64cf88c8f4-jtn6v"
+            }
+        },
+        {
+            "targets": [
+                "192.168.22.31:6443"
+            ],
+            "labels": {
+                "__address__": "192.168.22.31:6443",
+                "__meta_kubernetes_endpoint_port_protocol": "TCP",
+                "__meta_kubernetes_service_label_provider": "kubernetes",
+                "__meta_kubernetes_endpoints_name": "kubernetes",
+                "__meta_kubernetes_service_name": "kubernetes",
+                "__meta_kubernetes_endpoints_labelpresent_endpointslice_kubernetes_io_skip_mirror": "true",
+                "__meta_kubernetes_service_labelpresent_provider": "true",
+                "__meta_kubernetes_endpoint_port_name": "https",
+                "__meta_kubernetes_namespace": "default",
+                "__meta_kubernetes_service_label_component": "apiserver",
+                "__meta_kubernetes_service_labelpresent_component": "true",
+                "__meta_kubernetes_endpoint_ready": "true"
+            }
+        }
+        })JSON";
+    }
 }
 
 void MockScraperHttpClient::AsynSend(sdk::AsynRequest* request) {
@@ -70,31 +126,54 @@ public:
     void OnUpdateScrapeJob();
     void OnRemoveScrapeJob();
 
+protected:
+    void SetUp() override {
+        setenv("POD_NAME", "matrix-test", 1);
+        setenv("OPERATOR_HOST", "127.0.0.1", 1);
+        setenv("OPERATOR_PORT", "12345", 1);
+    }
+    void TearDown() override {
+        unsetenv("POD_NAME");
+        unsetenv("OPERATOR_HOST");
+        unsetenv("OPERATOR_PORT");
+    }
+
 private:
 };
 
 
 void ScraperGroupUnittest::OnUpdateScrapeJob() {
+    Json::Value config;
+    string errorMsg, configStr;
     // start scraper group first
     ScraperGroup::GetInstance()->Start();
 
+    configStr = R"JSON({
+        "job_name": "test_job",
+        "scheme": "http",
+        "metrics_path": "/metrics",
+        "scrape_interval": "30s",
+        "scrape_timeout": "30s"
+    })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+
+
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "", 3, 3, map<string, string>()));
     Labels labels;
     labels.Push(Label{"test_label", "test_value"});
     labels.Push(Label{"__address__", "192.168.0.1:1234"});
     labels.Push(Label{"job", "test_job"});
+    scrapeTargets.push_back(ScrapeTarget(labels));
 
-    scrapeTargets[0].SetLabels(labels);
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
-    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>();
+
+    APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
     scrapeJobPtr->mClient.reset(new MockScraperHttpClient());
 
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->mScrapeWorkMap.empty());
     ScraperGroup::GetInstance()->UpdateScrapeJob(std::move(scrapeJobPtr));
 
-    // sleep 6s
     std::this_thread::sleep_for(std::chrono::seconds(6));
     APSARA_TEST_EQUAL((size_t)1,
                       ScraperGroup::GetInstance()->mScrapeJobMap["test_job"]->GetScrapeTargetsMapCopy().size());
@@ -106,19 +185,30 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
 }
 
 void ScraperGroupUnittest::OnRemoveScrapeJob() {
+    Json::Value config;
+    string errorMsg, configStr;
     // start scraper group first
     ScraperGroup::GetInstance()->Start();
 
     // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
-    scrapeTargets.push_back(ScrapeTarget("test_job", "/metrics", "http", "", 3, 4, map<string, string>()));
     Labels labels;
     labels.Push(Label{"test_label", "test_value"});
     labels.Push(Label{"__address__", "192.168.0.1:1234"});
     labels.Push(Label{"job", "test_job"});
+    scrapeTargets.push_back(ScrapeTarget(labels));
 
-    scrapeTargets[0].SetLabels(labels);
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>("test_job", "/metrics", "http", 3, 3);
+    configStr = R"JSON({
+        "job_name": "test_job",
+        "scheme": "http",
+        "metrics_path": "/metrics",
+        "scrape_interval": "30s",
+        "scrape_timeout": "30s"
+    })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+
+    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>();
+    APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
     scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
     scrapeJobPtr->mClient.reset(new MockScraperHttpClient());
 

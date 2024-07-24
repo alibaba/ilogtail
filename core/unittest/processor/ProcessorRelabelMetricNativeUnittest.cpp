@@ -40,7 +40,7 @@ void ProcessorRelabelMetricNativeUnittest::TestInit() {
 
     // success config
     string configStr, errorMsg;
-    configStr = configStr + R"(
+    configStr = R"JSON(
         {
             "metric_relabel_configs": [
                 {
@@ -54,9 +54,7 @@ void ProcessorRelabelMetricNativeUnittest::TestInit() {
                 },
                 {
                     "action": "replace",
-                    "regex": "(.*)"
-        + ")\",\n" +
-        R"(
+                    "regex": "(.*)",
                     "replacement": "${1}:9100",
                     "separator": ";",
                     "source_labels": [
@@ -66,7 +64,7 @@ void ProcessorRelabelMetricNativeUnittest::TestInit() {
                 }
             ]
         }
-    )";
+    )JSON";
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     APSARA_TEST_TRUE(processor.Init(config));

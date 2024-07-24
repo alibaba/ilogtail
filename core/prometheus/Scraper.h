@@ -29,11 +29,6 @@
 
 namespace logtail {
 
-// TODO: 使用Scraper 进行异步改造
-// class Scraper{
-// }
-
-/// @brief 管理所有的ScrapeJob
 class ScraperGroup {
 public:
     static ScraperGroup* GetInstance() {

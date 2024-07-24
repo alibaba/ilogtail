@@ -90,6 +90,7 @@ private:
     friend class ScrapeJobUnittest;
     friend class PrometheusInputRunnerUnittest;
     friend class ScraperGroupUnittest;
+    friend class InputPrometheusUnittest;
 #endif
 };
 
