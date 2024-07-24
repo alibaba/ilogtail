@@ -69,23 +69,10 @@ void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
 }
 
 bool ProcessorRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
-    if (e.Is<MetricEvent>()) {
-        return true;
-    }
-    LOG_ERROR(
-        mContext->GetLogger(),
-        ("unexpected error", "unsupported metric event")("processor", sName)("config", mContext->GetConfigName()));
-    mContext->GetAlarm().SendAlarm(RELABEL_METRIC_FAIL_ALARM,
-                                   "unexpected error: unsupported metric event.\tprocessor: " + sName
-                                       + "\tconfig: " + mContext->GetConfigName(),
-                                   mContext->GetProjectName(),
-                                   mContext->GetLogstoreName(),
-                                   mContext->GetRegion());
-    return false;
+    return e.Is<MetricEvent>();
 }
 
 bool ProcessorRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
-    LOG_INFO(sLogger, ("processor ProcessEvent", sName)("config", mContext->GetConfigName()));
     if (!IsSupportedEvent(e)) {
         return false;
     }
