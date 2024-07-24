@@ -50,12 +50,18 @@ bool FlusherRunner::Init() {
 
 void FlusherRunner::Stop() {
     mIsFlush = true;
+    SenderQueueManager::GetInstance()->Trigger();
     future_status s = mThreadRes.wait_for(chrono::seconds(10));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("flusher runner", "stopped successfully"));
     } else {
         LOG_WARNING(sLogger, ("flusher runner", "forced to stopped"));
     }
+}
+
+void FlusherRunner::SubSendingBufferCount() {
+    --mSendingBufferCount;
+    SenderQueueManager::GetInstance()->Trigger();
 }
 
 void FlusherRunner::PushToHttpSink(SenderQueueItem* item) {
@@ -79,27 +85,26 @@ void FlusherRunner::Run() {
     LOG_INFO(sLogger, ("flusher runner", "started"));
     while (true) {
         int32_t curTime = time(NULL);
-        SenderQueueManager::GetInstance()->Wait(1000);
-        vector<SenderQueueItem*> items;
-        if (Application::GetInstance()->IsExiting()) {
-            SenderQueueManager::GetInstance()->GetAllAvailableItems(items, false);
-        } else {
-            SenderQueueManager::GetInstance()->GetAllAvailableItems(items);
-        }
         mLastDaemonRunTime = curTime;
 
-        // smoothing send tps, walk around webserver load burst
-        uint32_t bufferPackageCount = items.size();
-        if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendRandomSleep()) {
-            int64_t sleepMicroseconds = 0;
-            if (bufferPackageCount < 20)
-                sleepMicroseconds = (rand() % 30) * 10000; // 0ms ~ 300ms
-            else if (bufferPackageCount < 30)
-                sleepMicroseconds = (rand() % 20) * 10000; // 0ms ~ 200ms
-            else if (bufferPackageCount < 40)
-                sleepMicroseconds = (rand() % 10) * 10000; // 0ms ~ 100ms
-            if (sleepMicroseconds > 0)
-                usleep(sleepMicroseconds);
+        vector<SenderQueueItem*> items;
+        SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());
+        if (items.empty()) {
+            SenderQueueManager::GetInstance()->Wait(1000);
+        } else {
+            // smoothing send tps, walk around webserver load burst
+            uint32_t bufferPackageCount = items.size();
+            if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendRandomSleep()) {
+                int64_t sleepMicroseconds = 0;
+                if (bufferPackageCount < 20)
+                    sleepMicroseconds = (rand() % 30) * 10000; // 0ms ~ 300ms
+                else if (bufferPackageCount < 30)
+                    sleepMicroseconds = (rand() % 20) * 10000; // 0ms ~ 200ms
+                else if (bufferPackageCount < 40)
+                    sleepMicroseconds = (rand() % 10) * 10000; // 0ms ~ 100ms
+                if (sleepMicroseconds > 0)
+                    usleep(sleepMicroseconds);
+            }
         }
 
         for (auto itr = items.begin(); itr != items.end(); ++itr) {

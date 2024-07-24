@@ -39,7 +39,7 @@ bool HttpSink::Init() {
 
 void HttpSink::Stop() {
     mIsFlush = true;
-    future_status s = mThreadRes.wait_for(chrono::seconds(10));
+    future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("http sink", "stopped successfully"));
     } else {
@@ -56,6 +56,8 @@ void HttpSink::Run() {
             }
         } else if (mIsFlush && mQueue.Empty()) {
             break;
+        } else {
+            continue;
         }
         DoRun();
     }
@@ -118,7 +120,7 @@ void HttpSink::DoRun() {
         HandleCompletedRequests();
 
         unique_ptr<HttpRequest> request;
-        if (mQueue.WaitAndPop(request, 500)) {
+        if (mQueue.TryPop(request)) {
             if (AddRequestToClient(std::move(request))) {
                 ++runningHandlers;
             }

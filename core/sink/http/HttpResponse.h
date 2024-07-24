@@ -30,6 +30,8 @@ struct HttpResponse {
     int32_t mStatusCode = 0; // 0 means no response from server
     std::map<std::string, std::string, decltype(compareHeader)*> mHeader;
     std::string mBody;
+
+    HttpResponse(): mHeader(compareHeader) {}
 };
 
 } // namespace logtail

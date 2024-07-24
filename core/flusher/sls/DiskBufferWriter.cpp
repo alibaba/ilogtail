@@ -91,7 +91,8 @@ bool DiskBufferWriter::PushToDiskBuffer(SenderQueueItem* item, uint32_t retryTim
 
     uint32_t retry = 0;
     while (++retry < retryTimes) {
-        if (Application::GetInstance()->IsExiting() || mQueue.Size() < static_cast<size_t>(INT32_FLAG(secondary_buffer_count_limit))) {
+        if (Application::GetInstance()->IsExiting()
+            || mQueue.Size() < static_cast<size_t>(INT32_FLAG(secondary_buffer_count_limit))) {
             if (slsItem->mExactlyOnceCheckpoint != nullptr) {
                 // explicitly clone the data to avoid dataPtr be destructed by queue
                 mQueue.Push(item->Clone());
@@ -145,16 +146,18 @@ void DiskBufferWriter::BufferSenderThread() {
     unique_lock<mutex> lock(mBufferSenderThreadRunningMux);
     while (mIsSendBufferThreadRunning) {
         if (!SLSClientManager::GetInstance()->HasNetworkAvailable()) {
-            if (!mIsSendBufferThreadRunning)
+            if (mStopCV.wait_for(
+                    lock, chrono::seconds(mCheckPeriod), [this]() { return !mIsSendBufferThreadRunning; })) {
                 break;
-            sleep(mCheckPeriod);
+            }
             continue;
         }
         vector<string> filesToSend;
         if (!LoadFileToSend(mBufferDivideTime, filesToSend)) {
-            if (!mIsSendBufferThreadRunning)
+            if (mStopCV.wait_for(
+                    lock, chrono::seconds(mCheckPeriod), [this]() { return !mIsSendBufferThreadRunning; })) {
                 break;
-            sleep(mCheckPeriod);
+            }
             continue;
         }
         // mIsSendingBuffer = true;
