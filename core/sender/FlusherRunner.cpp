@@ -21,6 +21,7 @@
 #include "flusher/sls/DiskBufferWriter.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
+#include "queue/QueueKeyManager.h"
 #include "queue/SenderQueueItem.h"
 #include "queue/SenderQueueManager.h"
 #include "sink/http/HttpRequest.h"
@@ -108,20 +109,24 @@ void FlusherRunner::Run() {
         }
 
         for (auto itr = items.begin(); itr != items.end(); ++itr) {
-            int32_t logGroupWaitTime = curTime - (*itr)->mEnqueTime;
-            if (logGroupWaitTime > LOG_GROUP_WAIT_IN_QUEUE_ALARM_INTERVAL_SECOND) {
-                LOG_WARNING(sLogger,
-                            ("log group wait in queue for too long, may blocked by concurrency or quota",
-                             "")("log group wait time", logGroupWaitTime));
-                LogtailAlarm::GetInstance()->SendAlarm(LOG_GROUP_WAIT_TOO_LONG_ALARM,
-                                                       "log group wait in queue for too long, log group wait time "
-                                                           + ToString(logGroupWaitTime));
-            }
+            int32_t waitTime = curTime - (*itr)->mEnqueTime;
+            LOG_DEBUG(sLogger,
+                      ("got item from sender queue, item address",
+                       *itr)("config-flusher-dst", QueueKeyManager::GetInstance()->GetName((*itr)->mQueueKey))(
+                          "wait time", ToString(waitTime))("try cnt", ToString((*itr)->mTryCnt)));
+            // if (waitTime > LOG_GROUP_WAIT_IN_QUEUE_ALARM_INTERVAL_SECOND) {
+            //     LOG_WARNING(sLogger,
+            //                 ("log group wait in queue for too long, may blocked by concurrency or quota",
+            //                  "")("log group wait time", waitTime));
+            //     LogtailAlarm::GetInstance()->SendAlarm(LOG_GROUP_WAIT_TOO_LONG_ALARM,
+            //                                            "log group wait in queue for too long, log group wait time "
+            //                                                + ToString(waitTime));
+            // }
 
-            mLastSendDataTime = curTime;
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendFlowControl()) {
                 RateLimiter::FlowControl((*itr)->mRawSize, mSendLastTime, mSendLastByte, true);
             }
+
             int32_t beforeSleepTime = time(NULL);
             while (!Application::GetInstance()->IsExiting()
                    && GetSendingBufferCount() >= AppConfig::GetInstance()->GetSendRequestConcurrency()) {
@@ -143,6 +148,7 @@ void FlusherRunner::Run() {
 
             ++mSendingBufferCount;
             Dispatch(*itr);
+            mLastSendDataTime = curTime;
         }
 
         // TODO: move the following logic to scheduler

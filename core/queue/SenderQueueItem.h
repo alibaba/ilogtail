@@ -43,7 +43,7 @@ struct SenderQueueItem {
     SendingStatus mStatus = SendingStatus::IDLE;
     time_t mEnqueTime = 0;
     time_t mLastSendTime = 0;
-    uint32_t mSendRetryTimes = 0;
+    uint32_t mTryCnt = 1;
 
     SenderQueueItem(std::string&& data,
                     size_t rawSize,
@@ -56,8 +56,7 @@ struct SenderQueueItem {
           mType(type),
           mBufferOrNot(bufferOrNot),
           mFlusher(flusher),
-          mQueueKey(key),
-          mEnqueTime(time(nullptr)) {}
+          mQueueKey(key) {}
     virtual ~SenderQueueItem() = default;
 
     virtual SenderQueueItem* Clone() { return new SenderQueueItem(*this); }

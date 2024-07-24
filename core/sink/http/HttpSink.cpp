@@ -15,6 +15,7 @@
 #include "sink/http/HttpSink.h"
 
 #include "app_config/AppConfig.h"
+#include "common/StringTools.h"
 #include "common/http/Curl.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
@@ -51,6 +52,11 @@ void HttpSink::Run() {
     while (true) {
         unique_ptr<HttpRequest> request;
         if (mQueue.WaitAndPop(request, 500)) {
+            LOG_DEBUG(sLogger,
+                      ("got item from flusher runner, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "wait time", ToString(time(nullptr) - request->mItem->mLastSendTime))(
+                          "try cnt", ToString(request->mTryCnt)));
             if (!AddRequestToClient(std::move(request))) {
                 continue;
             }
@@ -83,12 +89,16 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpRequest>&& request) {
     if (curl == nullptr) {
         request->mItem->mStatus = SendingStatus::IDLE;
         FlusherRunner::GetInstance()->SubSendingBufferCount();
-        LOG_ERROR(sLogger, ("failed to send request", "failed to init curl handler"));
+        LOG_ERROR(sLogger,
+                  ("failed to send request", "failed to init curl handler")(
+                      "action", "put sender queue item back to sender queue")("item address", request->mItem)(
+                      "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey)));
         return false;
     }
 
     request->mPrivateData = headers;
     curl_easy_setopt(curl, CURLOPT_PRIVATE, request.get());
+    request->mLastSendTime = time(nullptr);
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
         request->mItem->mStatus = SendingStatus::IDLE;
@@ -97,8 +107,8 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpRequest>&& request) {
         LOG_ERROR(sLogger,
                   ("failed to send request",
                    "failed to add the easy curl handle to multi_handle")("errMsg", curl_multi_strerror(res))(
-                      "config-flusher-dst",
-                      QueueKeyManager::GetInstance()->GetName(request->mItem->mFlusher->GetQueueKey())));
+                      "action", "put sender queue item back to sender queue")("item address", request->mItem)(
+                      "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey)));
         return false;
     }
     // let sink destruct the request
@@ -121,6 +131,11 @@ void HttpSink::DoRun() {
 
         unique_ptr<HttpRequest> request;
         if (mQueue.TryPop(request)) {
+            LOG_DEBUG(sLogger,
+                      ("got item from flusher runner, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "wait time", ToString(time(nullptr) - request->mItem->mLastSendTime))(
+                          "try cnt", ToString(request->mTryCnt)));
             if (AddRequestToClient(std::move(request))) {
                 ++runningHandlers;
             }
@@ -173,6 +188,11 @@ void HttpSink::HandleCompletedRequests() {
             CURL* handler = msg->easy_handle;
             HttpRequest* request = nullptr;
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
+            LOG_DEBUG(sLogger,
+                      ("send http request completed, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "response time",
+                          ToString(time(nullptr) - request->mLastSendTime))("try cnt", ToString(request->mTryCnt)));
             switch (msg->data.result) {
                 case CURLE_OK: {
                     long statusCode = 0;
@@ -184,10 +204,10 @@ void HttpSink::HandleCompletedRequests() {
                 }
                 default:
                     // considered as network error
-                    if (++request->mRetryCnt < 3) {
+                    if (++request->mTryCnt <= 3) {
                         LOG_WARNING(
                             sLogger,
-                            ("failed to send request", "retry immediately")("retryCnt", request->mRetryCnt)(
+                            ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt)(
                                 "errMsg", curl_easy_strerror(msg->data.result))(
                                 "config-flusher-dst",
                                 QueueKeyManager::GetInstance()->GetName(request->mItem->mFlusher->GetQueueKey())));

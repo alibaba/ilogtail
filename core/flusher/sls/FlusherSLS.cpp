@@ -597,6 +597,9 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
     }
 
     auto data = static_cast<SLSSenderQueueItem*>(item);
+    string configName = HasContext() ? GetContext().GetConfigName() : "";
+    bool isProfileData = ProfileSender::GetInstance()->IsProfileData(mRegion, mProject, data->mLogstore);
+    int32_t curTime = time(NULL);
     if (slsResponse.mStatusCode == 200) {
         auto& cpt = data->mExactlyOnceCheckpoint;
         if (cpt) {
@@ -606,11 +609,12 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
 
         GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
         DealSenderQueueItemAfterSend(item, false);
+        LOG_DEBUG(sLogger,
+                  ("send data to sls succeeded, item address", item)("request id", slsResponse.mRequestId)(
+                      "config", configName)("region", mRegion)("project", mProject)("logstore", data->mLogstore)(
+                      "response time", curTime - data->mLastSendTime)("total send time", curTime - data->mEnqueTime)(
+                      "try cnt", data->mTryCnt)("endpoint", data->mCurrentEndpoint)("is profile data", isProfileData));
     } else {
-        string configName = HasContext() ? GetContext().GetConfigName() : "";
-
-        data->mSendRetryTimes++;
-        int32_t curTime = time(NULL);
         OperationOnFail operation;
         SendResult sendResult = ConvertErrorCode(slsResponse.mErrorCode);
         ostringstream failDetail, suggestion;
@@ -660,7 +664,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         } else if (sendResult == SEND_UNAUTHORIZED) {
             failDetail << "write unauthorized";
             suggestion << "check https connection to endpoint or access keys provided";
-            if (data->mSendRetryTimes > static_cast<uint32_t>(INT32_FLAG(unauthorized_send_retrytimes))) {
+            if (data->mTryCnt > static_cast<uint32_t>(INT32_FLAG(unauthorized_send_retrytimes))) {
                 operation = OperationOnFail::DISCARD;
             } else {
                 BOOL_FLAG(global_network_success) = true;
@@ -684,7 +688,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
         } else if (sendResult == SEND_PARAMETER_INVALID) {
             failDetail << "invalid paramters";
             suggestion << "check input parameters";
-            operation = DefaultOperation(item->mSendRetryTimes);
+            operation = DefaultOperation(item->mTryCnt);
         } else if (sendResult == SEND_INVALID_SEQUENCE_ID) {
             failDetail << "invalid exactly-once sequence id";
             do {
@@ -732,23 +736,23 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             // first time, we will retry immediately
             // then we record error and retry latter
             // when retry times > unknow_error_try_max, we will drop this data
-            operation = DefaultOperation(item->mSendRetryTimes);
+            operation = DefaultOperation(item->mTryCnt);
         }
         if (curTime - data->mEnqueTime > INT32_FLAG(discard_send_fail_interval)) {
             operation = OperationOnFail::DISCARD;
         }
-        bool isProfileData = ProfileSender::GetInstance()->IsProfileData(mRegion, mProject, data->mLogstore);
-        if (isProfileData && data->mSendRetryTimes >= static_cast<uint32_t>(INT32_FLAG(profile_data_send_retrytimes))) {
+        if (isProfileData && data->mTryCnt >= static_cast<uint32_t>(INT32_FLAG(profile_data_send_retrytimes))) {
             operation = OperationOnFail::DISCARD;
         }
 
 #define LOG_PATTERN \
     ("failed to send request", failDetail.str())("operation", GetOperationString(operation))( \
-        "suggestion", suggestion.str())("requestId", slsResponse.mRequestId)("statusCode", slsResponse.mStatusCode)( \
-        "errorCode", slsResponse.mErrorCode)("errorMessage", slsResponse.mErrorMsg)("config", configName)( \
-        "region", mRegion)("project", mProject)("logstore", data->mLogstore)("retryTimes", data->mSendRetryTimes)( \
-        "responseTime", curTime - data->mLastSendTime)("totalSendCost", curTime - data->mEnqueTime)( \
-        "bytes", data->mData.size())("endpoint", data->mCurrentEndpoint)("isProfileData", isProfileData)
+        "suggestion", suggestion.str())("item address", item)("request id", slsResponse.mRequestId)( \
+        "status code", slsResponse.mStatusCode)("error code", slsResponse.mErrorCode)( \
+        "errMsg", slsResponse.mErrorMsg)("config", configName)("region", mRegion)("project", mProject)( \
+        "logstore", data->mLogstore)("try cnt", data->mTryCnt)("response time", curTime - data->mLastSendTime)( \
+        "total send time", curTime - data->mEnqueTime)("endpoint", data->mCurrentEndpoint)("is profile data", \
+                                                                                           isProfileData)
 
         switch (operation) {
             case OperationOnFail::RETRY_IMMEDIATELY:
@@ -780,6 +784,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                 DealSenderQueueItemAfterSend(item, false);
                 break;
         }
+        ++item->mTryCnt;
     }
 }
 

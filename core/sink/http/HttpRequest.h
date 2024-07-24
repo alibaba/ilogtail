@@ -41,7 +41,8 @@ struct HttpRequest {
 
     SenderQueueItem* mItem = nullptr;
     void* mPrivateData = nullptr;
-    uint32_t mRetryCnt = 0;
+    uint32_t mTryCnt = 1;
+    time_t mLastSendTime = 0;
 
     HttpRequest(const std::string& method,
                 bool httpsFlag,
