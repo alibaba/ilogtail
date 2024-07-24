@@ -59,7 +59,6 @@ private:
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
     ScrapeTarget mScrapeTarget;
 
-
     std::string mHash;
 
     QueueKey mQueueKey;

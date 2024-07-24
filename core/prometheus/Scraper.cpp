@@ -61,7 +61,10 @@ void ScraperGroup::UpdateScrapeWork(const string& jobName) {
     for (const auto& [targetHash, target] : sTMap) {
         if (sWMap.find(targetHash) == sWMap.end()) {
             LOG_INFO(sLogger, ("Start new scrape target", targetHash));
-            sWMap[targetHash] = make_unique<ScrapeWork>(target);
+            sWMap[targetHash] = make_unique<ScrapeWork>(mScrapeJobMap[jobName]->mScrapeConfigPtr,
+                                                        target,
+                                                        mScrapeJobMap[jobName]->mQueueKey,
+                                                        mScrapeJobMap[jobName]->mInputIndex);
             sWMap[targetHash]->SetUnRegisterMs(mUnRegisterMs);
             sWMap[targetHash]->StartScrapeLoop();
         }

@@ -17,12 +17,10 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "JsonUtil.h"
 #include "Labels.h"
 #include "ScrapeConfig.h"
-#include "StringTools.h"
 #include "json/value.h"
 #include "prometheus/ScrapeWork.h"
 #include "sdk/Common.h"
@@ -93,71 +91,6 @@ void MockHttpClient::Send(const std::string& httpMethod,
 void MockHttpClient::AsynSend(sdk::AsynRequest* request) {
 }
 
-class ScrapeTargetUnittest : public testing::Test {
-public:
-    void OnInitScrapeTarget();
-
-private:
-};
-
-void ScrapeTargetUnittest::OnInitScrapeTarget() {
-    Json::Value config;
-    string errorMsg;
-    string configStr = R"JSON(
-    "ScrapeConfig": {
-        "job_name": "test_job",
-        "scheme": "http",
-        "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s",
-        "max_scrape_size": "1024MiB",
-        "sample_limit": 10000,
-        "series_limit": 10000,
-        "relabel_configs": [
-            {
-                "action": "keep",
-                "regex": "kube-state-metrics",
-                "replacement": "$1",
-                "separator": ";",
-                "source_labels": [
-                    "__meta_kubernetes_pod_label_k8s_app"
-                ]
-            }
-        ],
-        "params" : {
-            "__param_query": [
-                "test_query"
-            ]
-        },
-        "headers": {
-            "Authorization": "Bearer test_token"
-        }
-
-    }
-    )JSON";
-    auto scrapeConfigPtr = std::make_shared<ScrapeConfig>();
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    APSARA_TEST_TRUE(scrapeConfigPtr->Init(config));
-
-    auto labelsPtr = std::make_unique<Labels>();
-    labelsPtr->Push(Label{"test_label", "test_value"});
-    labelsPtr->Push(Label{"__address__", "192.168.0.1:1234"});
-    labelsPtr->Push(Label{"job", "test_job"});
-
-    ScrapeTarget target = ScrapeTarget(scrapeConfigPtr, std::move(labelsPtr), 0, 0);
-    APSARA_TEST_EQUAL(target.mPort, 80UL);
-    APSARA_TEST_EQUAL(target.mScrapeConfigPtr->mJobName, "test_job");
-    APSARA_TEST_EQUAL(target.mScrapeConfigPtr->mMetricsPath, "/metrics");
-    APSARA_TEST_EQUAL(target.mScrapeConfigPtr->mScheme, "http");
-    APSARA_TEST_EQUAL(target.mHost, "");
-    APSARA_TEST_EQUAL(target.mScrapeConfigPtr->mScrapeTimeout, 4);
-    APSARA_TEST_EQUAL(target.mScrapeConfigPtr->mScrapeInterval, 3);
-    APSARA_TEST_EQUAL(target.mLabelsPtr->Size(), 3UL);
-    APSARA_TEST_EQUAL(target.mHost, "192.168.0.1");
-    APSARA_TEST_EQUAL(target.mPort, 1234UL);
-    APSARA_TEST_EQUAL("test_jobhttp://192.168.0.1:1234/metrics" + ToString(labelsPtr->Hash()), target.GetHash());
-}
-
 class ScrapeWorkUnittest : public testing::Test {
 public:
     void OnStartAndStopScrapeLoop();
@@ -170,25 +103,26 @@ void ScrapeWorkUnittest::OnStartAndStopScrapeLoop() {
     Json::Value config;
     string errorMsg;
     string configStr = R"JSON(
-    "ScrapeConfig": {
+    {
         "job_name": "test_job",
         "scheme": "http",
         "metrics_path": "/metrics",
         "scrape_interval": "30s",
         "scrape_timeout": "30s"
+    }
     )JSON";
     auto scrapeConfigPtr = std::make_shared<ScrapeConfig>();
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     APSARA_TEST_TRUE(scrapeConfigPtr->Init(config));
 
-    auto labelsPtr = std::make_unique<Labels>();
-    labelsPtr->Push(Label{"test_label", "test_value"});
-    labelsPtr->Push(Label{"__address__", "192.168.0.1:1234"});
-    labelsPtr->Push(Label{"job", "test_job"});
+    auto labels = Labels();
+    labels.Push(Label{"test_label", "test_value"});
+    labels.Push(Label{"__address__", "192.168.0.1:1234"});
+    labels.Push(Label{"job", "test_job"});
 
-    auto target = std::make_unique<ScrapeTarget>(scrapeConfigPtr, std::move(labelsPtr), 0, 0);
+    auto target = ScrapeTarget(labels);
 
-    ScrapeWork work(std::move(target));
+    ScrapeWork work(scrapeConfigPtr, target, 0, 0);
     MockHttpClient* client = new MockHttpClient();
     work.mClient.reset(client);
 
@@ -209,48 +143,49 @@ void ScrapeWorkUnittest::OnGetRandSleep() {
     Json::Value config;
     string errorMsg;
     string configStr = R"JSON(
-    "ScrapeConfig": {
+    {
         "job_name": "test_job",
         "scheme": "http",
         "metrics_path": "/metrics",
         "scrape_interval": "30s",
         "scrape_timeout": "30s"
+    }
     )JSON";
     auto scrapeConfigPtr = std::make_shared<ScrapeConfig>();
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     APSARA_TEST_TRUE(scrapeConfigPtr->Init(config));
 
-    auto labelsPtr = std::make_unique<Labels>();
-    labelsPtr->Push(Label{"test_label", "test_value"});
-    labelsPtr->Push(Label{"__address__", "192.168.0.1:1234"});
-    labelsPtr->Push(Label{"job", "test_job"});
-    auto target = std::make_unique<ScrapeTarget>(scrapeConfigPtr, std::move(labelsPtr), 0, 0);
-    ScrapeWork work1(std::move(target));
+    auto labels = Labels();
+    labels.Push(Label{"test_label", "test_value"});
+    labels.Push(Label{"__address__", "192.168.0.1:1234"});
+    labels.Push(Label{"job", "test_job"});
+    auto target = ScrapeTarget(labels);
+    ScrapeWork work1(scrapeConfigPtr, target, 0, 0);
 
     // target2
     configStr = R"JSON(
-    "ScrapeConfig": {
+    {
         "job_name": "test_job",
         "scheme": "http",
         "metrics_path": "/metrics",
         "scrape_interval": "30s",
         "scrape_timeout": "30s"
+    }
     )JSON";
     auto scrapeConfigPtr2 = std::make_shared<ScrapeConfig>();
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     APSARA_TEST_TRUE(scrapeConfigPtr2->Init(config));
-    auto labelsPtr2 = std::make_unique<Labels>();
-    labelsPtr2->Push(Label{"__address__", "192.168.0.1:1234"});
-    labelsPtr2->Push(Label{"job", "test_job"});
-    auto target2 = std::make_unique<ScrapeTarget>(scrapeConfigPtr2, std::move(labelsPtr2), 0, 0);
-    ScrapeWork work2(std::move(target2));
+    auto labels2 = Labels();
+    labels2.Push(Label{"__address__", "192.168.0.1:1234"});
+    labels2.Push(Label{"job", "test_job"});
+    auto target2 = ScrapeTarget(labels2);
+    ScrapeWork work2(scrapeConfigPtr2, target2, 0, 0);
 
     uint64_t rand1 = work1.GetRandSleep();
     uint64_t rand2 = work2.GetRandSleep();
     APSARA_TEST_NOT_EQUAL(rand1, rand2);
 }
 
-UNIT_TEST_CASE(ScrapeTargetUnittest, OnInitScrapeTarget)
 UNIT_TEST_CASE(ScrapeWorkUnittest, OnStartAndStopScrapeLoop)
 UNIT_TEST_CASE(ScrapeWorkUnittest, OnGetRandSleep)
 

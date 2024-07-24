@@ -25,6 +25,7 @@
 #include <unordered_map>
 
 #include "ScrapeConfig.h"
+#include "ScrapeTarget.h"
 #include "ScrapeWork.h"
 
 
@@ -43,7 +44,7 @@ public:
     void StartTargetsDiscoverLoop();
     void StopTargetsDiscoverLoop();
 
-    std::unordered_map<std::string, ScrapeWork> GetScrapeTargetsMapCopy();
+    std::unordered_map<std::string, ScrapeTarget> GetScrapeTargetsMapCopy();
 
     std::string mJobName;
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
@@ -58,15 +59,15 @@ public:
     size_t mInputIndex;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    void AddScrapeTarget(std::string hash, std::unique_ptr<ScrapeTarget> target) {
+    void AddScrapeTarget(std::string hash, ScrapeTarget target) {
         std::lock_guard<std::mutex> lock(mMutex);
-        mScrapeTargetsMap[hash] = std::move(target);
+        mScrapeTargetsMap[hash] = target;
     }
 #endif
 
 private:
     std::mutex mMutex;
-    std::unordered_map<std::string, std::shared_ptr<ScrapeWork>> mScrapeTargetsMap;
+    std::unordered_map<std::string, ScrapeTarget> mScrapeTargetsMap;
 
     std::atomic<bool> mFinished;
     ThreadPtr mTargetsDiscoveryLoopThread;
@@ -79,7 +80,7 @@ private:
 
     bool FetchHttpData(std::string& readBuffer) const;
     bool ParseTargetGroups(const std::string& response,
-                           std::unordered_map<std::string, std::shared_ptr<ScrapeWork>>& newScrapeTargetsMap) const;
+                           std::unordered_map<std::string, ScrapeTarget>& newScrapeTargetsMap) const;
     int GetIntSeconds(const std::string& str) const;
     std::string ConvertMapParamsToQueryString() const;
 

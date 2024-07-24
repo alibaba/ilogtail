@@ -17,11 +17,11 @@
 #include <json/json.h>
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "ScrapeJob.h"
 #include "common/JsonUtil.h"
-#include "common/StringTools.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -200,24 +200,14 @@ protected:
     )JSON";
 };
 
-UNIT_TEST_CASE(ScrapeJobUnittest, OnInitScrapeJob);
-UNIT_TEST_CASE(ScrapeJobUnittest, ScrapeJobTargetsDiscovery);
+
 void ScrapeJobUnittest::OnInitScrapeJob() {
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>();
+    std::shared_ptr<ScrapeJob> scrapeJobPtr = std::make_shared<ScrapeJob>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(mConfig["ScrapeConfig"]));
     scrapeJobPtr->mClient.reset(new MockScrapeJobHttpClient);
 
-    APSARA_TEST_TRUE(scrapeJobPtr->GetScrapeConfig().isMember("http_sd_configs"));
-    APSARA_TEST_TRUE(scrapeJobPtr->GetScrapeConfig()["http_sd_configs"].isArray());
-    APSARA_TEST_EQUAL(scrapeJobPtr->GetScrapeConfig()["http_sd_configs"].size(), 1u);
-
-    for (const auto& httpSdConfig : scrapeJobPtr->GetScrapeConfig()["http_sd_configs"]) {
-        APSARA_TEST_TRUE(httpSdConfig.isMember("url"));
-        APSARA_TEST_EQUAL(httpSdConfig["url"].asString(),
-                          "http://" + ToString(getenv("OPERATOR_HOST")) + ":" + ToString(getenv("OPERATOR_PORT"))
-                              + "/jobs/" + scrapeJobPtr->mJobName
-                              + "/targets?collector_id=" + ToString(getenv("POD_NAME")));
-    }
+    APSARA_TEST_NOT_EQUAL(scrapeJobPtr->mScrapeConfigPtr.get(), nullptr);
+    APSARA_TEST_EQUAL(scrapeJobPtr->mJobName, "_kube-state-metrics");
 }
 void ScrapeJobUnittest::ScrapeJobTargetsDiscovery() {
     std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>();
@@ -233,17 +223,15 @@ void ScrapeJobUnittest::ScrapeJobTargetsDiscovery() {
     for (const auto& [hashTarget, target] : scrapeTargetsMap) {
         APSARA_TEST_TRUE(hashTarget.find("192.168.22.7") != std::string::npos);
         APSARA_TEST_EQUAL(target.mLabels.Size(), 6UL);
-        APSARA_TEST_EQUAL(target.mJobName, "_kube-state-metrics");
-        APSARA_TEST_EQUAL(target.mMetricsPath, "/metrics");
-        APSARA_TEST_EQUAL(target.mScheme, "http");
         APSARA_TEST_EQUAL(target.mHost, "192.168.22.7");
         APSARA_TEST_EQUAL(target.mPort, 8080UL);
-        APSARA_TEST_EQUAL(target.mScrapeInterval, 30);
-        APSARA_TEST_EQUAL(target.mScrapeTimeout, 30);
     }
 
     scrapeJobPtr->StopTargetsDiscoverLoop();
 }
+
+UNIT_TEST_CASE(ScrapeJobUnittest, OnInitScrapeJob);
+UNIT_TEST_CASE(ScrapeJobUnittest, ScrapeJobTargetsDiscovery);
 
 } // namespace logtail
 

@@ -99,7 +99,7 @@ unordered_map<string, ScrapeTarget> ScrapeJob::GetScrapeTargetsMapCopy() {
     unordered_map<string, ScrapeTarget> copy;
 
     for (const auto& [targetHash, targetPtr] : mScrapeTargetsMap) {
-        copy.emplace(targetHash, *targetPtr);
+        copy.emplace(targetHash, targetPtr);
     }
 
     return copy;
@@ -119,7 +119,7 @@ void ScrapeJob::TargetsDiscoveryLoop() {
         if (!FetchHttpData(readBuffer)) {
             continue;
         }
-        unordered_map<string, shared_ptr<ScrapeTarget>> newScrapeTargetsMap;
+        unordered_map<string, ScrapeTarget> newScrapeTargetsMap;
         if (!ParseTargetGroups(readBuffer, newScrapeTargetsMap)) {
             continue;
         }
@@ -160,7 +160,7 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
 }
 
 bool ScrapeJob::ParseTargetGroups(const string& response,
-                                  unordered_map<string, shared_ptr<ScrapeTarget>>& newScrapeTargetsMap) const {
+                                  unordered_map<string, ScrapeTarget>& newScrapeTargetsMap) const {
     Json::CharReaderBuilder readerBuilder;
     JSONCPP_STRING errs;
     Json::Value root;
@@ -218,20 +218,20 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         }
 
         // Relabel Config
-        std::shared_ptr<Labels> resultPtr = shared_ptr<Labels>();
-        bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, *resultPtr);
+        Labels result = Labels();
+        bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
         if (!keep) {
             continue;
         }
-        resultPtr->RemoveMetaLabels();
-        if (resultPtr->Size() == 0) {
+        result.RemoveMetaLabels();
+        if (result.Size() == 0) {
             continue;
         }
         LOG_INFO(sLogger, ("target relabel keep", mJobName));
 
-        auto scrapeTargetPtr = std::make_shared<ScrapeTarget>(mScrapeConfigPtr, resultPtr, mQueueKey, mInputIndex);
+        auto scrapeTarget = ScrapeTarget(result);
 
-        newScrapeTargetsMap[scrapeTargetPtr->GetHash()] = scrapeTargetPtr;
+        newScrapeTargetsMap[scrapeTarget.GetHash()] = scrapeTarget;
     }
     return true;
 }

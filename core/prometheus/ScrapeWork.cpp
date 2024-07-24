@@ -109,18 +109,16 @@ void ScrapeWork::ScrapeAndPush() {
     // TODO: scrape超时处理逻辑，和出错处理
     auto httpResponse = Scrape();
     if (httpResponse.statusCode == 200) {
-        // TODO: 生成自监控指标，但走下面pushEventGroup链路的指标 up指标
-
         // text parser
         auto parser = TextParser();
-        auto eventGroup = parser.Parse(httpResponse.content, defaultTs, mScrapeConfigPtr->mJobName, mHost);
+        auto eventGroup
+            = parser.Parse(httpResponse.content, defaultTs, mScrapeConfigPtr->mJobName, mScrapeTarget.mHost);
 
         // 发送到对应的处理队列
-        // TODO: 框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
+        // TODO: 如果框架处理超时了处理逻辑，如果超时了如何保证下一次采集有效并且发送
         PushEventGroup(std::move(eventGroup));
     } else {
         // scrape failed
-        // TODO: scrape超时处理逻辑，和出错处理
         string headerStr;
         for (auto [k, v] : mScrapeConfigPtr->mHeaders) {
             headerStr += k + ":" + v + ";";
@@ -153,10 +151,10 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
     // 使用CurlClient抓取目标
     try {
         mClient->Send(sdk::HTTP_GET,
-                      mHost,
-                      mPort,
+                      mScrapeTarget.mHost,
+                      mScrapeTarget.mPort,
                       mScrapeConfigPtr->mMetricsPath,
-                      mQueryString,
+                      mScrapeConfigPtr->mQueryString,
                       mScrapeConfigPtr->mHeaders,
                       reqBody,
                       mScrapeConfigPtr->mScrapeTimeout,
