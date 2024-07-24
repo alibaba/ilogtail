@@ -109,9 +109,6 @@ std::string SLSClientManager::RegionEndpointsInfo::GetAvailableEndpointWithTopPr
 }
 
 void SLSClientManager::Init() {
-    if (mIsInitialized) {
-        return;
-    }
     InitEndpointSwitchPolicy();
     if (mDataServerSwitchPolicy == EndpointSwitchPolicy::DESIGNATED_FIRST) {
         mProbeNetworkClient.reset(new sdk::Client("",

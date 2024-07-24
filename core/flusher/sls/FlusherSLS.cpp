@@ -88,6 +88,7 @@ static OperationOnFail DefaultOperation(uint32_t retryTimes) {
 }
 
 void FlusherSLS::InitResource() {
+#ifndef APSARA_UNIT_TEST_MAIN
     static bool sIsInited = false;
     if (!sIsInited) {
         SLSControl::GetInstance()->Init();
@@ -95,10 +96,13 @@ void FlusherSLS::InitResource() {
         DiskBufferWriter::GetInstance()->Init();
         sIsInited = true;
     }
+#endif
 }
 
 void FlusherSLS::RecycleResourceIfNotUsed() {
+#ifndef APSARA_UNIT_TEST_MAIN
     SLSClientManager::GetInstance()->Stop();
+#endif
 }
 
 mutex FlusherSLS::sMux;
