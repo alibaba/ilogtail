@@ -67,8 +67,6 @@ void ScrapeWork::StartScrapeLoop() {
 
 void ScrapeWork::StopScrapeLoop() {
     mFinished.store(true);
-    // 清理线程
-    mScrapeLoopThread->Wait(0ULL);
     mScrapeLoopThread.reset();
 }
 

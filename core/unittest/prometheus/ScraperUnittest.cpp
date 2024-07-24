@@ -152,8 +152,8 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
         "job_name": "test_job",
         "scheme": "http",
         "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
+        "scrape_interval": "5s",
+        "scrape_timeout": "5s"
     })JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 
@@ -170,6 +170,7 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
 
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
     scrapeJobPtr->mClient.reset(new MockScraperHttpClient());
+    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
 
     APSARA_TEST_TRUE(ScraperGroup::GetInstance()->mScrapeWorkMap.empty());
     ScraperGroup::GetInstance()->UpdateScrapeJob(std::move(scrapeJobPtr));
@@ -202,8 +203,8 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
         "job_name": "test_job",
         "scheme": "http",
         "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
+        "scrape_interval": "5s",
+        "scrape_timeout": "5s"
     })JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 

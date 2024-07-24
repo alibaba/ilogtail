@@ -85,7 +85,6 @@ void ScrapeJob::StartTargetsDiscoverLoop() {
 
 void ScrapeJob::StopTargetsDiscoverLoop() {
     mFinished.store(true);
-    mTargetsDiscoveryLoopThread->Wait(0ULL);
     mTargetsDiscoveryLoopThread.reset();
     mScrapeTargetsMap.clear();
 }

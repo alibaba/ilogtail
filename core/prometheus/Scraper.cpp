@@ -101,6 +101,7 @@ void ScraperGroup::Start() {
 
 void ScraperGroup::Stop() {
     mFinished.store(true);
+    mScraperThread.reset();
 
     vector<string> jobsToRemove;
     {
@@ -113,10 +114,6 @@ void ScraperGroup::Stop() {
         RemoveScrapeJob(jobName);
     }
 
-    if (mScraperThread) {
-        mScraperThread->Wait(0ULL);
-    }
-    mScraperThread.reset();
 
     {
         lock_guard<mutex> lock(mMutex);
