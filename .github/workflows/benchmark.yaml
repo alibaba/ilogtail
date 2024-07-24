@@ -92,7 +92,6 @@ jobs:
           name: benchmark
           tool: "customSmallerIsBetter"
           output-file-path: "test/benchmark/report/combined_benchmark.json"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           external-data-json-path: ./cache/benchmark-data.json
           summary-always: true
 
