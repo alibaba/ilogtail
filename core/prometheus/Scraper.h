@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 #include "ScrapeJob.h"
+#include "ScrapeWork.h"
 #include "common/Thread.h"
 
 namespace logtail {

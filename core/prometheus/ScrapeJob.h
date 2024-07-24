@@ -24,9 +24,11 @@
 #include <string>
 #include <unordered_map>
 
+#include "Common.h"
+#include "FeedbackQueueKey.h"
 #include "ScrapeConfig.h"
 #include "ScrapeTarget.h"
-#include "ScrapeWork.h"
+#include "Thread.h"
 
 
 namespace logtail {
