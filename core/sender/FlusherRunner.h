@@ -40,7 +40,8 @@ public:
     bool Init();
     void Stop();
 
-    void SubSendingBufferCount();
+    void IncreaseSendingCnt();
+    void DecreaseSendingCnt();
 
     void PushToHttpSink(SenderQueueItem* item);
 

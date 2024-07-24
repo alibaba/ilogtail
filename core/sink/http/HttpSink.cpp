@@ -88,7 +88,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpRequest>&& request) {
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
         request->mItem->mStatus = SendingStatus::IDLE;
-        FlusherRunner::GetInstance()->SubSendingBufferCount();
+        FlusherRunner::GetInstance()->DecreaseSendingCnt();
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to init curl handler")(
                       "action", "put sender queue item back to sender queue")("item address", request->mItem)(
@@ -102,7 +102,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpRequest>&& request) {
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
         request->mItem->mStatus = SendingStatus::IDLE;
-        FlusherRunner::GetInstance()->SubSendingBufferCount();
+        FlusherRunner::GetInstance()->DecreaseSendingCnt();
         curl_easy_cleanup(curl);
         LOG_ERROR(sLogger,
                   ("failed to send request",
@@ -199,7 +199,7 @@ void HttpSink::HandleCompletedRequests() {
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
                     request->mResponse.mStatusCode = (int32_t)statusCode;
                     request->mItem->mFlusher->OnSendDone(request->mResponse, request->mItem);
-                    FlusherRunner::GetInstance()->SubSendingBufferCount();
+                    FlusherRunner::GetInstance()->DecreaseSendingCnt();
                     break;
                 }
                 default:
@@ -215,7 +215,7 @@ void HttpSink::HandleCompletedRequests() {
                         requestReused = true;
                     } else {
                         request->mItem->mFlusher->OnSendDone(request->mResponse, request->mItem);
-                        FlusherRunner::GetInstance()->SubSendingBufferCount();
+                        FlusherRunner::GetInstance()->DecreaseSendingCnt();
                     }
                     break;
             }

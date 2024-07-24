@@ -93,7 +93,7 @@ bool DiskBufferWriter::PushToDiskBuffer(SenderQueueItem* item, uint32_t retryTim
     while (++retry < retryTimes) {
         if (Application::GetInstance()->IsExiting()
             || mQueue.Size() < static_cast<size_t>(INT32_FLAG(secondary_buffer_count_limit))) {
-            if (slsItem->mExactlyOnceCheckpoint != nullptr) {
+            if (slsItem->mExactlyOnceCheckpoint == nullptr) {
                 // explicitly clone the data to avoid dataPtr be destructed by queue
                 mQueue.Push(item->Clone());
             }

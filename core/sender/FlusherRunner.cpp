@@ -60,7 +60,11 @@ void FlusherRunner::Stop() {
     }
 }
 
-void FlusherRunner::SubSendingBufferCount() {
+void FlusherRunner::IncreaseSendingCnt() {
+    ++mSendingBufferCount;
+}
+
+void FlusherRunner::DecreaseSendingCnt() {
     --mSendingBufferCount;
     SenderQueueManager::GetInstance()->Trigger();
 }
@@ -69,7 +73,7 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item) {
     if (!BOOL_FLAG(enable_full_drain_mode) && item->mFlusher->Name() == "flusher_sls"
         && Application::GetInstance()->IsExiting()) {
         DiskBufferWriter::GetInstance()->PushToDiskBuffer(item, 3);
-        SubSendingBufferCount();
+        DecreaseSendingCnt();
         SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
         return;
     }
@@ -114,14 +118,6 @@ void FlusherRunner::Run() {
                       ("got item from sender queue, item address",
                        *itr)("config-flusher-dst", QueueKeyManager::GetInstance()->GetName((*itr)->mQueueKey))(
                           "wait time", ToString(waitTime))("try cnt", ToString((*itr)->mTryCnt)));
-            // if (waitTime > LOG_GROUP_WAIT_IN_QUEUE_ALARM_INTERVAL_SECOND) {
-            //     LOG_WARNING(sLogger,
-            //                 ("log group wait in queue for too long, may blocked by concurrency or quota",
-            //                  "")("log group wait time", waitTime));
-            //     LogtailAlarm::GetInstance()->SendAlarm(LOG_GROUP_WAIT_TOO_LONG_ALARM,
-            //                                            "log group wait in queue for too long, log group wait time "
-            //                                                + ToString(waitTime));
-            // }
 
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendFlowControl()) {
                 RateLimiter::FlowControl((*itr)->mRawSize, mSendLastTime, mSendLastByte, true);
@@ -146,7 +142,7 @@ void FlusherRunner::Run() {
                                                            + ToString(blockCostTime));
             }
 
-            ++mSendingBufferCount;
+            IncreaseSendingCnt();
             Dispatch(*itr);
             mLastSendDataTime = curTime;
         }
@@ -177,7 +173,7 @@ void FlusherRunner::Dispatch(SenderQueueItem* item) {
             PushToHttpSink(item);
             break;
         default:
-            SubSendingBufferCount();
+            DecreaseSendingCnt();
             SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
             break;
     }
