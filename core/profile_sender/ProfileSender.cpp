@@ -26,7 +26,6 @@
 #include "profile_sender/EnterpriseProfileSender.h"
 #endif
 #include "sdk/Exception.h"
-#include "sender/FlusherRunner.h"
 #include "sls_control/SLSControl.h"
 // TODO: temporarily used
 #include "compression/CompressorFactory.h"
