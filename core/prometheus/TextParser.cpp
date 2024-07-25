@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 
+#include "Constants.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "models/MetricEvent.h"
@@ -36,8 +37,6 @@ namespace logtail {
 
 // TODO: 830移除正则依赖
 const std::string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
-const string JOB = "job";
-const string INSTANCE = "instance";
 
 PipelineEventGroup TextParser::Parse(const string& content) {
     auto now = std::chrono::system_clock::now();
@@ -142,10 +141,10 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
             }
         }
         if (!jobName.empty()) {
-            e->SetTag(JOB, jobName);
+            e->SetTag(string(prometheus::JOB), jobName);
         }
         if (!instance.empty()) {
-            e->SetTag(INSTANCE, instance);
+            e->SetTag(string(prometheus::INSTANCE), instance);
         }
     }
 

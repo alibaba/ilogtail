@@ -18,10 +18,12 @@
 
 #include <curl/curl.h>
 
+#include <cstdlib>
 #include <memory>
 #include <string>
 
 #include "Common.h"
+#include "Constants.h"
 #include "CurlImp.h"
 #include "Exception.h"
 #include "JsonUtil.h"
@@ -32,8 +34,6 @@
 using namespace std;
 
 namespace logtail {
-
-const int sRefeshIntervalSeconds = 5;
 
 string url_encode(const string& value) {
     ostringstream escaped;
@@ -109,7 +109,7 @@ void ScrapeJob::TargetsDiscoveryLoop() {
             this_thread::sleep_for(chrono::nanoseconds(nextTargetsDiscoveryLoopTime - timeNow));
         }
         nextTargetsDiscoveryLoopTime
-            = GetCurrentTimeInNanoSeconds() + sRefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
+            = GetCurrentTimeInNanoSeconds() + prometheus::sRefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
 
         string readBuffer;
         if (!FetchHttpData(readBuffer)) {
@@ -126,14 +126,14 @@ void ScrapeJob::TargetsDiscoveryLoop() {
 
 bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     map<string, string> httpHeader;
-    httpHeader["Accept"] = "application/json";
-    httpHeader["X-Prometheus-Refresh-Interval-Seconds"] = ToString(sRefeshIntervalSeconds);
-    httpHeader["User-Agent"] = "matrix_prometheus_" + ToString(getenv("POD_NAME"));
+    httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
+    httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::sRefeshIntervalSeconds);
+    httpHeader[prometheus::USER_AGENT] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
     sdk::HttpMessage httpResponse;
     // TODO: 等待框架删除对respond返回头的 X_LOG_REQUEST_ID 检查
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
 
-    bool httpsFlag = mScrapeConfigPtr->mScheme == "https";
+    bool httpsFlag = mScrapeConfigPtr->mScheme == prometheus::HTTPS;
     try {
         mClient->Send(sdk::HTTP_GET,
                       mOperatorHost,
@@ -142,7 +142,7 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
                       "collector_id=" + mPodName,
                       httpHeader,
                       "",
-                      sRefeshIntervalSeconds,
+                      prometheus::sRefeshIntervalSeconds,
                       httpResponse,
                       "",
                       httpsFlag);
@@ -177,8 +177,8 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
 
         // Parse targets
         vector<string> targets;
-        if (element.isMember("targets") && element["targets"].isArray()) {
-            for (const auto& target : element["targets"]) {
+        if (element.isMember(prometheus::TARGETS) && element[prometheus::TARGETS].isArray()) {
+            for (const auto& target : element[prometheus::TARGETS]) {
                 if (target.isString()) {
                     targets.push_back(target.asString());
                 } else {
@@ -192,31 +192,31 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
 
         // Parse labels
         Labels labels;
-        labels.Push(Label{"job", mJobName});
-        labels.Push(Label{"__address__", targets[0]});
-        labels.Push(Label{"__scheme__", mScrapeConfigPtr->mScheme});
-        labels.Push(Label{"__metrics_path__", mScrapeConfigPtr->mMetricsPath});
-        labels.Push(Label{"__scrape_interval__",
+        labels.Push(Label{prometheus::JOB, mJobName});
+        labels.Push(Label{prometheus::__ADDRESS__, targets[0]});
+        labels.Push(Label{prometheus::__SCHEME__, mScrapeConfigPtr->mScheme});
+        labels.Push(Label{prometheus::__METRICS_PATH__, mScrapeConfigPtr->mMetricsPath});
+        labels.Push(Label{prometheus::__SCRAPE_INTERVAL__,
                           (mScrapeConfigPtr->mScrapeInterval % 60 == 0)
                               ? ToString(mScrapeConfigPtr->mScrapeInterval / 60) + "m"
                               : ToString(mScrapeConfigPtr->mScrapeInterval) + "s"});
-        labels.Push(Label{"__scrape_timeout__",
+        labels.Push(Label{prometheus::__SCRAPE_TIMEOUT__,
                           (mScrapeConfigPtr->mScrapeTimeout % 60 == 0)
                               ? ToString(mScrapeConfigPtr->mScrapeTimeout / 60) + "m"
                               : ToString(mScrapeConfigPtr->mScrapeTimeout) + "s"});
         for (const auto& pair : mScrapeConfigPtr->mParams) {
-            labels.Push(Label{"__param_" + pair.first, pair.second[0]});
+            labels.Push(Label{prometheus::__PARAM_ + pair.first, pair.second[0]});
         }
 
-        if (element.isMember("labels") && element["labels"].isObject()) {
-            for (const auto& labelKey : element["labels"].getMemberNames()) {
-                labels.Push(Label{labelKey, element["labels"][labelKey].asString()});
+        if (element.isMember(prometheus::LABELS) && element[prometheus::LABELS].isObject()) {
+            for (const auto& labelKey : element[prometheus::LABELS].getMemberNames()) {
+                labels.Push(Label{labelKey, element[prometheus::LABELS][labelKey].asString()});
             }
         }
 
         // Relabel Config
         Labels result = Labels();
-        bool keep = relabel::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
+        bool keep = prometheus::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
         if (!keep) {
             continue;
         }

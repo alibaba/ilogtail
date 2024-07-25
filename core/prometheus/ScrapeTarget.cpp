@@ -1,5 +1,6 @@
 #include "ScrapeTarget.h"
 
+#include "Constants.h"
 #include "Labels.h"
 #include "StringTools.h"
 
@@ -12,7 +13,7 @@ ScrapeTarget::ScrapeTarget() {
 ScrapeTarget::ScrapeTarget(const Labels& labels) {
     mLabels = labels;
     // host & port
-    string address = mLabels.Get("__address__");
+    string address = mLabels.Get(prometheus::__ADDRESS__);
     auto m = address.find(':');
     if (m != string::npos) {
         mHost = address.substr(0, m);

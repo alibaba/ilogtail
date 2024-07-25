@@ -33,8 +33,6 @@
 
 namespace logtail {
 
-extern const int sRefeshIntervalSeconds;
-
 class ScrapeJob {
 public:
     ScrapeJob();

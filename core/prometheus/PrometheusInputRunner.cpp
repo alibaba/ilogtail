@@ -20,6 +20,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "Constants.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Scraper.h"
@@ -36,10 +37,10 @@ PrometheusInputRunner::PrometheusInputRunner() {
     mClient = std::make_unique<sdk::CurlClient>();
 
     // get operator info by environment variables
-    mOperatorHost = ToString(getenv("OPERATOR_HOST"));
-    string portStr = ToString(getenv("OPERATOR_PORT"));
+    mOperatorHost = ToString(getenv(prometheus::OPERATOR_HOST));
+    string portStr = ToString(getenv(prometheus::OPERATOR_PORT));
     // get agent pod name by environment variables
-    mPodName = ToString(getenv("POD_NAME"));
+    mPodName = ToString(getenv(prometheus::POD_NAME));
 
     if (portStr.empty()) {
         LOG_ERROR(sLogger, ("PrometheusInputRunner operator port error", portStr));
@@ -71,15 +72,15 @@ void PrometheusInputRunner::Start() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
     while (true) {
         map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
+        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         sdk::HttpMessage httpResponse;
         // TODO: 等待curlImpl删除返回头校验
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
+        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
                           mOperatorHost,
                           mOperatorPort,
-                          "/register_collector",
+                          prometheus::REGISTER_COLLECTOR_PATH,
                           "pod_name=" + mPodName,
                           httpHeader,
                           "",
@@ -113,15 +114,15 @@ void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     for (int retry = 0; retry < 3; ++retry) {
         map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
+        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         sdk::HttpMessage httpResponse;
         // TODO: 等待curlImpl删除返回头校验
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = "matrix_prometheus_" + mPodName;
+        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
                           mOperatorHost,
                           mOperatorPort,
-                          "/unregister_collector",
+                          prometheus::UNREGISTER_COLLECTOR_PATH,
                           "pod_name=" + mPodName,
                           httpHeader,
                           "",

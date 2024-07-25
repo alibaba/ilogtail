@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "Constants.h"
 #include "common/FileSystemUtil.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
@@ -22,30 +23,30 @@ ScrapeConfig::ScrapeConfig()
       mSeriesLimit(-1) {
 }
 bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
-    if (scrapeConfig.isMember("job_name") && scrapeConfig["job_name"].isString()) {
-        mJobName = scrapeConfig["job_name"].asString();
+    if (scrapeConfig.isMember(prometheus::JOB_NAME) && scrapeConfig[prometheus::JOB_NAME].isString()) {
+        mJobName = scrapeConfig[prometheus::JOB_NAME].asString();
         if (mJobName.empty()) {
             return false;
         }
     } else {
         return false;
     }
-    if (scrapeConfig.isMember("scheme") && scrapeConfig["scheme"].isString()) {
-        mScheme = scrapeConfig["scheme"].asString();
+    if (scrapeConfig.isMember(prometheus::SCHEME) && scrapeConfig[prometheus::SCHEME].isString()) {
+        mScheme = scrapeConfig[prometheus::SCHEME].asString();
     }
-    if (scrapeConfig.isMember("metrics_path") && scrapeConfig["metrics_path"].isString()) {
-        mMetricsPath = scrapeConfig["metrics_path"].asString();
+    if (scrapeConfig.isMember(prometheus::METRICS_PATH) && scrapeConfig[prometheus::METRICS_PATH].isString()) {
+        mMetricsPath = scrapeConfig[prometheus::METRICS_PATH].asString();
     }
-    if (scrapeConfig.isMember("scrape_interval") && scrapeConfig["scrape_interval"].isString()) {
-        string tmpScrapeIntervalString = scrapeConfig["scrape_interval"].asString();
+    if (scrapeConfig.isMember(prometheus::SCRAPE_INTERVAL) && scrapeConfig[prometheus::SCRAPE_INTERVAL].isString()) {
+        string tmpScrapeIntervalString = scrapeConfig[prometheus::SCRAPE_INTERVAL].asString();
         if (EndWith(tmpScrapeIntervalString, "s")) {
             mScrapeInterval = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("s")));
         } else if (EndWith(tmpScrapeIntervalString, "m")) {
             mScrapeInterval = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("m"))) * 60;
         }
     }
-    if (scrapeConfig.isMember("scrape_timeout") && scrapeConfig["scrape_timeout"].isString()) {
-        string tmpScrapeTimeoutString = scrapeConfig["scrape_timeout"].asString();
+    if (scrapeConfig.isMember(prometheus::SCRAPE_TIMEOUT) && scrapeConfig[prometheus::SCRAPE_TIMEOUT].isString()) {
+        string tmpScrapeTimeoutString = scrapeConfig[prometheus::SCRAPE_TIMEOUT].asString();
         if (EndWith(tmpScrapeTimeoutString, "s")) {
             mScrapeTimeout = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("s")));
         } else if (EndWith(tmpScrapeTimeoutString, "m")) {
@@ -53,8 +54,8 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
-    if (scrapeConfig.isMember("max_scrape_size") && scrapeConfig["max_scrape_size"].isString()) {
-        string tmpMaxScrapeSize = scrapeConfig["max_scrape_size"].asString();
+    if (scrapeConfig.isMember(prometheus::MAX_SCRAPE_SIZE) && scrapeConfig[prometheus::MAX_SCRAPE_SIZE].isString()) {
+        string tmpMaxScrapeSize = scrapeConfig[prometheus::MAX_SCRAPE_SIZE].asString();
         if (tmpMaxScrapeSize.empty()) {
             mMaxScrapeSize = -1;
         } else if (EndWith(tmpMaxScrapeSize, "KiB") || EndWith(tmpMaxScrapeSize, "K")
@@ -87,14 +88,14 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
 
-    if (scrapeConfig.isMember("sample_limit") && scrapeConfig["sample_limit"].isInt64()) {
-        mSampleLimit = scrapeConfig["sample_limit"].asInt64();
+    if (scrapeConfig.isMember(prometheus::SAMPLE_LIMIT) && scrapeConfig[prometheus::SAMPLE_LIMIT].isInt64()) {
+        mSampleLimit = scrapeConfig[prometheus::SAMPLE_LIMIT].asInt64();
     }
-    if (scrapeConfig.isMember("series_limit") && scrapeConfig["series_limit"].isInt64()) {
-        mSeriesLimit = scrapeConfig["series_limit"].asInt64();
+    if (scrapeConfig.isMember(prometheus::SERIES_LIMIT) && scrapeConfig[prometheus::SERIES_LIMIT].isInt64()) {
+        mSeriesLimit = scrapeConfig[prometheus::SERIES_LIMIT].asInt64();
     }
-    if (scrapeConfig.isMember("params") && scrapeConfig["params"].isObject()) {
-        const Json::Value& params = scrapeConfig["params"];
+    if (scrapeConfig.isMember(prometheus::PARAMS) && scrapeConfig[prometheus::PARAMS].isObject()) {
+        const Json::Value& params = scrapeConfig[prometheus::PARAMS];
         if (params.isObject()) {
             for (const auto& key : params.getMemberNames()) {
                 const Json::Value& values = params[key];
@@ -109,23 +110,24 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
 
-    if (scrapeConfig.isMember("authorization") && scrapeConfig["authorization"].isObject()) {
-        string type = scrapeConfig["authorization"]["type"].asString();
+    if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
+        string type = scrapeConfig[prometheus::AUTHORIZATION][prometheus::TYPE].asString();
         string bearerToken;
-        bool b = ReadFile(scrapeConfig["authorization"]["credentials_file"].asString(), bearerToken);
+        bool b
+            = ReadFile(scrapeConfig[prometheus::AUTHORIZATION][prometheus::CREDENTIALS_FILE].asString(), bearerToken);
         if (!b) {
             LOG_ERROR(sLogger,
                       ("read credentials_file failed, credentials_file",
-                       scrapeConfig["authorization"]["credentials_file"].asString()));
+                       scrapeConfig[prometheus::AUTHORIZATION][prometheus::CREDENTIALS_FILE].asString()));
         }
-        mHeaders["Authorization"] = type + " " + bearerToken;
-        LOG_INFO(
-            sLogger,
-            ("read credentials_file success, credentials_file",
-             scrapeConfig["authorization"]["credentials_file"].asString())("Authorization", mHeaders["Authorization"]));
+        mHeaders[prometheus::A_UTHORIZATION] = type + " " + bearerToken;
+        LOG_INFO(sLogger,
+                 ("read credentials_file success, credentials_file",
+                  scrapeConfig[prometheus::AUTHORIZATION][prometheus::CREDENTIALS_FILE].asString())(
+                     prometheus::A_UTHORIZATION, mHeaders[prometheus::A_UTHORIZATION]));
     }
 
-    for (const auto& relabelConfig : scrapeConfig["relabel_configs"]) {
+    for (const auto& relabelConfig : scrapeConfig[prometheus::RELABEL_CONFIGS]) {
         mRelabelConfigs.emplace_back(relabelConfig);
     }
 

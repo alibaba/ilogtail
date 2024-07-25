@@ -26,9 +26,6 @@
 
 namespace logtail {
 
-const uint64_t prime64 = 1099511628211;
-const uint64_t offset64 = 14695981039346656037ULL;
-
 // Label is a key/value pair of strings.
 struct Label {
     std::string name;

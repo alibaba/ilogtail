@@ -85,7 +85,7 @@ bool ProcessorRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
     Labels result;
 
     // if keep this sourceEvent
-    if (relabel::Process(labels, mRelabelConfigs, result)) {
+    if (prometheus::Process(labels, mRelabelConfigs, result)) {
         // if k/v in labels by not result, then delete it
         labels.Range([&result, &sourceEvent](const Label& label) {
             if (result.Get(label.name).empty()) {

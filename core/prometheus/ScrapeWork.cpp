@@ -24,6 +24,7 @@
 #include <string>
 #include <utility>
 
+#include "Constants.h"
 #include "FeedbackQueueKey.h"
 #include "StringTools.h"
 #include "TextParser.h"
@@ -158,7 +159,7 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
                       mScrapeConfigPtr->mScrapeTimeout,
                       httpResponse,
                       "",
-                      mScrapeConfigPtr->mScheme == "https");
+                      mScrapeConfigPtr->mScheme == prometheus::HTTPS);
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(sLogger, ("scrape failed", e.GetMessage())("errCode", e.GetErrorCode())("target", mHash));
     }

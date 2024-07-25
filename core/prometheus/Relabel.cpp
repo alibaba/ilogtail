@@ -23,6 +23,7 @@
 #include <boost/regex.hpp>
 #include <string>
 
+#include "Constants.h"
 #include "common/ParamExtractor.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
@@ -69,7 +70,7 @@ const std::string& ActionToString(Action action) {
                                                        ENUM_TO_STRING_CASE(LABELKEEP),
                                                        ENUM_TO_STRING_CASE(LOWERCASE),
                                                        ENUM_TO_STRING_CASE(UPPERCASE)};
-    static string undefined = "undefined";
+    static string undefined = prometheus::UNDEFINED;
     auto it = actionStrings.find(action);
     if (it != actionStrings.end()) {
         return it->second;
@@ -83,34 +84,34 @@ RelabelConfig::RelabelConfig() {
 RelabelConfig::RelabelConfig(const Json::Value& config) {
     string errorMsg;
 
-    if (config.isMember("source_labels") && config["source_labels"].isArray()) {
-        GetOptionalListParam<string>(config, "source_labels", mSourceLabels, errorMsg);
+    if (config.isMember(prometheus::SOURCE_LABELS) && config[prometheus::SOURCE_LABELS].isArray()) {
+        GetOptionalListParam<string>(config, prometheus::SOURCE_LABELS, mSourceLabels, errorMsg);
     }
 
-    if (config.isMember("separator") && config["separator"].isString()) {
-        mSeparator = config["separator"].asString();
+    if (config.isMember(prometheus::SEPARATOR) && config[prometheus::SEPARATOR].isString()) {
+        mSeparator = config[prometheus::SEPARATOR].asString();
     }
 
-    if (config.isMember("target_label") && config["target_label"].isString()) {
-        mTargetLabel = config["target_label"].asString();
+    if (config.isMember(prometheus::TARGET_LABEL) && config[prometheus::TARGET_LABEL].isString()) {
+        mTargetLabel = config[prometheus::TARGET_LABEL].asString();
     }
 
-    if (config.isMember("regex") && config["regex"].isString()) {
-        string re = config["regex"].asString();
+    if (config.isMember(prometheus::REGEX) && config[prometheus::REGEX].isString()) {
+        string re = config[prometheus::REGEX].asString();
         mRegex = boost::regex(re);
     }
 
-    if (config.isMember("replacement") && config["replacement"].isString()) {
-        mReplacement = config["replacement"].asString();
+    if (config.isMember(prometheus::REPLACEMENT) && config[prometheus::REPLACEMENT].isString()) {
+        mReplacement = config[prometheus::REPLACEMENT].asString();
     }
 
-    if (config.isMember("action") && config["action"].isString()) {
-        string actionString = config["action"].asString();
+    if (config.isMember(prometheus::ACTION) && config[prometheus::ACTION].isString()) {
+        string actionString = config[prometheus::ACTION].asString();
         mAction = StringToAction(actionString);
     }
 
-    if (config.isMember("modulus") && config["modulus"].isUInt64()) {
-        mModulus = config["modulus"].asUInt64();
+    if (config.isMember(prometheus::MODULUS) && config[prometheus::MODULUS].isUInt64()) {
+        mModulus = config[prometheus::MODULUS].asUInt64();
     }
 }
 
@@ -126,7 +127,7 @@ bool RelabelConfig::Validate() {
 // If you want to avoid issues with the input label set being modified, at the cost of
 // higher memory usage, you can use lbls.Copy().
 // If a label set is dropped, EmptyLabels and false is returned.
-bool relabel::Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret) {
+bool prometheus::Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret) {
     auto lb = LabelsBuilder();
     lb.Reset(lbls);
     if (!ProcessBuilder(lb, cfgs)) {
@@ -139,7 +140,7 @@ bool relabel::Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs
 
 // ProcessBuilder is like Process, but the caller passes a labels.Builder
 // containing the initial set of labels, which is mutated by the rules.
-bool relabel::ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>& cfgs) {
+bool prometheus::ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>& cfgs) {
     for (const RelabelConfig& cfg : cfgs) {
         bool keep = Relabel(cfg, lb);
         if (!keep) {
@@ -149,7 +150,7 @@ bool relabel::ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>
     return true;
 }
 
-bool relabel::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
+bool prometheus::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
     vector<string> values;
     for (auto item : cfg.mSourceLabels) {
         values.push_back(lb.Get(item));

@@ -125,7 +125,7 @@ void RelabelConfigUnittest::TestProcess() {
     cfgs.push_back(config);
 
     Labels result;
-    relabel::Process(labels, cfgs, result);
+    prometheus::Process(labels, cfgs, result);
 
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3:9100", result.Get("__address__"));
@@ -147,7 +147,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(labels, cfgs, result);
+    prometheus::Process(labels, cfgs, result);
 
     APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
@@ -167,7 +167,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(labels, cfgs, result);
+    prometheus::Process(labels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)0, result.Size());
     APSARA_TEST_EQUAL("", result.Get("__meta_kubernetes_pod_label_app"));
 
@@ -191,7 +191,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(dropEqualLabels, cfgs, result);
+    prometheus::Process(dropEqualLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)0, result.Size());
     APSARA_TEST_EQUAL("", result.Get("__meta_kubernetes_pod_label_app"));
 
@@ -215,7 +215,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(keepEqualLabels, cfgs, result);
+    prometheus::Process(keepEqualLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
 
@@ -239,7 +239,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(lowercaseLabels, cfgs, result);
+    prometheus::Process(lowercaseLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
 
@@ -263,7 +263,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(uppercaseLabels, cfgs, result);
+    prometheus::Process(uppercaseLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("NODE-EXPORTER", result.Get("__meta_kubernetes_pod_label_app"));
 
@@ -288,7 +288,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(hashmodLabels, cfgs, result);
+    prometheus::Process(hashmodLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)4, result.Size());
     APSARA_TEST_TRUE(!result.Get("hash_val").empty());
 
@@ -305,7 +305,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(labels, cfgs, result);
+    prometheus::Process(labels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("k8s_app"));
 
@@ -325,7 +325,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(labelDropLabels, cfgs, result);
+    prometheus::Process(labelDropLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)1, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("pod_ip"));
 
@@ -345,7 +345,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.clear();
     cfgs.push_back(config);
-    relabel::Process(labelKeepLabels, cfgs, result);
+    prometheus::Process(labelKeepLabels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
@@ -386,7 +386,7 @@ void RelabelConfigUnittest::TestProcess() {
     config = RelabelConfig(configJson);
     cfgs.push_back(config);
 
-    relabel::Process(labels, cfgs, result);
+    prometheus::Process(labels, cfgs, result);
     APSARA_TEST_EQUAL((size_t)0, result.Size());
     APSARA_TEST_EQUAL("", result.Get("__address__"));
 }

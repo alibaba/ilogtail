@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <string>
 
+#include "prometheus/Constants.h"
 #include "prometheus/Labels.h"
 #include "unittest/Unittest.h"
 
@@ -65,13 +66,13 @@ void LabelsUnittest::TestHash() {
     uint64_t hash = labels.Hash();
 
     // 以字典序生成hash值
-    uint64_t expect = offset64;
+    uint64_t expect = prometheus::OFFSET64;
     string raw;
     raw = raw + "host" + "\xff" + "172.17.0.3:9100" + "\xff" + "ip" + "\xff" + "172.17.0.3" + "\xff" + "port" + "\xff"
         + "9100" + "\xff";
     for (auto i : raw) {
         expect ^= (uint64_t)i;
-        expect *= prime64;
+        expect *= prometheus::PRIME64;
     }
 
     APSARA_TEST_EQUAL(expect, hash);

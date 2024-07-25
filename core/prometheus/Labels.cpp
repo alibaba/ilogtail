@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "Constants.h"
+
 using namespace std;
 namespace logtail {
 
@@ -56,7 +58,7 @@ void Labels::Reset(MetricEvent* metricEvent) {
     for (auto it = metricEvent->TagsBegin(); it != metricEvent->TagsEnd(); it++) {
         Push(Label(it->first.to_string(), it->second.to_string()));
     }
-    Push(Label("__name__", metricEvent->GetName().to_string()));
+    Push(Label(prometheus::__NAME__, metricEvent->GetName().to_string()));
 }
 
 void Labels::Push(const Label& l) {
@@ -80,19 +82,11 @@ void Labels::Range(const std::function<void(Label)>& f) {
 }
 
 LabelMap::const_iterator Labels::Begin() const {
-    // if (metricEventPtr) {
-    //     return metricEventPtr->LabelsBegin();
-    // } else {
     return mLabels.begin();
-    // }
 }
 
 LabelMap::const_iterator Labels::End() const {
-    // if (metricEventPtr) {
-    //     return metricEventPtr->LabelsEnd();
-    // } else {
     return mLabels.end();
-    // }
 }
 
 
@@ -209,18 +203,18 @@ void LabelsBuilder::Range(const std::function<void(Label)>& closure) {
 
 uint64_t Labels::Hash() {
     string hash = "";
-    uint64_t sum = offset64;
+    uint64_t sum = prometheus::OFFSET64;
     Range([&hash](Label l) { hash += l.name + "\xff" + l.value + "\xff"; });
     for (auto i : hash) {
         sum ^= (uint64_t)i;
-        sum *= prime64;
+        sum *= prometheus::PRIME64;
     }
     return sum;
 }
 
 void Labels::RemoveMetaLabels() {
     for (auto it = mLabels.begin(); it != mLabels.end();) {
-        if (it->first.find("__meta_") == 0) {
+        if (it->first.find(prometheus::__META_) == 0) {
             it = mLabels.erase(it);
         } else {
             ++it;

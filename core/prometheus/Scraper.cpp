@@ -20,10 +20,10 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <thread>
 #include <unordered_map>
 #include <vector>
 
+#include "Constants.h"
 #include "ScrapeWork.h"
 #include "common/Thread.h"
 #include "logger/Logger.h"
@@ -131,7 +131,7 @@ void ScraperGroup::ProcessScrapeWorkUpdate() {
                 UpdateScrapeWork(iter.first);
             }
         }
-        this_thread::sleep_for(chrono::seconds(sRefeshIntervalSeconds));
+        this_thread::sleep_for(chrono::seconds(prometheus::sRefeshIntervalSeconds));
     }
 }
 
