@@ -32,7 +32,7 @@ using namespace std;
 
 namespace logtail {
 
-ScraperGroup::ScraperGroup() : mFinished(true), mScraperThread(nullptr) {
+ScraperGroup::ScraperGroup() : mUnRegisterMs(0), mFinished(true), mScraperThread(nullptr) {
 }
 
 void ScraperGroup::UpdateScrapeWork(const string& jobName) {
@@ -130,7 +130,7 @@ void ScraperGroup::ProcessScrapeWorkUpdate() {
                 UpdateScrapeWork(iter.first);
             }
         }
-        this_thread::sleep_for(chrono::seconds(prometheus::sRefeshIntervalSeconds));
+        this_thread::sleep_for(chrono::seconds(prometheus::RefeshIntervalSeconds));
     }
 }
 

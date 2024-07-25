@@ -140,7 +140,7 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 
-    // 手动构造插件的scrape job 和 target
+    // build scrape job and target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
@@ -153,7 +153,7 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     // before
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName")
                      == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
-    // 代替插件手动注册scrapeJob
+    // update scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", std::move(scrapeJobPtr));
 
     // after
@@ -175,7 +175,7 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     }
     )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    // 手动构造插件的scrape job 和 target
+    // build scrape job and target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
@@ -187,7 +187,7 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
     scrapeJobPtr->mClient.reset(new InputRunnerMockHttpClient);
 
-    // 代替插件手动注册scrapeJob
+    // update scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", std::move(scrapeJobPtr));
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName")
                      != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
@@ -198,7 +198,7 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
 }
 
 void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
-    // 手动构造插件的scrape job 和 target
+    // build scrape job and target
     string errorMsg, configStr;
     Json::Value config;
     configStr = R"JSON(
@@ -211,7 +211,6 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     }
     )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    // 手动构造插件的scrape job 和 target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
@@ -223,9 +222,9 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     scrapeJobPtr->mClient.reset(new InputRunnerMockHttpClient);
 
     PrometheusInputRunner::GetInstance()->mClient.reset(new InputRunnerMockHttpClient());
-    // 代替插件手动注册scrapeJob
+    // update scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test_input_name", std::move(scrapeJobPtr));
-    // start
+
     PrometheusInputRunner::GetInstance()->Start();
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_input_name")
                      != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());

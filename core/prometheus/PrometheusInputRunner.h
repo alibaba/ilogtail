@@ -28,9 +28,13 @@ namespace logtail {
 
 class PrometheusInputRunner {
 public:
+    PrometheusInputRunner(const PrometheusInputRunner&) = delete;
+    PrometheusInputRunner(PrometheusInputRunner&&) = delete;
+    PrometheusInputRunner& operator=(const PrometheusInputRunner&) = delete;
+    PrometheusInputRunner& operator=(PrometheusInputRunner&&) = delete;
     static PrometheusInputRunner* GetInstance() {
-        static PrometheusInputRunner instance;
-        return &instance;
+        static PrometheusInputRunner sInstance;
+        return &sInstance;
     }
 
     // input plugin update
@@ -44,10 +48,7 @@ public:
 
 private:
     PrometheusInputRunner();
-    PrometheusInputRunner(const PrometheusInputRunner&) = delete;
-    PrometheusInputRunner(PrometheusInputRunner&&) = delete;
-    PrometheusInputRunner& operator=(const PrometheusInputRunner&) = delete;
-    PrometheusInputRunner& operator=(PrometheusInputRunner&&) = delete;
+    ~PrometheusInputRunner() = default;
 
     std::unordered_map<std::string, std::string> mPrometheusInputsMap;
 

@@ -41,6 +41,8 @@ public:
     ScrapeWork& operator=(const ScrapeWork&) = delete;
     ScrapeWork& operator=(ScrapeWork&&) noexcept = delete;
 
+    ~ScrapeWork();
+
     bool operator<(const ScrapeWork& other) const;
 
     void StartScrapeLoop();

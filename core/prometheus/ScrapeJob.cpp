@@ -35,7 +35,7 @@ using namespace std;
 
 namespace logtail {
 
-string url_encode(const string& value) {
+string URLEncode(const string& value) {
     ostringstream escaped;
     escaped.fill('0');
     escaped << hex;
@@ -53,7 +53,8 @@ string url_encode(const string& value) {
     return escaped.str();
 }
 
-ScrapeJob::ScrapeJob() {
+ScrapeJob::ScrapeJob() : mOperatorPort(0), mQueueKey(0), mInputIndex(0) {
+    mFinished.store(true);
     mClient = make_unique<sdk::CurlClient>();
 }
 
@@ -109,7 +110,7 @@ void ScrapeJob::TargetsDiscoveryLoop() {
             this_thread::sleep_for(chrono::nanoseconds(nextTargetsDiscoveryLoopTime - timeNow));
         }
         nextTargetsDiscoveryLoopTime
-            = GetCurrentTimeInNanoSeconds() + prometheus::sRefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
+            = GetCurrentTimeInNanoSeconds() + prometheus::RefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
 
         string readBuffer;
         if (!FetchHttpData(readBuffer)) {
@@ -127,8 +128,8 @@ void ScrapeJob::TargetsDiscoveryLoop() {
 bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     map<string, string> httpHeader;
     httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
-    httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::sRefeshIntervalSeconds);
-    httpHeader[prometheus::USER_AGENT] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
+    httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
+    httpHeader[prometheus::USER_AGENT] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
 
@@ -137,11 +138,11 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
         mClient->Send(sdk::HTTP_GET,
                       mOperatorHost,
                       mOperatorPort,
-                      "/jobs/" + url_encode(mJobName) + "/targets",
+                      "/jobs/" + URLEncode(mJobName) + "/targets",
                       "collector_id=" + mPodName,
                       httpHeader,
                       "",
-                      prometheus::sRefeshIntervalSeconds,
+                      prometheus::RefeshIntervalSeconds,
                       httpResponse,
                       "",
                       httpsFlag);
@@ -192,19 +193,19 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         // Parse labels
         Labels labels;
         labels.Push(Label{prometheus::JOB, mJobName});
-        labels.Push(Label{prometheus::__ADDRESS__, targets[0]});
-        labels.Push(Label{prometheus::__SCHEME__, mScrapeConfigPtr->mScheme});
-        labels.Push(Label{prometheus::__METRICS_PATH__, mScrapeConfigPtr->mMetricsPath});
-        labels.Push(Label{prometheus::__SCRAPE_INTERVAL__,
+        labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
+        labels.Push(Label{prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme});
+        labels.Push(Label{prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath});
+        labels.Push(Label{prometheus::SCRAPE_INTERVAL_LABEL_NAME,
                           (mScrapeConfigPtr->mScrapeIntervalSeconds % 60 == 0)
                               ? ToString(mScrapeConfigPtr->mScrapeIntervalSeconds / 60) + "m"
                               : ToString(mScrapeConfigPtr->mScrapeIntervalSeconds) + "s"});
-        labels.Push(Label{prometheus::__SCRAPE_TIMEOUT__,
+        labels.Push(Label{prometheus::SCRAPE_TIMEOUT_LABEL_NAME,
                           (mScrapeConfigPtr->mScrapeTimeoutSeconds % 60 == 0)
                               ? ToString(mScrapeConfigPtr->mScrapeTimeoutSeconds / 60) + "m"
                               : ToString(mScrapeConfigPtr->mScrapeTimeoutSeconds) + "s"});
         for (const auto& pair : mScrapeConfigPtr->mParams) {
-            labels.Push(Label{prometheus::__PARAM_ + pair.first, pair.second[0]});
+            labels.Push(Label{prometheus::PARAM_LABEL_NAME + pair.first, pair.second[0]});
         }
 
         if (element.isMember(prometheus::LABELS) && element[prometheus::LABELS].isObject()) {

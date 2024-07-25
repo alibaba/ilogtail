@@ -8,30 +8,15 @@ using namespace std;
 
 namespace logtail {
 
-ScrapeTarget::ScrapeTarget() {
+ScrapeTarget::ScrapeTarget() : mPort(0) {
 }
-ScrapeTarget::ScrapeTarget(const Labels& labels) {
-    mLabels = labels;
-
-    string address = mLabels.Get(prometheus::__ADDRESS__);
+ScrapeTarget::ScrapeTarget(const Labels& labels) : mLabels(labels) {
+    string address = mLabels.Get(prometheus::ADDRESS_LABEL_NAME);
     auto m = address.find(':');
     if (m != string::npos) {
         mHost = address.substr(0, m);
         mPort = stoi(address.substr(m + 1));
     }
-}
-
-ScrapeTarget::ScrapeTarget(const ScrapeTarget& other) {
-    mHost = other.mHost;
-    mLabels = other.mLabels;
-    mPort = other.mPort;
-}
-
-ScrapeTarget& ScrapeTarget::operator=(const ScrapeTarget& other) {
-    mHost = other.mHost;
-    mLabels = other.mLabels;
-    mPort = other.mPort;
-    return *this;
 }
 
 string ScrapeTarget::GetHash() {

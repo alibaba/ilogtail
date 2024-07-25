@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ScrapeWork.h"
+#include "prometheus/ScrapeWork.h"
 
 #include <xxhash/xxhash.h>
 
@@ -44,14 +44,25 @@ ScrapeWork::ScrapeWork(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                        const ScrapeTarget& scrapeTarget,
                        QueueKey queueKey,
                        size_t inputIndex)
-    : mScrapeConfigPtr(scrapeConfigPtr), mScrapeTarget(scrapeTarget), mQueueKey(queueKey), mInputIndex(inputIndex) {
+    : mScrapeConfigPtr(std::move(scrapeConfigPtr)),
+      mScrapeTarget(scrapeTarget),
+      mQueueKey(queueKey),
+      mInputIndex(inputIndex),
+      mFinished(true),
+      mUnRegisterMs(0) {
     mClient = make_unique<sdk::CurlClient>();
 
-    // URL
     string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mScrapeTarget.mHost + ":" + ToString(mScrapeTarget.mPort)
         + mScrapeConfigPtr->mMetricsPath
         + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mScrapeTarget.mLabels.Hash());
+}
+
+ScrapeWork::~ScrapeWork() {
+    mFinished.store(true);
+    mScrapeConfigPtr.reset();
+    mClient.reset();
+    mScrapeLoopThread.reset();
 }
 
 bool ScrapeWork::operator<(const ScrapeWork& other) const {
@@ -77,7 +88,7 @@ void ScrapeWork::ScrapeLoop() {
     uint64_t randSleep = GetRandSleep();
     // zero-cost upgrade
     // if mUnRegisterMs is expired, scrape and push immediately
-    if (randSleep + GetCurrentTimeInNanoSeconds() > (uint64_t)mUnRegisterMs * 1000ULL * 1000ULL
+    if (randSleep + GetCurrentTimeInNanoSeconds() > mUnRegisterMs * 1000ULL * 1000ULL
             + (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL) {
         ScrapeAndPush();
         randSleep = GetRandSleep();
@@ -111,8 +122,8 @@ void ScrapeWork::ScrapeAndPush() {
         PushEventGroup(std::move(eventGroup));
     } else {
         string headerStr;
-        for (auto [k, v] : mScrapeConfigPtr->mHeaders) {
-            headerStr += k + ":" + v + ";";
+        for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
+            headerStr.append(k).append(":").append(v).append(";");
         }
         LOG_WARNING(sLogger,
                     ("scrape failed, status code", httpResponse.statusCode)("target", mHash)("http header", headerStr));
@@ -122,7 +133,8 @@ void ScrapeWork::ScrapeAndPush() {
 uint64_t ScrapeWork::GetRandSleep() {
     const string& key = mHash;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
-    uint64_t randSleep = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    uint64_t randSleep
+        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
     uint64_t sleepOffset
         = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
     if (randSleep < sleepOffset) {

@@ -49,14 +49,12 @@ public:
 
     void Range(const std::function<void(Label)>&);
 
-    // 为常量对象提供只读访问
     LabelMap::const_iterator Begin() const;
     LabelMap::const_iterator End() const;
 
 private:
     LabelMap mLabels;
 
-    // TODO: 现阶段metricEventPtr永远为空，后续作为适配器直接操作MetricEvent提高效率
     MetricEvent* mMetricEventPtr = nullptr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -67,7 +65,6 @@ private:
 class LabelsBuilder {
 public:
     LabelsBuilder();
-    // LabelsBuilder(Labels);
     void DeleteLabel(const std::vector<std::string>&);
     void DeleteLabel(std::string);
 

@@ -37,7 +37,7 @@ namespace logtail {
 const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
-bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value&) {
     LOG_INFO(sLogger, ("LOG_INFO input config", config.toStyledString()));
 
     string errorMsg;
@@ -75,7 +75,7 @@ bool InputPrometheus::Start() {
 }
 
 /// @brief unregister scrape job by PrometheusInputRunner
-bool InputPrometheus::Stop(bool isPipelineRemoving) {
+bool InputPrometheus::Stop(bool) {
     LOG_INFO(sLogger, ("input config stop", mJobName));
 
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput(mContext->GetConfigName());

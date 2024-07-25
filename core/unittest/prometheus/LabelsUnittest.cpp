@@ -65,7 +65,6 @@ void LabelsUnittest::TestHash() {
     labels.Push(Label{"port", "9100"});
     uint64_t hash = labels.Hash();
 
-    // 以字典序生成hash值
     uint64_t expect = prometheus::OFFSET64;
     string raw;
     raw = raw + "host" + "\xff" + "172.17.0.3:9100" + "\xff" + "ip" + "\xff" + "172.17.0.3" + "\xff" + "port" + "\xff"
@@ -83,10 +82,8 @@ void LabelsUnittest::TestGet() {
     labels.Push(Label{"host", "172.17.0.3:9100"});
     APSARA_TEST_EQUAL(1UL, labels.Size());
 
-    // 不存在返回空值
     APSARA_TEST_EQUAL("", labels.Get("hosts"));
 
-    // 存在返回value
     APSARA_TEST_EQUAL("172.17.0.3:9100", labels.Get("host"));
 }
 
@@ -95,7 +92,6 @@ void LabelsUnittest::TestPush() {
 
     labels.Push(Label{"host", "172.17.0.3:9100"});
 
-    // 存在Label{"host", "172.17.0.3:9100"}
     APSARA_TEST_EQUAL("172.17.0.3:9100", labels.Get("host"));
 }
 
@@ -147,11 +143,9 @@ void LabelsBuilderUnittest::TestSet() {
 
     lb.mAddLabelList.push_back(Label("host", "127.0.0.1"));
 
-    // 根据key修改value
     lb.Set("host", "172.17.0.3:9300");
     APSARA_TEST_EQUAL("172.17.0.3:9300", lb.Get("host"));
 
-    // 如果VALUE为空字符串则删除
     lb.Set("host", "");
     APSARA_TEST_EQUAL("", lb.Get("host"));
 }

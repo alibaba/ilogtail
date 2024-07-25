@@ -71,9 +71,9 @@ void PrometheusInputRunner::Start() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
     while (true) {
         map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
+        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
         sdk::HttpMessage httpResponse;
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
+        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
                           mOperatorHost,
@@ -111,9 +111,9 @@ void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     for (int retry = 0; retry < 3; ++retry) {
         map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
+        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
         sdk::HttpMessage httpResponse;
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
+        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
                           mOperatorHost,

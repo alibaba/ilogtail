@@ -8,9 +8,12 @@ namespace logtail {
 class ScrapeTarget {
 public:
     ScrapeTarget();
-    ScrapeTarget(const Labels& labels);
-    ScrapeTarget(const ScrapeTarget& other);
-    ScrapeTarget& operator=(const ScrapeTarget& other);
+    explicit ScrapeTarget(const Labels& labels);
+    ScrapeTarget(const ScrapeTarget& other) = default;
+    ScrapeTarget(ScrapeTarget&& other) = default;
+    ScrapeTarget& operator=(const ScrapeTarget& other) = default;
+    ScrapeTarget& operator=(ScrapeTarget&& other) = default;
+    ~ScrapeTarget() = default;
 
     Labels mLabels;
 

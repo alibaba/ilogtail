@@ -27,9 +27,7 @@ namespace logtail {
 Labels::Labels() : mMetricEventPtr(nullptr) {
 }
 
-Labels::Labels(const Labels& other) {
-    mMetricEventPtr = other.mMetricEventPtr;
-    mLabels = other.mLabels;
+Labels::Labels(const Labels& other) : mLabels(other.mLabels), mMetricEventPtr(other.mMetricEventPtr) {
 }
 
 size_t Labels::Size() const {
@@ -45,16 +43,15 @@ std::string Labels::Get(const string& name) {
     }
     if (mLabels.count(name)) {
         return mLabels[name];
-    } else {
-        return "";
     }
+    return "";
 }
 
 void Labels::Reset(MetricEvent* metricEvent) {
     for (auto it = metricEvent->TagsBegin(); it != metricEvent->TagsEnd(); it++) {
         Push(Label(it->first.to_string(), it->second.to_string()));
     }
-    Push(Label(prometheus::__NAME__, metricEvent->GetName().to_string()));
+    Push(Label(prometheus::NAME, metricEvent->GetName().to_string()));
 }
 
 void Labels::Push(const Label& l) {
@@ -72,7 +69,7 @@ void Labels::Range(const std::function<void(Label)>& f) {
         }
         return;
     }
-    for (auto l : mLabels) {
+    for (const auto& l : mLabels) {
         f(Label(l.first, l.second));
     }
 }
@@ -91,13 +88,13 @@ LabelsBuilder::LabelsBuilder() {
 
 // Del deletes the label of the given name.
 void LabelsBuilder::DeleteLabel(const vector<string>& nameList) {
-    for (auto name : nameList) {
+    for (const auto& name : nameList) {
         DeleteLabel(name);
     }
 }
 
 void LabelsBuilder::DeleteLabel(std::string name) {
-    auto it = find_if(mAddLabelList.begin(), mAddLabelList.end(), [&name](Label l) { return l.name == name; });
+    auto it = find_if(mAddLabelList.begin(), mAddLabelList.end(), [&name](const Label& l) { return l.name == name; });
     if (it != mAddLabelList.end()) {
         mAddLabelList.erase(it);
     }
@@ -136,7 +133,7 @@ void LabelsBuilder::Set(const std::string& name, const std::string& value) {
 
 void LabelsBuilder::Reset(Labels l) {
     mBase = l;
-    mBase.Range([this](Label l) {
+    mBase.Range([this](const Label& l) {
         if (l.value == "") {
             mDeleteLabelNameList.push_back(l.name);
         }
@@ -145,7 +142,7 @@ void LabelsBuilder::Reset(Labels l) {
 
 void LabelsBuilder::Reset(MetricEvent* metricEvent) {
     mBase.Reset(metricEvent);
-    mBase.Range([this](Label l) {
+    mBase.Range([this](const Label& l) {
         if (l.value == "") {
             mDeleteLabelNameList.push_back(l.name);
         }
@@ -161,16 +158,16 @@ Labels LabelsBuilder::GetLabels() {
     for (auto l = mBase.Begin(); l != mBase.End(); ++l) {
         if (find_if(mDeleteLabelNameList.begin(),
                     mDeleteLabelNameList.end(),
-                    [&l](string name) { return name == l->first; })
+                    [&l](const string& name) { return name == l->first; })
                 != mDeleteLabelNameList.end()
-            || find_if(mAddLabelList.begin(), mAddLabelList.end(), [&l](Label label) { return label.name == l->first; })
+            || find_if(mAddLabelList.begin(), mAddLabelList.end(), [&l](const Label& label) { return label.name == l->first; })
                 != mAddLabelList.end()) {
             continue;
         }
         res.Push(Label(l->first, l->second));
     }
 
-    for (auto l : mAddLabelList) {
+    for (const auto& l : mAddLabelList) {
         res.Push(l);
     }
     return res;
@@ -183,19 +180,19 @@ void LabelsBuilder::Range(const std::function<void(Label)>& closure) {
     auto originAdd = mAddLabelList;
     auto originDel = mDeleteLabelNameList;
     mBase.Range([&originAdd, &originDel, &closure](Label l) {
-        if (find_if(originAdd.begin(), originAdd.end(), [&l](Label label) { return l.name == label.name; })
+        if (find_if(originAdd.begin(), originAdd.end(), [&l](const Label& label) { return l.name == label.name; })
                 == originAdd.end()
             && find(originDel.begin(), originDel.end(), l.name) == originDel.end()) {
             closure(l);
         }
     });
-    for (auto item : originAdd) {
+    for (const auto& item : originAdd) {
         closure(item);
     }
 }
 
 uint64_t Labels::Hash() {
-    string hash = "";
+    string hash;
     uint64_t sum = prometheus::OFFSET64;
     Range([&hash](Label l) { hash += l.name + "\xff" + l.value + "\xff"; });
     for (auto i : hash) {
@@ -207,7 +204,7 @@ uint64_t Labels::Hash() {
 
 void Labels::RemoveMetaLabels() {
     for (auto it = mLabels.begin(); it != mLabels.end();) {
-        if (it->first.find(prometheus::__META_) == 0) {
+        if (it->first.find(prometheus::META) == 0) {
             it = mLabels.erase(it);
         } else {
             ++it;

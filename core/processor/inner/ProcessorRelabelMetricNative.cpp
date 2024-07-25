@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ProcessorRelabelMetricNative.h"
+#include "processor/inner/ProcessorRelabelMetricNative.h"
 
 #include <json/json.h>
 
@@ -44,9 +44,8 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
             }
         }
         return true;
-    } else {
-        return true;
     }
+    return true;
 }
 
 void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
@@ -66,7 +65,6 @@ void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
         }
     }
     events.resize(wIdx);
-    return;
 }
 
 bool ProcessorRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
@@ -77,7 +75,7 @@ bool ProcessorRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
         return false;
     }
-    MetricEvent& sourceEvent = e.Cast<MetricEvent>();
+    auto& sourceEvent = e.Cast<MetricEvent>();
 
     Labels labels;
 

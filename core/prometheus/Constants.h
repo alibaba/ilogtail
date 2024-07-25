@@ -2,13 +2,11 @@
 
 #include <cstdint>
 
-namespace logtail {
-
-namespace prometheus {
+namespace logtail::prometheus {
     const uint64_t PRIME64 = 1099511628211;
     const uint64_t OFFSET64 = 14695981039346656037ULL;
-    const uint64_t sRefeshIntervalSeconds = 5;
-    const char* const __META_ = "__meta_";
+    const uint64_t RefeshIntervalSeconds = 5;
+    const char* const META = "__meta_";
     const char* const UNDEFINED = "undefined";
 
     // relabel config
@@ -19,7 +17,7 @@ namespace prometheus {
     const char* const REPLACEMENT = "replacement";
     const char* const ACTION = "action";
     const char* const MODULUS = "modulus";
-    const char* const __NAME__ = "__name__";
+    const char* const NAME = "__name__";
 
     // prometheus env
     const char* const OPERATOR_HOST = "OPERATOR_HOST";
@@ -27,7 +25,7 @@ namespace prometheus {
     const char* const POD_NAME = "POD_NAME";
 
     // prometheus api
-    const char* const MATRIX_PROMETHEUS_ = "matrix_prometheus_";
+    const char* const MATRIX_PROMETHEUS_PREFIX = "matrix_prometheus_";
     const char* const REGISTER_COLLECTOR_PATH = "/register_collector";
     const char* const UNREGISTER_COLLECTOR_PATH = "/unregister_collector";
     const char* const ACCEPT = "Accept";
@@ -62,14 +60,13 @@ namespace prometheus {
     // metric labels
     const char* const JOB = "job";
     const char* const INSTANCE = "instance";
-    const char* const __ADDRESS__ = "__address__";
-    const char* const __SCRAPE_INTERVAL__ = "__scrape_interval__";
-    const char* const __SCRAPE_TIMEOUT__ = "__scrape_timeout__";
-    const char* const __SCHEME__ = "__scheme__";
-    const char* const __METRICS_PATH__ = "__metrics_path__";
-    const char* const __PARAM_ = "__param_";
+    const char* const ADDRESS_LABEL_NAME = "__address__";
+    const char* const SCRAPE_INTERVAL_LABEL_NAME = "__scrape_interval__";
+    const char* const SCRAPE_TIMEOUT_LABEL_NAME = "__scrape_timeout__";
+    const char* const SCHEME_LABEL_NAME = "__scheme__";
+    const char* const METRICS_PATH_LABEL_NAME = "__metrics_path__";
+    const char* const PARAM_LABEL_NAME = "__param_";
     const char* const LABELS = "labels";
 
-} // namespace prometheus
+} // namespace logtail::prometheus
 
-} // namespace logtail

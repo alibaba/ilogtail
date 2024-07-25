@@ -32,8 +32,8 @@ namespace logtail {
 class ScraperGroup {
 public:
     static ScraperGroup* GetInstance() {
-        static ScraperGroup group;
-        return &group;
+        static ScraperGroup sGroup;
+        return &sGroup;
     }
 
     void UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr);

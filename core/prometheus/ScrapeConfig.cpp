@@ -40,17 +40,17 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::SCRAPE_INTERVAL) && scrapeConfig[prometheus::SCRAPE_INTERVAL].isString()) {
         string tmpScrapeIntervalString = scrapeConfig[prometheus::SCRAPE_INTERVAL].asString();
         if (EndWith(tmpScrapeIntervalString, "s")) {
-            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("s")));
+            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find('s')));
         } else if (EndWith(tmpScrapeIntervalString, "m")) {
-            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("m"))) * 60;
+            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find('m'))) * 60;
         }
     }
     if (scrapeConfig.isMember(prometheus::SCRAPE_TIMEOUT) && scrapeConfig[prometheus::SCRAPE_TIMEOUT].isString()) {
         string tmpScrapeTimeoutString = scrapeConfig[prometheus::SCRAPE_TIMEOUT].asString();
         if (EndWith(tmpScrapeTimeoutString, "s")) {
-            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("s")));
+            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find('s')));
         } else if (EndWith(tmpScrapeTimeoutString, "m")) {
-            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("m"))) * 60;
+            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find('m'))) * 60;
         }
     }
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
@@ -60,30 +60,30 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             mMaxScrapeSizeBytes = -1;
         } else if (EndWith(tmpMaxScrapeSize, "KiB") || EndWith(tmpMaxScrapeSize, "K")
                    || EndWith(tmpMaxScrapeSize, "KB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("K"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('K'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "MiB") || EndWith(tmpMaxScrapeSize, "M")
                    || EndWith(tmpMaxScrapeSize, "MB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("M"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('M'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "GiB") || EndWith(tmpMaxScrapeSize, "G")
                    || EndWith(tmpMaxScrapeSize, "GB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("G"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('G'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "TiB") || EndWith(tmpMaxScrapeSize, "T")
                    || EndWith(tmpMaxScrapeSize, "TB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("T"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('T'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "PiB") || EndWith(tmpMaxScrapeSize, "P")
                    || EndWith(tmpMaxScrapeSize, "PB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("P"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('P'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "EiB") || EndWith(tmpMaxScrapeSize, "E")
                    || EndWith(tmpMaxScrapeSize, "EB")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("E"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('E'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "B")) {
-            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("B"));
+            tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find('B'));
             mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize);
         }
     }
@@ -139,7 +139,9 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             if (!mQueryString.empty()) {
                 mQueryString += "&";
             }
-            mQueryString = mQueryString + key + "=" + value;
+            mQueryString += key;
+            mQueryString += "=";
+            mQueryString += value;
         }
     }
 

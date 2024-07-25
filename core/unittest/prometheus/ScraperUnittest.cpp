@@ -158,7 +158,7 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 
 
-    // 手动构造插件的scrape job 和 target
+    // build scrape job and target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"test_label", "test_value"});
@@ -191,7 +191,7 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     // start scraper group first
     ScraperGroup::GetInstance()->Start();
 
-    // 手动构造插件的scrape job 和 target
+    // build scrape job and target
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"test_label", "test_value"});

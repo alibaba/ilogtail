@@ -18,12 +18,12 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    std::string mJobName;
-
 private:
     bool CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx);
     // only one job is supported
     std::unique_ptr<ScrapeJob> mScrapeJobPtr;
+
+    std::string mJobName;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;
