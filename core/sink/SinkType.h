@@ -18,6 +18,6 @@
 
 namespace logtail {
 
-enum class SinkType { HTTP, UNKNOWN };
+enum class SinkType { HTTP, NONE };
 
 } // namespace logtail

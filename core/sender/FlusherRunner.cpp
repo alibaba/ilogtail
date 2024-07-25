@@ -21,12 +21,12 @@
 #include "flusher/sls/DiskBufferWriter.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
+#include "plugin/interface/HttpFlusher.h"
 #include "queue/QueueKeyManager.h"
 #include "queue/SenderQueueItem.h"
 #include "queue/SenderQueueManager.h"
 #include "sink/http/HttpRequest.h"
 #include "sink/http/HttpSink.h"
-#include "plugin/interface/HttpFlusher.h"
 // TODO: temporarily used here
 #include "flusher/sls/PackIdManager.h"
 #include "flusher/sls/SLSClientManager.h"
@@ -62,13 +62,32 @@ void FlusherRunner::DecreaseHttpSendingCnt() {
     SenderQueueManager::GetInstance()->Trigger();
 }
 
-void FlusherRunner::PushToHttpSink(SenderQueueItem* item) {
+void FlusherRunner::PushToHttpSink(SenderQueueItem* item, bool withLimit) {
     if (!BOOL_FLAG(enable_full_drain_mode) && item->mFlusher->Name() == "flusher_sls"
         && Application::GetInstance()->IsExiting()) {
         DiskBufferWriter::GetInstance()->PushToDiskBuffer(item, 3);
         SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
         return;
     }
+
+    int32_t beforeSleepTime = time(NULL);
+    while (withLimit && !Application::GetInstance()->IsExiting()
+           && GetSendingBufferCount() >= AppConfig::GetInstance()->GetSendRequestConcurrency()) {
+        usleep(10 * 1000);
+    }
+    int32_t afterSleepTime = time(NULL);
+    int32_t blockCostTime = afterSleepTime - beforeSleepTime;
+    if (blockCostTime > SEND_BLOCK_COST_TIME_ALARM_INTERVAL_SECOND) {
+        LOG_WARNING(sLogger,
+                    ("sending log group blocked too long because send concurrency reached limit. current "
+                     "concurrency used",
+                     GetSendingBufferCount())("max concurrency", AppConfig::GetInstance()->GetSendRequestConcurrency())(
+                        "blocked time", blockCostTime));
+        LogtailAlarm::GetInstance()->SendAlarm(SENDING_COSTS_TOO_MUCH_TIME_ALARM,
+                                               "sending log group blocked for too much time, cost "
+                                                   + ToString(blockCostTime));
+    }
+
     unique_ptr<HttpRequest> req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
     item->mLastSendTime = time(nullptr);
     HttpSink::GetInstance()->AddRequest(std::move(req));
@@ -109,25 +128,6 @@ void FlusherRunner::Run() {
 
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendFlowControl()) {
                 RateLimiter::FlowControl((*itr)->mRawSize, mSendLastTime, mSendLastByte, true);
-            }
-
-            int32_t beforeSleepTime = time(NULL);
-            while (!Application::GetInstance()->IsExiting()
-                   && GetSendingBufferCount() >= AppConfig::GetInstance()->GetSendRequestConcurrency()) {
-                usleep(10 * 1000);
-            }
-            int32_t afterSleepTime = time(NULL);
-            int32_t blockCostTime = afterSleepTime - beforeSleepTime;
-            if (blockCostTime > SEND_BLOCK_COST_TIME_ALARM_INTERVAL_SECOND) {
-                LOG_WARNING(
-                    sLogger,
-                    ("sending log group blocked too long because send concurrency reached limit. current "
-                     "concurrency used",
-                     GetSendingBufferCount())("max concurrency", AppConfig::GetInstance()->GetSendRequestConcurrency())(
-                        "blocked time", blockCostTime));
-                LogtailAlarm::GetInstance()->SendAlarm(SENDING_COSTS_TOO_MUCH_TIME_ALARM,
-                                                       "sending log group blocked for too much time, cost "
-                                                           + ToString(blockCostTime));
             }
 
             Dispatch(*itr);

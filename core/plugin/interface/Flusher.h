@@ -40,7 +40,7 @@ public:
     virtual bool Flush(size_t key) = 0;
     virtual bool FlushAll() = 0;
 
-    virtual SinkType GetSinkType() { return SinkType::UNKNOWN; }
+    virtual SinkType GetSinkType() { return SinkType::NONE; }
 
     QueueKey GetQueueKey() const { return mQueueKey; }
 

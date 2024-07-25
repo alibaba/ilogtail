@@ -760,7 +760,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
 
         switch (operation) {
             case OperationOnFail::RETRY_IMMEDIATELY:
-                FlusherRunner::GetInstance()->PushToHttpSink(item);
+                FlusherRunner::GetInstance()->PushToHttpSink(item, false);
                 break;
             case OperationOnFail::RETRY_LATER:
                 if (slsResponse.mErrorCode == sdk::LOGE_REQUEST_TIMEOUT

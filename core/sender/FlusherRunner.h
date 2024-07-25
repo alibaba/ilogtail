@@ -42,7 +42,7 @@ public:
     void DecreaseHttpSendingCnt();
 
     // TODO: should be private
-    void PushToHttpSink(SenderQueueItem* item);
+    void PushToHttpSink(SenderQueueItem* item, bool withLimit = true);
 
     int32_t GetSendingBufferCount() { return mHttpSendingCnt; }
 
