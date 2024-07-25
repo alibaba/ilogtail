@@ -23,10 +23,10 @@
 #include <boost/regex.hpp>
 #include <string>
 
-#include "Constants.h"
 #include "common/ParamExtractor.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
+#include "prometheus/Constants.h"
 
 using namespace std;
 

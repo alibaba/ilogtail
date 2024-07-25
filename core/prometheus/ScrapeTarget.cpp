@@ -1,8 +1,8 @@
-#include "ScrapeTarget.h"
+#include "prometheus/ScrapeTarget.h"
 
-#include "Constants.h"
-#include "Labels.h"
-#include "StringTools.h"
+#include "common/StringTools.h"
+#include "prometheus/Constants.h"
+#include "prometheus/Labels.h"
 
 using namespace std;
 

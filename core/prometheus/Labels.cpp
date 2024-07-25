@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "Constants.h"
+#include "prometheus/Constants.h"
 
 using namespace std;
 namespace logtail {

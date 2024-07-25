@@ -19,9 +19,10 @@
 
 #include <cstddef>
 
-#include "PipelineEventGroup.h"
-#include "PipelineEventPtr.h"
 #include "models/MetricEvent.h"
+#include "models/PipelineEventGroup.h"
+#include "models/PipelineEventPtr.h"
+#include "prometheus/Constants.h"
 
 using namespace std;
 namespace logtail {
@@ -32,9 +33,9 @@ const string ProcessorRelabelMetricNative::sName = "processor_relabel_metric_nat
 bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
     LOG_INFO(sLogger, ("processor init", config.toStyledString()));
     std::string errorMsg;
-    if (config.isMember("metric_relabel_configs") && config["metric_relabel_configs"].isArray()
-        && config["metric_relabel_configs"].size() > 0) {
-        for (const auto& item : config["metric_relabel_configs"]) {
+    if (config.isMember(prometheus::METRIC_RELABEL_CONFIGS) && config[prometheus::METRIC_RELABEL_CONFIGS].isArray()
+        && config[prometheus::METRIC_RELABEL_CONFIGS].size() > 0) {
+        for (const auto& item : config[prometheus::METRIC_RELABEL_CONFIGS]) {
             mRelabelConfigs.emplace_back(item);
             if (!mRelabelConfigs.back().Validate()) {
                 errorMsg = "metric_relabel_configs is invalid";

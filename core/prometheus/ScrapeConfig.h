@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "Relabel.h"
+#include "prometheus/Relabel.h"
 
 
 namespace logtail {

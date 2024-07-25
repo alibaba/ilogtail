@@ -1,6 +1,9 @@
 #pragma once
 
-#include "Labels.h"
+#include <cstdint>
+#include <string>
+
+#include "prometheus/Labels.h"
 namespace logtail {
 class ScrapeTarget {
 public:

@@ -20,10 +20,10 @@
 #include <memory>
 #include <string>
 
-#include "ScrapeConfig.h"
-#include "ScrapeTarget.h"
 #include "common/Thread.h"
 #include "models/PipelineEventGroup.h"
+#include "prometheus/ScrapeConfig.h"
+#include "prometheus/ScrapeTarget.h"
 #include "queue/FeedbackQueueKey.h"
 #include "sdk/Common.h"
 

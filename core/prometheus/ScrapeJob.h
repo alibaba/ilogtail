@@ -24,11 +24,11 @@
 #include <string>
 #include <unordered_map>
 
-#include "Common.h"
-#include "FeedbackQueueKey.h"
-#include "ScrapeConfig.h"
-#include "ScrapeTarget.h"
-#include "Thread.h"
+#include "common/Thread.h"
+#include "prometheus/ScrapeConfig.h"
+#include "prometheus/ScrapeTarget.h"
+#include "queue/FeedbackQueueKey.h"
+#include "sdk/Common.h"
 
 
 namespace logtail {

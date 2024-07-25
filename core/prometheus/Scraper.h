@@ -23,9 +23,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "ScrapeJob.h"
-#include "ScrapeWork.h"
 #include "common/Thread.h"
+#include "prometheus/ScrapeJob.h"
+#include "prometheus/ScrapeWork.h"
 
 namespace logtail {
 

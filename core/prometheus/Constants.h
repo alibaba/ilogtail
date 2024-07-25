@@ -40,6 +40,7 @@ namespace prometheus {
 
 
     // scrape config
+    const char* const SCRAPE_CONFIG = "ScrapeConfig";
     const char* const JOB_NAME = "job_name";
     const char* const SCHEME = "scheme";
     const char* const METRICS_PATH = "metrics_path";

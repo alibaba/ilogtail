@@ -23,10 +23,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Constants.h"
-#include "ScrapeWork.h"
 #include "common/Thread.h"
 #include "logger/Logger.h"
+#include "prometheus/Constants.h"
+#include "prometheus/ScrapeWork.h"
 
 using namespace std;
 

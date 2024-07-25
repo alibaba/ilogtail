@@ -24,13 +24,13 @@
 #include <string>
 #include <utility>
 
-#include "Constants.h"
-#include "FeedbackQueueKey.h"
-#include "StringTools.h"
-#include "TextParser.h"
+#include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
+#include "prometheus/Constants.h"
 #include "prometheus/ScrapeTarget.h"
+#include "prometheus/TextParser.h"
+#include "queue/FeedbackQueueKey.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
 #include "sdk/CurlImp.h"

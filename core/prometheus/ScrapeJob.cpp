@@ -22,14 +22,14 @@
 #include <memory>
 #include <string>
 
-#include "Common.h"
-#include "Constants.h"
-#include "CurlImp.h"
-#include "Exception.h"
-#include "JsonUtil.h"
+#include "common/JsonUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
+#include "prometheus/Constants.h"
+#include "sdk/Common.h"
+#include "sdk/CurlImp.h"
+#include "sdk/Exception.h"
 
 using namespace std;
 

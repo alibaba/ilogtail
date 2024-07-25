@@ -26,10 +26,10 @@
 #include <sstream>
 #include <string>
 
-#include "Constants.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "models/MetricEvent.h"
+#include "prometheus/Constants.h"
 
 using namespace std;
 

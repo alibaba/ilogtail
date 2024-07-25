@@ -18,9 +18,9 @@
 
 #include <string>
 
-#include "PipelineEventGroup.h"
-#include "PipelineEventPtr.h"
-#include "Processor.h"
+#include "models/PipelineEventGroup.h"
+#include "models/PipelineEventPtr.h"
+#include "plugin/interface/Processor.h"
 #include "prometheus/Relabel.h"
 
 namespace logtail {
@@ -36,7 +36,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ProcessEvent( PipelineEventPtr& e);
+    bool ProcessEvent(PipelineEventPtr& e);
 
     std::vector<RelabelConfig> mRelabelConfigs;
 

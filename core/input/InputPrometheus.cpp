@@ -23,10 +23,11 @@
 #include <string>
 
 #include "PluginRegistry.h"
-#include "ProcessorInstance.h"
 #include "inner/ProcessorRelabelMetricNative.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
+#include "plugin/instance/ProcessorInstance.h"
+#include "prometheus/Constants.h"
 #include "prometheus/PrometheusInputRunner.h"
 
 using namespace std;
@@ -42,12 +43,12 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     string errorMsg;
 
     // config["ScrapeConfig"]
-    if (!config.isMember("ScrapeConfig") || !config["ScrapeConfig"].isObject()) {
+    if (!config.isMember(prometheus::SCRAPE_CONFIG) || !config[prometheus::SCRAPE_CONFIG].isObject()) {
         errorMsg = "ScrapeConfig not found";
         LOG_ERROR(sLogger, ("init prometheus input failed", errorMsg));
         return false;
     }
-    const Json::Value& scrapeConfig = config["ScrapeConfig"];
+    const Json::Value& scrapeConfig = config[prometheus::SCRAPE_CONFIG];
 
     // build scrape job
     mScrapeJobPtr = make_unique<ScrapeJob>();

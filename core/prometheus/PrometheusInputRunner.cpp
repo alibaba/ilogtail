@@ -20,9 +20,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "Constants.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
+#include "prometheus/Constants.h"
 #include "prometheus/Scraper.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
