@@ -50,11 +50,7 @@ std::string Labels::Get(const string& name) {
     }
 }
 
-/// @brief 从MetricEvent中获取Labels
-/// @param metricEvent
-/// @warning MetricEvent的name保存在__name__中
 void Labels::Reset(MetricEvent* metricEvent) {
-    // metricEventPtr = metricEvent;
     for (auto it = metricEvent->TagsBegin(); it != metricEvent->TagsEnd(); it++) {
         Push(Label(it->first.to_string(), it->second.to_string()));
     }
@@ -177,9 +173,6 @@ Labels LabelsBuilder::GetLabels() {
     for (auto l : mAddLabelList) {
         res.Push(l);
     }
-    // Sort res labels
-    // Labels类在push_back后自动排序
-    // sort(res.begin(), res.end(), [](Label a, Label b) { return a.name < b.name; });
     return res;
 }
 

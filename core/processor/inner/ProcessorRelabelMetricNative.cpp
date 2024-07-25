@@ -81,7 +81,6 @@ bool ProcessorRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
 
     Labels labels;
 
-    // TODO: 使用Labels类作为对MetricEvent操作的适配器
     labels.Reset(&sourceEvent);
     Labels result;
 

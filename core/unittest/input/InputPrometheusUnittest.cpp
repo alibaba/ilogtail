@@ -158,9 +158,9 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
     APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
     APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mScrapeConfigPtr->mMetricsPath);
-    APSARA_TEST_EQUAL(15LL, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeInterval);
-    APSARA_TEST_EQUAL(15LL, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeTimeout);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mMaxScrapeSize);
+    APSARA_TEST_EQUAL(15LL, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
+    APSARA_TEST_EQUAL(15LL, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
     APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mSampleLimit);
     APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mSeriesLimit);
 
@@ -194,9 +194,9 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
     APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
     APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mScrapeConfigPtr->mMetricsPath);
-    APSARA_TEST_EQUAL(15, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeInterval);
-    APSARA_TEST_EQUAL(15, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeTimeout);
-    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mScrapeJobPtr->mScrapeConfigPtr->mMaxScrapeSize);
+    APSARA_TEST_EQUAL(15, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
+    APSARA_TEST_EQUAL(15, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
+    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mScrapeJobPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
     APSARA_TEST_EQUAL(1000000, input->mScrapeJobPtr->mScrapeConfigPtr->mSampleLimit);
     APSARA_TEST_EQUAL(1000000, input->mScrapeJobPtr->mScrapeConfigPtr->mSeriesLimit);
 }

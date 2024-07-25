@@ -52,9 +52,9 @@ void ScrapeConfigUnittest::TestInit() {
     APSARA_TEST_EQUAL(scrapeConfig.mJobName, "test_job");
     APSARA_TEST_EQUAL(scrapeConfig.mScheme, "http");
     APSARA_TEST_EQUAL(scrapeConfig.mMetricsPath, "/metrics");
-    APSARA_TEST_EQUAL(scrapeConfig.mScrapeInterval, 30);
-    APSARA_TEST_EQUAL(scrapeConfig.mScrapeTimeout, 30);
-    APSARA_TEST_EQUAL(scrapeConfig.mMaxScrapeSize, 1024 * 1024 * 1024);
+    APSARA_TEST_EQUAL(scrapeConfig.mScrapeIntervalSeconds, 30);
+    APSARA_TEST_EQUAL(scrapeConfig.mScrapeTimeoutSeconds, 30);
+    APSARA_TEST_EQUAL(scrapeConfig.mMaxScrapeSizeBytes, 1024 * 1024 * 1024);
     APSARA_TEST_EQUAL(scrapeConfig.mSampleLimit, 10000);
     APSARA_TEST_EQUAL(scrapeConfig.mSeriesLimit, 10000);
     APSARA_TEST_EQUAL(scrapeConfig.mRelabelConfigs.size(), 1UL);

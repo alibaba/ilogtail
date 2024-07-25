@@ -130,7 +130,6 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::sRefeshIntervalSeconds);
     httpHeader[prometheus::USER_AGENT] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
     sdk::HttpMessage httpResponse;
-    // TODO: 等待框架删除对respond返回头的 X_LOG_REQUEST_ID 检查
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
 
     bool httpsFlag = mScrapeConfigPtr->mScheme == prometheus::HTTPS;
@@ -197,13 +196,13 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         labels.Push(Label{prometheus::__SCHEME__, mScrapeConfigPtr->mScheme});
         labels.Push(Label{prometheus::__METRICS_PATH__, mScrapeConfigPtr->mMetricsPath});
         labels.Push(Label{prometheus::__SCRAPE_INTERVAL__,
-                          (mScrapeConfigPtr->mScrapeInterval % 60 == 0)
-                              ? ToString(mScrapeConfigPtr->mScrapeInterval / 60) + "m"
-                              : ToString(mScrapeConfigPtr->mScrapeInterval) + "s"});
+                          (mScrapeConfigPtr->mScrapeIntervalSeconds % 60 == 0)
+                              ? ToString(mScrapeConfigPtr->mScrapeIntervalSeconds / 60) + "m"
+                              : ToString(mScrapeConfigPtr->mScrapeIntervalSeconds) + "s"});
         labels.Push(Label{prometheus::__SCRAPE_TIMEOUT__,
-                          (mScrapeConfigPtr->mScrapeTimeout % 60 == 0)
-                              ? ToString(mScrapeConfigPtr->mScrapeTimeout / 60) + "m"
-                              : ToString(mScrapeConfigPtr->mScrapeTimeout) + "s"});
+                          (mScrapeConfigPtr->mScrapeTimeoutSeconds % 60 == 0)
+                              ? ToString(mScrapeConfigPtr->mScrapeTimeoutSeconds / 60) + "m"
+                              : ToString(mScrapeConfigPtr->mScrapeTimeoutSeconds) + "s"});
         for (const auto& pair : mScrapeConfigPtr->mParams) {
             labels.Push(Label{prometheus::__PARAM_ + pair.first, pair.second[0]});
         }

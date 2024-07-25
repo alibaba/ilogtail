@@ -16,9 +16,9 @@ namespace logtail {
 ScrapeConfig::ScrapeConfig()
     : mScheme("http"),
       mMetricsPath("/metrics"),
-      mScrapeInterval(60),
-      mScrapeTimeout(10),
-      mMaxScrapeSize(-1),
+      mScrapeIntervalSeconds(60),
+      mScrapeTimeoutSeconds(10),
+      mMaxScrapeSizeBytes(-1),
       mSampleLimit(-1),
       mSeriesLimit(-1) {
 }
@@ -40,51 +40,51 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::SCRAPE_INTERVAL) && scrapeConfig[prometheus::SCRAPE_INTERVAL].isString()) {
         string tmpScrapeIntervalString = scrapeConfig[prometheus::SCRAPE_INTERVAL].asString();
         if (EndWith(tmpScrapeIntervalString, "s")) {
-            mScrapeInterval = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("s")));
+            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("s")));
         } else if (EndWith(tmpScrapeIntervalString, "m")) {
-            mScrapeInterval = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("m"))) * 60;
+            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find("m"))) * 60;
         }
     }
     if (scrapeConfig.isMember(prometheus::SCRAPE_TIMEOUT) && scrapeConfig[prometheus::SCRAPE_TIMEOUT].isString()) {
         string tmpScrapeTimeoutString = scrapeConfig[prometheus::SCRAPE_TIMEOUT].asString();
         if (EndWith(tmpScrapeTimeoutString, "s")) {
-            mScrapeTimeout = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("s")));
+            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("s")));
         } else if (EndWith(tmpScrapeTimeoutString, "m")) {
-            mScrapeTimeout = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("m"))) * 60;
+            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find("m"))) * 60;
         }
     }
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
     if (scrapeConfig.isMember(prometheus::MAX_SCRAPE_SIZE) && scrapeConfig[prometheus::MAX_SCRAPE_SIZE].isString()) {
         string tmpMaxScrapeSize = scrapeConfig[prometheus::MAX_SCRAPE_SIZE].asString();
         if (tmpMaxScrapeSize.empty()) {
-            mMaxScrapeSize = -1;
+            mMaxScrapeSizeBytes = -1;
         } else if (EndWith(tmpMaxScrapeSize, "KiB") || EndWith(tmpMaxScrapeSize, "K")
                    || EndWith(tmpMaxScrapeSize, "KB")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("K"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024;
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "MiB") || EndWith(tmpMaxScrapeSize, "M")
                    || EndWith(tmpMaxScrapeSize, "MB")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("M"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024;
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "GiB") || EndWith(tmpMaxScrapeSize, "G")
                    || EndWith(tmpMaxScrapeSize, "GB")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("G"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024;
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "TiB") || EndWith(tmpMaxScrapeSize, "T")
                    || EndWith(tmpMaxScrapeSize, "TB")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("T"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024;
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "PiB") || EndWith(tmpMaxScrapeSize, "P")
                    || EndWith(tmpMaxScrapeSize, "PB")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("P"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024 * 1024;
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "EiB") || EndWith(tmpMaxScrapeSize, "E")
                    || EndWith(tmpMaxScrapeSize, "EB")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("E"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024 * 1024 * 1024;
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize) * 1024 * 1024 * 1024 * 1024 * 1024 * 1024;
         } else if (EndWith(tmpMaxScrapeSize, "B")) {
             tmpMaxScrapeSize = tmpMaxScrapeSize.substr(0, tmpMaxScrapeSize.find("B"));
-            mMaxScrapeSize = stoll(tmpMaxScrapeSize);
+            mMaxScrapeSizeBytes = stoll(tmpMaxScrapeSize);
         }
     }
 

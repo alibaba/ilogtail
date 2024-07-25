@@ -35,7 +35,6 @@ using namespace std;
 
 namespace logtail {
 
-// TODO: 830移除正则依赖
 const std::string SAMPLE_RE = R"""(^(?P<name>\w+)(\{(?P<labels>[^}]+)\})?\s+(?P<value>\S+)(\s+(?P<timestamp>\S+))?)""";
 
 PipelineEventGroup TextParser::Parse(const string& content) {
@@ -46,7 +45,6 @@ PipelineEventGroup TextParser::Parse(const string& content) {
     return Parse(content, defaultTsInSecs, "", "");
 }
 
-// TODO: jobName和instance在后续移动到接近业务的位置
 PipelineEventGroup
 TextParser::Parse(const string& content, const time_t defaultTsInSecs, const string& jobName, const string& instance) {
     string line;
@@ -111,9 +109,7 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
             timestamp = defaultTsInSecs;
         } else {
             try {
-                // TODO: check if timestamp is out of window （e.g. 24h)
                 timestamp = stol(argTimestamp) / 1000;
-                // TODO: convert milli-second part into nano-second
             } catch (const exception&) {
                 LOG_WARNING(sLogger, ("invalid value", argTimestamp)("raw line", line));
                 continue;

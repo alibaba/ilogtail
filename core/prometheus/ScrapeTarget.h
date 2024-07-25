@@ -14,7 +14,6 @@ public:
 
     Labels mLabels;
 
-    // target info
     std::string mHost;
     uint32_t mPort;
 

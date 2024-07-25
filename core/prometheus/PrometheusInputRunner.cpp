@@ -32,7 +32,6 @@ using namespace std;
 
 namespace logtail {
 
-// TODO: 在PipelineManager类中注册该插件的管理类，用Init初始化
 PrometheusInputRunner::PrometheusInputRunner() {
     mClient = std::make_unique<sdk::CurlClient>();
 
@@ -74,7 +73,6 @@ void PrometheusInputRunner::Start() {
         map<string, string> httpHeader;
         httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         sdk::HttpMessage httpResponse;
-        // TODO: 等待curlImpl删除返回头校验
         httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,
@@ -95,7 +93,6 @@ void PrometheusInputRunner::Start() {
             LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
         } else {
             // register success
-            // 解析unRegisterMs时间戳
             if (httpResponse.content.empty()) {
                 LOG_ERROR(sLogger, ("unregister failed, content is empty", ""));
             } else {
@@ -116,7 +113,6 @@ void PrometheusInputRunner::Stop() {
         map<string, string> httpHeader;
         httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         sdk::HttpMessage httpResponse;
-        // TODO: 等待curlImpl删除返回头校验
         httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_ + mPodName;
         try {
             mClient->Send(sdk::HTTP_GET,

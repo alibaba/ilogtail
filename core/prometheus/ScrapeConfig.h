@@ -16,12 +16,9 @@ public:
     std::string mJobName;
     std::string mScheme;
     std::string mMetricsPath;
-    // in seconds
-    int64_t mScrapeInterval;
-    // in seconds
-    int64_t mScrapeTimeout;
-    // in bytes
-    int64_t mMaxScrapeSize;
+    int64_t mScrapeIntervalSeconds;
+    int64_t mScrapeTimeoutSeconds;
+    int64_t mMaxScrapeSizeBytes;
     int64_t mSampleLimit;
     int64_t mSeriesLimit;
     std::vector<RelabelConfig> mRelabelConfigs;

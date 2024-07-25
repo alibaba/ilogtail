@@ -42,7 +42,7 @@ public:
     void Start();
     void Stop();
 
-    // 无损升级/重启
+    // zero-cost upgrade
     uint64_t mUnRegisterMs;
 
 private:

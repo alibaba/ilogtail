@@ -115,18 +115,10 @@ RelabelConfig::RelabelConfig(const Json::Value& config) {
     }
 }
 
-// TODO: validation config
 bool RelabelConfig::Validate() {
     return true;
 }
 
-
-// Process returns a relabeled version of the given label set. The relabel configurations
-// are applied in order of input.
-// There are circumstances where Process will modify the input label.
-// If you want to avoid issues with the input label set being modified, at the cost of
-// higher memory usage, you can use lbls.Copy().
-// If a label set is dropped, EmptyLabels and false is returned.
 bool prometheus::Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret) {
     auto lb = LabelsBuilder();
     lb.Reset(lbls);
@@ -138,8 +130,6 @@ bool prometheus::Process(const Labels& lbls, const std::vector<RelabelConfig>& c
     return true;
 }
 
-// ProcessBuilder is like Process, but the caller passes a labels.Builder
-// containing the initial set of labels, which is mutated by the rules.
 bool prometheus::ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>& cfgs) {
     for (const RelabelConfig& cfg : cfgs) {
         bool keep = Relabel(cfg, lb);
@@ -188,7 +178,6 @@ bool prometheus::Relabel(const RelabelConfig& cfg, LabelsBuilder& lb) {
             if (!indexes) {
                 break;
             }
-            // boost::format_all标志会因此再次匹配，此处禁用
             LabelName target
                 = LabelName(boost::regex_replace(val, cfg.mRegex, cfg.mTargetLabel, boost::format_first_only));
             if (!target.Validate()) {
@@ -260,7 +249,6 @@ LabelName::LabelName() {
 LabelName::LabelName(std::string labelName) : mLabelName(labelName) {
 }
 
-// TODO: UTF8Validation
 bool LabelName::Validate() {
     return true;
 }

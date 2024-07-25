@@ -68,7 +68,7 @@ private:
     std::unique_ptr<sdk::HTTPClient> mClient;
     ThreadPtr mScrapeLoopThread;
 
-    // 无损升级
+    // zero-cost upgrade
     uint64_t mUnRegisterMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
