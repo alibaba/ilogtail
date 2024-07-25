@@ -277,7 +277,7 @@ func initPluginBase(cfgStr string) int {
 		LoadGlobalConfig(cfgStr)
 		// TODO: for golang debug
 		instance := k8smeta.GetMetaManagerInstance()
-		err = instance.Init("/workspaces/kubeconfig")
+		err = instance.Init("")
 		if err != nil {
 			fmt.Println("init err")
 			return
