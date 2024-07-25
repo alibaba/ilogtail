@@ -114,7 +114,6 @@ void ScraperGroup::Stop() {
         RemoveScrapeJob(jobName);
     }
 
-
     {
         lock_guard<mutex> lock(mMutex);
         mScrapeWorkMap.clear();

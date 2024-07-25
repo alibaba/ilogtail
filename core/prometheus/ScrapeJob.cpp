@@ -233,15 +233,4 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
     return true;
 }
 
-// only support xxs, xxm
-int ScrapeJob::GetIntSeconds(const string& str) const {
-    int value = stoi(str.substr(0, str.size() - 1));
-    if (str.back() == 's') {
-        return value;
-    } else if (str.back() == 'm') {
-        return 60 * value;
-    }
-    return 30;
-}
-
 } // namespace logtail

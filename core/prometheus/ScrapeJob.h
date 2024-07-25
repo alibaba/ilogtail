@@ -81,7 +81,6 @@ private:
     bool FetchHttpData(std::string& readBuffer) const;
     bool ParseTargetGroups(const std::string& response,
                            std::unordered_map<std::string, ScrapeTarget>& newScrapeTargetsMap) const;
-    int GetIntSeconds(const std::string& str) const;
     std::string ConvertMapParamsToQueryString() const;
 
 #ifdef APSARA_UNIT_TEST_MAIN
