@@ -131,10 +131,6 @@ void ProfileSender::SendToProfileProject(const string& region, sls_logs::LogGrou
     if (0 == logGroup.category().compare("logtail_status_profile")) {
         SendRunningStatus(logGroup);
     }
-
-    // Opensource is not necessary to synchronize data with SLS
-    FlusherRunner::GetInstance()->RestLastSenderTime();
-    return;
 }
 
 void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {

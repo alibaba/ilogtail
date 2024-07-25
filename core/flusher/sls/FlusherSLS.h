@@ -28,16 +28,17 @@
 #include "batch/Batcher.h"
 #include "compression/Compressor.h"
 #include "models/PipelineEventGroup.h"
-#include "plugin/interface/Flusher.h"
+#include "plugin/interface/HttpFlusher.h"
 #include "queue/SenderQueueItem.h"
 #include "sender/ConcurrencyLimiter.h"
 #include "serializer/SLSSerializer.h"
 
 namespace logtail {
 
-class FlusherSLS : public Flusher {
+class FlusherSLS : public HttpFlusher {
     // TODO: temporarily used
     friend class ProfileSender;
+
 public:
     enum class TelemetryType { LOG, METRIC };
 

@@ -760,7 +760,6 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
 
         switch (operation) {
             case OperationOnFail::RETRY_IMMEDIATELY:
-                FlusherRunner::GetInstance()->IncreaseSendingCnt();
                 FlusherRunner::GetInstance()->PushToHttpSink(item);
                 break;
             case OperationOnFail::RETRY_LATER:

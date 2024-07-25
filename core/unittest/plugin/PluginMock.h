@@ -22,9 +22,11 @@
 #include "plugin/creator/StaticFlusherCreator.h"
 #include "plugin/creator/StaticInputCreator.h"
 #include "plugin/creator/StaticProcessorCreator.h"
-#include "plugin/instance/FlusherInstance.h"
-#include "plugin/instance/InputInstance.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "plugin/interface/Flusher.h"
+#include "plugin/interface/HttpFlusher.h"
+#include "plugin/interface/Input.h"
+#include "plugin/interface/Processor.h"
+#include "queue/SenderQueueManager.h"
 
 namespace logtail {
 
@@ -83,15 +85,17 @@ public:
     static const std::string sName;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override { return true; }
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override {
+        GenerateQueueKey("mock");
+        SenderQueueManager::GetInstance()->CreateQueue(mQueueKey);
+        return true;
+    }
     bool Send(PipelineEventGroup&& g) override { return mIsValid; }
     bool Flush(size_t key) override {
         mFlushedQueues.push_back(key);
         return true;
     }
     bool FlushAll() override { return mIsValid; }
-    std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const override { return nullptr; }
-    void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override {}
 
     bool mIsValid = true;
     std::vector<size_t> mFlushedQueues;
@@ -99,12 +103,16 @@ public:
 
 const std::string FlusherMock::sName = "flusher_mock";
 
-class FlusherHttpMock : public Flusher {
+class FlusherHttpMock : public HttpFlusher {
 public:
     static const std::string sName;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override { return true; }
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override {
+        GenerateQueueKey("mock");
+        SenderQueueManager::GetInstance()->CreateQueue(mQueueKey);
+        return true;
+    }
     bool Send(PipelineEventGroup&& g) override { return mIsValid; }
     bool Flush(size_t key) override {
         mFlushedQueues.push_back(key);
@@ -124,8 +132,8 @@ void LoadPluginMock() {
     PluginRegistry::GetInstance()->RegisterInputCreator(new StaticInputCreator<InputMock>());
     PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorInnerMock>());
     PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMock>());
-    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>(), SinkType::UNKNOWN);
-    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherHttpMock>(), SinkType::HTTP);
+    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>());
+    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherHttpMock>());
 }
 
 } // namespace logtail

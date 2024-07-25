@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,7 @@
 #include "plugin/interface/Plugin.h"
 #include "queue/FeedbackQueueKey.h"
 #include "queue/SenderQueueItem.h"
-#include "sink/http/HttpRequest.h"
-#include "sink/http/HttpResponse.h"
+#include "sink/SinkType.h"
 
 namespace logtail {
 
@@ -40,8 +39,8 @@ public:
     virtual bool Send(PipelineEventGroup&& g) = 0;
     virtual bool Flush(size_t key) = 0;
     virtual bool FlushAll() = 0;
-    virtual std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const = 0;
-    virtual void OnSendDone(const HttpResponse& response, SenderQueueItem* item) = 0;
+
+    virtual SinkType GetSinkType() { return SinkType::UNKNOWN; }
 
     QueueKey GetQueueKey() const { return mQueueKey; }
 

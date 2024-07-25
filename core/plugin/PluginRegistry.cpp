@@ -144,7 +144,7 @@ void PluginRegistry::LoadStaticPlugins() {
     }
 #endif
 
-    RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>(), SinkType::HTTP);
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
@@ -175,9 +175,8 @@ void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
     RegisterCreator(PROCESSOR_PLUGIN, creator);
 }
 
-void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator, SinkType type) {
+void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator) {
     RegisterCreator(FLUSHER_PLUGIN, creator);
-    FlusherRunner::GetInstance()->RegisterSink(creator->Name(), type);
 }
 
 PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const string pluginName) {

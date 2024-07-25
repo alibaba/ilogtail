@@ -19,7 +19,6 @@
 #include <atomic>
 #include <cstdint>
 #include <future>
-#include <unordered_map>
 
 #include "plugin/interface/Flusher.h"
 #include "queue/SenderQueueItem.h"
@@ -40,21 +39,12 @@ public:
     bool Init();
     void Stop();
 
-    void IncreaseSendingCnt();
-    void DecreaseSendingCnt();
+    void DecreaseHttpSendingCnt();
 
+    // TODO: should be private
     void PushToHttpSink(SenderQueueItem* item);
 
-    void RegisterSink(const std::string& flusher, SinkType type);
-
-    int32_t GetSendingBufferCount() { return mSendingBufferCount; }
-    int32_t GetLastDeamonRunTime() { return mLastDaemonRunTime; }
-    int32_t GetLastSendTime() { return mLastSendDataTime; }
-
-    void RestLastSenderTime() {
-        mLastDaemonRunTime = 0;
-        mLastSendDataTime = 0;
-    }
+    int32_t GetSendingBufferCount() { return mHttpSendingCnt; }
 
 private:
     FlusherRunner() = default;
@@ -66,13 +56,9 @@ private:
     std::future<void> mThreadRes;
     std::atomic_bool mIsFlush = false;
 
-    std::unordered_map<std::string, SinkType> mFlusherSinkMap;
+    std::atomic_int mHttpSendingCnt{0};
 
-    std::atomic_int mSendingBufferCount{0};
-
-    std::atomic_int mLastDaemonRunTime{0};
-    std::atomic_int mLastSendDataTime{0};
-
+    // TODO: temporarily here
     int32_t mLastCheckSendClientTime = 0;
     int64_t mSendLastTime = 0;
     int32_t mSendLastByte = 0;

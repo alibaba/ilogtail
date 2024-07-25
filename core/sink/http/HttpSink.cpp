@@ -19,7 +19,7 @@
 #include "common/http/Curl.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "plugin/interface/Flusher.h"
+#include "plugin/interface/HttpFlusher.h"
 #include "queue/QueueKeyManager.h"
 #include "queue/SenderQueueItem.h"
 #include "sender/FlusherRunner.h"
@@ -88,7 +88,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpRequest>&& request) {
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
         request->mItem->mStatus = SendingStatus::IDLE;
-        FlusherRunner::GetInstance()->DecreaseSendingCnt();
+        FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to init curl handler")(
                       "action", "put sender queue item back to sender queue")("item address", request->mItem)(
@@ -102,7 +102,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpRequest>&& request) {
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
         request->mItem->mStatus = SendingStatus::IDLE;
-        FlusherRunner::GetInstance()->DecreaseSendingCnt();
+        FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
         curl_easy_cleanup(curl);
         LOG_ERROR(sLogger,
                   ("failed to send request",
@@ -198,8 +198,8 @@ void HttpSink::HandleCompletedRequests() {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
                     request->mResponse.mStatusCode = (int32_t)statusCode;
-                    request->mItem->mFlusher->OnSendDone(request->mResponse, request->mItem);
-                    FlusherRunner::GetInstance()->DecreaseSendingCnt();
+                    static_cast<HttpFlusher*>(request->mItem->mFlusher)->OnSendDone(request->mResponse, request->mItem);
+                    FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
                     break;
                 }
                 default:
@@ -214,8 +214,9 @@ void HttpSink::HandleCompletedRequests() {
                         AddRequestToClient(unique_ptr<HttpRequest>(request));
                         requestReused = true;
                     } else {
-                        request->mItem->mFlusher->OnSendDone(request->mResponse, request->mItem);
-                        FlusherRunner::GetInstance()->DecreaseSendingCnt();
+                        static_cast<HttpFlusher*>(request->mItem->mFlusher)
+                            ->OnSendDone(request->mResponse, request->mItem);
+                        FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
                     }
                     break;
             }

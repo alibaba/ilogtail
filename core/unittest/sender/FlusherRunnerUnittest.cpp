@@ -26,20 +26,14 @@ namespace logtail {
 class FlusherRunnerUnittest : public ::testing::Test {
 public:
     void TestDispatch();
-
-protected:
-    static void SetUpTestCase() { LoadPluginMock(); }
-
-    static void TearDownTestCase() { PluginRegistry::GetInstance()->UnloadPlugins(); }
 };
 
 void FlusherRunnerUnittest::TestDispatch() {
     {
         // http
         auto flusher = make_unique<FlusherHttpMock>();
-        flusher->GenerateQueueKey("");
-        SenderQueueManager::GetInstance()->CreateQueue(flusher->GetQueueKey(),
-                                                       vector<shared_ptr<ConcurrencyLimiter>>());
+        Json::Value tmp;
+        flusher->Init(Json::Value(), tmp);
 
         auto item = make_unique<SenderQueueItem>("content", 10, flusher.get(), flusher->GetQueueKey());
         auto realItem = item.get();
@@ -54,9 +48,8 @@ void FlusherRunnerUnittest::TestDispatch() {
     {
         // unknown
         auto flusher = make_unique<FlusherMock>();
-        flusher->GenerateQueueKey("");
-        SenderQueueManager::GetInstance()->CreateQueue(flusher->GetQueueKey(),
-                                                       vector<shared_ptr<ConcurrencyLimiter>>());
+        Json::Value tmp;
+        flusher->Init(Json::Value(), tmp);
 
         auto item = make_unique<SenderQueueItem>("content", 10, flusher.get(), flusher->GetQueueKey());
         auto realItem = item.get();

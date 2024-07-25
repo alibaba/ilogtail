@@ -35,12 +35,7 @@ public:
     void TestRegisterFlusherSinkType() const;
 
 protected:
-    void SetUp() override {
-        PluginRegistry::GetInstance()->RegisterInputCreator(new StaticInputCreator<InputMock>());
-        PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMock>());
-        PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>(),
-                                                              SinkType::UNKNOWN);
-    }
+    void SetUp() override { LoadPluginMock(); }
     void TearDown() override { PluginRegistry::GetInstance()->UnloadPlugins(); }
 };
 
@@ -73,16 +68,10 @@ void PluginRegistryUnittest::TestValidPlugin() const {
     APSARA_TEST_TRUE(PluginRegistry::GetInstance()->IsValidGoPlugin("service_unknown"));
 }
 
-void PluginRegistryUnittest::TestRegisterFlusherSinkType() const {
-    APSARA_TEST_EQUAL(1U, FlusherRunner::GetInstance()->mFlusherSinkMap.size());
-    APSARA_TEST_EQUAL(SinkType::UNKNOWN, FlusherRunner::GetInstance()->mFlusherSinkMap["flusher_mock"]);
-}
-
 UNIT_TEST_CASE(PluginRegistryUnittest, TestCreateInput)
 UNIT_TEST_CASE(PluginRegistryUnittest, TestCreateProcessor)
 UNIT_TEST_CASE(PluginRegistryUnittest, TestCreateFlusher)
 UNIT_TEST_CASE(PluginRegistryUnittest, TestValidPlugin)
-UNIT_TEST_CASE(PluginRegistryUnittest, TestRegisterFlusherSinkType)
 
 } // namespace logtail
 

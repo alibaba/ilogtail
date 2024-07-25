@@ -26,6 +26,7 @@
 #include "queue/SenderQueueManager.h"
 #include "sink/http/HttpRequest.h"
 #include "sink/http/HttpSink.h"
+#include "plugin/interface/HttpFlusher.h"
 // TODO: temporarily used here
 #include "flusher/sls/PackIdManager.h"
 #include "flusher/sls/SLSClientManager.h"
@@ -35,17 +36,13 @@ using namespace std;
 DEFINE_FLAG_INT32(check_send_client_timeout_interval, "", 600);
 
 static const int SEND_BLOCK_COST_TIME_ALARM_INTERVAL_SECOND = 3;
-static const int LOG_GROUP_WAIT_IN_QUEUE_ALARM_INTERVAL_SECOND = 6;
 
 namespace logtail {
 
 bool FlusherRunner::Init() {
     srand(time(nullptr));
-    mLastDaemonRunTime = time(nullptr);
-    mLastSendDataTime = time(nullptr);
-    mLastCheckSendClientTime = time(nullptr);
-
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
+    mLastCheckSendClientTime = time(nullptr);
     return true;
 }
 
@@ -60,12 +57,8 @@ void FlusherRunner::Stop() {
     }
 }
 
-void FlusherRunner::IncreaseSendingCnt() {
-    ++mSendingBufferCount;
-}
-
-void FlusherRunner::DecreaseSendingCnt() {
-    --mSendingBufferCount;
+void FlusherRunner::DecreaseHttpSendingCnt() {
+    --mHttpSendingCnt;
     SenderQueueManager::GetInstance()->Trigger();
 }
 
@@ -73,24 +66,19 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item) {
     if (!BOOL_FLAG(enable_full_drain_mode) && item->mFlusher->Name() == "flusher_sls"
         && Application::GetInstance()->IsExiting()) {
         DiskBufferWriter::GetInstance()->PushToDiskBuffer(item, 3);
-        DecreaseSendingCnt();
         SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
         return;
     }
-    unique_ptr<HttpRequest> req = item->mFlusher->BuildRequest(item);
+    unique_ptr<HttpRequest> req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
     item->mLastSendTime = time(nullptr);
     HttpSink::GetInstance()->AddRequest(std::move(req));
-}
-
-void FlusherRunner::RegisterSink(const std::string& flusher, SinkType type) {
-    mFlusherSinkMap[flusher] = type;
+    ++mHttpSendingCnt;
 }
 
 void FlusherRunner::Run() {
     LOG_INFO(sLogger, ("flusher runner", "started"));
     while (true) {
         int32_t curTime = time(NULL);
-        mLastDaemonRunTime = curTime;
 
         vector<SenderQueueItem*> items;
         SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());
@@ -142,9 +130,7 @@ void FlusherRunner::Run() {
                                                            + ToString(blockCostTime));
             }
 
-            IncreaseSendingCnt();
             Dispatch(*itr);
-            mLastSendDataTime = curTime;
         }
 
         // TODO: move the following logic to scheduler
@@ -161,19 +147,11 @@ void FlusherRunner::Run() {
 }
 
 void FlusherRunner::Dispatch(SenderQueueItem* item) {
-    auto iter = mFlusherSinkMap.find(item->mFlusher->Name());
-    if (iter == mFlusherSinkMap.end()) {
-        LOG_ERROR(sLogger, ("unexpected error", "no sink type found for flusher")("flusher", item->mFlusher->Name()));
-        SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
-        return;
-    }
-
-    switch (iter->second) {
+    switch (item->mFlusher->GetSinkType()) {
         case SinkType::HTTP:
             PushToHttpSink(item);
             break;
         default:
-            DecreaseSendingCnt();
             SenderQueueManager::GetInstance()->RemoveItem(item->mFlusher->GetQueueKey(), item);
             break;
     }
