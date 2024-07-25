@@ -158,14 +158,14 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
-    GaugePtr mGlobalCpuGauge;
+    DoubleGaugePtr mGlobalCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
-    GaugePtr mGlobalMemoryGauge;
+    IntGaugePtr mGlobalMemoryGauge;
 
-    GaugePtr mGlobalPluginTotal;
-    GaugePtr mGlobalEnvConfigTotal;
-    GaugePtr mGlobalUsedSendingConcurrency;
+    IntGaugePtr mGlobalPluginTotal;
+    IntGaugePtr mGlobalEnvConfigTotal;
+    IntGaugePtr mGlobalUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
@@ -196,7 +196,8 @@ public:
 
     void UpdateLabel(std::string key, std::string value);
     CounterPtr GetCounter(std::string key);
-    GaugePtr GetGauge(std::string key);
+    IntGaugePtr GetIntGauge(std::string key);
+    DoubleGaugePtr GetDoubleGauge(std::string key);
 
 private:
     MetricLabels GenLabels();
@@ -209,10 +210,11 @@ private:
     std::unordered_map<std::string, std::string> mLabels;
     // metrics
     std::unordered_map<std::string, CounterPtr> mCounters;
-    std::unordered_map<std::string, GaugePtr> mGauges;
+    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
+    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 
-    // GaugePtr mGlobalCrdConfigTotal;
-    // GaugePtr mGlobalConsoleConfigTotal;
+    // IntGaugePtr mGlobalCrdConfigTotal;
+    // IntGaugePtr mGlobalConsoleConfigTotal;
 };
 
 } // namespace logtail

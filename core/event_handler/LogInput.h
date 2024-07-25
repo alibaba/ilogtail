@@ -79,8 +79,8 @@ private:
     volatile bool mIdleFlag;
     int32_t mEventProcessCount;
     int32_t mLastUpdateMetricTime;
-    GaugePtr mGlobalOpenFdTotal;
-    GaugePtr mGlobalRegisterHandlerTotal;
+    IntGaugePtr mGlobalOpenFdTotal;
+    IntGaugePtr mGlobalRegisterHandlerTotal;
 
     std::atomic_int mLastReadEventTime{0};
     mutable std::mutex mThreadRunningMux;

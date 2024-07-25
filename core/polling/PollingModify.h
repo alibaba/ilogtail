@@ -101,7 +101,7 @@ private:
 
     ModifyCheckCacheMap mModifyCacheMap;
 
-    GaugePtr mGlobalPollingModifySizeTotal;
+    IntGaugePtr mGlobalPollingModifySizeTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PollingUnittest;

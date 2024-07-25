@@ -430,8 +430,8 @@ bool Sender::Init(void) {
     SLSControl::GetInstance()->Init();
 
     // TODO：Sender的初始化在LoongCollectorMonitor之前，这里会Get失败。等完善输出模块插件指标时一起解决
-    // mGlobalSendQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL);
-    // mGlobalSendQueueTotal = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_SEND_QUEUE_TOTAL);
+    // mGlobalSendQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL);
+    // mGlobalSendQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_SEND_QUEUE_TOTAL);
 
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
     mFlushLog = false;

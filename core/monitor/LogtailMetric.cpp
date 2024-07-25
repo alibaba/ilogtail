@@ -25,44 +25,6 @@ using namespace sls_logs;
 
 namespace logtail {
 
-Counter::Counter(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
-}
-
-uint64_t Counter::GetValue() const {
-    return mVal.load();
-}
-
-const std::string& Counter::GetName() const {
-    return mName;
-}
-
-Counter* Counter::Collect() {
-    return new Counter(mName, mVal.exchange(0));
-}
-
-void Counter::Add(uint64_t value) {
-    mVal.fetch_add(value);
-}
-
-Gauge::Gauge(const std::string& name, double val = 0) : mName(name), mVal(val) {
-}
-
-double Gauge::GetValue() const {
-    return mVal.load();
-}
-
-const std::string& Gauge::GetName() const {
-    return mName;
-}
-
-Gauge* Gauge::Collect() {
-    return new Gauge(mName, mVal);
-}
-
-void Gauge::Set(double value) {
-    mVal.store(value);
-}
-
 MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
 }
 
@@ -72,9 +34,15 @@ CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
     return counterPtr;
 }
 
-GaugePtr MetricsRecord::CreateGauge(const std::string& name) {
-    GaugePtr gaugePtr = std::make_shared<Gauge>(name);
-    mGauges.emplace_back(gaugePtr);
+IntGaugePtr MetricsRecord::CreateIntGauge(const std::string& name) {
+    IntGaugePtr gaugePtr = std::make_shared<Gauge<uint64_t>>(name);
+    mIntGauges.emplace_back(gaugePtr);
+    return gaugePtr;
+}
+
+DoubleGaugePtr MetricsRecord::CreateDoubleGauge(const std::string& name) {
+    DoubleGaugePtr gaugePtr = std::make_shared<Gauge<double>>(name);
+    mDoubleGauges.emplace_back(gaugePtr);
     return gaugePtr;
 }
 
@@ -100,8 +68,12 @@ const std::vector<CounterPtr>& MetricsRecord::GetCounters() const {
     return mCounters;
 }
 
-const std::vector<GaugePtr>& MetricsRecord::GetGauges() const {
-    return mGauges;
+const std::vector<IntGaugePtr>& MetricsRecord::GetIntGauges() const {
+    return mIntGauges;
+}
+
+const std::vector<DoubleGaugePtr>& MetricsRecord::GetDoubleGauges() const {
+    return mDoubleGauges;
 }
 
 MetricsRecord* MetricsRecord::Collect() {
@@ -114,9 +86,13 @@ MetricsRecord* MetricsRecord::Collect() {
         CounterPtr newPtr(item->Collect());
         metrics->mCounters.emplace_back(newPtr);
     }
-    for (auto& item : mGauges) {
-        GaugePtr newPtr(item->Collect());
-        metrics->mGauges.emplace_back(newPtr);
+    for (auto& item : mIntGauges) {
+        IntGaugePtr newPtr(item->Collect());
+        metrics->mIntGauges.emplace_back(newPtr);
+    }
+    for (auto& item : mDoubleGauges) {
+        DoubleGaugePtr newPtr(item->Collect());
+        metrics->mDoubleGauges.emplace_back(newPtr);
     }
     return metrics;
 }
@@ -151,8 +127,12 @@ CounterPtr MetricsRecordRef::CreateCounter(const std::string& name) {
     return mMetrics->CreateCounter(name);
 }
 
-GaugePtr MetricsRecordRef::CreateGauge(const std::string& name) {
-    return mMetrics->CreateGauge(name);
+IntGaugePtr MetricsRecordRef::CreateIntGauge(const std::string& name) {
+    return mMetrics->CreateIntGauge(name);
+}
+
+DoubleGaugePtr MetricsRecordRef::CreateDoubleGauge(const std::string& name) {
+    return mMetrics->CreateDoubleGauge(name);
 }
 
 const MetricsRecord* MetricsRecordRef::operator->() const {
@@ -167,8 +147,11 @@ void ReentrantMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::
             case MetricType::METRIC_TYPE_COUNTER:
                 mCounters[metric.first] = mMetricsRecordRef.CreateCounter(metric.first);
                 break;
-            case MetricType::METRIC_TYPE_GAUGE:
-                mGauges[metric.first] = mMetricsRecordRef.CreateGauge(metric.first);
+            case MetricType::METRIC_TYPE_INT_GAUGE:
+                mIntGauges[metric.first] = mMetricsRecordRef.CreateIntGauge(metric.first);
+                break;
+            case MetricType::METRIC_TYPE_DOUBLE_GAUGE:
+                mDoubleGauges[metric.first] = mMetricsRecordRef.CreateDoubleGauge(metric.first);
                 break;
             default:
                 break;
@@ -188,9 +171,17 @@ CounterPtr ReentrantMetricsRecord::GetCounter(const std::string& name) {
     return nullptr;
 }
 
-GaugePtr ReentrantMetricsRecord::GetGauge(const std::string& name) {
-    auto it = mGauges.find(name);
-    if (it != mGauges.end()) {
+IntGaugePtr ReentrantMetricsRecord::GetIntGauge(const std::string& name) {
+    auto it = mIntGauges.find(name);
+    if (it != mIntGauges.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+DoubleGaugePtr ReentrantMetricsRecord::GetDoubleGauge(const std::string& name) {
+    auto it = mDoubleGauges.find(name);
+    if (it != mDoubleGauges.end()) {
         return it->second;
     }
     return nullptr;
@@ -372,8 +363,14 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));
         }
-        for (auto& item : tmp->GetGauges()) {
-            GaugePtr gauge = item;
+        for (auto& item : tmp->GetIntGauges()) {
+            IntGaugePtr gauge = item;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
+            contentPtr->set_value(ToString(gauge->GetValue()));
+        }
+        for (auto& item : tmp->GetDoubleGauges()) {
+            DoubleGaugePtr gauge = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
             contentPtr->set_value(ToString(gauge->GetValue()));
@@ -404,8 +401,13 @@ void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
             metricsRecordValue[VALUE_PREFIX + counter->GetName()] = ToString(counter->GetValue());
         }
 
-        for (auto& item : tmp->GetGauges()) {
-            GaugePtr gauge = item;
+        for (auto& item : tmp->GetIntGauges()) {
+            IntGaugePtr gauge = item;
+            metricsRecordValue[VALUE_PREFIX + gauge->GetName()] = ToString(gauge->GetValue());
+        }
+
+        for (auto& item : tmp->GetDoubleGauges()) {
+            DoubleGaugePtr gauge = item;
             metricsRecordValue[VALUE_PREFIX + gauge->GetName()] = ToString(gauge->GetValue());
         }
 

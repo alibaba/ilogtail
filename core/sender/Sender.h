@@ -242,8 +242,8 @@ private:
     PTMutex mSendStatisticLock;
     std::unordered_map<std::string, std::vector<SendStatistic*>> mSendStatisticMap;
 
-    GaugePtr mGlobalSendQueueFullTotal;
-    GaugePtr mGlobalSendQueueTotal;
+    IntGaugePtr mGlobalSendQueueFullTotal;
+    IntGaugePtr mGlobalSendQueueTotal;
 
     // PTMutex mSendClientLock;
     // std::unordered_map<std::string, SlsClientInfo*> mSendClientMap;

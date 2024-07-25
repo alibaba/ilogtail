@@ -18,56 +18,19 @@
 #include <atomic>
 #include <string>
 
+#include "LoongCollectorMetricTypes.h"
 #include "common/Lock.h"
 #include "log_pb/sls_logs.pb.h"
 
-
 namespace logtail {
-
-enum class MetricType {
-    METRIC_TYPE_COUNTER,
-    METRIC_TYPE_GAUGE,
-};
-
-class Counter {
-private:
-    std::string mName;
-    std::atomic_uint64_t mVal;
-
-public:
-    Counter(const std::string& name, uint64_t val);
-    uint64_t GetValue() const;
-    const std::string& GetName() const;
-    void Add(uint64_t val);
-    Counter* Collect();
-};
-
-using CounterPtr = std::shared_ptr<Counter>;
-
-class Gauge {
-private:
-    std::string mName;
-    std::atomic<double> mVal;
-
-public:
-    Gauge(const std::string& name, double val);
-    double GetValue() const;
-    const std::string& GetName() const;
-    void Set(double val);
-    Gauge* Collect();
-};
-
-using GaugePtr = std::shared_ptr<Gauge>;
-
-using MetricLabels = std::vector<std::pair<std::string, std::string>>;
-using LabelsPtr = std::shared_ptr<MetricLabels>;
 
 class MetricsRecord {
 private:
     LabelsPtr mLabels;
     std::atomic_bool mDeleted;
     std::vector<CounterPtr> mCounters;
-    std::vector<GaugePtr> mGauges;
+    std::vector<IntGaugePtr> mIntGauges;
+    std::vector<DoubleGaugePtr> mDoubleGauges;
     MetricsRecord* mNext = nullptr;
 
     mutable std::mutex mLabelsMutex;
@@ -80,9 +43,11 @@ public:
     const LabelsPtr& GetLabels() const;
     void SetLabels(LabelsPtr labels);
     const std::vector<CounterPtr>& GetCounters() const;
-    const std::vector<GaugePtr>& GetGauges() const;
+    const std::vector<IntGaugePtr>& GetIntGauges() const;
+    const std::vector<DoubleGaugePtr>& GetDoubleGauges() const;
     CounterPtr CreateCounter(const std::string& name);
-    GaugePtr CreateGauge(const std::string& name);
+    IntGaugePtr CreateIntGauge(const std::string& name);
+    DoubleGaugePtr CreateDoubleGauge(const std::string& name);
     MetricsRecord* Collect();
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
@@ -103,7 +68,8 @@ public:
     void SetLabels(LabelsPtr labels);
     const LabelsPtr& GetLabels() const;
     CounterPtr CreateCounter(const std::string& name);
-    GaugePtr CreateGauge(const std::string& name);
+    IntGaugePtr CreateIntGauge(const std::string& name);
+    DoubleGaugePtr CreateDoubleGauge(const std::string& name);
     const MetricsRecord* operator->() const;
 };
 
@@ -111,13 +77,15 @@ class ReentrantMetricsRecord {
 private:
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
-    std::unordered_map<std::string, GaugePtr> mGauges;
+    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
+    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 
 public:
     void Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys);
     const LabelsPtr& GetLabels() const;
     CounterPtr GetCounter(const std::string& name);
-    GaugePtr GetGauge(const std::string& name);
+    IntGaugePtr GetIntGauge(const std::string& name);
+    DoubleGaugePtr GetDoubleGauge(const std::string& name);
 };
 using ReentrantMetricsRecordRef = std::shared_ptr<ReentrantMetricsRecord>;
 

@@ -112,11 +112,12 @@ bool LogtailMonitor::Init() {
 #endif
 
     // init metrics
-    mGlobalCpuGauge = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_CPU);
-    mGlobalMemoryGauge = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_MEMORY);
-    mGlobalPluginTotal = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
-    mGlobalEnvConfigTotal = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
-    mGlobalUsedSendingConcurrency = LoongCollectorMonitor::GetInstance()->GetGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
+    mGlobalCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_GLOBAL_CPU);
+    mGlobalMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_MEMORY);
+    mGlobalPluginTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
+    mGlobalEnvConfigTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
+    mGlobalUsedSendingConcurrency
+        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
 
     // Initialize monitor thread.
     mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
@@ -705,28 +706,31 @@ void LoongCollectorMonitor::Init() {
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(GenLabels()));
     }
     // init value
-    mGauges[METRIC_GLOBAL_CPU] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_CPU);
-    mGauges[METRIC_GLOBAL_MEMORY] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_MEMORY);
-    mGauges[METRIC_GLOBAL_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_OPEN_FD_TOTAL);
-    mGauges[METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL);
-    mGauges[METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL);
-    mGauges[METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL);
-    mGauges[METRIC_GLOBAL_REGISTER_HANDLER_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_REGISTER_HANDLER_TOTAL);
-    mGauges[METRIC_GLOBAL_CONFIG_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_CONFIG_TOTAL);
-    mGauges[METRIC_GLOBAL_ENV_CONFIG_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
-    mGauges[METRIC_GLOBAL_CRD_CONFIG_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_CRD_CONFIG_TOTAL);
-    mGauges[METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL);
-    mGauges[METRIC_GLOBAL_PLUGIN_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
-    mGauges[METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL]
-        = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
-    mGauges[METRIC_GLOBAL_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
-    mGauges[METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL);
-    mGauges[METRIC_GLOBAL_SEND_QUEUE_TOTAL] = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_SEND_QUEUE_TOTAL);
-    mGauges[METRIC_GLOBAL_USED_SENDING_CONCURRENCY]
-        = mMetricsRecordRef.CreateGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
+    mDoubleGauges[METRIC_GLOBAL_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU);
+    mIntGauges[METRIC_GLOBAL_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY);
+    mIntGauges[METRIC_GLOBAL_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_OPEN_FD_TOTAL);
+    mIntGauges[METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL);
+    mIntGauges[METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL);
+    mIntGauges[METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL);
+    mIntGauges[METRIC_GLOBAL_REGISTER_HANDLER_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_REGISTER_HANDLER_TOTAL);
+    mIntGauges[METRIC_GLOBAL_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONFIG_TOTAL);
+    mIntGauges[METRIC_GLOBAL_ENV_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
+    mIntGauges[METRIC_GLOBAL_CRD_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CRD_CONFIG_TOTAL);
+    mIntGauges[METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL);
+    mIntGauges[METRIC_GLOBAL_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
+    mIntGauges[METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
+    mIntGauges[METRIC_GLOBAL_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
+    mIntGauges[METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL);
+    mIntGauges[METRIC_GLOBAL_SEND_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_SEND_QUEUE_TOTAL);
+    mIntGauges[METRIC_GLOBAL_USED_SENDING_CONCURRENCY]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
     LOG_INFO(sLogger, ("LoongCollectorMonitor", "started"));
     isReady = true;
 }
@@ -754,9 +758,18 @@ CounterPtr LoongCollectorMonitor::GetCounter(std::string key) {
     return nullptr;
 }
 
-GaugePtr LoongCollectorMonitor::GetGauge(std::string key) {
-    auto it = mGauges.find(key);
-    if (it != mGauges.end()) {
+IntGaugePtr LoongCollectorMonitor::GetIntGauge(std::string key) {
+    auto it = mIntGauges.find(key);
+    if (it != mIntGauges.end()) {
+        return it->second;
+    }
+    LOG_WARNING(sLogger, ("get global gauge failed, gauge key", key));
+    return nullptr;
+}
+
+DoubleGaugePtr LoongCollectorMonitor::GetDoubleGauge(std::string key) {
+    auto it = mDoubleGauges.find(key);
+    if (it != mDoubleGauges.end()) {
         return it->second;
     }
     LOG_WARNING(sLogger, ("get global gauge failed, gauge key", key));

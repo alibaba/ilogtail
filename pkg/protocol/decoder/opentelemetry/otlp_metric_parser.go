@@ -58,7 +58,7 @@ func ConvertOtlpMetrics(metrics *v1.ResourceMetrics) (logs []*protocol.Log, err 
 		for _, metric := range scopeMetrics.GetMetrics() {
 			switch metric.GetData().(type) {
 			case *v1.Metric_Gauge:
-				logs = append(logs, gauge2Logs(metric.GetName(), metric.GetGauge(), &labels)...)
+				logs = append(logs, gauge2Logs(metric.GetName(), metric.GetIntGauge(), &labels)...)
 			case *v1.Metric_Histogram:
 				logs = append(logs, histogram2Logs(metric.GetName(), metric.GetHistogram(), &labels)...)
 			case *v1.Metric_Sum:

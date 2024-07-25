@@ -136,9 +136,9 @@ private:
     // The sequence number of current round, uint64_t is used to avoid overflow.
     uint64_t mCurrentRound;
 
-    GaugePtr mGlobalConfigTotal;
-    GaugePtr mGlobalPollingDirCacheSizeTotal;
-    GaugePtr mGlobalPollingFileCacheSizeTotal;
+    IntGaugePtr mGlobalConfigTotal;
+    IntGaugePtr mGlobalPollingDirCacheSizeTotal;
+    IntGaugePtr mGlobalPollingFileCacheSizeTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PollingUnittest;

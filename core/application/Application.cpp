@@ -231,9 +231,7 @@ void Application::Start() { // GCOVR_EXCL_START
 #endif
 
     LogtailAlarm::GetInstance()->Init();
-    LOG_INFO(sLogger, ("LoongCollectorMonitor", "init"));
     LoongCollectorMonitor::GetInstance()->Init();
-    LOG_INFO(sLogger, ("LogtailMonitor", "init"));
     LogtailMonitor::GetInstance()->Init();
 
     PluginRegistry::GetInstance()->LoadPlugins();
