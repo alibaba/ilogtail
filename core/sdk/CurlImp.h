@@ -18,7 +18,6 @@
 #include <map>
 #include <string>
 
-#include "Closure.h"
 #include "Common.h"
 
 namespace logtail {

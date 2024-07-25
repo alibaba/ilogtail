@@ -18,7 +18,6 @@
 #include <map>
 #include <string>
 
-#include "Closure.h"
 #include "Common.h"
 #include "log_pb/sls_logs.pb.h"
 #include "sink/http/HttpRequest.h"
