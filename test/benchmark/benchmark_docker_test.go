@@ -19,38 +19,6 @@ import (
 	"github.com/cucumber/godog"
 )
 
-func TestE2EOnDockerCompose(t *testing.T) {
-	suite := godog.TestSuite{
-		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
-		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"test_cases"},
-			Tags:     "@e2e && @docker-compose && ~@ebpf",
-			TestingT: t,
-		},
-	}
-	if suite.Run() != 0 {
-		t.Fail()
-	}
-}
-
-func TestE2EOnDockerComposeCore(t *testing.T) {
-	suite := godog.TestSuite{
-		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
-		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"test_cases"},
-			Tags:     "@e2e-core && @docker-compose && ~@ebpf",
-			TestingT: t,
-		},
-	}
-	if suite.Run() != 0 {
-		t.Fail()
-	}
-}
-
 func TestE2EOnDockerComposePerformance(t *testing.T) {
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",

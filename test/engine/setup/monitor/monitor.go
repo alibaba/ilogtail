@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -28,18 +29,24 @@ func StartMonitor(ctx context.Context, containerName string) (context.Context, e
 	if err != nil {
 		return ctx, err
 	}
-	// 获取机器信息
-	request := &v1.ContainerInfoRequest{NumStats: 10}
-	_, err = client.DockerContainer(containerName, request)
+	// 获取所有容器信息
+	allContainers, err := client.AllDockerContainers(&v1.ContainerInfoRequest{NumStats: 10})
 	if err != nil {
-		fmt.Println("Error getting container info:", err)
+		fmt.Println("Error getting all containers info:", err)
 		return ctx, err
 	}
-	stopCh = make(chan bool)
-	isMonitoring.Store(true)
-	fmt.Println("Start monitoring container:", containerName)
-	go monitoring(client, containerName)
-	return ctx, nil
+	for _, container := range allContainers {
+		containerFullName := container.Aliases[0]
+		if strings.Contains(containerFullName, containerName) {
+			stopCh = make(chan bool)
+			isMonitoring.Store(true)
+			fmt.Println("Start monitoring container:", containerFullName)
+			go monitoring(client, containerFullName)
+			return ctx, nil
+		}
+	}
+	err = fmt.Errorf("container %s not found", containerName)
+	return ctx, err
 }
 
 func StopMonitor(ctx context.Context) (context.Context, error) {
