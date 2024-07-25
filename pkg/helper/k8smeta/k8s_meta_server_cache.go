@@ -2,6 +2,7 @@ package k8smeta
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -28,6 +29,7 @@ type podMetadata struct {
 	WorkloadKind string            `json:"workloadKind"`
 	ServiceName  string            `json:"serviceName"`
 	Labels       map[string]string `json:"labels"`
+	Envs         map[string]string `json:"envs"`
 	Images       map[string]string `json:"images"`
 	IsDeleted    bool              `json:"-"`
 }
@@ -70,10 +72,17 @@ func (w *WatchCache) getPodMetadata(identifiers []string) map[string]*podMetadat
 			for _, container := range pod.Spec.Containers {
 				images[container.Name] = container.Image
 			}
+			envs := make(map[string]string)
+			for _, container := range pod.Spec.Containers {
+				for _, env := range container.Env {
+					envs[env.Name] = env.Value
+				}
+			}
 			podMetadata := &podMetadata{
 				Namespace: pod.Namespace,
 				Labels:    pod.Labels,
 				Images:    images,
+				Envs:      envs,
 				IsDeleted: false,
 			}
 			if len(pod.GetOwnerReferences()) == 0 {
@@ -108,15 +117,19 @@ func (w *WatchCache) handlePodUpdate(data *ObjectWrapper) {
 }
 
 func (w *WatchCache) addOrUpdatePod(pod *v1.Pod) {
+	fmt.Println("addOrUpdatePod")
 	podKey, err := w.keyFunc(pod)
-	if err == nil {
+	if err != nil {
 		return
 	}
 	w.cacheMutex.Lock()
 	defer w.cacheMutex.Unlock()
 	if pod.Status.PodIP != "" {
-
 		w.cache[pod.Status.PodIP] = podKey
+	}
+	fmt.Println("add pod.Status.HostIP", pod.Status.HostIP)
+	if pod.Status.HostIP != "" {
+		w.cache[pod.Status.HostIP] = podKey
 	}
 	for _, container := range pod.Status.ContainerStatuses {
 		if container.ContainerID != "" {
