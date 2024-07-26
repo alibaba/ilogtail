@@ -27,13 +27,12 @@ namespace logtail {
 class MetricsRecord {
 private:
     LabelsPtr mLabels;
+    std::unordered_map<std::string, std::function<std::string()>> mDynamicLabels;
     std::atomic_bool mDeleted;
     std::vector<CounterPtr> mCounters;
     std::vector<IntGaugePtr> mIntGauges;
     std::vector<DoubleGaugePtr> mDoubleGauges;
     MetricsRecord* mNext = nullptr;
-
-    mutable std::mutex mLabelsMutex;
 
 public:
     MetricsRecord(LabelsPtr labels);
@@ -41,10 +40,10 @@ public:
     void MarkDeleted();
     bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
-    void SetLabels(LabelsPtr labels);
     const std::vector<CounterPtr>& GetCounters() const;
     const std::vector<IntGaugePtr>& GetIntGauges() const;
     const std::vector<DoubleGaugePtr>& GetDoubleGauges() const;
+    void AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc);
     CounterPtr CreateCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
@@ -65,8 +64,8 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
-    void SetLabels(LabelsPtr labels);
     const LabelsPtr& GetLabels() const;
+    void AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc);
     CounterPtr CreateCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);

@@ -28,6 +28,10 @@ namespace logtail {
 MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
 }
 
+void MetricsRecord::AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc) {
+    mDynamicLabels.emplace(name, genLabelFunc);
+}
+
 CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
     CounterPtr counterPtr = std::make_shared<Counter>(name);
     mCounters.emplace_back(counterPtr);
@@ -55,13 +59,7 @@ bool MetricsRecord::IsDeleted() const {
 }
 
 const LabelsPtr& MetricsRecord::GetLabels() const {
-    std::lock_guard<std::mutex> lock(mLabelsMutex);
     return mLabels;
-}
-
-void MetricsRecord::SetLabels(LabelsPtr labels) {
-    std::lock_guard<std::mutex> lock(mLabelsMutex);
-    mLabels = labels;
 }
 
 const std::vector<CounterPtr>& MetricsRecord::GetCounters() const {
@@ -77,10 +75,9 @@ const std::vector<DoubleGaugePtr>& MetricsRecord::GetDoubleGauges() const {
 }
 
 MetricsRecord* MetricsRecord::Collect() {
-    MetricsRecord* metrics;
-    {
-        std::lock_guard<std::mutex> lock(mLabelsMutex);
-        metrics = new MetricsRecord(mLabels);
+    MetricsRecord* metrics = new MetricsRecord(mLabels);
+    for (auto dynamicLabel: mDynamicLabels) {
+        metrics->mLabels->emplace_back(dynamicLabel.first, dynamicLabel.second());
     }
     for (auto& item : mCounters) {
         CounterPtr newPtr(item->Collect());
@@ -115,12 +112,12 @@ void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
 }
 
-void MetricsRecordRef::SetLabels(LabelsPtr labels) {
-    mMetrics->SetLabels(labels);
-}
-
 const LabelsPtr& MetricsRecordRef::GetLabels() const {
     return mMetrics->GetLabels();
+}
+
+void MetricsRecordRef::AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc) {
+    mMetrics->AddDynamicLabel(name, genLabelFunc);
 }
 
 CounterPtr MetricsRecordRef::CreateCounter(const std::string& name) {

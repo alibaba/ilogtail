@@ -194,7 +194,6 @@ public:
     void Init();
     void Stop();
 
-    void UpdateLabel(std::string key, std::string value);
     CounterPtr GetCounter(std::string key);
     IntGaugePtr GetIntGauge(std::string key);
     DoubleGaugePtr GetDoubleGauge(std::string key);
@@ -202,8 +201,6 @@ public:
 private:
     MetricLabels GenLabels();
 
-    bool isReady;
-    mutable std::mutex mMetricRecordLabelsMutex;
     // MetricRecord
     MetricsRecordRef mMetricsRecordRef;
     // labels

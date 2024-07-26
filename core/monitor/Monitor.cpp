@@ -266,16 +266,10 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "version", ILOGTAIL_VERSION);
     AddLogContent(logPtr, "uuid", Application::GetInstance()->GetUUID());
 #ifdef __ENTERPRISE__
-    std::string userDefinedId = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
-    AddLogContent(logPtr, "user_defined_id", userDefinedId);
-    LoongCollectorMonitor::GetInstance()->UpdateLabel(METRIC_LABEL_UUID, userDefinedId);
-    std::string aliuids = EnterpriseConfigProvider::GetInstance()->GetAliuidSet();
-    AddLogContent(logPtr, "aliuids", aliuids);
-    LoongCollectorMonitor::GetInstance()->UpdateLabel(METRIC_LABEL_ALIUIDS, aliuids);
+    AddLogContent(logPtr, "user_defined_id", EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet());
+    AddLogContent(logPtr, "aliuids", EnterpriseConfigProvider::GetInstance()->GetAliuidSet());
 #endif
-    std::string projects = Sender::Instance()->GetAllProjects();
-    AddLogContent(logPtr, "projects", projects);
-    LoongCollectorMonitor::GetInstance()->UpdateLabel(METRIC_LABEL_PROJECTS, projects);
+    AddLogContent(logPtr, "projects", Sender::Instance()->GetAllProjects());
     AddLogContent(logPtr, "instance_id", Application::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "instance_key", id);
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
@@ -690,21 +684,23 @@ LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
 
 void LoongCollectorMonitor::Init() {
     // create metric record
-    {
-        std::lock_guard<std::mutex> lock(mMetricRecordLabelsMutex);
-        mLabels[METRIC_LABEL_OS] = OS_NAME;
-        mLabels[METRIC_LABEL_VERSION] = ILOGTAIL_VERSION;
-        mLabels[METRIC_LABEL_INSTANCE_ID] = Application::GetInstance()->GetInstanceId();
-        mLabels[METRIC_LABEL_IP] = LogFileProfiler::mIpAddr;
-        mLabels[METRIC_LABEL_OS_DETAIL] = LogFileProfiler::mOsDetail;
-        mLabels[METRIC_LABEL_PROJECTS] = Sender::Instance()->GetAllProjects();
-        mLabels[METRIC_LABEL_UUID] = Application::GetInstance()->GetUUID();
+    mLabels[METRIC_LABEL_OS] = OS_NAME;
+    mLabels[METRIC_LABEL_VERSION] = ILOGTAIL_VERSION;
+    mLabels[METRIC_LABEL_INSTANCE_ID] = Application::GetInstance()->GetInstanceId();
+    mLabels[METRIC_LABEL_IP] = LogFileProfiler::mIpAddr;
+    mLabels[METRIC_LABEL_OS_DETAIL] = LogFileProfiler::mOsDetail;
+    mLabels[METRIC_LABEL_PROJECTS] = Sender::Instance()->GetAllProjects();
+    mLabels[METRIC_LABEL_UUID] = Application::GetInstance()->GetUUID();
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(GenLabels()));
+    mMetricsRecordRef.AddDynamicLabel(METRIC_LABEL_PROJECTS,
+                                      []() -> std::string { return Sender::Instance()->GetAllProjects(); });
 #ifdef __ENTERPRISE__
-        mLabels[METRIC_LABEL_ALIUIDS] = EnterpriseConfigProvider::GetInstance()->GetAliuidSet();
-        mLabels[METRIC_LABEL_USER_DEFINED_ID] = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
+    mMetricsRecordRef.AddDynamicLabel(
+        METRIC_LABEL_ALIUIDS, []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
+    mMetricsRecordRef.AddDynamicLabel(METRIC_LABEL_USER_DEFINED_ID, []() -> std::string {
+        return EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
+    });
 #endif
-        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(GenLabels()));
-    }
     // init value
     mDoubleGauges[METRIC_GLOBAL_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU);
     mIntGauges[METRIC_GLOBAL_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY);
@@ -732,21 +728,9 @@ void LoongCollectorMonitor::Init() {
     mIntGauges[METRIC_GLOBAL_USED_SENDING_CONCURRENCY]
         = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
     LOG_INFO(sLogger, ("LoongCollectorMonitor", "started"));
-    isReady = true;
 }
 
 void LoongCollectorMonitor::Stop() {
-}
-
-void LoongCollectorMonitor::UpdateLabel(std::string key, std::string value) {
-    if (!isReady || mLabels[key] == value) {
-        return;
-    }
-    std::lock_guard<std::mutex> lock(mMetricRecordLabelsMutex);
-
-    mLabels[key] = value;
-    LabelsPtr labels = std::make_shared<MetricLabels>(GenLabels());
-    mMetricsRecordRef.SetLabels(labels);
 }
 
 CounterPtr LoongCollectorMonitor::GetCounter(std::string key) {
