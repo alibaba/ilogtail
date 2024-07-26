@@ -199,12 +199,8 @@ public:
     DoubleGaugePtr GetDoubleGauge(std::string key);
 
 private:
-    MetricLabels GenLabels();
-
     // MetricRecord
     MetricsRecordRef mMetricsRecordRef;
-    // labels
-    std::unordered_map<std::string, std::string> mLabels;
     // metrics
     std::unordered_map<std::string, CounterPtr> mCounters;
     std::unordered_map<std::string, IntGaugePtr> mIntGauges;

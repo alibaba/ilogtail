@@ -25,11 +25,8 @@ using namespace sls_logs;
 
 namespace logtail {
 
-MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
-}
-
-void MetricsRecord::AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc) {
-    mDynamicLabels.emplace(name, genLabelFunc);
+MetricsRecord::MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels)
+    : mLabels(labels), mDynamicLabels(dynamicLabels), mDeleted(false) {
 }
 
 CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
@@ -58,8 +55,12 @@ bool MetricsRecord::IsDeleted() const {
     return mDeleted;
 }
 
-const LabelsPtr& MetricsRecord::GetLabels() const {
+const MetricLabelsPtr& MetricsRecord::GetLabels() const {
     return mLabels;
+}
+
+const DynamicMetricLabelsPtr& MetricsRecord::GetDynamicLabels() const {
+    return mDynamicLabels;
 }
 
 const std::vector<CounterPtr>& MetricsRecord::GetCounters() const {
@@ -75,10 +76,7 @@ const std::vector<DoubleGaugePtr>& MetricsRecord::GetDoubleGauges() const {
 }
 
 MetricsRecord* MetricsRecord::Collect() {
-    MetricsRecord* metrics = new MetricsRecord(mLabels);
-    for (auto dynamicLabel: mDynamicLabels) {
-        metrics->mLabels->emplace_back(dynamicLabel.first, dynamicLabel.second());
-    }
+    MetricsRecord* metrics = new MetricsRecord(mLabels, mDynamicLabels);
     for (auto& item : mCounters) {
         CounterPtr newPtr(item->Collect());
         metrics->mCounters.emplace_back(newPtr);
@@ -112,12 +110,12 @@ void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
 }
 
-const LabelsPtr& MetricsRecordRef::GetLabels() const {
+const MetricLabelsPtr& MetricsRecordRef::GetLabels() const {
     return mMetrics->GetLabels();
 }
 
-void MetricsRecordRef::AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc) {
-    mMetrics->AddDynamicLabel(name, genLabelFunc);
+const DynamicMetricLabelsPtr& MetricsRecordRef::GetDynamicLabels() const {
+    return mMetrics->GetDynamicLabels();
 }
 
 CounterPtr MetricsRecordRef::CreateCounter(const std::string& name) {
@@ -156,8 +154,12 @@ void ReentrantMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::
     }
 }
 
-const LabelsPtr& ReentrantMetricsRecord::GetLabels() const {
+const MetricLabelsPtr& ReentrantMetricsRecord::GetLabels() const {
     return mMetricsRecordRef->GetLabels();
+}
+
+const DynamicMetricLabelsPtr& ReentrantMetricsRecord::GetDynamicLabels() const {
+    return mMetricsRecordRef->GetDynamicLabels();
 }
 
 CounterPtr ReentrantMetricsRecord::GetCounter(const std::string& name) {
@@ -203,8 +205,11 @@ void WriteMetrics::PreparePluginCommonLabels(const std::string& projectName,
     labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_ID, pluginID));
 }
 
-void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels) {
-    MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels));
+void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
+                                           MetricLabels&& labels,
+                                           DynamicMetricLabels&& dynamicLabels) {
+    MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels),
+                                           std::make_shared<DynamicMetricLabels>(dynamicLabels));
     ref.SetMetricsRecord(cur);
     std::lock_guard<std::mutex> lock(mMutex);
     cur->SetNext(mHead);
@@ -353,6 +358,12 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_key(LABEL_PREFIX + pair.first);
             contentPtr->set_value(pair.second);
         }
+        for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
+            std::pair<std::string, std::function<std::string()>> pair = *item;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(LABEL_PREFIX + item->first);
+            contentPtr->set_value(pair.second());
+        }
 
         for (auto& item : tmp->GetCounters()) {
             CounterPtr counter = item;
@@ -391,6 +402,10 @@ void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
             std::pair<std::string, std::string> pair = *item;
             metricsRecordValue[LABEL_PREFIX + pair.first] = pair.second;
+        }
+        for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
+            std::pair<std::string, std::function<std::string()>> pair = *item;
+            metricsRecordValue[LABEL_PREFIX + pair.first] = pair.second();
         }
 
         for (auto& item : tmp->GetCounters()) {

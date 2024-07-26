@@ -62,6 +62,8 @@ using IntGaugePtr = std::shared_ptr<Gauge<uint64_t>>;
 using DoubleGaugePtr = std::shared_ptr<Gauge<double>>;
 
 using MetricLabels = std::vector<std::pair<std::string, std::string>>;
-using LabelsPtr = std::shared_ptr<MetricLabels>;
+using MetricLabelsPtr = std::shared_ptr<MetricLabels>;
+using DynamicMetricLabels = std::vector<std::pair<std::string, std::function<std::string()>>>;
+using DynamicMetricLabelsPtr = std::shared_ptr<DynamicMetricLabels>;
 
 } // namespace logtail

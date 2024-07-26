@@ -684,23 +684,25 @@ LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
 
 void LoongCollectorMonitor::Init() {
     // create metric record
-    mLabels[METRIC_LABEL_OS] = OS_NAME;
-    mLabels[METRIC_LABEL_VERSION] = ILOGTAIL_VERSION;
-    mLabels[METRIC_LABEL_INSTANCE_ID] = Application::GetInstance()->GetInstanceId();
-    mLabels[METRIC_LABEL_IP] = LogFileProfiler::mIpAddr;
-    mLabels[METRIC_LABEL_OS_DETAIL] = LogFileProfiler::mOsDetail;
-    mLabels[METRIC_LABEL_PROJECTS] = Sender::Instance()->GetAllProjects();
-    mLabels[METRIC_LABEL_UUID] = Application::GetInstance()->GetUUID();
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(GenLabels()));
-    mMetricsRecordRef.AddDynamicLabel(METRIC_LABEL_PROJECTS,
-                                      []() -> std::string { return Sender::Instance()->GetAllProjects(); });
+    MetricLabels labels;
+    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
+    labels.emplace_back(METRIC_LABEL_IP, LogFileProfiler::mIpAddr);
+    labels.emplace_back(METRIC_LABEL_OS, OS_NAME);
+    labels.emplace_back(METRIC_LABEL_OS_DETAIL, LogFileProfiler::mOsDetail);
+    labels.emplace_back(METRIC_LABEL_UUID, Application::GetInstance()->GetUUID());
+    labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
+    DynamicMetricLabels dynamicLabels;
+    dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS,
+                               []() -> std::string { return Sender::Instance()->GetAllProjects(); });
 #ifdef __ENTERPRISE__
-    mMetricsRecordRef.AddDynamicLabel(
-        METRIC_LABEL_ALIUIDS, []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
-    mMetricsRecordRef.AddDynamicLabel(METRIC_LABEL_USER_DEFINED_ID, []() -> std::string {
+    dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
+                               []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_USER_DEFINED_ID, []() -> std::string {
         return EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     });
 #endif
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
     // init value
     mDoubleGauges[METRIC_GLOBAL_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU);
     mIntGauges[METRIC_GLOBAL_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY);
@@ -758,22 +760,6 @@ DoubleGaugePtr LoongCollectorMonitor::GetDoubleGauge(std::string key) {
     }
     LOG_WARNING(sLogger, ("get global gauge failed, gauge key", key));
     return nullptr;
-}
-
-MetricLabels LoongCollectorMonitor::GenLabels() {
-    MetricLabels labels;
-    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, mLabels[METRIC_LABEL_INSTANCE_ID]);
-    labels.emplace_back(METRIC_LABEL_IP, mLabels[METRIC_LABEL_IP]);
-    labels.emplace_back(METRIC_LABEL_OS, mLabels[METRIC_LABEL_OS]);
-    labels.emplace_back(METRIC_LABEL_OS_DETAIL, mLabels[METRIC_LABEL_OS_DETAIL]);
-    labels.emplace_back(METRIC_LABEL_PROJECTS, mLabels[METRIC_LABEL_PROJECTS]);
-    labels.emplace_back(METRIC_LABEL_UUID, mLabels[METRIC_LABEL_UUID]);
-    labels.emplace_back(METRIC_LABEL_VERSION, mLabels[METRIC_LABEL_VERSION]);
-#ifdef __ENTERPRISE__
-    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, mLabels[METRIC_LABEL_INSTANCE_ID]);
-    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, mLabels[METRIC_LABEL_INSTANCE_ID]);
-#endif
-    return labels;
 }
 
 } // namespace logtail

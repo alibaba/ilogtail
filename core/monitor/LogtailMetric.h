@@ -26,8 +26,8 @@ namespace logtail {
 
 class MetricsRecord {
 private:
-    LabelsPtr mLabels;
-    std::unordered_map<std::string, std::function<std::string()>> mDynamicLabels;
+    MetricLabelsPtr mLabels;
+    DynamicMetricLabelsPtr mDynamicLabels;
     std::atomic_bool mDeleted;
     std::vector<CounterPtr> mCounters;
     std::vector<IntGaugePtr> mIntGauges;
@@ -35,15 +35,15 @@ private:
     MetricsRecord* mNext = nullptr;
 
 public:
-    MetricsRecord(LabelsPtr labels);
+    MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels = nullptr);
     MetricsRecord() = default;
     void MarkDeleted();
     bool IsDeleted() const;
-    const LabelsPtr& GetLabels() const;
+    const MetricLabelsPtr& GetLabels() const;
+    const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     const std::vector<CounterPtr>& GetCounters() const;
     const std::vector<IntGaugePtr>& GetIntGauges() const;
     const std::vector<DoubleGaugePtr>& GetDoubleGauges() const;
-    void AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc);
     CounterPtr CreateCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
@@ -64,8 +64,8 @@ public:
     MetricsRecordRef(MetricsRecordRef&&) = delete;
     MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
-    const LabelsPtr& GetLabels() const;
-    void AddDynamicLabel(const std::string& name, std::function<std::string()> genLabelFunc);
+    const MetricLabelsPtr& GetLabels() const;
+    const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr CreateCounter(const std::string& name);
     IntGaugePtr CreateIntGauge(const std::string& name);
     DoubleGaugePtr CreateDoubleGauge(const std::string& name);
@@ -81,7 +81,8 @@ private:
 
 public:
     void Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys);
-    const LabelsPtr& GetLabels() const;
+    const MetricLabelsPtr& GetLabels() const;
+    const DynamicMetricLabelsPtr& GetDynamicLabels() const;
     CounterPtr GetCounter(const std::string& name);
     IntGaugePtr GetIntGauge(const std::string& name);
     DoubleGaugePtr GetDoubleGauge(const std::string& name);
@@ -110,7 +111,7 @@ public:
                                    const std::string& pluginName,
                                    const std::string& pluginID,
                                    MetricLabels& labels);
-    void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels);
+    void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels, DynamicMetricLabels&& dynamicLabels = {});
     MetricsRecord* DoSnapshot();
 
 

@@ -21,7 +21,7 @@ namespace logtail {
 class PluginMetricManagerUnittest : public ::testing::Test {
 public:
     void SetUp() {
-        LabelsPtr defaultLabels = std::make_shared<MetricLabels>();
+        MetricLabelsPtr defaultLabels = std::make_shared<MetricLabels>();
         defaultLabels->emplace_back(METRIC_LABEL_PROJECT, "default_project");
         defaultLabels->emplace_back(METRIC_LABEL_LOGSTORE, "default_logstore");
         defaultLabels->emplace_back(METRIC_LABEL_REGION, "default_region");

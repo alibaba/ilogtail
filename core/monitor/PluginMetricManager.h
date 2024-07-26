@@ -23,7 +23,7 @@ namespace logtail {
 
 class PluginMetricManager {
 public:
-    PluginMetricManager(const LabelsPtr defaultLabels, std::unordered_map<std::string, MetricType> metricKeys)
+    PluginMetricManager(const MetricLabelsPtr defaultLabels, std::unordered_map<std::string, MetricType> metricKeys)
         : mDefaultLabels(defaultLabels->begin(), defaultLabels->end()), mMetricKeys(metricKeys) {}
 
     ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(MetricLabels labels);
