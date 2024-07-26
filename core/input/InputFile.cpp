@@ -156,7 +156,7 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
         mContext->SetExactlyOnceFlag(true);
     }
 
-    mInputFileMonitorTotal = GetMetricsRecordRef().CreateGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
+    // init PluginMetricManager
     static const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
         // {METRIC_INPUT_RECORDS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
         {METRIC_INPUT_RECORDS_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
@@ -168,6 +168,8 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
     };
     mPluginMetricManager
         = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
+    // Register a Gauge metric to record PluginMetricManager‘s map size
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
     mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
 
     return CreateInnerProcessors(pluginIdx);

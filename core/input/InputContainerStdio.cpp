@@ -19,6 +19,7 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorMergeMultilineLogNative.h"
@@ -157,6 +158,19 @@ bool InputContainerStdio::Init(const Json::Value& config, uint32_t& pluginIdx, J
                                        GetContext().GetLogstoreName(),
                                        GetContext().GetRegion());
     }
+
+    // init PluginMetricManager
+    static const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
+        {METRIC_INPUT_RECORDS_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_READ_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_FILE_SIZE_BYTES, MetricType::METRIC_TYPE_GAUGE},
+        {METRIC_INPUT_FILE_OFFSET_BYTES, MetricType::METRIC_TYPE_GAUGE},
+    };
+    mPluginMetricManager
+        = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
+    // Register a Gauge metric to record PluginMetricManager‘s map size
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
+    mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
 
     return CreateInnerProcessors(pluginIdx);
 }

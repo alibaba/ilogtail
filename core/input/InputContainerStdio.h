@@ -21,6 +21,7 @@
 #include "container_manager/ContainerDiscoveryOptions.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
+#include "monitor/PluginMetricManager.h"
 #include "plugin/interface/Input.h"
 #include "reader/FileReaderOptions.h"
 
@@ -49,6 +50,9 @@ public:
 
 private:
     FileDiscoveryOptions mFileDiscovery;
+
+    PluginMetricManagerPtr mPluginMetricManager;
+    GaugePtr mInputFileMonitorTotal;
 
     bool CreateInnerProcessors(uint32_t& pluginIdx);
 
