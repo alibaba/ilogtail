@@ -878,12 +878,5 @@ namespace sdk {
         out.add((uint8_t*)opad, sizeof(opad));
     }
 
-
-    void Response::ParseSuccess(const HttpMessage& message) {
-        statusCode = 200;
-        requestId = message.RequestID();
-    }
-
-
 } // namespace sdk
 } // namespace logtail

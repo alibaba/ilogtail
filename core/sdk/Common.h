@@ -203,13 +203,6 @@ namespace sdk {
         std::string requestId;
 
         virtual ~Response() {}
-
-        virtual void ParseSuccess(const HttpMessage& message);
-
-        void SetError(int32_t code, const std::string& request) {
-            statusCode = code;
-            requestId = request;
-        }
     };
 
     struct PostLogStoreLogsResponse : public Response {
