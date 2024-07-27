@@ -153,6 +153,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## MIT licenses
 
+- [github.com/satori/go.uuid](https://pkg.go.dev/github.com/satori/go.uuid?tab=licenses)
 - [github.com/valyala/gozstd](https://pkg.go.dev/github.com/valyala/gozstd?tab=licenses)
 - [github.com/goccy/go-json](https://pkg.go.dev/github.com/goccy/go-json?tab=licenses)
 - [github.com/gofrs/uuid](https://pkg.go.dev/github.com/gofrs/uuid?tab=licenses)
