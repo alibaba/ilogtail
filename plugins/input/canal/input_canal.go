@@ -773,9 +773,9 @@ ForBlock:
 	for {
 		select {
 		case <-sc.shutdown:
+			sc.canal.Close() // will trigger OnPosSynced with force=true
 			logger.Info(sc.context.GetRuntimeContext(), "service_canal quit because of shutting down, checkpoint",
 				sc.checkpoint)
-			sc.canal.Close() // will trigger OnPosSynced with force=true
 			<-sc.lastErrorChan
 			return nil
 		case err = <-sc.lastErrorChan:
