@@ -49,7 +49,7 @@ if [ $OS_FLAG = 1 ]; then
     NAME=libPluginBase.so
   fi
 elif [ $OS_FLAG = 3 ]; then
-  export GOARCH=386
+  # export GOARCH=386
   export CGO_ENABLED=1
   if [ $BUILDMODE = "c-shared" ]; then
     NAME=PluginBase.dll

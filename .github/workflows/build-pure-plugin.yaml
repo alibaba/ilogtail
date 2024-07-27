@@ -62,11 +62,11 @@ jobs:
 
       # prepare windows environment
       # https://github.com/actions/virtual-environments/issues/2549
-      - name: add mingw32 to path
+      - name: add mingw64 to path
         if: matrix.runner == 'windows-2019'
         shell: bash
         run: |
-          echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
+          echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
 
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v4
