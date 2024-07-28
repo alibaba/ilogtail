@@ -104,12 +104,16 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
 
         // set timestamp to `defaultTsInSecs` if timestamp is empty, otherwise parse it
         // if timestamp is not empty but not a valid integer, skip it
-        time_t timestamp;
+        time_t timestamp = 0;
         if (argTimestamp.empty()) {
             timestamp = defaultTsInSecs;
         } else {
             try {
-                timestamp = stol(argTimestamp) / 1000;
+                if (argTimestamp.length() > 3) {
+                    timestamp = stol(argTimestamp.substr(0, argTimestamp.length() - 3));
+                } else {
+                    timestamp = 0;
+                }
             } catch (const exception&) {
                 LOG_WARNING(sLogger, ("invalid value", argTimestamp)("raw line", line));
                 continue;
@@ -140,7 +144,7 @@ TextParser::Parse(const string& content, const time_t defaultTsInSecs, const str
             e->SetTag(string(prometheus::JOB), jobName);
         }
         if (!instance.empty()) {
-            e->SetTag(string(prometheus::INSTANCE), instance);
+            e->SetTag(prometheus::INSTANCE, instance);
         }
     }
 

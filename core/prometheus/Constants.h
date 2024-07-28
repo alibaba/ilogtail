@@ -1,8 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace logtail::prometheus {
+
+    // magic number for labels hash, from https://github.com/prometheus/common/blob/main/model/fnv.go#L19
     const uint64_t PRIME64 = 1099511628211;
     const uint64_t OFFSET64 = 14695981039346656037ULL;
     const uint64_t RefeshIntervalSeconds = 5;
@@ -59,7 +62,7 @@ namespace logtail::prometheus {
 
     // metric labels
     const char* const JOB = "job";
-    const char* const INSTANCE = "instance";
+    const std::string INSTANCE = "instance";
     const char* const ADDRESS_LABEL_NAME = "__address__";
     const char* const SCRAPE_INTERVAL_LABEL_NAME = "__scrape_interval__";
     const char* const SCRAPE_TIMEOUT_LABEL_NAME = "__scrape_timeout__";

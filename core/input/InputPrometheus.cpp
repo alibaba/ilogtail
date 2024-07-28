@@ -38,8 +38,6 @@ const string InputPrometheus::sName = "input_prometheus";
 
 /// @brief Init
 bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value&) {
-    LOG_INFO(sLogger, ("LOG_INFO input config", config.toStyledString()));
-
     string errorMsg;
 
     // config["ScrapeConfig"]
@@ -53,14 +51,11 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     // build scrape job
     mScrapeJobPtr = make_unique<ScrapeJob>();
     if (!mScrapeJobPtr->Init(scrapeConfig)) {
-        LOG_ERROR(sLogger, ("scrape config not valid", config.toStyledString()));
         return false;
     }
 
     mJobName = mScrapeJobPtr->mJobName;
     mScrapeJobPtr->mInputIndex = mIndex;
-    LOG_INFO(sLogger, ("input config init success", mJobName));
-
     return CreateInnerProcessors(scrapeConfig, pluginIdx);
 }
 

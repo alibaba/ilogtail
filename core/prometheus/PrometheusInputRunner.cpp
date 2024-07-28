@@ -20,13 +20,18 @@
 #include <string>
 #include <unordered_map>
 
+#include "common/Flags.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
-#include "prometheus/Scraper.h"
+#include "prometheus/ScraperGroup.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
 #include "sdk/Exception.h"
+
+DEFINE_FLAG_STRING(OPERATOR_HOST, "operator host", "");
+DEFINE_FLAG_INT32(OPERATOR_PORT, "operator port", 8888);
+DEFINE_FLAG_STRING(POD_NAME, "agent pod name", "");
 
 using namespace std;
 
@@ -35,23 +40,18 @@ namespace logtail {
 PrometheusInputRunner::PrometheusInputRunner() {
     mClient = std::make_unique<sdk::CurlClient>();
 
-    // get operator info by environment variables
-    mOperatorHost = ToString(getenv(prometheus::OPERATOR_HOST));
-    string portStr = ToString(getenv(prometheus::OPERATOR_PORT));
-    // get agent pod name by environment variables
-    mPodName = ToString(getenv(prometheus::POD_NAME));
+    mOperatorHost = STRING_FLAG(OPERATOR_HOST);
+    mPodName = STRING_FLAG(POD_NAME);
 
-    if (portStr.empty()) {
-        LOG_ERROR(sLogger, ("PrometheusInputRunner operator port error", portStr));
-        mOperatorPort = 8888;
-    } else {
-        mOperatorPort = stoi(portStr);
-    }
+    mOperatorPort = INT32_FLAG(OPERATOR_PORT);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
 void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, std::unique_ptr<ScrapeJob> scrapeJobPtr) {
-    mPrometheusInputsMap[inputName] = scrapeJobPtr->mJobName;
+    {
+        WriteLock lock(mReadWriteLock);
+        mPrometheusInputsMap[inputName] = scrapeJobPtr->mJobName;
+    }
 
     // set job info
     scrapeJobPtr->mOperatorHost = mOperatorHost;
@@ -62,47 +62,43 @@ void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, std::uniq
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
-    ScraperGroup::GetInstance()->RemoveScrapeJob(mPrometheusInputsMap[inputName]);
-    mPrometheusInputsMap.erase(inputName);
+    string jobName;
+    {
+        ReadLock lock(mReadWriteLock);
+        jobName = mPrometheusInputsMap[inputName];
+    }
+    ScraperGroup::GetInstance()->RemoveScrapeJob(jobName);
+    {
+        WriteLock lock(mReadWriteLock);
+        mPrometheusInputsMap.erase(inputName);
+    }
 }
 
 /// @brief targets discovery and start scrape work
 void PrometheusInputRunner::Start() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
-    while (true) {
-        map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
-        sdk::HttpMessage httpResponse;
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
-        try {
-            mClient->Send(sdk::HTTP_GET,
-                          mOperatorHost,
-                          mOperatorPort,
-                          prometheus::REGISTER_COLLECTOR_PATH,
-                          "pod_name=" + mPodName,
-                          httpHeader,
-                          "",
-                          10,
-                          httpResponse,
-                          "",
-                          false);
-        } catch (const sdk::LOGException& e) {
-            LOG_ERROR(sLogger, ("curl error", e.what()));
-        }
-        if (httpResponse.statusCode != 200) {
-            LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
-        } else {
-            // register success
-            if (httpResponse.content.empty()) {
-                LOG_ERROR(sLogger, ("unregister failed, content is empty", ""));
+
+    if (!mOperatorHost.empty()) {
+        int retry = 0;
+        while (true) {
+            ++retry;
+            sdk::HttpMessage httpResponse = SendGetRequest(prometheus::REGISTER_COLLECTOR_PATH);
+            if (httpResponse.statusCode != 200) {
+                LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
             } else {
-                ScraperGroup::GetInstance()->mUnRegisterMs = stoll(httpResponse.content);
+                // register success
+                if (!httpResponse.content.empty()) {
+                    ScraperGroup::GetInstance()->mUnRegisterMs = stoll(httpResponse.content);
+                }
+                break;
             }
-            break;
+            if (retry % 3 == 0) {
+                LOG_INFO(sLogger, ("register failed, retried", ToString(retry)));
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        LOG_INFO(sLogger, ("Register Success", mPodName));
     }
-    LOG_INFO(sLogger, ("Register Success", mPodName));
     ScraperGroup::GetInstance()->Start();
 }
 
@@ -110,25 +106,7 @@ void PrometheusInputRunner::Start() {
 void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     for (int retry = 0; retry < 3; ++retry) {
-        map<string, string> httpHeader;
-        httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
-        sdk::HttpMessage httpResponse;
-        httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
-        try {
-            mClient->Send(sdk::HTTP_GET,
-                          mOperatorHost,
-                          mOperatorPort,
-                          prometheus::UNREGISTER_COLLECTOR_PATH,
-                          "pod_name=" + mPodName,
-                          httpHeader,
-                          "",
-                          10,
-                          httpResponse,
-                          "",
-                          false);
-        } catch (const sdk::LOGException& e) {
-            LOG_ERROR(sLogger, ("curl error", e.what()));
-        }
+        sdk::HttpMessage httpResponse = SendGetRequest(prometheus::UNREGISTER_COLLECTOR_PATH);
         if (httpResponse.statusCode != 200) {
             LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
         } else {
@@ -138,11 +116,38 @@ void PrometheusInputRunner::Stop() {
     }
     LOG_INFO(sLogger, ("Unregister Success", mPodName));
     ScraperGroup::GetInstance()->Stop();
-    mPrometheusInputsMap.clear();
+
+    {
+        WriteLock lock(mReadWriteLock);
+        mPrometheusInputsMap.clear();
+    }
+}
+
+sdk::HttpMessage PrometheusInputRunner::SendGetRequest(const string& url) {
+    map<string, string> httpHeader;
+    httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
+    sdk::HttpMessage httpResponse;
+    httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
+    try {
+        mClient->Send(sdk::HTTP_GET,
+                      mOperatorHost,
+                      mOperatorPort,
+                      prometheus::UNREGISTER_COLLECTOR_PATH,
+                      "pod_name=" + mPodName,
+                      httpHeader,
+                      "",
+                      10,
+                      httpResponse,
+                      "",
+                      false);
+    } catch (const sdk::LOGException& e) {
+        LOG_ERROR(sLogger, ("curl error", e.what())("url", url)("pod_name", mPodName));
+    }
+    return httpResponse;
 }
 
 bool PrometheusInputRunner::HasRegisteredPlugin() {
+    ReadLock lock(mReadWriteLock);
     return !mPrometheusInputsMap.empty();
 }
-
 }; // namespace logtail

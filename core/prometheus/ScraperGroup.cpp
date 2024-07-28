@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "Scraper.h"
+#include "prometheus/ScraperGroup.h"
 
 #include <atomic>
 #include <memory>

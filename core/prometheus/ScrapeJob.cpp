@@ -65,12 +65,7 @@ bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
     }
     mJobName = mScrapeConfigPtr->mJobName;
 
-    return Validation();
-}
-
-
-bool ScrapeJob::Validation() const {
-    return !mJobName.empty();
+    return true;
 }
 
 bool ScrapeJob::operator<(const ScrapeJob& other) const {
@@ -87,6 +82,8 @@ void ScrapeJob::StartTargetsDiscoverLoop() {
 void ScrapeJob::StopTargetsDiscoverLoop() {
     mFinished.store(true);
     mTargetsDiscoveryLoopThread.reset();
+
+    std::lock_guard<std::mutex> lock(mMutex);
     mScrapeTargetsMap.clear();
 }
 
@@ -224,7 +221,6 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         if (result.Size() == 0) {
             continue;
         }
-        LOG_INFO(sLogger, ("target relabel keep", mJobName));
 
         auto scrapeTarget = ScrapeTarget(result);
 

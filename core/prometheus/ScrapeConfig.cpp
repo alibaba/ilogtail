@@ -26,6 +26,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::JOB_NAME) && scrapeConfig[prometheus::JOB_NAME].isString()) {
         mJobName = scrapeConfig[prometheus::JOB_NAME].asString();
         if (mJobName.empty()) {
+            LOG_ERROR(sLogger, ("job name is empty", ""));
             return false;
         }
     } else {
@@ -119,6 +120,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             LOG_ERROR(sLogger,
                       ("read credentials_file failed, credentials_file",
                        scrapeConfig[prometheus::AUTHORIZATION][prometheus::CREDENTIALS_FILE].asString()));
+            return false;
         }
         mHeaders[prometheus::A_UTHORIZATION] = type + " " + bearerToken;
         LOG_INFO(sLogger,

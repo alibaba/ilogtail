@@ -46,8 +46,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     static bool isInputStreamStarted = false;
 #endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
-         isInputContainerStdioChanged = false;
-    bool isInputPrometheusChanged = false;
+         isInputContainerStdioChanged = false, isInputPrometheusChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,

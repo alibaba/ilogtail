@@ -74,8 +74,6 @@ private:
 
     std::unique_ptr<sdk::HTTPClient> mClient;
 
-    bool Validation() const;
-
     void TargetsDiscoveryLoop();
 
     bool FetchHttpData(std::string& readBuffer) const;

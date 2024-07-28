@@ -106,7 +106,6 @@ void ScrapeWork::ScrapeLoop() {
             - elapsedTime % ((uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
         this_thread::sleep_for(chrono::nanoseconds(timeToWait));
     }
-    LOG_INFO(sLogger, ("stop prometheus scrape loop", mHash));
 }
 
 void ScrapeWork::ScrapeAndPush() {
@@ -169,8 +168,6 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
 }
 
 void ScrapeWork::PushEventGroup(PipelineEventGroup&& eGroup) {
-    LOG_INFO(sLogger,
-             ("push event group", mHash)("target index", mInputIndex)("target queueKey", to_string(mQueueKey)));
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
     for (size_t i = 0; i < 1000; ++i) {
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item)) == 0) {
@@ -184,6 +181,5 @@ void ScrapeWork::PushEventGroup(PipelineEventGroup&& eGroup) {
 void ScrapeWork::SetUnRegisterMs(uint64_t unRegisterMs) {
     mUnRegisterMs = unRegisterMs;
 }
-
 
 } // namespace logtail

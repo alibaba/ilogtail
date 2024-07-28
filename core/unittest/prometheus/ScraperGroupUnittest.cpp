@@ -20,8 +20,7 @@
 #include "JsonUtil.h"
 #include "StringTools.h"
 #include "prometheus/Labels.h"
-#include "prometheus/ScrapeWork.h"
-#include "prometheus/Scraper.h"
+#include "prometheus/ScraperGroup.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
