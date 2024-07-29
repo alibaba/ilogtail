@@ -361,7 +361,7 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
         for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
             std::pair<std::string, std::function<std::string()>> pair = *item;
             Log_Content* contentPtr = logPtr->add_contents();
-            contentPtr->set_key(LABEL_PREFIX + item->first);
+            contentPtr->set_key(LABEL_PREFIX + pair.first);
             contentPtr->set_value(pair.second());
         }
 
