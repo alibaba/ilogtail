@@ -127,7 +127,7 @@ public:
 
 protected:
     void SetUp() override {
-        setenv("POD_NAME", "matrix-test", 1);
+        setenv("POD_NAME", "prometheus-test", 1);
         setenv("OPERATOR_HOST", "127.0.0.1", 1);
         setenv("OPERATOR_PORT", "12345", 1);
     }

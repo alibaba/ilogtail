@@ -28,7 +28,7 @@ namespace logtail::prometheus {
     const char* const POD_NAME = "POD_NAME";
 
     // prometheus api
-    const char* const MATRIX_PROMETHEUS_PREFIX = "matrix_prometheus_";
+    const char* const PROMETHEUS_PREFIX = "prometheus_";
     const char* const REGISTER_COLLECTOR_PATH = "/register_collector";
     const char* const UNREGISTER_COLLECTOR_PATH = "/unregister_collector";
     const char* const ACCEPT = "Accept";

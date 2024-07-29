@@ -126,7 +126,7 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     map<string, string> httpHeader;
     httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
     httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
-    httpHeader[prometheus::USER_AGENT] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
+    httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
 

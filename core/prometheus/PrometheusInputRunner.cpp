@@ -127,9 +127,9 @@ void PrometheusInputRunner::Stop() {
 
 sdk::HttpMessage PrometheusInputRunner::SendGetRequest(const string& url) {
     map<string, string> httpHeader;
-    httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
+    httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
     sdk::HttpMessage httpResponse;
-    httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::MATRIX_PROMETHEUS_PREFIX + mPodName;
+    httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
     try {
         mClient->Send(sdk::HTTP_GET,
                       mOperatorHost,
