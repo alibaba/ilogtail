@@ -79,6 +79,7 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
 void PrometheusInputRunner::Start() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
 
+    // only register when operator exist
     if (!mOperatorHost.empty()) {
         int retry = 0;
         while (true) {
@@ -107,16 +108,19 @@ void PrometheusInputRunner::Start() {
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
-    for (int retry = 0; retry < 3; ++retry) {
-        sdk::HttpMessage httpResponse = SendGetRequest(prometheus::UNREGISTER_COLLECTOR_PATH);
-        if (httpResponse.statusCode != 200) {
-            LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
-        } else {
-            break;
+    // only unregister when operator exist
+    if (!mOperatorHost.empty()) {
+        for (int retry = 0; retry < 3; ++retry) {
+            sdk::HttpMessage httpResponse = SendGetRequest(prometheus::UNREGISTER_COLLECTOR_PATH);
+            if (httpResponse.statusCode != 200) {
+                LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
+            } else {
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        LOG_INFO(sLogger, ("Unregister Success", mPodName));
     }
-    LOG_INFO(sLogger, ("Unregister Success", mPodName));
     mScraperGroup->Stop();
 
     {
