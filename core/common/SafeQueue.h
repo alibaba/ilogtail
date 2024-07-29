@@ -22,6 +22,7 @@
 
 namespace logtail {
 
+// lock-based unbounded queue, suitable for common use (except for process queue and sender queue)
 template <typename T>
 class SafeQueue {
 public:
