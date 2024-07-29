@@ -170,13 +170,7 @@ inline sdk::HttpMessage ScrapeWork::Scrape() {
 
 void ScrapeWork::PushEventGroup(PipelineEventGroup&& eGroup) {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
-    for (size_t i = 0; i < 1000; ++i) {
-        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item)) == 0) {
-            return;
-        }
-        this_thread::sleep_for(chrono::milliseconds(10));
-    }
-    LOG_INFO(sLogger, ("push event group failed", mHash));
+    ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
 }
 
 void ScrapeWork::SetUnRegisterMs(uint64_t unRegisterMs) {
