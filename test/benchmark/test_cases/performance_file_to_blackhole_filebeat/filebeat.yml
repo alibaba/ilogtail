@@ -2,7 +2,8 @@ filebeat.inputs:
 - type: filestream
   id: input-file
   paths:
-    - /home/filebeat/a.log
+    - /home/filebeat/*.log
+  prospector.scanner.check_interval: 1s
 
 processors:
   - decode_json_fields:

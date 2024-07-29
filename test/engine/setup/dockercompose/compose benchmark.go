@@ -30,7 +30,8 @@ import (
 )
 
 const (
-	cadvisorTemplate = `version: '3.8'
+	benchmarkIdentifier = "benchmark"
+	cadvisorTemplate    = `version: '3.8'
 services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
@@ -64,7 +65,7 @@ func (c *ComposeBenchmarkBooter) Start(ctx context.Context) error {
 	if err := c.createComposeFile(); err != nil {
 		return err
 	}
-	compose := testcontainers.NewLocalDockerCompose([]string{config.CaseHome + finalFileName}, identifier).WithCommand([]string{"up", "-d", "--build"})
+	compose := testcontainers.NewLocalDockerCompose([]string{config.CaseHome + finalFileName}, benchmarkIdentifier).WithCommand([]string{"up", "-d", "--build"})
 	strategyWrappers := withExposedService(compose)
 	execError := compose.Invoke()
 	if execError.Error != nil {
@@ -79,7 +80,7 @@ func (c *ComposeBenchmarkBooter) Start(ctx context.Context) error {
 	c.cli = cli
 
 	list, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", "e2e-cadvisor")),
+		Filters: filters.NewArgs(filters.Arg("name", "benchmark-cadvisor")),
 	})
 	if len(list) != 1 {
 		logger.Errorf(context.Background(), "CADVISOR_COMPOSE_ALARM", "cadvisor container size is not equal 1, got %d count", len(list))
@@ -102,7 +103,7 @@ func (c *ComposeBenchmarkBooter) Start(ctx context.Context) error {
 }
 
 func (c *ComposeBenchmarkBooter) Stop() error {
-	execError := testcontainers.NewLocalDockerCompose([]string{config.CaseHome + finalFileName}, identifier).Down()
+	execError := testcontainers.NewLocalDockerCompose([]string{config.CaseHome + finalFileName}, benchmarkIdentifier).Down()
 	if execError.Error != nil {
 		logger.Error(context.Background(), "STOP_DOCKER_COMPOSE_ERROR",
 			"stdout", execError.Stdout.Error(), "stderr", execError.Stderr.Error())

@@ -8,7 +8,7 @@ services:
     volumes:
       - ./main.conf:/tmp/main.conf
       - ./parsers.conf:/tmp/parsers.conf
-      - ./a.log:/home/fluentbit/a.log
+      - .:/home/fluentbit
     restart: always
 
 

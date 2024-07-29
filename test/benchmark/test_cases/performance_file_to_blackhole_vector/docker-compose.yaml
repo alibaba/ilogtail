@@ -5,4 +5,4 @@ services:
     image: timberio/vector:0.39.0-debian
     volumes:
       - ./vector.yaml:/etc/vector/vector.yaml
-      - ./a.log:/home/vector-log/a.log
+      - .:/home/vector-log

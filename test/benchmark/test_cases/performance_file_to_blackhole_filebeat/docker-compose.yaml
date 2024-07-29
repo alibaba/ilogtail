@@ -6,5 +6,5 @@ services:
     user: root
     volumes:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ./a.log:/home/filebeat/a.log:ro
+      - .:/home/filebeat
     command: filebeat -e --strict.perms=false

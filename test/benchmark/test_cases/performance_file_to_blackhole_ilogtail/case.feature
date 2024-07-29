@@ -12,7 +12,7 @@ Feature: performance file to blackhole iLogtail
     inputs:
       - Type: input_file
         FilePaths: 
-          - /home/test-log/json.log
+          - /home/test-log/*.log
     processors:
       - Type: processor_parse_json_native
         SourceKey: content
@@ -22,13 +22,13 @@ Feature: performance file to blackhole iLogtail
         FilterRegex:
           - ^no-agent$
     flushers:
-    - Type: flusher_sls
-      Region: cn-hangzhou
-      Endpoint: cn-hangzhou.log.aliyuncs.com
-      Project: test_project
-      Logstore: test_logstore
+      - Type: flusher_sls
+        Region: cn-hangzhou
+        Endpoint: cn-hangzhou.log.aliyuncs.com
+        Project: test_project
+        Logstore: test_logstore
     """
-    Given iLogtail container mount {./a.log} to {/home/test-log/json.log}
+    Given iLogtail container mount {.} to {/home/test-log}
     When start docker-compose {performance_file_to_blackhole_ilogtail}
     When start monitor {ilogtailC}
     When generate logs to file, speed {10}MB/s, total {1}min, to file {./a.log}, template
