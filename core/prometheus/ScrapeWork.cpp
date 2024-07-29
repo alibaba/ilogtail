@@ -88,8 +88,9 @@ void ScrapeWork::ScrapeLoop() {
     uint64_t randSleep = GetRandSleep();
     // zero-cost upgrade
     // if mUnRegisterMs is expired, scrape and push immediately
-    if (randSleep + GetCurrentTimeInNanoSeconds() > mUnRegisterMs * 1000ULL * 1000ULL
-            + (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL) {
+    if (mUnRegisterMs != 0
+        && (randSleep + GetCurrentTimeInNanoSeconds() > mUnRegisterMs * 1000ULL * 1000ULL
+                + (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL)) {
         ScrapeAndPush();
         randSleep = GetRandSleep();
     }

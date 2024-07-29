@@ -23,6 +23,7 @@
 
 #include "Lock.h"
 #include "prometheus/ScrapeJob.h"
+#include "prometheus/ScraperGroup.h"
 #include "sdk/Common.h"
 
 namespace logtail {
@@ -62,6 +63,8 @@ private:
     std::string mOperatorHost;
     int32_t mOperatorPort;
     std::string mPodName;
+
+    std::unique_ptr<ScraperGroup> mScraperGroup;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;

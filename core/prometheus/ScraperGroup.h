@@ -31,10 +31,12 @@ namespace logtail {
 
 class ScraperGroup {
 public:
-    static ScraperGroup* GetInstance() {
-        static ScraperGroup sGroup;
-        return &sGroup;
-    }
+    ScraperGroup();
+    ~ScraperGroup();
+    ScraperGroup(const ScraperGroup&) = delete;
+    ScraperGroup(ScraperGroup&&) = delete;
+    ScraperGroup& operator=(const ScraperGroup&) = delete;
+    ScraperGroup& operator=(ScraperGroup&&) = delete;
 
     void UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr);
     void RemoveScrapeJob(const std::string& jobName);
@@ -46,8 +48,6 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    ScraperGroup();
-
     std::mutex mMutex;
     std::unordered_map<std::string, std::unique_ptr<ScrapeJob>> mScrapeJobMap;
     std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<ScrapeWork>>> mScrapeWorkMap;

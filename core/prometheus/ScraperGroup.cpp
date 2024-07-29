@@ -35,6 +35,10 @@ namespace logtail {
 ScraperGroup::ScraperGroup() : mUnRegisterMs(0), mFinished(true), mScraperThread(nullptr) {
 }
 
+ScraperGroup::~ScraperGroup() {
+    Stop();
+}
+
 void ScraperGroup::UpdateScrapeWork(const string& jobName) {
     if (mScrapeJobMap.find(jobName) == mScrapeJobMap.end()) {
         LOG_WARNING(sLogger, ("Job not found", jobName));

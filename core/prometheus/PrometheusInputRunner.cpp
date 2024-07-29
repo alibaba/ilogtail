@@ -42,8 +42,9 @@ PrometheusInputRunner::PrometheusInputRunner() {
 
     mOperatorHost = STRING_FLAG(OPERATOR_HOST);
     mPodName = STRING_FLAG(POD_NAME);
-
     mOperatorPort = INT32_FLAG(OPERATOR_PORT);
+
+    mScraperGroup = make_unique<ScraperGroup>();
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -58,7 +59,7 @@ void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, std::uniq
     scrapeJobPtr->mOperatorPort = mOperatorPort;
     scrapeJobPtr->mPodName = mPodName;
 
-    ScraperGroup::GetInstance()->UpdateScrapeJob(std::move(scrapeJobPtr));
+    mScraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
@@ -67,7 +68,7 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
         ReadLock lock(mReadWriteLock);
         jobName = mPrometheusInputsMap[inputName];
     }
-    ScraperGroup::GetInstance()->RemoveScrapeJob(jobName);
+    mScraperGroup->RemoveScrapeJob(jobName);
     {
         WriteLock lock(mReadWriteLock);
         mPrometheusInputsMap.erase(inputName);
@@ -85,21 +86,22 @@ void PrometheusInputRunner::Start() {
             sdk::HttpMessage httpResponse = SendGetRequest(prometheus::REGISTER_COLLECTOR_PATH);
             if (httpResponse.statusCode != 200) {
                 LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
+                if (retry % 3 == 0) {
+                    LOG_INFO(sLogger, ("register failed, retried", ToString(retry)));
+                }
             } else {
                 // register success
+                // http.content only has one timestamp string in millisecond format
                 if (!httpResponse.content.empty()) {
-                    ScraperGroup::GetInstance()->mUnRegisterMs = stoll(httpResponse.content);
+                    mScraperGroup->mUnRegisterMs = stoll(httpResponse.content);
                 }
                 break;
-            }
-            if (retry % 3 == 0) {
-                LOG_INFO(sLogger, ("register failed, retried", ToString(retry)));
             }
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         LOG_INFO(sLogger, ("Register Success", mPodName));
     }
-    ScraperGroup::GetInstance()->Start();
+    mScraperGroup->Start();
 }
 
 /// @brief stop scrape work and clear all scrape jobs
@@ -115,7 +117,7 @@ void PrometheusInputRunner::Stop() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     LOG_INFO(sLogger, ("Unregister Success", mPodName));
-    ScraperGroup::GetInstance()->Stop();
+    mScraperGroup->Stop();
 
     {
         WriteLock lock(mReadWriteLock);
