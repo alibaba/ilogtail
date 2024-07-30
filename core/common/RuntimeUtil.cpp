@@ -37,6 +37,7 @@ namespace logtail {
 // replace them with PATH_SEPARATOR.
 std::string GetProcessExecutionDir(void) {
 #if defined(__ANDROID__)
+    // In Android, runtime configuration files cannot be stored in the same directory as the executable
     return STRING_FLAG(logtail_sys_conf_dir);
 #elif defined(__linux__)
     char exePath[PATH_MAX + 1] = "";
