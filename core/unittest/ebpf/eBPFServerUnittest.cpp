@@ -6,8 +6,6 @@
 #include "common/FileSystemUtil.h"
 #include "unittest/Unittest.h"
 #include "ebpf/include/export.h"
-#include "ebpf/observer/ObserverOptions.h"
-#include "ebpf/security/SecurityOptions.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "ebpf/eBPFServer.h"
@@ -16,7 +14,7 @@
 #include "ebpf/config.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/observer/ObserverOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFFileObserver.h"
 
 namespace logtail {
@@ -49,7 +47,7 @@ public:
 
 protected:
     void SetUp() override {
-        config_ = new eBPFConfig;
+        config_ = new eBPFAdminConfig;
         config_->mReceiveEventChanCap = 4096;
         config_->mAdminConfig.mDebugMode = false;
         config_->mAdminConfig.mLogLevel = "warn";
@@ -80,7 +78,7 @@ private:
         LOG_INFO(sLogger, ("writeLogtailConfigJSON", v.toStyledString()));
         OverwriteFile(STRING_FLAG(ilogtail_config), v.toStyledString());
     }
-    eBPFConfig* config_;
+    eBPFAdminConfig* config_;
     Pipeline p;
     PipelineContext ctx;
     SecurityOptions security_opts;
@@ -328,7 +326,7 @@ void eBPFServerUnittest::GenerateBatchMeasure(nami::NamiHandleBatchMeasureFunc c
                 {"callType", "http_client"},
                 {"source", "ebpf"},
             };
-            NetSingleMeasre* sm = new NetSingleMeasre;
+            NetSingleMeasure* sm = new NetSingleMeasure;
             sm->recv_byte_total_ = 15631 + generateRandomInt(500);
             sm->send_byte_total_ = 18676 + generateRandomInt(400);
             sm->send_pkt_total_ = 203 + generateRandomInt(50);
@@ -400,7 +398,7 @@ void eBPFServerUnittest::GenerateBatchMeasure(nami::NamiHandleBatchMeasureFunc c
                     {"callType", "conn_stats"},
                     {"source", "ebpf"},
                 };
-                NetSingleMeasre* sm = new NetSingleMeasre;
+                NetSingleMeasure* sm = new NetSingleMeasure;
                 sm->recv_byte_total_ = 15631 + generateRandomInt(500);
                 sm->send_byte_total_ = 18676 + generateRandomInt(400);
                 sm->recv_pkt_total_ = 203 + generateRandomInt(50);
@@ -480,8 +478,9 @@ void eBPFServerUnittest::InitObserverOpts() {
 }
 
 void eBPFServerUnittest::TestInit() {
-    auto host_name = ebpf::SourceManager::GetInstance()->host_name_;
-    auto host_ip = ebpf::SourceManager::GetInstance()->host_ip_;
+    auto host_name = ebpf::eBPFServer::GetInstance()->mSourceManager->mHostName;
+    auto host_ip = ebpf::eBPFServer::GetInstance()->mSourceManager->mHostIp;
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager != nullptr);
     EXPECT_TRUE(host_name.length());
     EXPECT_TRUE(host_ip.length());
 }
@@ -504,16 +503,19 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     std::string errorMsg;
     Json::Value configJson;
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    ObserverOptions observer_options;
-    observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
-    bool res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
+    
+    nami::ObserverNetworkOption network_option;
+    bool res = ebpf::InitObserverNetworkOption(configJson, network_option, &ctx, "test");
+    EXPECT_TRUE(res);
+    // observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
+    res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 1,
         nami::PluginType::NETWORK,
         &ctx,
-        &observer_options);
+        &network_option);
     
     EXPECT_TRUE(res);
-    auto conf = ebpf::SourceManager::GetInstance()->config_;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     auto network_conf = std::get<nami::NetworkObserveConfig>(conf->config_);
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
@@ -523,44 +525,44 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     EXPECT_TRUE(network_conf.so_.size());
     EXPECT_TRUE(network_conf.so_.find("libnetwork_observer.so") != std::string::npos);
     EXPECT_TRUE(network_conf.so_size_ != 0);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->plugin_idx_, 1);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->plugin_idx_, 1);
-    EXPECT_TRUE(ebpf::SourceManager::GetInstance()->running_[int(nami::PluginType::NETWORK)]);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 1);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK)]);
 
     // do suspend
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::NETWORK);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->ctx_, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->ctx_, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->plugin_idx_, 0);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->plugin_idx_, 0);
-    EXPECT_TRUE(ebpf::SourceManager::GetInstance()->running_[int(nami::PluginType::NETWORK)]);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, nullptr);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, nullptr);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 0);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 0);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK)]);
 
     // do update
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 8,
         nami::PluginType::NETWORK,
         &ctx,
-        &observer_options);
+        &network_option);
     EXPECT_TRUE(res);
-    conf = ebpf::SourceManager::GetInstance()->config_;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 
     GenerateBatchMeasure(network_conf.measure_cb_);
     GenerateBatchSpan(network_conf.span_cb_);
     auto after_conf = std::get<nami::NetworkObserveConfig>(conf->config_);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->plugin_idx_, 8);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->plugin_idx_, 8);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_meter_cb_->process_total_count_, 19);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->ob_span_cb_->process_total_count_, 5);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 8);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 8);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mProcessTotalCnt, 19);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mProcessTotalCnt, 5);
 
     // do stop
     ebpf::eBPFServer::GetInstance()->DisablePlugin("test", nami::PluginType::NETWORK);
-    EXPECT_TRUE(!ebpf::SourceManager::GetInstance()->running_[int(nami::PluginType::NETWORK)]);
+    EXPECT_TRUE(!ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK)]);
 }
 
 void eBPFServerUnittest::TestEnableProcessPlugin() {
@@ -603,7 +605,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    auto conf = ebpf::SourceManager::GetInstance()->config_;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto process_conf = std::get<nami::ProcessConfig>(conf->config_);
@@ -622,14 +624,14 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    conf = ebpf::SourceManager::GetInstance()->config_;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
     auto after_conf = std::get<nami::ProcessConfig>(conf->config_);
 
     GenerateBatchEvent(after_conf.process_security_cb_, SecureEventType::SECURE_EVENT_TYPE_PROCESS_SECURE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->process_secure_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->process_secure_cb_->process_total_count_, 1000);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mProcessTotalCnt, 1000);
 }
 
 void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
@@ -668,7 +670,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    auto conf = ebpf::SourceManager::GetInstance()->config_;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto inner_conf = std::get<nami::NetworkSecurityConfig>(conf->config_);
@@ -687,15 +689,15 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    conf = ebpf::SourceManager::GetInstance()->config_;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 
     auto after_conf = std::get<nami::NetworkSecurityConfig>(conf->config_);
 
     GenerateBatchEvent(after_conf.network_security_cb_, SecureEventType::SECURE_EVENT_TYPE_SOCKET_SECURE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->network_secure_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->network_secure_cb_->process_total_count_, 1000);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mProcessTotalCnt, 1000);
 }
 
 void eBPFServerUnittest::TestEnableFileSecurePlugin() {
@@ -734,9 +736,9 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
         nami::PluginType::FILE_SECURITY,
         &ctx,
         &security_options);
-    EXPECT_EQ(std::get<SecurityFileFilter>(security_options.mOptionList[0].mFilter).mFileFilterItem.size(), 3);
+    EXPECT_EQ(std::get<nami::SecurityFileFilter>(security_options.mOptionList[0].filter_).mFileFilterItem.size(), 3);
     EXPECT_TRUE(res);
-    auto conf = ebpf::SourceManager::GetInstance()->config_;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::FILE_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto inner_conf = std::get<nami::FileSecurityConfig>(conf->config_);
@@ -754,15 +756,15 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    conf = ebpf::SourceManager::GetInstance()->config_;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::FILE_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 
     auto after_conf = std::get<nami::FileSecurityConfig>(conf->config_);
 
     GenerateBatchEvent(after_conf.file_security_cb_, SecureEventType::SECURE_EVENT_TYPE_FILE_SECURE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->file_secure_cb_->ctx_, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->file_secure_cb_->process_total_count_, 1000);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mProcessTotalCnt, 1000);
 }
 
 UNIT_TEST_CASE(eBPFServerUnittest, TestDefaultEbpfParameters);

@@ -19,217 +19,60 @@
 namespace logtail {
 namespace ebpf {
 
+#define ADD_STATUS_METRICS(METRIC_NAME, FIELD_NAME, VALUE) \
+    {if (!inner->FIELD_NAME) return; \
+    auto event = group.AddMetricEvent(); \
+    for (auto& tag : measure->tags_) { \
+        event->SetTag(tag.first, tag.second); \
+    } \
+    event->SetTag(std::string("status_code"), std::string(VALUE)); \
+    event->SetName(METRIC_NAME); \
+    event->SetTimestamp(ts); \
+    event->SetValue(UntypedSingleValue{(double)inner->FIELD_NAME});} \
+
+#define GENERATE_METRICS(FUNC_NAME, MEASURE_TYPE, INNER_TYPE, METRIC_NAME, FIELD_NAME) \
+void FUNC_NAME(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) { \
+    if (measure->type_ != MEASURE_TYPE) return; \
+    auto inner = static_cast<INNER_TYPE*>(measure->inner_measure_.get()); \
+    if (!inner->FIELD_NAME) return; \
+    auto event = group.AddMetricEvent(); \
+    for (auto& tag : measure->tags_) { \
+        event->SetTag(tag.first, tag.second); \
+    } \
+    event->SetName(METRIC_NAME); \
+    event->SetTimestamp(ts); \
+    event->SetValue(UntypedSingleValue{(double)inner->FIELD_NAME}); \
+}
 
 // FOR APP METRICS
-void GenerateRequestsTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_APP) return;
-    auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-    if (!inner->request_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_rpc_requests_count");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->request_total_});
-}
-
-void GenerateRequestsDurationSumMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_APP) return;
-    auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-    if (!inner->duration_ms_sum_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_rpc_requests_seconds");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->duration_ms_sum_});
-}
+GENERATE_METRICS(GenerateRequestsTotalMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_count", request_total_)
+GENERATE_METRICS(GenerateRequestsSlowMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_slow_count", slow_total_)
+GENERATE_METRICS(GenerateRequestsErrorMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_error_count", error_total_)
+GENERATE_METRICS(GenerateRequestsDurationSumMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_seconds", duration_ms_sum_)
 
 void GenerateRequestsStatusMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
     if (measure->type_ != MeasureType::MEASURE_TYPE_APP) return;
     auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-    if (inner->status_2xx_count_ > 0) {
-        auto event = group.AddMetricEvent();
-        for (auto& tag : measure->tags_) {
-            event->SetTag(tag.first, tag.second);
-        }
-        event->SetTag(std::string("status_code"), std::string("2xx"));
-        event->SetName("arms_rpc_requests_by_status_count");
-        event->SetTimestamp(ts);
-        event->SetValue(UntypedSingleValue{(double)inner->status_2xx_count_});
-    }
-
-    if (inner->status_2xx_count_ > 0) {
-        auto event = group.AddMetricEvent();
-        for (auto& tag : measure->tags_) {
-            event->SetTag(tag.first, tag.second);
-        }
-        event->SetTag(std::string("status_code"), std::string("3xx"));
-        event->SetName("arms_rpc_requests_by_status_count");
-        event->SetTimestamp(ts);
-        event->SetValue(UntypedSingleValue{(double)inner->status_3xx_count_});
-    }
-
-    if (inner->status_4xx_count_ > 0) {
-        auto event = group.AddMetricEvent();
-        for (auto& tag : measure->tags_) {
-            event->SetTag(tag.first, tag.second);
-        }
-        event->SetTag(std::string("status_code"), std::string("4xx"));
-        event->SetName("arms_rpc_requests_by_status_count");
-        event->SetTimestamp(ts);
-        event->SetValue(UntypedSingleValue{(double)inner->status_4xx_count_});
-    }
-
-    if (inner->status_5xx_count_ > 0) {
-        auto event = group.AddMetricEvent();
-        for (auto& tag : measure->tags_) {
-            event->SetTag(tag.first, tag.second);
-        }
-        event->SetTag(std::string("status_code"), std::string("5xx"));
-        event->SetName("arms_rpc_requests_by_status_count");
-        event->SetTimestamp(ts);
-        event->SetValue(UntypedSingleValue{(double)inner->status_5xx_count_});
-    }
-}
-
-void GenerateRequestsSlowMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_APP) return;
-    auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-    if (!inner->slow_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_rpc_requests_slow_count");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->slow_total_});
-}
-
-void GenerateRequestsErrorMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_APP) return;
-    auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-    if (!inner->error_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_rpc_requests_error_count");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->error_total_});
+    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_2xx_count_, "2xx");
+    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_3xx_count_, "3xx");
+    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_4xx_count_, "4xx");
+    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_5xx_count_, "5xx");
 }
 
 // FOR NET METRICS
-void GenerateTcpDropTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->tcp_drop_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_tcp_drop_count");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->tcp_drop_total_});
-}
-
-void GenerateTcpRetransTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->tcp_retran_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_tcp_retrans_total");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->tcp_retran_total_});
-}
-
-void GenerateTcpConnectionTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->tcp_connect_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_tcp_count_by_state");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->tcp_connect_total_});
-}
-
-void GenerateTcpRecvPktsTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->recv_pkt_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_recv_packets_total");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->recv_pkt_total_});
-}
-
-void GenerateTcpRecvBytesTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->recv_byte_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_recv_bytes_total");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->recv_byte_total_});
-}
-
-void GenerateTcpSendPktsTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->send_pkt_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_sent_packets_total");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->send_pkt_total_});
-}
-
-void GenerateTcpSendBytesTotalMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
-    if (measure->type_ != MeasureType::MEASURE_TYPE_NET) return;
-    auto inner = static_cast<NetSingleMeasre*>(measure->inner_measure_.get());
-    if (!inner->send_byte_total_) return;
-    auto event = group.AddMetricEvent();
-    for (auto& tag : measure->tags_) {
-        event->SetTag(tag.first, tag.second);
-    }
-    
-    event->SetName("arms_npm_sent_bytes_total");
-    event->SetTimestamp(ts);
-    event->SetValue(UntypedSingleValue{(double)inner->send_byte_total_});
-}
-
+GENERATE_METRICS(GenerateTcpDropTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_tcp_drop_count", tcp_drop_total_)
+GENERATE_METRICS(GenerateTcpRetransTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_tcp_retrans_total", tcp_retran_total_)
+GENERATE_METRICS(GenerateTcpConnectionTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_tcp_count_by_state", tcp_connect_total_)
+GENERATE_METRICS(GenerateTcpRecvPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_recv_packets_total", recv_pkt_total_)
+GENERATE_METRICS(GenerateTcpRecvBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_recv_bytes_total", recv_byte_total_)
+GENERATE_METRICS(GenerateTcpSendPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_sent_packets_total", send_pkt_total_)
+GENERATE_METRICS(GenerateTcpSendBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_sent_bytes_total", send_byte_total_)
 
 void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
     LOG_INFO(sLogger, ("HandleSpans spans size", spans.size()));
     if (spans.empty()) return;
 
-    if (!ctx_) {
+    if (!mCtx) {
         LOG_WARNING(sLogger, ("HandleSpans", "ctx is null, exit"));
         return;
     }
@@ -249,13 +92,13 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
             spanEvent->SetEndTimeNs(x->end_timestamp_);
             spanEvent->SetTraceId(x->trace_id_);
             spanEvent->SetSpanId(x->span_id_);
-            process_total_count_++;
+            mProcessTotalCnt++;
         }
         #ifdef APSARA_UNIT_TEST_MAIN
             continue;
         #endif
-        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), plugin_idx_);
-        if (ProcessQueueManager::GetInstance()->PushQueue(ctx_->GetProcessQueueKey(), std::move(item))) {
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
             LOG_WARNING(sLogger, ("[Span] push queue failed!", "a"));
         }
 
@@ -269,7 +112,7 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) {
     LOG_INFO(sLogger, ("HandleMeasures measure size", measures.size()) ("ts", timestamp));
     if (measures.empty()) return;
-    if (!ctx_) {
+    if (!mCtx) {
         LOG_WARNING(sLogger, ("HandleSpans", "ctx is null, exit"));
         return;
     }
@@ -299,14 +142,14 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
                 GenerateTcpSendPktsTotalMetrics(event_group, measure, timestamp);
                 GenerateTcpSendBytesTotalMetrics(event_group, measure, timestamp);
             }
-            process_total_count_++;
+            mProcessTotalCnt++;
         }
         
         #ifdef APSARA_UNIT_TEST_MAIN
             continue;
         #endif
-        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), plugin_idx_);
-        if (ProcessQueueManager::GetInstance()->PushQueue(ctx_->GetProcessQueueKey(), std::move(item))) {
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
             LOG_WARNING(sLogger, ("[Metrics] push queue failed!", "a"));
         }
     }

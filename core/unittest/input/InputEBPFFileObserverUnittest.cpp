@@ -16,7 +16,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/observer/ObserverOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFFileObserver.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -67,8 +67,8 @@ void InputEBPFFileObserverUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
-    ObserverFileOption thisObserver = std::get<ObserverFileOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOptions.mType);
+    nami::ObserverFileOption thisObserver = input->mFileOption;
+    // APSARA_TEST_EQUAL(ebpf::ObserverType::FILE, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
     APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
     APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);
@@ -97,8 +97,8 @@ void InputEBPFFileObserverUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
-    ObserverFileOption thisObserver = std::get<ObserverFileOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::FILE, input->mObserverOptions.mType);
+    nami::ObserverFileOption thisObserver = input->mFileOption;
+    // APSARA_TEST_EQUAL(ebpf::ObserverType::FILE, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
     APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
     APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);

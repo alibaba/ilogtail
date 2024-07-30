@@ -16,7 +16,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/security/SecurityOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFProcessSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -82,8 +82,8 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityProcessFilter thisFilter1 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    nami::SecurityProcessFilter thisFilter1 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("4026531833", thisFilter1.mNamespaceFilter[0].mValueList[0]);
     APSARA_TEST_EQUAL("Pid", thisFilter1.mNamespaceFilter[0].mNamespaceType);
     APSARA_TEST_EQUAL("4026531834", thisFilter1.mNamespaceFilter[1].mValueList[0]);
@@ -121,8 +121,8 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityProcessFilter thisFilter2 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    nami::SecurityProcessFilter thisFilter2 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("4026531833", thisFilter2.mNamespaceBlackFilter[0].mValueList[0]);
     APSARA_TEST_EQUAL("Pid", thisFilter2.mNamespaceBlackFilter[0].mNamespaceType);
     APSARA_TEST_EQUAL("4026531834", thisFilter2.mNamespaceBlackFilter[1].mValueList[0]);
@@ -146,7 +146,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
 }
 
 void InputEBPFProcessSecurityUnittest::OnFailedInit() {
@@ -179,8 +179,8 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityProcessFilter thisFilter1 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    nami::SecurityProcessFilter thisFilter1 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL(0, thisFilter1.mNamespaceFilter.size());
 
     // invalid param: 1 NamespaceFilter and 1 NamespaceBlackFilter
@@ -213,8 +213,8 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
-    SecurityProcessFilter thisFilter2 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
+    nami::SecurityProcessFilter thisFilter2 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
     APSARA_TEST_EQUAL(1, thisFilter2.mNamespaceFilter.size());
     APSARA_TEST_EQUAL(0, thisFilter2.mNamespaceBlackFilter.size());
 
@@ -277,8 +277,8 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    SecurityProcessFilter thisFilter3 = std::get<SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::PROCESS, input->mSecurityOptions.mFilterType);
+    nami::SecurityProcessFilter thisFilter3 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL(0, thisFilter3.mNamespaceFilter.size());
     APSARA_TEST_EQUAL(0, thisFilter3.mNamespaceBlackFilter.size());
 }

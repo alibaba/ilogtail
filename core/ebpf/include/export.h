@@ -66,7 +66,7 @@ struct AbstractSingleMeasure {
 
 };
 
-struct NetSingleMeasre : public AbstractSingleMeasure {
+struct NetSingleMeasure : public AbstractSingleMeasure {
   uint64_t tcp_drop_total_;
   uint64_t tcp_retran_total_;
   uint64_t tcp_connect_total_;
@@ -142,6 +142,26 @@ using NamiHandleBatchSpanFunc = std::function<void(std::vector<std::unique_ptr<A
 // observe security
 using NamiHandleBatchDataEventFn = std::function<void(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events)>;
 
+
+
+struct ObserverProcessOption {
+    std::vector<std::string> mIncludeCmdRegex;
+    std::vector<std::string> mExcludeCmdRegex;
+};
+
+struct ObserverFileOption {
+    std::string mProfileRemoteServer;
+    bool mCpuSkipUpload = false;
+    bool mMemSkipUpload = false;
+};
+
+struct ObserverNetworkOption {
+    std::vector<std::string> mEnableProtocols;
+    bool mDisableProtocolParse = false;
+    bool mDisableConnStats = false;
+    bool mEnableConnTrackerDump = false;
+};
+
 // file
 struct SecurityFileFilterItem {
     std::string mFilePath = "";
@@ -198,10 +218,10 @@ struct SecurityNetworkFilter {
   }
 };
 
-struct SecurityOptions {
+struct SecurityOption {
   std::vector<std::string> call_names_;
-  std::variant<SecurityFileFilter, SecurityProcessFilter, SecurityNetworkFilter> filter_;
-  bool operator==(const SecurityOptions& other) const {
+  std::variant<SecurityFileFilter, SecurityNetworkFilter, SecurityProcessFilter> filter_;
+  bool operator==(const SecurityOption& other) const {
     return call_names_ == other.call_names_ &&
             filter_ == other.filter_;
   }
@@ -238,7 +258,7 @@ struct ProcessConfig {
   
   bool enable_libbpf_debug_ = false;
 
-  std::vector<SecurityOptions> options_;
+  std::vector<SecurityOption> options_;
   NamiHandleBatchDataEventFn process_security_cb_;
   bool operator==(const ProcessConfig& other) const {
     return enable_libbpf_debug_ == other.enable_libbpf_debug_ &&
@@ -247,7 +267,7 @@ struct ProcessConfig {
 };
 
 struct NetworkSecurityConfig {
-  std::vector<SecurityOptions> options_;
+  std::vector<SecurityOption> options_;
   NamiHandleBatchDataEventFn network_security_cb_;
   bool operator==(const NetworkSecurityConfig& other) const {
     return options_ == other.options_;  
@@ -255,7 +275,7 @@ struct NetworkSecurityConfig {
 };
 
 struct FileSecurityConfig {
-  std::vector<SecurityOptions> options_;
+  std::vector<SecurityOption> options_;
   NamiHandleBatchDataEventFn file_security_cb_;
   bool operator==(const FileSecurityConfig& other) const {
     return options_ == other.options_;  

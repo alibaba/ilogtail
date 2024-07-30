@@ -16,7 +16,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/observer/ObserverOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFNetworkObserver.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -70,8 +70,8 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
-    ObserverNetworkOption thisObserver = std::get<ObserverNetworkOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOptions.mType);
+    nami::ObserverNetworkOption thisObserver = input->mNetworkOption;
+    // APSARA_TEST_EQUAL(ebpf::ObserverType::NETWORK, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
     APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);
@@ -105,8 +105,8 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
-    ObserverNetworkOption thisObserver = std::get<ObserverNetworkOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::NETWORK, input->mObserverOptions.mType);
+    nami::ObserverNetworkOption thisObserver = input->mNetworkOption;
+    // APSARA_TEST_EQUAL(ebpf::ObserverType::NETWORK, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
     APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);

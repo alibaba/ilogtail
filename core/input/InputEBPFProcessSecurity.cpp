@@ -25,7 +25,7 @@ const std::string InputEBPFProcessSecurity::sName = "input_ebpf_processprobe_sec
 
 bool InputEBPFProcessSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mSecurityOptions.Init(SecurityFilterType::PROCESS, config, mContext, sName);
+    return mSecurityOptions.Init(ebpf::SecurityFilterType::PROCESS, config, mContext, sName);
 }
 
 bool InputEBPFProcessSecurity::Start() {
@@ -35,6 +35,7 @@ bool InputEBPFProcessSecurity::Start() {
 bool InputEBPFProcessSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         LOG_INFO(sLogger, ("receive config update", ""));
+        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::PROCESS);
         return true;
     }
     return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::PROCESS);

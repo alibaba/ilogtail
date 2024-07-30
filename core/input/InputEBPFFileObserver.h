@@ -18,9 +18,10 @@
 
 #include <string>
 
-#include "ebpf/observer/ObserverOptions.h"
+#include "ebpf/config.h"
 #include "plugin/interface/Input.h"
 #include "ebpf/eBPFServer.h"
+#include "ebpf/include/export.h"
 
 namespace logtail {
 
@@ -33,6 +34,7 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    ObserverOptions mObserverOptions;
+    // ebpf::ObserverOptions mObserverOptions;
+    nami::ObserverFileOption mFileOption;
 };
 } // namespace logtail

@@ -23,6 +23,7 @@
 #include <chrono>
 #include <cstring>
 #include <atomic>
+#include <array>
 
 #include "ebpf/include/export.h"
 #include "ebpf/include/SysAkApi.h"
@@ -44,11 +45,6 @@ public:
     SourceManager(const SourceManager&) = delete;
     SourceManager& operator=(const SourceManager&) = delete;
 
-    static SourceManager* GetInstance() {
-        static SourceManager instance;
-        return &instance;
-    }
-
     void Init();
 
     bool StartPlugin(nami::PluginType plugin_type,
@@ -57,16 +53,17 @@ public:
     bool StopPlugin(nami::PluginType plugin_type);
 
     bool StopAll();
+        
+    SourceManager();
+    ~SourceManager();
 
 private:
     void FillCommonConf(nami::eBPFConfig* conf);
+    bool CheckPluginRunning(nami::PluginType plugin_type);
     bool LoadDynamicLib(const std::string& lib_name);
     bool DynamicLibSuccess();
     bool UpdatePlugin(nami::PluginType plugin_type, 
                 std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config);
-    
-    SourceManager();
-    ~SourceManager();
 
     enum class ebpf_func {
         EBPF_INIT = 0,
@@ -80,18 +77,18 @@ private:
         EBPF_MAX = 8,
     };
 
-    std::shared_ptr<DynamicLibLoader> lib_;
-    std::vector<void*> funcs_ = std::vector<void*>((int)ebpf_func::EBPF_MAX, nullptr);
-    std::vector<long> offsets_ = std::vector<long>((int)ebpf_func::EBPF_MAX, 0);
-    std::vector<std::atomic_bool> running_ = std::vector<std::atomic_bool>(int(nami::PluginType::MAX));
-    std::string host_ip_;
-    std::string host_name_;
-    std::string host_path_prefix_;
-    std::string binary_path_;
-    std::string full_lib_name_;
+    std::shared_ptr<DynamicLibLoader> mLib;
+    std::array<void*, (int)ebpf_func::EBPF_MAX> mFuncs = {};
+    std::array<long, (int)ebpf_func::EBPF_MAX> mOffsets = {};
+    std::array<std::atomic_bool, (int)nami::PluginType::MAX> mRunning = {};
+    std::string mHostIp;
+    std::string mHostName;
+    std::string mHostPathPrefix;
+    std::string mBinaryPath;
+    std::string mFullLibName;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    nami::eBPFConfig* config_;
+    nami::eBPFConfig* mConfig;
     friend class eBPFServerUnittest;
 #endif
 };

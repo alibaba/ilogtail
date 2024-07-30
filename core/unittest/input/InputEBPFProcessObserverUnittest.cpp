@@ -16,7 +16,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/observer/ObserverOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFProcessObserver.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -66,8 +66,8 @@ void InputEBPFProcessObserverUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
-    ObserverProcessOption thisObserver = std::get<ObserverProcessOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOptions.mType);
+    nami::ObserverProcessOption thisObserver = input->mProcessOption;
+    // APSARA_TEST_EQUAL(ebpf::ObserverType::PROCESS, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 1);
     APSARA_TEST_EQUAL("h", thisObserver.mIncludeCmdRegex[0]);
     APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
@@ -97,8 +97,8 @@ void InputEBPFProcessObserverUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
-    ObserverProcessOption thisObserver = std::get<ObserverProcessOption>(input->mObserverOptions.mObserverOption);
-    APSARA_TEST_EQUAL(ObserverType::PROCESS, input->mObserverOptions.mType);
+    nami::ObserverProcessOption thisObserver = input->mProcessOption;
+    // APSARA_TEST_EQUAL(ebpf::ObserverType::PROCESS, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 0);
     APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
     APSARA_TEST_EQUAL("m", thisObserver.mExcludeCmdRegex[0]);

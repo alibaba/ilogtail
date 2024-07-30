@@ -27,7 +27,7 @@ const std::string InputEBPFFileSecurity::sName = "input_ebpf_fileprobe_security"
 
 bool InputEBPFFileSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mSecurityOptions.Init(SecurityFilterType::FILE, config, mContext, sName);
+    return mSecurityOptions.Init(ebpf::SecurityFilterType::FILE, config, mContext, sName);
 }
 
 bool InputEBPFFileSecurity::Start() {

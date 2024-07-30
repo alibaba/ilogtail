@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "input/InputEBPFProcessObserver.h"
-
+#include "ebpf/config.h"
 
 using namespace std;
 
@@ -22,8 +22,7 @@ namespace logtail {
 const std::string InputEBPFProcessObserver::sName = "input_ebpf_processprobe_observer";
 
 bool InputEBPFProcessObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    // config string解析成定义的param
-    return mObserverOptions.Init(ObserverType::PROCESS, config, mContext, sName);
+    return ebpf::InitObserverProcessOption(config, mProcessOption, mContext, sName);
 }
 
 bool InputEBPFProcessObserver::Start() {

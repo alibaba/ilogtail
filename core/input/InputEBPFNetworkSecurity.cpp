@@ -26,7 +26,7 @@ const std::string InputEBPFNetworkSecurity::sName = "input_ebpf_sockettraceprobe
 
 bool InputEBPFNetworkSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     // config string解析成定义的param
-    return mSecurityOptions.Init(SecurityFilterType::NETWORK, config, mContext, sName);
+    return mSecurityOptions.Init(ebpf::SecurityFilterType::NETWORK, config, mContext, sName);
 }
 
 bool InputEBPFNetworkSecurity::Start() {
@@ -36,6 +36,7 @@ bool InputEBPFNetworkSecurity::Start() {
 bool InputEBPFNetworkSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         LOG_INFO(sLogger, ("receive config update", ""));
+        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::NETWORK_SECURITY);
         return true;
     }
     return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::NETWORK_SECURITY);

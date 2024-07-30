@@ -45,27 +45,30 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     static bool isInputStreamStarted = false;
 #endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
-         isInputContainerStdioChanged = false;
+         isInputContainerStdioChanged = false, inputEbpfChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            inputEbpfChanged);
     }
     for (const auto& config : diff.mModified) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            inputEbpfChanged);
     }
     for (const auto& config : diff.mAdded) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            inputEbpfChanged);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -87,7 +90,10 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
 #if defined(__linux__) && !defined(__ANDROID__)
-    logtail::ebpf::eBPFServer::GetInstance()->Init();
+    if (inputEbpfChanged) {
+        logtail::ebpf::eBPFServer::GetInstance()->Init();
+    }
+
 #endif
 #endif
 
@@ -295,7 +301,8 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
                                           bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged) {
+                                          bool& isInputContainerStdioChanged,
+                                          bool& isInputEbpfChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -305,6 +312,13 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
+    } else if (inputType == "input_ebpf_processprobe_security" || 
+        inputType == "input_ebpf_processprobe_observer" ||
+        inputType == "input_ebpf_sockettraceprobe_security" ||
+        inputType == "input_ebpf_sockettraceprobe_observer" ||
+        inputType == "input_ebpf_fileprobe_security" ||
+        inputType == "input_ebpf_profilingprobe_observer") {
+        isInputEbpfChanged = true;
     }
 }
 

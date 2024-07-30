@@ -14,8 +14,8 @@ public:
     SecurityHandler(logtail::PipelineContext* ctx, uint32_t idx);
     void handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events);
 private:
-    std::string host_ip_;
-    std::string host_name_;
+    std::string mHostIp;
+    std::string mHostName;
 };
 
 }

@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "ebpf/security/SecurityOptions.h"
+#include "ebpf/config.h"
 #include "plugin/interface/Input.h"
 
 
@@ -33,7 +33,7 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    SecurityOptions mSecurityOptions;
+    ebpf::SecurityOptions mSecurityOptions;
 };
 
 } // namespace logtail

@@ -15,7 +15,7 @@
 #include "input/InputEBPFFileObserver.h"
 
 #include "ebpf/eBPFServer.h"
-
+#include "ebpf/config.h"
 
 using namespace std;
 
@@ -24,8 +24,8 @@ namespace logtail {
 const std::string InputEBPFFileObserver::sName = "input_ebpf_profilingprobe_observer";
 
 bool InputEBPFFileObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    // config string解析成定义的param
-    return mObserverOptions.Init(ObserverType::FILE, config, mContext, sName);
+    return ebpf::InitObserverFileOption(config, mFileOption, mContext, sName);
+    // return mObserverOptions.Init(ebpf::ObserverType::FILE, config, mContext, sName);
 }
 
 bool InputEBPFFileObserver::Start() {

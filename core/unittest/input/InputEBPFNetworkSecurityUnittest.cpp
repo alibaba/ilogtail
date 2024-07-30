@@ -16,7 +16,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/security/SecurityOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFNetworkSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -79,18 +79,18 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
-    SecurityNetworkFilter thisFilter1 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::NETWORK, input->mSecurityOptions.mFilterType);
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].mCallName[0]);
-    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].mCallName[1]);
+    nami::SecurityNetworkFilter thisFilter1 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::NETWORK, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
+    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
     APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1.mDestAddrList[1]);
     APSARA_TEST_EQUAL(80, thisFilter1.mDestPortList[0]);
     APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1.mSourceAddrBlackList[0]);
     APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
 
-    SecurityNetworkFilter thisFilter2 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].mCallName[0]);
+    nami::SecurityNetworkFilter thisFilter2 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].call_names_[0]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2.mDestAddrList[0]);
     APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2.mDestAddrList[1]);
     APSARA_TEST_EQUAL(80, thisFilter2.mDestPortList[0]);
@@ -131,18 +131,18 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
-    SecurityNetworkFilter thisFilter1 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::NETWORK, input->mSecurityOptions.mFilterType);
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].mCallName[0]);
-    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].mCallName[1]);
+    nami::SecurityNetworkFilter thisFilter1 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::NETWORK, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
+    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
     APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1.mDestAddrList[1]);
     APSARA_TEST_EQUAL(0, thisFilter1.mDestPortList.size());
     APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1.mSourceAddrBlackList[0]);
     APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
 
-    SecurityNetworkFilter thisFilter2 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[1].mFilter);
-    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].mCallName[0]);
+    nami::SecurityNetworkFilter thisFilter2 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[1].filter_);
+    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].call_names_[0]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2.mDestAddrList[0]);
     APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2.mDestAddrList[1]);
     APSARA_TEST_EQUAL(80, thisFilter2.mDestPortList[0]);
@@ -166,7 +166,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     input.reset(new InputEBPFNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
-    SecurityNetworkFilter thisFilter3 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    nami::SecurityNetworkFilter thisFilter3 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
     APSARA_TEST_EQUAL(0, thisFilter3.mDestAddrList.size());
     APSARA_TEST_EQUAL(0, thisFilter3.mDestPortList.size());
 
@@ -192,7 +192,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     input.reset(new InputEBPFNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
-    SecurityNetworkFilter thisFilter4 = std::get<SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
+    nami::SecurityNetworkFilter thisFilter4 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
     APSARA_TEST_EQUAL(2, thisFilter4.mDestAddrList.size());
     APSARA_TEST_EQUAL(1, thisFilter4.mDestPortList.size());
 }

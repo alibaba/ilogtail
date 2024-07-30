@@ -16,6 +16,7 @@
 
 #include "ebpf/include/export.h"
 #include "ebpf/eBPFServer.h"
+#include "ebpf/config.h"
 
 using namespace std;
 
@@ -24,17 +25,17 @@ namespace logtail {
 const std::string InputEBPFNetworkObserver::sName = "input_ebpf_sockettraceprobe_observer";
 
 bool InputEBPFNetworkObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    // config string解析成定义的param
-    return mObserverOptions.Init(ObserverType::NETWORK, config, mContext, sName);
+    return ebpf::InitObserverNetworkOption(config, mNetworkOption, mContext, sName);
 }
 
 bool InputEBPFNetworkObserver::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK, mContext, &mObserverOptions);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK, mContext, &mNetworkOption);
 }
 
 bool InputEBPFNetworkObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         LOG_INFO(sLogger, ("receive config update", ""));
+        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::NETWORK);
         return true;
     }
     return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::NETWORK);

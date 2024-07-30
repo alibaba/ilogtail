@@ -18,7 +18,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "ebpf/security/SecurityOptions.h"
+#include "ebpf/config.h"
 #include "input/InputEBPFFileSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -76,9 +76,9 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    SecurityFileFilter thisFilter1 = std::get<SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::FILE, input->mSecurityOptions.mFilterType);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    nami::SecurityFileFilter thisFilter1 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL("/etc", thisFilter1.mFileFilterItem[0].mFilePath);
     APSARA_TEST_EQUAL("/bin", thisFilter1.mFileFilterItem[1].mFilePath);
 
@@ -111,9 +111,9 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    SecurityFileFilter thisFilter2 = std::get<SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::FILE, input->mSecurityOptions.mFilterType);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    nami::SecurityFileFilter thisFilter2 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL("/etc", thisFilter2.mFileFilterItem[0].mFilePath);
     APSARA_TEST_EQUAL("passwd", thisFilter2.mFileFilterItem[0].mFileName);
     APSARA_TEST_EQUAL("/etc", thisFilter2.mFileFilterItem[1].mFilePath);
@@ -171,9 +171,9 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    SecurityFileFilter thisFilter1 = std::get<SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].mFilter);
-    APSARA_TEST_EQUAL(SecurityFilterType::FILE, input->mSecurityOptions.mFilterType);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    nami::SecurityFileFilter thisFilter1 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL("/etc", thisFilter1.mFileFilterItem[0].mFilePath);
     APSARA_TEST_EQUAL("", thisFilter1.mFileFilterItem[0].mFileName);
 
@@ -215,10 +215,10 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    APSARA_TEST_EQUAL(SecurityFilterType::FILE, input->mSecurityOptions.mFilterType);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].mCallName[0]);
+    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL(
-        0, std::get<SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].mFilter).mFileFilterItem.size());
+        0, std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_).mFileFilterItem.size());
 }
 
 

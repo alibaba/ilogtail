@@ -60,11 +60,11 @@ SourceManager::~SourceManager() {
 }
 
 void SourceManager::Init() {
-  host_ip_ = GetHostIp();
-  host_name_ = GetHostName();
-  host_path_prefix_ = STRING_FLAG(default_container_host_path);
-  binary_path_ = GetProcessExecutionDir();
-  full_lib_name_ = "lib" + m_lib_name_ + ".so";
+  mHostIp = GetHostIp();
+  mHostName = GetHostName();
+  mHostPathPrefix = STRING_FLAG(default_container_host_path);
+  mBinaryPath = GetProcessExecutionDir();
+  mFullLibName = "lib" + m_lib_name_ + ".so";
 }
 
 bool SourceManager::LoadDynamicLib(const std::string& lib_name) {
@@ -76,10 +76,10 @@ bool SourceManager::LoadDynamicLib(const std::string& lib_name) {
     return true;
 #endif
   std::shared_ptr<DynamicLibLoader> tmp_lib = std::make_shared<DynamicLibLoader>();
-  LOG_INFO(sLogger, ("[SourceManager] begin load ebpf dylib, path:", binary_path_));
+  LOG_INFO(sLogger, ("[SourceManager] begin load ebpf dylib, path:", mBinaryPath));
   std::string loadErr;
-  if (!tmp_lib->LoadDynLib(lib_name, loadErr, binary_path_)) {
-      LOG_ERROR(sLogger, ("failed to load ebpf dynamic library, path", binary_path_)("error", loadErr));
+  if (!tmp_lib->LoadDynLib(lib_name, loadErr, mBinaryPath)) {
+      LOG_ERROR(sLogger, ("failed to load ebpf dynamic library, path", mBinaryPath)("error", loadErr));
       return false;
   }
   // init funcs
@@ -87,31 +87,31 @@ bool SourceManager::LoadDynamicLib(const std::string& lib_name) {
   // init config
   // this memory will be managed by plugin
 
-  funcs_[(int)ebpf_func::EBPF_INIT] = LOAD_EBPF_FUNC_ADDR(init);
-  funcs_[(int)ebpf_func::EBPF_UPDATE] = LOAD_EBPF_FUNC_ADDR(update);
-  funcs_[(int)ebpf_func::EBPF_DEINIT] = LOAD_EBPF_FUNC_ADDR(deinit);
-  funcs_[(int)ebpf_func::EBPF_REMOVE] = LOAD_EBPF_FUNC_ADDR(removep);
-  funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG] = LOAD_EBPF_FUNC_ADDR(ebpf_cleanup_dog);
-  funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE] = LOAD_EBPF_FUNC_ADDR(ebpf_update_conn_role);
-  funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS] = LOAD_EBPF_FUNC_ADDR(ebpf_disable_process);
-  funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR] = LOAD_EBPF_FUNC_ADDR(ebpf_update_conn_addr);
+  mFuncs[(int)ebpf_func::EBPF_INIT] = LOAD_EBPF_FUNC_ADDR(init);
+  mFuncs[(int)ebpf_func::EBPF_UPDATE] = LOAD_EBPF_FUNC_ADDR(update);
+  mFuncs[(int)ebpf_func::EBPF_DEINIT] = LOAD_EBPF_FUNC_ADDR(deinit);
+  mFuncs[(int)ebpf_func::EBPF_REMOVE] = LOAD_EBPF_FUNC_ADDR(removep);
+  mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG] = LOAD_EBPF_FUNC_ADDR(ebpf_cleanup_dog);
+  mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE] = LOAD_EBPF_FUNC_ADDR(ebpf_update_conn_role);
+  mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS] = LOAD_EBPF_FUNC_ADDR(ebpf_disable_process);
+  mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR] = LOAD_EBPF_FUNC_ADDR(ebpf_update_conn_addr);
 
-  offsets_[(int)ebpf_func::EBPF_INIT] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_INIT]);
-  offsets_[(int)ebpf_func::EBPF_UPDATE] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_UPDATE]);
-  offsets_[(int)ebpf_func::EBPF_DEINIT] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_DEINIT]);
-  offsets_[(int)ebpf_func::EBPF_REMOVE] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_REMOVE]);
-  offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG]);
-  offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE]);
-  offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS]);
-  offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR] = LOAD_UPROBE_OFFSET(funcs_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR]);
+  mOffsets[(int)ebpf_func::EBPF_INIT] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_INIT]);
+  mOffsets[(int)ebpf_func::EBPF_UPDATE] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_UPDATE]);
+  mOffsets[(int)ebpf_func::EBPF_DEINIT] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_DEINIT]);
+  mOffsets[(int)ebpf_func::EBPF_REMOVE] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_REMOVE]);
+  mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG]);
+  mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE]);
+  mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS]);
+  mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR]);
 
   // check function load success
-  for (auto& x : funcs_) {
+  for (auto& x : mFuncs) {
     if (x == nullptr) return false;
   }
 
   // update meta
-  lib_ = std::move(tmp_lib);
+  mLib = std::move(tmp_lib);
 
   return true;
 }
@@ -120,89 +120,92 @@ bool SourceManager::DynamicLibSuccess() {
 #ifdef APSARA_UNIT_TEST_MAIN
     return true;
 #endif
-  if (!lib_) return false;
-  for (auto x : funcs_) {
+  if (!mLib) return false;
+  for (auto x : mFuncs) {
     if (x == nullptr) return false;
   }
   return true;
 }
 
 void SourceManager::FillCommonConf(nami::eBPFConfig* conf) {
-  conf->host_ip_ = host_ip_;
-  conf->host_name_ = host_name_;
-  conf->host_path_prefix_ = host_path_prefix_;
+  conf->host_ip_ = mHostIp;
+  conf->host_name_ = mHostName;
+  conf->host_path_prefix_ = mHostPathPrefix;
   if (conf->plugin_type_ == nami::PluginType::NETWORK) {
     auto cc = std::get<nami::NetworkObserveConfig>(conf->config_);
     // set so addr
-    cc.so_ = std::filesystem::path(binary_path_) / full_lib_name_;
+    cc.so_ = std::filesystem::path(mBinaryPath) / mFullLibName;
     cc.so_size_ = cc.so_.length();
-    cc.uprobe_offset_ = offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG];
-    cc.upcr_offset_ = offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE];
-    cc.upps_offset_ = offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS];
-    cc.upca_offset_ = offsets_[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR];
+    cc.uprobe_offset_ = mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG];
+    cc.upcr_offset_ = mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE];
+    cc.upps_offset_ = mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_DISABLE_PROCESS];
+    cc.upca_offset_ = mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR];
     conf->config_ = cc;
   }
 }
 
-bool SourceManager::StartPlugin(nami::PluginType plugin_type, 
-                std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
+bool SourceManager::CheckPluginRunning(nami::PluginType plugin_type) {
   if (!LoadDynamicLib(m_lib_name_)) {
-    LOG_ERROR(sLogger, ("failed to load dynamic lib", "exit"));
+    LOG_ERROR(sLogger, ("dynamic lib not load, plugin type:", int(plugin_type)));
     return false;
   }
 
-  if (running_[int(plugin_type)]) {
-    // do update
+  return mRunning[int(plugin_type)].load();
+}
+
+bool SourceManager::StartPlugin(nami::PluginType plugin_type, 
+                std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
+  if (CheckPluginRunning(plugin_type)) {
     return UpdatePlugin(plugin_type, std::move(config));
   }
 
   LOG_INFO(sLogger, ("begin to start plugin, type", int(plugin_type)));
-
-  auto update_f = (init_func)funcs_[(int)ebpf_func::EBPF_INIT];
   auto conf = new nami::eBPFConfig;
   conf->plugin_type_ = plugin_type;
   conf->type = UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE;
   conf->config_ = config;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
-    config_ = conf;
-    running_[int(plugin_type)] = true;
+    mConfig = conf;
+    mRunning[int(plugin_type)] = true;
     return true;
 #endif
-  int res = update_f(conf);
-  if (res) {
+  void* f = mFuncs[(int)ebpf_func::EBPF_INIT];
+  if (!f) {
+    LOG_ERROR(sLogger, ("failed to load dynamic lib, init func ptr is null", int(plugin_type)));
     return false;
-  } else {
-    running_[int(plugin_type)] = true;
-    return true;
   }
+  auto init_f = (init_func)f;
+  int res = init_f(conf);
+  mRunning[int(plugin_type)].store(!res);
+  return !res;
 }
 
 bool SourceManager::UpdatePlugin(nami::PluginType plugin_type, 
                 std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
-  if (!LoadDynamicLib(m_lib_name_)) {
-    LOG_ERROR(sLogger, ("failed to load dynamic lib", "exit"));
-    return false;
-  }
-
-  if (!running_[int(plugin_type)]) {
-    // check update
+  if (!CheckPluginRunning(plugin_type)) {
     LOG_ERROR(sLogger, ("plugin not started, type",  int(plugin_type)));
     return false;
   }
 
-  auto update_f = (update_func)funcs_[(int)ebpf_func::EBPF_UPDATE];
   auto conf = new nami::eBPFConfig;
   conf->plugin_type_ = plugin_type;
   conf->type = UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE;
   conf->config_ = config;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
-  config_ = conf;
+  mConfig = conf;
   return true;
 #endif
+  void* f = mFuncs[(int)ebpf_func::EBPF_UPDATE];
+  if (!f) {
+    LOG_ERROR(sLogger, ("failed to load dynamic lib, update func ptr is null", int(plugin_type)));
+    return false;
+  }
+
+  auto update_f = (update_func)f;
   int res = update_f(conf);
-  return res ? false : true;
+  return !res;
 }
 
 bool SourceManager::StopAll() {
@@ -211,8 +214,8 @@ bool SourceManager::StopAll() {
     return true;
   }
 
-  for (size_t i = 0; i < running_.size(); i ++) {
-    auto& x = running_[i];
+  for (size_t i = 0; i < mRunning.size(); i ++) {
+    auto& x = mRunning[i];
     if (!x) continue;
     // stop plugin
     StopPlugin(static_cast<nami::PluginType>(i));
@@ -223,39 +226,37 @@ bool SourceManager::StopAll() {
 #endif
 
   // call deinit
-  auto deinit_f = (deinit_func)funcs_[(int)ebpf_func::EBPF_DEINIT];
+  auto deinit_f = (deinit_func)mFuncs[(int)ebpf_func::EBPF_DEINIT];
   deinit_f();
   return true;
 }
 
 bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
-  if (!DynamicLibSuccess()) {
-    LOG_WARNING(sLogger, ("dynamic lib not load, just exit", "need check"));
+  if (!CheckPluginRunning(plugin_type)) {
+    LOG_WARNING(sLogger, ("plugin not started, do nothing. type",  int(plugin_type)));
     return true;
   }
 
-  if (!running_[int(plugin_type)]) {
-    LOG_WARNING(sLogger, ("plugin already stopped, type",  int(plugin_type)));
-    return true;
-  }
-
-  auto remove_f = (remove_func)funcs_[(int)ebpf_func::EBPF_REMOVE];
   auto config = new nami::eBPFConfig;
   config->plugin_type_ = plugin_type;
   config->type = UpdataType::SECURE_UPDATE_TYPE_DISABLE_PROBE;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-  config_ = config;
-  running_[int(plugin_type)] = false;
+  mConfig = config;
+  mRunning[int(plugin_type)] = false;
   return true;
 #endif
-  int res = remove_f(config);
-  if (res) {
+
+  void* f = mFuncs[(int)ebpf_func::EBPF_REMOVE];
+  if (!f) {
+    LOG_ERROR(sLogger, ("failed to load dynamic lib, remove func ptr is null", int(plugin_type)));
     return false;
-  } else {
-    running_[int(plugin_type)] = false;
-    return true;
   }
+
+  auto remove_f = (remove_func)f;
+  int res = remove_f(config);
+  mRunning[int(plugin_type)] = res;
+  return !res;
 }
 
 }
