@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:2.0.4
+FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:2.0.3
 
 ARG USERNAME=admin
 USER root
@@ -54,5 +54,7 @@ RUN source /tmp/.env && rm /tmp/.env; \
     chmod 0440 /etc/sudoers.d/$USERNAME; \
     chown -R $USERNAME:$GROUPNAME /opt $(eval echo ~$USERNAME); \
     chmod -R 755 $(eval echo ~$USERNAME);
+
+USER $USERNAME
 
 RUN go env -w GO111MODULE=on && go env -w GOPROXY=https://goproxy.cn,direct

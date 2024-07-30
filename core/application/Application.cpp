@@ -233,6 +233,7 @@ void Application::Start() { // GCOVR_EXCL_START
 #endif
 
     LogtailAlarm::GetInstance()->Init();
+    LoongCollectorMonitor::GetInstance()->Init();
     LogtailMonitor::GetInstance()->Init();
 
     PluginRegistry::GetInstance()->LoadPlugins();
@@ -359,6 +360,7 @@ void Application::Exit() {
 #endif
 
     LogtailMonitor::GetInstance()->Stop();
+    LoongCollectorMonitor::GetInstance()->Stop();
     LogtailAlarm::GetInstance()->Stop();
     // from now on, alarm should not be used.
 
