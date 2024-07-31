@@ -15,12 +15,14 @@
 - [public] [both] [fixed] Fix issue that guage metric miss labels (#1618)
 - [public] [both] [fixed] recover readers exactly from checkpoint (#1620) (#1635)
 - [public] [both] [fixed] fix: GTID Truncation Issue and Improve Consistency in Checkpoint Management (#1648)
+- [public] [both] [fixed] suicide immediately when resource hard limit is met (#1649)
 
 * 修复转义零字节导致 JSON 截断 [#1596](https://github.com/alibaba/ilogtail/pull/1596)
 * 修复使用非线程安全的gethostbyname方法导致的coredump问题 [#1611](https://github.com/alibaba/ilogtail/pull/1611)
 * 修复opentelemetry解析guage类型指标数据的时候缺失标签的问题 [#1618](https://github.com/alibaba/ilogtail/pull/1618)
 * 修复从checkpoint恢复的时候，轮转文件过多可能导致超出reader队列长度的reader恢复失败，进一步引发在inode复用时，新的reader读到了错误的老reader的checkpoint，会导致截断和重复采集 [#1635, #1638](https://github.com/alibaba/ilogtail/pull/1635, https://github.com/alibaba/ilogtail/pull/1638)
 * 修复input_canel插件GTID不准确的问题 [#1648](https://github.com/alibaba/ilogtail/pull/1648)
+* 当资源使用超过硬限制的时候立刻自杀 [#1649](https://github.com/alibaba/ilogtail/pull/1649)
 
 
 [详情和源代码](https://github.com/alibaba/ilogtail/blob/main/changes/v2.0.7.md)
