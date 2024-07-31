@@ -53,7 +53,7 @@ string URLEncode(const string& value) {
     return escaped.str();
 }
 
-ScrapeJob::ScrapeJob() : mOperatorPort(0), mQueueKey(0), mInputIndex(0) {
+ScrapeJob::ScrapeJob() : mServicePort(0), mQueueKey(0), mInputIndex(0) {
     mFinished.store(true);
     mClient = make_unique<sdk::CurlClient>();
 }
@@ -133,8 +133,8 @@ bool ScrapeJob::FetchHttpData(string& readBuffer) const {
     bool httpsFlag = mScrapeConfigPtr->mScheme == prometheus::HTTPS;
     try {
         mClient->Send(sdk::HTTP_GET,
-                      mOperatorHost,
-                      mOperatorPort,
+                      mServiceHost,
+                      mServicePort,
                       "/jobs/" + URLEncode(mJobName) + "/targets",
                       "collector_id=" + mPodName,
                       httpHeader,

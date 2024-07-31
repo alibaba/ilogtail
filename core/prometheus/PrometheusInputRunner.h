@@ -52,7 +52,6 @@ private:
     PrometheusInputRunner();
     ~PrometheusInputRunner() = default;
 
-    // 发送Get网络请求
     sdk::HttpMessage SendGetRequest(const std::string& url);
 
     mutable ReadWriteLock mReadWriteLock;
@@ -60,8 +59,8 @@ private:
 
     std::unique_ptr<sdk::HTTPClient> mClient;
 
-    std::string mOperatorHost;
-    int32_t mOperatorPort;
+    std::string mServiceHost;
+    int32_t mServicePort;
     std::string mPodName;
 
     std::unique_ptr<ScraperGroup> mScraperGroup;

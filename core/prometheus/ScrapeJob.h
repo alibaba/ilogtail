@@ -50,8 +50,8 @@ public:
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     // from environment variable
-    std::string mOperatorHost;
-    uint32_t mOperatorPort;
+    std::string mServiceHost;
+    uint32_t mServicePort;
     std::string mPodName;
 
     // from pipeline context

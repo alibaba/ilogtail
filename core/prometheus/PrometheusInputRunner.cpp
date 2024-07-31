@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "common/Flags.h"
+#include "common/JsonUtil.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
@@ -29,9 +30,9 @@
 #include "sdk/CurlImp.h"
 #include "sdk/Exception.h"
 
-DEFINE_FLAG_STRING(OPERATOR_HOST, "operator host", "");
-DEFINE_FLAG_INT32(OPERATOR_PORT, "operator port", 8888);
-DEFINE_FLAG_STRING(POD_NAME, "agent pod name", "");
+DEFINE_FLAG_STRING(SERVICE_HOST, "service host", "");
+DEFINE_FLAG_INT32(SERVICE_PORT, "service port", 8888);
+DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 using namespace std;
 
@@ -40,9 +41,9 @@ namespace logtail {
 PrometheusInputRunner::PrometheusInputRunner() {
     mClient = std::make_unique<sdk::CurlClient>();
 
-    mOperatorHost = STRING_FLAG(OPERATOR_HOST);
-    mPodName = STRING_FLAG(POD_NAME);
-    mOperatorPort = INT32_FLAG(OPERATOR_PORT);
+    mServiceHost = STRING_FLAG(SERVICE_HOST);
+    mServicePort = INT32_FLAG(SERVICE_PORT);
+    mPodName = STRING_FLAG(_pod_name_);
 
     mScraperGroup = make_unique<ScraperGroup>();
 }
@@ -55,8 +56,8 @@ void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, std::uniq
     }
 
     // set job info
-    scrapeJobPtr->mOperatorHost = mOperatorHost;
-    scrapeJobPtr->mOperatorPort = mOperatorPort;
+    scrapeJobPtr->mServiceHost = mServiceHost;
+    scrapeJobPtr->mServicePort = mServicePort;
     scrapeJobPtr->mPodName = mPodName;
 
     mScraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
@@ -80,7 +81,7 @@ void PrometheusInputRunner::Start() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
 
     // only register when operator exist
-    if (!mOperatorHost.empty()) {
+    if (!mServiceHost.empty()) {
         int retry = 0;
         while (true) {
             ++retry;
@@ -92,9 +93,18 @@ void PrometheusInputRunner::Start() {
                 }
             } else {
                 // register success
-                // http.content only has one timestamp string in millisecond format
+                // response will be { "unregister_ms": 30000 }
                 if (!httpResponse.content.empty()) {
-                    mScraperGroup->mUnRegisterMs = stoll(httpResponse.content);
+                    string responseStr = httpResponse.content;
+                    string errMsg;
+                    Json::Value responseJson;
+                    if (!ParseJsonTable(responseStr, responseJson, errMsg)) {
+                        LOG_ERROR(sLogger, ("register failed, parse response failed", responseStr));
+                    }
+                    if (responseJson.isMember(prometheus::UNREGISTER_MS)
+                        && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
+                        mScraperGroup->mUnRegisterMs = responseJson[prometheus::UNREGISTER_MS].asUInt64();
+                    }
                 }
                 break;
             }
@@ -106,10 +116,11 @@ void PrometheusInputRunner::Start() {
 }
 
 /// @brief stop scrape work and clear all scrape jobs
+// 改造成超时退出
 void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     // only unregister when operator exist
-    if (!mOperatorHost.empty()) {
+    if (!mServiceHost.empty()) {
         for (int retry = 0; retry < 3; ++retry) {
             sdk::HttpMessage httpResponse = SendGetRequest(prometheus::UNREGISTER_COLLECTOR_PATH);
             if (httpResponse.statusCode != 200) {
@@ -136,9 +147,9 @@ sdk::HttpMessage PrometheusInputRunner::SendGetRequest(const string& url) {
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
     try {
         mClient->Send(sdk::HTTP_GET,
-                      mOperatorHost,
-                      mOperatorPort,
-                      prometheus::UNREGISTER_COLLECTOR_PATH,
+                      mServiceHost,
+                      mServicePort,
+                      url,
                       "pod_name=" + mPodName,
                       httpHeader,
                       "",

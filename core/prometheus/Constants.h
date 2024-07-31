@@ -38,7 +38,7 @@ namespace logtail::prometheus {
     const char* const APPLICATION_JSON = "application/json";
     const char* const HTTPS = "HTTPS";
     const char* const TARGETS = "targets";
-
+    const char* const UNREGISTER_MS = "unregister_ms";
 
     // scrape config
     const char* const SCRAPE_CONFIG = "ScrapeConfig";
