@@ -673,8 +673,8 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             } else {
                 BOOL_FLAG(global_network_success) = true;
 #ifdef __ENTERPRISE__
-                if (flusher->mAliuid.empty() && !EnterpriseConfigProvider::GetInstance()->IsPubRegion()) {
-                    operation = RETRY_IMMEDIATELY;
+                if (mAliuid.empty() && !EnterpriseConfigProvider::GetInstance()->IsPubRegion()) {
+                    operation = OperationOnFail::RETRY_IMMEDIATELY;
                 } else {
 #endif
                     int32_t lastUpdateTime;
