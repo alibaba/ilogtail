@@ -13,7 +13,7 @@
 # limitations under the License.
 
 FROM --platform=$TARGETPLATFORM debian:bookworm as build
-ARG VERSION=2.0.6
+ARG VERSION=2.0.7
 ARG TARGETPLATFORM
 ARG UID=65532
 WORKDIR /usr/local
@@ -30,7 +30,7 @@ LABEL org.opencontainers.image.authors="yyuuttaaoo@gmail.com, jiangdeyan@gmail.c
 COPY --from=build /usr/lib/x86_64-linux-gnu/libuuid.so.1.3.0 /lib/x86_64-linux-gnu/libuuid.so.1
 
 ARG HOST_OS=Linux
-ARG VERSION=2.0.6
+ARG VERSION=2.0.7
 ARG TARGETPLATFORM
 
 COPY --from=build --chown=$UID:$UID /usr/local/ilogtail /usr/local/ilogtail
