@@ -182,7 +182,7 @@ void LabelsBuilder::Range(const std::function<void(Label)>& closure) {
 uint64_t Labels::Hash() {
     string hash;
     uint64_t sum = prometheus::OFFSET64;
-    Range([&hash](Label l) { hash += l.name + "\xff" + l.value + "\xff"; });
+    Range([&hash](const Label& l) { hash += l.name + "\xff" + l.value + "\xff"; });
     for (auto i : hash) {
         sum ^= (uint64_t)i;
         sum *= prometheus::PRIME64;

@@ -21,6 +21,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "models/MetricEvent.h"
@@ -31,7 +32,7 @@ namespace logtail {
 struct Label {
     std::string name;
     std::string value;
-    Label(std::string name, std::string value) : name(name), value(value) {}
+    Label(std::string name, std::string value) : name(std::move(name)), value(std::move(value)) {}
 };
 
 using LabelMap = std::map<std::string, std::string>;
