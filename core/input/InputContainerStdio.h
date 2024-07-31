@@ -52,7 +52,7 @@ private:
     FileDiscoveryOptions mFileDiscovery;
 
     PluginMetricManagerPtr mPluginMetricManager;
-    GaugePtr mInputFileMonitorTotal;
+    IntGaugePtr mInputFileMonitorTotal;
 
     bool CreateInnerProcessors(uint32_t& pluginIdx);
 

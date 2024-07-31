@@ -59,14 +59,12 @@ bool Pipeline::Init(PipelineConfig&& config) {
     const InputContainerStdio* inputContainerStdio = nullptr;
     bool hasFlusherSLS = false;
 
-#ifdef __ENTERPRISE__
-    // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
+    // to send alarm and init MetricsRecord before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
     unique_ptr<FlusherSLS> SLSTmp = make_unique<FlusherSLS>();
     SLSTmp->mProject = config.mProject;
     SLSTmp->mLogstore = config.mLogstore;
     SLSTmp->mRegion = config.mRegion;
     mContext.SetSLSInfo(SLSTmp.get());
-#endif
 
     uint32_t pluginIndex = 0;
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
@@ -142,10 +140,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
                 } else {
                     MergeGoPipeline(optionalGoPipeline, mGoPipelineWithoutInput);
                 }
-            }
-            if (name == FlusherSLS::sName) {
-                hasFlusherSLS = true;
-                mContext.SetSLSInfo(static_cast<const FlusherSLS*>(mFlushers.back()->GetPlugin()));
             }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
