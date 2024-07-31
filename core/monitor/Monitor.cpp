@@ -54,6 +54,7 @@ using namespace std;
 using namespace sls_logs;
 
 DEFINE_FLAG_BOOL(logtail_dump_monitor_info, "enable to dump Logtail monitor info (CPU, mem)", false);
+DEFINE_FLAG_INT32(check_resource_interval, "", 5);
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(check_profile_region);
 
@@ -140,7 +141,7 @@ void LogtailMonitor::Stop() {
 
 void LogtailMonitor::Monitor() {
     LOG_INFO(sLogger, ("profiling", "started"));
-    int32_t lastMonitorTime = time(NULL);
+    int32_t lastMonitorTime = time(NULL), lastCheckHardLimitTime = time(nullptr);
     CpuStat curCpuStat;
     {
         unique_lock<mutex> lock(mThreadRunningMux);
@@ -172,6 +173,17 @@ void LogtailMonitor::Monitor() {
             }
 #endif
 
+            if ((monitorTime - lastCheckHardLimitTime) < INT32_FLAG(check_resource_interval))
+                continue;
+            lastCheckHardLimitTime = monitorTime;
+
+            if (CheckHardCpuLimit() || CheckHardMemLimit()) {
+                LOG_ERROR(sLogger,
+                          ("Resource used by program exceeds hard limit",
+                           "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                Suicide();
+            }
+
             // Update statistics and send to logtail_status_profile regularly.
             // If CPU or memory limit triggered, send to logtail_suicide_profile.
             if ((monitorTime - lastMonitorTime) < INT32_FLAG(monitor_interval))
@@ -191,9 +203,9 @@ void LogtailMonitor::Monitor() {
             // Returning true means too much violations, so we have to prepare to restart
             // logtail to release resource.
             // Mainly for controlling memory because we have no idea to descrease memory usage.
-            if (CheckCpuLimit() || CheckMemLimit()) {
+            if (CheckSoftCpuLimit() || CheckSoftMemLimit()) {
                 LOG_ERROR(sLogger,
-                          ("Resource used by program exceeds upper limit",
+                          ("Resource used by program exceeds upper limit for some time",
                            "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
                 Suicide();
             }
@@ -439,7 +451,7 @@ void LogtailMonitor::CalCpuStat(const CpuStat& curCpu, CpuStat& savedCpu) {
 #endif
 }
 
-bool LogtailMonitor::CheckCpuLimit() {
+bool LogtailMonitor::CheckSoftCpuLimit() {
     float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
         ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
         : AppConfig::GetInstance()->GetCpuUsageUpLimit();
@@ -451,13 +463,24 @@ bool LogtailMonitor::CheckCpuLimit() {
     return false;
 }
 
-bool LogtailMonitor::CheckMemLimit() {
+bool LogtailMonitor::CheckSoftMemLimit() {
     if (mMemStat.mRss > AppConfig::GetInstance()->GetMemUsageUpLimit()) {
         if (++mMemStat.mViolateNum > INT32_FLAG(mem_limit_num))
             return true;
     } else
         mMemStat.mViolateNum = 0;
     return false;
+}
+
+bool LogtailMonitor::CheckHardCpuLimit() {
+    float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
+        ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
+        : AppConfig::GetInstance()->GetCpuUsageUpLimit();
+    return mCpuStat.mCpuUsage > 10 * cpuUsageLimit;
+}
+
+bool LogtailMonitor::CheckHardMemLimit() {
+    return mMemStat.mRss > 10 * AppConfig::GetInstance()->GetMemUsageUpLimit();
 }
 
 void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
