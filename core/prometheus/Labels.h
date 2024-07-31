@@ -20,6 +20,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "models/MetricEvent.h"
@@ -37,8 +38,7 @@ using LabelMap = std::map<std::string, std::string>;
 /// @brief Labels is a sorted set of labels. Order has to be guaranteed upon instantiation
 class Labels {
 public:
-    Labels();
-    Labels(const Labels&);
+    Labels() = default;
     size_t Size() const;
     uint64_t Hash();
     void RemoveMetaLabels();
@@ -81,8 +81,8 @@ public:
 private:
     Labels mBase;
 
-    std::vector<std::string> mDeleteLabelNameList;
-    std::vector<Label> mAddLabelList;
+    std::unordered_set<std::string> mDeleteLabelNameList;
+    std::unordered_map<std::string, std::string> mAddLabelList;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LabelsBuilderUnittest;

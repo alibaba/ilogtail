@@ -24,11 +24,6 @@
 using namespace std;
 namespace logtail {
 
-Labels::Labels() : mMetricEventPtr(nullptr) {
-}
-
-Labels::Labels(const Labels& other) : mLabels(other.mLabels), mMetricEventPtr(other.mMetricEventPtr) {
-}
 
 size_t Labels::Size() const {
     if (mMetricEventPtr) {
@@ -94,18 +89,18 @@ void LabelsBuilder::DeleteLabel(const vector<string>& nameList) {
 }
 
 void LabelsBuilder::DeleteLabel(std::string name) {
-    auto it = find_if(mAddLabelList.begin(), mAddLabelList.end(), [&name](const Label& l) { return l.name == name; });
+    auto it = mAddLabelList.find(name);
     if (it != mAddLabelList.end()) {
         mAddLabelList.erase(it);
     }
-    mDeleteLabelNameList.emplace_back(name);
+    mDeleteLabelNameList.insert(name);
 }
 
 std::string LabelsBuilder::Get(const std::string& name) {
     // Del() removes entries from .add but Set() does not remove from .del, so check .add first.
-    for (const Label& label : mAddLabelList) {
-        if (label.name == name) {
-            return label.value;
+    for (const auto& [k, v] : mAddLabelList) {
+        if (k == name) {
+            return v;
         }
     }
     auto it = find(mDeleteLabelNameList.begin(), mDeleteLabelNameList.end(), name);
@@ -122,20 +117,18 @@ void LabelsBuilder::Set(const std::string& name, const std::string& value) {
         DeleteLabel(name);
         return;
     }
-    for (size_t i = 0; i < mAddLabelList.size(); ++i) {
-        if (mAddLabelList[i].name == name) {
-            mAddLabelList[i].value = value;
-            return;
-        }
+    if (mAddLabelList.find(name) != mAddLabelList.end()) {
+        mAddLabelList[name] = value;
+        return;
     }
-    mAddLabelList.push_back(Label(name, value));
+    mAddLabelList.emplace(name, value);
 }
 
 void LabelsBuilder::Reset(Labels l) {
     mBase = l;
     mBase.Range([this](const Label& l) {
         if (l.value == "") {
-            mDeleteLabelNameList.push_back(l.name);
+            mDeleteLabelNameList.insert(l.name);
         }
     });
 }
@@ -144,7 +137,7 @@ void LabelsBuilder::Reset(MetricEvent* metricEvent) {
     mBase.Reset(metricEvent);
     mBase.Range([this](const Label& l) {
         if (l.value == "") {
-            mDeleteLabelNameList.push_back(l.name);
+            mDeleteLabelNameList.insert(l.name);
         }
     });
 }
@@ -156,20 +149,17 @@ Labels LabelsBuilder::GetLabels() {
 
     auto res = Labels();
     for (auto l = mBase.Begin(); l != mBase.End(); ++l) {
-        if (find_if(mDeleteLabelNameList.begin(),
-                    mDeleteLabelNameList.end(),
-                    [&l](const string& name) { return name == l->first; })
-                != mDeleteLabelNameList.end()
-            || find_if(mAddLabelList.begin(), mAddLabelList.end(), [&l](const Label& label) { return label.name == l->first; })
-                != mAddLabelList.end()) {
+        if (mDeleteLabelNameList.find(l->first) != mDeleteLabelNameList.end()
+            || mAddLabelList.find(l->first) != mAddLabelList.end()) {
             continue;
         }
         res.Push(Label(l->first, l->second));
     }
 
-    for (const auto& l : mAddLabelList) {
-        res.Push(l);
+    for (const auto& [k, v] : mAddLabelList) {
+        res.Push(Label{k, v});
     }
+
     return res;
 }
 
@@ -179,15 +169,13 @@ void LabelsBuilder::Range(const std::function<void(Label)>& closure) {
     // Take a copy of add and del, so they are unaffected by calls to Set() or Del().
     auto originAdd = mAddLabelList;
     auto originDel = mDeleteLabelNameList;
-    mBase.Range([&originAdd, &originDel, &closure](Label l) {
-        if (find_if(originAdd.begin(), originAdd.end(), [&l](const Label& label) { return l.name == label.name; })
-                == originAdd.end()
-            && find(originDel.begin(), originDel.end(), l.name) == originDel.end()) {
+    mBase.Range([&originAdd, &originDel, &closure](const Label& l) {
+        if (originAdd.find(l.name) == originAdd.end() && originDel.find(l.name) == originDel.end()) {
             closure(l);
         }
     });
-    for (const auto& item : originAdd) {
-        closure(item);
+    for (const auto& [k, v] : originAdd) {
+        closure(Label{k, v});
     }
 }
 

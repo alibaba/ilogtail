@@ -119,7 +119,7 @@ void LabelsBuilderUnittest::TestReset() {
     labels.Push(Label{"host", ""});
     lb.Reset(labels);
     APSARA_TEST_EQUAL("", lb.mBase.Get("host"));
-    APSARA_TEST_EQUAL("host", lb.mDeleteLabelNameList.front());
+    APSARA_TEST_EQUAL(1UL, lb.mDeleteLabelNameList.count("host"));
 }
 
 void LabelsBuilderUnittest::TestDeleteLabel() {
@@ -141,7 +141,7 @@ void LabelsBuilderUnittest::TestSet() {
     lb.Reset(labels);
     APSARA_TEST_EQUAL("172.17.0.3:9100", lb.Get("host"));
 
-    lb.mAddLabelList.push_back(Label("host", "127.0.0.1"));
+    lb.mAddLabelList.emplace("host", "127.0.0.1");
 
     lb.Set("host", "172.17.0.3:9300");
     APSARA_TEST_EQUAL("172.17.0.3:9300", lb.Get("host"));
