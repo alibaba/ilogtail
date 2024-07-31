@@ -54,7 +54,6 @@ using namespace std;
 using namespace sls_logs;
 
 DEFINE_FLAG_BOOL(logtail_dump_monitor_info, "enable to dump Logtail monitor info (CPU, mem)", false);
-DEFINE_FLAG_INT32(check_resource_interval, "", 5);
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(check_profile_region);
 
@@ -173,51 +172,54 @@ void LogtailMonitor::Monitor() {
             }
 #endif
 
-            if ((monitorTime - lastCheckHardLimitTime) < INT32_FLAG(check_resource_interval))
-                continue;
-            lastCheckHardLimitTime = monitorTime;
+            static uint32_t checkHardLimitInterval
+                = INT32_FLAG(monitor_interval) > 30 ? INT32_FLAG(monitor_interval) / 6 : 5;
+            if ((monitorTime - lastCheckHardLimitTime) >= checkHardLimitInterval) {
+                lastCheckHardLimitTime = monitorTime;
 
-            if (CheckHardCpuLimit() || CheckHardMemLimit()) {
-                LOG_ERROR(sLogger,
-                          ("Resource used by program exceeds hard limit",
-                           "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
-                Suicide();
+                GetMemStat();
+                CalCpuStat(curCpuStat, mCpuStat);
+                if (CheckHardCpuLimit() || CheckHardMemLimit()) {
+                    LOG_ERROR(sLogger,
+                              ("Resource used by program exceeds hard limit",
+                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                    Suicide();
+                }
             }
+
 
             // Update statistics and send to logtail_status_profile regularly.
             // If CPU or memory limit triggered, send to logtail_suicide_profile.
-            if ((monitorTime - lastMonitorTime) < INT32_FLAG(monitor_interval))
-                continue;
-            lastMonitorTime = monitorTime;
+            if ((monitorTime - lastMonitorTime) >= INT32_FLAG(monitor_interval)) {
+                lastMonitorTime = monitorTime;
 
-            // Memory usage has exceeded limit, try to free some timeout objects.
-            if (1 == mMemStat.mViolateNum) {
-                LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
-                LogInput::GetInstance()->SetForceClearFlag(true);
-            }
-            GetMemStat();
-            CalCpuStat(curCpuStat, mCpuStat);
-            // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
-            // or memory exceeds limit) // is greater or equal than limits (
-            // flag(cpu_limit_num) and flag(mem_limit_num)).
-            // Returning true means too much violations, so we have to prepare to restart
-            // logtail to release resource.
-            // Mainly for controlling memory because we have no idea to descrease memory usage.
-            if (CheckSoftCpuLimit() || CheckSoftMemLimit()) {
-                LOG_ERROR(sLogger,
-                          ("Resource used by program exceeds upper limit for some time",
-                           "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
-                Suicide();
-            }
+                // Memory usage has exceeded limit, try to free some timeout objects.
+                if (1 == mMemStat.mViolateNum) {
+                    LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
+                    LogInput::GetInstance()->SetForceClearFlag(true);
+                }
+                // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
+                // or memory exceeds limit) // is greater or equal than limits (
+                // flag(cpu_limit_num) and flag(mem_limit_num)).
+                // Returning true means too much violations, so we have to prepare to restart
+                // logtail to release resource.
+                // Mainly for controlling memory because we have no idea to descrease memory usage.
+                if (CheckSoftCpuLimit() || CheckSoftMemLimit()) {
+                    LOG_ERROR(sLogger,
+                              ("Resource used by program exceeds upper limit for some time",
+                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                    Suicide();
+                }
 
-            if (IsHostIpChanged()) {
-                Suicide();
-            }
+                if (IsHostIpChanged()) {
+                    Suicide();
+                }
 
-            SendStatusProfile(false);
-            if (BOOL_FLAG(logtail_dump_monitor_info)) {
-                if (!DumpMonitorInfo(monitorTime))
-                    LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+                SendStatusProfile(false);
+                if (BOOL_FLAG(logtail_dump_monitor_info)) {
+                    if (!DumpMonitorInfo(monitorTime))
+                        LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+                }
             }
         }
     }
