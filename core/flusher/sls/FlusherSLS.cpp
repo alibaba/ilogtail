@@ -811,8 +811,13 @@ bool FlusherSLS::Send(string&& data, const string& shardHashKey, const string& l
     } else {
         compressedData = data;
     }
-    return Flusher::PushToQueue(make_unique<SLSSenderQueueItem>(
-        std::move(compressedData), data.size(), this, mQueueKey, logstore, RawDataType::EVENT_GROUP, shardHashKey));
+    return Flusher::PushToQueue(make_unique<SLSSenderQueueItem>(std::move(compressedData),
+                                                                data.size(),
+                                                                this,
+                                                                mQueueKey,
+                                                                logstore.empty() ? mLogstore : logstore,
+                                                                RawDataType::EVENT_GROUP,
+                                                                shardHashKey));
 }
 
 void FlusherSLS::GenerateGoPlugin(const Json::Value& config, Json::Value& res) const {
