@@ -172,7 +172,7 @@ void LogtailMonitor::Monitor() {
             }
 #endif
 
-            static uint32_t checkHardLimitInterval
+            static int32_t checkHardLimitInterval
                 = INT32_FLAG(monitor_interval) > 30 ? INT32_FLAG(monitor_interval) / 6 : 5;
             if ((monitorTime - lastCheckHardLimitTime) >= checkHardLimitInterval) {
                 lastCheckHardLimitTime = monitorTime;
