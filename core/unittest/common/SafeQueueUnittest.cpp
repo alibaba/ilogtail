@@ -23,6 +23,7 @@ class SafeQueueUnittest : public ::testing::Test {
 public:
     void TestPush();
     void TestPop();
+    void TestWait();
 };
 
 void SafeQueueUnittest::TestPush() {
@@ -73,8 +74,29 @@ void SafeQueueUnittest::TestPop() {
     }
 }
 
+void SafeQueueUnittest::TestWait() {
+    SafeQueue<unique_ptr<int>> queue;
+    {
+        auto res = async(launch::async, [&queue] {
+            unique_ptr<int> item;
+            return queue.WaitAndPop(item, 10000);
+        });
+        queue.Push(make_unique<int>(1));
+        APSARA_TEST_TRUE(res.get());
+    }
+    {
+        auto res = async(launch::async, [&queue] {
+            vector<unique_ptr<int>> items;
+            return queue.WaitAndPopAll(items, 10000);
+        });
+        queue.Push(make_unique<int>(1));
+        APSARA_TEST_TRUE(res.get());
+    }
+}
+
 UNIT_TEST_CASE(SafeQueueUnittest, TestPush)
 UNIT_TEST_CASE(SafeQueueUnittest, TestPop)
+UNIT_TEST_CASE(SafeQueueUnittest, TestWait)
 
 } // namespace logtail
 

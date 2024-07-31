@@ -694,7 +694,7 @@ void LoongCollectorMonitor::Init() {
     labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
     DynamicMetricLabels dynamicLabels;
     dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS,
-                               []() -> std::string { return Sender::Instance()->GetAllProjects(); });
+                               []() -> std::string { return FlusherSLS::GetAllProjects(); });
 #ifdef __ENTERPRISE__
     dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
                                []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
