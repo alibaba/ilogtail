@@ -2,6 +2,45 @@
 
 # 发布历史
 
+## 2.0.7
+
+### 发布记录
+
+发版日期：2024 年 7 月 31 日
+
+问题修复
+
+- [public] [both] [fixed] fix: JSON truncation caused by escaped zero byte (#1594) (#1596)
+- [public] [both] [fixed] fix core caused by concurrent use of non-thread-safe gethostbyname (#1611)
+- [public] [both] [fixed] Fix issue that guage metric miss labels (#1618)
+- [public] [both] [fixed] recover readers exactly from checkpoint (#1620) (#1635)
+- [public] [both] [fixed] fix: GTID Truncation Issue and Improve Consistency in Checkpoint Management (#1648)
+
+* 修复转义零字节导致 JSON 截断 [#1596](https://github.com/alibaba/ilogtail/pull/1596)
+* 修复使用非线程安全的gethostbyname方法导致的coredump问题 [#1611](https://github.com/alibaba/ilogtail/pull/1611)
+* 修复opentelemetry解析guage类型指标数据的时候缺失标签的问题 [#1618](https://github.com/alibaba/ilogtail/pull/1618)
+* 修复从checkpoint恢复的时候，轮转文件过多可能导致超出reader队列长度的reader恢复失败，进一步引发在inode复用时，新的reader读到了错误的老reader的checkpoint，会导致截断和重复采集 [#1635, #1638](https://github.com/alibaba/ilogtail/pull/1635, https://github.com/alibaba/ilogtail/pull/1638)
+* 修复input_canel插件GTID不准确的问题 [#1648](https://github.com/alibaba/ilogtail/pull/1648)
+
+
+[详情和源代码](https://github.com/alibaba/ilogtail/blob/main/changes/v2.0.7.md)
+
+### 下载
+
+| 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
+| [ilogtail-2.0.7.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.7/ilogtail-2.0.7.linux-amd64.tar.gz) | Linux | x86-64 | 144b20e4dd4e20b517e49c04c745d2f6a64747ab40c0f4aefc7dcadad5803104 |
+| [ilogtail-2.0.7.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/2.0.7/ilogtail-2.0.7.linux-arm64.tar.gz) | Linux | arm64  | 4a54a7b11fb4cae0cea17f0f9bfbff95dea4a2163e9a925d6728ef8c8d720392 |
+
+### Docker 镜像
+
+**Docker Pull 命令**&#x20;
+
+``` bash
+docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:2.0.7
+```
+
+
 ## 2.0.4
 
 ### 发布记录
