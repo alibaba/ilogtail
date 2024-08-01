@@ -23,10 +23,11 @@
 #include <string>
 
 #include "PluginRegistry.h"
-#include "inner/ProcessorRelabelMetricNative.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "processor/inner/ProcessorLogToMetricNative.h"
+#include "processor/inner/ProcessorRelabelMetricNative.h"
 #include "prometheus/Constants.h"
 #include "prometheus/PrometheusInputRunner.h"
 
@@ -79,12 +80,22 @@ bool InputPrometheus::Stop(bool) {
 
 bool InputPrometheus::CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx) {
     unique_ptr<ProcessorInstance> processor;
-    processor
-        = PluginRegistry::GetInstance()->CreateProcessor(ProcessorRelabelMetricNative::sName, to_string(++pluginIdx));
-    if (!processor->Init(inputConfig, *mContext)) {
-        return false;
+    {
+        processor
+            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorLogToMetricNative::sName, to_string(++pluginIdx));
+        if (!processor->Init(inputConfig, *mContext)) {
+            return false;
+        }
+        mInnerProcessors.emplace_back(std::move(processor));
     }
-    mInnerProcessors.emplace_back(std::move(processor));
+    {
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorRelabelMetricNative::sName,
+                                                                   to_string(++pluginIdx));
+        if (!processor->Init(inputConfig, *mContext)) {
+            return false;
+        }
+        mInnerProcessors.emplace_back(std::move(processor));
+    }
     return true;
 }
 

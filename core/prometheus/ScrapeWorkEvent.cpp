@@ -24,11 +24,11 @@
 #include <string>
 #include <utility>
 
+#include "TimeUtil.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/ScrapeTarget.h"
-#include "prometheus/TextParser.h"
 #include "queue/FeedbackQueueKey.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
@@ -57,7 +57,7 @@ bool ScrapeWorkEvent::operator<(const ScrapeWorkEvent& other) const {
 
 void ScrapeWorkEvent::Process(const sdk::HttpMessage& response) {
     // TODO(liqiang): get scrape timestamp
-    time_t defaultTs = time(nullptr);
+    time_t timestampInNs = GetCurrentTimeInNanoSeconds();
     if (response.statusCode != 200) {
         string headerStr;
         for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
@@ -67,11 +67,28 @@ void ScrapeWorkEvent::Process(const sdk::HttpMessage& response) {
                     ("scrape failed, status code", response.statusCode)("target", mHash)("http header", headerStr));
         return;
     }
-    const string& content = response.content;
-    auto parser = TextParser();
-    auto eventGroup = parser.Parse(content, defaultTs, "", "");
+    // TODO(liqiang): set jobName, instance metadata
+    auto eventGroup = SplitByLines(response.content, timestampInNs);
 
     PushEventGroup(std::move(eventGroup));
+}
+PipelineEventGroup ScrapeWorkEvent::SplitByLines(const std::string& content, time_t timestamp) {
+    PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
+
+    for (const auto& line : SplitString(content, "\r\n")) {
+        if (line.empty()) {
+            continue;
+        }
+        TrimString(line);
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        auto* logEvent = eGroup.AddLogEvent();
+        logEvent->SetContent(prometheus::PROMETHEUS, line);
+        logEvent->SetTimestamp(timestamp);
+    }
+
+    return eGroup;
 }
 
 sdk::AsynRequest ScrapeWorkEvent::BuildAsyncRequest() const {

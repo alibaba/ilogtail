@@ -46,6 +46,8 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
     void ScrapeAndPush();
 
+    PipelineEventGroup SplitByLines(const std::string& content, time_t timestampNs);
+
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
     ScrapeTarget mScrapeTarget;
 
