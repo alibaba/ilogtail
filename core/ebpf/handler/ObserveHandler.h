@@ -15,9 +15,9 @@ public:
     virtual void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&&, uint64_t) = 0;
 };
 
-class ArmsMeterHandler : public MeterHandler {
+class OtelMeterHandler : public MeterHandler {
 public:
-    ArmsMeterHandler(PipelineContext* ctx, uint32_t idx) : MeterHandler(ctx, idx) {}
+    OtelMeterHandler(PipelineContext* ctx, uint32_t idx) : MeterHandler(ctx, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) override;
 };
 
@@ -27,11 +27,27 @@ public:
     virtual void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) = 0;
 };
 
+class OtelSpanHandler : public SpanHandler {
+public:
+    OtelSpanHandler(PipelineContext* ctx, uint32_t idx) : SpanHandler(ctx, idx) {}
+    void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) override;
+};
+
+#ifdef __ENTERPRISE__
+
+class ArmsMeterHandler : public MeterHandler {
+public:
+    ArmsMeterHandler(PipelineContext* ctx, uint32_t idx) : MeterHandler(ctx, idx) {}
+    void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) override;
+};
+
 class ArmsSpanHandler : public SpanHandler {
 public:
     ArmsSpanHandler(PipelineContext* ctx, uint32_t idx) : SpanHandler(ctx, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) override;
 };
+
+#endif
 
 }
 }

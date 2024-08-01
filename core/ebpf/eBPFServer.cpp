@@ -24,8 +24,14 @@ void eBPFServer::Init() {
     // ebpf config
     auto configJson = AppConfig::GetInstance()->GetConfig();
     mAdminConfig.LoadEbpfConfig(configJson);
+#ifdef __ENTERPRISE__
     mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, 0);
     mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, 0);
+#else
+    mMeterCB = std::make_unique<OtelMeterHandler>(nullptr, 0);
+    mSpanCB = std::make_unique<OtelSpanHandler>(nullptr, 0);
+#endif
+
     mNetworkSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
     mProcessSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
     mFileSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
@@ -34,11 +40,11 @@ void eBPFServer::Init() {
 void eBPFServer::Stop() {
     LOG_WARNING(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
-    mMeterCB->update_context(nullptr, 0);
-    mSpanCB->update_context(nullptr,0);
-    mNetworkSecureCB->update_context(nullptr, 0);
-    mProcessSecureCB->update_context(nullptr, 0);
-    mFileSecureCB->update_context(nullptr, 0);
+    if (mMeterCB) mMeterCB->update_context(nullptr, 0);
+    if (mSpanCB) mSpanCB->update_context(nullptr,0);
+    if (mNetworkSecureCB) mNetworkSecureCB->update_context(nullptr, 0);
+    if (mProcessSecureCB) mProcessSecureCB->update_context(nullptr, 0);
+    if (mFileSecureCB) mFileSecureCB->update_context(nullptr, 0);
 }
 
 bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
@@ -48,7 +54,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;
-    // call update function 
+    // call update function
     // step2: call init function
     switch(type) {
     case nami::PluginType::PROCESS: {
@@ -57,13 +63,13 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         pconfig.process_security_cb_ = std::bind(&SecurityHandler::handle, mProcessSecureCB.get(), std::placeholders::_1);
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         pconfig.options_ = opts->mOptionList;
-
         config = std::move(pconfig);
         break;
     }
 
     case nami::PluginType::NETWORK:{
         nami::NetworkObserveConfig nconfig;
+        // nami::ObserverNetworkOption* opts = std::get<nami::ObserverNetworkOption*>(options);
         mMeterCB->update_context(ctx, plugin_index);
         mSpanCB->update_context(ctx, plugin_index);
         nconfig.measure_cb_ = std::bind(&MeterHandler::handle, mMeterCB.get(), std::placeholders::_1, std::placeholders::_2);

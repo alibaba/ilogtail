@@ -42,6 +42,8 @@ public:
     bool SuspendPlugin(const std::string& pipeline_name, nami::PluginType type);
 
 private:
+    void InitMeterHandler(PipelineContext* ctx, uint32_t idx, const std::string& type);
+    void InitSpanHandler(PipelineContext* ctx, uint32_t idx, const std::string& type);
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 

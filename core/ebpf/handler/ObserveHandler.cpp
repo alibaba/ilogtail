@@ -14,8 +14,6 @@
 #include "queue/ProcessQueueManager.h"
 #include "queue/ProcessQueueItem.h"
 
-
-
 namespace logtail {
 namespace ebpf {
 
@@ -44,6 +42,81 @@ void FUNC_NAME(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uin
     event->SetValue(UntypedSingleValue{(double)inner->FIELD_NAME}); \
 }
 
+void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) {
+        LOG_INFO(sLogger, ("Otel HandleMeasures measure size", measures.size()) ("ts", timestamp));
+    if (measures.empty()) return;
+    if (!mCtx) {
+        LOG_WARNING(sLogger, ("Otel HandleSpans", "ctx is null, exit"));
+        return;
+    }
+
+    for (auto& app_batch_measures : measures) {
+        std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();;
+        PipelineEventGroup event_group(source_buffer);
+        for (auto& measure : app_batch_measures->measures_) {
+            auto type = measure->type_;
+            if (type == MeasureType::MEASURE_TYPE_APP) {
+                auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
+                auto event = event_group.AddMetricEvent();
+                for (auto& tag : measure->tags_) {
+                    event->SetTag(tag.first, tag.second);
+                }
+                event->SetName("service_requests_total");
+                event->SetTimestamp(timestamp);
+                event->SetValue(UntypedSingleValue{(double)inner->request_total_});
+            }
+            mProcessTotalCnt++;
+        }
+#ifdef APSARA_UNIT_TEST_MAIN
+            continue;
+#endif
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
+            LOG_WARNING(sLogger, ("[Otel Metrics] push queue failed!", "a"));
+        }
+    }
+    return;
+}
+
+void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
+    LOG_INFO(sLogger, ("Otel HandleSpans spans size", spans.size()));
+    if (spans.empty()) return;
+
+    if (!mCtx) {
+        LOG_WARNING(sLogger, ("Otel HandleSpans", "ctx is null, exit"));
+        return;
+    }
+    std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup event_group(source_buffer);
+
+    for (auto& span : spans) {
+        for (auto& x : span->single_spans_) {
+            auto spanEvent = event_group.AddSpanEvent();
+            for (auto& tag : x->tags_) {
+                spanEvent->SetTag(tag.first, tag.second);
+            }
+            spanEvent->SetName(x->span_name_);
+            spanEvent->SetKind(static_cast<SpanEvent::Kind>(x->span_kind_));
+            spanEvent->SetStartTimeNs(x->start_timestamp_);
+            spanEvent->SetEndTimeNs(x->end_timestamp_);
+            spanEvent->SetTraceId(x->trace_id_);
+            spanEvent->SetSpanId(x->span_id_);
+            mProcessTotalCnt++;
+        }
+#ifdef APSARA_UNIT_TEST_MAIN
+            continue;
+#endif
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
+            LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
+        }
+    }
+
+    return;
+}
+
+#ifdef __ENTERPRISE__
+
 // FOR APP METRICS
 GENERATE_METRICS(GenerateRequestsTotalMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_count", request_total_)
 GENERATE_METRICS(GenerateRequestsSlowMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_slow_count", slow_total_)
@@ -69,11 +142,11 @@ GENERATE_METRICS(GenerateTcpSendPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET,
 GENERATE_METRICS(GenerateTcpSendBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_sent_bytes_total", send_byte_total_)
 
 void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
-    LOG_INFO(sLogger, ("HandleSpans spans size", spans.size()));
+    LOG_INFO(sLogger, ("ARMS HandleSpans spans size", spans.size()));
     if (spans.empty()) return;
 
     if (!mCtx) {
-        LOG_WARNING(sLogger, ("HandleSpans", "ctx is null, exit"));
+        LOG_WARNING(sLogger, ("ARMS HandleSpans", "ctx is null, exit"));
         return;
     }
 
@@ -94,9 +167,9 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
             spanEvent->SetSpanId(x->span_id_);
             mProcessTotalCnt++;
         }
-        #ifdef APSARA_UNIT_TEST_MAIN
+#ifdef APSARA_UNIT_TEST_MAIN
             continue;
-        #endif
+#endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
             LOG_WARNING(sLogger, ("[Span] push queue failed!", "a"));
@@ -155,6 +228,8 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
     }
     return;
 }
+
+#endif
 
 }
 }

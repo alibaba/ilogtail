@@ -100,7 +100,6 @@ struct Measure {
 // process
 struct ApplicationBatchMeasure {
   std::string app_id_;
-  std::string region_id_;
   std::string ip_;
   std::vector<std::unique_ptr<Measure>> measures_;
   uint64_t timestamp_;
@@ -160,6 +159,8 @@ struct ObserverNetworkOption {
     bool mDisableProtocolParse = false;
     bool mDisableConnStats = false;
     bool mEnableConnTrackerDump = false;
+    std::string mMeterHandlerType;
+    std::string mSpanHandlerType;
 };
 
 // file
