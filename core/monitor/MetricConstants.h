@@ -120,4 +120,19 @@ extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
 extern const std::string METRIC_PROC_PARSE_STDOUT_TOTAL;
 extern const std::string METRIC_PROC_PARSE_STDERR_TOTAL;
 
+// flusher common metrics
+extern const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES;
+extern const std::string METRIC_FLUSHER_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_TIME_MS;
+extern const std::string METRIC_FLUSHER_ERROR_TIME_MS;
+
+// flusher sls metrics
+extern const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
+
 } // namespace logtail

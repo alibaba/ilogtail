@@ -169,7 +169,7 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
     mPluginMetricManager
         = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
     // Register a Gauge metric to record PluginMetricManager‘s map size
-    mInputFileMonitorTotal = GetMetricsRecordRef().CreateGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateIntGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
     mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
 
     return CreateInnerProcessors(pluginIdx);
