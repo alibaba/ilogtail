@@ -246,7 +246,7 @@ namespace sdk {
         return SynPostLogStoreLogs(project, logstore, packageListData, httpHeader, hashKey);
     }
 
-    unique_ptr<HttpRequest> Client::CreatePostLogStoreLogsRequest(const std::string& project,
+    unique_ptr<AsynHttpRequest<SenderQueueItem>> Client::CreatePostLogStoreLogsRequest(const std::string& project,
                                                                   const std::string& logstore,
                                                                   sls_logs::SlsCompressType compressType,
                                                                   const std::string& compressedLogGroup,
@@ -265,7 +265,7 @@ namespace sdk {
             project, logstore, compressedLogGroup, httpHeader, hashKey, hashKeySeqID, item);
     }
 
-    unique_ptr<HttpRequest> Client::CreatePostLogStoreLogPackageListRequest(const std::string& project,
+    unique_ptr<AsynHttpRequest<SenderQueueItem>> Client::CreatePostLogStoreLogPackageListRequest(const std::string& project,
                                                                             const std::string& logstore,
                                                                             sls_logs::SlsCompressType compressType,
                                                                             const std::string& packageListData,
@@ -314,7 +314,7 @@ namespace sdk {
         }
     }
 
-    unique_ptr<HttpRequest> Client::CreateAsynPostLogStoreLogsRequest(const std::string& project,
+    unique_ptr<AsynHttpRequest<SenderQueueItem>> Client::CreateAsynPostLogStoreLogsRequest(const std::string& project,
                                                                       const std::string& logstore,
                                                                       const std::string& body,
                                                                       std::map<std::string, std::string>& httpHeader,
@@ -346,7 +346,7 @@ namespace sdk {
         string queryString;
         GetQueryString(parameterList, queryString);
 
-        return make_unique<HttpRequest>(HTTP_POST, mUsingHTTPS, host, operation, queryString, httpHeader, body, item);
+        return make_unique<AsynHttpRequest<SenderQueueItem>>(HTTP_POST, mUsingHTTPS, host, operation, queryString, httpHeader, body, item);
     }
 
     PostLogStoreLogsResponse

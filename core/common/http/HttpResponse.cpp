@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sink/http/HttpResponse.h"
+#include "common/http/HttpResponse.h"
+
+using namespace std;
 
 namespace logtail {
 
@@ -21,7 +23,7 @@ bool caseInsensitiveComp(const char lhs, const char rhs) {
 }
 
 bool compareHeader(const std::string& lhs, const std::string& rhs) {
-    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), caseInsensitiveComp);
+    return lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), caseInsensitiveComp);
 }
 
 } // namespace logtail

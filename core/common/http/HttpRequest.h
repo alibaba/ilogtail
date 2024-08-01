@@ -20,11 +20,9 @@
 #include <map>
 #include <string>
 
-#include "sink/http/HttpResponse.h"
+#include "common/http/HttpResponse.h"
 
 namespace logtail {
-
-class SenderQueueItem;
 
 struct HttpRequest {
     std::string mMethod;
@@ -37,10 +35,7 @@ struct HttpRequest {
     std::map<std::string, std::string> mHeader;
     std::string mBody;
     std::string mHost;
-    HttpResponse mResponse;
 
-    SenderQueueItem* mItem = nullptr;
-    void* mPrivateData = nullptr;
     uint32_t mTryCnt = 1;
     time_t mLastSendTime = 0;
 
@@ -50,16 +45,34 @@ struct HttpRequest {
                 const std::string& url,
                 const std::string& query,
                 const std::map<std::string, std::string>& header,
-                const std::string& body,
-                SenderQueueItem* item)
+                const std::string& body)
         : mMethod(method),
           mHTTPSFlag(httpsFlag),
           mUrl(url),
           mQueryString(query),
           mHeader(header),
           mBody(body),
-          mHost(host),
-          mItem(item) {}
+          mHost(host) {}
+    virtual ~HttpRequest() = default;
+};
+
+template <class T>
+struct AsynHttpRequest : public HttpRequest {
+    HttpResponse mResponse;
+    T* mContext = nullptr;
+    void* mPrivateData = nullptr;
+
+    AsynHttpRequest(const std::string& method,
+                    bool httpsFlag,
+                    const std::string& host,
+                    const std::string& url,
+                    const std::string& query,
+                    const std::map<std::string, std::string>& header,
+                    const std::string& body,
+                    T* ctx)
+        : HttpRequest(method, httpsFlag, host, url, query, header, body), mContext(ctx) {}
+
+    bool IsContextValid() { return true; }
 };
 
 } // namespace logtail

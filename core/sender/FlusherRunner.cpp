@@ -25,7 +25,7 @@
 #include "queue/QueueKeyManager.h"
 #include "queue/SenderQueueItem.h"
 #include "queue/SenderQueueManager.h"
-#include "sink/http/HttpRequest.h"
+#include "common/http/HttpRequest.h"
 #include "sink/http/HttpSink.h"
 // TODO: temporarily used here
 #include "flusher/sls/PackIdManager.h"
@@ -88,7 +88,7 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item, bool withLimit) {
                                                    + ToString(blockCostTime));
     }
 
-    unique_ptr<HttpRequest> req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
+    unique_ptr<AsynHttpRequest<SenderQueueItem>> req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
     item->mLastSendTime = time(nullptr);
     HttpSink::GetInstance()->AddRequest(std::move(req));
     ++mHttpSendingCnt;

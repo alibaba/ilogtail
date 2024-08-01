@@ -24,11 +24,12 @@
 #include <mutex>
 
 #include "sink/Sink.h"
-#include "sink/http/HttpRequest.h"
+#include "common/http/HttpRequest.h"
+#include "queue/SenderQueueItem.h"
 
 namespace logtail {
 
-class HttpSink : public Sink<HttpRequest> {
+class HttpSink : public Sink<AsynHttpRequest<SenderQueueItem>> {
 public:
     HttpSink(const HttpSink&) = delete;
     HttpSink& operator=(const HttpSink&) = delete;
@@ -46,7 +47,7 @@ private:
     ~HttpSink() = default;
 
     void Run();
-    bool AddRequestToClient(std::unique_ptr<HttpRequest>&& request);
+    bool AddRequestToClient(std::unique_ptr<AsynHttpRequest<SenderQueueItem>>&& request);
     void DoRun();
     void HandleCompletedRequests();
 

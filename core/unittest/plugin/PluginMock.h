@@ -119,7 +119,7 @@ public:
         return true;
     }
     bool FlushAll() override { return mIsValid; }
-    std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const override { return nullptr; }
+    std::unique_ptr<AsynHttpRequest<SenderQueueItem>> BuildRequest(SenderQueueItem* item) const override { return nullptr; }
     void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override {}
 
     bool mIsValid = true;

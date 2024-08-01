@@ -68,7 +68,7 @@ public:
     bool Send(PipelineEventGroup&& g) override;
     bool Flush(size_t key) override;
     bool FlushAll() override;
-    std::unique_ptr<HttpRequest> BuildRequest(SenderQueueItem* item) const override;
+    std::unique_ptr<AsynHttpRequest<SenderQueueItem>> BuildRequest(SenderQueueItem* item) const override;
     void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override;
 
     CompressType GetCompressType() const { return mCompressor ? mCompressor->GetCompressType() : CompressType::NONE; }

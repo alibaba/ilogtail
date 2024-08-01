@@ -22,7 +22,7 @@
 #include <map>
 #include <string>
 
-#include "sink/http/HttpResponse.h"
+#include "common/http/HttpResponse.h"
 
 namespace logtail {
 
