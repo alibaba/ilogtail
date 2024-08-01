@@ -19,10 +19,9 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
-#include "Lock.h"
-#include "prometheus/ScrapeJob.h"
+#include "common/Lock.h"
+#include "prometheus/ScrapeJobEvent.h"
 #include "prometheus/ScraperGroup.h"
 #include "sdk/Common.h"
 
@@ -40,8 +39,8 @@ public:
     }
 
     // input plugin update
-    void UpdateScrapeInput(const std::string& inputName, std::unique_ptr<ScrapeJob> scrapeJob);
-    void RemoveScrapeInput(const std::string& inputName);
+    void UpdateScrapeInput(std::shared_ptr<ScrapeJobEvent> scrapeJobEvent);
+    void RemoveScrapeInput(const std::string& jobName);
 
     // target discover and scrape
     void Start();
@@ -55,7 +54,7 @@ private:
     sdk::HttpMessage SendGetRequest(const std::string& url);
 
     mutable ReadWriteLock mReadWriteLock;
-    std::unordered_map<std::string, std::string> mPrometheusInputsMap;
+    std::unordered_set<std::string> mPrometheusInputsSet;
 
     std::unique_ptr<sdk::HTTPClient> mClient;
 

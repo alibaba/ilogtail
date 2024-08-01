@@ -21,122 +21,103 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "common/Thread.h"
+#include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
-#include "prometheus/ScrapeWork.h"
+#include "prometheus/ScrapeWorkEvent.h"
 
 using namespace std;
 
 namespace logtail {
 
-ScraperGroup::ScraperGroup() : mUnRegisterMs(0), mFinished(true), mScraperThread(nullptr) {
+ScraperGroup::ScraperGroup() : mUnRegisterMs(0), mTimer(make_shared<Timer>()), mIsStarted(false) {
 }
 
 ScraperGroup::~ScraperGroup() {
     Stop();
 }
 
-void ScraperGroup::UpdateScrapeWork(const string& jobName) {
-    if (mScrapeJobMap.find(jobName) == mScrapeJobMap.end()) {
-        LOG_WARNING(sLogger, ("Job not found", jobName));
-        return;
-    }
-    unordered_map<string, ScrapeTarget> sTMap = mScrapeJobMap[jobName]->GetScrapeTargetsMapCopy();
-    unordered_map<string, unique_ptr<ScrapeWork>>& sWMap = mScrapeWorkMap[jobName];
+void ScraperGroup::UpdateScrapeJob(std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr) {
+    RemoveScrapeJob(scrapeJobEventPtr->mJobName);
 
-    // stop obsolete targets
-    vector<string> obsoleteTargets;
-    for (const auto& [targetHash, _] : sWMap) {
-        if (sTMap.find(targetHash) == sTMap.end()) {
-            obsoleteTargets.push_back(targetHash);
-        }
-    }
+    scrapeJobEventPtr->mUnRegisterMs = mUnRegisterMs;
+    scrapeJobEventPtr->SetTimer(mTimer);
+    // 1. add job to mJobSet
+    WriteLock lock(mJobRWLock);
+    mJobValidSet.insert(scrapeJobEventPtr->mJobName);
+    mJobEventMap[scrapeJobEventPtr->mJobName] = scrapeJobEventPtr;
 
-    for (const string& targetHash : obsoleteTargets) {
-        LOG_INFO(sLogger, ("Stop obsolete scrape target", targetHash));
-        sWMap[targetHash]->StopScrapeLoop();
-        sWMap.erase(targetHash);
-    }
-
-    // start new targets
-    for (const auto& [targetHash, target] : sTMap) {
-        if (sWMap.find(targetHash) == sWMap.end()) {
-            LOG_INFO(sLogger, ("Start new scrape target", targetHash));
-            sWMap[targetHash] = make_unique<ScrapeWork>(mScrapeJobMap[jobName]->mScrapeConfigPtr,
-                                                        target,
-                                                        mScrapeJobMap[jobName]->mQueueKey,
-                                                        mScrapeJobMap[jobName]->mInputIndex);
-            sWMap[targetHash]->SetUnRegisterMs(mUnRegisterMs);
-            sWMap[targetHash]->StartScrapeLoop();
-        }
-    }
-}
-
-void ScraperGroup::UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr) {
-    RemoveScrapeJob(scrapeJobPtr->mJobName);
-
-    scrapeJobPtr->StartTargetsDiscoverLoop();
-
-    lock_guard<mutex> lock(mMutex);
-    mScrapeJobMap[scrapeJobPtr->mJobName] = std::move(scrapeJobPtr);
+    // 2. build Ticker Event and add it to Timer
+    ScrapeEvent scrapeEvent = BuildScrapeEvent(std::move(scrapeJobEventPtr),
+                                               prometheus::RefeshIntervalSeconds,
+                                               mJobRWLock,
+                                               mJobValidSet,
+                                               scrapeJobEventPtr->mJobName);
+    mTimer->PushEvent(scrapeEvent);
 }
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
-    lock_guard<mutex> lock(mMutex);
-    if (mScrapeJobMap.find(jobName) != mScrapeJobMap.end()) {
-        mScrapeJobMap[jobName]->StopTargetsDiscoverLoop();
-        for (auto& [_, work] : mScrapeWorkMap[jobName]) {
-            work->StopScrapeLoop();
-        }
-        mScrapeWorkMap.erase(jobName);
-        mScrapeJobMap.erase(jobName);
-    }
+    WriteLock lock(mJobRWLock);
+    mJobValidSet.erase(jobName);
+    mJobEventMap.erase(jobName);
 }
 
 void ScraperGroup::Start() {
-    mFinished.store(false);
-    if (!mScraperThread) {
-        mScraperThread = CreateThread([this]() { ProcessScrapeWorkUpdate(); });
+    {
+        lock_guard<mutex> lock(mStartMux);
+        if (mIsStarted) {
+            return;
+        }
+        mIsStarted = true;
     }
+    mThreadRes = std::async(launch::async, [this]() {
+        mTimer->Start();
+        // TODO(liqiang): init curl thread
+    });
 }
 
 void ScraperGroup::Stop() {
-    mFinished.store(true);
-    mScraperThread.reset();
+    // 1. stop threads
+    mTimer->Stop();
 
-    vector<string> jobsToRemove;
+    // 2. clear resources
     {
-        lock_guard<mutex> lock(mMutex);
-        for (auto& iter : mScrapeJobMap) {
-            jobsToRemove.push_back(iter.first);
+        WriteLock lock(mJobRWLock);
+        mJobValidSet.clear();
+        mJobEventMap.clear();
+    }
+    {
+        lock_guard<mutex> lock(mStartMux);
+        if (!mIsStarted) {
+            return;
         }
+        mIsStarted = false;
     }
-    for (const auto& jobName : jobsToRemove) {
-        RemoveScrapeJob(jobName);
-    }
-
-    {
-        lock_guard<mutex> lock(mMutex);
-        mScrapeWorkMap.clear();
-        mScrapeJobMap.clear();
+    future_status s = mThreadRes.wait_for(chrono::seconds(1));
+    if (s == future_status::ready) {
+        LOG_INFO(sLogger, ("scraper group", "stopped successfully"));
+    } else {
+        LOG_WARNING(sLogger, ("scraper group", "forced to stopped"));
     }
 }
 
-void ScraperGroup::ProcessScrapeWorkUpdate() {
-    while (!mFinished.load()) {
-        {
-            lock_guard<mutex> lock(mMutex);
-
-            for (auto& iter : mScrapeJobMap) {
-                UpdateScrapeWork(iter.first);
-            }
-        }
-        this_thread::sleep_for(chrono::seconds(prometheus::RefeshIntervalSeconds));
-    }
+ScrapeEvent ScraperGroup::BuildScrapeEvent(std::shared_ptr<AsyncEvent> asyncEvent,
+                                           uint64_t intervalSeconds,
+                                           ReadWriteLock& rwLock,
+                                           unordered_set<string>& validationSet,
+                                           string hash) {
+    ScrapeEvent scrapeEvent;
+    uint64_t deadlineNanoSeconds = GetCurrentTimeInNanoSeconds();
+    scrapeEvent.mDeadline = deadlineNanoSeconds;
+    auto tickerEvent = TickerEvent(
+        std::move(asyncEvent), intervalSeconds, deadlineNanoSeconds, mTimer, rwLock, validationSet, std::move(hash));
+    auto asyncCallback = [&tickerEvent](const sdk::HttpMessage& response) { tickerEvent.Process(response); };
+    scrapeEvent.mCallback = asyncCallback;
+    return scrapeEvent;
 }
-
 
 } // namespace logtail

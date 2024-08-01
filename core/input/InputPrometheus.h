@@ -5,7 +5,7 @@
 #include <string>
 
 #include "plugin/interface/Input.h"
-#include "prometheus/ScrapeJob.h"
+#include "prometheus/ScrapeJobEvent.h"
 
 namespace logtail {
 
@@ -21,7 +21,7 @@ public:
 private:
     bool CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx);
     // only one job is supported
-    std::unique_ptr<ScrapeJob> mScrapeJobPtr;
+    std::shared_ptr<ScrapeJobEvent> mScrapeJobEventPtr;
 
     std::string mJobName;
 

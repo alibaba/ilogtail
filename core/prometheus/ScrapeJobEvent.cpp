@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include "ScrapeJob.h"
+#include "ScrapeJobEvent.h"
 
 #include <curl/curl.h>
+#include <xxhash/xxhash.h>
 
 #include <cstdlib>
 #include <memory>
@@ -26,10 +27,10 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
+#include "prometheus/AsyncEvent.h"
 #include "prometheus/Constants.h"
+#include "prometheus/ScrapeWorkEvent.h"
 #include "sdk/Common.h"
-#include "sdk/CurlImp.h"
-#include "sdk/Exception.h"
 
 using namespace std;
 
@@ -53,12 +54,9 @@ string URLEncode(const string& value) {
     return escaped.str();
 }
 
-ScrapeJob::ScrapeJob() : mServicePort(0), mQueueKey(0), mInputIndex(0) {
-    mFinished.store(true);
-    mClient = make_unique<sdk::CurlClient>();
+ScrapeJobEvent::ScrapeJobEvent() : mServicePort(0), mQueueKey(0), mInputIndex(0), mUnRegisterMs(0) {
 }
-
-bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
+bool ScrapeJobEvent::Init(const Json::Value& scrapeConfig) {
     mScrapeConfigPtr = std::make_shared<ScrapeConfig>();
     if (!mScrapeConfigPtr->Init(scrapeConfig)) {
         return false;
@@ -68,98 +66,116 @@ bool ScrapeJob::Init(const Json::Value& scrapeConfig) {
     return true;
 }
 
-bool ScrapeJob::operator<(const ScrapeJob& other) const {
+bool ScrapeJobEvent::operator<(const ScrapeJobEvent& other) const {
     return mJobName < other.mJobName;
 }
 
-void ScrapeJob::StartTargetsDiscoverLoop() {
-    mFinished.store(false);
-    if (!mTargetsDiscoveryLoopThread) {
-        mTargetsDiscoveryLoopThread = CreateThread([this]() { TargetsDiscoveryLoop(); });
+void ScrapeJobEvent::Process(const sdk::HttpMessage& response) {
+    if (response.statusCode != 200) {
+        return;
+    }
+    const string& content = response.content;
+    set<ScrapeWorkEvent> newScrapeWorkSet;
+    if (!ParseTargetGroups(content, newScrapeWorkSet)) {
+        return;
+    }
+
+    set<ScrapeWorkEvent> diff;
+    {
+        WriteLock lock(mRWLock);
+
+        // remove obsolete scrape work
+        set_difference(mScrapeWorkSet.begin(),
+                       mScrapeWorkSet.end(),
+                       newScrapeWorkSet.begin(),
+                       newScrapeWorkSet.end(),
+                       inserter(diff, diff.begin()));
+        for (const auto& work : diff) {
+            mScrapeWorkSet.erase(work);
+            mValidSet.erase(work.mHash);
+        }
+        diff.clear();
+
+        // save new scrape work
+        set_difference(newScrapeWorkSet.begin(),
+                       newScrapeWorkSet.end(),
+                       mScrapeWorkSet.begin(),
+                       mScrapeWorkSet.end(),
+                       inserter(diff, diff.begin()));
+        for (const auto& work : diff) {
+            mScrapeWorkSet.insert(work);
+            mValidSet.insert(work.mHash);
+        }
+    }
+
+    // create new scrape event
+    if (mTimer) {
+        for (auto work : diff) {
+            auto event = BuildScrapeEvent(make_shared<ScrapeWorkEvent>(work),
+                                          mScrapeConfigPtr->mScrapeIntervalSeconds,
+                                          mRWLock,
+                                          mValidSet,
+                                          work.mHash);
+            mTimer->PushEvent(event);
+        }
     }
 }
 
-void ScrapeJob::StopTargetsDiscoverLoop() {
-    mFinished.store(true);
-    mTargetsDiscoveryLoopThread.reset();
-
-    std::lock_guard<std::mutex> lock(mMutex);
-    mScrapeTargetsMap.clear();
+ScrapeEvent ScrapeJobEvent::BuildScrapeEvent(std::shared_ptr<AsyncEvent> asyncEvent,
+                                             uint64_t intervalSeconds,
+                                             ReadWriteLock& rwLock,
+                                             unordered_set<string>& validSet,
+                                             string hash) {
+    ScrapeEvent scrapeEvent;
+    uint64_t deadlineNanoSeconds = GetCurrentTimeInNanoSeconds() + GetRandSleep(hash);
+    scrapeEvent.mDeadline = deadlineNanoSeconds;
+    auto tickerEvent = TickerEvent(
+        std::move(asyncEvent), intervalSeconds, deadlineNanoSeconds, mTimer, rwLock, validSet, std::move(hash));
+    auto asyncCallback = [&tickerEvent](const sdk::HttpMessage& response) { tickerEvent.Process(response); };
+    scrapeEvent.mCallback = asyncCallback;
+    return scrapeEvent;
 }
 
-unordered_map<string, ScrapeTarget> ScrapeJob::GetScrapeTargetsMapCopy() {
-    lock_guard<mutex> lock(mMutex);
-
-    unordered_map<string, ScrapeTarget> copy;
-
-    for (const auto& [targetHash, targetPtr] : mScrapeTargetsMap) {
-        copy.emplace(targetHash, targetPtr);
+uint64_t ScrapeJobEvent::GetRandSleep(const string& hash) const {
+    const string& key = hash;
+    uint64_t h = XXH64(key.c_str(), key.length(), 0);
+    uint64_t randSleep
+        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    uint64_t sleepOffset
+        = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
+    if (randSleep < sleepOffset) {
+        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
     }
-
-    return copy;
+    randSleep -= sleepOffset;
+    return randSleep;
 }
 
-void ScrapeJob::TargetsDiscoveryLoop() {
-    uint64_t nextTargetsDiscoveryLoopTime = GetCurrentTimeInNanoSeconds();
-    while (!mFinished.load()) {
-        uint64_t timeNow = GetCurrentTimeInNanoSeconds();
-        if (timeNow < nextTargetsDiscoveryLoopTime) {
-            this_thread::sleep_for(chrono::nanoseconds(nextTargetsDiscoveryLoopTime - timeNow));
-        }
-        nextTargetsDiscoveryLoopTime
-            = GetCurrentTimeInNanoSeconds() + prometheus::RefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
-
-        string readBuffer;
-        if (!FetchHttpData(readBuffer)) {
-            continue;
-        }
-        unordered_map<string, ScrapeTarget> newScrapeTargetsMap;
-        if (!ParseTargetGroups(readBuffer, newScrapeTargetsMap)) {
-            continue;
-        }
-        lock_guard<mutex> lock(mMutex);
-        mScrapeTargetsMap = std::move(newScrapeTargetsMap);
-    }
-}
-
-bool ScrapeJob::FetchHttpData(string& readBuffer) const {
+sdk::AsynRequest ScrapeJobEvent::BuildAsyncRequest() const {
     map<string, string> httpHeader;
     httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
     httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
     httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
-    sdk::HttpMessage httpResponse;
-    httpResponse.header[sdk::X_LOG_REQUEST_ID] = "PrometheusTargetsDiscover";
+    auto* response = new sdk::Response();
+    auto* closure = new sdk::PostLogStoreLogsResponse;
 
-    bool httpsFlag = mScrapeConfigPtr->mScheme == prometheus::HTTPS;
-    try {
-        mClient->Send(sdk::HTTP_GET,
-                      mServiceHost,
-                      mServicePort,
-                      "/jobs/" + URLEncode(mJobName) + "/targets",
-                      "collector_id=" + mPodName,
-                      httpHeader,
-                      "",
-                      prometheus::RefeshIntervalSeconds,
-                      httpResponse,
-                      "",
-                      httpsFlag);
-    } catch (const sdk::LOGException& e) {
-        LOG_WARNING(sLogger,
-                    ("http service discovery from operator failed", e.GetMessage())("errCode",
-                                                                                    e.GetErrorCode())("job", mJobName));
-        return false;
-    }
-    readBuffer = httpResponse.content;
-    return true;
+    return sdk::AsynRequest(sdk::HTTP_GET,
+                            mServiceHost,
+                            mServicePort,
+                            "/jobs/" + URLEncode(mJobName) + "/targets",
+                            "collector_id=" + mPodName,
+                            httpHeader,
+                            "",
+                            prometheus::RefeshIntervalSeconds,
+                            "",
+                            mScrapeConfigPtr->mScheme == prometheus::HTTPS,
+                            (sdk::LogsClosure*)closure,
+                            response);
 }
 
-bool ScrapeJob::ParseTargetGroups(const string& response,
-                                  unordered_map<string, ScrapeTarget>& newScrapeTargetsMap) const {
-    Json::CharReaderBuilder readerBuilder;
+bool ScrapeJobEvent::ParseTargetGroups(const string& content, set<ScrapeWorkEvent> newScrapeWorkSet) const {
     string errs;
     Json::Value root;
-    istringstream s(response);
-    if (!ParseJsonTable(response, root, errs)) {
+    if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
         LOG_ERROR(sLogger,
                   ("http service discovery from operator failed", "Failed to parse JSON: " + errs)("job", mJobName));
         return false;
@@ -223,10 +239,15 @@ bool ScrapeJob::ParseTargetGroups(const string& response,
         }
 
         auto scrapeTarget = ScrapeTarget(result);
+        auto scrapeWorkEvent = ScrapeWorkEvent(mScrapeConfigPtr, scrapeTarget, mQueueKey, mInputIndex);
 
-        newScrapeTargetsMap[scrapeTarget.GetHash()] = scrapeTarget;
+        newScrapeWorkSet.insert(scrapeWorkEvent);
     }
     return true;
+}
+
+void ScrapeJobEvent::SetTimer(shared_ptr<Timer> timer) {
+    mTimer = std::move(timer);
 }
 
 } // namespace logtail

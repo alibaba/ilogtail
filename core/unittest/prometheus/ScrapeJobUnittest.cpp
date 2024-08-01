@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "ScrapeJob.h"
+#include "ScrapeJobEvent.h"
 #include "common/JsonUtil.h"
 #include "unittest/Unittest.h"
 

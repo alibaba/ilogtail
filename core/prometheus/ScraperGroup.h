@@ -16,16 +16,15 @@
 
 #pragma once
 
-#include <atomic>
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 
-#include "common/Thread.h"
-#include "prometheus/ScrapeJob.h"
-#include "prometheus/ScrapeWork.h"
+#include "common/Lock.h"
+#include "prometheus/ScrapeJobEvent.h"
 
 namespace logtail {
 
@@ -38,7 +37,7 @@ public:
     ScraperGroup& operator=(const ScraperGroup&) = delete;
     ScraperGroup& operator=(ScraperGroup&&) = delete;
 
-    void UpdateScrapeJob(std::unique_ptr<ScrapeJob> scrapeJobPtr);
+    void UpdateScrapeJob(std::shared_ptr<ScrapeJobEvent>);
     void RemoveScrapeJob(const std::string& jobName);
 
     void Start();
@@ -48,15 +47,23 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    std::mutex mMutex;
-    std::unordered_map<std::string, std::unique_ptr<ScrapeJob>> mScrapeJobMap;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<ScrapeWork>>> mScrapeWorkMap;
-
-    std::atomic<bool> mFinished;
-    ThreadPtr mScraperThread;
-
+    ScrapeEvent BuildScrapeEvent(std::shared_ptr<AsyncEvent> asyncEvent,
+                                 uint64_t intervalSeconds,
+                                 ReadWriteLock& rwLock,
+                                 std::unordered_set<std::string>& validationSet,
+                                 std::string hash);
     void ProcessScrapeWorkUpdate();
     void UpdateScrapeWork(const std::string& jobName);
+
+    std::shared_ptr<Timer> mTimer;
+
+    ReadWriteLock mJobRWLock;
+    std::unordered_set<std::string> mJobValidSet;
+    std::map<std::string, std::shared_ptr<ScrapeJobEvent>> mJobEventMap;
+
+    std::mutex mStartMux;
+    bool mIsStarted;
+    std::future<void> mThreadRes;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;

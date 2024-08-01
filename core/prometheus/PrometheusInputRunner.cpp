@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
@@ -49,30 +48,25 @@ PrometheusInputRunner::PrometheusInputRunner() {
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
-void PrometheusInputRunner::UpdateScrapeInput(const string& inputName, std::unique_ptr<ScrapeJob> scrapeJobPtr) {
+void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr) {
     {
         WriteLock lock(mReadWriteLock);
-        mPrometheusInputsMap[inputName] = scrapeJobPtr->mJobName;
+        mPrometheusInputsSet.insert(scrapeJobEventPtr->mJobName);
     }
 
     // set job info
-    scrapeJobPtr->mServiceHost = mServiceHost;
-    scrapeJobPtr->mServicePort = mServicePort;
-    scrapeJobPtr->mPodName = mPodName;
+    scrapeJobEventPtr->mServiceHost = mServiceHost;
+    scrapeJobEventPtr->mServicePort = mServicePort;
+    scrapeJobEventPtr->mPodName = mPodName;
 
-    mScraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
+    mScraperGroup->UpdateScrapeJob(std::move(scrapeJobEventPtr));
 }
 
-void PrometheusInputRunner::RemoveScrapeInput(const std::string& inputName) {
-    string jobName;
-    {
-        ReadLock lock(mReadWriteLock);
-        jobName = mPrometheusInputsMap[inputName];
-    }
+void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
     mScraperGroup->RemoveScrapeJob(jobName);
     {
         WriteLock lock(mReadWriteLock);
-        mPrometheusInputsMap.erase(inputName);
+        mPrometheusInputsSet.erase(jobName);
     }
 }
 
@@ -136,7 +130,7 @@ void PrometheusInputRunner::Stop() {
 
     {
         WriteLock lock(mReadWriteLock);
-        mPrometheusInputsMap.clear();
+        mPrometheusInputsSet.clear();
     }
 }
 
@@ -165,6 +159,6 @@ sdk::HttpMessage PrometheusInputRunner::SendGetRequest(const string& url) {
 
 bool PrometheusInputRunner::HasRegisteredPlugin() {
     ReadLock lock(mReadWriteLock);
-    return !mPrometheusInputsMap.empty();
+    return !mPrometheusInputsSet.empty();
 }
 }; // namespace logtail

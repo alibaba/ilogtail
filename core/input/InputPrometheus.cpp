@@ -49,13 +49,13 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     const Json::Value& scrapeConfig = config[prometheus::SCRAPE_CONFIG];
 
     // build scrape job
-    mScrapeJobPtr = make_unique<ScrapeJob>();
-    if (!mScrapeJobPtr->Init(scrapeConfig)) {
+    mScrapeJobEventPtr = make_unique<ScrapeJobEvent>();
+    if (!mScrapeJobEventPtr->Init(scrapeConfig)) {
         return false;
     }
 
-    mJobName = mScrapeJobPtr->mJobName;
-    mScrapeJobPtr->mInputIndex = mIndex;
+    mJobName = mScrapeJobEventPtr->mJobName;
+    mScrapeJobEventPtr->mInputIndex = mIndex;
     return CreateInnerProcessors(scrapeConfig, pluginIdx);
 }
 
@@ -63,9 +63,9 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 bool InputPrometheus::Start() {
     LOG_INFO(sLogger, ("input config start", mJobName));
 
-    mScrapeJobPtr->mQueueKey = mContext->GetProcessQueueKey();
+    mScrapeJobEventPtr->mQueueKey = mContext->GetProcessQueueKey();
 
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(mContext->GetConfigName(), std::move(mScrapeJobPtr));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(mScrapeJobEventPtr));
     return true;
 }
 
@@ -73,7 +73,7 @@ bool InputPrometheus::Start() {
 bool InputPrometheus::Stop(bool) {
     LOG_INFO(sLogger, ("input config stop", mJobName));
 
-    PrometheusInputRunner::GetInstance()->RemoveScrapeInput(mContext->GetConfigName());
+    PrometheusInputRunner::GetInstance()->RemoveScrapeInput(mJobName);
     return true;
 }
 

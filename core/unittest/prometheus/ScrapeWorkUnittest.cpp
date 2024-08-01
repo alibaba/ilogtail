@@ -22,7 +22,7 @@
 #include "Labels.h"
 #include "ScrapeConfig.h"
 #include "json/value.h"
-#include "prometheus/ScrapeWork.h"
+#include "prometheus/ScrapeWorkEvent.h"
 #include "sdk/Common.h"
 #include "unittest/Unittest.h"
 
