@@ -73,9 +73,7 @@ void enable_core(void) {
 
 static void overwrite_community_edition_flags() {
     // support run in installation dir on default
-#if !defined(__ANDROID__)
     STRING_FLAG(logtail_sys_conf_dir) = ".";
-#endif
     STRING_FLAG(check_point_filename) = "checkpoint/logtail_check_point";
     STRING_FLAG(default_buffer_file_path) = "checkpoint";
     STRING_FLAG(ilogtail_docker_file_path_config) = "checkpoint/docker_path_config.json";
