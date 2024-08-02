@@ -119,7 +119,10 @@ public:
         return true;
     }
     bool FlushAll() override { return mIsValid; }
-    std::unique_ptr<HttpSinkRequest> BuildRequest(SenderQueueItem* item) const override { return nullptr; }
+    std::unique_ptr<HttpSinkRequest> BuildRequest(SenderQueueItem* item) const override {
+        return std::make_unique<HttpSinkRequest>(
+            "", false, "", "", "", std::map<std::string, std::string>(), "", nullptr);
+    }
     void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override {}
 
     bool mIsValid = true;
