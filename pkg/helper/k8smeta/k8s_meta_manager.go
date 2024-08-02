@@ -5,17 +5,16 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 var metaManager *MetaManager
 
 var onceManager sync.Once
-
-var refreshInterval = 60
 
 type FlushCh struct {
 	Ch         chan *K8sMetaEvent
@@ -115,7 +114,7 @@ func (m *MetaManager) UnRegisterFlush(configName string, resourceType string) {
 }
 
 func (m *MetaManager) runServer() {
-	metadataHandler := NewMetadataHandler()
+	metadataHandler := newMetadataHandler()
 	go metadataHandler.K8sServerRun(m.stopCh)
 }
 

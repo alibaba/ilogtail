@@ -8,7 +8,9 @@ import (
 
 type ProcessFunc func(data *k8smeta.K8sMetaEvent, method string) *protocol.Log
 
+//revive:disable:exported
 type ServiceK8sMeta struct {
+	//revive:enable:exported
 	// entity switch
 	Pod                   bool
 	Node                  bool

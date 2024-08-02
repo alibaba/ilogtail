@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type requestBody struct {
@@ -22,7 +23,7 @@ type metadataHandler struct {
 	metaManager *MetaManager
 }
 
-func NewMetadataHandler() *metadataHandler {
+func newMetadataHandler() *metadataHandler {
 	metadataHandler := &metadataHandler{
 		metaManager: GetMetaManagerInstance(),
 	}

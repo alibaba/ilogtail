@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 )
 
 func TestProcessPodEntity(t *testing.T) {
@@ -56,10 +57,10 @@ func TestProcessPodEntity(t *testing.T) {
 			},
 		},
 	}
-	objWrapper := &k8smeta.ObjectWrapper{
+	event := &k8smeta.K8sMetaEvent{
 		RawObject: obj,
 	}
 	podCollector := &podCollector{}
-	log := podCollector.processPodEntity(objWrapper, "create")
-	fmt.Println(log.Contents)
+	log := podCollector.processPodEntity(event, "create")
+	fmt.Println(log)
 }

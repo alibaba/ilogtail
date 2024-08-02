@@ -1,7 +1,7 @@
 package service
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"strconv"
 	"time"
@@ -36,57 +36,57 @@ func (p *podCollector) init() {
 	}
 }
 
-func (s *podCollector) handlePodEvent() {
+func (p *podCollector) handlePodEvent() {
 	go func() {
 		for {
 			select {
-			case data := <-s.podCh:
+			case data := <-p.podCh:
 				switch data.EventType {
 				case k8smeta.EventTypeAdd:
-					s.HandlePodAdd(data)
+					p.HandlePodAdd(data)
 				case k8smeta.EventTypeDelete:
-					s.HandlePodDelete(data)
+					p.HandlePodDelete(data)
 				default:
-					s.HandlePodUpdate(data)
+					p.HandlePodUpdate(data)
 				}
-			case data := <-s.podServiceCh:
-				s.HandlePodService(data)
+			case data := <-p.podServiceCh:
+				p.HandlePodService(data)
 			}
 		}
 	}()
 }
 
-func (s *podCollector) HandlePodAdd(data *k8smeta.K8sMetaEvent) {
-	for _, processor := range s.podProcessors {
+func (p *podCollector) HandlePodAdd(data *k8smeta.K8sMetaEvent) {
+	for _, processor := range p.podProcessors {
 		log := processor(data, "create")
 		if log != nil {
-			s.collector.AddRawLog(log)
+			p.collector.AddRawLog(log)
 		}
 	}
 }
 
-func (s *podCollector) HandlePodUpdate(data *k8smeta.K8sMetaEvent) {
-	for _, processor := range s.podProcessors {
+func (p *podCollector) HandlePodUpdate(data *k8smeta.K8sMetaEvent) {
+	for _, processor := range p.podProcessors {
 		log := processor(data, "update")
 		if log != nil {
-			s.collector.AddRawLog(log)
+			p.collector.AddRawLog(log)
 		}
 	}
 }
 
-func (s *podCollector) HandlePodDelete(data *k8smeta.K8sMetaEvent) {
-	for _, processor := range s.podProcessors {
+func (p *podCollector) HandlePodDelete(data *k8smeta.K8sMetaEvent) {
+	for _, processor := range p.podProcessors {
 		log := processor(data, "delete")
 		if log != nil {
-			s.collector.AddRawLog(log)
+			p.collector.AddRawLog(log)
 		}
 	}
 }
 
-func (s *podCollector) HandlePodService(data *k8smeta.K8sMetaEvent) {
-	log := s.processPodServiceLink(data, "update")
+func (p *podCollector) HandlePodService(data *k8smeta.K8sMetaEvent) {
+	log := p.processPodServiceLink(data, "update")
 	if log != nil {
-		s.collector.AddRawLog(log)
+		p.collector.AddRawLog(log)
 	}
 }
 
@@ -96,19 +96,19 @@ func genKeyByPod(pod *v1.Pod) string {
 
 func genKey(namespace, kind, name string) string {
 	key := namespace + kind + name
-	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
 }
 
-func (s *podCollector) registerInnerProcessor() {
-	if s.serviceK8sMeta.Pod {
-		s.podProcessors = append(s.podProcessors, s.processPodEntity)
+func (p *podCollector) registerInnerProcessor() {
+	if p.serviceK8sMeta.Pod {
+		p.podProcessors = append(p.podProcessors, p.processPodEntity)
 	}
-	if s.serviceK8sMeta.PodReplicasetLink {
-		s.podProcessors = append(s.podProcessors, s.processPodReplicasetLink)
+	if p.serviceK8sMeta.PodReplicasetLink {
+		p.podProcessors = append(p.podProcessors, p.processPodReplicasetLink)
 	}
 }
 
-func (s *podCollector) processPodEntity(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
+func (p *podCollector) processPodEntity(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
 	log := &protocol.Log{}
 	if obj, ok := data.RawObject.(*v1.Pod); ok {
 		log.Contents = make([]*protocol.Log_Content, 0)
@@ -130,7 +130,7 @@ func (s *podCollector) processPodEntity(data *k8smeta.K8sMetaEvent, method strin
 	return nil
 }
 
-func (s *podCollector) processPodReplicasetLink(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
+func (p *podCollector) processPodReplicasetLink(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
 	log := &protocol.Log{}
 	if obj, ok := data.RawObject.(*v1.Pod); ok {
 		log.Contents = make([]*protocol.Log_Content, 0)
@@ -150,11 +150,12 @@ func (s *podCollector) processPodReplicasetLink(data *k8smeta.K8sMetaEvent, meth
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__relation_type__", Value: "contain"})
 
-		if method == "create" || method == "update" {
+		switch method {
+		case "create", "update":
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__method__", Value: "update"})
-		} else if method == "delete" {
+		case "delete":
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__method__", Value: method})
-		} else {
+		default:
 			// 数据不完整就没有意义
 			return nil
 		}
@@ -169,7 +170,7 @@ func (s *podCollector) processPodReplicasetLink(data *k8smeta.K8sMetaEvent, meth
 	return nil
 }
 
-func (s *podCollector) processPodServiceLink(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
+func (p *podCollector) processPodServiceLink(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
 	log := &protocol.Log{}
 	if obj, ok := data.RawObject.(*k8smeta.PodService); ok {
 		log.Contents = make([]*protocol.Log_Content, 0)
@@ -183,11 +184,12 @@ func (s *podCollector) processPodServiceLink(data *k8smeta.K8sMetaEvent, method 
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__relation_type__", Value: "contain"})
 
-		if method == "create" || method == "update" {
+		switch method {
+		case "create", "update":
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__method__", Value: "update"})
-		} else if method == "delete" {
+		case "delete":
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__method__", Value: method})
-		} else {
+		default:
 			// 数据不完整就没有意义
 			return nil
 		}

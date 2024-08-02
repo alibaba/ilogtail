@@ -214,10 +214,6 @@ func (in *InputKubernetesMeta) collectNamespaces(lister interface{}, selector la
 	return
 }
 
-
-
-
-
 // collectPersistentVolumeClaims list the kubernetes PersistentVolumeClaims by the label selector and collect the core metadata.
 func (in *InputKubernetesMeta) collectPersistentVolumeClaims(lister interface{}, selector labels.Selector) (nodes []*helper.MetaNode, err error) {
 	if !in.PersistentVolumeClaim {

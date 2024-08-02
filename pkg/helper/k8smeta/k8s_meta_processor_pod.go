@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type podProcessor struct {
@@ -33,7 +34,7 @@ func (m *podProcessor) init(stopCh chan struct{}, pipelineCh chan *K8sMetaEvent)
 	m.pipelineCh = pipelineCh
 	store := NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 60, 120, cache.MetaNamespaceKeyFunc, idxRules...)
 	store.Start(m.flushPeriodEvent)
-	m.metaStore = &store
+	m.metaStore = store
 	m.watch(m.stopCh)
 }
 
@@ -116,7 +117,7 @@ func (m *podProcessor) watch(stopCh <-chan struct{}) {
 func (m *podProcessor) flushRealTimeEvent(event *K8sMetaEvent) {
 	// flush to cache
 	m.eventCh <- event
-	// flush to store pipeline, if block, discard and contine
+	// flush to store pipeline, if block, discard and continue
 	select {
 	case m.pipelineCh <- event:
 	default:
@@ -126,7 +127,7 @@ func (m *podProcessor) flushRealTimeEvent(event *K8sMetaEvent) {
 
 func (m *podProcessor) flushPeriodEvent(events []*K8sMetaEvent) {
 	podServiceEvent := m.podServiceProcess(events)
-	// flush to store pipeline, if block, discard and contine
+	// flush to store pipeline, if block, discard and continue
 	for _, event := range append(events, podServiceEvent...) {
 		select {
 		case m.pipelineCh <- event:

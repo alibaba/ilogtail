@@ -1,6 +1,8 @@
 package k8smeta
 
+//revive:disable:exported
 type K8sMetaEvent struct {
+	//revive:enable:exported
 	EventType    string
 	ResourceType string
 	RawObject    interface{}

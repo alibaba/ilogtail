@@ -7,7 +7,9 @@ const (
 	POD     = "pod"
 	SERVICE = "service"
 	// entity link type
+	//revive:disable:var-naming
 	POD_SERVICE = "pod_service"
+	//revive:enable:var-naming
 )
 
 const (

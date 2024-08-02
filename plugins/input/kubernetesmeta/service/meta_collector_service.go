@@ -4,10 +4,11 @@ import (
 	"strconv"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	v1 "k8s.io/api/core/v1"
 )
 
 type serviceCollector struct {
@@ -19,28 +20,25 @@ type serviceCollector struct {
 	serviceCh chan *k8smeta.K8sMetaEvent
 }
 
-func (p *serviceCollector) init() {
-	p.registerInnerProcessor()
-	if p.serviceK8sMeta.Service {
-		p.serviceCh = make(chan *k8smeta.K8sMetaEvent, 100)
-		p.metaManager.RegisterFlush(p.serviceCh, p.serviceK8sMeta.configName, k8smeta.SERVICE)
+func (s *serviceCollector) init() {
+	s.registerInnerProcessor()
+	if s.serviceK8sMeta.Service {
+		s.serviceCh = make(chan *k8smeta.K8sMetaEvent, 100)
+		s.metaManager.RegisterFlush(s.serviceCh, s.serviceK8sMeta.configName, k8smeta.SERVICE)
 	}
-	p.handleServiceEvent()
+	s.handleServiceEvent()
 }
 
 func (s *serviceCollector) handleServiceEvent() {
 	go func() {
-		for {
-			select {
-			case data := <-s.serviceCh:
-				switch data.EventType {
-				case k8smeta.EventTypeAdd:
-					s.HandleServiceAdd(data)
-				case k8smeta.EventTypeDelete:
-					s.HandleServiceDelete(data)
-				default:
-					s.HandleServiceUpdate(data)
-				}
+		for data := range s.serviceCh {
+			switch data.EventType {
+			case k8smeta.EventTypeAdd:
+				s.HandleServiceAdd(data)
+			case k8smeta.EventTypeDelete:
+				s.HandleServiceDelete(data)
+			default:
+				s.HandleServiceUpdate(data)
 			}
 		}
 	}()

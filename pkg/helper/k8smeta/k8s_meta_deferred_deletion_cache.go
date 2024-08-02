@@ -5,8 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type DeferredDeletionMetaStore struct {
@@ -26,8 +27,8 @@ type DeferredDeletionMetaStore struct {
 	gracePeriod     int64
 }
 
-func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan struct{}, refreshInterval, gracePeriod int64, keyFunc cache.KeyFunc, indexRules ...IdxFunc) DeferredDeletionMetaStore {
-	m := DeferredDeletionMetaStore{
+func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan struct{}, refreshInterval, gracePeriod int64, keyFunc cache.KeyFunc, indexRules ...IdxFunc) *DeferredDeletionMetaStore {
+	m := &DeferredDeletionMetaStore{
 		keyFunc:       keyFunc,
 		indexRules:    indexRules,
 		timerHandlers: make([]TimerHandler, 0),
@@ -114,11 +115,10 @@ func (m *DeferredDeletionMetaStore) handleAddOrUpdateEvent(event *K8sMetaEvent) 
 	defer m.lock.Unlock()
 	m.Items[key] = event
 	for _, idxKey := range idxKeys {
-		if _, ok := m.Index[idxKey]; ok {
-			m.Index[idxKey] = append(m.Index[idxKey], key)
-		} else {
-			m.Index[idxKey] = []string{key}
+		if _, ok := m.Index[idxKey]; !ok {
+			m.Index[idxKey] = make([]string, 0)
 		}
+		m.Index[idxKey] = append(m.Index[idxKey], key)
 	}
 }
 
