@@ -35,6 +35,15 @@ extern const std::string LOG_RESERVED_KEY_TRUNCATE_INFO;
 extern const std::string LOG_RESERVED_KEY_INODE;
 extern const std::string LOG_RESERVED_KEY_FILE_OFFSET;
 
+
+extern const std::string METRIC_RESERVED_KEY_NAME;
+extern const std::string METRIC_RESERVED_KEY_LABELS;
+extern const std::string METRIC_RESERVED_KEY_VALUE;
+extern const std::string METRIC_RESERVED_KEY_TIME_NANO;
+
+extern const std::string METRIC_LABELS_SEPARATOR;
+extern const std::string METRIC_LABELS_KEY_VALUE_SEPARATOR;
+
 extern const char* SLS_EMPTY_STR_FOR_INDEX;
 
 // profile project

@@ -38,6 +38,7 @@ protected:
 
 private:
     BatchedEvents CreateBatchedEvents(bool enableNanosecond);
+    BatchedEvents CreateBatchedMetricEvents();
 
     static unique_ptr<FlusherSLS> sFlusher;
 
@@ -103,8 +104,19 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         sls_logs::LogGroup logGroup;
         APSARA_TEST_TRUE(logGroup.ParseFromString(res));
         APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
-        //APSARA_TEST_FALSE(logGroup.logs(0).has_time_ns());
-        //const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = false;
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).key(), "__labels__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890000000");
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
     }
 }
 
@@ -122,6 +134,7 @@ void SLSSerializerUnittest::TestSerializeEventGroupList() {
     APSARA_TEST_EQUAL(10, logPackageList.packages(0).uncompress_size());
     APSARA_TEST_EQUAL(sls_logs::SlsCompressType::SLS_CMP_NONE, logPackageList.packages(0).compress_type());
 }
+
 
 BatchedEvents SLSSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
@@ -163,9 +176,9 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents() {
     e->SetTag(string("key2"), string("value2"));
    
     e->SetTimestamp(1234567890);
-    double value = 0.1
+    double value = 0.1;
     e->SetValue<UntypedSingleValue>(value);
-    e->SetName("test_gauge")
+    e->SetName("test_gauge");
     
     BatchedEvents batch(std::move(group.MutableEvents()),
                         std::move(group.GetSizedTags()),
