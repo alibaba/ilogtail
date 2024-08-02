@@ -34,16 +34,6 @@ const std::string LOG_RESERVED_KEY_TRUNCATE_INFO = "__truncate_info__";
 const std::string LOG_RESERVED_KEY_INODE = "__inode__";
 const std::string LOG_RESERVED_KEY_FILE_OFFSET = "__file_offset__";
 
-
-const std::string METRIC_RESERVED_KEY_NAME = "__name__";
-const std::string METRIC_RESERVED_KEY_LABELS  = "__labels__";
-const std::string METRIC_RESERVED_KEY_VALUE = "__value__";
-const std::string METRIC_RESERVED_KEY_TIME_NANO = "__time_nano__";
-
-const std::string METRIC_LABELS_SEPARATOR = "|";
-const std::string METRIC_LABELS_KEY_VALUE_SEPARATOR = "#$#";
-
-
 const char* SLS_EMPTY_STR_FOR_INDEX = "\01";
 
 // profile project

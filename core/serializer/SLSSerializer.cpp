@@ -16,24 +16,26 @@
 
 #include "application/Application.h"
 #include "common/Flags.h"
+#include "common/TimeUtil.h"
 #include "compression/CompressType.h"
 #include "flusher/FlusherSLS.h"
 
+
 DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
+
+const std::string METRIC_RESERVED_KEY_NAME = "__name__";
+const std::string METRIC_RESERVED_KEY_LABELS  = "__labels__";
+const std::string METRIC_RESERVED_KEY_VALUE = "__value__";
+const std::string METRIC_RESERVED_KEY_TIME_NANO = "__time_nano__";
+
+const std::string METRIC_LABELS_SEPARATOR = "|";
+const std::string METRIC_LABELS_KEY_VALUE_SEPARATOR = "#$#";
 
 using namespace std;
 
 namespace logtail {
 
-std::string Uint32ToSixDigitString(uint32_t number) {
-    std::ostringstream oss;
-    oss << std::setw(9) << std::setfill('0') << number;
-    std::string result = oss.str();
-    if (result.length() > 9) {
-        result = result.substr(result.length() - 9, 9);
-    }
-    return result;
-}
+
 
 bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, string& errorMsg) {
     sls_logs::LogGroup logGroup;
@@ -57,7 +59,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             std::ostringstream oss;
             // set __labels__
             bool hasPrev = false;
-            for (auto it = metricEvent.TagsBegin(); it != metricEvent.TagsEnd(); it++) {
+            for (auto it = metricEvent.TagsBegin(); it != metricEvent.TagsEnd(); ++it) {
                 if (hasPrev) {
                     oss << METRIC_LABELS_SEPARATOR;
                 }
@@ -75,7 +77,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
 
             if (mFlusher->GetContext().GetGlobalConfig().mEnableTimestampNanosecond
                 && metricEvent.GetTimestampNanosecond()) {
-                logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + Uint32ToSixDigitString(metricEvent.GetTimestampNanosecond().value()));   
+                logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + NumberToDigitString(metricEvent.GetTimestampNanosecond().value(), 9));   
                 log->set_time_ns(metricEvent.GetTimestampNanosecond().value());
             } else {
                 logPtr->set_value(std::to_string(metricEvent.GetTimestamp()));   
