@@ -29,16 +29,16 @@ bool InputEBPFProcessSecurity::Init(const Json::Value& config, uint32_t& pluginI
 }
 
 bool InputEBPFProcessSecurity::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::PROCESS,mContext, &mSecurityOptions);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::PROCESS_SECURITY,mContext, &mSecurityOptions);
 }
 
 bool InputEBPFProcessSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
         LOG_INFO(sLogger, ("receive config update", ""));
-        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::PROCESS);
+        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::PROCESS_SECURITY);
         return true;
     }
-    return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::PROCESS);
+    return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::PROCESS_SECURITY);
 }
 
 } // namespace logtail

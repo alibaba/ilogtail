@@ -128,7 +128,7 @@ namespace nami {
 
 enum class PluginType {
   NETWORK = 0,
-  PROCESS = 1,
+  PROCESS_SECURITY = 1,
   FILE_SECURITY = 2,
   NETWORK_SECURITY = 3,
   MAX = 4,

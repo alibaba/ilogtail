@@ -601,12 +601,12 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     security_options.Init(SecurityFilterType::PROCESS, configJson, &ctx, "input_ebpf_processprobe_security");
     bool res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 0,
-        nami::PluginType::PROCESS,
+        nami::PluginType::PROCESS_SECURITY,
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
     auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
-    EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS);
+    EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto process_conf = std::get<nami::ProcessConfig>(conf->config_);
     EXPECT_TRUE(process_conf.process_security_cb_ != nullptr);
@@ -620,12 +620,12 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 0,
-        nami::PluginType::PROCESS,
+        nami::PluginType::PROCESS_SECURITY,
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
     conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
-    EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS);
+    EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
     auto after_conf = std::get<nami::ProcessConfig>(conf->config_);
 

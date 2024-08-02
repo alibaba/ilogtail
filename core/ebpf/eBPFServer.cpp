@@ -57,7 +57,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     // call update function
     // step2: call init function
     switch(type) {
-    case nami::PluginType::PROCESS: {
+    case nami::PluginType::PROCESS_SECURITY: {
         mProcessSecureCB->update_context(ctx, plugin_index);
         nami::ProcessConfig pconfig;
         pconfig.process_security_cb_ = std::bind(&SecurityHandler::handle, mProcessSecureCB.get(), std::placeholders::_1);
@@ -119,7 +119,7 @@ bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginTyp
 bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginType type) {
     LOG_INFO(sLogger, ("receive plugin update", "now suspend for a while"));
     switch (type) {
-    case nami::PluginType::PROCESS:{
+    case nami::PluginType::PROCESS_SECURITY:{
         if (mProcessSecureCB) mProcessSecureCB->update_context(nullptr, 0);
         return true;
     }
