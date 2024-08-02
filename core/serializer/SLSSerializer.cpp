@@ -25,6 +25,12 @@ using namespace std;
 
 namespace logtail {
 
+std::string Uint32ToSixDigitString(uint32_t number) {
+    std::ostringstream oss;
+    oss << std::setw(6) << std::setfill('0') << number;
+    return oss.str();
+}
+
 bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, string& errorMsg) {
     sls_logs::LogGroup logGroup;
     for (const auto& e : group.mEvents) {
@@ -57,10 +63,19 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             auto logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_LABELS);
             logPtr->set_value(oss.str());
+            // set time
+            log->set_time(metricEvent.GetTimestamp());
             // set __time_nano__
             logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_TIME_NANO);
-            logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + "000000");   
+
+            if (mFlusher->GetContext().GetGlobalConfig().mEnableTimestampNanosecond
+                && metricEvent.GetTimestampNanosecond()) {
+                logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + Uint32ToSixDigitString(metricEvent.GetTimestampNanosecond().value()));   
+                log->set_time_ns(metricEvent.GetTimestampNanosecond().value());
+            } else {
+                logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + "000000");   
+            }
             // set __value__
             if (metricEvent.Is<UntypedSingleValue>()) {
                 double value = metricEvent.GetValue<UntypedSingleValue>()->mValue;
@@ -72,8 +87,6 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_NAME);
             logPtr->set_value(metricEvent.GetName().to_string());
-            // set time
-            log->set_time(metricEvent.GetTimestamp());
         } else {
             errorMsg = "unsupported event type in event group";
             return false;

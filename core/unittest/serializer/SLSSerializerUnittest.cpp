@@ -38,7 +38,7 @@ protected:
 
 private:
     BatchedEvents CreateBatchedEvents(bool enableNanosecond);
-    BatchedEvents CreateBatchedMetricEvents();
+    BatchedEvents CreateBatchedMetricEvents(bool enableNanosecond);
 
     static unique_ptr<FlusherSLS> sFlusher;
 
@@ -100,7 +100,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
     {
         // metric event
         string res, errorMsg;
-        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(), res, errorMsg));
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(false), res, errorMsg));
         sls_logs::LogGroup logGroup;
         APSARA_TEST_TRUE(logGroup.ParseFromString(res));
         APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
@@ -117,6 +117,30 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
+    }
+    {
+        // metric event with EnableTimestampNanosecond 
+        const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = true;
+        string res, errorMsg;
+        
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true), res, errorMsg));
+        sls_logs::LogGroup logGroup;
+        APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+        APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).key(), "__labels__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890000001");
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
+
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
+        const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = false;
     }
 }
 
@@ -161,7 +185,7 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) 
 }
 
 
-BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents() {
+BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanosecond) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
     group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
@@ -174,8 +198,11 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents() {
     MetricEvent* e = group.AddMetricEvent();
     e->SetTag(string("key1"), string("value1"));
     e->SetTag(string("key2"), string("value2"));
-   
-    e->SetTimestamp(1234567890);
+    if (enableNanosecond) {
+        e->SetTimestamp(1234567890, 1);
+    } else {
+        e->SetTimestamp(1234567890);
+    }
     double value = 0.1;
     e->SetValue<UntypedSingleValue>(value);
     e->SetName("test_gauge");
