@@ -84,7 +84,7 @@ bool ProcessQueueManager::DeleteQueue(QueueKey key) {
     return true;
 }
 
-bool ProcessQueueManager::IsValidToPush(QueueKey key) {
+bool ProcessQueueManager::IsValidToPush(QueueKey key) const {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter != mQueues.end()) {

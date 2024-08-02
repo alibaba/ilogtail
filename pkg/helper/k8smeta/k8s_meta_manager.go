@@ -1,8 +1,11 @@
 package k8smeta
 
 import (
+	"context"
 	"sync"
+	"sync/atomic"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -14,25 +17,31 @@ var onceManager sync.Once
 
 var refreshInterval = 60
 
-type MetaManager struct {
-	clientset *kubernetes.Clientset
-
-	// 延迟删除的
-	PodProcessor *podProcessor
-	//
-	ServiceProcessor *serviceProcessor
+type FlushCh struct {
+	Ch         chan *K8sMetaEvent
+	ConfigName string
 }
 
-type MetaProcessor interface {
-	init()
-	watch(stopCh <-chan struct{})
-	RegisterHandlers(addHandler, updateHandler, deleteHandler HandlerFunc, configName string)
-	UnregisterHandlers(configName string)
+type MetaManager struct {
+	clientset *kubernetes.Clientset
+	stopCh    chan struct{}
+
+	eventCh         chan *K8sMetaEvent
+	pipelineChs     map[string][]*FlushCh
+	pipelineChsLock sync.RWMutex
+	ready           atomic.Bool
+
+	PodProcessor     *podProcessor
+	ServiceProcessor *serviceProcessor
 }
 
 func GetMetaManagerInstance() *MetaManager {
 	onceManager.Do(func() {
-		metaManager = &MetaManager{}
+		metaManager = &MetaManager{
+			stopCh:      make(chan struct{}),
+			eventCh:     make(chan *K8sMetaEvent, 100),
+			pipelineChs: make(map[string][]*FlushCh),
+		}
 	})
 	return metaManager
 }
@@ -58,32 +67,76 @@ func (m *MetaManager) Init(configPath string) (err error) {
 	}
 	m.clientset = clientset
 
-	m.ServiceProcessor = &serviceProcessor{
-		metaManager: m,
-	}
-	m.ServiceProcessor.init()
-
-	m.PodProcessor = &podProcessor{
-		metaManager:      m,
-		serviceMetaStore: m.ServiceProcessor.metaStore,
-	}
-	m.PodProcessor.init()
-
+	go func() {
+		m.ServiceProcessor = &serviceProcessor{
+			metaManager: m,
+		}
+		m.ServiceProcessor.init(m.stopCh, m.eventCh)
+		m.PodProcessor = &podProcessor{
+			metaManager:      m,
+			serviceMetaStore: m.ServiceProcessor.metaStore,
+		}
+		m.PodProcessor.init(m.stopCh, m.eventCh)
+		m.ready.Store(true)
+		logger.Info(context.Background(), "init k8s meta manager", "success")
+	}()
 	return nil
 }
 
-func (m *MetaManager) Run(stopCh <-chan struct{}) {
-
-	m.ServiceProcessor.watch(stopCh)
-	m.PodProcessor.watch(stopCh)
-
-	// 最后
-	m.runServer(stopCh)
+func (m *MetaManager) Run(stopCh chan struct{}) {
+	m.stopCh = stopCh
+	m.runServer()
+	m.runFlush()
 }
 
-func (m *MetaManager) runServer(stopCh <-chan struct{}) {
-	// meta server需要注册的handler
-	metadataHandler := NewMetadataHandler(m.PodProcessor.metaStore)
-	m.PodProcessor.metaStore.DeferredDeleteHandler = metadataHandler.watchCache.handlePodDelete
-	go metadataHandler.K8sServerRun(stopCh)
+func (m *MetaManager) RegisterFlush(ch chan *K8sMetaEvent, configName string, resourceType string) {
+	m.pipelineChsLock.Lock()
+	defer m.pipelineChsLock.Unlock()
+	if _, ok := m.pipelineChs[resourceType]; !ok {
+		m.pipelineChs[resourceType] = make([]*FlushCh, 0)
+	}
+	pipelineCh := &FlushCh{
+		Ch:         ch,
+		ConfigName: configName,
+	}
+	m.pipelineChs[resourceType] = append(m.pipelineChs[resourceType], pipelineCh)
+}
+
+func (m *MetaManager) UnRegisterFlush(configName string, resourceType string) {
+	m.pipelineChsLock.Lock()
+	defer m.pipelineChsLock.Unlock()
+	if _, ok := m.pipelineChs[resourceType]; ok {
+		for i, pipelineCh := range m.pipelineChs[resourceType] {
+			if pipelineCh.ConfigName == configName {
+				m.pipelineChs[resourceType] = append(m.pipelineChs[resourceType][:i], m.pipelineChs[resourceType][i+1:]...)
+			}
+		}
+	}
+}
+
+func (m *MetaManager) runServer() {
+	metadataHandler := NewMetadataHandler()
+	go metadataHandler.K8sServerRun(m.stopCh)
+}
+
+func (m *MetaManager) runFlush() {
+	go func() {
+		for {
+			select {
+			case event := <-m.eventCh:
+				m.pipelineChsLock.RLock()
+				pipelineChs := m.pipelineChs[event.ResourceType]
+				for _, pipelineCh := range pipelineChs {
+					select {
+					case pipelineCh.Ch <- event:
+					default:
+						logger.Error(context.Background(), "ENTITY_PIPELINE_QUEUE_FULL", "pipelineCh is full, discard in current sync")
+					}
+				}
+				m.pipelineChsLock.RUnlock()
+			case <-m.stopCh:
+				return
+			}
+		}
+	}()
 }

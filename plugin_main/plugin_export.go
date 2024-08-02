@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"runtime"
 	"runtime/debug"
 	"sync"
@@ -275,16 +276,16 @@ func initPluginBase(cfgStr string) int {
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
 		LoadGlobalConfig(cfgStr)
-		// TODO: for golang debug
-		instance := k8smeta.GetMetaManagerInstance()
-		err = instance.Init("")
-		if err != nil {
-			fmt.Println("init err")
-			return
+		if len(os.Getenv("ENABLE_KUBERNETES_META_COLLECT")) != 0 {
+			instance := k8smeta.GetMetaManagerInstance()
+			err := instance.Init("/workspaces/kubeconfig")
+			if err != nil {
+				logger.Error(context.Background(), "K8S_META_INIT_FAIL", "init k8s meta manager", "fail")
+				return
+			}
+			stopCh := make(chan struct{})
+			instance.Run(stopCh)
 		}
-		stopCh := make(chan struct{})
-		instance.Run(stopCh)
-
 		if err := pluginmanager.Init(); err != nil {
 			logger.Error(context.Background(), "PLUGIN_ALARM", "init plugin error", err)
 			rst = 1

@@ -1,143 +1,181 @@
 package k8smeta
 
 import (
+	"context"
 	"sync"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"k8s.io/client-go/tools/cache"
 )
 
 type DeferredDeletionMetaStore struct {
-	cacheMetaStore
+	keyFunc       cache.KeyFunc
+	indexRules    []IdxFunc
+	timerHandlers []TimerHandler
 
-	deleteKeysMutex sync.Mutex
-	deleteKeys      map[string]struct{}
+	eventCh chan *K8sMetaEvent
+	stopCh  <-chan struct{}
 
-	DeferredDeleteHandler HandlerFunc
-
-	deleteOnce sync.Once
+	// cache
+	Items map[string]*K8sMetaEvent
+	Index map[string][]string
+	lock  sync.RWMutex
 
 	refreshInterval int64
 	gracePeriod     int64
 }
 
-func (m *DeferredDeletionMetaStore) RegisterHandlers(addHandler, updateHandler, deleteHandler HandlerFunc, configName string) {
-	m.cacheMetaStore.RegisterHandlers(addHandler, updateHandler, deleteHandler, configName)
-	m.deleteLoop()
-}
+func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan struct{}, refreshInterval, gracePeriod int64, keyFunc cache.KeyFunc, indexRules ...IdxFunc) DeferredDeletionMetaStore {
+	m := DeferredDeletionMetaStore{
+		keyFunc:       keyFunc,
+		indexRules:    indexRules,
+		timerHandlers: make([]TimerHandler, 0),
 
-func (m *DeferredDeletionMetaStore) UnregisterHandlers(configName string) {
-	m.cacheMetaStore.UnregisterHandlers(configName)
-}
+		eventCh: eventCh,
+		stopCh:  stopCh,
 
-// 不cache，只处理
-func (m *DeferredDeletionMetaStore) AddWithoutCache(obj *ObjectWrapper) error {
-	return m.cacheMetaStore.AddWithoutCache(obj)
-}
+		Items: make(map[string]*K8sMetaEvent),
+		Index: make(map[string][]string),
 
-func (m *DeferredDeletionMetaStore) Add(obj interface{}) error {
-	return m.cacheMetaStore.Add(obj)
-}
-
-func (m *DeferredDeletionMetaStore) Update(obj interface{}) error {
-	return m.cacheMetaStore.Update(obj)
-}
-
-func (m *DeferredDeletionMetaStore) Delete(obj interface{}) error {
-	key, err := m.keyFunc(obj)
-	if err != nil {
-		return err
+		refreshInterval: refreshInterval,
+		gracePeriod:     gracePeriod,
 	}
-	{
-		m.deleteKeysMutex.Lock()
-		defer m.deleteKeysMutex.Unlock()
-		m.deleteKeys[key] = struct{}{}
+	return m
+}
+
+func (m *DeferredDeletionMetaStore) Start(timerHandlers ...TimerHandler) {
+	m.timerHandlers = timerHandlers
+	go m.handleEvent()
+}
+
+func (m *DeferredDeletionMetaStore) Get(key string) []*K8sMetaEvent {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	realKeys := m.Index[key]
+	result := make([]*K8sMetaEvent, 0)
+	for _, k := range realKeys {
+		result = append(result, m.Items[k])
 	}
+	return result
+}
 
-	m.cacheMetaStore.lock.Lock()
-	objWrapper, ok := m.cacheMetaStore.Items[key]
-	nowTime := time.Now().Unix()
-	if !ok {
-		return nil
+func (m *DeferredDeletionMetaStore) List() []*K8sMetaEvent {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	result := make([]*K8sMetaEvent, 0)
+	for _, item := range m.Items {
+		result = append(result, item)
 	}
-
-	//	标记删除
-	if !objWrapper.IsDeleted {
-		objWrapper.UpdateTime = nowTime
-		objWrapper.IsDeleted = true
-	}
-	objWrapper.RawObject = obj
-	m.cacheMetaStore.lock.Unlock()
-
-	m.cacheMetaStore.deleteLock.Lock()
-	defer m.cacheMetaStore.deleteLock.Unlock()
-	for _, handler := range m.cacheMetaStore.deleteHandlers {
-		handler(objWrapper)
-	}
-	return nil
+	return result
 }
 
-// List implements the List method of the store interface.
-func (m *DeferredDeletionMetaStore) List() []interface{} {
-	return m.cacheMetaStore.List()
-}
-
-// custom implement
-func (m *DeferredDeletionMetaStore) ListObjWrapper() []*ObjectWrapper {
-	return m.cacheMetaStore.ListObjWrapper()
-}
-
-func (m *DeferredDeletionMetaStore) ListObjWrapperByKeys(keys []string) map[string]*ObjectWrapper {
-	return m.cacheMetaStore.ListObjWrapperByKeys(keys)
-}
-
-// ListKeys implements the ListKeys method of the store interface.
-func (m *DeferredDeletionMetaStore) ListKeys() []string {
-	return nil
-}
-
-// Get implements the Get method of the store interface.
-func (m *DeferredDeletionMetaStore) Get(obj interface{}) (item interface{}, exists bool, err error) {
-	return nil, false, nil
-}
-
-// GetByKey implements the GetByKey method of the store interface.
-func (m *DeferredDeletionMetaStore) GetByKey(key string) (item interface{}, exists bool, err error) {
-	return nil, false, nil
-}
-
-func (m *DeferredDeletionMetaStore) Replace(list []interface{}, str string) error {
-	return m.cacheMetaStore.Replace(list, str)
-}
-
-func (m *DeferredDeletionMetaStore) Resync() error {
-	return nil
-}
-
-func (m *DeferredDeletionMetaStore) deleteLoop() {
-	m.deleteOnce.Do(func() {
-		go func() {
-			interval := time.Second * time.Duration(m.refreshInterval)
-			ticker := time.NewTicker(interval)
-			for range ticker.C {
-				now := time.Now().Unix()
-				m.deleteKeysMutex.Lock()
-				m.lock.Lock()
-				for key, _ := range m.deleteKeys {
-					obj, ok := m.Items[key]
-					if !ok || !obj.IsDeleted {
-						// 如果没有找到，就从删除队列中删掉
-						delete(m.deleteKeys, key)
-						continue
-					}
-					// 找到了，如果超时就删除
-					if now-obj.UpdateTime > m.gracePeriod {
-						m.DeferredDeleteHandler(obj)
-						delete(m.deleteKeys, key)
-						delete(m.Items, key)
-					}
-				}
-				m.lock.Unlock()
-				m.deleteKeysMutex.Unlock()
+func (m *DeferredDeletionMetaStore) handleEvent() {
+	ticker := time.NewTicker(time.Duration(m.refreshInterval) * time.Second)
+	for {
+		select {
+		case event := <-m.eventCh:
+			switch event.EventType {
+			case EventTypeAdd:
+				m.handleAddEvent(event)
+			case EventTypeUpdate:
+				m.handleUpdateEvent(event)
+			case EventTypeDelete:
+				m.handleDeleteEvent(event)
+			case EventTypeDeferredDelete:
+				m.handleDeferredDeleteEvent(event)
+			default:
+				logger.Error(context.Background(), "unknown event type", event.EventType)
 			}
-		}()
-	})
+		case <-ticker.C:
+			m.handleTimerEvent()
+		case <-m.stopCh:
+			return
+		}
+	}
+}
+
+func (m *DeferredDeletionMetaStore) handleAddEvent(event *K8sMetaEvent) {
+	m.handleAddOrUpdateEvent(event)
+}
+
+func (m *DeferredDeletionMetaStore) handleUpdateEvent(event *K8sMetaEvent) {
+	m.handleAddOrUpdateEvent(event)
+}
+
+func (m *DeferredDeletionMetaStore) handleAddOrUpdateEvent(event *K8sMetaEvent) {
+	key, err := m.keyFunc(event.RawObject)
+	if err != nil {
+		logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "handle k8s meta with keyFunc error", err)
+		return
+	}
+	idxKeys := m.getIdxKeys(event)
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	m.Items[key] = event
+	for _, idxKey := range idxKeys {
+		if _, ok := m.Index[idxKey]; ok {
+			m.Index[idxKey] = append(m.Index[idxKey], key)
+		} else {
+			m.Index[idxKey] = []string{key}
+		}
+	}
+}
+
+func (m *DeferredDeletionMetaStore) handleDeleteEvent(event *K8sMetaEvent) {
+	go func() {
+		// wait and add a deferred delete event
+		time.Sleep(time.Duration(m.gracePeriod) * time.Second)
+		m.eventCh <- &K8sMetaEvent{
+			EventType:    EventTypeDeferredDelete,
+			ResourceType: event.ResourceType,
+			RawObject:    event.RawObject,
+		}
+	}()
+}
+
+func (m *DeferredDeletionMetaStore) handleDeferredDeleteEvent(event *K8sMetaEvent) {
+	key, err := m.keyFunc(event.RawObject)
+	if err != nil {
+		logger.Error(context.Background(), "handleDeferredDeleteEvent keyFunc error", err)
+		return
+	}
+	idxKeys := m.getIdxKeys(event)
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	delete(m.Items, key)
+	for _, idxKey := range idxKeys {
+		for i, k := range m.Index[idxKey] {
+			if k == key {
+				m.Index[idxKey] = append(m.Index[idxKey][:i], m.Index[idxKey][i+1:]...)
+				break
+			}
+		}
+	}
+}
+
+func (m *DeferredDeletionMetaStore) handleTimerEvent() {
+	// flush all
+	m.lock.Lock()
+	itemList := make([]*K8sMetaEvent, 0)
+	for _, item := range m.Items {
+		itemList = append(itemList, item)
+	}
+	m.lock.Unlock()
+	for _, handler := range m.timerHandlers {
+		handler(itemList)
+	}
+}
+
+func (m *DeferredDeletionMetaStore) getIdxKeys(event *K8sMetaEvent) []string {
+	result := make([]string, 0)
+	for _, rule := range m.indexRules {
+		idxKeys, err := rule(event.RawObject)
+		if err != nil {
+			logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "handle k8s meta with idx rules error", err)
+			return nil
+		}
+		result = append(result, idxKeys...)
+	}
+	return result
 }

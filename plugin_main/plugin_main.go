@@ -18,6 +18,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/alibaba/ilogtail/pkg/doc"
@@ -54,15 +55,16 @@ func main() {
 	} else if InitPluginBaseV2(globalCfg) != 0 {
 		return
 	}
-	// TODO: for golang debug
-	instance := k8smeta.GetMetaManagerInstance()
-	err = instance.Init("/workspaces/kubeconfig")
-	if err != nil {
-		fmt.Println("init err")
-		return
+	if len(os.Getenv("ENABLE_KUBERNETES_META_COLLECT")) != 0 {
+		instance := k8smeta.GetMetaManagerInstance()
+		err := instance.Init("/workspaces/kubeconfig")
+		if err != nil {
+			logger.Error(context.Background(), "K8S_META_INIT_FAIL", "init k8s meta manager", "fail")
+			return
+		}
+		stopCh := make(chan struct{})
+		instance.Run(stopCh)
 	}
-	stopCh := make(chan struct{})
-	instance.Run(stopCh)
 
 	// load the static configs.
 	for i, cfg := range pluginCfgs {

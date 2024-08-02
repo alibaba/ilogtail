@@ -2,6 +2,7 @@ package service
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -14,16 +15,38 @@ type serviceCollector struct {
 	serviceProcessors []ProcessFunc
 	metaManager       *k8smeta.MetaManager
 	collector         pipeline.Collector
+
+	serviceCh chan *k8smeta.K8sMetaEvent
 }
 
 func (p *serviceCollector) init() {
 	p.registerInnerProcessor()
 	if p.serviceK8sMeta.Service {
-		p.metaManager.ServiceProcessor.RegisterHandlers(p.HandleServiceAdd, p.HandleServiceUpdate, p.HandleServiceDelete, p.serviceK8sMeta.configName)
+		p.serviceCh = make(chan *k8smeta.K8sMetaEvent, 100)
+		p.metaManager.RegisterFlush(p.serviceCh, p.serviceK8sMeta.configName, k8smeta.SERVICE)
 	}
+	p.handleServiceEvent()
 }
 
-func (s *serviceCollector) HandleServiceAdd(data *k8smeta.ObjectWrapper) {
+func (s *serviceCollector) handleServiceEvent() {
+	go func() {
+		for {
+			select {
+			case data := <-s.serviceCh:
+				switch data.EventType {
+				case k8smeta.EventTypeAdd:
+					s.HandleServiceAdd(data)
+				case k8smeta.EventTypeDelete:
+					s.HandleServiceDelete(data)
+				default:
+					s.HandleServiceUpdate(data)
+				}
+			}
+		}
+	}()
+}
+
+func (s *serviceCollector) HandleServiceAdd(data *k8smeta.K8sMetaEvent) {
 	for _, processor := range s.serviceProcessors {
 		log := processor(data, "create")
 		if log != nil {
@@ -32,7 +55,7 @@ func (s *serviceCollector) HandleServiceAdd(data *k8smeta.ObjectWrapper) {
 	}
 }
 
-func (s *serviceCollector) HandleServiceUpdate(data *k8smeta.ObjectWrapper) {
+func (s *serviceCollector) HandleServiceUpdate(data *k8smeta.K8sMetaEvent) {
 	for _, processor := range s.serviceProcessors {
 		log := processor(data, "update")
 		if log != nil {
@@ -41,7 +64,7 @@ func (s *serviceCollector) HandleServiceUpdate(data *k8smeta.ObjectWrapper) {
 	}
 }
 
-func (s *serviceCollector) HandleServiceDelete(data *k8smeta.ObjectWrapper) {
+func (s *serviceCollector) HandleServiceDelete(data *k8smeta.K8sMetaEvent) {
 	for _, processor := range s.serviceProcessors {
 		log := processor(data, "delete")
 		if log != nil {
@@ -60,7 +83,7 @@ func (s *serviceCollector) registerInnerProcessor() {
 	}
 }
 
-func (s *serviceCollector) processServiceEntity(data *k8smeta.ObjectWrapper, method string) *protocol.Log {
+func (s *serviceCollector) processServiceEntity(data *k8smeta.K8sMetaEvent, method string) *protocol.Log {
 	log := &protocol.Log{}
 	if obj, ok := data.RawObject.(*v1.Service); ok {
 		log.Contents = make([]*protocol.Log_Content, 0)
@@ -75,7 +98,8 @@ func (s *serviceCollector) processServiceEntity(data *k8smeta.ObjectWrapper, met
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "namespace", Value: obj.Namespace})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "name", Value: obj.Name})
-
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__category__", Value: "entity"})
+		protocol.SetLogTime(log, uint32(time.Now().Unix()))
 		return log
 	}
 	return nil

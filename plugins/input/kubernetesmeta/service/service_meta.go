@@ -6,7 +6,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type ProcessFunc func(data *k8smeta.ObjectWrapper, method string) *protocol.Log
+type ProcessFunc func(data *k8smeta.K8sMetaEvent, method string) *protocol.Log
 
 type ServiceK8sMeta struct {
 	// entity switch
@@ -51,17 +51,16 @@ func (s *ServiceK8sMeta) Description() string {
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceK8sMeta) Stop() error {
 	if s.Pod {
-		s.metaManager.PodProcessor.UnregisterHandlers(s.configName)
+		s.metaManager.UnRegisterFlush(s.configName, k8smeta.POD)
 	}
 	if s.Service {
-		s.metaManager.ServiceProcessor.UnregisterHandlers(s.configName)
+		s.metaManager.UnRegisterFlush(s.configName, k8smeta.SERVICE)
 	}
 	return nil
 }
 
 func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 	s.collector = collector
-	// 注册需要在collector之后做
 	if s.Pod {
 		podCollector := &podCollector{
 			serviceK8sMeta: s,
