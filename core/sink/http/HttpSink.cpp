@@ -31,7 +31,7 @@ namespace logtail {
 bool HttpSink::Init() {
     mClient = curl_multi_init();
     if (mClient == nullptr) {
-        LOG_ERROR(sLogger, ("failed to init http sink", "failed to init curl client"));
+        LOG_ERROR(sLogger, ("failed to init http sink", "failed to init curl multi client"));
         return false;
     }
     mThreadRes = async(launch::async, &HttpSink::Run, this);
@@ -152,7 +152,7 @@ void HttpSink::DoRun() {
         }
         if (curlTimeout >= 0) {
             auto sec = curlTimeout / 1000;
-            // special treatment, do not know why
+            // to avoid waiting too long so that adding new request is delayed
             if (sec <= 1) {
                 timeout.tv_sec = sec;
                 timeout.tv_usec = (curlTimeout % 1000) * 1000;
@@ -207,8 +207,8 @@ void HttpSink::HandleCompletedRequests() {
                     if (++request->mTryCnt <= 3) {
                         LOG_WARNING(
                             sLogger,
-                            ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt)(
-                                "errMsg", curl_easy_strerror(msg->data.result))(
+                            ("failed to send request", "retry immediately")("item address", request->mItem)(
+                                "try cnt", request->mTryCnt)("errMsg", curl_easy_strerror(msg->data.result))(
                                 "config-flusher-dst",
                                 QueueKeyManager::GetInstance()->GetName(request->mItem->mFlusher->GetQueueKey())));
                         AddRequestToClient(unique_ptr<HttpSinkRequest>(request));

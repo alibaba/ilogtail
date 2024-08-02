@@ -29,7 +29,7 @@ public:
     void Push(T&& data) {
         std::lock_guard<std::mutex> lock(mMux);
         mQueue.push(std::move(data));
-        mCond.notify_one();
+        mCond.notify_all();
     }
 
     bool WaitAndPop(T& value, int64_t ms) {
