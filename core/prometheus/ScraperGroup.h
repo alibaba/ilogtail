@@ -52,8 +52,6 @@ private:
                                  ReadWriteLock& rwLock,
                                  std::unordered_set<std::string>& validationSet,
                                  std::string hash);
-    void ProcessScrapeWorkUpdate();
-    void UpdateScrapeWork(const std::string& jobName);
 
     std::shared_ptr<Timer> mTimer;
 
