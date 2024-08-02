@@ -59,6 +59,7 @@ struct HttpRequest {
 struct AsynHttpRequest : public HttpRequest {
     HttpResponse mResponse;
     void* mPrivateData = nullptr;
+    time_t mEnqueTime = 0;
 
     AsynHttpRequest(const std::string& method,
                     bool httpsFlag,

@@ -52,11 +52,11 @@ void HttpSink::Run() {
     while (true) {
         unique_ptr<HttpSinkRequest> request;
         if (mQueue.WaitAndPop(request, 500)) {
-            LOG_DEBUG(sLogger,
-                      ("got item from flusher runner, item address", request->mItem)(
-                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                          "wait time", ToString(time(nullptr) - request->mItem->mLastSendTime))(
-                          "try cnt", ToString(request->mTryCnt)));
+            LOG_DEBUG(
+                sLogger,
+                ("got item from flusher runner, item address", request->mItem)(
+                    "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                    "wait time", ToString(time(nullptr) - request->mEnqueTime))("try cnt", ToString(request->mTryCnt)));
             if (!AddRequestToClient(std::move(request))) {
                 continue;
             }
@@ -131,11 +131,11 @@ void HttpSink::DoRun() {
 
         unique_ptr<HttpSinkRequest> request;
         if (mQueue.TryPop(request)) {
-            LOG_DEBUG(sLogger,
-                      ("got item from flusher runner, item address", request->mItem)(
-                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                          "wait time", ToString(time(nullptr) - request->mItem->mLastSendTime))(
-                          "try cnt", ToString(request->mTryCnt)));
+            LOG_DEBUG(
+                sLogger,
+                ("got item from flusher runner, item address", request->mItem)(
+                    "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                    "wait time", ToString(time(nullptr) - request->mEnqueTime))("try cnt", ToString(request->mTryCnt)));
             if (AddRequestToClient(std::move(request))) {
                 ++runningHandlers;
             }
