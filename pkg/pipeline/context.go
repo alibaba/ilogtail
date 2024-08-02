@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/config"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type CommonContext struct {
@@ -38,12 +37,6 @@ type MetricsRecord struct {
 	MetricCollectors []MetricCollector
 }
 
-func (m *MetricsRecord) appendLabels(log *protocol.Log) {
-	for _, label := range m.Labels {
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: label.Key, Value: label.Value})
-	}
-}
-
 func (m *MetricsRecord) insertLabels(record map[string]string) {
 	for _, label := range m.Labels {
 		record[label.Key] = label.Value
@@ -54,23 +47,6 @@ func (m *MetricsRecord) RegisterMetricCollector(collector MetricCollector) {
 	m.Lock()
 	defer m.Unlock()
 	m.MetricCollectors = append(m.MetricCollectors, collector)
-}
-
-func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
-	m.RLock()
-	defer m.RUnlock()
-	for _, metricCollector := range m.MetricCollectors {
-		metrics := metricCollector.Collect()
-		for _, metric := range metrics {
-			log := &protocol.Log{}
-			metric.Serialize(log)
-			if len(log.Contents) == 0 {
-				continue
-			}
-			m.appendLabels(log) // append metrics record labels
-			logGroup.Logs = append(logGroup.Logs, log)
-		}
-	}
 }
 
 // ExportMetricRecords is used for exporting metrics records.
@@ -126,9 +102,6 @@ type Context interface {
 	GetRuntimeContext() context.Context
 	GetPipelineScopeConfig() *config.GlobalConfig
 	GetExtension(name string, cfg any) (Extension, error)
-	// RegisterCounterMetric(metric CounterMetric)
-	// RegisterStringMetric(metric StringMetric)
-	// RegisterLatencyMetric(metric LatencyMetric)
 
 	SaveCheckPoint(key string, value []byte) error
 	GetCheckPoint(key string) (value []byte, exist bool)
@@ -139,5 +112,6 @@ type Context interface {
 	RegisterMetricRecord(labels []LabelPair) *MetricsRecord // for v1.8.8 compatible
 	GetMetricRecord() *MetricsRecord                        // for v1.8.8 compatible
 	ExportMetricRecords() []map[string]string               // for v1.8.8 compatible
-	MetricSerializeToPB(logGroup *protocol.LogGroup)
+	RegisterLogstoreConfigMetricRecord(labels []LabelPair) *MetricsRecord
+	GetLogstoreConfigMetricRecord() *MetricsRecord
 }

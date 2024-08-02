@@ -15,24 +15,29 @@
 package pluginmanager
 
 import (
+	"time"
+
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type ProcessorWrapper struct {
-	Processor pipeline.ProcessorV1
-	Config    *LogstoreConfig
+type ProcessorWrapperV1 struct {
+	ProcessorWrapper
 	LogsChan  chan *pipeline.LogWithContext
-	Priority  int
+	Processor pipeline.ProcessorV1
 }
 
-type ProcessorWrapperArray []*ProcessorWrapper
+func (wrapper *ProcessorWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
+	wrapper.InitMetricRecord(pluginMeta)
 
-func (c ProcessorWrapperArray) Len() int {
-	return len(c)
+	return wrapper.Processor.Init(wrapper.Config.Context)
 }
-func (c ProcessorWrapperArray) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
-}
-func (c ProcessorWrapperArray) Less(i, j int) bool {
-	return c[i].Priority < c[j].Priority
+
+func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol.Log {
+	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
+	startTime := time.Now()
+	result := wrapper.Processor.ProcessLogs(logArray)
+	wrapper.procTimeMS.Add(time.Since(startTime).Milliseconds())
+	wrapper.procOutRecordsTotal.Add(int64(len(result)))
+	return result
 }

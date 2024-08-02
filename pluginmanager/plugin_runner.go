@@ -40,13 +40,15 @@ const (
 type PluginRunner interface {
 	Init(inputQueueSize int, aggrQueueSize int) error
 
-	Initialized() error
+	AddDefaultAggregatorIfEmpty() error
+
+	AddDefaultFlusherIfEmpty() error
 
 	ReceiveRawLog(log *pipeline.LogWithContext)
 
 	ReceiveLogGroup(logGroup pipeline.LogGroupWithContext)
 
-	AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error
+	AddPlugin(pluginMeta *pipeline.PluginMeta, category pluginCategory, plugin interface{}, config map[string]interface{}) error
 
 	GetExtension(name string) (pipeline.Extension, bool)
 
