@@ -28,7 +28,11 @@ namespace logtail {
 std::string Uint32ToSixDigitString(uint32_t number) {
     std::ostringstream oss;
     oss << std::setw(6) << std::setfill('0') << number;
-    return oss.str();
+    std::string result = oss.str();
+    if (result.length() > 6) {
+        result = result.substr(result.length() - 6, 6);
+    }
+    return result;
 }
 
 bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, string& errorMsg) {
