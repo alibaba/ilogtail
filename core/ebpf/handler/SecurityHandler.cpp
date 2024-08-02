@@ -28,8 +28,8 @@ void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>
     PipelineEventGroup event_group(source_buffer);
     // aggregate to pipeline event group
     // set host ips
-    event_group.SetTag("host_ip", mHostIp);
-    event_group.SetTag("host_name", mHostName);
+    event_group.SetTag("host.ip", mHostIp);
+    event_group.SetTag("host.name", mHostName);
     for (auto& x : events) {
         auto event = event_group.AddLogEvent();
         for (auto& tag : x->GetAllTags()) {
