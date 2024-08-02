@@ -32,29 +32,29 @@ class InputRunnerMockHttpClient : public sdk::HTTPClient {
 public:
     void Send(const std::string& httpMethod,
               const std::string& host,
-              const int32_t port,
+              int32_t port,
               const std::string& url,
               const std::string& queryString,
               const std::map<std::string, std::string>& header,
               const std::string& body,
-              const int32_t timeout,
+              int32_t timeout,
               sdk::HttpMessage& httpMessage,
               const std::string& intf,
-              const bool httpsFlag);
+              bool httpsFlag) override;
     void AsynSend(sdk::AsynRequest* request);
 };
 
-void InputRunnerMockHttpClient::Send(const std::string& httpMethod,
-                                     const std::string& host,
-                                     const int32_t port,
+void InputRunnerMockHttpClient::Send(const std::string&,
+                                     const std::string&,
+                                     const int32_t,
                                      const std::string& url,
-                                     const std::string& queryString,
-                                     const std::map<std::string, std::string>& header,
-                                     const std::string& body,
-                                     const int32_t timeout,
+                                     const std::string&,
+                                     const std::map<std::string, std::string>&,
+                                     const std::string&,
+                                     const int32_t,
                                      sdk::HttpMessage& httpMessage,
-                                     const std::string& intf,
-                                     const bool httpsFlag) {
+                                     const std::string&,
+                                     const bool) {
     httpMessage.statusCode = 200;
     if (url.find("/jobs") == 0) {
         httpMessage.content = R"(
@@ -112,7 +112,7 @@ void InputRunnerMockHttpClient::Send(const std::string& httpMethod,
     }
 }
 
-void InputRunnerMockHttpClient::AsynSend(sdk::AsynRequest* request) {
+void InputRunnerMockHttpClient::AsynSend(sdk::AsynRequest*) {
 }
 
 class PrometheusInputRunnerUnittest : public testing::Test {
@@ -127,7 +127,8 @@ private:
 
 
 void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
-    string errorMsg, configStr;
+    string errorMsg;
+    string configStr;
     Json::Value config;
     configStr = R"JSON(
     {
@@ -144,26 +145,25 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    scrapeTargets.push_back(ScrapeTarget(labels));
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>();
-    APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
+    scrapeTargets.emplace_back(labels);
+    std::unique_ptr<ScrapeJobEvent> scrapeJobEventPtr = make_unique<ScrapeJobEvent>();
+    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(config));
 
-    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
-    scrapeJobPtr->mClient.reset(new InputRunnerMockHttpClient);
     // before
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName")
-                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
+                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
     // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", std::move(scrapeJobPtr));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobEventPtr));
 
     // after
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName")
-                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
+                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
-    string errorMsg, configStr;
+    string errorMsg;
+    string configStr;
     Json::Value config;
     configStr = R"JSON(
     {
@@ -179,27 +179,25 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    scrapeTargets.push_back(ScrapeTarget(labels));
+    scrapeTargets.emplace_back(labels);
 
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>();
+    std::unique_ptr<ScrapeJobEvent> scrapeJobPtr = make_unique<ScrapeJobEvent>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
-    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
-    scrapeJobPtr->mClient.reset(new InputRunnerMockHttpClient);
-
     // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("testInputName", std::move(scrapeJobPtr));
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName")
-                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
-    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("testInputName");
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("testInputName")
-                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
+                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
+    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("test_job");
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
+                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     // build scrape job and target
-    string errorMsg, configStr;
+    string errorMsg;
+    string configStr;
     Json::Value config;
     configStr = R"JSON(
     {
@@ -214,27 +212,24 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    scrapeTargets.push_back(ScrapeTarget(labels));
+    scrapeTargets.emplace_back(labels);
 
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = make_unique<ScrapeJob>();
+    std::unique_ptr<ScrapeJobEvent> scrapeJobPtr = make_unique<ScrapeJobEvent>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
-    scrapeJobPtr->AddScrapeTarget(scrapeTargets[0].GetHash(), scrapeTargets[0]);
-    scrapeJobPtr->mClient.reset(new InputRunnerMockHttpClient);
 
-    PrometheusInputRunner::GetInstance()->mClient.reset(new InputRunnerMockHttpClient());
+    PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();
     // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput("test_input_name", std::move(scrapeJobPtr));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
 
     PrometheusInputRunner::GetInstance()->Start();
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_input_name")
-                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
+                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
 
-    sleep(5);
 
     // stop
     PrometheusInputRunner::GetInstance()->Stop();
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_input_name")
-                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
+                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
 }
 
 UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnUpdateScrapeInput)

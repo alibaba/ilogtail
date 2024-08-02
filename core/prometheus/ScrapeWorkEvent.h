@@ -52,6 +52,9 @@ private:
 
     QueueKey mQueueKey;
     size_t mInputIndex;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorLogToMetricNativeUnittest;
+#endif
 };
 
 } // namespace logtail

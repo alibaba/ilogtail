@@ -93,101 +93,10 @@ void MockHttpClient::AsynSend(sdk::AsynRequest* request) {
 
 class ScrapeWorkUnittest : public testing::Test {
 public:
-    void OnStartAndStopScrapeLoop();
-    void OnGetRandSleep();
 
 private:
 };
 
-void ScrapeWorkUnittest::OnStartAndStopScrapeLoop() {
-    Json::Value config;
-    string errorMsg;
-    string configStr = R"JSON(
-    {
-        "job_name": "test_job",
-        "scheme": "http",
-        "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
-    }
-    )JSON";
-    auto scrapeConfigPtr = std::make_shared<ScrapeConfig>();
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    APSARA_TEST_TRUE(scrapeConfigPtr->Init(config));
-
-    auto labels = Labels();
-    labels.Push(Label{"test_label", "test_value"});
-    labels.Push(Label{"__address__", "192.168.0.1:1234"});
-    labels.Push(Label{"job", "test_job"});
-
-    auto target = ScrapeTarget(labels);
-
-    ScrapeWork work(scrapeConfigPtr, target, 0, 0);
-    MockHttpClient* client = new MockHttpClient();
-    work.mClient.reset(client);
-
-    // before start
-    APSARA_TEST_EQUAL(nullptr, work.mScrapeLoopThread);
-
-    // start
-    work.StartScrapeLoop();
-    APSARA_TEST_NOT_EQUAL(nullptr, work.mScrapeLoopThread);
-
-    // stop
-    work.StopScrapeLoop();
-    APSARA_TEST_EQUAL(nullptr, work.mScrapeLoopThread);
-}
-
-void ScrapeWorkUnittest::OnGetRandSleep() {
-    // target1
-    Json::Value config;
-    string errorMsg;
-    string configStr = R"JSON(
-    {
-        "job_name": "test_job",
-        "scheme": "http",
-        "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
-    }
-    )JSON";
-    auto scrapeConfigPtr = std::make_shared<ScrapeConfig>();
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    APSARA_TEST_TRUE(scrapeConfigPtr->Init(config));
-
-    auto labels = Labels();
-    labels.Push(Label{"test_label", "test_value"});
-    labels.Push(Label{"__address__", "192.168.0.1:1234"});
-    labels.Push(Label{"job", "test_job"});
-    auto target = ScrapeTarget(labels);
-    ScrapeWork work1(scrapeConfigPtr, target, 0, 0);
-
-    // target2
-    configStr = R"JSON(
-    {
-        "job_name": "test_job",
-        "scheme": "http",
-        "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
-    }
-    )JSON";
-    auto scrapeConfigPtr2 = std::make_shared<ScrapeConfig>();
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    APSARA_TEST_TRUE(scrapeConfigPtr2->Init(config));
-    auto labels2 = Labels();
-    labels2.Push(Label{"__address__", "192.168.0.1:1234"});
-    labels2.Push(Label{"job", "test_job"});
-    auto target2 = ScrapeTarget(labels2);
-    ScrapeWork work2(scrapeConfigPtr2, target2, 0, 0);
-
-    uint64_t rand1 = work1.GetRandSleep();
-    uint64_t rand2 = work2.GetRandSleep();
-    APSARA_TEST_NOT_EQUAL(rand1, rand2);
-}
-
-UNIT_TEST_CASE(ScrapeWorkUnittest, OnStartAndStopScrapeLoop)
-UNIT_TEST_CASE(ScrapeWorkUnittest, OnGetRandSleep)
 
 } // namespace logtail
 

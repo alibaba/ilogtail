@@ -22,6 +22,7 @@
 #include "Relabel.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
+#include "inner/ProcessorLogToMetricNative.h"
 #include "inner/ProcessorRelabelMetricNative.h"
 #include "input/InputPrometheus.h"
 #include "pipeline/Pipeline.h"
@@ -33,66 +34,6 @@
 using namespace std;
 namespace logtail {
 
-// MockHttpClient
-class MockHttpClient : public sdk::HTTPClient {
-public:
-    MockHttpClient();
-
-    virtual void Send(const std::string& httpMethod,
-                      const std::string& host,
-                      const int32_t port,
-                      const std::string& url,
-                      const std::string& queryString,
-                      const std::map<std::string, std::string>& header,
-                      const std::string& body,
-                      const int32_t timeout,
-                      sdk::HttpMessage& httpMessage,
-                      const std::string& intf,
-                      const bool httpsFlag);
-    virtual void AsynSend(sdk::AsynRequest* request);
-};
-
-MockHttpClient::MockHttpClient() {
-}
-
-void MockHttpClient::Send(const std::string& httpMethod,
-                          const std::string& host,
-                          const int32_t port,
-                          const std::string& url,
-                          const std::string& queryString,
-                          const std::map<std::string, std::string>& header,
-                          const std::string& body,
-                          const int32_t timeout,
-                          sdk::HttpMessage& httpMessage,
-                          const std::string& intf,
-                          const bool httpsFlag) {
-    httpMessage.content
-        = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
-          "# TYPE go_gc_duration_seconds summary\n"
-          "go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.25\"} 3.9357e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.5\"} 4.1114e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.75\"} 4.3372e-05\n"
-          "go_gc_duration_seconds{quantile=\"1\"} 0.000112326\n"
-          "go_gc_duration_seconds_sum 0.034885631\n"
-          "go_gc_duration_seconds_count 850\n"
-          "# HELP go_goroutines Number of goroutines that currently exist.\n"
-          "# TYPE go_goroutines gauge\n"
-          "go_goroutines 7\n"
-          "# HELP go_info Information about the Go environment.\n"
-          "# TYPE go_info gauge\n"
-          "go_info{version=\"go1.22.3\"} 1\n"
-          "# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.\n"
-          "# TYPE go_memstats_alloc_bytes gauge\n"
-          "go_memstats_alloc_bytes 6.742688e+06\n"
-          "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
-          "# TYPE go_memstats_alloc_bytes_total counter\n"
-          "go_memstats_alloc_bytes_total 1.5159292e+08";
-    httpMessage.statusCode = 200;
-}
-
-void MockHttpClient::AsynSend(sdk::AsynRequest* request) {
-}
 class InputPrometheusUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
@@ -128,9 +69,11 @@ private:
 
 void InputPrometheusUnittest::OnSuccessfulInit() {
     unique_ptr<InputPrometheus> input;
-    Json::Value configJson, optionalGoPipeline;
+    Json::Value configJson;
+    Json::Value optionalGoPipeline;
     uint32_t pluginIndex = 0;
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     // only mandatory param
     configStr = R"(
         {
@@ -140,29 +83,23 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
                 "metrics_path": "/metrics",
                 "scheme": "http",
                 "scrape_interval": "15s",
-                "scrape_timeout": "15s",
-                "scrape_targets": [
-                    {
-                        "host": "172.17.0.3:9100",
-                    }
-                ]
+                "scrape_timeout": "15s"
             }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputPrometheus());
+    input = make_unique<InputPrometheus>();
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
-    input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
-    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
-    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mScrapeConfigPtr->mMetricsPath);
-    APSARA_TEST_EQUAL(15LL, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
-    APSARA_TEST_EQUAL(15LL, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mSampleLimit);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobPtr->mScrapeConfigPtr->mSeriesLimit);
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobEventPtr->mJobName);
+    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobEventPtr->mScrapeConfigPtr->mMetricsPath);
+    APSARA_TEST_EQUAL(15LL, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
+    APSARA_TEST_EQUAL(15LL, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobEventPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(-1, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSeriesLimit);
 
     // all useful config
     configStr = R"(
@@ -186,26 +123,27 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputPrometheus());
+    input = make_unique<InputPrometheus>();
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
-    input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
-    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobPtr->mJobName);
-    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobPtr->mScrapeConfigPtr->mMetricsPath);
-    APSARA_TEST_EQUAL(15, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
-    APSARA_TEST_EQUAL(15, input->mScrapeJobPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
-    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mScrapeJobPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
-    APSARA_TEST_EQUAL(1000000, input->mScrapeJobPtr->mScrapeConfigPtr->mSampleLimit);
-    APSARA_TEST_EQUAL(1000000, input->mScrapeJobPtr->mScrapeConfigPtr->mSeriesLimit);
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobEventPtr->mJobName);
+    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobEventPtr->mScrapeConfigPtr->mMetricsPath);
+    APSARA_TEST_EQUAL(15, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
+    APSARA_TEST_EQUAL(15, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
+    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mScrapeJobEventPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
+    APSARA_TEST_EQUAL(1000000, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(1000000, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSeriesLimit);
 }
 
 void InputPrometheusUnittest::OnFailedInit() {
     unique_ptr<InputPrometheus> input;
-    Json::Value configJson, optionalGoPipeline;
+    Json::Value configJson;
+    Json::Value optionalGoPipeline;
     uint32_t pluginIndex = 0;
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     // only mandatory param
     configStr = R"(
         {
@@ -213,7 +151,7 @@ void InputPrometheusUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputPrometheus());
+    input = make_unique<InputPrometheus>();
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_FALSE(input->Init(configJson, pluginIndex, optionalGoPipeline));
@@ -237,7 +175,7 @@ void InputPrometheusUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputPrometheus());
+    input = make_unique<InputPrometheus>();
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_FALSE(input->Init(configJson, pluginIndex, optionalGoPipeline));
@@ -245,9 +183,11 @@ void InputPrometheusUnittest::OnFailedInit() {
 
 void InputPrometheusUnittest::OnPipelineUpdate() {
     unique_ptr<InputPrometheus> input;
-    Json::Value configJson, optionalGoPipeline;
+    Json::Value configJson;
+    Json::Value optionalGoPipeline;
     uint32_t pluginIndex = 0;
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     configStr = R"(
         {
             "Type": "input_prometheus",
@@ -266,28 +206,29 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputPrometheus());
+    input = make_unique<InputPrometheus>();
     input->SetContext(ctx);
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
-    input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
 
     APSARA_TEST_TRUE(input->Start());
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_config")
-                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("_arms-prom/node-exporter/0")
+                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
 
     APSARA_TEST_TRUE(input->Stop(true));
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.find("test_config")
-                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsMap.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("_arms-prom/node-exporter/0")
+                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
 
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void InputPrometheusUnittest::TestCreateInnerProcessor() {
     unique_ptr<InputPrometheus> input;
-    Json::Value configJson, optionalGoPipeline;
+    Json::Value configJson;
+    Json::Value optionalGoPipeline;
     uint32_t pluginIndex = 0;
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     {
         // only mandatory param
         configStr = R"(
@@ -308,17 +249,17 @@ void InputPrometheusUnittest::TestCreateInnerProcessor() {
         }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-        input.reset(new InputPrometheus());
+        input = make_unique<InputPrometheus>();
         input->SetContext(ctx);
         input->SetMetricsRecordRef(InputPrometheus::sName, "1");
 
         APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
-        input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
-        APSARA_TEST_EQUAL(1U, input->mInnerProcessors.size());
-        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(2U, input->mInnerProcessors.size());
+        APSARA_TEST_EQUAL(ProcessorLogToMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[1]->Name());
         APSARA_TEST_EQUAL(0U,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs.size());
     }
     {
@@ -415,29 +356,29 @@ void InputPrometheusUnittest::TestCreateInnerProcessor() {
             }
         )JSON";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-        input.reset(new InputPrometheus());
+        input = make_unique<InputPrometheus>();
         input->SetContext(ctx);
         input->SetMetricsRecordRef(InputPrometheus::sName, "1");
 
         APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
-        input->mScrapeJobPtr->mClient.reset(new MockHttpClient());
-        APSARA_TEST_EQUAL(1U, input->mInnerProcessors.size());
-        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[0]->Name());
-        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[0]->mPlugin->Name());
+        APSARA_TEST_EQUAL(2U, input->mInnerProcessors.size());
+        APSARA_TEST_EQUAL(ProcessorLogToMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[1]->Name());
+        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[1]->mPlugin->Name());
         APSARA_TEST_EQUAL(3U,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs.size());
         APSARA_TEST_EQUAL(Action::KEEP,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs[0]
                               .mAction);
         APSARA_TEST_EQUAL(Action::KEEP,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs[1]
                               .mAction);
         APSARA_TEST_EQUAL(Action::REPLACE,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[0]->mPlugin.get())
+                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs[2]
                               .mAction);
     }

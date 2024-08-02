@@ -66,7 +66,8 @@ void ActionConverterUnittest::TestActionToString() {
 
 void RelabelConfigUnittest::TestRelabelConfig() {
     Json::Value configJson;
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
 
     configStr = R"(
         {
@@ -99,7 +100,8 @@ void RelabelConfigUnittest::TestRelabelConfig() {
 
 void RelabelConfigUnittest::TestProcess() {
     Json::Value configJson;
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     Labels labels;
     labels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
     labels.Push(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
@@ -352,7 +354,8 @@ void RelabelConfigUnittest::TestProcess() {
 
 
     // multi relabel
-    string configStr1, configStr2;
+    string configStr1;
+    string configStr2;
     configStr1 = configStr1 + R"(
         {
                 "action": "replace",

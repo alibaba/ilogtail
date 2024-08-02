@@ -24,6 +24,8 @@
 #include "common/JsonUtil.h"
 #include "unittest/Unittest.h"
 
+using namespace std;
+
 namespace logtail {
 
 // MockHttpClient
@@ -117,10 +119,10 @@ void MockScrapeJobHttpClient::Send(const std::string& httpMethod,
 void MockScrapeJobHttpClient::AsynSend(sdk::AsynRequest* request) {
 }
 
-class ScrapeJobUnittest : public ::testing::Test {
+class ScrapeJobEventUnittest : public ::testing::Test {
 public:
-    void OnInitScrapeJob();
-    void ScrapeJobTargetsDiscovery();
+    void OnInitScrapeJobEvent();
+    void OnGetRandSleep();
 
 protected:
     void SetUp() override {
@@ -201,37 +203,24 @@ protected:
 };
 
 
-void ScrapeJobUnittest::OnInitScrapeJob() {
-    std::shared_ptr<ScrapeJob> scrapeJobPtr = std::make_shared<ScrapeJob>();
-    APSARA_TEST_TRUE(scrapeJobPtr->Init(mConfig["ScrapeConfig"]));
-    scrapeJobPtr->mClient.reset(new MockScrapeJobHttpClient);
+void ScrapeJobEventUnittest::OnInitScrapeJobEvent() {
+    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
 
-    APSARA_TEST_NOT_EQUAL(scrapeJobPtr->mScrapeConfigPtr.get(), nullptr);
-    APSARA_TEST_EQUAL(scrapeJobPtr->mJobName, "_kube-state-metrics");
-}
-void ScrapeJobUnittest::ScrapeJobTargetsDiscovery() {
-    std::unique_ptr<ScrapeJob> scrapeJobPtr = std::make_unique<ScrapeJob>();
-    APSARA_TEST_TRUE(scrapeJobPtr->Init(mConfig["ScrapeConfig"]));
-
-    scrapeJobPtr->mClient.reset(new MockScrapeJobHttpClient);
-
-    scrapeJobPtr->StartTargetsDiscoverLoop();
-    std::this_thread::sleep_for(std::chrono::seconds(6));
-
-    const auto& scrapeTargetsMap = scrapeJobPtr->GetScrapeTargetsMapCopy();
-    APSARA_TEST_EQUAL(scrapeTargetsMap.size(), 1u);
-    for (const auto& [hashTarget, target] : scrapeTargetsMap) {
-        APSARA_TEST_TRUE(hashTarget.find("192.168.22.7") != std::string::npos);
-        APSARA_TEST_EQUAL(target.mLabels.Size(), 6UL);
-        APSARA_TEST_EQUAL(target.mHost, "192.168.22.7");
-        APSARA_TEST_EQUAL(target.mPort, 8080UL);
-    }
-
-    scrapeJobPtr->StopTargetsDiscoverLoop();
+    APSARA_TEST_NOT_EQUAL(scrapeJobEventPtr->mScrapeConfigPtr.get(), nullptr);
+    APSARA_TEST_EQUAL(scrapeJobEventPtr->mJobName, "_kube-state-metrics");
 }
 
-UNIT_TEST_CASE(ScrapeJobUnittest, OnInitScrapeJob);
-UNIT_TEST_CASE(ScrapeJobUnittest, ScrapeJobTargetsDiscovery);
+void ScrapeJobEventUnittest::OnGetRandSleep() {
+    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
+    auto rand1 = scrapeJobEventPtr->GetRandSleep("192.168.22.7:8080");
+    auto rand2 = scrapeJobEventPtr->GetRandSleep("192.168.22.8:8080");
+    APSARA_TEST_NOT_EQUAL(rand1, rand2);
+}
+
+UNIT_TEST_CASE(ScrapeJobEventUnittest, OnInitScrapeJobEvent)
+UNIT_TEST_CASE(ScrapeJobEventUnittest, OnGetRandSleep)
 
 } // namespace logtail
 

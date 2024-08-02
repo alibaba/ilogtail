@@ -24,7 +24,6 @@ private:
     TextParser mParser;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorRelabelMetricNativeUnittest;
     friend class InputPrometheusUnittest;
 #endif
 };

@@ -75,6 +75,11 @@ private:
     std::unordered_set<std::string> mValidSet;
 
     std::shared_ptr<Timer> mTimer;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ScrapeJobEventUnittest;
+    friend class InputPrometheusUnittest;
+#endif
 };
 
 } // namespace logtail

@@ -76,15 +76,12 @@ PipelineEventGroup ScrapeWorkEvent::SplitByLines(const std::string& content, tim
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     for (const auto& line : SplitString(content, "\r\n")) {
-        if (line.empty()) {
-            continue;
-        }
-        TrimString(line);
-        if (line.empty() || line[0] == '#') {
+        auto newLine = TrimString(line);
+        if (newLine.empty() || newLine[0] == '#') {
             continue;
         }
         auto* logEvent = eGroup.AddLogEvent();
-        logEvent->SetContent(prometheus::PROMETHEUS, line);
+        logEvent->SetContent(prometheus::PROMETHEUS, newLine);
         logEvent->SetTimestamp(timestamp);
     }
 
