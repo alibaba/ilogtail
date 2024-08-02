@@ -56,10 +56,8 @@ struct HttpRequest {
     virtual ~HttpRequest() = default;
 };
 
-template <class T>
 struct AsynHttpRequest : public HttpRequest {
     HttpResponse mResponse;
-    T* mContext = nullptr;
     void* mPrivateData = nullptr;
 
     AsynHttpRequest(const std::string& method,
@@ -68,11 +66,11 @@ struct AsynHttpRequest : public HttpRequest {
                     const std::string& url,
                     const std::string& query,
                     const std::map<std::string, std::string>& header,
-                    const std::string& body,
-                    T* ctx)
-        : HttpRequest(method, httpsFlag, host, url, query, header, body), mContext(ctx) {}
+                    const std::string& body)
+        : HttpRequest(method, httpsFlag, host, url, query, header, body) {}
 
-    bool IsContextValid() { return true; }
+    virtual bool IsContextValid() const = 0;
+    virtual void OnSendDone(const HttpResponse& response) = 0;
 };
 
 } // namespace logtail

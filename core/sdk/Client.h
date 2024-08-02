@@ -20,9 +20,8 @@
 
 #include "Common.h"
 #include "CurlImp.h"
-#include "common/http/HttpRequest.h"
+#include "sink/http/HttpSinkRequest.h"
 #include "log_pb/sls_logs.pb.h"
-#include "queue/SenderQueueItem.h"
 
 namespace logtail {
 namespace sdk {
@@ -121,28 +120,26 @@ namespace sdk {
          * @param compressType compression type
          * @return request_id.
          */
-        std::unique_ptr<AsynHttpRequest<SenderQueueItem>>
-        CreatePostLogStoreLogsRequest(const std::string& project,
-                                      const std::string& logstore,
-                                      sls_logs::SlsCompressType compressType,
-                                      const std::string& compressedLogGroup,
-                                      uint32_t rawSize,
-                                      SenderQueueItem* item,
-                                      const std::string& hashKey = "",
-                                      int64_t hashKeySeqID = kInvalidHashKeySeqID);
+        std::unique_ptr<HttpSinkRequest> CreatePostLogStoreLogsRequest(const std::string& project,
+                                                                       const std::string& logstore,
+                                                                       sls_logs::SlsCompressType compressType,
+                                                                       const std::string& compressedLogGroup,
+                                                                       uint32_t rawSize,
+                                                                       SenderQueueItem* item,
+                                                                       const std::string& hashKey = "",
+                                                                       int64_t hashKeySeqID = kInvalidHashKeySeqID);
         /** Async Put data to LOG service. Unsuccessful opertaion will cause an LOGException.
          * @param project The project name
          * @param logstore The logstore name
          * @param packageListData data of logPackageList, consist of several LogGroup
          * @return request_id.
          */
-        std::unique_ptr<AsynHttpRequest<SenderQueueItem>>
-        CreatePostLogStoreLogPackageListRequest(const std::string& project,
-                                                const std::string& logstore,
-                                                sls_logs::SlsCompressType compressType,
-                                                const std::string& packageListData,
-                                                SenderQueueItem* item,
-                                                const std::string& hashKey = "");
+        std::unique_ptr<HttpSinkRequest> CreatePostLogStoreLogPackageListRequest(const std::string& project,
+                                                                                 const std::string& logstore,
+                                                                                 sls_logs::SlsCompressType compressType,
+                                                                                 const std::string& packageListData,
+                                                                                 SenderQueueItem* item,
+                                                                                 const std::string& hashKey = "");
 
         PostLogStoreLogsResponse PostLogUsingWebTracking(const std::string& project,
                                                          const std::string& logstore,
@@ -165,7 +162,7 @@ namespace sdk {
                          HttpMessage& httpMessage,
                          std::string* realIpPtr = NULL);
 
-        std::unique_ptr<AsynHttpRequest<SenderQueueItem>>
+        std::unique_ptr<HttpSinkRequest>
         CreateAsynPostLogStoreLogsRequest(const std::string& project,
                                           const std::string& logstore,
                                           const std::string& body,

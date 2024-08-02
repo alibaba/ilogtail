@@ -50,12 +50,12 @@ void HttpSink::Stop() {
 
 void HttpSink::Run() {
     while (true) {
-        unique_ptr<AsynHttpRequest<SenderQueueItem>> request;
+        unique_ptr<HttpSinkRequest> request;
         if (mQueue.WaitAndPop(request, 500)) {
             LOG_DEBUG(sLogger,
-                      ("got item from flusher runner, item address", request->mContext)(
-                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mContext->mQueueKey))(
-                          "wait time", ToString(time(nullptr) - request->mContext->mLastSendTime))(
+                      ("got item from flusher runner, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "wait time", ToString(time(nullptr) - request->mItem->mLastSendTime))(
                           "try cnt", ToString(request->mTryCnt)));
             if (!AddRequestToClient(std::move(request))) {
                 continue;
@@ -73,7 +73,7 @@ void HttpSink::Run() {
     }
 }
 
-bool HttpSink::AddRequestToClient(std::unique_ptr<AsynHttpRequest<SenderQueueItem>>&& request) {
+bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
     curl_slist* headers = nullptr;
     CURL* curl = CreateCurlHandler(request->mMethod,
                                    request->mHTTPSFlag,
@@ -87,12 +87,12 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<AsynHttpRequest<SenderQueueIte
                                    AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
-        request->mContext->mStatus = SendingStatus::IDLE;
+        request->mItem->mStatus = SendingStatus::IDLE;
         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
         LOG_ERROR(sLogger,
                   ("failed to send request", "failed to init curl handler")(
-                      "action", "put sender queue item back to sender queue")("item address", request->mContext)(
-                      "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mContext->mQueueKey)));
+                      "action", "put sender queue item back to sender queue")("item address", request->mItem)(
+                      "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey)));
         return false;
     }
 
@@ -101,14 +101,14 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<AsynHttpRequest<SenderQueueIte
     request->mLastSendTime = time(nullptr);
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
-        request->mContext->mStatus = SendingStatus::IDLE;
+        request->mItem->mStatus = SendingStatus::IDLE;
         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
         curl_easy_cleanup(curl);
         LOG_ERROR(sLogger,
                   ("failed to send request",
                    "failed to add the easy curl handle to multi_handle")("errMsg", curl_multi_strerror(res))(
-                      "action", "put sender queue item back to sender queue")("item address", request->mContext)(
-                      "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mContext->mQueueKey)));
+                      "action", "put sender queue item back to sender queue")("item address", request->mItem)(
+                      "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey)));
         return false;
     }
     // let sink destruct the request
@@ -129,12 +129,12 @@ void HttpSink::DoRun() {
         }
         HandleCompletedRequests();
 
-        unique_ptr<AsynHttpRequest<SenderQueueItem>> request;
+        unique_ptr<HttpSinkRequest> request;
         if (mQueue.TryPop(request)) {
             LOG_DEBUG(sLogger,
-                      ("got item from flusher runner, item address", request->mContext)(
-                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mContext->mQueueKey))(
-                          "wait time", ToString(time(nullptr) - request->mContext->mLastSendTime))(
+                      ("got item from flusher runner, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
+                          "wait time", ToString(time(nullptr) - request->mItem->mLastSendTime))(
                           "try cnt", ToString(request->mTryCnt)));
             if (AddRequestToClient(std::move(request))) {
                 ++runningHandlers;
@@ -186,11 +186,11 @@ void HttpSink::HandleCompletedRequests() {
         if (msg->msg == CURLMSG_DONE) {
             bool requestReused = false;
             CURL* handler = msg->easy_handle;
-            AsynHttpRequest<SenderQueueItem>* request = nullptr;
+            HttpSinkRequest* request = nullptr;
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
             LOG_DEBUG(sLogger,
-                      ("send http request completed, item address", request->mContext)(
-                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mContext->mQueueKey))(
+                      ("send http request completed, item address", request->mItem)(
+                          "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
                           "response time",
                           ToString(time(nullptr) - request->mLastSendTime))("try cnt", ToString(request->mTryCnt)));
             switch (msg->data.result) {
@@ -198,8 +198,7 @@ void HttpSink::HandleCompletedRequests() {
                     long statusCode = 0;
                     curl_easy_getinfo(handler, CURLINFO_RESPONSE_CODE, &statusCode);
                     request->mResponse.mStatusCode = (int32_t)statusCode;
-                    static_cast<HttpFlusher*>(request->mContext->mFlusher)
-                        ->OnSendDone(request->mResponse, request->mContext);
+                    static_cast<HttpFlusher*>(request->mItem->mFlusher)->OnSendDone(request->mResponse, request->mItem);
                     FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
                     break;
                 }
@@ -211,12 +210,12 @@ void HttpSink::HandleCompletedRequests() {
                             ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt)(
                                 "errMsg", curl_easy_strerror(msg->data.result))(
                                 "config-flusher-dst",
-                                QueueKeyManager::GetInstance()->GetName(request->mContext->mFlusher->GetQueueKey())));
-                        AddRequestToClient(unique_ptr<AsynHttpRequest<SenderQueueItem>>(request));
+                                QueueKeyManager::GetInstance()->GetName(request->mItem->mFlusher->GetQueueKey())));
+                        AddRequestToClient(unique_ptr<HttpSinkRequest>(request));
                         requestReused = true;
                     } else {
-                        static_cast<HttpFlusher*>(request->mContext->mFlusher)
-                            ->OnSendDone(request->mResponse, request->mContext);
+                        static_cast<HttpFlusher*>(request->mItem->mFlusher)
+                            ->OnSendDone(request->mResponse, request->mItem);
                         FlusherRunner::GetInstance()->DecreaseHttpSendingCnt();
                     }
                     break;

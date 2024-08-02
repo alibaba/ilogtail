@@ -529,7 +529,7 @@ bool FlusherSLS::FlushAll() {
     return SerializeAndPush(std::move(res));
 }
 
-unique_ptr<AsynHttpRequest<SenderQueueItem>> FlusherSLS::BuildRequest(SenderQueueItem* item) const {
+unique_ptr<HttpSinkRequest> FlusherSLS::BuildRequest(SenderQueueItem* item) const {
     auto data = static_cast<SLSSenderQueueItem*>(item);
     static int32_t lastResetEndpointTime = 0;
     sdk::Client* sendClient = SLSClientManager::GetInstance()->GetClient(mRegion, mAliuid);

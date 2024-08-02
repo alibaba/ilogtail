@@ -88,7 +88,7 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item, bool withLimit) {
                                                    + ToString(blockCostTime));
     }
 
-    unique_ptr<AsynHttpRequest<SenderQueueItem>> req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
+    auto req = static_cast<HttpFlusher*>(item->mFlusher)->BuildRequest(item);
     item->mLastSendTime = time(nullptr);
     HttpSink::GetInstance()->AddRequest(std::move(req));
     ++mHttpSendingCnt;

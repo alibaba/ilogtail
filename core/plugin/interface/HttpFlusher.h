@@ -16,9 +16,10 @@
 
 #pragma once
 
-#include "plugin/interface/Flusher.h"
-#include "common/http/HttpRequest.h"
 #include "common/http/HttpResponse.h"
+#include "plugin/interface/Flusher.h"
+#include "queue/SenderQueueItem.h"
+#include "sink/http/HttpSinkRequest.h"
 
 namespace logtail {
 
@@ -26,7 +27,7 @@ class HttpFlusher : public Flusher {
 public:
     virtual ~HttpFlusher() = default;
 
-    virtual std::unique_ptr<AsynHttpRequest<SenderQueueItem>> BuildRequest(SenderQueueItem* item) const = 0;
+    virtual std::unique_ptr<HttpSinkRequest> BuildRequest(SenderQueueItem* item) const = 0;
     virtual void OnSendDone(const HttpResponse& response, SenderQueueItem* item) = 0;
 
     virtual SinkType GetSinkType() override { return SinkType::HTTP; }
