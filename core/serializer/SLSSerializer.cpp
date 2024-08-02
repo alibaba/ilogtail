@@ -27,10 +27,10 @@ namespace logtail {
 
 std::string Uint32ToSixDigitString(uint32_t number) {
     std::ostringstream oss;
-    oss << std::setw(6) << std::setfill('0') << number;
+    oss << std::setw(9) << std::setfill('0') << number;
     std::string result = oss.str();
-    if (result.length() > 6) {
-        result = result.substr(result.length() - 6, 6);
+    if (result.length() > 9) {
+        result = result.substr(result.length() - 9, 9);
     }
     return result;
 }
@@ -78,7 +78,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + Uint32ToSixDigitString(metricEvent.GetTimestampNanosecond().value()));   
                 log->set_time_ns(metricEvent.GetTimestampNanosecond().value());
             } else {
-                logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + "000000");   
+                logPtr->set_value(std::to_string(metricEvent.GetTimestamp()));   
             }
             // set __value__
             if (metricEvent.Is<UntypedSingleValue>()) {

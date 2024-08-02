@@ -110,7 +110,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
-        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890000000");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
@@ -133,7 +133,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
-        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890000001");
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890000000001");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
@@ -147,7 +147,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = true;
         string res, errorMsg;
         
-        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true, 1999999), res, errorMsg));
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true, 1999999999), res, errorMsg));
         sls_logs::LogGroup logGroup;
         APSARA_TEST_TRUE(logGroup.ParseFromString(res));
         APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
@@ -157,7 +157,7 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(0).value(), "key1#$#value1|key2#$#value2");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).key(), "__time_nano__");
-        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890999999");gi
+        APSARA_TEST_EQUAL(logGroup.logs(0).contents(1).value(), "1234567890999999999");
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).key(), "__value__");
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(2).value(), "0.100000");
