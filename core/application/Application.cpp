@@ -56,6 +56,7 @@
 #endif
 #else
 #include "config/provider/CommonConfigProvider.h"
+#include "config/provider/LegacyCommonConfigProvider.h"
 #endif
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/SenderQueueManager.h"
@@ -227,10 +228,12 @@ void Application::Start() { // GCOVR_EXCL_START
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
-    CommonConfigProvider::GetInstance()->Init("common");
+    CommonConfigProvider::GetInstance()->Init("common_v2");
+    LegacyCommonConfigProvider::GetInstance()->Init("common");
 #endif
 
     LogtailAlarm::GetInstance()->Init();
+    LoongCollectorMonitor::GetInstance()->Init();
     LogtailMonitor::GetInstance()->Init();
 
     PluginRegistry::GetInstance()->LoadPlugins();
@@ -353,9 +356,11 @@ void Application::Exit() {
     LegacyConfigProvider::GetInstance()->Stop();
 #else
     CommonConfigProvider::GetInstance()->Stop();
+    LegacyCommonConfigProvider::GetInstance()->Stop();
 #endif
 
     LogtailMonitor::GetInstance()->Stop();
+    LoongCollectorMonitor::GetInstance()->Stop();
     LogtailAlarm::GetInstance()->Stop();
     // from now on, alarm should not be used.
 

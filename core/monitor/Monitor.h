@@ -21,6 +21,8 @@
 #include <mutex>
 #include <string>
 
+#include "LogtailMetric.h"
+#include "MetricConstants.h"
 #include "MetricStore.h"
 #include "profile_sender/ProfileSender.h"
 #if defined(_MSC_VER)
@@ -105,12 +107,15 @@ private:
     // set @curCpu to @savedCpu after calculation.
     void CalCpuStat(const CpuStat& curCpu, CpuStat& savedCpu);
 
-    // CheckCpuLimit checks if current cpu usage exceeds limit.
+    // CheckSoftCpuLimit checks if current cpu usage exceeds limit.
     // @return true if the cpu usage exceeds limit continuously.
-    bool CheckCpuLimit();
-    // CheckMemLimit checks if the memory usage exceeds limit.
+    bool CheckSoftCpuLimit();
+    // CheckSoftMemLimit checks if the memory usage exceeds limit.
     // @return true if the memory usage exceeds limit continuously.
-    bool CheckMemLimit();
+    bool CheckSoftMemLimit();
+
+    bool CheckHardCpuLimit();
+    bool CheckHardMemLimit();
 
     // SendStatusProfile collects status profile and send them to server.
     // @suicide indicates if the target LogStore is logtail_suicide_profile.
@@ -156,8 +161,14 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
+    DoubleGaugePtr mGlobalCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
+    IntGaugePtr mGlobalMemoryGauge;
+
+    IntGaugePtr mGlobalPluginTotal;
+    IntGaugePtr mGlobalEnvConfigTotal;
+    IntGaugePtr mGlobalUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
@@ -177,6 +188,29 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ConfigUpdatorUnittest;
 #endif
+};
+
+class LoongCollectorMonitor {
+public:
+    static LoongCollectorMonitor* GetInstance();
+
+    void Init();
+    void Stop();
+
+    CounterPtr GetCounter(std::string key);
+    IntGaugePtr GetIntGauge(std::string key);
+    DoubleGaugePtr GetDoubleGauge(std::string key);
+
+private:
+    // MetricRecord
+    MetricsRecordRef mMetricsRecordRef;
+    // metrics
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
+    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
+
+    // IntGaugePtr mGlobalCrdConfigTotal;
+    // IntGaugePtr mGlobalConsoleConfigTotal;
 };
 
 } // namespace logtail
