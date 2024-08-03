@@ -5,53 +5,65 @@
 #include <unordered_set>
 
 #include "common/Lock.h"
+#include "common/http/HttpRequest.h"
 #include "prometheus/Mock.h"
-#include "sdk/Common.h"
 
 namespace logtail {
 
-
-AsyncEventDecorator::AsyncEventDecorator(std::shared_ptr<AsyncEvent> event) : mEvent(std::move(event)) {
-}
-void AsyncEventDecorator::Process(const HttpResponse& response) {
-    if (mEvent) {
-        mEvent->Process(response);
-    }
-}
-
-TickerEvent::TickerEvent(std::shared_ptr<AsyncEvent> event,
-                         uint64_t intervalSeconds,
-                         uint64_t deadlineNanoSeconds,
-                         std::shared_ptr<Timer> timer,
-                         ReadWriteLock& mutex,
-                         std::unordered_set<std::string>& validationSet,
-                         std::string hash)
-    : AsyncEventDecorator(std::move(event)),
+// TODO(liqiang): fix port
+TickerHttpRequest::TickerHttpRequest(const std::string& method,
+                                     bool httpsFlag,
+                                     const std::string& host,
+                                     int32_t port,
+                                     const std::string& url,
+                                     const std::string& query,
+                                     const std::map<std::string, std::string>& header,
+                                     const std::string& body,
+                                     const std::string& hash,
+                                     std::shared_ptr<PromEvent> event,
+                                     ReadWriteLock& rwLock,
+                                     std::unordered_set<std::string>& contextSet,
+                                     uint64_t intervalSeconds,
+                                     std::chrono::steady_clock::time_point execTime,
+                                     std::shared_ptr<Timer> timer)
+    : AsynHttpRequest(method, httpsFlag, host, url, query, header, body),
+      mEvent(std::move(event)),
       mIntervalSeconds(intervalSeconds),
-      mDeadlineNanoSeconds(deadlineNanoSeconds),
+      mExecTime(execTime),
       mTimer(std::move(timer)),
-      mRWLock(mutex),
-      mHash(std::move(hash)),
-      mValidationSet(validationSet) {
+      mHash(hash),
+      mRWLock(rwLock),
+      mContextSet(contextSet) {
 }
-void TickerEvent::Process(const HttpResponse& response) {
-    AsyncEventDecorator::Process(response);
 
-    if (IsValidation() && mTimer) {
+void TickerHttpRequest::OnSendDone(const HttpResponse& response) {
+    if (!IsContextValid()) {
+        return;
+    }
+    mEvent->Process(response);
+    if (IsContextValid() && mTimer) {
         mTimer->PushEvent(BuildTimerEvent());
     }
 }
-[[nodiscard]] std::unique_ptr<TimerEvent> TickerEvent::BuildTimerEvent() const {
-    auto request = std::make_unique<PromHttpRequest>();
-    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(std::move(request));
-    uint64_t deadlineNanoSeconds = mDeadlineNanoSeconds + mIntervalSeconds * 1000000000UL;
-    auto tickerEvent
-        = TickerEvent(mEvent, mIntervalSeconds, deadlineNanoSeconds, mTimer, mRWLock, mValidationSet, mHash);
+[[nodiscard]] bool TickerHttpRequest::IsContextValid() const {
+    ReadLock lock(mRWLock);
+    return mContextSet.count(mHash);
+}
+
+[[nodiscard]] std::unique_ptr<TimerEvent> TickerHttpRequest::BuildTimerEvent() const {
+    auto execTime = GetNextExecTime();
+    auto request = std::make_unique<TickerHttpRequest>(*this);
+    request->SetNextExecTime(execTime);
+    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;
 }
-[[nodiscard]] bool TickerEvent::IsValidation() const {
-    ReadLock lock(mRWLock);
-    return mValidationSet.count(mHash);
+
+std::chrono::steady_clock::time_point TickerHttpRequest::GetNextExecTime() const {
+    return mExecTime + std::chrono::seconds(mIntervalSeconds);
+}
+
+void TickerHttpRequest::SetNextExecTime(std::chrono::steady_clock::time_point execTime) {
+    mExecTime = execTime;
 }
 
 

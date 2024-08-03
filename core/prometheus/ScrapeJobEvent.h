@@ -22,34 +22,28 @@
 #include <memory>
 #include <string>
 
+#include "common/http/HttpResponse.h"
+#include "prometheus/Mock.h"
 #include "prometheus/AsyncEvent.h"
 #include "prometheus/ScrapeConfig.h"
 #include "prometheus/ScrapeWorkEvent.h"
 #include "queue/FeedbackQueueKey.h"
-#include "sdk/Common.h"
 
 namespace logtail {
 
-class ScrapeJobEvent : public AsyncEvent {
+class ScrapeJobEvent : public PromEvent {
 public:
     ScrapeJobEvent();
     ~ScrapeJobEvent() override = default;
 
-
     bool Init(const Json::Value& scrapeConfig);
     bool operator<(const ScrapeJobEvent& other) const;
 
-    void Process(const sdk::HttpMessage&) override;
+    void Process(const HttpResponse&) override;
 
-    sdk::AsynRequest BuildAsyncRequest() const;
     void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string mJobName;
-
-    // from environment variable
-    std::string mServiceHost;
-    uint32_t mServicePort;
-    std::string mPodName;
 
     // from pipeline context
     QueueKey mQueueKey;
@@ -61,18 +55,15 @@ public:
 private:
     bool ParseTargetGroups(const std::string& content, std::set<ScrapeWorkEvent> newScrapeWorkSet) const;
 
-    ScrapeEvent BuildScrapeEvent(std::shared_ptr<AsyncEvent> asyncEvent,
-                                 uint64_t intervalSeconds,
-                                 ReadWriteLock& rwLock,
-                                 std::unordered_set<std::string>& validSet,
-                                 std::string hash);
+    std::unique_ptr<TimerEvent> BuildWorkTimerEvent(std::shared_ptr<ScrapeWorkEvent> workEvent);
+
     uint64_t GetRandSleep(const std::string& hash) const;
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     ReadWriteLock mRWLock;
     std::set<ScrapeWorkEvent> mScrapeWorkSet;
-    std::unordered_set<std::string> mValidSet;
+    std::unordered_set<std::string> mWorkValidSet;
 
     std::shared_ptr<Timer> mTimer;
 

@@ -36,25 +36,7 @@ using namespace std;
 
 namespace logtail {
 
-string URLEncode(const string& value) {
-    ostringstream escaped;
-    escaped.fill('0');
-    escaped << hex;
-
-    for (char c : value) {
-        // Keep alphanumeric characters and other safe characters intact
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            escaped << c;
-            continue;
-        }
-        // Any other characters are percent-encoded
-        escaped << '%' << setw(2) << int((unsigned char)c);
-    }
-
-    return escaped.str();
-}
-
-ScrapeJobEvent::ScrapeJobEvent() : mServicePort(0), mQueueKey(0), mInputIndex(0), mUnRegisterMs(0) {
+ScrapeJobEvent::ScrapeJobEvent() : mQueueKey(0), mInputIndex(0), mUnRegisterMs(0) {
 }
 bool ScrapeJobEvent::Init(const Json::Value& scrapeConfig) {
     mScrapeConfigPtr = std::make_shared<ScrapeConfig>();
@@ -70,11 +52,11 @@ bool ScrapeJobEvent::operator<(const ScrapeJobEvent& other) const {
     return mJobName < other.mJobName;
 }
 
-void ScrapeJobEvent::Process(const sdk::HttpMessage& response) {
-    if (response.statusCode != 200) {
+void ScrapeJobEvent::Process(const HttpResponse& response) {
+    if (response.mStatusCode != 200) {
         return;
     }
-    const string& content = response.content;
+    const string& content = response.mBody;
     set<ScrapeWorkEvent> newScrapeWorkSet;
     if (!ParseTargetGroups(content, newScrapeWorkSet)) {
         return;
@@ -92,7 +74,7 @@ void ScrapeJobEvent::Process(const sdk::HttpMessage& response) {
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
             mScrapeWorkSet.erase(work);
-            mValidSet.erase(work.mHash);
+            mWorkValidSet.erase(work.mHash);
         }
         diff.clear();
 
@@ -104,36 +86,38 @@ void ScrapeJobEvent::Process(const sdk::HttpMessage& response) {
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
             mScrapeWorkSet.insert(work);
-            mValidSet.insert(work.mHash);
+            mWorkValidSet.insert(work.mHash);
         }
     }
 
     // create new scrape event
     if (mTimer) {
         for (auto work : diff) {
-            auto event = BuildScrapeEvent(make_shared<ScrapeWorkEvent>(work),
-                                          mScrapeConfigPtr->mScrapeIntervalSeconds,
-                                          mRWLock,
-                                          mValidSet,
-                                          work.mHash);
-            mTimer->PushEvent(event);
+            auto event = BuildWorkTimerEvent(make_shared<ScrapeWorkEvent>(work));
+            mTimer->PushEvent(std::move(event));
         }
     }
 }
 
-ScrapeEvent ScrapeJobEvent::BuildScrapeEvent(std::shared_ptr<AsyncEvent> asyncEvent,
-                                             uint64_t intervalSeconds,
-                                             ReadWriteLock& rwLock,
-                                             unordered_set<string>& validSet,
-                                             string hash) {
-    ScrapeEvent scrapeEvent;
-    uint64_t deadlineNanoSeconds = GetCurrentTimeInNanoSeconds() + GetRandSleep(hash);
-    scrapeEvent.mDeadline = deadlineNanoSeconds;
-    auto tickerEvent = TickerEvent(
-        std::move(asyncEvent), intervalSeconds, deadlineNanoSeconds, mTimer, rwLock, validSet, std::move(hash));
-    auto asyncCallback = [&tickerEvent](const sdk::HttpMessage& response) { tickerEvent.Process(response); };
-    scrapeEvent.mCallback = asyncCallback;
-    return scrapeEvent;
+std::unique_ptr<TimerEvent> ScrapeJobEvent::BuildWorkTimerEvent(std::shared_ptr<ScrapeWorkEvent> workEvent) {
+    auto execTime = std::chrono::steady_clock::now() + std::chrono::nanoseconds(GetRandSleep(workEvent->mHash));
+    auto request = std::make_unique<TickerHttpRequest>(sdk::HTTP_GET,
+                                                       mScrapeConfigPtr->mScheme == prometheus::HTTPS,
+                                                       workEvent->mScrapeTarget.mHost,
+                                                       workEvent->mScrapeTarget.mPort,
+                                                       mScrapeConfigPtr->mMetricsPath,
+                                                       mScrapeConfigPtr->mQueryString,
+                                                       mScrapeConfigPtr->mHeaders,
+                                                       "",
+                                                       workEvent->mHash,
+                                                       std::move(workEvent),
+                                                       mRWLock,
+                                                       mWorkValidSet,
+                                                       mScrapeConfigPtr->mScrapeIntervalSeconds,
+                                                       execTime,
+                                                       mTimer);
+    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
+    return timerEvent;
 }
 
 uint64_t ScrapeJobEvent::GetRandSleep(const string& hash) const {
@@ -148,28 +132,6 @@ uint64_t ScrapeJobEvent::GetRandSleep(const string& hash) const {
     }
     randSleep -= sleepOffset;
     return randSleep;
-}
-
-sdk::AsynRequest ScrapeJobEvent::BuildAsyncRequest() const {
-    map<string, string> httpHeader;
-    httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
-    httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
-    httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
-    auto* response = new sdk::Response();
-    auto* closure = new sdk::PostLogStoreLogsResponse;
-
-    return sdk::AsynRequest(sdk::HTTP_GET,
-                            mServiceHost,
-                            mServicePort,
-                            "/jobs/" + URLEncode(mJobName) + "/targets",
-                            "collector_id=" + mPodName,
-                            httpHeader,
-                            "",
-                            prometheus::RefeshIntervalSeconds,
-                            "",
-                            mScrapeConfigPtr->mScheme == prometheus::HTTPS,
-                            (sdk::LogsClosure*)closure,
-                            response);
 }
 
 bool ScrapeJobEvent::ParseTargetGroups(const string& content, set<ScrapeWorkEvent> newScrapeWorkSet) const {

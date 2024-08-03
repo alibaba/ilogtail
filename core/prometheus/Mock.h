@@ -9,9 +9,11 @@
 namespace logtail {
 
 class TimerEvent {
-    friend bool operator<(const TimerEvent& lhs, const TimerEvent& rhs);
+    friend bool operator<(const TimerEvent& lhs, const TimerEvent& rhs) { return lhs.mExecTime < rhs.mExecTime; }
 
 public:
+    TimerEvent(std::chrono::steady_clock::time_point execTime) : mExecTime(execTime) {}
+
     virtual ~TimerEvent() = default;
 
     [[nodiscard]] virtual bool IsValid() const = 0;
@@ -23,15 +25,11 @@ private:
     std::chrono::steady_clock::time_point mExecTime;
 };
 
-bool operator<(const TimerEvent& lhs, const TimerEvent& rhs) {
-    return lhs.mExecTime < rhs.mExecTime;
-}
-
 class Timer {
 public:
-    void Init();
-    void Stop();
-    void PushEvent(std::unique_ptr<TimerEvent>&& e);
+    void Init() {}
+    void Stop() {}
+    void PushEvent(std::unique_ptr<TimerEvent>&& e) {}
 
 private:
     void Run();
@@ -47,10 +45,10 @@ private:
 
 class HttpRequestTimerEvent : public TimerEvent {
 public:
-    [[nodiscard]] bool IsValid() const override;
-    bool Execute() override;
-
-    explicit HttpRequestTimerEvent(std::unique_ptr<AsynHttpRequest>&& request) : mRequest(std::move(request)) {}
+    [[nodiscard]] bool IsValid() const override { return true; }
+    bool Execute() override { return true; }
+    HttpRequestTimerEvent(std::chrono::steady_clock::time_point execTime, std::unique_ptr<AsynHttpRequest>&& request)
+        : TimerEvent(execTime), mRequest(std::move(request)) {}
 
 private:
     std::unique_ptr<AsynHttpRequest> mRequest;

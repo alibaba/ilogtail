@@ -19,26 +19,31 @@
 #include <memory>
 #include <string>
 
+#include "common/http/HttpResponse.h"
 #include "models/PipelineEventGroup.h"
 #include "prometheus/AsyncEvent.h"
 #include "prometheus/ScrapeConfig.h"
 #include "prometheus/ScrapeTarget.h"
 #include "queue/FeedbackQueueKey.h"
-#include "sdk/Common.h"
 
 namespace logtail {
 
-class ScrapeWorkEvent : public AsyncEvent {
+class ScrapeWorkEvent : public PromEvent {
+    friend class ScrapeJobEvent;
+
 public:
     ScrapeWorkEvent(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                     const ScrapeTarget& scrapeTarget,
                     QueueKey queueKey,
                     size_t inputIndex);
+    ScrapeWorkEvent(const ScrapeWorkEvent&) = default;
     ~ScrapeWorkEvent() override = default;
+
     bool operator<(const ScrapeWorkEvent& other) const;
 
-    void Process(const sdk::HttpMessage&) override;
-    sdk::AsynRequest BuildAsyncRequest() const;
+    void Process(const HttpResponse&) override;
+
+    // std::unique_ptr<TickerHttpRequest> BuildTickerHttpRequest() const;
 
     std::string mHash;
 

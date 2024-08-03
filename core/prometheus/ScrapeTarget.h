@@ -18,7 +18,7 @@ public:
     Labels mLabels;
 
     std::string mHost;
-    uint32_t mPort;
+    int32_t mPort;
 
     std::string GetHash();
 };

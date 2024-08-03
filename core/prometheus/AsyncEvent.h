@@ -10,61 +10,52 @@
 namespace logtail {
 
 
-class AsyncEvent {
+class PromEvent {
 public:
-    virtual ~AsyncEvent() = default;
+    virtual ~PromEvent() = default;
+
+    // Process should support oneshot or streaming mode.
     virtual void Process(const HttpResponse&) = 0;
 };
 
-
-class AsyncEventDecorator : public AsyncEvent {
+class TickerHttpRequest : public AsynHttpRequest {
 public:
-    explicit AsyncEventDecorator(std::shared_ptr<AsyncEvent> event);
-    ~AsyncEventDecorator() override = default;
-    void Process(const HttpResponse& response) override;
+    TickerHttpRequest(const std::string& method,
+                      bool httpsFlag,
+                      const std::string& host,
+                      int32_t port,
+                      const std::string& url,
+                      const std::string& query,
+                      const std::map<std::string, std::string>& header,
+                      const std::string& body,
+                      const std::string& hash,
+                      std::shared_ptr<PromEvent> event,
+                      ReadWriteLock& rwLock,
+                      std::unordered_set<std::string>& contextSet,
+                      uint64_t intervalSeconds,
+                      std::chrono::steady_clock::time_point execTime,
+                      std::shared_ptr<Timer> timer);
+    TickerHttpRequest(const TickerHttpRequest&) = default;
+    ~TickerHttpRequest() override = default;
 
-protected:
-    std::shared_ptr<AsyncEvent> mEvent;
-};
-
-class TickerEvent : public AsyncEventDecorator {
-public:
-    TickerEvent(std::shared_ptr<AsyncEvent> event,
-                uint64_t intervalSeconds,
-                uint64_t deadlineNanoSeconds,
-                std::shared_ptr<Timer> timer,
-                ReadWriteLock& mutex,
-                std::unordered_set<std::string>& validationSet,
-                std::string hash);
-    ~TickerEvent() override = default;
-    void Process(const HttpResponse& response) override;
+    void OnSendDone(const HttpResponse& response) override;
+    [[nodiscard]] bool IsContextValid() const override;
 
 private:
-    uint64_t mIntervalSeconds;
-    uint64_t mDeadlineNanoSeconds;
+    [[nodiscard]] std::unique_ptr<TimerEvent> BuildTimerEvent() const;
+    std::chrono::steady_clock::time_point GetNextExecTime() const;
+    void SetNextExecTime(std::chrono::steady_clock::time_point execTime);
+
+    std::shared_ptr<PromEvent> mEvent;
+
+    int64_t mIntervalSeconds;
+    std::chrono::steady_clock::time_point mExecTime;
     std::shared_ptr<Timer> mTimer;
 
-    ReadWriteLock& mRWLock;
+    // mHash is used to identify the context
     std::string mHash;
-    std::unordered_set<std::string>& mValidationSet;
-    [[nodiscard]] std::unique_ptr<TimerEvent> BuildTimerEvent() const;
-    [[nodiscard]] bool IsValidation() const;
-};
-
-struct PromHttpRequest : public AsynHttpRequest {
-    std::shared_ptr<TickerEvent> mTickerEvent;
-    PromHttpRequest(const std::string& method,
-                    bool httpsFlag,
-                    const std::string& host,
-                    const std::string& url,
-                    const std::string& query,
-                    const std::map<std::string, std::string>& header,
-                    const std::string& body,
-                    std::shared_ptr<TickerEvent> tickerEvent)
-        : AsynHttpRequest(method, httpsFlag, host, url, query, header, body), mTickerEvent(std::move(tickerEvent)) {}
-    void OnSendDone(const HttpResponse& response) override {
-        mTickerEvent->Process(response);
-    }
+    ReadWriteLock& mRWLock;
+    std::unordered_set<std::string>& mContextSet;
 };
 
 } // namespace logtail

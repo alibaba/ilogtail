@@ -26,7 +26,6 @@
 #include "prometheus/Constants.h"
 #include "prometheus/ScraperGroup.h"
 #include "sdk/Common.h"
-#include "sdk/CurlImp.h"
 #include "sdk/Exception.h"
 
 DEFINE_FLAG_STRING(SERVICE_HOST, "service host", "");
@@ -45,6 +44,10 @@ PrometheusInputRunner::PrometheusInputRunner() {
     mPodName = STRING_FLAG(_pod_name_);
 
     mScraperGroup = make_unique<ScraperGroup>();
+
+    mScraperGroup->mServiceHost = mServiceHost;
+    mScraperGroup->mServicePort = mServicePort;
+    mScraperGroup->mPodName = mPodName;
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -53,11 +56,6 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<ScrapeJobEvent> sc
         WriteLock lock(mReadWriteLock);
         mPrometheusInputsSet.insert(scrapeJobEventPtr->mJobName);
     }
-
-    // set job info
-    scrapeJobEventPtr->mServiceHost = mServiceHost;
-    scrapeJobEventPtr->mServicePort = mServicePort;
-    scrapeJobEventPtr->mPodName = mPodName;
 
     mScraperGroup->UpdateScrapeJob(std::move(scrapeJobEventPtr));
 }

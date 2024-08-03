@@ -19,7 +19,6 @@
 #include <xxhash/xxhash.h>
 
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -55,20 +54,20 @@ bool ScrapeWorkEvent::operator<(const ScrapeWorkEvent& other) const {
     return mHash < other.mHash;
 }
 
-void ScrapeWorkEvent::Process(const sdk::HttpMessage& response) {
+void ScrapeWorkEvent::Process(const HttpResponse& response) {
     // TODO(liqiang): get scrape timestamp
     time_t timestampInNs = GetCurrentTimeInNanoSeconds();
-    if (response.statusCode != 200) {
+    if (response.mStatusCode != 200) {
         string headerStr;
         for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
             headerStr.append(k).append(":").append(v).append(";");
         }
         LOG_WARNING(sLogger,
-                    ("scrape failed, status code", response.statusCode)("target", mHash)("http header", headerStr));
+                    ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
         return;
     }
     // TODO(liqiang): set jobName, instance metadata
-    auto eventGroup = SplitByLines(response.content, timestampInNs);
+    auto eventGroup = SplitByLines(response.mBody, timestampInNs);
 
     PushEventGroup(std::move(eventGroup));
 }
@@ -86,27 +85,6 @@ PipelineEventGroup ScrapeWorkEvent::SplitByLines(const std::string& content, tim
     }
 
     return eGroup;
-}
-
-sdk::AsynRequest ScrapeWorkEvent::BuildAsyncRequest() const {
-    map<string, string> httpHeader;
-    string reqBody;
-
-    auto* response = new sdk::Response();
-    auto* closure = new sdk::PostLogStoreLogsResponse;
-
-    return sdk::AsynRequest(sdk::HTTP_GET,
-                            mScrapeTarget.mHost,
-                            mScrapeTarget.mPort,
-                            mScrapeConfigPtr->mMetricsPath,
-                            mScrapeConfigPtr->mQueryString,
-                            mScrapeConfigPtr->mHeaders,
-                            "",
-                            mScrapeConfigPtr->mScrapeTimeoutSeconds,
-                            "",
-                            mScrapeConfigPtr->mScheme == prometheus::HTTPS,
-                            (sdk::LogsClosure*)closure,
-                            response);
 }
 
 void ScrapeWorkEvent::PushEventGroup(PipelineEventGroup&& eGroup) {

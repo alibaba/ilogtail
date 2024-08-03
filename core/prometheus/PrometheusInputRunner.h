@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 
+#include "CurlImp.h"
 #include "common/Lock.h"
 #include "prometheus/ScrapeJobEvent.h"
 #include "prometheus/ScraperGroup.h"
@@ -56,7 +57,7 @@ private:
     mutable ReadWriteLock mReadWriteLock;
     std::unordered_set<std::string> mPrometheusInputsSet;
 
-    std::unique_ptr<sdk::HTTPClient> mClient;
+    std::unique_ptr<sdk::CurlClient> mClient;
 
     std::string mServiceHost;
     int32_t mServicePort;

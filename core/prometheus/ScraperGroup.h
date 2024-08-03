@@ -43,15 +43,16 @@ public:
     void Start();
     void Stop();
 
+    // from environment variable
+    std::string mServiceHost;
+    int32_t mServicePort;
+    std::string mPodName;
+
     // zero-cost upgrade
     uint64_t mUnRegisterMs;
 
 private:
-    ScrapeEvent BuildScrapeEvent(std::shared_ptr<AsyncEvent> asyncEvent,
-                                 uint64_t intervalSeconds,
-                                 ReadWriteLock& rwLock,
-                                 std::unordered_set<std::string>& validationSet,
-                                 std::string hash);
+    std::unique_ptr<TimerEvent> BuildJobTimerEvent(std::shared_ptr<ScrapeJobEvent> jobEvent, uint64_t intervalSeconds);
 
     std::shared_ptr<Timer> mTimer;
 
