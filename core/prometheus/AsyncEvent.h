@@ -5,7 +5,6 @@
 
 #include "common/Lock.h"
 #include "prometheus/Mock.h"
-#include "sdk/Common.h"
 
 
 namespace logtail {
