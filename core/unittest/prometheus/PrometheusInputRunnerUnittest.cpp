@@ -28,7 +28,7 @@ using namespace std;
 namespace logtail {
 
 // InputRunnerMockHttpClient
-class InputRunnerMockHttpClient : public sdk::HTTPClient {
+class InputRunnerMockHttpClient : public sdk::CurlClient {
 public:
     void Send(const std::string& httpMethod,
               const std::string& host,
@@ -40,8 +40,7 @@ public:
               int32_t timeout,
               sdk::HttpMessage& httpMessage,
               const std::string& intf,
-              bool httpsFlag) override;
-    void AsynSend(sdk::AsynRequest* request);
+              bool httpsFlag);
 };
 
 void InputRunnerMockHttpClient::Send(const std::string&,
@@ -110,9 +109,6 @@ void InputRunnerMockHttpClient::Send(const std::string&,
     }]
     )";
     }
-}
-
-void InputRunnerMockHttpClient::AsynSend(sdk::AsynRequest*) {
 }
 
 class PrometheusInputRunnerUnittest : public testing::Test {

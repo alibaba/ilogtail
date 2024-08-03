@@ -22,7 +22,7 @@ void ScrapeTargetUnittest::TestInit() {
     ScrapeTarget target(labels);
 
     APSARA_TEST_EQUAL("127.0.0.1", target.mHost);
-    APSARA_TEST_EQUAL(8080UL, target.mPort);
+    APSARA_TEST_EQUAL(8080, target.mPort);
     APSARA_TEST_EQUAL("127.0.0.1:8080" + ToString(labels.Hash()), target.GetHash());
 }
 

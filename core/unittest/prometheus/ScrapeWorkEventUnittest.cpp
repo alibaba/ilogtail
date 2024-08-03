@@ -18,85 +18,122 @@
 #include <memory>
 #include <string>
 
-#include "JsonUtil.h"
-#include "Labels.h"
-#include "ScrapeConfig.h"
-#include "json/value.h"
+#include "common/StringTools.h"
+#include "prometheus/Constants.h"
+#include "prometheus/Labels.h"
+#include "prometheus/ScrapeConfig.h"
 #include "prometheus/ScrapeWorkEvent.h"
-#include "sdk/Common.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
 
 namespace logtail {
 
-// MockHttpClient
-class MockHttpClient : public sdk::HTTPClient {
+class ScrapeWorkEventUnittest : public testing::Test {
 public:
-    MockHttpClient();
+    void TestInitScrapeWorkEvent();
+    void TestProcess();
+    void TestSplitByLines();
 
-    virtual void Send(const std::string& httpMethod,
-                      const std::string& host,
-                      const int32_t port,
-                      const std::string& url,
-                      const std::string& queryString,
-                      const std::map<std::string, std::string>& header,
-                      const std::string& body,
-                      const int32_t timeout,
-                      sdk::HttpMessage& httpMessage,
-                      const std::string& intf,
-                      const bool httpsFlag);
-    virtual void AsynSend(sdk::AsynRequest* request);
-};
+protected:
+    void SetUp() override {
+        mScrapeConfig = make_shared<ScrapeConfig>();
+        mScrapeConfig->mJobName = "test_job";
+        mScrapeConfig->mScheme = "http";
+        mScrapeConfig->mScrapeIntervalSeconds = 10;
+        mScrapeConfig->mScrapeTimeoutSeconds = 10;
+        mScrapeConfig->mMetricsPath = "/metrics";
 
-MockHttpClient::MockHttpClient() {
-}
+        mHttpResponse.mBody
+            = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
+              "# TYPE go_gc_duration_seconds summary\n"
+              "go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05\n"
+              "go_gc_duration_seconds{quantile=\"0.25\"} 3.9357e-05\n"
+              "go_gc_duration_seconds{quantile=\"0.5\"} 4.1114e-05\n"
+              "go_gc_duration_seconds{quantile=\"0.75\"} 4.3372e-05\n"
+              "go_gc_duration_seconds{quantile=\"1\"} 0.000112326\n"
+              "go_gc_duration_seconds_sum 0.034885631\n"
+              "go_gc_duration_seconds_count 850\n"
+              "# HELP go_goroutines Number of goroutines that currently exist.\n"
+              "# TYPE go_goroutines gauge\n"
+              "go_goroutines 7\n"
+              "# HELP go_info Information about the Go environment.\n"
+              "# TYPE go_info gauge\n"
+              "go_info{version=\"go1.22.3\"} 1\n"
+              "# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.\n"
+              "# TYPE go_memstats_alloc_bytes gauge\n"
+              "go_memstats_alloc_bytes 6.742688e+06\n"
+              "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
+              "# TYPE go_memstats_alloc_bytes_total counter\n"
+              "go_memstats_alloc_bytes_total 1.5159292e+08";
 
-void MockHttpClient::Send(const std::string& httpMethod,
-                          const std::string& host,
-                          const int32_t port,
-                          const std::string& url,
-                          const std::string& queryString,
-                          const std::map<std::string, std::string>& header,
-                          const std::string& body,
-                          const int32_t timeout,
-                          sdk::HttpMessage& httpMessage,
-                          const std::string& intf,
-                          const bool httpsFlag) {
-    httpMessage.content
-        = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
-          "# TYPE go_gc_duration_seconds summary\n"
-          "go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.25\"} 3.9357e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.5\"} 4.1114e-05\n"
-          "go_gc_duration_seconds{quantile=\"0.75\"} 4.3372e-05\n"
-          "go_gc_duration_seconds{quantile=\"1\"} 0.000112326\n"
-          "go_gc_duration_seconds_sum 0.034885631\n"
-          "go_gc_duration_seconds_count 850\n"
-          "# HELP go_goroutines Number of goroutines that currently exist.\n"
-          "# TYPE go_goroutines gauge\n"
-          "go_goroutines 7\n"
-          "# HELP go_info Information about the Go environment.\n"
-          "# TYPE go_info gauge\n"
-          "go_info{version=\"go1.22.3\"} 1\n"
-          "# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.\n"
-          "# TYPE go_memstats_alloc_bytes gauge\n"
-          "go_memstats_alloc_bytes 6.742688e+06\n"
-          "# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n"
-          "# TYPE go_memstats_alloc_bytes_total counter\n"
-          "go_memstats_alloc_bytes_total 1.5159292e+08";
-    httpMessage.statusCode = 200;
-}
-
-void MockHttpClient::AsynSend(sdk::AsynRequest* request) {
-}
-
-class ScrapeWorkUnittest : public testing::Test {
-public:
+        mHttpResponse.mStatusCode = 200;
+    }
 
 private:
+    std::shared_ptr<ScrapeConfig> mScrapeConfig;
+    HttpResponse mHttpResponse;
 };
 
+void ScrapeWorkEventUnittest::TestInitScrapeWorkEvent() {
+    Labels labels;
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    ScrapeTarget target(labels);
+    ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
+    APSARA_TEST_EQUAL(event.mHash, "test_jobhttp://localhost:8080/metrics" + ToString(target.mLabels.Hash()));
+}
+
+void ScrapeWorkEventUnittest::TestProcess() {
+    Labels labels;
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    ScrapeTarget target(labels);
+    ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
+    // if status code is not 200, no data will be processed
+    mHttpResponse.mStatusCode = 503;
+    event.Process(mHttpResponse);
+    APSARA_TEST_EQUAL(0UL, event.mItem.size());
+    event.mItem.clear();
+
+    mHttpResponse.mStatusCode = 200;
+    event.Process(mHttpResponse);
+    APSARA_TEST_EQUAL(1UL, event.mItem.size());
+    APSARA_TEST_EQUAL(11UL, event.mItem[0]->mEventGroup.GetEvents().size());
+}
+
+void ScrapeWorkEventUnittest::TestSplitByLines() {
+    Labels labels;
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    ScrapeTarget target(labels);
+    ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
+    auto res = event.SplitByLines(mHttpResponse.mBody, 0);
+    APSARA_TEST_EQUAL(11UL, res.GetEvents().size());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05",
+                      res.GetEvents()[0].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"0.25\"} 3.9357e-05",
+                      res.GetEvents()[1].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"0.5\"} 4.1114e-05",
+                      res.GetEvents()[2].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"0.75\"} 4.3372e-05",
+                      res.GetEvents()[3].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"1\"} 0.000112326",
+                      res.GetEvents()[4].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds_sum 0.034885631",
+                      res.GetEvents()[5].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_gc_duration_seconds_count 850",
+                      res.GetEvents()[6].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_goroutines 7",
+                      res.GetEvents()[7].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_info{version=\"go1.22.3\"} 1",
+                      res.GetEvents()[8].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_memstats_alloc_bytes 6.742688e+06",
+                      res.GetEvents()[9].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+    APSARA_TEST_EQUAL("go_memstats_alloc_bytes_total 1.5159292e+08",
+                      res.GetEvents()[10].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+}
+
+UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestInitScrapeWorkEvent)
+UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestProcess)
+UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestSplitByLines)
 
 } // namespace logtail
 

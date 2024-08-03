@@ -15,7 +15,6 @@
  */
 
 #include <string>
-#include <thread>
 
 #include "JsonUtil.h"
 #include "prometheus/Labels.h"
@@ -31,6 +30,8 @@ class ScraperGroupUnittest : public testing::Test {
 public:
     void OnUpdateScrapeJob();
     void OnRemoveScrapeJob();
+
+    void TestStartAndStop();
 
 protected:
     void SetUp() override {
@@ -76,10 +77,10 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
 
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
-    APSARA_TEST_TRUE(scraperGroup->mJobValidSet.empty());
+    APSARA_TEST_TRUE(scraperGroup->mJobEventMap.empty());
     scraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
 
-    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mJobValidSet.count("test_job"));
+    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mJobEventMap.count("test_job"));
 }
 
 void ScraperGroupUnittest::OnRemoveScrapeJob() {
@@ -109,20 +110,36 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
 
-    APSARA_TEST_TRUE(scraperGroup->mJobValidSet.empty());
+    APSARA_TEST_TRUE(scraperGroup->mJobEventMap.empty());
     scraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
 
-    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mJobValidSet.count("test_job"));
+    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mJobEventMap.count("test_job"));
     scraperGroup->RemoveScrapeJob("test_job");
 
-    APSARA_TEST_TRUE(scraperGroup->mJobValidSet.find("test_job") == scraperGroup->mJobValidSet.end());
+    APSARA_TEST_TRUE(scraperGroup->mJobEventMap.find("test_job") == scraperGroup->mJobEventMap.end());
 
     // stop scraper group to clean up
     scraperGroup->Stop();
 }
 
+void ScraperGroupUnittest::TestStartAndStop() {
+    std::unique_ptr<ScraperGroup> scraperGroup = make_unique<ScraperGroup>();
+    scraperGroup->Start();
+    {
+        std::lock_guard<mutex> lock(scraperGroup->mStartMux);
+        APSARA_TEST_EQUAL(scraperGroup->mIsStarted, true);
+    }
+    scraperGroup->Stop();
+    {
+        std::lock_guard<mutex> lock(scraperGroup->mStartMux);
+        APSARA_TEST_EQUAL(scraperGroup->mIsStarted, false);
+    }
+    APSARA_TEST_EQUAL(0UL, scraperGroup->mJobEventMap.size());
+}
+
 UNIT_TEST_CASE(ScraperGroupUnittest, OnUpdateScrapeJob)
 UNIT_TEST_CASE(ScraperGroupUnittest, OnRemoveScrapeJob)
+UNIT_TEST_CASE(ScraperGroupUnittest, TestStartAndStop)
 
 } // namespace logtail
 

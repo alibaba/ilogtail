@@ -28,41 +28,57 @@ using namespace std;
 
 namespace logtail {
 
-// MockHttpClient
-class MockScrapeJobHttpClient : public sdk::HTTPClient {
+class ScrapeJobEventUnittest : public ::testing::Test {
 public:
-    MockScrapeJobHttpClient();
+    void OnInitScrapeJobEvent();
+    void OnGetRandSleep();
+    void TestProcess();
+    void TestParseTargetGroups();
 
-    virtual void Send(const std::string& httpMethod,
-                      const std::string& host,
-                      const int32_t port,
-                      const std::string& url,
-                      const std::string& queryString,
-                      const std::map<std::string, std::string>& header,
-                      const std::string& body,
-                      const int32_t timeout,
-                      sdk::HttpMessage& httpMessage,
-                      const std::string& intf,
-                      const bool httpsFlag);
-    virtual void AsynSend(sdk::AsynRequest* request);
-};
-
-MockScrapeJobHttpClient::MockScrapeJobHttpClient() {
+protected:
+    void SetUp() override {
+        setenv("POD_NAME", "prometheus-test", 1);
+        setenv("OPERATOR_HOST", "127.0.0.1", 1);
+        setenv("OPERATOR_PORT", "12345", 1);
+        {
+            mConfigString = R"JSON(
+{
+    "Type": "input_prometheus",
+    "ScrapeConfig": {
+        "enable_http2": true,
+        "follow_redirects": true,
+        "honor_timestamps": false,
+        "job_name": "_kube-state-metrics",
+        "kubernetes_sd_configs": [
+            {
+                "enable_http2": true,
+                "follow_redirects": true,
+                "kubeconfig_file": "",
+                "namespaces": {
+                    "names": [
+                        "arms-prom"
+                    ],
+                    "own_namespace": false
+                },
+                "role": "pod"
+            }
+        ],
+        "metrics_path": "/metrics",
+        "scheme": "http",
+        "scrape_interval": "30s",
+        "scrape_timeout": "30s"
+    }
 }
+    )JSON";
+        }
+        std::string errMsg;
+        if (!ParseJsonTable(mConfigString, mConfig, errMsg)) {
+            std::cerr << "JSON parsing failed." << std::endl;
+        }
 
-void MockScrapeJobHttpClient::Send(const std::string& httpMethod,
-                                   const std::string& host,
-                                   const int32_t port,
-                                   const std::string& url,
-                                   const std::string& queryString,
-                                   const std::map<std::string, std::string>& header,
-                                   const std::string& body,
-                                   const int32_t timeout,
-                                   sdk::HttpMessage& httpMessage,
-                                   const std::string& intf,
-                                   const bool httpsFlag) {
-    httpMessage.statusCode = 200;
-    httpMessage.content = R"JSON([
+        mHttpResponse.mStatusCode = 200;
+        {
+            mHttpResponse.mBody = R"JSON([
         {
             "targets": [
                 "192.168.22.7:8080"
@@ -114,24 +130,6 @@ void MockScrapeJobHttpClient::Send(const std::string& httpMethod,
             }
         }
     ])JSON";
-}
-
-void MockScrapeJobHttpClient::AsynSend(sdk::AsynRequest* request) {
-}
-
-class ScrapeJobEventUnittest : public ::testing::Test {
-public:
-    void OnInitScrapeJobEvent();
-    void OnGetRandSleep();
-
-protected:
-    void SetUp() override {
-        setenv("POD_NAME", "prometheus-test", 1);
-        setenv("OPERATOR_HOST", "127.0.0.1", 1);
-        setenv("OPERATOR_PORT", "12345", 1);
-        std::string errMsg;
-        if (!ParseJsonTable(mConfigString, mConfig, errMsg)) {
-            std::cerr << "JSON parsing failed." << std::endl;
         }
     }
     void TearDown() override {
@@ -139,67 +137,11 @@ protected:
         unsetenv("OPERATOR_HOST");
         unsetenv("OPERATOR_PORT");
     }
+
+private:
+    HttpResponse mHttpResponse;
     Json::Value mConfig;
-    std::string mConfigString = R"JSON(
-{
-    "Type": "input_prometheus",
-    "ScrapeConfig": {
-        "enable_http2": true,
-        "follow_redirects": true,
-        "honor_timestamps": false,
-        "job_name": "_kube-state-metrics",
-        "kubernetes_sd_configs": [
-            {
-                "enable_http2": true,
-                "follow_redirects": true,
-                "kubeconfig_file": "",
-                "namespaces": {
-                    "names": [
-                        "arms-prom"
-                    ],
-                    "own_namespace": false
-                },
-                "role": "pod"
-            }
-        ],
-        "metrics_path": "/metrics",
-        "relabel_configs": [
-            {
-                "action": "keep",
-                "regex": "kube-state-metrics",
-                "replacement": "$1",
-                "separator": ";",
-                "source_labels": [
-                    "__meta_kubernetes_pod_label_k8s_app"
-                ]
-            },
-            {
-                "action": "keep",
-                "regex": "8080",
-                "replacement": "$1",
-                "separator": ";",
-                "source_labels": [
-                    "__meta_kubernetes_pod_container_port_number"
-                ]
-            },
-            {
-                "action": "replace",
-                "regex": "([^:]+)(?::\\d+)?;(\\d+)",
-                "replacement": "$1:$2",
-                "separator": ";",
-                "source_labels": [
-                    "__address__",
-                    "__meta_kubernetes_pod_container_port_number"
-                ],
-                "target_label": "__address__"
-            }
-        ],
-        "scheme": "http",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
-    }
-}
-    )JSON";
+    std::string mConfigString;
 };
 
 
@@ -219,8 +161,34 @@ void ScrapeJobEventUnittest::OnGetRandSleep() {
     APSARA_TEST_NOT_EQUAL(rand1, rand2);
 }
 
+void ScrapeJobEventUnittest::TestProcess() {
+    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
+
+    // if status code is not 200
+    mHttpResponse.mStatusCode = 404;
+    scrapeJobEventPtr->Process(mHttpResponse);
+    APSARA_TEST_EQUAL(0UL, scrapeJobEventPtr->mScrapeWorkSet.size());
+
+    // if status code is 200
+    mHttpResponse.mStatusCode = 200;
+    scrapeJobEventPtr->Process(mHttpResponse);
+    APSARA_TEST_EQUAL(2UL, scrapeJobEventPtr->mScrapeWorkSet.size());
+}
+
+void ScrapeJobEventUnittest::TestParseTargetGroups() {
+    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
+
+    std::set<ScrapeWorkEvent> newScrapeWorkSet;
+    APSARA_TEST_TRUE(scrapeJobEventPtr->ParseTargetGroups(mHttpResponse.mBody, newScrapeWorkSet));
+    APSARA_TEST_EQUAL(2UL, newScrapeWorkSet.size());
+}
+
 UNIT_TEST_CASE(ScrapeJobEventUnittest, OnInitScrapeJobEvent)
 UNIT_TEST_CASE(ScrapeJobEventUnittest, OnGetRandSleep)
+UNIT_TEST_CASE(ScrapeJobEventUnittest, TestProcess)
+UNIT_TEST_CASE(ScrapeJobEventUnittest, TestParseTargetGroups)
 
 } // namespace logtail
 
