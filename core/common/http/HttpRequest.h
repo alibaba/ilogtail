@@ -35,6 +35,7 @@ struct HttpRequest {
     std::map<std::string, std::string> mHeader;
     std::string mBody;
     std::string mHost;
+    int32_t mPort;
 
     uint32_t mTryCnt = 1;
     time_t mLastSendTime = 0;
@@ -42,6 +43,7 @@ struct HttpRequest {
     HttpRequest(const std::string& method,
                 bool httpsFlag,
                 const std::string& host,
+                int32_t port,
                 const std::string& url,
                 const std::string& query,
                 const std::map<std::string, std::string>& header,
@@ -52,7 +54,8 @@ struct HttpRequest {
           mQueryString(query),
           mHeader(header),
           mBody(body),
-          mHost(host) {}
+          mHost(host),
+          mPort(port) {}
     virtual ~HttpRequest() = default;
 };
 
@@ -64,11 +67,12 @@ struct AsynHttpRequest : public HttpRequest {
     AsynHttpRequest(const std::string& method,
                     bool httpsFlag,
                     const std::string& host,
+                    int32_t port,
                     const std::string& url,
                     const std::string& query,
                     const std::map<std::string, std::string>& header,
                     const std::string& body)
-        : HttpRequest(method, httpsFlag, host, url, query, header, body) {}
+        : HttpRequest(method, httpsFlag, host, port, url, query, header, body) {}
 
     virtual bool IsContextValid() const = 0;
     virtual void OnSendDone(const HttpResponse& response) = 0;

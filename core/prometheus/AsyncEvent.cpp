@@ -26,7 +26,7 @@ TickerHttpRequest::TickerHttpRequest(const std::string& method,
                                      uint64_t intervalSeconds,
                                      std::chrono::steady_clock::time_point execTime,
                                      std::shared_ptr<Timer> timer)
-    : AsynHttpRequest(method, httpsFlag, host, url, query, header, body),
+    : AsynHttpRequest(method, httpsFlag, host, port,url, query, header, body),
       mEvent(std::move(event)),
       mIntervalSeconds(intervalSeconds),
       mExecTime(execTime),
