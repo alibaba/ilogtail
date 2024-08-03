@@ -26,6 +26,10 @@
 #include "prometheus/ScrapeTarget.h"
 #include "queue/FeedbackQueueKey.h"
 
+#ifdef APSARA_UNIT_TEST_MAIN
+#include "queue/ProcessQueueItem.h"
+#endif
+
 namespace logtail {
 
 class ScrapeWorkEvent : public PromEvent {
@@ -43,9 +47,8 @@ public:
 
     void Process(const HttpResponse&) override;
 
-    // std::unique_ptr<TickerHttpRequest> BuildTickerHttpRequest() const;
-
-    std::string mHash;
+    std::string GetId() const override;
+    bool ReciveMessage() override;
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
@@ -53,12 +56,16 @@ private:
     PipelineEventGroup SplitByLines(const std::string& content, time_t timestampNs);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
+
     ScrapeTarget mScrapeTarget;
+    std::string mHash;
 
     QueueKey mQueueKey;
     size_t mInputIndex;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorLogToMetricNativeUnittest;
+    friend class ScrapeWorkEventUnittest;
+    std::vector<std::shared_ptr<ProcessQueueItem>> mItem;
 #endif
 };
 

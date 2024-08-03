@@ -15,7 +15,11 @@ ScrapeTarget::ScrapeTarget(const Labels& labels) : mLabels(labels) {
     auto m = address.find(':');
     if (m != string::npos) {
         mHost = address.substr(0, m);
-        mPort = stoi(address.substr(m + 1));
+        try {
+            mPort = stoi(address.substr(m + 1));
+        } catch (...) {
+            mPort = 9100;
+        }
     }
 }
 

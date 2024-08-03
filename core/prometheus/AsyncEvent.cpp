@@ -2,15 +2,60 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_set>
 
+#include "Logger.h"
 #include "common/Lock.h"
 #include "common/http/HttpRequest.h"
 #include "prometheus/Mock.h"
 
 namespace logtail {
 
-// TODO(liqiang): fix port
+void PromEvent::Send(bool message) {
+    // this is a state that is not easy to change, so here we use a read-write lock
+    {
+        ReadLock lock(mStateRWLock);
+        if (message == mValidState) {
+            return;
+        }
+    }
+    WriteLock lock(mStateRWLock);
+    mValidState = message;
+}
+
+void PromMessageDispatcher::RegisterEvent(std::shared_ptr<PromEvent> promEvent) {
+    WriteLock lock(mEventsRWLock);
+    mPromEvents[promEvent->GetId()] = std::move(promEvent);
+}
+
+void PromMessageDispatcher::UnRegisterEvent(const std::string& promEventId) {
+    WriteLock lock(mEventsRWLock);
+    mPromEvents.erase(promEventId);
+}
+
+void PromMessageDispatcher::SendMessage(const std::string& promEventId, bool message) {
+    std::shared_ptr<PromEvent> promEvent;
+    {
+        ReadLock lock(mEventsRWLock);
+        auto it = mPromEvents.find(promEventId);
+        if (it != mPromEvents.end()) {
+            promEvent = it->second;
+        }
+    }
+    if (promEvent) {
+        promEvent->Send(message);
+    } else {
+        LOG_INFO(sLogger, ("PromEvent not found", promEventId));
+    }
+}
+
+void PromMessageDispatcher::Stop() {
+    WriteLock lock(mEventsRWLock);
+    for (auto& it : mPromEvents) {
+        it.second->Send(false);
+    }
+    mPromEvents.clear();
+}
+
 TickerHttpRequest::TickerHttpRequest(const std::string& method,
                                      bool httpsFlag,
                                      const std::string& host,
@@ -19,21 +64,15 @@ TickerHttpRequest::TickerHttpRequest(const std::string& method,
                                      const std::string& query,
                                      const std::map<std::string, std::string>& header,
                                      const std::string& body,
-                                     const std::string& hash,
                                      std::shared_ptr<PromEvent> event,
-                                     ReadWriteLock& rwLock,
-                                     std::unordered_set<std::string>& contextSet,
                                      uint64_t intervalSeconds,
                                      std::chrono::steady_clock::time_point execTime,
                                      std::shared_ptr<Timer> timer)
-    : AsynHttpRequest(method, httpsFlag, host, port,url, query, header, body),
+    : AsynHttpRequest(method, httpsFlag, host, port, url, query, header, body),
       mEvent(std::move(event)),
       mIntervalSeconds(intervalSeconds),
       mExecTime(execTime),
-      mTimer(std::move(timer)),
-      mHash(hash),
-      mRWLock(rwLock),
-      mContextSet(contextSet) {
+      mTimer(std::move(timer)) {
 }
 
 void TickerHttpRequest::OnSendDone(const HttpResponse& response) {
@@ -46,8 +85,7 @@ void TickerHttpRequest::OnSendDone(const HttpResponse& response) {
     }
 }
 [[nodiscard]] bool TickerHttpRequest::IsContextValid() const {
-    ReadLock lock(mRWLock);
-    return mContextSet.count(mHash);
+    return mEvent->ReciveMessage();
 }
 
 [[nodiscard]] std::unique_ptr<TimerEvent> TickerHttpRequest::BuildTimerEvent() const {

@@ -21,7 +21,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_set>
 
 #include "common/Lock.h"
 #include "prometheus/ScrapeJobEvent.h"
@@ -31,7 +30,7 @@ namespace logtail {
 class ScraperGroup {
 public:
     ScraperGroup();
-    ~ScraperGroup();
+    ~ScraperGroup() = default;
     ScraperGroup(const ScraperGroup&) = delete;
     ScraperGroup(ScraperGroup&&) = delete;
     ScraperGroup& operator=(const ScraperGroup&) = delete;
@@ -57,7 +56,6 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     ReadWriteLock mJobRWLock;
-    std::unordered_set<std::string> mJobValidSet;
     std::map<std::string, std::shared_ptr<ScrapeJobEvent>> mJobEventMap;
 
     std::mutex mStartMux;

@@ -54,7 +54,7 @@ PrometheusInputRunner::PrometheusInputRunner() {
 void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr) {
     {
         WriteLock lock(mReadWriteLock);
-        mPrometheusInputsSet.insert(scrapeJobEventPtr->mJobName);
+        mPrometheusInputsSet.insert(scrapeJobEventPtr->GetId());
     }
 
     mScraperGroup->UpdateScrapeJob(std::move(scrapeJobEventPtr));
@@ -108,7 +108,6 @@ void PrometheusInputRunner::Start() {
 }
 
 /// @brief stop scrape work and clear all scrape jobs
-// 改造成超时退出
 void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
     // only unregister when operator exist

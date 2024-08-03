@@ -55,7 +55,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
         return false;
     }
 
-    mJobName = mScrapeJobEventPtr->mJobName;
+    mJobName = mScrapeJobEventPtr->GetId();
     mScrapeJobEventPtr->mInputIndex = mIndex;
     return CreateInnerProcessors(scrapeConfig, pluginIdx);
 }

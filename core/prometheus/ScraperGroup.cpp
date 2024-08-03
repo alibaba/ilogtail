@@ -53,29 +53,29 @@ string URLEncode(const string& value) {
 ScraperGroup::ScraperGroup() : mServicePort(0), mUnRegisterMs(0), mTimer(make_shared<Timer>()), mIsStarted(false) {
 }
 
-ScraperGroup::~ScraperGroup() {
-    Stop();
-}
-
 void ScraperGroup::UpdateScrapeJob(std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr) {
-    RemoveScrapeJob(scrapeJobEventPtr->mJobName);
+    RemoveScrapeJob(scrapeJobEventPtr->GetId());
 
     scrapeJobEventPtr->mUnRegisterMs = mUnRegisterMs;
     scrapeJobEventPtr->SetTimer(mTimer);
-    // 1. add job to mJobSet
+    // 1. add job to mJobEventMap
     WriteLock lock(mJobRWLock);
-    mJobValidSet.insert(scrapeJobEventPtr->mJobName);
-    mJobEventMap[scrapeJobEventPtr->mJobName] = scrapeJobEventPtr;
+    mJobEventMap[scrapeJobEventPtr->GetId()] = scrapeJobEventPtr;
 
-    // 2. build Ticker Event and add it to Timer
+    // 2. register job to PromMessageDispatcher
+    PromMessageDispatcher::GetInstance().RegisterEvent(scrapeJobEventPtr);
+
+    // 3. build Ticker Event and add it to Timer
     auto timerEvent = BuildJobTimerEvent(std::move(scrapeJobEventPtr), prometheus::RefeshIntervalSeconds);
     mTimer->PushEvent(std::move(timerEvent));
 }
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
     WriteLock lock(mJobRWLock);
-    mJobValidSet.erase(jobName);
     mJobEventMap.erase(jobName);
+    // unregister job to PromMessageDispatcher
+    PromMessageDispatcher::GetInstance().SendMessage(jobName, false);
+    PromMessageDispatcher::GetInstance().UnRegisterEvent(jobName);
 }
 
 void ScraperGroup::Start() {
@@ -97,9 +97,9 @@ void ScraperGroup::Stop() {
     mTimer->Stop();
 
     // 2. clear resources
+    PromMessageDispatcher::GetInstance().Stop();
     {
         WriteLock lock(mJobRWLock);
-        mJobValidSet.clear();
         mJobEventMap.clear();
     }
     {
@@ -128,14 +128,11 @@ std::unique_ptr<TimerEvent> ScraperGroup::BuildJobTimerEvent(std::shared_ptr<Scr
                                                        false,
                                                        mServiceHost,
                                                        mServicePort,
-                                                       "/jobs/" + URLEncode(jobEvent->mJobName) + "/targets",
+                                                       "/jobs/" + URLEncode(jobEvent->GetId()) + "/targets",
                                                        "collector_id=" + mPodName,
                                                        httpHeader,
                                                        "",
-                                                       jobEvent->mJobName,
                                                        std::move(jobEvent),
-                                                       mJobRWLock,
-                                                       mJobValidSet,
                                                        intervalSeconds,
                                                        execTime,
                                                        mTimer);

@@ -74,7 +74,7 @@ void ScrapeJobEvent::Process(const HttpResponse& response) {
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
             mScrapeWorkSet.erase(work);
-            mWorkValidSet.erase(work.mHash);
+            PromMessageDispatcher::GetInstance().SendMessage(work.GetId(), false);
         }
         diff.clear();
 
@@ -86,7 +86,6 @@ void ScrapeJobEvent::Process(const HttpResponse& response) {
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
             mScrapeWorkSet.insert(work);
-            mWorkValidSet.insert(work.mHash);
         }
     }
 
@@ -109,10 +108,7 @@ std::unique_ptr<TimerEvent> ScrapeJobEvent::BuildWorkTimerEvent(std::shared_ptr<
                                                        mScrapeConfigPtr->mQueryString,
                                                        mScrapeConfigPtr->mHeaders,
                                                        "",
-                                                       workEvent->mHash,
                                                        std::move(workEvent),
-                                                       mRWLock,
-                                                       mWorkValidSet,
                                                        mScrapeConfigPtr->mScrapeIntervalSeconds,
                                                        execTime,
                                                        mTimer);
@@ -134,7 +130,7 @@ uint64_t ScrapeJobEvent::GetRandSleep(const string& hash) const {
     return randSleep;
 }
 
-bool ScrapeJobEvent::ParseTargetGroups(const string& content, set<ScrapeWorkEvent> newScrapeWorkSet) const {
+bool ScrapeJobEvent::ParseTargetGroups(const string& content, set<ScrapeWorkEvent>& newScrapeWorkSet) const {
     string errs;
     Json::Value root;
     if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
@@ -210,6 +206,28 @@ bool ScrapeJobEvent::ParseTargetGroups(const string& content, set<ScrapeWorkEven
 
 void ScrapeJobEvent::SetTimer(shared_ptr<Timer> timer) {
     mTimer = std::move(timer);
+}
+
+string ScrapeJobEvent::GetId() const {
+    return mJobName;
+}
+
+bool ScrapeJobEvent::ReciveMessage() {
+    {
+        ReadLock lock(mStateRWLock);
+        if (mValidState == true) {
+            return true;
+        }
+    }
+
+    // unregister job event
+    PromMessageDispatcher::GetInstance().UnRegisterEvent(GetId());
+
+    // send message to work events
+    for (const auto& workEvent : mScrapeWorkSet) {
+        PromMessageDispatcher::GetInstance().SendMessage(workEvent.GetId(), false);
+    }
+    return false;
 }
 
 } // namespace logtail

@@ -89,7 +89,27 @@ PipelineEventGroup ScrapeWorkEvent::SplitByLines(const std::string& content, tim
 
 void ScrapeWorkEvent::PushEventGroup(PipelineEventGroup&& eGroup) {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
+#ifdef APSARA_UNIT_TEST_MAIN
+    mItem.push_back(std::move(item));
+#endif
     ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
+}
+
+string ScrapeWorkEvent::GetId() const {
+    return mHash;
+}
+
+bool ScrapeWorkEvent::ReciveMessage() {
+    {
+        ReadLock lock(mStateRWLock);
+        if (mValidState == true) {
+            return true;
+        }
+    }
+
+    // unregister work event
+    PromMessageDispatcher::GetInstance().UnRegisterEvent(GetId());
+    return false;
 }
 
 } // namespace logtail

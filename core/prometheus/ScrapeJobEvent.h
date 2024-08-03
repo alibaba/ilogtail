@@ -23,8 +23,8 @@
 #include <string>
 
 #include "common/http/HttpResponse.h"
-#include "prometheus/Mock.h"
 #include "prometheus/AsyncEvent.h"
+#include "prometheus/Mock.h"
 #include "prometheus/ScrapeConfig.h"
 #include "prometheus/ScrapeWorkEvent.h"
 #include "queue/FeedbackQueueKey.h"
@@ -40,10 +40,10 @@ public:
     bool operator<(const ScrapeJobEvent& other) const;
 
     void Process(const HttpResponse&) override;
-
     void SetTimer(std::shared_ptr<Timer> timer);
 
-    std::string mJobName;
+    std::string GetId() const override;
+    bool ReciveMessage() override;
 
     // from pipeline context
     QueueKey mQueueKey;
@@ -53,7 +53,7 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    bool ParseTargetGroups(const std::string& content, std::set<ScrapeWorkEvent> newScrapeWorkSet) const;
+    bool ParseTargetGroups(const std::string& content, std::set<ScrapeWorkEvent>& newScrapeWorkSet) const;
 
     std::unique_ptr<TimerEvent> BuildWorkTimerEvent(std::shared_ptr<ScrapeWorkEvent> workEvent);
 
@@ -63,8 +63,8 @@ private:
 
     ReadWriteLock mRWLock;
     std::set<ScrapeWorkEvent> mScrapeWorkSet;
-    std::unordered_set<std::string> mWorkValidSet;
 
+    std::string mJobName;
     std::shared_ptr<Timer> mTimer;
 
 #ifdef APSARA_UNIT_TEST_MAIN

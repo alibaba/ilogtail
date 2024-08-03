@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include <unordered_set>
 
 #include "common/Lock.h"
 #include "prometheus/Mock.h"
@@ -9,13 +8,41 @@
 
 namespace logtail {
 
-
 class PromEvent {
 public:
     virtual ~PromEvent() = default;
 
-    // Process should support oneshot or streaming mode.
+    // Process should support oneshot and streaming mode.
     virtual void Process(const HttpResponse&) = 0;
+
+    [[nodiscard]] virtual std::string GetId() const = 0;
+
+    void Send(bool message);
+    virtual bool ReciveMessage() = 0;
+
+protected:
+    bool mValidState = true;
+    ReadWriteLock mStateRWLock;
+};
+
+class PromMessageDispatcher {
+public:
+    static PromMessageDispatcher& GetInstance() {
+        static PromMessageDispatcher sInstance;
+        return sInstance;
+    }
+
+    void RegisterEvent(std::shared_ptr<PromEvent> promEvent);
+    void UnRegisterEvent(const std::string& promEventId);
+
+    void SendMessage(const std::string& promEventId, bool message);
+
+    void Stop();
+
+private:
+    PromMessageDispatcher() = default;
+    ReadWriteLock mEventsRWLock;
+    std::unordered_map<std::string, std::shared_ptr<PromEvent>> mPromEvents;
 };
 
 class TickerHttpRequest : public AsynHttpRequest {
@@ -28,10 +55,7 @@ public:
                       const std::string& query,
                       const std::map<std::string, std::string>& header,
                       const std::string& body,
-                      const std::string& hash,
                       std::shared_ptr<PromEvent> event,
-                      ReadWriteLock& rwLock,
-                      std::unordered_set<std::string>& contextSet,
                       uint64_t intervalSeconds,
                       std::chrono::steady_clock::time_point execTime,
                       std::shared_ptr<Timer> timer);
@@ -51,11 +75,6 @@ private:
     int64_t mIntervalSeconds;
     std::chrono::steady_clock::time_point mExecTime;
     std::shared_ptr<Timer> mTimer;
-
-    // mHash is used to identify the context
-    std::string mHash;
-    ReadWriteLock& mRWLock;
-    std::unordered_set<std::string>& mContextSet;
 };
 
 } // namespace logtail
