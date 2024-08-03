@@ -1,11 +1,11 @@
 #include "prometheus/AsyncEvent.h"
 
 #include <cstdint>
-#include <functional>
 #include <string>
 #include <unordered_set>
 
 #include "common/Lock.h"
+#include "prometheus/Mock.h"
 #include "sdk/Common.h"
 
 namespace logtail {
@@ -13,12 +13,11 @@ namespace logtail {
 
 AsyncEventDecorator::AsyncEventDecorator(std::shared_ptr<AsyncEvent> event) : mEvent(std::move(event)) {
 }
-void AsyncEventDecorator::Process(const sdk::HttpMessage& response) {
+void AsyncEventDecorator::Process(const HttpResponse& response) {
     if (mEvent) {
         mEvent->Process(response);
     }
 }
-
 
 TickerEvent::TickerEvent(std::shared_ptr<AsyncEvent> event,
                          uint64_t intervalSeconds,
@@ -35,22 +34,20 @@ TickerEvent::TickerEvent(std::shared_ptr<AsyncEvent> event,
       mHash(std::move(hash)),
       mValidationSet(validationSet) {
 }
-void TickerEvent::Process(const sdk::HttpMessage& response) {
+void TickerEvent::Process(const HttpResponse& response) {
     AsyncEventDecorator::Process(response);
 
     if (IsValidation() && mTimer) {
-        mTimer->PushEvent(BuildAsyncEvent());
+        mTimer->PushEvent(BuildTimerEvent());
     }
 }
-[[nodiscard]] ScrapeEvent TickerEvent::BuildAsyncEvent() const {
-    ScrapeEvent scrapeEvent;
+[[nodiscard]] std::unique_ptr<TimerEvent> TickerEvent::BuildTimerEvent() const {
+    auto request = std::make_unique<PromHttpRequest>();
+    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(std::move(request));
     uint64_t deadlineNanoSeconds = mDeadlineNanoSeconds + mIntervalSeconds * 1000000000UL;
-    scrapeEvent.mDeadline = deadlineNanoSeconds;
     auto tickerEvent
         = TickerEvent(mEvent, mIntervalSeconds, deadlineNanoSeconds, mTimer, mRWLock, mValidationSet, mHash);
-    auto asyncCallback = [&tickerEvent](const sdk::HttpMessage& response) { tickerEvent.Process(response); };
-    scrapeEvent.mCallback = asyncCallback;
-    return scrapeEvent;
+    return timerEvent;
 }
 [[nodiscard]] bool TickerEvent::IsValidation() const {
     ReadLock lock(mRWLock);
