@@ -17,6 +17,7 @@ project(prometheus_unittest)
 
 add_executable(labels_unittest LabelsUnittest.cpp)
 target_link_libraries(labels_unittest ${UT_BASE_TARGET})
+target_link_libraries(labels_unittest ${UT_BASE_TARGET})
 
 add_executable(relabel_unittest RelabelUnittest.cpp)
 target_link_libraries(relabel_unittest ${UT_BASE_TARGET})
