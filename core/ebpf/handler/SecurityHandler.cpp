@@ -28,8 +28,10 @@ void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>
     PipelineEventGroup event_group(source_buffer);
     // aggregate to pipeline event group
     // set host ips
-    event_group.SetTag("host.ip", mHostIp);
-    event_group.SetTag("host.name", mHostName);
+    const static std::string host_ip_key = "host.ip";
+    const static std::string host_name_key = "host.name";
+    event_group.SetTag(host_ip_key, mHostIp);
+    event_group.SetTag(host_name_key, mHostName);
     for (auto& x : events) {
         auto event = event_group.AddLogEvent();
         for (auto& tag : x->GetAllTags()) {
@@ -46,8 +48,6 @@ void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>
     
     if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
         LOG_WARNING(sLogger, ("Push queue failed!", events.size()));
-    } else {
-        LOG_INFO(sLogger, ("Push queue success!", events.size()));
     }
 }
 

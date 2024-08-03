@@ -43,7 +43,6 @@ void FUNC_NAME(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uin
 }
 
 void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) {
-        LOG_INFO(sLogger, ("Otel HandleMeasures measure size", measures.size()) ("ts", timestamp));
     if (measures.empty()) return;
     if (!mCtx) {
         LOG_WARNING(sLogger, ("Otel HandleSpans", "ctx is null, exit"));
@@ -79,7 +78,6 @@ void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 }
 
 void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
-    LOG_INFO(sLogger, ("Otel HandleSpans spans size", spans.size()));
     if (spans.empty()) return;
 
     if (!mCtx) {
@@ -117,32 +115,52 @@ void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 
 #ifdef __ENTERPRISE__
 
+const static std::string app_id_key = "arms.appId";
+const static std::string ip_key = "ip";
+
+const static std::string rpc_request_total_count = "arms_rpc_requests_count";
+const static std::string rpc_request_slow_count = "arms_rpc_requests_slow_count";
+const static std::string rpc_request_err_count = "arms_rpc_requests_error_count";
+const static std::string rpc_request_rt = "arms_rpc_requests_seconds";
+const static std::string rpc_request_status_count = "arms_rpc_requests_by_status_count";
+static const std::string status_2xx_key = "2xx";
+static const std::string status_3xx_key = "2xx";
+static const std::string status_4xx_key = "2xx";
+static const std::string status_5xx_key = "2xx";
+
 // FOR APP METRICS
-GENERATE_METRICS(GenerateRequestsTotalMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_count", request_total_)
-GENERATE_METRICS(GenerateRequestsSlowMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_slow_count", slow_total_)
-GENERATE_METRICS(GenerateRequestsErrorMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_error_count", error_total_)
-GENERATE_METRICS(GenerateRequestsDurationSumMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, "arms_rpc_requests_seconds", duration_ms_sum_)
+GENERATE_METRICS(GenerateRequestsTotalMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, rpc_request_total_count, request_total_)
+GENERATE_METRICS(GenerateRequestsSlowMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, rpc_request_slow_count, slow_total_)
+GENERATE_METRICS(GenerateRequestsErrorMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, rpc_request_err_count, error_total_)
+GENERATE_METRICS(GenerateRequestsDurationSumMetrics, MeasureType::MEASURE_TYPE_APP, AppSingleMeasure, rpc_request_status_count, duration_ms_sum_)
 
 void GenerateRequestsStatusMetrics(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uint64_t ts) {
     if (measure->type_ != MeasureType::MEASURE_TYPE_APP) return;
     auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_2xx_count_, "2xx");
-    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_3xx_count_, "3xx");
-    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_4xx_count_, "4xx");
-    ADD_STATUS_METRICS("arms_rpc_requests_by_status_count", status_5xx_count_, "5xx");
+    ADD_STATUS_METRICS(rpc_request_status_count, status_2xx_count_, status_2xx_key);
+    ADD_STATUS_METRICS(rpc_request_status_count, status_3xx_count_, status_3xx_key);
+    ADD_STATUS_METRICS(rpc_request_status_count, status_4xx_count_, status_4xx_key);
+    ADD_STATUS_METRICS(rpc_request_status_count, status_5xx_count_, status_5xx_key);
 }
 
+const static std::string npm_tcp_drop_total = "arms_npm_tcp_drop_count";
+const static std::string npm_tcp_retrans_total = "arms_npm_tcp_retrans_total";
+const static std::string npm_tcp_count_total = "arms_npm_tcp_count_by_state";
+const static std::string npm_recv_pkt_total = "arms_npm_recv_packets_total";
+const static std::string npm_recv_byte_total = "arms_npm_recv_bytes_total";
+const static std::string npm_send_pkt_total = "arms_npm_sent_packets_total";
+const static std::string npm_send_byte_total = "arms_npm_sent_bytes_total";
+
 // FOR NET METRICS
-GENERATE_METRICS(GenerateTcpDropTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_tcp_drop_count", tcp_drop_total_)
-GENERATE_METRICS(GenerateTcpRetransTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_tcp_retrans_total", tcp_retran_total_)
-GENERATE_METRICS(GenerateTcpConnectionTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_tcp_count_by_state", tcp_connect_total_)
-GENERATE_METRICS(GenerateTcpRecvPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_recv_packets_total", recv_pkt_total_)
-GENERATE_METRICS(GenerateTcpRecvBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_recv_bytes_total", recv_byte_total_)
-GENERATE_METRICS(GenerateTcpSendPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_sent_packets_total", send_pkt_total_)
-GENERATE_METRICS(GenerateTcpSendBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, "arms_npm_sent_bytes_total", send_byte_total_)
+GENERATE_METRICS(GenerateTcpDropTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_tcp_drop_total, tcp_drop_total_)
+GENERATE_METRICS(GenerateTcpRetransTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_tcp_retrans_total, tcp_retran_total_)
+GENERATE_METRICS(GenerateTcpConnectionTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_tcp_count_total, tcp_connect_total_)
+GENERATE_METRICS(GenerateTcpRecvPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_recv_pkt_total, recv_pkt_total_)
+GENERATE_METRICS(GenerateTcpRecvBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_recv_byte_total, recv_byte_total_)
+GENERATE_METRICS(GenerateTcpSendPktsTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_send_pkt_total, send_pkt_total_)
+GENERATE_METRICS(GenerateTcpSendBytesTotalMetrics, MeasureType::MEASURE_TYPE_NET, NetSingleMeasure, npm_send_byte_total, send_byte_total_)
 
 void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
-    LOG_INFO(sLogger, ("ARMS HandleSpans spans size", spans.size()));
     if (spans.empty()) return;
 
     if (!mCtx) {
@@ -153,7 +171,7 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
     for (auto& span : spans) {
         std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup event_group(source_buffer);
-        event_group.SetTag("arms.appId", span->app_id_);
+        event_group.SetTag(app_id_key, span->app_id_);
         for (auto& x : span->single_spans_) {
             auto spanEvent = event_group.AddSpanEvent();
             for (auto& tag : x->tags_) {
@@ -172,7 +190,7 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
-            LOG_WARNING(sLogger, ("[Span] push queue failed!", "a"));
+            LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
         }
 
         // TODO @qianlu.kk 
@@ -183,7 +201,6 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 }
 
 void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) {
-    LOG_INFO(sLogger, ("HandleMeasures measure size", measures.size()) ("ts", timestamp));
     if (measures.empty()) return;
     if (!mCtx) {
         LOG_WARNING(sLogger, ("HandleSpans", "ctx is null, exit"));
@@ -195,8 +212,8 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
         PipelineEventGroup event_group(source_buffer);
         
         // source_ip
-        event_group.SetTag(std::string("appId"), app_batch_measures->app_id_);
-        event_group.SetTag(std::string("ip"), app_batch_measures->ip_);
+        event_group.SetTag(std::string(app_id_key), app_batch_measures->app_id_);
+        event_group.SetTag(std::string(ip_key), app_batch_measures->ip_);
         for (auto& measure : app_batch_measures->measures_) {
             auto type = measure->type_;
             if (type == MeasureType::MEASURE_TYPE_APP) {
@@ -223,7 +240,7 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
         #endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
-            LOG_WARNING(sLogger, ("[Metrics] push queue failed!", "a"));
+            LOG_WARNING(sLogger, ("[Metrics] push queue failed!", ""));
         }
     }
     return;
