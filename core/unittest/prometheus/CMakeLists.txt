@@ -37,6 +37,9 @@ target_link_libraries(prometheus_input_runner_unittest ${UT_BASE_TARGET})
 add_executable(textparser_unittest TextParserUnittest.cpp)
 target_link_libraries(textparser_unittest ${UT_BASE_TARGET})
 
+add_executable(textparser_benchmark TextParserBenchmark.cpp)
+target_link_libraries(textparser_benchmark ${UT_BASE_TARGET})
+
 add_executable(scrape_config_unittest ScrapeConfigUnittest.cpp)
 target_link_libraries(scrape_config_unittest ${UT_BASE_TARGET})
 
@@ -52,5 +55,6 @@ gtest_discover_tests(scrape_job_event_unittest)
 gtest_discover_tests(scraper_group_unittest)
 gtest_discover_tests(prometheus_input_runner_unittest)
 gtest_discover_tests(textparser_unittest)
+gtest_discover_tests(textparser_benchmark)
 gtest_discover_tests(scrape_config_unittest)
 gtest_discover_tests(scrape_target_unittest)
