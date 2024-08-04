@@ -18,7 +18,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <cmath>
-#include <sstream>
 #include <string>
 
 #include "common/StringTools.h"
@@ -30,25 +29,33 @@ using namespace std;
 
 namespace logtail {
 
-TextEvent ClassifyChar(char c) {
-    if (std::isalpha(c) || c == '_' || c == ':' || c == '-')
-        return TextEvent::Character;
-    if (std::isdigit(c))
-        return TextEvent::Digit;
-    if (c == '=')
-        return TextEvent::Equal;
-    if (c == '"')
-        return TextEvent::Quote;
-    if (c == ',')
-        return TextEvent::Comma;
-    if (c == '{')
-        return TextEvent::OpenBrace;
-    if (c == '}')
-        return TextEvent::CloseBrace;
-    if (std::isspace(c))
-        return TextEvent::Space;
-    if (c == '\0')
-        return TextEvent::EndOfInput;
+inline TextEvent ClassifyChar(char c) {
+    switch (c) {
+        case '=':
+            return TextEvent::Equal;
+        case ',':
+            return TextEvent::Comma;
+        case '{':
+            return TextEvent::OpenBrace;
+        case '}':
+            return TextEvent::CloseBrace;
+        case '"':
+            return TextEvent::Quote;
+        case '\0':
+            return TextEvent::EndOfInput;
+        case '_':
+        case ':':
+        case '-':
+            return TextEvent::Character;
+        default:
+            if (std::isalpha(c))
+                return TextEvent::Character;
+            if (std::isdigit(c))
+                return TextEvent::Digit;
+            if (std::isspace(c))
+                return TextEvent::Space;
+            return TextEvent::Invalid;
+    }
     return TextEvent::Invalid;
 }
 
@@ -69,14 +76,12 @@ PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNano
     return eGroup;
 }
 
-bool TextParser::ParseLine(const string& line, uint64_t defaultNanoTs, MetricEvent& metricEvent) {
+bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent) {
     mLine = line;
     mPos = 0;
     mState = TextState::Start;
-    mMetricName.clear();
     mLabelName.clear();
-    mLabelValue.clear();
-    mToken.str("");
+    mToken.clear();
     if (defaultNanoTs > 0) {
         mNanoTimestamp = defaultNanoTs;
     }
@@ -126,11 +131,11 @@ bool TextParser::ParseLine(const string& line, uint64_t defaultNanoTs, MetricEve
 
 void TextParser::HandleStart(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (ClassifyChar(c) == TextEvent::Space) {
+    while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (ClassifyChar(c) == TextEvent::Character) {
-        mToken << c;
+        mToken += c;
         NextState(TextState::MetricName);
     } else {
         HandleError("expected metric name");
@@ -140,13 +145,12 @@ void TextParser::HandleStart(char c, MetricEvent&) {
 void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
     TextEvent event = ClassifyChar(c);
     if (event == TextEvent::Character || event == TextEvent::Digit || c == '_') {
-        mToken << c;
+        mToken += c;
     } else if (event == TextEvent::OpenBrace || event == TextEvent::Space) {
-        mMetricName = mToken.str();
-        metricEvent.SetName(mMetricName);
-        mToken.str("");
+        metricEvent.SetName(mToken);
+        mToken.clear();
         // Ignore subsequent spaces
-        while (ClassifyChar(c) == TextEvent::Space) {
+        while (std::isspace(c)) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         }
         if (ClassifyChar(c) == TextEvent::OpenBrace) {
@@ -161,12 +165,12 @@ void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
 
 void TextParser::HandleOpenBrace(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (ClassifyChar(c) == TextEvent::Space) {
+    while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     TextEvent event = ClassifyChar(c);
     if (event == TextEvent::Character) {
-        mToken << c;
+        mToken += c;
         NextState(TextState::LabelName);
     } else if (event == TextEvent::CloseBrace) {
         SkipSpaceIfHasNext();
@@ -179,12 +183,12 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
 void TextParser::HandleLabelName(char c, MetricEvent&) {
     TextEvent event = ClassifyChar(c);
     if (event == TextEvent::Character || event == TextEvent::Digit || c == '_') {
-        mToken << c;
+        mToken += c;
     } else if (event == TextEvent::Equal || event == TextEvent::Space) {
-        mLabelName = mToken.str();
-        mToken.str("");
+        mLabelName = mToken;
+        mToken.clear();
         // Ignore subsequent spaces
-        while (ClassifyChar(c) == TextEvent::Space) {
+        while (std::isspace(c)) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         }
         if (ClassifyChar(c) != TextEvent::Equal) {
@@ -199,7 +203,7 @@ void TextParser::HandleLabelName(char c, MetricEvent&) {
 
 void TextParser::HandleEqualSign(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (ClassifyChar(c) == TextEvent::Space) {
+    while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     TextEvent event = ClassifyChar(c);
@@ -212,20 +216,19 @@ void TextParser::HandleEqualSign(char c, MetricEvent&) {
 
 void TextParser::HandleLabelValue(char c, MetricEvent& metricEvent) {
     if (ClassifyChar(c) == TextEvent::Quote) {
-        mLabelValue = mToken.str();
-        metricEvent.SetTag(mLabelName, mLabelValue);
-        mToken.str("");
+        metricEvent.SetTag(mLabelName, mToken);
+        mToken.clear();
         NextState(TextState::CommaOrCloseBrace);
     } else if (c == '\0') {
         HandleError("unexpected end of input in label value");
     } else {
-        mToken << c;
+        mToken += c;
     }
 }
 
 void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (ClassifyChar(c) == TextEvent::Space) {
+    while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     TextEvent event = ClassifyChar(c);
@@ -242,19 +245,19 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
 void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
     TextEvent event = ClassifyChar(c);
     if (event == TextEvent::Digit || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
-        mToken << c;
+        mToken += c;
     } else if (event == TextEvent::Space || event == TextEvent::EndOfInput) {
         try {
-            mSampleValue = stod(mToken.str());
+            mSampleValue = stod(mToken);
         } catch (...) {
             HandleError("invalid sample value");
-            mToken.str("");
+            mToken.clear();
             return;
         }
         metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
-        mToken.str("");
+        mToken.clear();
 
-        if (ClassifyChar(c) == TextEvent::Space) {
+        if (event == TextEvent::Space) {
             SkipSpaceIfHasNext();
             NextState(TextState::Timestamp);
         } else {
@@ -271,20 +274,20 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
 void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
     TextEvent event = ClassifyChar(c);
     if (event == TextEvent::Digit) {
-        mToken << c;
+        mToken += c;
     } else if (event == TextEvent::Space || event == TextEvent::EndOfInput) {
-        if (!mToken.str().empty()) {
+        if (!mToken.empty()) {
             try {
-                mNanoTimestamp = stoull(mToken.str()) * 1000000;
+                mNanoTimestamp = stoull(mToken) * 1000000;
             } catch (...) {
                 HandleError("invalid timestamp");
-                mToken.str("");
+                mToken.clear();
                 return;
             }
             time_t timestamp = mNanoTimestamp / 1000000000;
             auto ns = mNanoTimestamp % 1000000000;
             metricEvent.SetTimestamp(timestamp, ns);
-            mToken.str("");
+            mToken.clear();
         }
         NextState(TextState::Done);
     } else {
@@ -293,17 +296,18 @@ void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleError(const string& errMsg) {
-    LOG_WARNING(sLogger, ("text parser error parsing line", mLine + errMsg));
+    cout << errMsg << mLine << endl;
+    LOG_WARNING(sLogger, ("text parser error parsing line", mLine.to_string() + errMsg));
     mState = TextState::Error;
 }
 
 void TextParser::SkipSpaceIfHasNext() {
     // before entering this state, we should clear all space characters
-    while (mPos < mLine.length() && ClassifyChar(mLine[mPos]) == TextEvent::Space) {
+    while (mPos < mLine.length() && std::isspace(mLine[mPos])) {
         mPos++;
         // if next char is not space, we should stop
         // because the main loop must read the next char
-        if (mPos < mLine.length() && ClassifyChar(mLine[mPos]) != TextEvent::Space) {
+        if (mPos < mLine.length() && !std::isspace(mLine[mPos])) {
             break;
         }
     }

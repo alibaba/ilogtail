@@ -48,7 +48,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
     if (sourceEvent.GetTimestampNanosecond().has_value()) {
         nanoTimestamp += (uint64_t)sourceEvent.GetTimestampNanosecond().value();
     }
-    if (mParser.ParseLine(sourceEvent.GetContent(prometheus::PROMETHEUS).to_string(), nanoTimestamp, *metricEvent)) {
+    if (mParser.ParseLine(sourceEvent.GetContent(prometheus::PROMETHEUS), nanoTimestamp, *metricEvent)) {
         newEvents.emplace_back(std::move(metricEvent));
     }
     return true;

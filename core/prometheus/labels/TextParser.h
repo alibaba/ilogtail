@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <sstream>
 #include <string>
 
 #include "models/MetricEvent.h"
@@ -40,7 +39,7 @@ enum class TextState {
 
 enum class TextEvent { None, Character, Digit, Equal, Quote, Comma, OpenBrace, CloseBrace, Space, EndOfInput, Invalid };
 
-TextEvent ClassifyChar(char c);
+inline TextEvent ClassifyChar(char c);
 
 class TextParser {
 public:
@@ -48,7 +47,7 @@ public:
 
     PipelineEventGroup Parse(const std::string& content, uint64_t defaultNanoTs);
 
-    bool ParseLine(const std::string& line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
+    bool ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
 
 private:
     void NextState(TextState newState) { mState = newState; }
@@ -68,7 +67,7 @@ private:
     void SkipSpaceIfHasNext();
 
     TextState mState{TextState::Start};
-    std::string mLine;
+    StringView mLine;
     std::size_t mPos{0};
 
     std::string mMetricName;
@@ -76,7 +75,7 @@ private:
     std::string mLabelValue;
     double mSampleValue{0.0};
     uint64_t mNanoTimestamp{0};
-    std::ostringstream mToken;
+    std::string mToken;
 
 
 #ifdef APSARA_UNIT_TEST_MAIN
