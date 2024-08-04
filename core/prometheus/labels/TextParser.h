@@ -16,28 +16,68 @@
 
 #pragma once
 
-#include <re2/re2.h>
-
+#include <sstream>
 #include <string>
 
+#include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
 
 namespace logtail {
 
-extern const std::string SAMPLE_RE;
+enum class TextState {
+    Start,
+    MetricName,
+    OpenBrace,
+    LabelName,
+    EqualSign,
+    LabelValue,
+    CommaOrCloseBrace,
+    SampleValue,
+    Timestamp,
+    Done,
+    Error
+};
+
+enum class TextEvent { None, Character, Digit, Equal, Quote, Comma, OpenBrace, CloseBrace, Space, EndOfInput, Invalid };
+
+TextEvent ClassifyChar(char c);
 
 class TextParser {
 public:
-    TextParser() : mSampleRegex(SAMPLE_RE) {}
-    PipelineEventGroup Parse(const std::string& content);
+    TextParser() = default;
 
+    PipelineEventGroup Parse(const std::string& content, uint64_t defaultNanoTs);
 
-    PipelineEventGroup
-    Parse(const std::string& content, std::time_t defaultTs, const std::string& jobName, const std::string& instance);
-    bool ParseLine(const std::string& line, MetricEvent& e, time_t defaultTs);
+    bool ParseLine(const std::string& line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
 
 private:
-    RE2 mSampleRegex;
+    void NextState(TextState newState) { mState = newState; }
+    void HandleError(const std::string& errMsg);
+
+    void HandleStart(char c, MetricEvent& metricEvent);
+    void HandleMetricName(char c, MetricEvent& metricEvent);
+    void HandleOpenBrace(char c, MetricEvent& metricEvent);
+    void HandleLabelName(char c, MetricEvent& metricEvent);
+    void HandleEqualSign(char c, MetricEvent& metricEvent);
+    void HandleLabelValue(char c, MetricEvent& metricEvent);
+    void HandleCommaOrCloseBrace(char c, MetricEvent& metricEvent);
+    void HandleSampleValue(char c, MetricEvent& metricEvent);
+    void HandleTimestamp(char c, MetricEvent& metricEvent);
+    void HandleSpace(char c, MetricEvent& metricEvent);
+
+    void SkipSpaceIfHasNext();
+
+    TextState mState{TextState::Start};
+    std::string mLine;
+    std::size_t mPos{0};
+
+    std::string mMetricName;
+    std::string mLabelName;
+    std::string mLabelValue;
+    double mSampleValue{0.0};
+    uint64_t mNanoTimestamp{0};
+    std::ostringstream mToken;
+
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TextParserUnittest;

@@ -44,8 +44,11 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
     }
     auto& sourceEvent = e.Cast<LogEvent>();
     std::unique_ptr<MetricEvent> metricEvent = eGroup.CreateMetricEvent();
-    if (mParser.ParseLine(
-            sourceEvent.GetContent(prometheus::PROMETHEUS).to_string(), *metricEvent, sourceEvent.GetTimestamp())) {
+    auto nanoTimestamp = (uint64_t)sourceEvent.GetTimestamp() * 1000000000;
+    if (sourceEvent.GetTimestampNanosecond().has_value()) {
+        nanoTimestamp += (uint64_t)sourceEvent.GetTimestampNanosecond().value();
+    }
+    if (mParser.ParseLine(sourceEvent.GetContent(prometheus::PROMETHEUS).to_string(), nanoTimestamp, *metricEvent)) {
         newEvents.emplace_back(std::move(metricEvent));
     }
     return true;
