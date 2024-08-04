@@ -18,11 +18,11 @@
 
 #include <boost/algorithm/string.hpp>
 #include <cmath>
-#include <iostream>
 #include <sstream>
 #include <string>
 
 #include "common/StringTools.h"
+#include "logger/Logger.h"
 #include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
 
@@ -81,7 +81,6 @@ bool TextParser::ParseLine(const string& line, uint64_t defaultNanoTs, MetricEve
         mNanoTimestamp = defaultNanoTs;
     }
 
-    cout << line << endl;
     while (mState != TextState::Done && mState != TextState::Error) {
         char currentChar = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         switch (mState) {
@@ -294,7 +293,7 @@ void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleError(const string& errMsg) {
-    std::cerr << "Error parsing line: " << errMsg << std::endl;
+    LOG_WARNING(sLogger, ("text parser error parsing line", mLine + errMsg));
     mState = TextState::Error;
 }
 
