@@ -149,17 +149,31 @@ void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
     } else if (event == TextEvent::OpenBrace || event == TextEvent::Space) {
         metricEvent.SetName(mToken);
         mToken.clear();
-        // Ignore subsequent spaces
-        while (std::isspace(c)) {
+        // need to solve these case, but don't point mPos to Value
+        // {Space}* OpenBrace
+        // {Space}+ Value
+        while (std::isspace(c) && mPos < mLine.size() && std::isspace(mLine[mPos])) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         }
-        if (ClassifyChar(c) == TextEvent::OpenBrace) {
+        if (std::isspace(c)) {
+            // Space OpenBrace
+            if (ClassifyChar(mLine[mPos]) == TextEvent::OpenBrace) {
+                mPos++;
+                NextState(TextState::OpenBrace);
+            } else {
+                // Space Value
+                NextState(TextState::SampleValue);
+            }
+        } else if (c == '{') {
+            // OpenBrace
             NextState(TextState::OpenBrace);
         } else {
-            NextState(TextState::SampleValue);
+            // Value
+            HandleError("invalid character in metric name");
         }
+
     } else {
-        HandleError("Invalid character in metric name");
+        HandleError("invalid character in metric name");
     }
 }
 
