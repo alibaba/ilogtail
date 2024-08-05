@@ -69,16 +69,14 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             auto logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_LABELS);
             logPtr->set_value(oss.str());
-            // set time
+            // set time, no need to set nanosecond for metric
             log->set_time(metricEvent.GetTimestamp());
             // set __time_nano__
             logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_TIME_NANO);
 
-            if (mFlusher->GetContext().GetGlobalConfig().mEnableTimestampNanosecond
-                && metricEvent.GetTimestampNanosecond()) {
+            if (metricEvent.GetTimestampNanosecond()) {
                 logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + NumberToDigitString(metricEvent.GetTimestampNanosecond().value(), 9));   
-                log->set_time_ns(metricEvent.GetTimestampNanosecond().value());
             } else {
                 logPtr->set_value(std::to_string(metricEvent.GetTimestamp()));   
             }
