@@ -50,13 +50,18 @@ func (m *DeferredDeletionMetaStore) Start(timerHandlers ...TimerHandler) {
 	go m.handleEvent()
 }
 
-func (m *DeferredDeletionMetaStore) Get(key string) []*K8sMetaEvent {
+func (m *DeferredDeletionMetaStore) Get(key []string) map[string][]*K8sMetaEvent {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	realKeys := m.Index[key]
-	result := make([]*K8sMetaEvent, 0)
-	for _, k := range realKeys {
-		result = append(result, m.Items[k])
+	result := make(map[string][]*K8sMetaEvent)
+	for _, k := range key {
+		if realKeys, ok := m.Index[k]; !ok {
+			return nil
+		} else {
+			for _, realKey := range realKeys {
+				result[k] = append(result[k], m.Items[realKey])
+			}
+		}
 	}
 	return result
 }

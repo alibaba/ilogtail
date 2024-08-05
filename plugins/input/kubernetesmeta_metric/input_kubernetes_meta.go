@@ -34,12 +34,10 @@ import (
 
 const pluginName = "metric_meta_kubernetes"
 const (
-	defaultIntervalMs        = 300000
-	defaultDeleteGracePeriod = 120 * time.Second
+	defaultIntervalMs = 300000
 )
 
 type InputKubernetesMeta struct {
-	// entity switch
 	Pod                   bool
 	Node                  bool
 	Service               bool
@@ -55,10 +53,6 @@ type InputKubernetesMeta struct {
 	PersistentVolumeClaim bool
 	StorageClass          bool
 	Ingress               bool
-	// entity link switch
-	DeploymentPodLink bool
-	// raw, entity, default
-	DataFormat string
 
 	DisableReportParents   bool
 	KubeConfigPath         string

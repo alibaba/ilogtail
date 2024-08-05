@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 	"runtime"
 
 	"github.com/alibaba/ilogtail/pkg/doc"
@@ -55,9 +54,9 @@ func main() {
 	} else if InitPluginBaseV2(globalCfg) != 0 {
 		return
 	}
-	if len(os.Getenv("ENABLE_KUBERNETES_META_COLLECT")) != 0 {
+	if *flags.SingletonFlag {
 		instance := k8smeta.GetMetaManagerInstance()
-		err := instance.Init("/workspaces/kubeconfig")
+		err := instance.Init("")
 		if err != nil {
 			logger.Error(context.Background(), "K8S_META_INIT_FAIL", "init k8s meta manager", "fail")
 			return

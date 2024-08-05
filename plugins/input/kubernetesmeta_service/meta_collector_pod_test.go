@@ -60,7 +60,7 @@ func TestProcessPodEntity(t *testing.T) {
 	event := &k8smeta.K8sMetaEvent{
 		RawObject: obj,
 	}
-	podCollector := &podCollector{}
-	log := podCollector.processPodEntity(event, "create")
+	collector := &metaCollector{}
+	log := collector.processPodEntity(event, "create")
 	fmt.Println(log)
 }

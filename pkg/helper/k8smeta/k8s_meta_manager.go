@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -15,6 +16,14 @@ import (
 var metaManager *MetaManager
 
 var onceManager sync.Once
+
+type MetaProcessor interface {
+	Get(key []string) map[string][]*K8sMetaEvent
+	init(stopCh chan struct{}, pipelineCh chan *K8sMetaEvent)
+	watch(stopCh <-chan struct{})
+	flushRealTimeEvent(event *K8sMetaEvent)
+	flushPeriodEvent(events []*K8sMetaEvent)
+}
 
 type FlushCh struct {
 	Ch         chan *K8sMetaEvent
@@ -120,6 +129,8 @@ func (m *MetaManager) runServer() {
 
 func (m *MetaManager) runFlush() {
 	go func() {
+		flushBlockTimes := 0
+		lastBlockTime := time.Now()
 		for {
 			select {
 			case event := <-m.eventCh:
@@ -129,7 +140,11 @@ func (m *MetaManager) runFlush() {
 					select {
 					case pipelineCh.Ch <- event:
 					default:
-						logger.Error(context.Background(), "ENTITY_PIPELINE_QUEUE_FULL", "pipelineCh is full, discard in current sync")
+						if time.Since(lastBlockTime) > time.Second*3 || flushBlockTimes > 100 {
+							logger.Error(context.Background(), "ENTITY_PIPELINE_QUEUE_FULL", "pipelineCh is full, discard in current sync, count:", flushBlockTimes)
+							flushBlockTimes = 0
+							lastBlockTime = time.Now()
+						}
 					}
 				}
 				m.pipelineChsLock.RUnlock()

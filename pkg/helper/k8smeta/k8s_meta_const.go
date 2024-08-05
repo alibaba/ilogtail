@@ -8,7 +8,8 @@ const (
 	SERVICE = "service"
 	// entity link type
 	//revive:disable:var-naming
-	POD_SERVICE = "pod_service"
+	LINK_SPLIT_CHARACTER = "_"
+	POD_SERVICE          = "pod_service"
 	//revive:enable:var-naming
 )
 

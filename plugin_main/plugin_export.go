@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"runtime"
 	"runtime/debug"
 	"sync"
@@ -276,9 +275,9 @@ func initPluginBase(cfgStr string) int {
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
 		LoadGlobalConfig(cfgStr)
-		if len(os.Getenv("ENABLE_KUBERNETES_META_COLLECT")) != 0 {
+		if *flags.SingletonFlag {
 			instance := k8smeta.GetMetaManagerInstance()
-			err := instance.Init("/workspaces/kubeconfig")
+			err := instance.Init("")
 			if err != nil {
 				logger.Error(context.Background(), "K8S_META_INIT_FAIL", "init k8s meta manager", "fail")
 				return

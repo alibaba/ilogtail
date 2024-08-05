@@ -58,6 +58,7 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 		time.Sleep(1 * time.Second)
 		logger.Warning(context.Background(), "K8S_META_SERVER_WAIT", "waiting for k8s meta manager to be ready")
 	}
+	logger.Info(context.Background(), "k8s meta server", "started", "port", port)
 	go func() {
 		_ = server.ListenAndServe()
 	}()
@@ -77,9 +78,9 @@ func (m *metadataHandler) handlePodMeta(w http.ResponseWriter, r *http.Request) 
 
 	// Get the metadata
 	metadata := make(map[string]*PodMetadata)
-	for _, key := range rBody.Keys {
-		events := m.metaManager.PodProcessor.Get(key)
-		podMetadata := convertObj2PodMetadata(key, events)
+	events := m.metaManager.PodProcessor.Get(rBody.Keys)
+	for key, objs := range events {
+		podMetadata := convertObj2PodMetadata(key, objs)
 		for k, v := range podMetadata {
 			metadata[k] = v
 		}

@@ -2,11 +2,11 @@ package service
 
 import (
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type ProcessFunc func(data *k8smeta.K8sMetaEvent, method string) *protocol.Log
+type ProcessFunc func(data *k8smeta.K8sMetaEvent, method string) models.PipelineEvent
 
 //revive:disable:exported
 type ServiceK8sMeta struct {
@@ -31,9 +31,10 @@ type ServiceK8sMeta struct {
 	PodReplicasetLink bool
 	PodServiceLink    bool
 	// other
-	metaManager *k8smeta.MetaManager
-	collector   pipeline.Collector
-	configName  string
+	metaManager   *k8smeta.MetaManager
+	collector     pipeline.Collector
+	metaCollector *metaCollector
+	configName    string
 }
 
 // Init called for init some system resources, like socket, mutex...
@@ -52,35 +53,20 @@ func (s *ServiceK8sMeta) Description() string {
 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceK8sMeta) Stop() error {
-	if s.Pod {
-		s.metaManager.UnRegisterFlush(s.configName, k8smeta.POD)
-	}
-	if s.Service {
-		s.metaManager.UnRegisterFlush(s.configName, k8smeta.SERVICE)
-	}
-	return nil
+	return s.metaCollector.Stop()
 }
 
 func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 	s.collector = collector
-	if s.Pod {
-		podCollector := &podCollector{
-			serviceK8sMeta: s,
-			metaManager:    s.metaManager,
-			collector:      s.collector,
-		}
-		podCollector.init()
+	s.metaCollector = &metaCollector{
+		serviceK8sMeta:   s,
+		processors:       make(map[string][]ProcessFunc),
+		collector:        collector,
+		eventCh:          make(chan *k8smeta.K8sMetaEvent, 100),
+		entityBuffer:     &models.PipelineGroupEvents{},
+		entityLinkBuffer: &models.PipelineGroupEvents{},
 	}
-
-	if s.Service {
-		serviceCollector := &serviceCollector{
-			serviceK8sMeta: s,
-			metaManager:    s.metaManager,
-			collector:      s.collector,
-		}
-		serviceCollector.init()
-	}
-	return nil
+	return s.metaCollector.Start()
 }
 
 func init() {

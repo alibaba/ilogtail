@@ -34,7 +34,7 @@ func (m *serviceProcessor) init(stopCh chan struct{}, pipelineCh chan *K8sMetaEv
 	m.watch(m.stopCh)
 }
 
-func (m *serviceProcessor) Get(key string) []*K8sMetaEvent {
+func (m *serviceProcessor) Get(key []string) map[string][]*K8sMetaEvent {
 	return m.metaStore.Get(key)
 }
 
