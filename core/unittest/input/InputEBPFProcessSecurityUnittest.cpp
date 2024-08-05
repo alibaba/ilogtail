@@ -54,25 +54,22 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
-                    "Filter": 
-                    {
-                        "NamespaceFilter": [
-                            {
-                                "NamespaceType": "Pid",
-                                "ValueList": [
-                                    "4026531833"
-                                ]
-                            },
-                            {
-                                "NamespaceType": "Mnt",
-                                "ValueList": [
-                                    "4026531834"
-                                ]
-                            }
-                        ]
-                    }
+                    "NamespaceFilter": [
+                        {
+                            "NamespaceType": "Pid",
+                            "ValueList": [
+                                "4026531833"
+                            ]
+                        },
+                        {
+                            "NamespaceType": "Mnt",
+                            "ValueList": [
+                                "4026531834"
+                            ]
+                        }
+                    ]
                 }
             ]
         }
@@ -93,25 +90,22 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
-                    "Filter": 
-                    {
-                        "NamespaceBlackFilter": [
-                            {
-                                "NamespaceType": "Pid",
-                                "ValueList": [
-                                    "4026531833"
-                                ]
-                            },
-                            {
-                                "NamespaceType": "Mnt",
-                                "ValueList": [
-                                    "4026531834"
-                                ]
-                            }
-                        ]
-                    }
+                    "NamespaceBlackFilter": [
+                        {
+                            "NamespaceType": "Pid",
+                            "ValueList": [
+                                "4026531833"
+                            ]
+                        },
+                        {
+                            "NamespaceType": "Mnt",
+                            "ValueList": [
+                                "4026531834"
+                            ]
+                        }
+                    ]
                 }
             ]
         }
@@ -132,11 +126,8 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
-                    "Filter": 
-                    {
-                    }
                 }
             ]
         }
@@ -159,17 +150,14 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
-                    "Filter": 
-                    {
-                        "NamespaceBlackAAAAAAFilter": [
-                            {
-                                "NamespaceType": "Pid",
-                                "ValueList": "4026531833"
-                            }
-                        ]
-                    }
+                    "NamespaceBlackAAAAAAFilter": [
+                        {
+                            "NamespaceType": "Pid",
+                            "ValueList": "4026531833"
+                        }
+                    ]
                 }
             ]
         }
@@ -187,23 +175,20 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
-                    "Filter": 
-                    {
-                        "NamespaceBlackFilter": [
-                            {
-                                "NamespaceType": "Pid",
-                                "ValueList": ["4026531833"]
-                            }
-                        ],
-                        "NamespaceFilter": [
-                            {
-                                "NamespaceType": "Pid",
-                                "ValueList": ["4026531833"]
-                            }
-                        ]
-                    }
+                    "NamespaceBlackFilter": [
+                        {
+                            "NamespaceType": "Pid",
+                            "ValueList": ["4026531833"]
+                        }
+                    ],
+                    "NamespaceFilter": [
+                        {
+                            "NamespaceType": "Pid",
+                            "ValueList": ["4026531833"]
+                        }
+                    ]
                 }
             ]
         }
@@ -222,23 +207,20 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     // configStr = R"(
     //     {
     //         "Type": "input_ebpf_processprobe_security",
-    //         "ConfigList": [
+    //         "ProbeConfigList": [
     //             {
-    //                 "Filter":
-    //                 {
-    //                     "NamespaceFilter": [
-    //                         {
-    //                             "NamespaceType": "Pid",
-    //                             "ValueList": ["4026531833"]
-    //                         }
-    //                     ],
-    //                     "NamespaceFilter": [
-    //                         {
-    //                             "NamespaceType": "Pid",
-    //                             "ValueList": ["4026531833"]
-    //                         }
-    //                     ]
-    //                 }
+//                     "NamespaceFilter": [
+//                         {
+//                             "NamespaceType": "Pid",
+//                             "ValueList": ["4026531833"]
+//                         }
+//                     ],
+//                     "NamespaceFilter": [
+//                         {
+//                             "NamespaceType": "Pid",
+//                             "ValueList": ["4026531833"]
+//                         }
+//                     ]
     //             }
     //         ]
     //     }
@@ -252,22 +234,20 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {   
-                    "NamespaceFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": [
-                                "4026531833"
-                            ]
-                        },
-                        {
-                            "NamespaceType": "Mnt",
-                            "ValueList": [
-                                "4026531834"
-                            ]
-                        }
-                    ]
+                    {
+                        "NamespaceType": "Pid",
+                        "ValueList": [
+                            "4026531833"
+                        ]
+                    },
+                    {
+                        "NamespaceType": "Mnt",
+                        "ValueList": [
+                            "4026531834"
+                        ]
+                    }
                 }
             ]
         }

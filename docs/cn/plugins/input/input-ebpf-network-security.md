@@ -15,15 +15,15 @@
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_network\_security  |
 |  ProbeConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
 |  ProbeConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ProbeConfigList.Filter  |  object  |  是  |  /  |  过滤参数  |
-|  ProbeConfigList.Filter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
-|  ProbeConfigList.Filter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
-|  ProbeConfigList.Filter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
-|  ProbeConfigList.Filter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
-|  ProbeConfigList.Filter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
-|  ProbeConfigList.Filter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
-|  ProbeConfigList.Filter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
-|  ProbeConfigList.Filter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
+|  ProbeConfigList.AddrFilter  |  object  |  是  |  /  |  过滤参数  |
+|  ProbeConfigList.AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
+|  ProbeConfigList.AddrFilter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
+|  ProbeConfigList.AddrFilter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
+|  ProbeConfigList.AddrFilter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
+|  ProbeConfigList.AddrFilter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
+|  ProbeConfigList.AddrFilter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
+|  ProbeConfigList.AddrFilter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
+|  ProbeConfigList.AddrFilter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
 
 ## 样例
 
@@ -45,7 +45,7 @@ inputs:
       - CallName: 
         - "tcp_connect"
         - "tcp_close"
-        Filter: 
+        AddrFilter: 
           DestAddrList: 
             - "10.0.0.0/8"
             - "92.168.0.0/16"
@@ -57,7 +57,7 @@ inputs:
             - 9300
       - CallName: 
         - "tcp_sendmsg"
-        Filter: 
+        AddrFilter: 
           DestAddrList: 
             - "10.0.0.0/8"
             - "92.168.0.0/16"

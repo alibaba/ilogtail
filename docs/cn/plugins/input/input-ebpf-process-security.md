@@ -15,11 +15,10 @@
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_process\_security  |
 |  ProbeConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
 |  ProbeConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ProbeConfigList.Filter  |  object  |  是  |  /  |  过滤参数  |
-|  ProbeConfigList.Filter.NamespaceFilter  |  object  |  否  |  空  |  命名空间  |
-|  ProbeConfigList.Filter.NamespaceBlackFilter  |  object  |  否  |  空  |  命名空间  |
-|  ProbeConfigList.Filter.Namespace\[Black\]Filter.NamespaceType  |  string  |  是  |  /  |  命名空间类型 \[范围：Uts, Ipc, Mnt, Pid, PidForChildren, Net, Cgroup, User, Time, TimeForChildren\] |
-|  ProbeConfigList.Filter.Namespace\[Black\]Filter.ValueList  |  \[string\]  |  是  |  /  |  特定命名空间类型对应的取值列表 |
+|  ProbeConfigList.NamespaceFilter  |  object  |  否  |  空  |  命名空间  |
+|  ProbeConfigList.NamespaceBlackFilter  |  object  |  否  |  空  |  命名空间  |
+|  ProbeConfigList.Namespace\[Black\]Filter.NamespaceType  |  string  |  是  |  /  |  命名空间类型 \[范围：Uts, Ipc, Mnt, Pid, PidForChildren, Net, Cgroup, User, Time, TimeForChildren\] |
+|  ProbeConfigList.Namespace\[Black\]Filter.ValueList  |  \[string\]  |  是  |  /  |  特定命名空间类型对应的取值列表 |
 
 ## 样例
 
@@ -38,14 +37,13 @@ enable: true
 inputs:
   - Type: input_ebpf_processprobe_security
     ProbeConfigList:
-      - Filter:
-          NamespaceFilter:
-            - NamespaceType: "Pid"
-              ValueList: 
-                - "4026531833"
-            - NamespaceType: "Mnt"
-              ValueList: 
-                - "4026531834"
+      NamespaceFilter:
+        - NamespaceType: "Pid"
+          ValueList: 
+            - "4026531833"
+        - NamespaceType: "Mnt"
+          ValueList: 
+            - "4026531834"
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true

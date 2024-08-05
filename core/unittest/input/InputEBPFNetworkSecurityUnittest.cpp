@@ -54,10 +54,10 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80],
                         "SourceAddrBlackList": ["127.0.0.1/8"],
@@ -66,7 +66,7 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
                 },
                 {
                     "CallName": ["tcp_sendmsg"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80]
                     }
@@ -106,10 +106,10 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": ["80"],
                         "SourceAddrBlackList": ["127.0.0.1/8"],
@@ -118,7 +118,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
                 },
                 {
                     "CallName": ["tcp_sendmsg"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80]
                     }
@@ -151,7 +151,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
                     "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
@@ -175,10 +175,10 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [40, "80", 160],
                         "SourceAddrBlackList": ["127.0.0.1/8"],

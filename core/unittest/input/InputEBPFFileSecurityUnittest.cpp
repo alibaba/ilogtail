@@ -56,10 +56,10 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
-                    "Filter": [
+                    "FilePathFilter": [
                         {
                             "FilePath": "/etc",
                         },
@@ -86,10 +86,10 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
-                    "Filter": [
+                    "FilePathFilter": [
                         {
                             "FilePath": "/etc",
                             "FileName": "passwd"
@@ -131,10 +131,10 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
-                    "Filter": [
+                    "FilePathFilter": [
                         {
                             "FilePath": 1,
                             "FileName": "name"
@@ -153,10 +153,10 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
-                    "Filter": [
+                    "FilePathFilter": [
                         {
                             "FilePath": "/etc",
                             "FileName": 1
@@ -181,10 +181,10 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
-                    "Filter": [
+                    "FilePathFilter": [
                         {
                             "FileName": "passwd"
                         }
@@ -202,7 +202,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
                     "FileName": "passwd"

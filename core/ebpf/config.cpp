@@ -500,8 +500,8 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                            const PipelineContext* mContext,
                            const std::string& sName) {
     std::string errorMsg;
-    // ConfigList (Mandatory)
-    if (!IsValidList(config, "ConfigList", errorMsg)) {
+    // ProbeConfigList (Mandatory)
+    if (!IsValidList(config, "ProbeConfigList", errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            errorMsg,
@@ -511,7 +511,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                            mContext->GetLogstoreName(),
                            mContext->GetRegion());
     }
-    for (auto& innerConfig : config["ConfigList"]) {
+    for (auto& innerConfig : config["ProbeConfigList"]) {
         nami::SecurityOption thisSecurityOption;
 
         std::string errorMsg;
@@ -531,7 +531,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
         switch (filterType) {
             case SecurityFilterType::FILE: {
                 nami::SecurityFileFilter thisFileFilter;
-                if (!IsValidList(innerConfig, "Filter", errorMsg)) {
+                if (!IsValidList(innerConfig, "FilePathFilter", errorMsg)) {
                     PARAM_WARNING_IGNORE(mContext->GetLogger(),
                                         mContext->GetAlarm(),
                                         errorMsg,
@@ -550,27 +550,15 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
             }
             case SecurityFilterType::PROCESS: {
                 nami::SecurityProcessFilter thisProcessFilter;
-                if (!IsValidMap(innerConfig, "Filter", errorMsg)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                        mContext->GetAlarm(),
-                                        errorMsg,
-                                        sName,
-                                        mContext->GetConfigName(),
-                                        mContext->GetProjectName(),
-                                        mContext->GetLogstoreName(),
-                                        mContext->GetRegion());
-                } else {
-                    const Json::Value& filterConfig = innerConfig["Filter"];
-                    if (!InitSecurityProcessFilter(filterConfig, thisProcessFilter, mContext, sName)) {
-                        return false;
-                    }
+                if (!InitSecurityProcessFilter(innerConfig, thisProcessFilter, mContext, sName)) {
+                    return false;
                 }
                 thisSecurityOption.filter_.emplace<nami::SecurityProcessFilter>(thisProcessFilter);
                 break;
             }
             case SecurityFilterType::NETWORK: {
                 nami::SecurityNetworkFilter thisNetworkFilter;
-                if (!IsValidMap(innerConfig, "Filter", errorMsg)) {
+                if (!IsValidMap(innerConfig, "AddrFilter", errorMsg)) {
                     PARAM_WARNING_IGNORE(mContext->GetLogger(),
                                         mContext->GetAlarm(),
                                         errorMsg,
@@ -580,7 +568,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                                         mContext->GetLogstoreName(),
                                         mContext->GetRegion());
                 } else {
-                    const Json::Value& filterConfig = innerConfig["Filter"];
+                    const Json::Value& filterConfig = innerConfig["AddrFilter"];
                     if (!InitSecurityNetworkFilter(filterConfig, thisNetworkFilter, mContext, sName)) {
                         return false;
                     }
