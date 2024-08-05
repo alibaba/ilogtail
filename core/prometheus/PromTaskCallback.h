@@ -8,17 +8,18 @@
 
 namespace logtail {
 
-class PromEvent {
+class PromTaskCallback {
 public:
-    virtual ~PromEvent() = default;
+    virtual ~PromTaskCallback() = default;
 
     // Process should support oneshot and streaming mode.
     virtual void Process(const HttpResponse&) = 0;
 
     [[nodiscard]] virtual std::string GetId() const = 0;
 
-    void Send(bool message);
-    virtual bool ReciveMessage() = 0;
+    void Cancel(bool message);
+    virtual bool IsCancelled() = 0;
+
 
 protected:
     bool mValidState = true;
@@ -32,7 +33,7 @@ public:
         return sInstance;
     }
 
-    void RegisterEvent(std::shared_ptr<PromEvent> promEvent);
+    void RegisterEvent(std::shared_ptr<PromTaskCallback> promEvent);
     void UnRegisterEvent(const std::string& promEventId);
 
     void SendMessage(const std::string& promEventId, bool message);
@@ -42,25 +43,25 @@ public:
 private:
     PromMessageDispatcher() = default;
     ReadWriteLock mEventsRWLock;
-    std::unordered_map<std::string, std::shared_ptr<PromEvent>> mPromEvents;
+    std::unordered_map<std::string, std::shared_ptr<PromTaskCallback>> mPromEvents;
 };
 
-class TickerHttpRequest : public AsynHttpRequest {
+class PromHttpRequest : public AsynHttpRequest {
 public:
-    TickerHttpRequest(const std::string& method,
-                      bool httpsFlag,
-                      const std::string& host,
-                      int32_t port,
-                      const std::string& url,
-                      const std::string& query,
-                      const std::map<std::string, std::string>& header,
-                      const std::string& body,
-                      std::shared_ptr<PromEvent> event,
-                      uint64_t intervalSeconds,
-                      std::chrono::steady_clock::time_point execTime,
-                      std::shared_ptr<Timer> timer);
-    TickerHttpRequest(const TickerHttpRequest&) = default;
-    ~TickerHttpRequest() override = default;
+    PromHttpRequest(const std::string& method,
+                    bool httpsFlag,
+                    const std::string& host,
+                    int32_t port,
+                    const std::string& url,
+                    const std::string& query,
+                    const std::map<std::string, std::string>& header,
+                    const std::string& body,
+                    std::shared_ptr<PromTaskCallback> event,
+                    uint64_t intervalSeconds,
+                    std::chrono::steady_clock::time_point execTime,
+                    std::shared_ptr<Timer> timer);
+    PromHttpRequest(const PromHttpRequest&) = default;
+    ~PromHttpRequest() override = default;
 
     void OnSendDone(const HttpResponse& response) override;
     [[nodiscard]] bool IsContextValid() const override;
@@ -70,7 +71,7 @@ private:
     std::chrono::steady_clock::time_point GetNextExecTime() const;
     void SetNextExecTime(std::chrono::steady_clock::time_point execTime);
 
-    std::shared_ptr<PromEvent> mEvent;
+    std::shared_ptr<PromTaskCallback> mEvent;
 
     int64_t mIntervalSeconds;
     std::chrono::steady_clock::time_point mExecTime;

@@ -1,4 +1,4 @@
-#include "prometheus/AsyncEvent.h"
+#include "prometheus/PromTaskCallback.h"
 
 #include <cstdint>
 #include <string>
@@ -10,7 +10,7 @@
 
 namespace logtail {
 
-void PromEvent::Send(bool message) {
+void PromTaskCallback::Cancel(bool message) {
     // The state changes infrequently, so here we use a read-write lock
     {
         ReadLock lock(mStateRWLock);
@@ -22,7 +22,7 @@ void PromEvent::Send(bool message) {
     mValidState = message;
 }
 
-void PromMessageDispatcher::RegisterEvent(std::shared_ptr<PromEvent> promEvent) {
+void PromMessageDispatcher::RegisterEvent(std::shared_ptr<PromTaskCallback> promEvent) {
     WriteLock lock(mEventsRWLock);
     mPromEvents[promEvent->GetId()] = std::move(promEvent);
 }
@@ -33,7 +33,7 @@ void PromMessageDispatcher::UnRegisterEvent(const std::string& promEventId) {
 }
 
 void PromMessageDispatcher::SendMessage(const std::string& promEventId, bool message) {
-    std::shared_ptr<PromEvent> promEvent;
+    std::shared_ptr<PromTaskCallback> promEvent;
     {
         ReadLock lock(mEventsRWLock);
         auto it = mPromEvents.find(promEventId);
@@ -42,7 +42,7 @@ void PromMessageDispatcher::SendMessage(const std::string& promEventId, bool mes
         }
     }
     if (promEvent) {
-        promEvent->Send(message);
+        promEvent->Cancel(message);
     } else {
         LOG_INFO(sLogger, ("PromEvent not found", promEventId));
     }
@@ -51,12 +51,12 @@ void PromMessageDispatcher::SendMessage(const std::string& promEventId, bool mes
 void PromMessageDispatcher::Stop() {
     WriteLock lock(mEventsRWLock);
     for (auto& it : mPromEvents) {
-        it.second->Send(false);
+        it.second->Cancel(false);
     }
     mPromEvents.clear();
 }
 
-TickerHttpRequest::TickerHttpRequest(const std::string& method,
+PromHttpRequest::PromHttpRequest(const std::string& method,
                                      bool httpsFlag,
                                      const std::string& host,
                                      int32_t port,
@@ -64,7 +64,7 @@ TickerHttpRequest::TickerHttpRequest(const std::string& method,
                                      const std::string& query,
                                      const std::map<std::string, std::string>& header,
                                      const std::string& body,
-                                     std::shared_ptr<PromEvent> event,
+                                     std::shared_ptr<PromTaskCallback> event,
                                      uint64_t intervalSeconds,
                                      std::chrono::steady_clock::time_point execTime,
                                      std::shared_ptr<Timer> timer)
@@ -75,33 +75,37 @@ TickerHttpRequest::TickerHttpRequest(const std::string& method,
       mTimer(std::move(timer)) {
 }
 
-void TickerHttpRequest::OnSendDone(const HttpResponse& response) {
-    if (!IsContextValid()) {
-        return;
-    }
-    mEvent->Process(response);
+void PromHttpRequest::OnSendDone(const HttpResponse& response) {
     if (IsContextValid() && mTimer) {
-        mTimer->PushEvent(BuildTimerEvent());
     }
+
+    // ignore valid state, just process the response
+    mEvent->Process(response);
 }
 
-[[nodiscard]] bool TickerHttpRequest::IsContextValid() const {
-    return mEvent->ReciveMessage();
+[[nodiscard]] bool PromHttpRequest::IsContextValid() const {
+    return mEvent->IsCancelled();
 }
 
-[[nodiscard]] std::unique_ptr<TimerEvent> TickerHttpRequest::BuildTimerEvent() const {
+[[nodiscard]] std::unique_ptr<TimerEvent> PromHttpRequest::BuildTimerEvent() const {
     auto execTime = GetNextExecTime();
-    auto request = std::make_unique<TickerHttpRequest>(*this);
+    auto request = std::make_unique<PromHttpRequest>(*this);
     request->SetNextExecTime(execTime);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;
 }
 
-std::chrono::steady_clock::time_point TickerHttpRequest::GetNextExecTime() const {
-    return mExecTime + std::chrono::seconds(mIntervalSeconds);
+std::chrono::steady_clock::time_point PromHttpRequest::GetNextExecTime() const {
+    // if timeout, use current time
+    auto nextTime = mExecTime + std::chrono::seconds(mIntervalSeconds);
+    if (nextTime < std::chrono::steady_clock::now()) {
+        nextTime = std::chrono::steady_clock::now();
+    }
+
+    return nextTime;
 }
 
-void TickerHttpRequest::SetNextExecTime(std::chrono::steady_clock::time_point execTime) {
+void PromHttpRequest::SetNextExecTime(std::chrono::steady_clock::time_point execTime) {
     mExecTime = execTime;
 }
 

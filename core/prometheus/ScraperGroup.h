@@ -23,7 +23,7 @@
 #include <string>
 
 #include "common/Lock.h"
-#include "prometheus/ScrapeJobEvent.h"
+#include "prometheus/TargetsSubscriber.h"
 
 namespace logtail {
 
@@ -36,7 +36,7 @@ public:
     ScraperGroup& operator=(const ScraperGroup&) = delete;
     ScraperGroup& operator=(ScraperGroup&&) = delete;
 
-    void UpdateScrapeJob(std::shared_ptr<ScrapeJobEvent>);
+    void UpdateScrapeJob(std::shared_ptr<TargetsSubscriber>);
     void RemoveScrapeJob(const std::string& jobName);
 
     void Start();
@@ -51,12 +51,12 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    std::unique_ptr<TimerEvent> BuildJobTimerEvent(std::shared_ptr<ScrapeJobEvent> jobEvent, uint64_t intervalSeconds);
+    std::unique_ptr<TimerEvent> BuildJobTimerEvent(std::shared_ptr<TargetsSubscriber> jobEvent, uint64_t intervalSeconds);
 
     std::shared_ptr<Timer> mTimer;
 
     ReadWriteLock mJobRWLock;
-    std::map<std::string, std::shared_ptr<ScrapeJobEvent>> mJobEventMap;
+    std::map<std::string, std::shared_ptr<TargetsSubscriber>> mJobEventMap;
 
     std::mutex mStartMux;
     bool mIsStarted;

@@ -21,7 +21,7 @@ public:
 private:
     bool CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx);
     // only one job is supported
-    std::shared_ptr<ScrapeJobEvent> mScrapeJobEventPtr;
+    std::shared_ptr<TargetsSubscriber> mScrapeJobEventPtr;
 
     std::string mJobName;
 

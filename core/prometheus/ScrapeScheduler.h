@@ -21,7 +21,7 @@
 
 #include "common/http/HttpResponse.h"
 #include "models/PipelineEventGroup.h"
-#include "prometheus/AsyncEvent.h"
+#include "prometheus/PromTaskCallback.h"
 #include "prometheus/ScrapeConfig.h"
 #include "prometheus/ScrapeTarget.h"
 #include "queue/FeedbackQueueKey.h"
@@ -32,23 +32,23 @@
 
 namespace logtail {
 
-class ScrapeWorkEvent : public PromEvent {
-    friend class ScrapeJobEvent;
+class ScrapeScheduler : public PromTaskCallback {
+    friend class TargetsSubscriber;
 
 public:
-    ScrapeWorkEvent(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+    ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                     const ScrapeTarget& scrapeTarget,
                     QueueKey queueKey,
                     size_t inputIndex);
-    ScrapeWorkEvent(const ScrapeWorkEvent&) = default;
-    ~ScrapeWorkEvent() override = default;
+    ScrapeScheduler(const ScrapeScheduler&) = default;
+    ~ScrapeScheduler() override = default;
 
-    bool operator<(const ScrapeWorkEvent& other) const;
+    bool operator<(const ScrapeScheduler& other) const;
 
     void Process(const HttpResponse&) override;
 
     std::string GetId() const override;
-    bool ReciveMessage() override;
+    bool IsCancelled() override;
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
@@ -62,6 +62,7 @@ private:
 
     QueueKey mQueueKey;
     size_t mInputIndex;
+    std::shared_ptr<Timer> mTimer;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorLogToMetricNativeUnittest;
     friend class ScrapeWorkEventUnittest;

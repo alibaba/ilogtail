@@ -146,7 +146,7 @@ private:
 
 
 void ScrapeJobEventUnittest::OnInitScrapeJobEvent() {
-    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
 
     APSARA_TEST_NOT_EQUAL(scrapeJobEventPtr->mScrapeConfigPtr.get(), nullptr);
@@ -154,7 +154,7 @@ void ScrapeJobEventUnittest::OnInitScrapeJobEvent() {
 }
 
 void ScrapeJobEventUnittest::OnGetRandSleep() {
-    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
     auto rand1 = scrapeJobEventPtr->GetRandSleep("192.168.22.7:8080");
     auto rand2 = scrapeJobEventPtr->GetRandSleep("192.168.22.8:8080");
@@ -162,7 +162,7 @@ void ScrapeJobEventUnittest::OnGetRandSleep() {
 }
 
 void ScrapeJobEventUnittest::TestProcess() {
-    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
 
     // if status code is not 200
@@ -177,7 +177,7 @@ void ScrapeJobEventUnittest::TestProcess() {
 }
 
 void ScrapeJobEventUnittest::TestParseTargetGroups() {
-    std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr = std::make_shared<ScrapeJobEvent>();
+    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
 
     std::set<ScrapeWorkEvent> newScrapeWorkSet;

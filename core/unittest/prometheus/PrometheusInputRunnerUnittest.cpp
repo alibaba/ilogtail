@@ -142,7 +142,7 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
     scrapeTargets.emplace_back(labels);
-    std::unique_ptr<ScrapeJobEvent> scrapeJobEventPtr = make_unique<ScrapeJobEvent>();
+    std::unique_ptr<TargetsSubscriber> scrapeJobEventPtr = make_unique<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobEventPtr->Init(config));
 
     // before
@@ -177,7 +177,7 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
     scrapeTargets.emplace_back(labels);
 
-    std::unique_ptr<ScrapeJobEvent> scrapeJobPtr = make_unique<ScrapeJobEvent>();
+    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
     // update scrapeJob
@@ -210,7 +210,7 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
     scrapeTargets.emplace_back(labels);
 
-    std::unique_ptr<ScrapeJobEvent> scrapeJobPtr = make_unique<ScrapeJobEvent>();
+    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetsSubscriber>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
     PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();

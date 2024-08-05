@@ -26,7 +26,7 @@
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Mock.h"
-#include "prometheus/ScrapeWorkEvent.h"
+#include "prometheus/ScrapeScheduler.h"
 
 using namespace std;
 
@@ -53,7 +53,7 @@ string URLEncode(const string& value) {
 ScraperGroup::ScraperGroup() : mServicePort(0), mUnRegisterMs(0), mTimer(make_shared<Timer>()), mIsStarted(false) {
 }
 
-void ScraperGroup::UpdateScrapeJob(std::shared_ptr<ScrapeJobEvent> scrapeJobEventPtr) {
+void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr) {
     RemoveScrapeJob(scrapeJobEventPtr->GetId());
 
     scrapeJobEventPtr->mUnRegisterMs = mUnRegisterMs;
@@ -62,20 +62,15 @@ void ScraperGroup::UpdateScrapeJob(std::shared_ptr<ScrapeJobEvent> scrapeJobEven
     WriteLock lock(mJobRWLock);
     mJobEventMap[scrapeJobEventPtr->GetId()] = scrapeJobEventPtr;
 
-    // 2. register job to PromMessageDispatcher
-    PromMessageDispatcher::GetInstance().RegisterEvent(scrapeJobEventPtr);
-
-    // 3. build Ticker Event and add it to Timer
+    // 2. build Ticker Event and add it to Timer
     auto timerEvent = BuildJobTimerEvent(std::move(scrapeJobEventPtr), prometheus::RefeshIntervalSeconds);
     mTimer->PushEvent(std::move(timerEvent));
 }
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
     WriteLock lock(mJobRWLock);
+    mJobEventMap[jobName]->Cancel(false);
     mJobEventMap.erase(jobName);
-    // unregister job to PromMessageDispatcher
-    PromMessageDispatcher::GetInstance().SendMessage(jobName, false);
-    PromMessageDispatcher::GetInstance().UnRegisterEvent(jobName);
 }
 
 void ScraperGroup::Start() {
@@ -117,14 +112,14 @@ void ScraperGroup::Stop() {
     }
 }
 
-std::unique_ptr<TimerEvent> ScraperGroup::BuildJobTimerEvent(std::shared_ptr<ScrapeJobEvent> jobEvent,
+std::unique_ptr<TimerEvent> ScraperGroup::BuildJobTimerEvent(std::shared_ptr<TargetsSubscriber> jobEvent,
                                                              uint64_t intervalSeconds) {
     map<string, string> httpHeader;
     httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
     httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
     httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
     auto execTime = std::chrono::steady_clock::now();
-    auto request = std::make_unique<TickerHttpRequest>(sdk::HTTP_GET,
+    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
                                                        false,
                                                        mServiceHost,
                                                        mServicePort,

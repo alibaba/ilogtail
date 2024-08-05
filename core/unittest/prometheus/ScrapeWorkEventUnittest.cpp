@@ -81,7 +81,7 @@ void ScrapeWorkEventUnittest::TestInitScrapeWorkEvent() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
     ScrapeTarget target(labels);
-    ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
+    ScrapeScheduler event(mScrapeConfig, target, 0, 0);
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(target.mLabels.Hash()));
 }
 
@@ -89,7 +89,7 @@ void ScrapeWorkEventUnittest::TestProcess() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
     ScrapeTarget target(labels);
-    ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
+    ScrapeScheduler event(mScrapeConfig, target, 0, 0);
     // if status code is not 200, no data will be processed
     mHttpResponse.mStatusCode = 503;
     event.Process(mHttpResponse);
@@ -106,7 +106,7 @@ void ScrapeWorkEventUnittest::TestSplitByLines() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
     ScrapeTarget target(labels);
-    ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
+    ScrapeScheduler event(mScrapeConfig, target, 0, 0);
     auto res = event.SplitByLines(mHttpResponse.mBody, 0);
     APSARA_TEST_EQUAL(11UL, res.GetEvents().size());
     APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05",
@@ -137,18 +137,18 @@ void ScrapeWorkEventUnittest::TestReceiveMessage() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
     ScrapeTarget target(labels);
-    auto event = std::make_shared<ScrapeWorkEvent>(mScrapeConfig, target, 0, 0);
+    auto event = std::make_shared<ScrapeScheduler>(mScrapeConfig, target, 0, 0);
 
     PromMessageDispatcher::GetInstance().RegisterEvent(event);
 
     // before
-    APSARA_TEST_EQUAL(true, event->ReciveMessage());
+    APSARA_TEST_EQUAL(true, event->IsCancelled());
 
     // send stop message
     PromMessageDispatcher::GetInstance().SendMessage(event->GetId(), false);
 
     // after
-    APSARA_TEST_EQUAL(false, event->ReciveMessage());
+    APSARA_TEST_EQUAL(false, event->IsCancelled());
 
     PromMessageDispatcher::GetInstance().Stop();
 }

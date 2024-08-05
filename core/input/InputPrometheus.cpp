@@ -50,7 +50,7 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     const Json::Value& scrapeConfig = config[prometheus::SCRAPE_CONFIG];
 
     // build scrape job
-    mScrapeJobEventPtr = make_unique<ScrapeJobEvent>();
+    mScrapeJobEventPtr = make_unique<TargetsSubscriber>();
     if (!mScrapeJobEventPtr->Init(scrapeConfig)) {
         return false;
     }

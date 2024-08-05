@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "prometheus/ScrapeWorkEvent.h"
+#include "prometheus/ScrapeScheduler.h"
 
 #include <xxhash/xxhash.h>
 
@@ -36,7 +36,7 @@ using namespace std;
 
 namespace logtail {
 
-ScrapeWorkEvent::ScrapeWorkEvent(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
+ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                                  const ScrapeTarget& scrapeTarget,
                                  QueueKey queueKey,
                                  size_t inputIndex)
@@ -50,11 +50,11 @@ ScrapeWorkEvent::ScrapeWorkEvent(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mScrapeTarget.mLabels.Hash());
 }
 
-bool ScrapeWorkEvent::operator<(const ScrapeWorkEvent& other) const {
+bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
     return mHash < other.mHash;
 }
 
-void ScrapeWorkEvent::Process(const HttpResponse& response) {
+void ScrapeScheduler::Process(const HttpResponse& response) {
     // TODO(liqiang): get scrape timestamp
     time_t timestampInNs = GetCurrentTimeInNanoSeconds();
     if (response.mStatusCode != 200) {
@@ -68,10 +68,12 @@ void ScrapeWorkEvent::Process(const HttpResponse& response) {
     }
     // TODO(liqiang): set jobName, instance metadata
     auto eventGroup = SplitByLines(response.mBody, timestampInNs);
+    // 自监控
+    // work target 的 label 同步传输到 processor 中
 
     PushEventGroup(std::move(eventGroup));
 }
-PipelineEventGroup ScrapeWorkEvent::SplitByLines(const std::string& content, time_t timestamp) {
+PipelineEventGroup ScrapeScheduler::SplitByLines(const std::string& content, time_t timestamp) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     for (const auto& line : SplitString(content, "\r\n")) {
@@ -87,7 +89,7 @@ PipelineEventGroup ScrapeWorkEvent::SplitByLines(const std::string& content, tim
     return eGroup;
 }
 
-void ScrapeWorkEvent::PushEventGroup(PipelineEventGroup&& eGroup) {
+void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
 #ifdef APSARA_UNIT_TEST_MAIN
     mItem.push_back(std::move(item));
@@ -95,11 +97,11 @@ void ScrapeWorkEvent::PushEventGroup(PipelineEventGroup&& eGroup) {
     ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
 }
 
-string ScrapeWorkEvent::GetId() const {
+string ScrapeScheduler::GetId() const {
     return mHash;
 }
 
-bool ScrapeWorkEvent::ReciveMessage() {
+bool ScrapeScheduler::IsCancelled() {
     {
         ReadLock lock(mStateRWLock);
         if (mValidState == true) {
