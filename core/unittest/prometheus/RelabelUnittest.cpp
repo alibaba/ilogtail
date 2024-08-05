@@ -20,7 +20,7 @@
 #include <string>
 
 #include "common/JsonUtil.h"
-#include "prometheus/Relabel.h"
+#include "prometheus/labels/Relabel.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

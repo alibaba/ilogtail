@@ -2,8 +2,8 @@
 #include <string>
 
 #include "JsonUtil.h"
-#include "ScrapeConfig.h"
 #include "json/value.h"
+#include "prometheus/schedulers/ScrapeConfig.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

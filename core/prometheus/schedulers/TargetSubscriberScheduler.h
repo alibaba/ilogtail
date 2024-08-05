@@ -59,8 +59,9 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    bool ParseTargetGroups(const std::string& content,
-                           std::set<std::shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) const;
+    bool ParseTargetGroups(const std::string& content, std::vector<Labels>& targetGroups);
+
+    std::set<std::shared_ptr<ScrapeScheduler>> BuildScrapeSchedulerSet(std::vector<Labels>& targetGroups);
 
     std::unique_ptr<TimerEvent> BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime);
     void UpdateScrapeScheduler(std::set<std::shared_ptr<ScrapeScheduler>>&);
@@ -70,14 +71,14 @@ private:
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     ReadWriteLock mRWLock;
-    std::set<std::shared_ptr<ScrapeScheduler>> mScrapeWorkSet;
+    std::set<std::shared_ptr<ScrapeScheduler>> mScrapeSchedulerSet;
     std::map<std::string, std::shared_ptr<ScrapeScheduler>> mScrapeMap;
 
     std::string mJobName;
     std::shared_ptr<Timer> mTimer;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ScrapeJobEventUnittest;
+    friend class TargetSubscriberSchedulerUnittest;
     friend class InputPrometheusUnittest;
 #endif
 };

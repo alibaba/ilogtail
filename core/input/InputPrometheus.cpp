@@ -30,6 +30,7 @@
 #include "processor/inner/ProcessorRelabelMetricNative.h"
 #include "prometheus/Constants.h"
 #include "prometheus/PrometheusInputRunner.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 
 using namespace std;
 
@@ -50,13 +51,13 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
     const Json::Value& scrapeConfig = config[prometheus::SCRAPE_CONFIG];
 
     // build scrape job
-    mScrapeJobEventPtr = make_unique<TargetsSubscriber>();
-    if (!mScrapeJobEventPtr->Init(scrapeConfig)) {
+    mTargetSubscirber = make_unique<TargetSubscriberScheduler>();
+    if (!mTargetSubscirber->Init(scrapeConfig)) {
         return false;
     }
 
-    mJobName = mScrapeJobEventPtr->GetId();
-    mScrapeJobEventPtr->mInputIndex = mIndex;
+    mJobName = mTargetSubscirber->GetId();
+    mTargetSubscirber->mInputIndex = mIndex;
     return CreateInnerProcessors(scrapeConfig, pluginIdx);
 }
 
@@ -64,9 +65,9 @@ bool InputPrometheus::Init(const Json::Value& config, uint32_t& pluginIdx, Json:
 bool InputPrometheus::Start() {
     LOG_INFO(sLogger, ("input config start", mJobName));
 
-    mScrapeJobEventPtr->mQueueKey = mContext->GetProcessQueueKey();
+    mTargetSubscirber->mQueueKey = mContext->GetProcessQueueKey();
 
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(mScrapeJobEventPtr));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(mTargetSubscirber));
     return true;
 }
 

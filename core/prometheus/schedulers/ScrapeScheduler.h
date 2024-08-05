@@ -23,7 +23,6 @@
 #include "common/http/HttpResponse.h"
 #include "models/PipelineEventGroup.h"
 #include "prometheus/Mock.h"
-#include "prometheus/ScrapeTarget.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 #include "queue/FeedbackQueueKey.h"
 
@@ -36,7 +35,9 @@ namespace logtail {
 class ScrapeScheduler : public BaseScheduler {
 public:
     ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                    const ScrapeTarget& scrapeTarget,
+                    std::string host,
+                    int32_t port,
+                    Labels labels,
                     QueueKey queueKey,
                     size_t inputIndex);
     ScrapeScheduler(const ScrapeScheduler&) = default;
@@ -62,15 +63,17 @@ private:
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
-    ScrapeTarget mScrapeTarget;
     std::string mHash;
+    std::string mHost;
+    int32_t mPort;
+    Labels mLabels;
 
     QueueKey mQueueKey;
     size_t mInputIndex;
     std::shared_ptr<Timer> mTimer;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorLogToMetricNativeUnittest;
-    friend class ScrapeWorkEventUnittest;
+    friend class ScrapeSchedulerUnittest;
     std::vector<std::shared_ptr<ProcessQueueItem>> mItem;
 #endif
 };

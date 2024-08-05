@@ -17,9 +17,9 @@
 #include <string>
 
 #include "JsonUtil.h"
-#include "prometheus/Labels.h"
-#include "prometheus/ScrapeJobEvent.h"
 #include "prometheus/ScraperGroup.h"
+#include "prometheus/labels/Labels.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -66,14 +66,8 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
 
 
     // build scrape job and target
-    auto scrapeTargets = std::vector<ScrapeTarget>();
-    Labels labels;
-    labels.Push(Label{"test_label", "test_value"});
-    labels.Push(Label{"__address__", "192.168.0.1:1234"});
-    labels.Push(Label{"job", "test_job"});
-    scrapeTargets.emplace_back(labels);
 
-    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
+    std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
 
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
@@ -90,12 +84,6 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     auto scraperGroup = make_unique<ScraperGroup>();
 
     // build scrape job and target
-    auto scrapeTargets = std::vector<ScrapeTarget>();
-    Labels labels;
-    labels.Push(Label{"test_label", "test_value"});
-    labels.Push(Label{"__address__", "192.168.0.1:1234"});
-    labels.Push(Label{"job", "test_job"});
-    scrapeTargets.emplace_back(labels);
 
     configStr = R"JSON({
         "job_name": "test_job",
@@ -106,7 +94,7 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     })JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 
-    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
+    std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
 

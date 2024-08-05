@@ -20,15 +20,16 @@
 #include <memory>
 #include <string>
 
-#include "ScrapeJobEvent.h"
 #include "common/JsonUtil.h"
+#include "prometheus/labels/Labels.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
 
 namespace logtail {
 
-class ScrapeJobEventUnittest : public ::testing::Test {
+class TargetSubscriberSchedulerUnittest : public ::testing::Test {
 public:
     void OnInitScrapeJobEvent();
     void OnGetRandSleep();
@@ -145,50 +146,50 @@ private:
 };
 
 
-void ScrapeJobEventUnittest::OnInitScrapeJobEvent() {
-    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
-    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
+void TargetSubscriberSchedulerUnittest::OnInitScrapeJobEvent() {
+    std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
+    APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
 
-    APSARA_TEST_NOT_EQUAL(scrapeJobEventPtr->mScrapeConfigPtr.get(), nullptr);
-    APSARA_TEST_EQUAL(scrapeJobEventPtr->mJobName, "_kube-state-metrics");
+    APSARA_TEST_NOT_EQUAL(targetSubscriber->mScrapeConfigPtr.get(), nullptr);
+    APSARA_TEST_EQUAL(targetSubscriber->mJobName, "_kube-state-metrics");
 }
 
-void ScrapeJobEventUnittest::OnGetRandSleep() {
-    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
-    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
-    auto rand1 = scrapeJobEventPtr->GetRandSleep("192.168.22.7:8080");
-    auto rand2 = scrapeJobEventPtr->GetRandSleep("192.168.22.8:8080");
+void TargetSubscriberSchedulerUnittest::OnGetRandSleep() {
+    std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
+    APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
+    auto rand1 = targetSubscriber->GetRandSleep("192.168.22.7:8080");
+    auto rand2 = targetSubscriber->GetRandSleep("192.168.22.8:8080");
     APSARA_TEST_NOT_EQUAL(rand1, rand2);
 }
 
-void ScrapeJobEventUnittest::TestProcess() {
-    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
-    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
+void TargetSubscriberSchedulerUnittest::TestProcess() {
+    std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
+    APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
 
     // if status code is not 200
     mHttpResponse.mStatusCode = 404;
-    scrapeJobEventPtr->Process(mHttpResponse);
-    APSARA_TEST_EQUAL(0UL, scrapeJobEventPtr->mScrapeWorkSet.size());
+    targetSubscriber->OnSubscription(mHttpResponse);
+    APSARA_TEST_EQUAL(0UL, targetSubscriber->mScrapeSchedulerSet.size());
 
     // if status code is 200
     mHttpResponse.mStatusCode = 200;
-    scrapeJobEventPtr->Process(mHttpResponse);
-    APSARA_TEST_EQUAL(2UL, scrapeJobEventPtr->mScrapeWorkSet.size());
+    targetSubscriber->OnSubscription(mHttpResponse);
+    APSARA_TEST_EQUAL(2UL, targetSubscriber->mScrapeSchedulerSet.size());
 }
 
-void ScrapeJobEventUnittest::TestParseTargetGroups() {
-    std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr = std::make_shared<TargetsSubscriber>();
-    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(mConfig["ScrapeConfig"]));
+void TargetSubscriberSchedulerUnittest::TestParseTargetGroups() {
+    std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
+    APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
 
-    std::set<ScrapeWorkEvent> newScrapeWorkSet;
-    APSARA_TEST_TRUE(scrapeJobEventPtr->ParseTargetGroups(mHttpResponse.mBody, newScrapeWorkSet));
-    APSARA_TEST_EQUAL(2UL, newScrapeWorkSet.size());
+    std::vector<Labels> newScrapeSchedulerSet;
+    APSARA_TEST_TRUE(targetSubscriber->ParseTargetGroups(mHttpResponse.mBody, newScrapeSchedulerSet));
+    APSARA_TEST_EQUAL(2UL, newScrapeSchedulerSet.size());
 }
 
-UNIT_TEST_CASE(ScrapeJobEventUnittest, OnInitScrapeJobEvent)
-UNIT_TEST_CASE(ScrapeJobEventUnittest, OnGetRandSleep)
-UNIT_TEST_CASE(ScrapeJobEventUnittest, TestProcess)
-UNIT_TEST_CASE(ScrapeJobEventUnittest, TestParseTargetGroups)
+UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, OnInitScrapeJobEvent)
+UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, OnGetRandSleep)
+UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, TestProcess)
+UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, TestParseTargetGroups)
 
 } // namespace logtail
 

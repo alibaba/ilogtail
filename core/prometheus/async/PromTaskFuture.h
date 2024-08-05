@@ -12,9 +12,7 @@ public:
     // Process should support oneshot and streaming mode.
     void Process(const HttpResponse&);
 
-    void AddDoneCallback(std::function<void(const HttpResponse&)>&& callback) {
-        mDoneCallbacks.emplace_back(std::move(callback));
-    }
+    void AddDoneCallback(std::function<void(const HttpResponse&)>&& callback);
 
     void Cancel();
     bool IsCancelled();

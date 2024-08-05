@@ -18,7 +18,7 @@
 
 #include "MetricEvent.h"
 #include "models/PipelineEventGroup.h"
-#include "prometheus/TextParser.h"
+#include "prometheus/labels/TextParser.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

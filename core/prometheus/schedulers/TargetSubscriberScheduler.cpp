@@ -61,38 +61,39 @@ void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
         return;
     }
     const string& content = response.mBody;
-    set<shared_ptr<ScrapeScheduler>> newScrapeWorkSet;
-    if (!ParseTargetGroups(content, newScrapeWorkSet)) {
+    vector<Labels> targetGroup;
+    if (!ParseTargetGroups(content, targetGroup)) {
         return;
     }
-    UpdateScrapeScheduler(newScrapeWorkSet);
+    set<shared_ptr<ScrapeScheduler>> newScrapeSchedulerSet = BuildScrapeSchedulerSet(targetGroup);
+    UpdateScrapeScheduler(newScrapeSchedulerSet);
 }
 
-void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) {
+void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeScheduler>>& newScrapeSchedulerSet) {
     set<shared_ptr<ScrapeScheduler>> diff;
     {
         WriteLock lock(mRWLock);
 
         // remove obsolete scrape work
-        set_difference(mScrapeWorkSet.begin(),
-                       mScrapeWorkSet.end(),
-                       newScrapeWorkSet.begin(),
-                       newScrapeWorkSet.end(),
+        set_difference(mScrapeSchedulerSet.begin(),
+                       mScrapeSchedulerSet.end(),
+                       newScrapeSchedulerSet.begin(),
+                       newScrapeSchedulerSet.end(),
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
-            mScrapeWorkSet.erase(work);
-            mScrapeMap[work->GetId()]->mFuture->Cancel();
+            mScrapeSchedulerSet.erase(work);
+            mScrapeMap[work->GetId()]->Cancel();
         }
         diff.clear();
 
         // save new scrape work
-        set_difference(newScrapeWorkSet.begin(),
-                       newScrapeWorkSet.end(),
-                       mScrapeWorkSet.begin(),
-                       mScrapeWorkSet.end(),
+        set_difference(newScrapeSchedulerSet.begin(),
+                       newScrapeSchedulerSet.end(),
+                       mScrapeSchedulerSet.begin(),
+                       mScrapeSchedulerSet.end(),
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
-            mScrapeWorkSet.insert(work);
+            mScrapeSchedulerSet.insert(work);
             mScrapeMap[work->GetId()] = work;
         }
     }
@@ -119,10 +120,7 @@ uint64_t TargetSubscriberScheduler::GetRandSleep(const string& hash) const {
     randSleep -= sleepOffset;
     return randSleep;
 }
-
-// TODO: simplify method
-bool TargetSubscriberScheduler::ParseTargetGroups(const string& content,
-                                                  std::set<std::shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) const {
+bool TargetSubscriberScheduler::ParseTargetGroups(const std::string& content, std::vector<Labels>& targetGroups) {
     string errs;
     Json::Value root;
     if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
@@ -152,21 +150,16 @@ bool TargetSubscriberScheduler::ParseTargetGroups(const string& content,
                 }
             }
         }
-
         // Parse labels
         Labels labels;
         labels.Push(Label{prometheus::JOB, mJobName});
         labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
         labels.Push(Label{prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme});
         labels.Push(Label{prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath});
-        labels.Push(Label{prometheus::SCRAPE_INTERVAL_LABEL_NAME,
-                          (mScrapeConfigPtr->mScrapeIntervalSeconds % 60 == 0)
-                              ? ToString(mScrapeConfigPtr->mScrapeIntervalSeconds / 60) + "m"
-                              : ToString(mScrapeConfigPtr->mScrapeIntervalSeconds) + "s"});
-        labels.Push(Label{prometheus::SCRAPE_TIMEOUT_LABEL_NAME,
-                          (mScrapeConfigPtr->mScrapeTimeoutSeconds % 60 == 0)
-                              ? ToString(mScrapeConfigPtr->mScrapeTimeoutSeconds / 60) + "m"
-                              : ToString(mScrapeConfigPtr->mScrapeTimeoutSeconds) + "s"});
+        labels.Push(
+            Label{prometheus::SCRAPE_INTERVAL_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeIntervalSeconds)});
+        labels.Push(
+            Label{prometheus::SCRAPE_TIMEOUT_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeTimeoutSeconds)});
         for (const auto& pair : mScrapeConfigPtr->mParams) {
             labels.Push(Label{prometheus::PARAM_LABEL_NAME + pair.first, pair.second[0]});
         }
@@ -176,10 +169,17 @@ bool TargetSubscriberScheduler::ParseTargetGroups(const string& content,
                 labels.Push(Label{labelKey, element[prometheus::LABELS][labelKey].asString()});
             }
         }
+        targetGroups.push_back(labels);
+    }
+    return true;
+}
 
+std::set<std::shared_ptr<ScrapeScheduler>>
+TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGroups) {
+    set<shared_ptr<ScrapeScheduler>> scrapeSchedulerSet;
+    for (const auto& labels : targetGroups) {
         // Relabel Config
         Labels result = Labels();
-        // 产生的labels 放到 sample 中
         bool keep = prometheus::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
         if (!keep) {
             continue;
@@ -189,16 +189,28 @@ bool TargetSubscriberScheduler::ParseTargetGroups(const string& content,
             continue;
         }
 
-        auto scrapeTarget = ScrapeTarget(result);
-        auto scrapeWorkEvent
-            = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, scrapeTarget, mQueueKey, mInputIndex);
-        scrapeWorkEvent->SetFirstExecTime(std::chrono::steady_clock::now()
-                                          + std::chrono::nanoseconds(scrapeWorkEvent->GetRandSleep()));
+        string address = result.Get(prometheus::ADDRESS_LABEL_NAME);
+        auto m = address.find(':');
+        string host;
+        int32_t port = 0;
+        if (m != string::npos) {
+            host = address.substr(0, m);
+            try {
+                port = stoi(address.substr(m + 1));
+            } catch (...) {
+                port = 9100;
+            }
+        }
 
-        scrapeWorkEvent->SetTimer(mTimer);
-        newScrapeWorkSet.insert(scrapeWorkEvent);
+        auto scrapeScheduler
+            = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, result, mQueueKey, mInputIndex);
+        scrapeScheduler->SetFirstExecTime(std::chrono::steady_clock::now()
+                                          + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep()));
+
+        scrapeScheduler->SetTimer(mTimer);
+        scrapeSchedulerSet.insert(scrapeScheduler);
     }
-    return true;
+    return scrapeSchedulerSet;
 }
 
 void TargetSubscriberScheduler::SetTimer(shared_ptr<Timer> timer) {
@@ -213,10 +225,17 @@ void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromTaskFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
         this->OnSubscription(response);
+        ExecDone();
         this->ScheduleNext();
-        this->mExecCount++;
     });
-    mFuture = future;
+
+    {
+        WriteLock lock(mLock);
+        if (mFuture && mFuture->IsCancelled()) {
+            return;
+        }
+        mFuture = future;
+    }
 
     auto event = BuildSubscriberTimerEvent(GetNextExecTime());
     mTimer->PushEvent(std::move(event));

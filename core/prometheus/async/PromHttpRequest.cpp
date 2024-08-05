@@ -16,24 +16,23 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
                                  const std::string& query,
                                  const std::map<std::string, std::string>& header,
                                  const std::string& body,
-                                 std::shared_ptr<PromTaskFuture> event,
+                                 std::shared_ptr<PromTaskFuture> future,
                                  uint64_t intervalSeconds,
                                  std::chrono::steady_clock::time_point execTime,
                                  std::shared_ptr<Timer> timer)
     : AsynHttpRequest(method, httpsFlag, host, port, url, query, header, body),
-      mEvent(std::move(event)),
+      mFuture(std::move(future)),
       mIntervalSeconds(intervalSeconds),
       mExecTime(execTime),
       mTimer(std::move(timer)) {
 }
 
 void PromHttpRequest::OnSendDone(const HttpResponse& response) {
-    // ignore invalid state, just process the response
-    mEvent->Process(response);
+    mFuture->Process(response);
 }
 
 [[nodiscard]] bool PromHttpRequest::IsContextValid() const {
-    return mEvent->IsCancelled();
+    return mFuture->IsCancelled();
 }
 
 } // namespace logtail

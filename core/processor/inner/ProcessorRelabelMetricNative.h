@@ -21,7 +21,7 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "plugin/interface/Processor.h"
-#include "prometheus/Relabel.h"
+#include "prometheus/labels/Relabel.h"
 
 namespace logtail {
 class ProcessorRelabelMetricNative : public Processor {

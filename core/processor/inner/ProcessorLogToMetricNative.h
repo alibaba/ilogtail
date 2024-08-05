@@ -5,7 +5,7 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "plugin/interface/Processor.h"
-#include "prometheus/TextParser.h"
+#include "prometheus/labels/TextParser.h"
 
 namespace logtail {
 class ProcessorLogToMetricNative : public Processor {

@@ -33,7 +33,7 @@ private:
     std::chrono::steady_clock::time_point GetNextExecTime() const;
     void SetNextExecTime(std::chrono::steady_clock::time_point execTime);
 
-    std::shared_ptr<PromTaskFuture> mEvent;
+    std::shared_ptr<PromTaskFuture> mFuture;
 
     int64_t mIntervalSeconds;
     std::chrono::steady_clock::time_point mExecTime;

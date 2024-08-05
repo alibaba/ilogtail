@@ -31,24 +31,26 @@ namespace logtail {
 ScraperGroup::ScraperGroup() : mServicePort(0), mUnRegisterMs(0), mTimer(make_shared<Timer>()), mIsStarted(false) {
 }
 
-void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetSubscriberScheduler> scrapeJobEventPtr) {
-    RemoveScrapeJob(scrapeJobEventPtr->GetId());
+void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber) {
+    RemoveScrapeJob(targetSubscriber->GetId());
 
-    scrapeJobEventPtr->mUnRegisterMs = mUnRegisterMs;
-    scrapeJobEventPtr->SetTimer(mTimer);
-    scrapeJobEventPtr->SetFirstExecTime(std::chrono::steady_clock::now());
+    targetSubscriber->mUnRegisterMs = mUnRegisterMs;
+    targetSubscriber->SetTimer(mTimer);
+    targetSubscriber->SetFirstExecTime(std::chrono::steady_clock::now());
     // 1. add job to mJobEventMap
     WriteLock lock(mJobRWLock);
-    mJobEventMap[scrapeJobEventPtr->GetId()] = scrapeJobEventPtr;
+    mJobEventMap[targetSubscriber->GetId()] = targetSubscriber;
 
     // 2. build Ticker Event and add it to Timer
-    scrapeJobEventPtr->ScheduleNext();
+    targetSubscriber->ScheduleNext();
 }
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
     WriteLock lock(mJobRWLock);
-    mJobEventMap[jobName]->mFuture->Cancel();
-    mJobEventMap.erase(jobName);
+    if (mJobEventMap.count(jobName)) {
+        mJobEventMap[jobName]->Cancel();
+        mJobEventMap.erase(jobName);
+    }
 }
 
 void ScraperGroup::Start() {
@@ -59,9 +61,7 @@ void ScraperGroup::Start() {
         }
         mIsStarted = true;
     }
-    mThreadRes = std::async(launch::async, [this]() {
-        mTimer->Init();
-    });
+    mThreadRes = std::async(launch::async, [this]() { mTimer->Init(); });
 }
 
 void ScraperGroup::Stop() {

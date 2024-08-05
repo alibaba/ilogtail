@@ -18,7 +18,7 @@
 #include <string>
 
 #include "prometheus/Constants.h"
-#include "prometheus/Labels.h"
+#include "prometheus/labels/Labels.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

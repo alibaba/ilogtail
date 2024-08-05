@@ -1,5 +1,5 @@
 
-#include "ScrapeConfig.h"
+#include "prometheus/schedulers/ScrapeConfig.h"
 
 #include <json/value.h>
 
@@ -9,6 +9,7 @@
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Utils.h"
 
 using namespace std;
 
@@ -40,19 +41,11 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     }
     if (scrapeConfig.isMember(prometheus::SCRAPE_INTERVAL) && scrapeConfig[prometheus::SCRAPE_INTERVAL].isString()) {
         string tmpScrapeIntervalString = scrapeConfig[prometheus::SCRAPE_INTERVAL].asString();
-        if (EndWith(tmpScrapeIntervalString, "s")) {
-            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find('s')));
-        } else if (EndWith(tmpScrapeIntervalString, "m")) {
-            mScrapeIntervalSeconds = stoll(tmpScrapeIntervalString.substr(0, tmpScrapeIntervalString.find('m'))) * 60;
-        }
+        mScrapeIntervalSeconds = DurationToSecond(tmpScrapeIntervalString);
     }
     if (scrapeConfig.isMember(prometheus::SCRAPE_TIMEOUT) && scrapeConfig[prometheus::SCRAPE_TIMEOUT].isString()) {
         string tmpScrapeTimeoutString = scrapeConfig[prometheus::SCRAPE_TIMEOUT].asString();
-        if (EndWith(tmpScrapeTimeoutString, "s")) {
-            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find('s')));
-        } else if (EndWith(tmpScrapeTimeoutString, "m")) {
-            mScrapeTimeoutSeconds = stoll(tmpScrapeTimeoutString.substr(0, tmpScrapeTimeoutString.find('m'))) * 60;
-        }
+        mScrapeTimeoutSeconds = DurationToSecond(tmpScrapeTimeoutString);
     }
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
     if (scrapeConfig.isMember(prometheus::MAX_SCRAPE_SIZE) && scrapeConfig[prometheus::MAX_SCRAPE_SIZE].isString()) {

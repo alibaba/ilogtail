@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "prometheus/TextParser.h"
+#include "prometheus/labels/TextParser.h"
 
 #include <re2/re2.h>
 

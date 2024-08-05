@@ -5,7 +5,7 @@
 #include <string>
 
 #include "plugin/interface/Input.h"
-#include "prometheus/ScrapeJobEvent.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 
 namespace logtail {
 
@@ -21,7 +21,7 @@ public:
 private:
     bool CreateInnerProcessors(const Json::Value& inputConfig, uint32_t& pluginIdx);
     // only one job is supported
-    std::shared_ptr<TargetsSubscriber> mScrapeJobEventPtr;
+    std::shared_ptr<TargetSubscriberScheduler> mTargetSubscirber;
 
     std::string mJobName;
 

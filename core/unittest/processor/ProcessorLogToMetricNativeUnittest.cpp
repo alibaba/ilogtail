@@ -17,11 +17,11 @@
 #include "LogEvent.h"
 #include "MetricEvent.h"
 #include "StringTools.h"
-#include "TextParser.h"
 #include "common/JsonUtil.h"
 #include "processor/inner/ProcessorLogToMetricNative.h"
 #include "prometheus/Constants.h"
-#include "prometheus/ScrapeWorkEvent.h"
+#include "prometheus/labels/TextParser.h"
+#include "prometheus/schedulers/ScrapeScheduler.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

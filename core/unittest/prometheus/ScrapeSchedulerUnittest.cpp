@@ -20,18 +20,18 @@
 
 #include "common/StringTools.h"
 #include "prometheus/Constants.h"
-#include "prometheus/Labels.h"
-#include "prometheus/ScrapeConfig.h"
-#include "prometheus/ScrapeWorkEvent.h"
+#include "prometheus/labels/Labels.h"
+#include "prometheus/schedulers/ScrapeConfig.h"
+#include "prometheus/schedulers/ScrapeScheduler.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
 
 namespace logtail {
 
-class ScrapeWorkEventUnittest : public testing::Test {
+class ScrapeSchedulerUnittest : public testing::Test {
 public:
-    void TestInitScrapeWorkEvent();
+    void TestInitscrapeScheduler();
     void TestProcess();
     void TestSplitByLines();
     void TestReceiveMessage();
@@ -77,37 +77,38 @@ private:
     HttpResponse mHttpResponse;
 };
 
-void ScrapeWorkEventUnittest::TestInitScrapeWorkEvent() {
+void ScrapeSchedulerUnittest::TestInitscrapeScheduler() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    ScrapeTarget target(labels);
-    ScrapeScheduler event(mScrapeConfig, target, 0, 0);
-    APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(target.mLabels.Hash()));
+    ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
+    APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
 }
 
-void ScrapeWorkEventUnittest::TestProcess() {
+void ScrapeSchedulerUnittest::TestProcess() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    ScrapeTarget target(labels);
-    ScrapeScheduler event(mScrapeConfig, target, 0, 0);
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
+    APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
     // if status code is not 200, no data will be processed
     mHttpResponse.mStatusCode = 503;
-    event.Process(mHttpResponse);
+    event.OnMetricResult(mHttpResponse);
     APSARA_TEST_EQUAL(0UL, event.mItem.size());
     event.mItem.clear();
 
     mHttpResponse.mStatusCode = 200;
-    event.Process(mHttpResponse);
+    event.OnMetricResult(mHttpResponse);
     APSARA_TEST_EQUAL(1UL, event.mItem.size());
     APSARA_TEST_EQUAL(11UL, event.mItem[0]->mEventGroup.GetEvents().size());
 }
 
-void ScrapeWorkEventUnittest::TestSplitByLines() {
+void ScrapeSchedulerUnittest::TestSplitByLines() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    ScrapeTarget target(labels);
-    ScrapeScheduler event(mScrapeConfig, target, 0, 0);
-    auto res = event.SplitByLines(mHttpResponse.mBody, 0);
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    ScrapeScheduler event(mScrapeConfig, "localhost", 8080, labels, 0, 0);
+    APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
+    auto res = event.BuildPipelineEventGroup(mHttpResponse.mBody, 0);
     APSARA_TEST_EQUAL(11UL, res.GetEvents().size());
     APSARA_TEST_EQUAL("go_gc_duration_seconds{quantile=\"0\"} 1.5531e-05",
                       res.GetEvents()[0].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
@@ -133,29 +134,24 @@ void ScrapeWorkEventUnittest::TestSplitByLines() {
                       res.GetEvents()[10].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
 }
 
-void ScrapeWorkEventUnittest::TestReceiveMessage() {
+void ScrapeSchedulerUnittest::TestReceiveMessage() {
     Labels labels;
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
-    ScrapeTarget target(labels);
-    auto event = std::make_shared<ScrapeScheduler>(mScrapeConfig, target, 0, 0);
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    auto event = make_shared<ScrapeScheduler>(mScrapeConfig, "localhost", 8080, labels, 0, 0);
 
-    PromMessageDispatcher::GetInstance().RegisterEvent(event);
 
     // before
-    APSARA_TEST_EQUAL(true, event->IsCancelled());
+    APSARA_TEST_EQUAL(true, event->mFuture->IsCancelled());
 
-    // send stop message
-    PromMessageDispatcher::GetInstance().SendMessage(event->GetId(), false);
 
     // after
-    APSARA_TEST_EQUAL(false, event->IsCancelled());
-
-    PromMessageDispatcher::GetInstance().Stop();
+    APSARA_TEST_EQUAL(false, event->mFuture->IsCancelled());
 }
 
-UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestInitScrapeWorkEvent)
-UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestProcess)
-UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestSplitByLines)
+UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestInitscrapeScheduler)
+UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestProcess)
+UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestSplitByLines)
 
 } // namespace logtail
 

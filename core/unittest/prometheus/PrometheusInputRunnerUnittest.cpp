@@ -18,9 +18,9 @@
 
 #include "Common.h"
 #include "JsonUtil.h"
-#include "Labels.h"
 #include "json/value.h"
 #include "prometheus/PrometheusInputRunner.h"
+#include "prometheus/labels/Labels.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -138,18 +138,16 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 
     // build scrape job and target
-    auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    scrapeTargets.emplace_back(labels);
-    std::unique_ptr<TargetSubscriberScheduler> scrapeJobEventPtr = make_unique<TargetSubscriberScheduler>();
-    APSARA_TEST_TRUE(scrapeJobEventPtr->Init(config));
+    std::unique_ptr<TargetSubscriberScheduler> targetSubscriber = make_unique<TargetSubscriberScheduler>();
+    APSARA_TEST_TRUE(targetSubscriber->Init(config));
 
     // before
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
                      == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
     // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobEventPtr));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(targetSubscriber));
 
     // after
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("test_job")
@@ -172,10 +170,6 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     // build scrape job and target
-    auto scrapeTargets = std::vector<ScrapeTarget>();
-    Labels labels;
-    labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    scrapeTargets.emplace_back(labels);
 
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
@@ -205,10 +199,8 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     }
     )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    auto scrapeTargets = std::vector<ScrapeTarget>();
     Labels labels;
     labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    scrapeTargets.emplace_back(labels);
 
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));

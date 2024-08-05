@@ -51,16 +51,16 @@ PrometheusInputRunner::PrometheusInputRunner() {
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
-void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> scrapeJobEventPtr) {
+void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber) {
     {
         WriteLock lock(mReadWriteLock);
-        mPrometheusInputsSet.insert(scrapeJobEventPtr->GetId());
+        mPrometheusInputsSet.insert(targetSubscriber->GetId());
     }
-    scrapeJobEventPtr->mServiceHost = mServiceHost;
-    scrapeJobEventPtr->mServicePort = mServicePort;
-    scrapeJobEventPtr->mPodName = mPodName;
+    targetSubscriber->mServiceHost = mServiceHost;
+    targetSubscriber->mServicePort = mServicePort;
+    targetSubscriber->mPodName = mPodName;
 
-    mScraperGroup->UpdateScrapeJob(std::move(scrapeJobEventPtr));
+    mScraperGroup->UpdateScrapeJob(std::move(targetSubscriber));
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {

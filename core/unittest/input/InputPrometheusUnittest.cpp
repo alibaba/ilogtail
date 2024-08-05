@@ -19,7 +19,6 @@
 #include <string>
 
 #include "PluginRegistry.h"
-#include "Relabel.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "inner/ProcessorLogToMetricNative.h"
@@ -28,6 +27,7 @@
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "prometheus/PrometheusInputRunner.h"
+#include "prometheus/labels/Relabel.h"
 #include "unittest/Unittest.h"
 
 
@@ -93,13 +93,13 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(input->Name(), "1");
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
-    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobEventPtr->mJobName);
-    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobEventPtr->mScrapeConfigPtr->mMetricsPath);
-    APSARA_TEST_EQUAL(15LL, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
-    APSARA_TEST_EQUAL(15LL, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobEventPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSampleLimit);
-    APSARA_TEST_EQUAL(-1, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSeriesLimit);
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mTargetSubscirber->mJobName);
+    APSARA_TEST_EQUAL("/metrics", input->mTargetSubscirber->mScrapeConfigPtr->mMetricsPath);
+    APSARA_TEST_EQUAL(15LL, input->mTargetSubscirber->mScrapeConfigPtr->mScrapeIntervalSeconds);
+    APSARA_TEST_EQUAL(15LL, input->mTargetSubscirber->mScrapeConfigPtr->mScrapeTimeoutSeconds);
+    APSARA_TEST_EQUAL(-1, input->mTargetSubscirber->mScrapeConfigPtr->mMaxScrapeSizeBytes);
+    APSARA_TEST_EQUAL(-1, input->mTargetSubscirber->mScrapeConfigPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(-1, input->mTargetSubscirber->mScrapeConfigPtr->mSeriesLimit);
 
     // all useful config
     configStr = R"(
@@ -128,13 +128,13 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     input->SetMetricsRecordRef(InputPrometheus::sName, "1");
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
-    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobEventPtr->mJobName);
-    APSARA_TEST_EQUAL("/metrics", input->mScrapeJobEventPtr->mScrapeConfigPtr->mMetricsPath);
-    APSARA_TEST_EQUAL(15, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeIntervalSeconds);
-    APSARA_TEST_EQUAL(15, input->mScrapeJobEventPtr->mScrapeConfigPtr->mScrapeTimeoutSeconds);
-    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mScrapeJobEventPtr->mScrapeConfigPtr->mMaxScrapeSizeBytes);
-    APSARA_TEST_EQUAL(1000000, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSampleLimit);
-    APSARA_TEST_EQUAL(1000000, input->mScrapeJobEventPtr->mScrapeConfigPtr->mSeriesLimit);
+    APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mTargetSubscirber->mJobName);
+    APSARA_TEST_EQUAL("/metrics", input->mTargetSubscirber->mScrapeConfigPtr->mMetricsPath);
+    APSARA_TEST_EQUAL(15, input->mTargetSubscirber->mScrapeConfigPtr->mScrapeIntervalSeconds);
+    APSARA_TEST_EQUAL(15, input->mTargetSubscirber->mScrapeConfigPtr->mScrapeTimeoutSeconds);
+    APSARA_TEST_EQUAL(10 * 1024 * 1024, input->mTargetSubscirber->mScrapeConfigPtr->mMaxScrapeSizeBytes);
+    APSARA_TEST_EQUAL(1000000, input->mTargetSubscirber->mScrapeConfigPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(1000000, input->mTargetSubscirber->mScrapeConfigPtr->mSeriesLimit);
 }
 
 void InputPrometheusUnittest::OnFailedInit() {
@@ -219,7 +219,6 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("_arms-prom/node-exporter/0")
                      == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
 
-    PrometheusInputRunner::GetInstance()->Stop();
 }
 
 void InputPrometheusUnittest::TestCreateInnerProcessor() {

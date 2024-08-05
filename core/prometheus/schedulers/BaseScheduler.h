@@ -13,19 +13,20 @@ public:
 
     virtual void ScheduleNext() = 0;
 
-    void ExecDone() { this->mExecCount++; }
+    void ExecDone();
 
-    std::chrono::steady_clock::time_point GetNextExecTime() {
-        return mFirstExecTime + std::chrono::seconds(mExecCount * mInterval);
-    }
+    std::chrono::steady_clock::time_point GetNextExecTime();
 
-    void SetFirstExecTime(std::chrono::steady_clock::time_point firstExecTime) { mFirstExecTime = firstExecTime; }
+    void SetFirstExecTime(std::chrono::steady_clock::time_point firstExecTime);
 
-    std::shared_ptr<PromTaskFuture> mFuture;
+    void Cancel();
 
 protected:
     std::chrono::steady_clock::time_point mFirstExecTime;
     int64_t mExecCount = 0;
     int64_t mInterval = 0;
+
+    ReadWriteLock mLock;
+    std::shared_ptr<PromTaskFuture> mFuture;
 };
 } // namespace logtail

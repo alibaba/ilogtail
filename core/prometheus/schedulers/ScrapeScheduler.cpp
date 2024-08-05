@@ -29,7 +29,6 @@
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Mock.h"
-#include "prometheus/ScrapeTarget.h"
 #include "prometheus/async/PromHttpRequest.h"
 #include "queue/FeedbackQueueKey.h"
 #include "queue/ProcessQueueItem.h"
@@ -40,17 +39,21 @@ using namespace std;
 namespace logtail {
 
 ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
-                                 const ScrapeTarget& scrapeTarget,
+                                 std::string host,
+                                 int32_t port,
+                                 Labels labels,
                                  QueueKey queueKey,
                                  size_t inputIndex)
     : mScrapeConfigPtr(std::move(scrapeConfigPtr)),
-      mScrapeTarget(scrapeTarget),
+      mHost(std::move(host)),
+      mPort(port),
+      mLabels(std::move(labels)),
       mQueueKey(queueKey),
       mInputIndex(inputIndex) {
-    string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mScrapeTarget.mHost + ":" + ToString(mScrapeTarget.mPort)
+    string tmpTargetURL = mScrapeConfigPtr->mScheme + "://" + mHost + ":" + ToString(mPort)
         + mScrapeConfigPtr->mMetricsPath
         + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
-    mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mScrapeTarget.mLabels.Hash());
+    mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabels.Hash());
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
 }
 
@@ -70,9 +73,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
         return;
     }
-    // TODO(liqiang): set jobName, instance metadata
     auto eventGroup = BuildPipelineEventGroup(response.mBody, timestampInNs);
-    // TODO(liqiang): work target 的 label 同步传输到 processor 中
 
     PushEventGroup(std::move(eventGroup));
 }
@@ -108,10 +109,17 @@ void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromTaskFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
         this->OnMetricResult(response);
+        ExecDone();
         this->ScheduleNext();
-        this->mExecCount++;
     });
-    mFuture = future;
+
+    {
+        WriteLock lock(mLock);
+        if (mFuture && mFuture->IsCancelled()) {
+            return;
+        }
+        mFuture = future;
+    }
 
     auto event = BuildScrapeTimerEvent(GetNextExecTime());
     mTimer->PushEvent(std::move(event));
@@ -120,8 +128,8 @@ void ScrapeScheduler::ScheduleNext() {
 std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime) {
     auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
                                                      mScrapeConfigPtr->mScheme == prometheus::HTTPS,
-                                                     mScrapeTarget.mHost,
-                                                     mScrapeTarget.mPort,
+                                                     mHost,
+                                                     mPort,
                                                      mScrapeConfigPtr->mMetricsPath,
                                                      mScrapeConfigPtr->mQueryString,
                                                      mScrapeConfigPtr->mHeaders,
