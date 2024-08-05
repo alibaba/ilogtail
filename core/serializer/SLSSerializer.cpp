@@ -55,6 +55,9 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             }
         } else if (e.Is<MetricEvent>()) {
             const auto& metricEvent = e.Cast<MetricEvent>();
+            if (metricEvent.Is<std::monostate>()) {
+                 continue;
+            }
             auto log = logGroup.add_logs();
             std::ostringstream oss;
             // set __labels__
@@ -74,7 +77,6 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
             // set __time_nano__
             logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_TIME_NANO);
-
             if (metricEvent.GetTimestampNanosecond()) {
                 logPtr->set_value(std::to_string(metricEvent.GetTimestamp()) + NumberToDigitString(metricEvent.GetTimestampNanosecond().value(), 9));   
             } else {
@@ -86,7 +88,7 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 logPtr = log->add_contents();
                 logPtr->set_key(METRIC_RESERVED_KEY_VALUE);
                 logPtr->set_value(std::to_string(value));
-            }
+            } 
             // set __name__
             logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_NAME);
