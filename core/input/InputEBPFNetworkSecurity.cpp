@@ -25,7 +25,6 @@ namespace logtail {
 const std::string InputEBPFNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
 
 bool InputEBPFNetworkSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    // config string解析成定义的param
     return mSecurityOptions.Init(ebpf::SecurityFilterType::NETWORK, config, mContext, sName);
 }
 

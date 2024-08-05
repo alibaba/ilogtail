@@ -65,6 +65,9 @@ void SourceManager::Init() {
   mHostPathPrefix = STRING_FLAG(default_container_host_path);
   mBinaryPath = GetProcessExecutionDir();
   mFullLibName = "lib" + m_lib_name_ + ".so";
+  for (auto& x : mRunning) {
+    x = 0;
+  }
 }
 
 bool SourceManager::LoadDynamicLib(const std::string& lib_name) {

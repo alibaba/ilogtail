@@ -24,7 +24,6 @@ namespace logtail {
 const std::string InputEBPFProcessSecurity::sName = "input_ebpf_processprobe_security";
 
 bool InputEBPFProcessSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
-    // config string解析成定义的param
     return mSecurityOptions.Init(ebpf::SecurityFilterType::PROCESS, config, mContext, sName);
 }
 

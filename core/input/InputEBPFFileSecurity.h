@@ -33,7 +33,6 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
     ebpf::SecurityOptions mSecurityOptions;
-    // nami::ObserverFileOption mFileOption;
 };
 
 } // namespace logtail

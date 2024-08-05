@@ -1,15 +1,16 @@
-// Copyright 2022 iLogtail Authors
+// Copyright 2023 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific l
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <string>
 #include <unordered_set>
@@ -20,6 +21,23 @@
 
 namespace logtail {
 namespace ebpf {
+
+static const int32_t DEFUALT_RECEIVE_EVENT_CHAN_CAP = 4096;
+static const bool DEFUALT_ADMIN_DEBUG_MODE = false;
+static const std::string DEFUALT_ADMIN_LOG_LEVEL = "warn";
+static const bool DEFUALT_ADMIN_PUSH_ALL_SPAN = false;
+static const int32_t DEFUALT_AGGREGATION_WINDOW_SECOND = 15;
+static const std::string DEFUALT_CONVERAGE_STRATEGY = "combine";
+static const std::string DEFUALT_SAMPLE_STRATEGY = "fixedRate";
+static const double DEFUALT_SAMPLE_RATE = 0.01;
+static const int32_t DEFUALT_SOCKET_SLOW_REQUEST_THRESHOLD_MS = 500;
+static const int32_t DEFUALT_SOCKET_MAX_CONN_TRACKDERS = 10000;
+static const int32_t DEFUALT_SOCKET_MAX_BAND_WITH_MB_PER_SEC = 30;
+static const int32_t DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC = 100000;
+static const int32_t DEFUALT_PROFILE_SAMPLE_RATE = 10;
+static const int32_t DEFUALT_PROFILE_UPLOAD_DURATION = 10;
+static const bool DEFUALT_PROCESS_ENABLE_OOM_DETECT = false;
+
 //////
 bool IsProcessNamespaceFilterTypeValid(const std::string& type);
 
@@ -226,55 +244,6 @@ bool InitObserverNetworkOption(const Json::Value& config,
     }
 
     return InitObserverNetworkOptionInner(probeConfig, thisObserverNetworkOption, mContext, sName);
-}
-
-bool ObserverOptions::Init(ObserverType type,
-                           const Json::Value& config,
-                           const PipelineContext* mContext,
-                           const std::string& sName) {
-    std::string errorMsg;
-    mType = type;
-    // ProbeConfig (Mandatory)
-    if (!IsValidMap(config, "ProbeConfig", errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                           mContext->GetAlarm(),
-                           errorMsg,
-                           sName,
-                           mContext->GetConfigName(),
-                           mContext->GetProjectName(),
-                           mContext->GetLogstoreName(),
-                           mContext->GetRegion());
-    }
-    const Json::Value& probeConfig = config["ProbeConfig"];
-    switch (type) {
-        case ObserverType::NETWORK: {
-            nami::ObserverNetworkOption thisObserverNetworkOption;
-            if (!InitObserverNetworkOptionInner(probeConfig, thisObserverNetworkOption, mContext, sName)) {
-                return false;
-            }
-            mObserverOption.emplace<nami::ObserverNetworkOption>(thisObserverNetworkOption);
-            break;
-        }
-        case ObserverType::FILE: {
-            nami::ObserverFileOption thisObserverFileOption;
-            if (!InitObserverFileOptionInner(probeConfig, thisObserverFileOption, mContext, sName)) {
-                return false;
-            }
-            mObserverOption.emplace<nami::ObserverFileOption>(thisObserverFileOption);
-            break;
-        }
-        case ObserverType::PROCESS: {
-            nami::ObserverProcessOption thisObserverProcessOption;
-            if (!InitObserverProcessOptionInner(probeConfig, thisObserverProcessOption, mContext, sName)) {
-                return false;
-            }
-            mObserverOption.emplace<nami::ObserverProcessOption>(thisObserverProcessOption);
-            break;
-        }
-        default:
-            break;
-    }
-    return true;
 }
 
 //////
@@ -644,6 +613,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
 
 //////
 void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
+    mReceiveEventChanCap = DEFUALT_RECEIVE_EVENT_CHAN_CAP;
     std::string errorMsg;
     // ReceiveEventChanCap (Optional)
     if (!GetOptionalIntParam(confJson, "ReceiveEventChanCap", mReceiveEventChanCap, errorMsg)) {
@@ -651,6 +621,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
         return;
     }
     // AdminConfig (Optional)
+    mAdminConfig = AdminConfig{DEFUALT_ADMIN_DEBUG_MODE, DEFUALT_ADMIN_LOG_LEVEL, DEFUALT_ADMIN_PUSH_ALL_SPAN};
     if (confJson.isMember("AdminConfig")) {
         if (!confJson["AdminConfig"].isObject()) {
             LOG_ERROR(sLogger, ("AdminConfig", " is not a map"));
@@ -673,6 +644,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
             return;
         }
     }
+    mAggregationConfig = AggregationConfig{DEFUALT_AGGREGATION_WINDOW_SECOND};
     // AggregationConfig (Optional)
     if (confJson.isMember("AggregationConfig")) {
         if (!confJson["AggregationConfig"].isObject()) {
@@ -687,6 +659,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
             return;
         }
     }
+    mConverageConfig = ConverageConfig{DEFUALT_CONVERAGE_STRATEGY};
     // ConverageConfig (Optional)
     if (confJson.isMember("ConverageConfig")) {
         if (!confJson["ConverageConfig"].isObject()) {
@@ -700,6 +673,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
             return;
         }
     }
+    mSampleConfig = SampleConfig{DEFUALT_SAMPLE_STRATEGY, {DEFUALT_SAMPLE_RATE}};
     // SampleConfig (Optional)
     if (confJson.isMember("SampleConfig")) {
         if (!confJson["SampleConfig"].isObject()) {
@@ -726,6 +700,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
             }
         }
     }
+    mSocketProbeConfig = SocketProbeConfig{DEFUALT_SOCKET_SLOW_REQUEST_THRESHOLD_MS, DEFUALT_SOCKET_MAX_CONN_TRACKDERS, DEFUALT_SOCKET_MAX_BAND_WITH_MB_PER_SEC, DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC};
     // for Observer
     // SocketProbeConfig (Optional)
     if (confJson.isMember("SocketProbeConfig")) {
@@ -761,6 +736,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
             return;
         }
     }
+    mProfileProbeConfig = ProfileProbeConfig{DEFUALT_PROFILE_SAMPLE_RATE, DEFUALT_PROFILE_UPLOAD_DURATION};
     // ProfileProbeConfig (Optional)
     if (confJson.isMember("ProfileProbeConfig")) {
         if (!confJson["ProfileProbeConfig"].isObject()) {
@@ -783,6 +759,7 @@ void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
             return;
         }
     }
+    mProcessProbeConfig = ProcessProbeConfig{DEFUALT_PROCESS_ENABLE_OOM_DETECT};
     // ProcessProbeConfig (Optional)
     if (confJson.isMember("ProcessProbeConfig")) {
         if (!confJson["ProcessProbeConfig"].isObject()) {
