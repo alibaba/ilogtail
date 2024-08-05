@@ -32,7 +32,7 @@ namespace logtail {
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
 
-    for (const auto& line : SplitString(content, "\r\n")) {
+    for (const auto& line : SplitString(content, "\n")) {
         auto newLine = TrimString(line);
         if (newLine.empty() || newLine[0] == '#') {
             continue;
