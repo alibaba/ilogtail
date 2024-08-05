@@ -1,3 +1,16 @@
+// Copyright 2022 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific l
+
 #include <vector>
 #include <map>
 #include <string>
@@ -15,10 +28,9 @@ namespace logtail {
 namespace ebpf {
 
 void eBPFServer::Init() {
-    if (mInited.load()) {
+    if (mInited) {
         return;
     }
-    mInited.store(true);
     mSourceManager = std::make_unique<SourceManager>();
     mSourceManager->Init();
     // ebpf config
@@ -35,10 +47,11 @@ void eBPFServer::Init() {
     mNetworkSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
     mProcessSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
     mFileSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
+    mInited = true;
 }
 
 void eBPFServer::Stop() {
-    LOG_WARNING(sLogger, ("begin to stop all plugins", ""));
+    LOG_INFO(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
     if (mMeterCB) mMeterCB->update_context(nullptr, 0);
     if (mSpanCB) mSpanCB->update_context(nullptr,0);
@@ -54,47 +67,56 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;
+    bool ret = false;
     // call update function
     // step2: call init function
     switch(type) {
     case nami::PluginType::PROCESS_SECURITY: {
-        mProcessSecureCB->update_context(ctx, plugin_index);
         nami::ProcessConfig pconfig;
-        pconfig.process_security_cb_ = std::bind(&SecurityHandler::handle, mProcessSecureCB.get(), std::placeholders::_1);
+        // pconfig.process_security_cb_ = std::bind(&SecurityHandler::handle, mProcessSecureCB.get(), std::placeholders::_1);
+        pconfig.process_security_cb_ = [this](auto events) { return mProcessSecureCB->handle(std::move(events)); };
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         pconfig.options_ = opts->mOptionList;
         config = std::move(pconfig);
+        ret = mSourceManager->StartPlugin(type, config);
+        if (ret) mProcessSecureCB->update_context(ctx, plugin_index);
         break;
     }
 
-    case nami::PluginType::NETWORK:{
+    case nami::PluginType::NETWORK_OBSERVE:{
         nami::NetworkObserveConfig nconfig;
-        // nami::ObserverNetworkOption* opts = std::get<nami::ObserverNetworkOption*>(options);
-        mMeterCB->update_context(ctx, plugin_index);
-        mSpanCB->update_context(ctx, plugin_index);
-        nconfig.measure_cb_ = std::bind(&MeterHandler::handle, mMeterCB.get(), std::placeholders::_1, std::placeholders::_2);
-        nconfig.span_cb_ = std::bind(&SpanHandler::handle, mSpanCB.get(), std::placeholders::_1);
+        // nconfig.measure_cb_ = std::bind(&MeterHandler::handle, mMeterCB.get(), std::placeholders::_1, std::placeholders::_2);
+        // nconfig.span_cb_ = std::bind(&SpanHandler::handle, mSpanCB.get(), std::placeholders::_1);
+        nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
+        nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
         config = std::move(nconfig);
+        ret = mSourceManager->StartPlugin(type, config);
+        if (ret) mMeterCB->update_context(ctx, plugin_index);
+        if (ret) mSpanCB->update_context(ctx, plugin_index);
         break;
     }
 
     case nami::PluginType::NETWORK_SECURITY:{
         nami::NetworkSecurityConfig nconfig;
-        mNetworkSecureCB->update_context(ctx, plugin_index);
-        nconfig.network_security_cb_ = std::bind(&SecurityHandler::handle, mNetworkSecureCB.get(), std::placeholders::_1);
+        // nconfig.network_security_cb_ = std::bind(&SecurityHandler::handle, mNetworkSecureCB.get(), std::placeholders::_1);
+        nconfig.network_security_cb_ = [this](auto events) { return mNetworkSecureCB->handle(std::move(events)); };
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         nconfig.options_ = opts->mOptionList;
         config = std::move(nconfig);
+        ret = mSourceManager->StartPlugin(type, config);
+        if (ret) mNetworkSecureCB->update_context(ctx, plugin_index);
         break;
     }
 
     case nami::PluginType::FILE_SECURITY:{
         nami::FileSecurityConfig fconfig;
-        mFileSecureCB->update_context(ctx, plugin_index);
-        fconfig.file_security_cb_ = std::bind(&SecurityHandler::handle, mFileSecureCB.get(), std::placeholders::_1);
+        // fconfig.file_security_cb_ = std::bind(&SecurityHandler::handle, mFileSecureCB.get(), std::placeholders::_1);
+        fconfig.file_security_cb_ = [this](auto events) { return mFileSecureCB->handle(std::move(events)); };
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         fconfig.options_ = opts->mOptionList;
         config = std::move(fconfig);
+        ret = mSourceManager->StartPlugin(type, config);
+        if (ret) mFileSecureCB->update_context(ctx, plugin_index);
         break;
     }
     default:
@@ -102,7 +124,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         return false;
     }
 
-    return mSourceManager->StartPlugin(type, config);
+    return ret;
 }
 
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
@@ -117,13 +139,15 @@ bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginTyp
 }
 
 bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginType type) {
-    LOG_INFO(sLogger, ("receive plugin update", "now suspend for a while"));
+    // mark plugin status is update
+    bool ret = mSourceManager->SuspendPlugin(type);
+    if (!ret) return false;
     switch (type) {
     case nami::PluginType::PROCESS_SECURITY:{
         if (mProcessSecureCB) mProcessSecureCB->update_context(nullptr, 0);
         return true;
     }
-    case nami::PluginType::NETWORK:{
+    case nami::PluginType::NETWORK_OBSERVE:{
         if (mMeterCB) mMeterCB->update_context(nullptr, 0);
         if (mSpanCB) mSpanCB->update_context(nullptr, 0);
         return true;

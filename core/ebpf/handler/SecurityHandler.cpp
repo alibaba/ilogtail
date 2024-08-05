@@ -1,3 +1,16 @@
+// Copyright 2022 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific l
+
 #include "ebpf/handler/SecurityHandler.h"
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
@@ -21,13 +34,15 @@ SecurityHandler::SecurityHandler(logtail::PipelineContext* ctx, uint32_t idx)
 }
 
 void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events) {
-    if (mCtx == nullptr || events.empty()) {
+    
+    if (events.empty()) {
         return ;
     }
     std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();;
     PipelineEventGroup event_group(source_buffer);
     // aggregate to pipeline event group
     // set host ips
+    // TODO 后续这两个 key 需要移到 group 的 metadata 里，在 processortagnative 中转成tag
     const static std::string host_ip_key = "host.ip";
     const static std::string host_name_key = "host.name";
     event_group.SetTag(host_ip_key, mHostIp);
@@ -40,9 +55,9 @@ void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>
         auto seconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::nanoseconds(x->GetTimestamp()));
         event->SetTimestamp(seconds.count(), x->GetTimestamp());
     }
-    #ifdef APSARA_UNIT_TEST_MAIN
-        mProcessTotalCnt+= events.size();
-    #endif
+    mProcessTotalCnt+= events.size();
+    std::lock_guard<std::mutex> lock(mMux);
+    if (!mCtx) return;
     std::unique_ptr<ProcessQueueItem> item = 
             std::unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(event_group), mPluginIdx));
     

@@ -82,7 +82,6 @@ private:
     Pipeline p;
     PipelineContext ctx;
     SecurityOptions security_opts;
-    ObserverOptions observer_opts;
 };
 
 static int generateRandomInt(int bound) {
@@ -510,14 +509,14 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     // observer_options.Init(ObserverType::NETWORK, configJson, &ctx, "test");
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 1,
-        nami::PluginType::NETWORK,
+        nami::PluginType::NETWORK_OBSERVE,
         &ctx,
         &network_option);
     
     EXPECT_TRUE(res);
     auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
     auto network_conf = std::get<nami::NetworkObserveConfig>(conf->config_);
-    EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK);
+    EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     std::cout << "3" << std::endl;
     EXPECT_TRUE(network_conf.measure_cb_ != nullptr);
@@ -529,25 +528,25 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, &ctx);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 1);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 1);
-    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK)]);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 
     // do suspend
-    ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::NETWORK);
+    ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, nullptr);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, nullptr);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 0);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 0);
-    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK)]);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 
     // do update
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 8,
-        nami::PluginType::NETWORK,
+        nami::PluginType::NETWORK_OBSERVE,
         &ctx,
         &network_option);
     EXPECT_TRUE(res);
     conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
-    EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK);
+    EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 
     GenerateBatchMeasure(network_conf.measure_cb_);
@@ -561,8 +560,8 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mProcessTotalCnt, 5);
 
     // do stop
-    ebpf::eBPFServer::GetInstance()->DisablePlugin("test", nami::PluginType::NETWORK);
-    EXPECT_TRUE(!ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK)]);
+    ebpf::eBPFServer::GetInstance()->DisablePlugin("test", nami::PluginType::NETWORK_OBSERVE);
+    EXPECT_TRUE(!ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 }
 
 void eBPFServerUnittest::TestEnableProcessPlugin() {

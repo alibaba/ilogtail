@@ -68,7 +68,6 @@ void InputEBPFFileObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
     nami::ObserverFileOption thisObserver = input->mFileOption;
-    // APSARA_TEST_EQUAL(ebpf::ObserverType::FILE, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
     APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
     APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);
@@ -98,7 +97,6 @@ void InputEBPFFileObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_profilingprobe_observer");
     nami::ObserverFileOption thisObserver = input->mFileOption;
-    // APSARA_TEST_EQUAL(ebpf::ObserverType::FILE, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL("", thisObserver.mProfileRemoteServer);
     APSARA_TEST_EQUAL(false, thisObserver.mCpuSkipUpload);
     APSARA_TEST_EQUAL(false, thisObserver.mMemSkipUpload);

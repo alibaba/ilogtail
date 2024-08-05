@@ -35,7 +35,6 @@ bool InputEBPFNetworkSecurity::Start() {
 
 bool InputEBPFNetworkSecurity::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
-        LOG_INFO(sLogger, ("receive config update", ""));
         ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::NETWORK_SECURITY);
         return true;
     }

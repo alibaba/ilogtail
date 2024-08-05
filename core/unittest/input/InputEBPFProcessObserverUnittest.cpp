@@ -67,7 +67,6 @@ void InputEBPFProcessObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
     nami::ObserverProcessOption thisObserver = input->mProcessOption;
-    // APSARA_TEST_EQUAL(ebpf::ObserverType::PROCESS, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 1);
     APSARA_TEST_EQUAL("h", thisObserver.mIncludeCmdRegex[0]);
     APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
@@ -98,7 +97,6 @@ void InputEBPFProcessObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_observer");
     nami::ObserverProcessOption thisObserver = input->mProcessOption;
-    // APSARA_TEST_EQUAL(ebpf::ObserverType::PROCESS, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mIncludeCmdRegex.size(), 0);
     APSARA_TEST_EQUAL(thisObserver.mExcludeCmdRegex.size(), 2);
     APSARA_TEST_EQUAL("m", thisObserver.mExcludeCmdRegex[0]);

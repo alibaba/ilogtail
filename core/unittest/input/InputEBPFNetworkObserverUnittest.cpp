@@ -71,7 +71,6 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
     nami::ObserverNetworkOption thisObserver = input->mNetworkOption;
-    // APSARA_TEST_EQUAL(ebpf::ObserverType::NETWORK, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
     APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);
@@ -106,7 +105,6 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIdx, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
     nami::ObserverNetworkOption thisObserver = input->mNetworkOption;
-    // APSARA_TEST_EQUAL(ebpf::ObserverType::NETWORK, input->mObserverOptions.mType);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
     APSARA_TEST_EQUAL(false, thisObserver.mDisableProtocolParse);

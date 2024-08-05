@@ -32,9 +32,8 @@ public:
     bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
-
     ebpf::SecurityOptions mSecurityOptions;
-    nami::ObserverFileOption mFileOption;
+    // nami::ObserverFileOption mFileOption;
 };
 
 } // namespace logtail

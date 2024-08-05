@@ -52,6 +52,8 @@ public:
     
     bool StopPlugin(nami::PluginType plugin_type);
 
+    bool SuspendPlugin(nami::PluginType plugin_type);
+
     bool StopAll();
         
     SourceManager();
@@ -80,7 +82,7 @@ private:
     std::shared_ptr<DynamicLibLoader> mLib;
     std::array<void*, (int)ebpf_func::EBPF_MAX> mFuncs = {};
     std::array<long, (int)ebpf_func::EBPF_MAX> mOffsets = {};
-    std::array<std::atomic_bool, (int)nami::PluginType::MAX> mRunning = {};
+    std::array<std::atomic_int, (int)nami::PluginType::MAX> mRunning = {};
     std::string mHostIp;
     std::string mHostName;
     std::string mHostPathPrefix;

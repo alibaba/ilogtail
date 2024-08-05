@@ -21,17 +21,19 @@ namespace logtail {
 
 const std::string InputEBPFProcessObserver::sName = "input_ebpf_processprobe_observer";
 
+// TODO: this plugin is not supported yet
 bool InputEBPFProcessObserver::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
     return ebpf::InitObserverProcessOption(config, mProcessOption, mContext, sName);
 }
 
+// TODO: this plugin is not supported yet
 bool InputEBPFProcessObserver::Start() {
     return true;
 }
 
+// TODO: this plugin is not supported yet
 bool InputEBPFProcessObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
-        LOG_INFO(sLogger, ("receive config update", ""));
         return true;
     }
     return true;

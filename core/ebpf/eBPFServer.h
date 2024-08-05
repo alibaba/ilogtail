@@ -1,3 +1,16 @@
+// Copyright 2022 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific l
+
 #pragma once
 
 #include <variant>
@@ -13,7 +26,6 @@
 #include "ebpf/handler/AbstractHandler.h"
 #include "ebpf/handler/ObserveHandler.h"
 #include "ebpf/handler/SecurityHandler.h"
-
 
 namespace logtail {
 namespace ebpf {
@@ -42,8 +54,6 @@ public:
     bool SuspendPlugin(const std::string& pipeline_name, nami::PluginType type);
 
 private:
-    void InitMeterHandler(PipelineContext* ctx, uint32_t idx, const std::string& type);
-    void InitSpanHandler(PipelineContext* ctx, uint32_t idx, const std::string& type);
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
@@ -60,7 +70,7 @@ private:
     std::unique_ptr<SecurityHandler> mFileSecureCB;
 
     eBPFAdminConfig mAdminConfig;
-    std::atomic_bool mInited;
+    volatile bool mInited = false;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;

@@ -131,7 +131,7 @@ void SourceManager::FillCommonConf(nami::eBPFConfig* conf) {
   conf->host_ip_ = mHostIp;
   conf->host_name_ = mHostName;
   conf->host_path_prefix_ = mHostPathPrefix;
-  if (conf->plugin_type_ == nami::PluginType::NETWORK) {
+  if (conf->plugin_type_ == nami::PluginType::NETWORK_OBSERVE) {
     auto cc = std::get<nami::NetworkObserveConfig>(conf->config_);
     // set so addr
     cc.so_ = std::filesystem::path(mBinaryPath) / mFullLibName;
@@ -150,15 +150,24 @@ bool SourceManager::CheckPluginRunning(nami::PluginType plugin_type) {
     return false;
   }
 
-  return mRunning[int(plugin_type)].load();
+  return mRunning[int(plugin_type)] > 0;
 }
 
 bool SourceManager::StartPlugin(nami::PluginType plugin_type, 
                 std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
-  if (CheckPluginRunning(plugin_type)) {
+  bool running = CheckPluginRunning(plugin_type);
+  if (running && mRunning[int(plugin_type)] == 1) {
+    // already started ... 
+    LOG_WARNING(sLogger, ("plugin already started, skip loading", "only support ONE config") ("type:", int(plugin_type)));
+    return false;
+  }
+
+  if (running && mRunning[int(plugin_type)] == 2) {
+    // plugin update ... 
     return UpdatePlugin(plugin_type, std::move(config));
   }
 
+  // plugin not started ... 
   LOG_INFO(sLogger, ("begin to start plugin, type", int(plugin_type)));
   auto conf = new nami::eBPFConfig;
   conf->plugin_type_ = plugin_type;
@@ -167,7 +176,7 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
     mConfig = conf;
-    mRunning[int(plugin_type)] = true;
+    mRunning[int(plugin_type)] = 1;
     return true;
 #endif
   void* f = mFuncs[(int)ebpf_func::EBPF_INIT];
@@ -177,7 +186,7 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
   }
   auto init_f = (init_func)f;
   int res = init_f(conf);
-  mRunning[int(plugin_type)].store(!res);
+  if (!res) mRunning[int(plugin_type)] = 1;
   return !res;
 }
 
@@ -205,6 +214,7 @@ bool SourceManager::UpdatePlugin(nami::PluginType plugin_type,
 
   auto update_f = (update_func)f;
   int res = update_f(conf);
+  if (!res) mRunning[int(plugin_type)] = 1;
   return !res;
 }
 
@@ -231,6 +241,16 @@ bool SourceManager::StopAll() {
   return true;
 }
 
+bool SourceManager::SuspendPlugin(nami::PluginType plugin_type) {
+  if (!CheckPluginRunning(plugin_type)) {
+    LOG_WARNING(sLogger, ("plugin not started, cannot suspend. type",  int(plugin_type)));
+    return false;
+  }
+
+  mRunning[int(plugin_type)] = 2;
+  return true;
+}
+
 bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
   if (!CheckPluginRunning(plugin_type)) {
     LOG_WARNING(sLogger, ("plugin not started, do nothing. type",  int(plugin_type)));
@@ -243,7 +263,7 @@ bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
 
 #ifdef APSARA_UNIT_TEST_MAIN
   mConfig = config;
-  mRunning[int(plugin_type)] = false;
+  mRunning[int(plugin_type)] = 0;
   return true;
 #endif
 
@@ -255,7 +275,7 @@ bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
 
   auto remove_f = (remove_func)f;
   int res = remove_f(config);
-  mRunning[int(plugin_type)] = res;
+  if (!res) mRunning[int(plugin_type)] = 0;
   return !res;
 }
 

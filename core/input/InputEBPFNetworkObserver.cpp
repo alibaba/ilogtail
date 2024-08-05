@@ -29,16 +29,15 @@ bool InputEBPFNetworkObserver::Init(const Json::Value& config, uint32_t& pluginI
 }
 
 bool InputEBPFNetworkObserver::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK, mContext, &mNetworkOption);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK_OBSERVE, mContext, &mNetworkOption);
 }
 
 bool InputEBPFNetworkObserver::Stop(bool isPipelineRemoving) {
     if (!isPipelineRemoving) {
-        LOG_INFO(sLogger, ("receive config update", ""));
-        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::NETWORK);
+        ebpf::eBPFServer::GetInstance()->SuspendPlugin(mContext->GetConfigName(), nami::PluginType::NETWORK_OBSERVE);
         return true;
     }
-    return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::NETWORK);
+    return ebpf::eBPFServer::GetInstance()->DisablePlugin(mContext->GetConfigName(), nami::PluginType::NETWORK_OBSERVE);
 }
 
 } // namespace logtail
