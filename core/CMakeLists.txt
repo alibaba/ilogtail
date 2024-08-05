@@ -114,7 +114,7 @@ set(SUB_DIRECTORIES_LIST
         batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher config_manager config_server_pb/v1 config_server_pb/v2 
         container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
-        profile_sender queue reader sdk sender serializer sls_control fuse prometheus
+        profile_sender queue reader sdk sender serializer sls_control fuse prometheus sink/http
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)
@@ -232,6 +232,7 @@ endif()
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
     message(STATUS "Build unittest.")
+    add_definitions(-DVIRTUAL=virtual)
     function(delete_gcda_files target_directory)
         if(EXISTS "${target_directory}")
             message(STATUS "Deleting .gcda files in ${target_directory}")
@@ -245,4 +246,6 @@ if (BUILD_LOGTAIL_UT)
     include(CTest)
     enable_testing()
     add_subdirectory(unittest)
+else()
+    add_definitions(-DVIRTUAL= )
 endif ()

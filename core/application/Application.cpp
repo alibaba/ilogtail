@@ -36,6 +36,7 @@
 #include "controller/EventDispatcher.h"
 #include "event_handler/LogInput.h"
 #include "file_server/FileServer.h"
+#include "flusher/sls/DiskBufferWriter.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
 #include "logger/Logger.h"
@@ -46,7 +47,10 @@
 #include "pipeline/ProcessConfigManager.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
+#include "queue/ExactlyOnceQueueManager.h"
+#include "queue/SenderQueueManager.h"
+#include "sender/FlusherRunner.h"
+#include "sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #include "config/provider/LegacyConfigProvider.h"
@@ -56,9 +60,8 @@
 #endif
 #else
 #include "config/provider/CommonConfigProvider.h"
+#include "config/provider/LegacyCommonConfigProvider.h"
 #endif
-#include "queue/ExactlyOnceQueueManager.h"
-#include "queue/SenderQueueManager.h"
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
 DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
@@ -193,8 +196,9 @@ void Application::Start() { // GCOVR_EXCL_START
     InitWindowsSignalObject();
 #endif
     SenderQueueInterface::SetFeedback(ProcessQueueManager::GetInstance());
-    // flusher_sls should always be loaded, since profiling will rely on this.
-    Sender::Instance()->Init();
+
+    HttpSink::GetInstance()->Init();
+    FlusherRunner::GetInstance()->Init();
 
     {
         // add local config dir
@@ -227,7 +231,8 @@ void Application::Start() { // GCOVR_EXCL_START
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
-    CommonConfigProvider::GetInstance()->Init("common");
+    CommonConfigProvider::GetInstance()->Init("common_v2");
+    LegacyCommonConfigProvider::GetInstance()->Init("common");
 #endif
 
     LogtailAlarm::GetInstance()->Init();
@@ -354,6 +359,7 @@ void Application::Exit() {
     LegacyConfigProvider::GetInstance()->Stop();
 #else
     CommonConfigProvider::GetInstance()->Stop();
+    LegacyCommonConfigProvider::GetInstance()->Stop();
 #endif
 
     LogtailMonitor::GetInstance()->Stop();
@@ -361,11 +367,9 @@ void Application::Exit() {
     LogtailAlarm::GetInstance()->Stop();
     // from now on, alarm should not be used.
 
-    if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
-        LOG_WARNING(sLogger, ("flush SLS sender data", "failed"));
-    } else {
-        LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
-    }
+    FlusherRunner::GetInstance()->Stop();
+    HttpSink::GetInstance()->Stop();
+    DiskBufferWriter::GetInstance()->Stop();
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
@@ -397,29 +401,6 @@ void Application::CheckCriticalCondition(int32_t curTime) {
         sleep(10);
         _exit(1);
     }
-
-    int32_t lastDaemonRunTime = Sender::Instance()->GetLastDeamonRunTime();
-    if (lastDaemonRunTime > 0 && curTime - lastDaemonRunTime > 3600) {
-        LOG_ERROR(sLogger, ("last sender daemon run time is too old", lastDaemonRunTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM,
-                                               "last sender daemon run time is too old: " + ToString(lastDaemonRunTime)
-                                                   + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    int32_t lastSendTime = Sender::Instance()->GetLastSendTime();
-    if (lastSendTime > 0 && curTime - lastSendTime > 3600 * 12) {
-        LOG_ERROR(sLogger, ("last send time is too old", lastSendTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM,
-                                               "last send time is too old: " + ToString(lastSendTime) + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    LogtailMonitor::GetInstance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
 }
 
 bool Application::GetUUIDThread() {

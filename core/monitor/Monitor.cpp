@@ -34,12 +34,13 @@
 #include "common/version.h"
 #include "config_manager/ConfigManager.h"
 #include "event_handler/LogInput.h"
+#include "flusher/sls/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
-#include "sender/Sender.h"
+#include "sender/FlusherRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ObserverManager.h"
 #endif
@@ -138,7 +139,7 @@ void LogtailMonitor::Stop() {
 
 void LogtailMonitor::Monitor() {
     LOG_INFO(sLogger, ("profiling", "started"));
-    int32_t lastMonitorTime = time(NULL);
+    int32_t lastMonitorTime = time(NULL), lastCheckHardLimitTime = time(nullptr);
     CpuStat curCpuStat;
     {
         unique_lock<mutex> lock(mThreadRunningMux);
@@ -170,40 +171,54 @@ void LogtailMonitor::Monitor() {
             }
 #endif
 
+            static int32_t checkHardLimitInterval
+                = INT32_FLAG(monitor_interval) > 30 ? INT32_FLAG(monitor_interval) / 6 : 5;
+            if ((monitorTime - lastCheckHardLimitTime) >= checkHardLimitInterval) {
+                lastCheckHardLimitTime = monitorTime;
+
+                GetMemStat();
+                CalCpuStat(curCpuStat, mCpuStat);
+                if (CheckHardCpuLimit() || CheckHardMemLimit()) {
+                    LOG_ERROR(sLogger,
+                              ("Resource used by program exceeds hard limit",
+                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                    Suicide();
+                }
+            }
+
+
             // Update statistics and send to logtail_status_profile regularly.
             // If CPU or memory limit triggered, send to logtail_suicide_profile.
-            if ((monitorTime - lastMonitorTime) < INT32_FLAG(monitor_interval))
-                continue;
-            lastMonitorTime = monitorTime;
+            if ((monitorTime - lastMonitorTime) >= INT32_FLAG(monitor_interval)) {
+                lastMonitorTime = monitorTime;
 
-            // Memory usage has exceeded limit, try to free some timeout objects.
-            if (1 == mMemStat.mViolateNum) {
-                LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
-                LogInput::GetInstance()->SetForceClearFlag(true);
-            }
-            GetMemStat();
-            CalCpuStat(curCpuStat, mCpuStat);
-            // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
-            // or memory exceeds limit) // is greater or equal than limits (
-            // flag(cpu_limit_num) and flag(mem_limit_num)).
-            // Returning true means too much violations, so we have to prepare to restart
-            // logtail to release resource.
-            // Mainly for controlling memory because we have no idea to descrease memory usage.
-            if (CheckCpuLimit() || CheckMemLimit()) {
-                LOG_ERROR(sLogger,
-                          ("Resource used by program exceeds upper limit",
-                           "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
-                Suicide();
-            }
+                // Memory usage has exceeded limit, try to free some timeout objects.
+                if (1 == mMemStat.mViolateNum) {
+                    LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
+                    LogInput::GetInstance()->SetForceClearFlag(true);
+                }
+                // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
+                // or memory exceeds limit) // is greater or equal than limits (
+                // flag(cpu_limit_num) and flag(mem_limit_num)).
+                // Returning true means too much violations, so we have to prepare to restart
+                // logtail to release resource.
+                // Mainly for controlling memory because we have no idea to descrease memory usage.
+                if (CheckSoftCpuLimit() || CheckSoftMemLimit()) {
+                    LOG_ERROR(sLogger,
+                              ("Resource used by program exceeds upper limit for some time",
+                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                    Suicide();
+                }
 
-            if (IsHostIpChanged()) {
-                Suicide();
-            }
+                if (IsHostIpChanged()) {
+                    Suicide();
+                }
 
-            SendStatusProfile(false);
-            if (BOOL_FLAG(logtail_dump_monitor_info)) {
-                if (!DumpMonitorInfo(monitorTime))
-                    LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+                SendStatusProfile(false);
+                if (BOOL_FLAG(logtail_dump_monitor_info)) {
+                    if (!DumpMonitorInfo(monitorTime))
+                        LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+                }
             }
         }
     }
@@ -267,7 +282,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "user_defined_id", EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet());
     AddLogContent(logPtr, "aliuids", EnterpriseConfigProvider::GetInstance()->GetAliuidSet());
 #endif
-    AddLogContent(logPtr, "projects", Sender::Instance()->GetAllProjects());
+    AddLogContent(logPtr, "projects", FlusherSLS::GetAllProjects());
     AddLogContent(logPtr, "instance_id", Application::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "instance_key", id);
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
@@ -302,7 +317,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     if (!envTags.empty()) {
         UpdateMetric("env_config_count", envTags.size());
     }
-    int32_t usedSendingConcurrency = Sender::Instance()->GetSendingBufferCount();
+    int32_t usedSendingConcurrency = FlusherRunner::GetInstance()->GetSendingBufferCount();
     UpdateMetric("used_sending_concurrency", usedSendingConcurrency);
     mGlobalUsedSendingConcurrency->Set(usedSendingConcurrency);
 
@@ -319,13 +334,13 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     // Dump to local and send to enabled regions.
     DumpToLocal(logGroup);
     for (size_t i = 0; i < allProfileRegion.size(); ++i) {
-        if (BOOL_FLAG(check_profile_region) && !Sender::Instance()->IsRegionContainingConfig(allProfileRegion[i])) {
+        if (BOOL_FLAG(check_profile_region) && !FlusherSLS::IsRegionContainingConfig(allProfileRegion[i])) {
             LOG_DEBUG(sLogger, ("region does not contain config for this instance", allProfileRegion[i]));
             continue;
         }
 
         // Check if the region is disabled.
-        if (!Sender::Instance()->GetRegionStatus(allProfileRegion[i])) {
+        if (!FlusherSLS::GetRegionStatus(allProfileRegion[i])) {
             LOG_DEBUG(sLogger, ("disabled region, do not send status profile to region", allProfileRegion[i]));
             continue;
         }
@@ -434,7 +449,7 @@ void LogtailMonitor::CalCpuStat(const CpuStat& curCpu, CpuStat& savedCpu) {
 #endif
 }
 
-bool LogtailMonitor::CheckCpuLimit() {
+bool LogtailMonitor::CheckSoftCpuLimit() {
     float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
         ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
         : AppConfig::GetInstance()->GetCpuUsageUpLimit();
@@ -446,13 +461,24 @@ bool LogtailMonitor::CheckCpuLimit() {
     return false;
 }
 
-bool LogtailMonitor::CheckMemLimit() {
+bool LogtailMonitor::CheckSoftMemLimit() {
     if (mMemStat.mRss > AppConfig::GetInstance()->GetMemUsageUpLimit()) {
         if (++mMemStat.mViolateNum > INT32_FLAG(mem_limit_num))
             return true;
     } else
         mMemStat.mViolateNum = 0;
     return false;
+}
+
+bool LogtailMonitor::CheckHardCpuLimit() {
+    float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
+        ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
+        : AppConfig::GetInstance()->GetCpuUsageUpLimit();
+    return mCpuStat.mCpuUsage > 10 * cpuUsageLimit;
+}
+
+bool LogtailMonitor::CheckHardMemLimit() {
+    return mMemStat.mRss > 10 * AppConfig::GetInstance()->GetMemUsageUpLimit();
 }
 
 void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
@@ -688,7 +714,7 @@ void LoongCollectorMonitor::Init() {
     labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
     DynamicMetricLabels dynamicLabels;
     dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS,
-                               []() -> std::string { return Sender::Instance()->GetAllProjects(); });
+                               []() -> std::string { return FlusherSLS::GetAllProjects(); });
 #ifdef __ENTERPRISE__
     dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
                                []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
