@@ -38,7 +38,7 @@ protected:
 
 private:
     BatchedEvents CreateBatchedEvents(bool enableNanosecond);
-    BatchedEvents CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp);
+    BatchedEvents CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue);
 
     static unique_ptr<FlusherSLS> sFlusher;
 
@@ -100,9 +100,11 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
     {
         // metric event
         string res, errorMsg;
-        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(false, 0), res, errorMsg));
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(false, 0, false), res, errorMsg));
         sls_logs::LogGroup logGroup;
         APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+
+        APSARA_TEST_EQUAL(1, logGroup.logs_size());
         APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
@@ -123,9 +125,11 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = true;
         string res, errorMsg;
         
-        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true, 1), res, errorMsg));
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true, 1, false), res, errorMsg));
         sls_logs::LogGroup logGroup;
         APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+
+        APSARA_TEST_EQUAL(1, logGroup.logs_size());
         APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
@@ -147,9 +151,11 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = true;
         string res, errorMsg;
         
-        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true, 1999999999), res, errorMsg));
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(true, 1999999999, false), res, errorMsg));
         sls_logs::LogGroup logGroup;
         APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+
+        APSARA_TEST_EQUAL(1, logGroup.logs_size());
         APSARA_TEST_EQUAL(1234567890U, logGroup.logs(0).time());
 
         APSARA_TEST_EQUAL(logGroup.logs(0).contents_size(), 4);
@@ -165,6 +171,18 @@ void SLSSerializerUnittest::TestSerializeEventGroup() {
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).key(), "__name__");
         APSARA_TEST_EQUAL(logGroup.logs(0).contents(3).value(), "test_gauge");
         const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = false;
+    }
+
+    {
+        // metric event with EnableTimestampNanosecond 
+        const_cast<GlobalConfig&>(mCtx.GetGlobalConfig()).mEnableTimestampNanosecond = true;
+        string res, errorMsg;
+        
+        APSARA_TEST_TRUE(serializer.Serialize(CreateBatchedMetricEvents(false, 0, true), res, errorMsg));
+        sls_logs::LogGroup logGroup;
+        APSARA_TEST_TRUE(logGroup.ParseFromString(res));
+
+        APSARA_TEST_EQUAL(0, logGroup.logs_size());
     }
 }
 
@@ -209,7 +227,7 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedEvents(bool enableNanosecond) 
 }
 
 
-BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp) {
+BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanosecond, uint32_t nanoTimestamp, bool emptyValue) {
     PipelineEventGroup group(make_shared<SourceBuffer>());
     group.SetTag(LOG_RESERVED_KEY_TOPIC, "topic");
     group.SetTag(LOG_RESERVED_KEY_SOURCE, "source");
@@ -227,10 +245,12 @@ BatchedEvents SLSSerializerUnittest::CreateBatchedMetricEvents(bool enableNanose
     } else {
         e->SetTimestamp(1234567890);
     }
-    double value = 0.1;
-    e->SetValue<UntypedSingleValue>(value);
+
+    if (!emptyValue) {
+        double value = 0.1;
+        e->SetValue<UntypedSingleValue>(value);
+    }
     e->SetName("test_gauge");
-    
     BatchedEvents batch(std::move(group.MutableEvents()),
                         std::move(group.GetSizedTags()),
                         std::move(group.GetSourceBuffer()),
