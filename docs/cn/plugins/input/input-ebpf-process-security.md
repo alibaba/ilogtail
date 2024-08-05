@@ -13,13 +13,13 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_process\_security  |
-|  ConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ConfigList.Filter  |  object  |  是  |  /  |  过滤参数  |
-|  ConfigList.Filter.NamespaceFilter  |  object  |  否  |  空  |  命名空间  |
-|  ConfigList.Filter.NamespaceBlackFilter  |  object  |  否  |  空  |  命名空间  |
-|  ConfigList.Filter.Namespace\[Black\]Filter.NamespaceType  |  string  |  是  |  /  |  命名空间类型 \[范围：Uts, Ipc, Mnt, Pid, PidForChildren, Net, Cgroup, User, Time, TimeForChildren\] |
-|  ConfigList.Filter.Namespace\[Black\]Filter.ValueList  |  \[string\]  |  是  |  /  |  特定命名空间类型对应的取值列表 |
+|  ProbeConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
+|  ProbeConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
+|  ProbeConfigList.Filter  |  object  |  是  |  /  |  过滤参数  |
+|  ProbeConfigList.Filter.NamespaceFilter  |  object  |  否  |  空  |  命名空间  |
+|  ProbeConfigList.Filter.NamespaceBlackFilter  |  object  |  否  |  空  |  命名空间  |
+|  ProbeConfigList.Filter.Namespace\[Black\]Filter.NamespaceType  |  string  |  是  |  /  |  命名空间类型 \[范围：Uts, Ipc, Mnt, Pid, PidForChildren, Net, Cgroup, User, Time, TimeForChildren\] |
+|  ProbeConfigList.Filter.Namespace\[Black\]Filter.ValueList  |  \[string\]  |  是  |  /  |  特定命名空间类型对应的取值列表 |
 
 ## 样例
 
@@ -37,7 +37,7 @@ TODO
 enable: true
 inputs:
   - Type: input_ebpf_processprobe_security
-    ConfigList:
+    ProbeConfigList:
       - Filter:
           NamespaceFilter:
             - NamespaceType: "Pid"

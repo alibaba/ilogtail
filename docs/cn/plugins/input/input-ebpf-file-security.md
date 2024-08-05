@@ -13,11 +13,11 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_file\_security  |
-|  ConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ConfigList.Filter  |  \[object\]  |  是  |  /  |  过滤参数  |
-|  ConfigList.Filter.FilePath  |  string  |  是  |  /  |  文件路径  |
-|  ConfigList.Filter.FileName  |  string  |  否  |  空  |  文件名。不填 FileName 代表采集对应的 FilePath 下所有文件  |
+|  ProbeConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
+|  ProbeConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
+|  ProbeConfigList.Filter  |  \[object\]  |  是  |  /  |  过滤参数  |
+|  ProbeConfigList.Filter.FilePath  |  string  |  是  |  /  |  文件路径  |
+|  ProbeConfigList.Filter.FileName  |  string  |  否  |  空  |  文件名。不填 FileName 代表采集对应的 FilePath 下所有文件  |
 
 ## 样例
 
@@ -35,7 +35,7 @@ TODO
 enable: true
 inputs:
   - Type: input_ebpf_fileprobe_security
-    ConfigList:
+    ProbeConfigList:
       - CallName: 
         - "security_file_permission"
         Filter: 

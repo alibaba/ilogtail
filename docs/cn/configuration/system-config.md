@@ -15,6 +15,21 @@
 | `send_running_status`    | Bool | 为了更好的了解 `iLogtail` 的使用情况，以便做出更有针对性的发展规划，`iLogtail` 会上报一些脱敏后的运行统计信息。您也可以手动关闭此开关。                                              |
 | `host_path_blacklist` | String | 全局主机路径黑名单，黑名单为子串匹配，Linux下多个子串以:分隔，Windows下以;分隔。比如禁止采集NAS挂载，可以配置为`/volumes/kubernetes.io~csi/nas-`。 |
 | `metrics_report_method` | String | <p>自身指标输出方式。默认为空，即不输出指标。</p><p>当前支持的值：</br>`file`：每分钟将指标输出到`ilogtail`运行目录下的`self_metrics`目录，文件格式为`self-metrics-&{time}.json`，最多保留60个指标文件（即1小时的数据）。该方式适合本地调试使用。</p> |
+| `ReceiveEventChanCap` | Int |  |
+| `AdminConfig.DebugMode` | Bool |  |
+| `AdminConfig.LogLevel` | String |  |
+| `AdminConfig.PushAllSpan` | Bool |  |
+| `AggregationConfig.AggWindowSecond` | Int |  |
+| `ConverageConfig.Strategy` | String |  |
+| `SampleConfig.Strategy` | String |  |
+| `ConverageConfig.Config.Rate` | Double |  |
+| `SocketProbeConfig.SlowRequestThresholdMs` | Int |  |
+| `SocketProbeConfig.MaxConnTrackers` | Int |  |
+| `SocketProbeConfig.MaxBandWidthMbPerSec` | Int |  |
+| `SocketProbeConfig.MaxRawRecordPerSec` | Int |  |
+| `ProfileProbeConfig.ProfileSampleRate` | Int |  |
+| `ProfileProbeConfig.ProfileUploadDuration` | Int |  |
+| `ProcessProbeConfig.EnableOOMDetect` | Bool |  |
 
 ### 典型配置
 
@@ -24,6 +39,23 @@
     "default_access_key": "",
     "cpu_usage_limit" : 0.4,
     "mem_usage_limit" : 384
+}
+```
+
+```json
+{
+    "ReceiveEventChanCap": 4096,
+    "AdminConfig": {
+    "DebugMode": false,
+    "LogLevel": "warn",
+    "PushAllSpan": false
+    },
+    "SocketProbeConfig": {
+    "SlowRequestThresholdMs": 500,
+    "MaxConnTrackers": 10000,
+    "MaxBandWidthMbPerSec": 30,
+    "MaxRawRecordPerSec": 100000
+    }
 }
 ```
 

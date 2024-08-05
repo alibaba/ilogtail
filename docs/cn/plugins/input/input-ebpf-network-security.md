@@ -13,17 +13,17 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_network\_security  |
-|  ConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ConfigList.Filter  |  object  |  是  |  /  |  过滤参数  |
-|  ConfigList.Filter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
-|  ConfigList.Filter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
-|  ConfigList.Filter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
-|  ConfigList.Filter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
-|  ConfigList.Filter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
-|  ConfigList.Filter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
-|  ConfigList.Filter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
-|  ConfigList.Filter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
+|  ProbeConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
+|  ProbeConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
+|  ProbeConfigList.Filter  |  object  |  是  |  /  |  过滤参数  |
+|  ProbeConfigList.Filter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
+|  ProbeConfigList.Filter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
+|  ProbeConfigList.Filter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
+|  ProbeConfigList.Filter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
+|  ProbeConfigList.Filter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
+|  ProbeConfigList.Filter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
+|  ProbeConfigList.Filter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
+|  ProbeConfigList.Filter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
 
 ## 样例
 
@@ -41,7 +41,7 @@ TODO
 enable: true
 inputs:
   - Type: input_ebpf_sockettraceprobe_security
-    ConfigList:
+    ProbeConfigList:
       - CallName: 
         - "tcp_connect"
         - "tcp_close"
