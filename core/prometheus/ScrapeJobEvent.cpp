@@ -16,7 +16,6 @@
 
 #include "ScrapeJobEvent.h"
 
-#include <curl/curl.h>
 #include <xxhash/xxhash.h>
 
 #include <cstdlib>

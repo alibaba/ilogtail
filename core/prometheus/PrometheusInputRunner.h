@@ -20,11 +20,11 @@
 #include <memory>
 #include <string>
 
-#include "CurlImp.h"
 #include "common/Lock.h"
 #include "prometheus/ScrapeJobEvent.h"
 #include "prometheus/ScraperGroup.h"
 #include "sdk/Common.h"
+#include "sdk/CurlImp.h"
 
 namespace logtail {
 

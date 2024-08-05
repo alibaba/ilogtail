@@ -11,7 +11,7 @@
 namespace logtail {
 
 void PromEvent::Send(bool message) {
-    // this is a state that is not easy to change, so here we use a read-write lock
+    // The state changes infrequently, so here we use a read-write lock
     {
         ReadLock lock(mStateRWLock);
         if (message == mValidState) {
@@ -84,6 +84,7 @@ void TickerHttpRequest::OnSendDone(const HttpResponse& response) {
         mTimer->PushEvent(BuildTimerEvent());
     }
 }
+
 [[nodiscard]] bool TickerHttpRequest::IsContextValid() const {
     return mEvent->ReciveMessage();
 }
