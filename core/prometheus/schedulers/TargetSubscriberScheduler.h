@@ -22,24 +22,24 @@
 #include <memory>
 #include <string>
 
-#include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
 #include "prometheus/Mock.h"
-#include "prometheus/ScrapeConfig.h"
-#include "prometheus/ScrapeScheduler.h"
+#include "prometheus/schedulers/BaseScheduler.h"
+#include "prometheus/schedulers/ScrapeConfig.h"
+#include "prometheus/schedulers/ScrapeScheduler.h"
 #include "queue/FeedbackQueueKey.h"
 
 namespace logtail {
 
-class TargetsSubscriber : public BaseScheduler {
+class TargetSubscriberScheduler : public BaseScheduler {
 public:
-    TargetsSubscriber();
-    ~TargetsSubscriber() override = default;
+    TargetSubscriberScheduler();
+    ~TargetSubscriberScheduler() override = default;
 
     bool Init(const Json::Value& scrapeConfig);
-    bool operator<(const TargetsSubscriber& other) const;
+    bool operator<(const TargetSubscriberScheduler& other) const;
 
-    void Process(const HttpResponse&);
+    void OnSubscription(const HttpResponse&);
     void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
@@ -63,6 +63,7 @@ private:
                            std::set<std::shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) const;
 
     std::unique_ptr<TimerEvent> BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime);
+    void UpdateScrapeScheduler(std::set<std::shared_ptr<ScrapeScheduler>>&);
 
     uint64_t GetRandSleep(const std::string& hash) const;
 

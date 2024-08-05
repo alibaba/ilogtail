@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "prometheus/ScrapeScheduler.h"
+#include "prometheus/schedulers/ScrapeScheduler.h"
 
 #include <xxhash/xxhash.h>
 
@@ -28,7 +28,9 @@
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Mock.h"
 #include "prometheus/ScrapeTarget.h"
+#include "prometheus/async/PromHttpRequest.h"
 #include "queue/FeedbackQueueKey.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
@@ -49,13 +51,14 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
         + mScrapeConfigPtr->mMetricsPath
         + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mScrapeTarget.mLabels.Hash());
+    mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
 }
 
 bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
     return mHash < other.mHash;
 }
 
-void ScrapeScheduler::Process(const HttpResponse& response) {
+void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
     // TODO(liqiang): get scrape timestamp
     time_t timestampInNs = GetCurrentTimeInNanoSeconds();
     if (response.mStatusCode != 200) {
@@ -68,13 +71,12 @@ void ScrapeScheduler::Process(const HttpResponse& response) {
         return;
     }
     // TODO(liqiang): set jobName, instance metadata
-    auto eventGroup = SplitByLines(response.mBody, timestampInNs);
-    // 自监控
-    // work target 的 label 同步传输到 processor 中
+    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestampInNs);
+    // TODO(liqiang): work target 的 label 同步传输到 processor 中
 
     PushEventGroup(std::move(eventGroup));
 }
-PipelineEventGroup ScrapeScheduler::SplitByLines(const std::string& content, time_t timestamp) {
+PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content, time_t timestamp) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     for (const auto& line : SplitString(content, "\r\n")) {
@@ -105,18 +107,17 @@ string ScrapeScheduler::GetId() const {
 void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromTaskFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
-        this->Process(response);
+        this->OnMetricResult(response);
         this->ScheduleNext();
         this->mExecCount++;
     });
     mFuture = future;
-    auto execTime = mFirstExecTime + std::chrono::seconds(mExecCount * prometheus::RefeshIntervalSeconds);
 
-    auto event = BuildWorkTimerEvent(execTime);
+    auto event = BuildScrapeTimerEvent(GetNextExecTime());
     mTimer->PushEvent(std::move(event));
 }
 
-std::unique_ptr<TimerEvent> ScrapeScheduler::BuildWorkTimerEvent(std::chrono::steady_clock::time_point execTime) {
+std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime) {
     auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
                                                      mScrapeConfigPtr->mScheme == prometheus::HTTPS,
                                                      mScrapeTarget.mHost,

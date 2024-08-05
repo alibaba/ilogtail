@@ -31,7 +31,7 @@ namespace logtail {
 ScraperGroup::ScraperGroup() : mServicePort(0), mUnRegisterMs(0), mTimer(make_shared<Timer>()), mIsStarted(false) {
 }
 
-void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr) {
+void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetSubscriberScheduler> scrapeJobEventPtr) {
     RemoveScrapeJob(scrapeJobEventPtr->GetId());
 
     scrapeJobEventPtr->mUnRegisterMs = mUnRegisterMs;
@@ -61,7 +61,6 @@ void ScraperGroup::Start() {
     }
     mThreadRes = std::async(launch::async, [this]() {
         mTimer->Init();
-        // TODO(liqiang): init curl thread
     });
 }
 

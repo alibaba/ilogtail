@@ -2,34 +2,11 @@
 #include <cstdint>
 #include <string>
 
-#include "common/Lock.h"
 #include "prometheus/Mock.h"
+#include "prometheus/async/PromTaskFuture.h"
 
 
 namespace logtail {
-
-class PromTaskFuture {
-public:
-    virtual ~PromTaskFuture() = default;
-
-    // Process should support oneshot and streaming mode.
-    void Process(const HttpResponse&);
-
-    void AddDoneCallback(std::function<void(const HttpResponse&)>&& callback) {
-        mDoneCallbacks.emplace_back(std::move(callback));
-    }
-
-    void Cancel();
-    bool IsCancelled();
-
-protected:
-
-    bool mValidState = true;
-    ReadWriteLock mStateRWLock;
-
-    std::vector<std::function<void(const HttpResponse&)>> mDoneCallbacks;
-};
-
 
 class PromHttpRequest : public AsynHttpRequest {
 public:

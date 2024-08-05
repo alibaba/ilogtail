@@ -21,8 +21,8 @@
 #include <string>
 
 #include "common/Lock.h"
-#include "prometheus/TargetsSubscriber.h"
 #include "prometheus/ScraperGroup.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
 
@@ -40,7 +40,7 @@ public:
     }
 
     // input plugin update
-    void UpdateScrapeInput(std::shared_ptr<TargetsSubscriber> scrapeJobEvent);
+    void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> scrapeJobEvent);
     void RemoveScrapeInput(const std::string& jobName);
 
     // target discover and scrape

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-#include "prometheus/Labels.h"
+#include "prometheus/labels/Labels.h"
 namespace logtail {
 class ScrapeTarget {
 public:

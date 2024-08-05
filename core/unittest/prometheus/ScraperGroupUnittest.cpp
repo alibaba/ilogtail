@@ -73,7 +73,7 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
     labels.Push(Label{"job", "test_job"});
     scrapeTargets.emplace_back(labels);
 
-    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetsSubscriber>();
+    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
 
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
@@ -106,7 +106,7 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     })JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
 
-    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetsSubscriber>();
+    std::unique_ptr<TargetsSubscriber> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
 

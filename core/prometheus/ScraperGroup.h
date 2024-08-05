@@ -23,7 +23,7 @@
 #include <string>
 
 #include "common/Lock.h"
-#include "prometheus/TargetsSubscriber.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 
 namespace logtail {
 
@@ -36,7 +36,7 @@ public:
     ScraperGroup& operator=(const ScraperGroup&) = delete;
     ScraperGroup& operator=(ScraperGroup&&) = delete;
 
-    void UpdateScrapeJob(std::shared_ptr<TargetsSubscriber>);
+    void UpdateScrapeJob(std::shared_ptr<TargetSubscriberScheduler>);
     void RemoveScrapeJob(const std::string& jobName);
 
     void Start();
@@ -51,11 +51,10 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-
     std::shared_ptr<Timer> mTimer;
 
     ReadWriteLock mJobRWLock;
-    std::map<std::string, std::shared_ptr<TargetsSubscriber>> mJobEventMap;
+    std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mJobEventMap;
 
     std::mutex mStartMux;
     bool mIsStarted;

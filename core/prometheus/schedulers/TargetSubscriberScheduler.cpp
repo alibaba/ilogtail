@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "prometheus/TargetsSubscriber.h"
+#include "prometheus/schedulers/TargetSubscriberScheduler.h"
 
 #include <xxhash/xxhash.h>
 
@@ -22,57 +22,41 @@
 #include <memory>
 #include <string>
 
+#include "Common.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
-#include "prometheus/PromTaskFuture.h"
-#include "prometheus/ScrapeScheduler.h"
-#include "sdk/Common.h"
+#include "prometheus/Utils.h"
+#include "prometheus/async//PromHttpRequest.h"
+#include "prometheus/async//PromTaskFuture.h"
+#include "prometheus/schedulers/ScrapeScheduler.h"
 
 using namespace std;
 
 namespace logtail {
 
-
-string URLEncode(const string& value) {
-    ostringstream escaped;
-    escaped.fill('0');
-    escaped << hex;
-
-    for (char c : value) {
-        // Keep alphanumeric characters and other safe characters intact
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            escaped << c;
-            continue;
-        }
-        // Any other characters are percent-encoded
-        escaped << '%' << setw(2) << int((unsigned char)c);
-    }
-
-    return escaped.str();
+TargetSubscriberScheduler::TargetSubscriberScheduler()
+    : mQueueKey(0), mInputIndex(0), mServicePort(0), mUnRegisterMs(0) {
 }
 
-
-TargetsSubscriber::TargetsSubscriber() : mQueueKey(0), mInputIndex(0), mServicePort(0), mUnRegisterMs(0) {
-}
-
-bool TargetsSubscriber::Init(const Json::Value& scrapeConfig) {
+bool TargetSubscriberScheduler::Init(const Json::Value& scrapeConfig) {
     mScrapeConfigPtr = std::make_shared<ScrapeConfig>();
     if (!mScrapeConfigPtr->Init(scrapeConfig)) {
         return false;
     }
     mJobName = mScrapeConfigPtr->mJobName;
+    mInterval = prometheus::RefeshIntervalSeconds;
 
     return true;
 }
 
-bool TargetsSubscriber::operator<(const TargetsSubscriber& other) const {
+bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other) const {
     return mJobName < other.mJobName;
 }
 
-void TargetsSubscriber::Process(const HttpResponse& response) {
+void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
     if (response.mStatusCode != 200) {
         return;
     }
@@ -81,7 +65,10 @@ void TargetsSubscriber::Process(const HttpResponse& response) {
     if (!ParseTargetGroups(content, newScrapeWorkSet)) {
         return;
     }
+    UpdateScrapeScheduler(newScrapeWorkSet);
+}
 
+void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) {
     set<shared_ptr<ScrapeScheduler>> diff;
     {
         WriteLock lock(mRWLock);
@@ -119,7 +106,7 @@ void TargetsSubscriber::Process(const HttpResponse& response) {
 }
 
 
-uint64_t TargetsSubscriber::GetRandSleep(const string& hash) const {
+uint64_t TargetSubscriberScheduler::GetRandSleep(const string& hash) const {
     const string& key = hash;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
     uint64_t randSleep
@@ -133,8 +120,9 @@ uint64_t TargetsSubscriber::GetRandSleep(const string& hash) const {
     return randSleep;
 }
 
-bool TargetsSubscriber::ParseTargetGroups(const string& content,
-                                          std::set<std::shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) const {
+// TODO: simplify method
+bool TargetSubscriberScheduler::ParseTargetGroups(const string& content,
+                                                  std::set<std::shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) const {
     string errs;
     Json::Value root;
     if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
@@ -213,30 +201,29 @@ bool TargetsSubscriber::ParseTargetGroups(const string& content,
     return true;
 }
 
-void TargetsSubscriber::SetTimer(shared_ptr<Timer> timer) {
+void TargetSubscriberScheduler::SetTimer(shared_ptr<Timer> timer) {
     mTimer = std::move(timer);
 }
 
-string TargetsSubscriber::GetId() const {
+string TargetSubscriberScheduler::GetId() const {
     return mJobName;
 }
 
-void TargetsSubscriber::ScheduleNext() {
+void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromTaskFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
-        this->Process(response);
+        this->OnSubscription(response);
         this->ScheduleNext();
         this->mExecCount++;
     });
     mFuture = future;
-    auto execTime = mFirstExecTime + std::chrono::seconds(mExecCount * prometheus::RefeshIntervalSeconds);
 
-    auto event = BuildSubscriberTimerEvent(execTime);
+    auto event = BuildSubscriberTimerEvent(GetNextExecTime());
     mTimer->PushEvent(std::move(event));
 }
 
 std::unique_ptr<TimerEvent>
-TargetsSubscriber::BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime) {
+TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime) {
     map<string, string> httpHeader;
     httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
     httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
@@ -250,7 +237,7 @@ TargetsSubscriber::BuildSubscriberTimerEvent(std::chrono::steady_clock::time_poi
                                                      httpHeader,
                                                      "",
                                                      this->mFuture,
-                                                     prometheus::RefeshIntervalSeconds,
+                                                     mInterval,
                                                      execTime,
                                                      mTimer);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));

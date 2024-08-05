@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "prometheus/Labels.h"
+#include "prometheus/labels/Labels.h"
 
 #include <algorithm>
 #include <cstdint>

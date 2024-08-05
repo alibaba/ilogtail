@@ -22,8 +22,9 @@
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
 #include "models/PipelineEventGroup.h"
-#include "prometheus/ScrapeConfig.h"
+#include "prometheus/Mock.h"
 #include "prometheus/ScrapeTarget.h"
+#include "prometheus/schedulers/ScrapeConfig.h"
 #include "queue/FeedbackQueueKey.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -43,11 +44,10 @@ public:
 
     bool operator<(const ScrapeScheduler& other) const;
 
-    void Process(const HttpResponse&);
+    void OnMetricResult(const HttpResponse&);
     void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
-    bool IsCancelled();
 
     void ScheduleNext() override;
 
@@ -56,9 +56,9 @@ public:
 private:
     void PushEventGroup(PipelineEventGroup&&);
 
-    PipelineEventGroup SplitByLines(const std::string& content, time_t timestampNs);
+    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, time_t timestampNs);
 
-    std::unique_ptr<TimerEvent> BuildWorkTimerEvent(std::chrono::steady_clock::time_point execTime);
+    std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 

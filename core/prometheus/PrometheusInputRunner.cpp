@@ -51,7 +51,7 @@ PrometheusInputRunner::PrometheusInputRunner() {
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
-void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetsSubscriber> scrapeJobEventPtr) {
+void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> scrapeJobEventPtr) {
     {
         WriteLock lock(mReadWriteLock);
         mPrometheusInputsSet.insert(scrapeJobEventPtr->GetId());
