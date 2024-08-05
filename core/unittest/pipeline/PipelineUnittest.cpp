@@ -38,6 +38,7 @@ namespace logtail {
 class PipelineUnittest : public ::testing::Test {
 public:
     void OnSuccessfulInit() const;
+
     void OnFailedInit() const;
     void OnInitVariousTopology() const;
     void TestProcessQueue() const;
@@ -99,6 +100,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+
     config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -2473,6 +2475,7 @@ void PipelineUnittest::OnInputFileWithJsonMultiline() const {
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
+    APSARA_TEST_EQUAL(2, pipeline->mProcessorLine.size());
     APSARA_TEST_TRUE(pipeline->GetContext().RequiringJsonReader());
     APSARA_TEST_EQUAL(ProcessorSplitLogStringNative::sName, pipeline->mInputs[0]->GetInnerProcessors()[0]->Name());
 
@@ -2671,10 +2674,10 @@ void PipelineUnittest::TestProcess() const {
     uint32_t pluginIdx = 0;
     PipelineContext ctx;
     Json::Value tmp;
-    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, to_string(++pluginIdx));
-    input->Init(Json::Value(), ctx, pluginIdx, 0, tmp);
+    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, pipeline.GenNextPluginMeta(false));
+    input->Init(Json::Value(), ctx, 0, tmp);
     pipeline.mInputs.emplace_back(std::move(input));
-    auto processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, to_string(++pluginIdx));
+    auto processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, pipeline.GenNextPluginMeta(false));
     processor->Init(Json::Value(), ctx);
     pipeline.mProcessorLine.emplace_back(std::move(processor));
 
@@ -2694,12 +2697,12 @@ void PipelineUnittest::TestSend() const {
         uint32_t pluginIdx = 0;
         Json::Value tmp;
         {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
         {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
@@ -2727,12 +2730,12 @@ void PipelineUnittest::TestFlushBatch() const {
     uint32_t pluginIdx = 0;
     Json::Value tmp;
     {
-        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
         flusher->Init(Json::Value(), ctx, tmp);
         pipeline.mFlushers.emplace_back(std::move(flusher));
     }
     {
-        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
         flusher->Init(Json::Value(), ctx, tmp);
         pipeline.mFlushers.emplace_back(std::move(flusher));
     }

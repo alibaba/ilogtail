@@ -36,7 +36,7 @@ public:
     DeduceAndSetContainerBaseDir(ContainerInfo& containerInfo, const PipelineContext*, const FileDiscoveryOptions*);
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) override;
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
@@ -54,7 +54,7 @@ private:
     PluginMetricManagerPtr mPluginMetricManager;
     IntGaugePtr mInputFileMonitorTotal;
 
-    bool CreateInnerProcessors(uint32_t& pluginIdx);
+    bool CreateInnerProcessors();
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputContainerStdioUnittest;

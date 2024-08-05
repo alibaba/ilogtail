@@ -69,14 +69,15 @@ bool Pipeline::Init(PipelineConfig&& config) {
         mContext.SetSLSInfo(SLSTmp.get());
     }
 
-    uint32_t pluginIndex = 0;
+    mPluginID.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string name = detail["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
+        unique_ptr<InputInstance> input
+            = PluginRegistry::GetInstance()->CreateInput(name, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
-            if (!input->Init(detail, mContext, pluginIndex, i, optionalGoPipeline)) {
+            if (!input->Init(detail, mContext, i, optionalGoPipeline)) {
                 return false;
             }
             mInputs.emplace_back(std::move(input));
@@ -98,7 +99,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
         string name = (*config.mProcessors[i])["Type"].asString();
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(name, GenNextPluginMeta(false));
         if (processor) {
             if (!processor->Init(*config.mProcessors[i], mContext)) {
                 return false;
@@ -130,7 +131,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     for (auto detail : config.mFlushers) {
         string name = (*detail)["Type"].asString();
         unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateFlusher(name, GenNextPluginMeta(false));
         if (flusher) {
             Json::Value optionalGoPipeline;
             if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {
@@ -361,10 +362,12 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
     }
 }
 
+// Rule: pluginName=pluginType/pluginID#pluginPriority.
 void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    res["type"] = plugin["Type"];
+    std::string typeAndId(plugin["Type"].asString().begin(), plugin["Type"].asString().end());
+    res["type"] = typeAndId + "/" + std::to_string(mPluginID.fetch_add(1));
     res["detail"] = detail;
     dst[module].append(res);
 }
@@ -420,6 +423,18 @@ bool Pipeline::LoadGoPipelines() const {
         }
     }
     return true;
+}
+
+PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
+    mPluginID.fetch_add(1);
+    int32_t childNodeID = mPluginID.load();
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
+        childNodeID += 1;
+    }
+    return PluginInstance::PluginMeta(
+        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
 }
 
 } // namespace logtail
