@@ -51,7 +51,6 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    std::unique_ptr<TimerEvent> BuildJobTimerEvent(std::shared_ptr<TargetsSubscriber> jobEvent, uint64_t intervalSeconds);
 
     std::shared_ptr<Timer> mTimer;
 

@@ -8,43 +8,28 @@
 
 namespace logtail {
 
-class PromTaskCallback {
+class PromTaskFuture {
 public:
-    virtual ~PromTaskCallback() = default;
+    virtual ~PromTaskFuture() = default;
 
     // Process should support oneshot and streaming mode.
-    virtual void Process(const HttpResponse&) = 0;
+    void Process(const HttpResponse&);
 
-    [[nodiscard]] virtual std::string GetId() const = 0;
-
-    void Cancel(bool message);
-    virtual bool IsCancelled() = 0;
-
-
-protected:
-    bool mValidState = true;
-    ReadWriteLock mStateRWLock;
-};
-
-class PromMessageDispatcher {
-public:
-    static PromMessageDispatcher& GetInstance() {
-        static PromMessageDispatcher sInstance;
-        return sInstance;
+    void AddDoneCallback(std::function<void(const HttpResponse&)>&& callback) {
+        mDoneCallbacks.emplace_back(std::move(callback));
     }
 
-    void RegisterEvent(std::shared_ptr<PromTaskCallback> promEvent);
-    void UnRegisterEvent(const std::string& promEventId);
+    void Cancel();
+    bool IsCancelled();
 
-    void SendMessage(const std::string& promEventId, bool message);
+protected:
 
-    void Stop();
+    bool mValidState = true;
+    ReadWriteLock mStateRWLock;
 
-private:
-    PromMessageDispatcher() = default;
-    ReadWriteLock mEventsRWLock;
-    std::unordered_map<std::string, std::shared_ptr<PromTaskCallback>> mPromEvents;
+    std::vector<std::function<void(const HttpResponse&)>> mDoneCallbacks;
 };
+
 
 class PromHttpRequest : public AsynHttpRequest {
 public:
@@ -56,7 +41,7 @@ public:
                     const std::string& query,
                     const std::map<std::string, std::string>& header,
                     const std::string& body,
-                    std::shared_ptr<PromTaskCallback> event,
+                    std::shared_ptr<PromTaskFuture> event,
                     uint64_t intervalSeconds,
                     std::chrono::steady_clock::time_point execTime,
                     std::shared_ptr<Timer> timer);
@@ -71,7 +56,7 @@ private:
     std::chrono::steady_clock::time_point GetNextExecTime() const;
     void SetNextExecTime(std::chrono::steady_clock::time_point execTime);
 
-    std::shared_ptr<PromTaskCallback> mEvent;
+    std::shared_ptr<PromTaskFuture> mEvent;
 
     int64_t mIntervalSeconds;
     std::chrono::steady_clock::time_point mExecTime;

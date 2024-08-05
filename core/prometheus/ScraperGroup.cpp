@@ -19,36 +19,14 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
 
-#include "Common.h"
-#include "common/StringTools.h"
 #include "logger/Logger.h"
-#include "prometheus/Constants.h"
 #include "prometheus/Mock.h"
-#include "prometheus/ScrapeScheduler.h"
 
 using namespace std;
 
 namespace logtail {
 
-string URLEncode(const string& value) {
-    ostringstream escaped;
-    escaped.fill('0');
-    escaped << hex;
-
-    for (char c : value) {
-        // Keep alphanumeric characters and other safe characters intact
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            escaped << c;
-            continue;
-        }
-        // Any other characters are percent-encoded
-        escaped << '%' << setw(2) << int((unsigned char)c);
-    }
-
-    return escaped.str();
-}
 
 ScraperGroup::ScraperGroup() : mServicePort(0), mUnRegisterMs(0), mTimer(make_shared<Timer>()), mIsStarted(false) {
 }
@@ -58,18 +36,18 @@ void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetsSubscriber> scrapeJobE
 
     scrapeJobEventPtr->mUnRegisterMs = mUnRegisterMs;
     scrapeJobEventPtr->SetTimer(mTimer);
+    scrapeJobEventPtr->SetFirstExecTime(std::chrono::steady_clock::now());
     // 1. add job to mJobEventMap
     WriteLock lock(mJobRWLock);
     mJobEventMap[scrapeJobEventPtr->GetId()] = scrapeJobEventPtr;
 
     // 2. build Ticker Event and add it to Timer
-    auto timerEvent = BuildJobTimerEvent(std::move(scrapeJobEventPtr), prometheus::RefeshIntervalSeconds);
-    mTimer->PushEvent(std::move(timerEvent));
+    scrapeJobEventPtr->ScheduleNext();
 }
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
     WriteLock lock(mJobRWLock);
-    mJobEventMap[jobName]->Cancel(false);
+    mJobEventMap[jobName]->mFuture->Cancel();
     mJobEventMap.erase(jobName);
 }
 
@@ -92,7 +70,6 @@ void ScraperGroup::Stop() {
     mTimer->Stop();
 
     // 2. clear resources
-    PromMessageDispatcher::GetInstance().Stop();
     {
         WriteLock lock(mJobRWLock);
         mJobEventMap.clear();
@@ -110,30 +87,6 @@ void ScraperGroup::Stop() {
     } else {
         LOG_WARNING(sLogger, ("scraper group", "forced to stopped"));
     }
-}
-
-std::unique_ptr<TimerEvent> ScraperGroup::BuildJobTimerEvent(std::shared_ptr<TargetsSubscriber> jobEvent,
-                                                             uint64_t intervalSeconds) {
-    map<string, string> httpHeader;
-    httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
-    httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
-    httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
-    auto execTime = std::chrono::steady_clock::now();
-    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
-                                                       false,
-                                                       mServiceHost,
-                                                       mServicePort,
-                                                       "/jobs/" + URLEncode(jobEvent->GetId()) + "/targets",
-                                                       "collector_id=" + mPodName,
-                                                       httpHeader,
-                                                       "",
-                                                       std::move(jobEvent),
-                                                       intervalSeconds,
-                                                       execTime,
-                                                       mTimer);
-    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
-
-    return timerEvent;
 }
 
 } // namespace logtail

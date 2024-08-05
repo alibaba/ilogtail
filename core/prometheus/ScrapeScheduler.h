@@ -19,9 +19,9 @@
 #include <memory>
 #include <string>
 
+#include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
 #include "models/PipelineEventGroup.h"
-#include "prometheus/PromTaskCallback.h"
 #include "prometheus/ScrapeConfig.h"
 #include "prometheus/ScrapeTarget.h"
 #include "queue/FeedbackQueueKey.h"
@@ -32,9 +32,7 @@
 
 namespace logtail {
 
-class ScrapeScheduler : public PromTaskCallback {
-    friend class TargetsSubscriber;
-
+class ScrapeScheduler : public BaseScheduler {
 public:
     ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
                     const ScrapeTarget& scrapeTarget,
@@ -45,15 +43,22 @@ public:
 
     bool operator<(const ScrapeScheduler& other) const;
 
-    void Process(const HttpResponse&) override;
+    void Process(const HttpResponse&);
+    void SetTimer(std::shared_ptr<Timer> timer);
 
-    std::string GetId() const override;
-    bool IsCancelled() override;
+    std::string GetId() const;
+    bool IsCancelled();
+
+    void ScheduleNext() override;
+
+    uint64_t GetRandSleep() const;
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
 
     PipelineEventGroup SplitByLines(const std::string& content, time_t timestampNs);
+
+    std::unique_ptr<TimerEvent> BuildWorkTimerEvent(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 

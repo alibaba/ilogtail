@@ -23,8 +23,9 @@
 #include <string>
 #include <utility>
 
-#include "TimeUtil.h"
+#include "Common.h"
 #include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/ScrapeTarget.h"
@@ -101,17 +102,52 @@ string ScrapeScheduler::GetId() const {
     return mHash;
 }
 
-bool ScrapeScheduler::IsCancelled() {
-    {
-        ReadLock lock(mStateRWLock);
-        if (mValidState == true) {
-            return true;
-        }
-    }
+void ScrapeScheduler::ScheduleNext() {
+    auto future = std::make_shared<PromTaskFuture>();
+    future->AddDoneCallback([this](const HttpResponse& response) {
+        this->Process(response);
+        this->ScheduleNext();
+        this->mExecCount++;
+    });
+    mFuture = future;
+    auto execTime = mFirstExecTime + std::chrono::seconds(mExecCount * prometheus::RefeshIntervalSeconds);
 
-    // unregister work event
-    PromMessageDispatcher::GetInstance().UnRegisterEvent(GetId());
-    return false;
+    auto event = BuildWorkTimerEvent(execTime);
+    mTimer->PushEvent(std::move(event));
 }
 
+std::unique_ptr<TimerEvent> ScrapeScheduler::BuildWorkTimerEvent(std::chrono::steady_clock::time_point execTime) {
+    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
+                                                     mScrapeConfigPtr->mScheme == prometheus::HTTPS,
+                                                     mScrapeTarget.mHost,
+                                                     mScrapeTarget.mPort,
+                                                     mScrapeConfigPtr->mMetricsPath,
+                                                     mScrapeConfigPtr->mQueryString,
+                                                     mScrapeConfigPtr->mHeaders,
+                                                     "",
+                                                     this->mFuture,
+                                                     mScrapeConfigPtr->mScrapeIntervalSeconds,
+                                                     execTime,
+                                                     mTimer);
+    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
+    return timerEvent;
+}
+
+uint64_t ScrapeScheduler::GetRandSleep() const {
+    const string& key = mHash;
+    uint64_t h = XXH64(key.c_str(), key.length(), 0);
+    uint64_t randSleep
+        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    uint64_t sleepOffset
+        = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
+    if (randSleep < sleepOffset) {
+        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
+    }
+    randSleep -= sleepOffset;
+    return randSleep;
+}
+
+void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {
+    mTimer = std::move(timer);
+}
 } // namespace logtail

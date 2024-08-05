@@ -26,8 +26,8 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
-#include "prometheus/PromTaskCallback.h"
 #include "prometheus/Constants.h"
+#include "prometheus/PromTaskFuture.h"
 #include "prometheus/ScrapeScheduler.h"
 #include "sdk/Common.h"
 
@@ -35,8 +35,29 @@ using namespace std;
 
 namespace logtail {
 
-TargetsSubscriber::TargetsSubscriber() : mQueueKey(0), mInputIndex(0), mUnRegisterMs(0) {
+
+string URLEncode(const string& value) {
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    for (char c : value) {
+        // Keep alphanumeric characters and other safe characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+        // Any other characters are percent-encoded
+        escaped << '%' << setw(2) << int((unsigned char)c);
+    }
+
+    return escaped.str();
 }
+
+
+TargetsSubscriber::TargetsSubscriber() : mQueueKey(0), mInputIndex(0), mServicePort(0), mUnRegisterMs(0) {
+}
+
 bool TargetsSubscriber::Init(const Json::Value& scrapeConfig) {
     mScrapeConfigPtr = std::make_shared<ScrapeConfig>();
     if (!mScrapeConfigPtr->Init(scrapeConfig)) {
@@ -56,12 +77,12 @@ void TargetsSubscriber::Process(const HttpResponse& response) {
         return;
     }
     const string& content = response.mBody;
-    set<ScrapeScheduler> newScrapeWorkSet;
+    set<shared_ptr<ScrapeScheduler>> newScrapeWorkSet;
     if (!ParseTargetGroups(content, newScrapeWorkSet)) {
         return;
     }
 
-    set<ScrapeScheduler> diff;
+    set<shared_ptr<ScrapeScheduler>> diff;
     {
         WriteLock lock(mRWLock);
 
@@ -73,7 +94,7 @@ void TargetsSubscriber::Process(const HttpResponse& response) {
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
             mScrapeWorkSet.erase(work);
-            PromMessageDispatcher::GetInstance().SendMessage(work.GetId(), false);
+            mScrapeMap[work->GetId()]->mFuture->Cancel();
         }
         diff.clear();
 
@@ -85,35 +106,18 @@ void TargetsSubscriber::Process(const HttpResponse& response) {
                        inserter(diff, diff.begin()));
         for (const auto& work : diff) {
             mScrapeWorkSet.insert(work);
+            mScrapeMap[work->GetId()] = work;
         }
     }
 
     // create new scrape event
     if (mTimer) {
-        for (auto work : diff) {
-            auto event = BuildWorkTimerEvent(make_shared<ScrapeScheduler>(work));
-            mTimer->PushEvent(std::move(event));
+        for (const auto& work : diff) {
+            work->ScheduleNext();
         }
     }
 }
 
-std::unique_ptr<TimerEvent> TargetsSubscriber::BuildWorkTimerEvent(std::shared_ptr<ScrapeScheduler> workEvent) {
-    auto execTime = std::chrono::steady_clock::now() + std::chrono::nanoseconds(GetRandSleep(workEvent->mHash));
-    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
-                                                       mScrapeConfigPtr->mScheme == prometheus::HTTPS,
-                                                       workEvent->mScrapeTarget.mHost,
-                                                       workEvent->mScrapeTarget.mPort,
-                                                       mScrapeConfigPtr->mMetricsPath,
-                                                       mScrapeConfigPtr->mQueryString,
-                                                       mScrapeConfigPtr->mHeaders,
-                                                       "",
-                                                       std::move(workEvent),
-                                                       mScrapeConfigPtr->mScrapeIntervalSeconds,
-                                                       execTime,
-                                                       mTimer);
-    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
-    return timerEvent;
-}
 
 uint64_t TargetsSubscriber::GetRandSleep(const string& hash) const {
     const string& key = hash;
@@ -129,7 +133,8 @@ uint64_t TargetsSubscriber::GetRandSleep(const string& hash) const {
     return randSleep;
 }
 
-bool TargetsSubscriber::ParseTargetGroups(const string& content, set<ScrapeScheduler>& newScrapeWorkSet) const {
+bool TargetsSubscriber::ParseTargetGroups(const string& content,
+                                          std::set<std::shared_ptr<ScrapeScheduler>>& newScrapeWorkSet) const {
     string errs;
     Json::Value root;
     if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
@@ -197,8 +202,12 @@ bool TargetsSubscriber::ParseTargetGroups(const string& content, set<ScrapeSched
         }
 
         auto scrapeTarget = ScrapeTarget(result);
-        auto scrapeWorkEvent = ScrapeScheduler(mScrapeConfigPtr, scrapeTarget, mQueueKey, mInputIndex);
+        auto scrapeWorkEvent
+            = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, scrapeTarget, mQueueKey, mInputIndex);
+        scrapeWorkEvent->SetFirstExecTime(std::chrono::steady_clock::now()
+                                          + std::chrono::nanoseconds(scrapeWorkEvent->GetRandSleep()));
 
+        scrapeWorkEvent->SetTimer(mTimer);
         newScrapeWorkSet.insert(scrapeWorkEvent);
     }
     return true;
@@ -212,25 +221,42 @@ string TargetsSubscriber::GetId() const {
     return mJobName;
 }
 
-bool TargetsSubscriber::IsCancelled() {
-    {
-        ReadLock lock(mStateRWLock);
-        if (mValidState == true) {
-            return true;
-        }
-    }
+void TargetsSubscriber::ScheduleNext() {
+    auto future = std::make_shared<PromTaskFuture>();
+    future->AddDoneCallback([this](const HttpResponse& response) {
+        this->Process(response);
+        this->ScheduleNext();
+        this->mExecCount++;
+    });
+    mFuture = future;
+    auto execTime = mFirstExecTime + std::chrono::seconds(mExecCount * prometheus::RefeshIntervalSeconds);
 
-    // unregister job event
-    PromMessageDispatcher::GetInstance().UnRegisterEvent(GetId());
-
-    // send message to work events
-    for (const auto& workEvent : mScrapeWorkSet) {
-        PromMessageDispatcher::GetInstance().SendMessage(workEvent.GetId(), false);
-    }
-    mScrapeWorkSet.clear();
-    mTimer.reset();
-    mScrapeConfigPtr.reset();
-    return false;
+    auto event = BuildSubscriberTimerEvent(execTime);
+    mTimer->PushEvent(std::move(event));
 }
+
+std::unique_ptr<TimerEvent>
+TargetsSubscriber::BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime) {
+    map<string, string> httpHeader;
+    httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
+    httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
+    httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
+    auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
+                                                     false,
+                                                     mServiceHost,
+                                                     mServicePort,
+                                                     "/jobs/" + URLEncode(GetId()) + "/targets",
+                                                     "collector_id=" + mPodName,
+                                                     httpHeader,
+                                                     "",
+                                                     this->mFuture,
+                                                     prometheus::RefeshIntervalSeconds,
+                                                     execTime,
+                                                     mTimer);
+    auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
+
+    return timerEvent;
+}
+
 
 } // namespace logtail

@@ -56,6 +56,9 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetsSubscriber>
         WriteLock lock(mReadWriteLock);
         mPrometheusInputsSet.insert(scrapeJobEventPtr->GetId());
     }
+    scrapeJobEventPtr->mServiceHost = mServiceHost;
+    scrapeJobEventPtr->mServicePort = mServicePort;
+    scrapeJobEventPtr->mPodName = mPodName;
 
     mScraperGroup->UpdateScrapeJob(std::move(scrapeJobEventPtr));
 }
