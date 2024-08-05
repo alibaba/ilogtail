@@ -37,10 +37,6 @@ enum class TextState {
     Error
 };
 
-enum class TextEvent { None, Character, Digit, Equal, Quote, Comma, OpenBrace, CloseBrace, Space, EndOfInput, Invalid };
-
-inline TextEvent ClassifyChar(char c);
-
 class TextParser {
 public:
     TextParser() = default;
@@ -50,7 +46,7 @@ public:
     bool ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
 
 private:
-    void NextState(TextState newState) { mState = newState; }
+    inline void NextState(TextState newState) { mState = newState; }
     void HandleError(const std::string& errMsg);
 
     void HandleStart(char c, MetricEvent& metricEvent);

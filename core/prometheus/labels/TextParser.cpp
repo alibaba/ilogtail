@@ -29,36 +29,6 @@ using namespace std;
 
 namespace logtail {
 
-inline TextEvent ClassifyChar(char c) {
-    switch (c) {
-        case '=':
-            return TextEvent::Equal;
-        case ',':
-            return TextEvent::Comma;
-        case '{':
-            return TextEvent::OpenBrace;
-        case '}':
-            return TextEvent::CloseBrace;
-        case '"':
-            return TextEvent::Quote;
-        case '\0':
-            return TextEvent::EndOfInput;
-        case '_':
-        case ':':
-        case '-':
-            return TextEvent::Character;
-        default:
-            if (std::isalpha(c))
-                return TextEvent::Character;
-            if (std::isdigit(c))
-                return TextEvent::Digit;
-            if (std::isspace(c))
-                return TextEvent::Space;
-            return TextEvent::Invalid;
-    }
-    return TextEvent::Invalid;
-}
-
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
 
@@ -134,7 +104,7 @@ void TextParser::HandleStart(char c, MetricEvent&) {
     while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
-    if (ClassifyChar(c) == TextEvent::Character) {
+    if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
         mToken += c;
         NextState(TextState::MetricName);
     } else {
@@ -143,10 +113,9 @@ void TextParser::HandleStart(char c, MetricEvent&) {
 }
 
 void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Character || event == TextEvent::Digit || c == '_') {
+    if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
         mToken += c;
-    } else if (event == TextEvent::OpenBrace || event == TextEvent::Space) {
+    } else if (c == '{' || std::isspace(c)) {
         metricEvent.SetName(mToken);
         mToken.clear();
         // need to solve these case, but don't point mPos to Value
@@ -157,7 +126,7 @@ void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
         }
         if (std::isspace(c)) {
             // Space OpenBrace
-            if (ClassifyChar(mLine[mPos]) == TextEvent::OpenBrace) {
+            if (mLine[mPos] == '{') {
                 mPos++;
                 NextState(TextState::OpenBrace);
             } else {
@@ -182,11 +151,10 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
     while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Character) {
+    if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
         mToken += c;
         NextState(TextState::LabelName);
-    } else if (event == TextEvent::CloseBrace) {
+    } else if (c == '}') {
         SkipSpaceIfHasNext();
         NextState(TextState::SampleValue);
     } else {
@@ -195,17 +163,16 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
 }
 
 void TextParser::HandleLabelName(char c, MetricEvent&) {
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Character || event == TextEvent::Digit || c == '_') {
+    if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
         mToken += c;
-    } else if (event == TextEvent::Equal || event == TextEvent::Space) {
+    } else if (c == '=' || std::isspace(c)) {
         mLabelName = mToken;
         mToken.clear();
         // Ignore subsequent spaces
         while (std::isspace(c)) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         }
-        if (ClassifyChar(c) != TextEvent::Equal) {
+        if (c != '=') {
             HandleError("expected '=' after label name");
             return;
         }
@@ -220,8 +187,7 @@ void TextParser::HandleEqualSign(char c, MetricEvent&) {
     while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Quote) {
+    if (c == '"') {
         NextState(TextState::LabelValue);
     } else {
         HandleError("expected '\"' after '='");
@@ -229,7 +195,7 @@ void TextParser::HandleEqualSign(char c, MetricEvent&) {
 }
 
 void TextParser::HandleLabelValue(char c, MetricEvent& metricEvent) {
-    if (ClassifyChar(c) == TextEvent::Quote) {
+    if (c == '"') {
         metricEvent.SetTag(mLabelName, mToken);
         mToken.clear();
         NextState(TextState::CommaOrCloseBrace);
@@ -245,10 +211,9 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
     while (std::isspace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Comma) {
+    if (c == ',') {
         NextState(TextState::OpenBrace);
-    } else if (event == TextEvent::CloseBrace) {
+    } else if (c == '}') {
         SkipSpaceIfHasNext();
         NextState(TextState::SampleValue);
     } else {
@@ -257,10 +222,9 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
 }
 
 void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Digit || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
+    if (std::isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
         mToken += c;
-    } else if (event == TextEvent::Space || event == TextEvent::EndOfInput) {
+    } else if (c == ' ' || c == '\0') {
         try {
             mSampleValue = stod(mToken);
         } catch (...) {
@@ -271,7 +235,7 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
         metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
         mToken.clear();
 
-        if (event == TextEvent::Space) {
+        if (c == ' ') {
             SkipSpaceIfHasNext();
             NextState(TextState::Timestamp);
         } else {
@@ -286,10 +250,9 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
-    TextEvent event = ClassifyChar(c);
-    if (event == TextEvent::Digit) {
+    if (std::isdigit(c)) {
         mToken += c;
-    } else if (event == TextEvent::Space || event == TextEvent::EndOfInput) {
+    } else if (c == ' ' || c == '\0') {
         if (!mToken.empty()) {
             try {
                 mNanoTimestamp = stoull(mToken) * 1000000;
