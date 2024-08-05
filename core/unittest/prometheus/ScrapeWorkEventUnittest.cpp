@@ -34,6 +34,7 @@ public:
     void TestInitScrapeWorkEvent();
     void TestProcess();
     void TestSplitByLines();
+    void TestReceiveMessage();
 
 protected:
     void SetUp() override {
@@ -43,6 +44,7 @@ protected:
         mScrapeConfig->mScrapeIntervalSeconds = 10;
         mScrapeConfig->mScrapeTimeoutSeconds = 10;
         mScrapeConfig->mMetricsPath = "/metrics";
+        mScrapeConfig->mHeaders = {{"Authorization", "Bearer xxxxx"}};
 
         mHttpResponse.mBody
             = "# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n"
@@ -80,7 +82,7 @@ void ScrapeWorkEventUnittest::TestInitScrapeWorkEvent() {
     labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
     ScrapeTarget target(labels);
     ScrapeWorkEvent event(mScrapeConfig, target, 0, 0);
-    APSARA_TEST_EQUAL(event.mHash, "test_jobhttp://localhost:8080/metrics" + ToString(target.mLabels.Hash()));
+    APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(target.mLabels.Hash()));
 }
 
 void ScrapeWorkEventUnittest::TestProcess() {
@@ -129,6 +131,26 @@ void ScrapeWorkEventUnittest::TestSplitByLines() {
                       res.GetEvents()[9].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
     APSARA_TEST_EQUAL("go_memstats_alloc_bytes_total 1.5159292e+08",
                       res.GetEvents()[10].Cast<LogEvent>().GetContent(prometheus::PROMETHEUS).to_string());
+}
+
+void ScrapeWorkEventUnittest::TestReceiveMessage() {
+    Labels labels;
+    labels.Push({prometheus::ADDRESS_LABEL_NAME, "localhost:8080"});
+    ScrapeTarget target(labels);
+    auto event = std::make_shared<ScrapeWorkEvent>(mScrapeConfig, target, 0, 0);
+
+    PromMessageDispatcher::GetInstance().RegisterEvent(event);
+
+    // before
+    APSARA_TEST_EQUAL(true, event->ReciveMessage());
+
+    // send stop message
+    PromMessageDispatcher::GetInstance().SendMessage(event->GetId(), false);
+
+    // after
+    APSARA_TEST_EQUAL(false, event->ReciveMessage());
+
+    PromMessageDispatcher::GetInstance().Stop();
 }
 
 UNIT_TEST_CASE(ScrapeWorkEventUnittest, TestInitScrapeWorkEvent)

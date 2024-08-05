@@ -90,7 +90,7 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input = make_unique<InputPrometheus>();
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputPrometheus::sName, "1");
+    input->SetMetricsRecordRef(input->Name(), "1");
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
     APSARA_TEST_EQUAL("_arms-prom/node-exporter/0", input->mScrapeJobEventPtr->mJobName);

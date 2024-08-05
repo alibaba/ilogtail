@@ -20,6 +20,13 @@ void ScrapeConfigUnittest::TestInit() {
     string errorMsg;
     string configStr;
 
+    // error config
+    configStr = R"JSON({
+        
+    })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    APSARA_TEST_FALSE(scrapeConfig.Init(config));
+
     // all useful config
     configStr = R"JSON({
         "job_name": "test_job",
@@ -44,6 +51,9 @@ void ScrapeConfigUnittest::TestInit() {
         "params" : {
             "__param_query": [
                 "test_query"
+            ],
+            "__param_query_1": [
+                "test_query_1"
             ]
         }
     })JSON";
@@ -59,6 +69,7 @@ void ScrapeConfigUnittest::TestInit() {
     APSARA_TEST_EQUAL(scrapeConfig.mSeriesLimit, 10000);
     APSARA_TEST_EQUAL(scrapeConfig.mRelabelConfigs.size(), 1UL);
     APSARA_TEST_EQUAL(scrapeConfig.mParams["__param_query"][0], "test_query");
+    APSARA_TEST_EQUAL(scrapeConfig.mParams["__param_query_1"][0], "test_query_1");
 }
 
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestInit);

@@ -123,10 +123,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             return false;
         }
         mHeaders[prometheus::A_UTHORIZATION] = type + " " + bearerToken;
-        LOG_INFO(sLogger,
-                 ("read credentials_file success, credentials_file",
-                  scrapeConfig[prometheus::AUTHORIZATION][prometheus::CREDENTIALS_FILE].asString())(
-                     prometheus::A_UTHORIZATION, mHeaders[prometheus::A_UTHORIZATION]));
     }
 
     for (const auto& relabelConfig : scrapeConfig[prometheus::RELABEL_CONFIGS]) {
