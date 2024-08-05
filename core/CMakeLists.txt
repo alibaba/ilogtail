@@ -114,11 +114,7 @@ set(SUB_DIRECTORIES_LIST
         batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher config_manager config_server_pb/v1 config_server_pb/v2 
         container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
         models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
-<<<<<<< HEAD
         profile_sender queue reader sdk sender serializer sls_control fuse prometheus sink/http ebpf/observer ebpf/security ebpf/handler ebpf
-=======
-        profile_sender queue reader sdk sender serializer sls_control fuse prometheus ebpf/handler ebpf
->>>>>>> 12a6c38e (1. Removed SourceManager singleton)
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)
