@@ -1,4 +1,4 @@
-#include "processor/inner/ProcessorParsePrometheusMetricNative.h"
+#include "processor/inner/ProcessorPromParseMetricNative.h"
 
 #include <json/json.h>
 
@@ -11,14 +11,14 @@
 using namespace std;
 namespace logtail {
 
-const string ProcessorParsePrometheusMetricNative::sName = "processor_log_to_metric_native";
+const string ProcessorPromParseMetricNative::sName = "processor_prom_parse_metric_native";
 
 // only for inner processor
-bool ProcessorParsePrometheusMetricNative::Init(const Json::Value&) {
+bool ProcessorPromParseMetricNative::Init(const Json::Value&) {
     return true;
 }
 
-void ProcessorParsePrometheusMetricNative::Process(PipelineEventGroup& eGroup) {
+void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     if (eGroup.GetEvents().empty()) {
         return;
     }
@@ -32,11 +32,11 @@ void ProcessorParsePrometheusMetricNative::Process(PipelineEventGroup& eGroup) {
     events.swap(newEvents);
 }
 
-bool ProcessorParsePrometheusMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
+bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 
-bool ProcessorParsePrometheusMetricNative::ProcessEvent(PipelineEventPtr& e,
+bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
                                               EventsContainer& newEvents,
                                               PipelineEventGroup& eGroup) {
     if (!IsSupportedEvent(e)) {

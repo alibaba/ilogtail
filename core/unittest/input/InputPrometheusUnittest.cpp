@@ -21,8 +21,8 @@
 #include "PluginRegistry.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
-#include "inner/ProcessorParsePrometheusMetricNative.h"
-#include "inner/ProcessorRelabelMetricNative.h"
+#include "inner/ProcessorPromParseMetricNative.h"
+#include "inner/ProcessorPromRelabelMetricNative.h"
 #include "input/InputPrometheus.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
@@ -255,10 +255,10 @@ void InputPrometheusUnittest::TestCreateInnerProcessor() {
         APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
         APSARA_TEST_EQUAL(2U, input->mInnerProcessors.size());
-        APSARA_TEST_EQUAL(ProcessorParsePrometheusMetricNative::sName, input->mInnerProcessors[0]->Name());
-        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[1]->Name());
+        APSARA_TEST_EQUAL(ProcessorPromParseMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(ProcessorPromRelabelMetricNative::sName, input->mInnerProcessors[1]->Name());
         APSARA_TEST_EQUAL(0U,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
+                          dynamic_cast<ProcessorPromRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs.size());
     }
     {
@@ -362,22 +362,22 @@ void InputPrometheusUnittest::TestCreateInnerProcessor() {
         APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
         APSARA_TEST_EQUAL(2U, input->mInnerProcessors.size());
-        APSARA_TEST_EQUAL(ProcessorParsePrometheusMetricNative::sName, input->mInnerProcessors[0]->Name());
-        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[1]->Name());
-        APSARA_TEST_EQUAL(ProcessorRelabelMetricNative::sName, input->mInnerProcessors[1]->mPlugin->Name());
+        APSARA_TEST_EQUAL(ProcessorPromParseMetricNative::sName, input->mInnerProcessors[0]->Name());
+        APSARA_TEST_EQUAL(ProcessorPromRelabelMetricNative::sName, input->mInnerProcessors[1]->Name());
+        APSARA_TEST_EQUAL(ProcessorPromRelabelMetricNative::sName, input->mInnerProcessors[1]->mPlugin->Name());
         APSARA_TEST_EQUAL(3U,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
+                          dynamic_cast<ProcessorPromRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs.size());
         APSARA_TEST_EQUAL(Action::KEEP,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
+                          dynamic_cast<ProcessorPromRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs[0]
                               .mAction);
         APSARA_TEST_EQUAL(Action::KEEP,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
+                          dynamic_cast<ProcessorPromRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs[1]
                               .mAction);
         APSARA_TEST_EQUAL(Action::REPLACE,
-                          dynamic_cast<ProcessorRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
+                          dynamic_cast<ProcessorPromRelabelMetricNative*>(input->mInnerProcessors[1]->mPlugin.get())
                               ->mRelabelConfigs[2]
                               .mAction);
     }

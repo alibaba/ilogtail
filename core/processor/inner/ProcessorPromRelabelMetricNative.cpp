@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "processor/inner/ProcessorRelabelMetricNative.h"
+#include "processor/inner/ProcessorPromRelabelMetricNative.h"
 
 #include <json/json.h>
 
@@ -27,10 +27,10 @@
 using namespace std;
 namespace logtail {
 
-const string ProcessorRelabelMetricNative::sName = "processor_relabel_metric_native";
+const string ProcessorPromRelabelMetricNative::sName = "processor_prom_relabel_metric_native";
 
 // only for inner processor
-bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
+bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (config.isMember(prometheus::METRIC_RELABEL_CONFIGS) && config[prometheus::METRIC_RELABEL_CONFIGS].isArray()
         && config[prometheus::METRIC_RELABEL_CONFIGS].size() > 0) {
@@ -47,7 +47,7 @@ bool ProcessorRelabelMetricNative::Init(const Json::Value& config) {
     return true;
 }
 
-void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
+void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     if (metricGroup.GetEvents().empty()) {
         return;
     }
@@ -66,11 +66,11 @@ void ProcessorRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     events.resize(wIdx);
 }
 
-bool ProcessorRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
+bool ProcessorPromRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<MetricEvent>();
 }
 
-bool ProcessorRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
+bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
         return false;
     }

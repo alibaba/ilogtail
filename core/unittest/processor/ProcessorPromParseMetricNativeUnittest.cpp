@@ -18,7 +18,7 @@
 #include "MetricEvent.h"
 #include "StringTools.h"
 #include "common/JsonUtil.h"
-#include "processor/inner/ProcessorParsePrometheusMetricNative.h"
+#include "processor/inner/ProcessorPromParseMetricNative.h"
 #include "prometheus/Constants.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
@@ -39,7 +39,7 @@ public:
 
 void ProcessorParsePrometheusMetricUnittest::TestInit() {
     Json::Value config;
-    ProcessorParsePrometheusMetricNative processor;
+    ProcessorPromParseMetricNative processor;
     processor.SetContext(mContext);
 
     // success config
@@ -58,7 +58,7 @@ void ProcessorParsePrometheusMetricUnittest::TestProcess() {
     // make config
     Json::Value config;
 
-    ProcessorParsePrometheusMetricNative processor;
+    ProcessorPromParseMetricNative processor;
     processor.SetContext(mContext);
 
     string configStr;

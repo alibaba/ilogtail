@@ -97,7 +97,6 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
-
     APSARA_TEST_TRUE(scraperGroup->mTargetSubscriberSchedulerMap.empty());
     scraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
 

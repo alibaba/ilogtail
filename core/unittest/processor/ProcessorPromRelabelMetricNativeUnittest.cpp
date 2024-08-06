@@ -17,13 +17,13 @@
 #include "MetricEvent.h"
 #include "TextParser.h"
 #include "common/JsonUtil.h"
-#include "processor/inner/ProcessorRelabelMetricNative.h"
+#include "processor/inner/ProcessorPromRelabelMetricNative.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
 
 namespace logtail {
-class ProcessorRelabelMetricNativeUnittest : public testing::Test {
+class ProcessorPromRelabelMetricNativeUnittest : public testing::Test {
 public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
 
@@ -33,9 +33,9 @@ public:
     PipelineContext mContext;
 };
 
-void ProcessorRelabelMetricNativeUnittest::TestInit() {
+void ProcessorPromRelabelMetricNativeUnittest::TestInit() {
     Json::Value config;
-    ProcessorRelabelMetricNative processor;
+    ProcessorPromRelabelMetricNative processor;
     processor.SetContext(mContext);
 
     // success config
@@ -70,11 +70,11 @@ void ProcessorRelabelMetricNativeUnittest::TestInit() {
     APSARA_TEST_TRUE(processor.Init(config));
 }
 
-void ProcessorRelabelMetricNativeUnittest::TestProcess() {
+void ProcessorPromRelabelMetricNativeUnittest::TestProcess() {
     // make config
     Json::Value config;
 
-    ProcessorRelabelMetricNative processor;
+    ProcessorPromRelabelMetricNative processor;
     processor.SetContext(mContext);
 
     string configStr, errorMsg;
@@ -144,8 +144,8 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
     // test_metric8 is dropped by relabel config
 }
 
-UNIT_TEST_CASE(ProcessorRelabelMetricNativeUnittest, TestInit)
-UNIT_TEST_CASE(ProcessorRelabelMetricNativeUnittest, TestProcess)
+UNIT_TEST_CASE(ProcessorPromRelabelMetricNativeUnittest, TestInit)
+UNIT_TEST_CASE(ProcessorPromRelabelMetricNativeUnittest, TestProcess)
 
 } // namespace logtail
 

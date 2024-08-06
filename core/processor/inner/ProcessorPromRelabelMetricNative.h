@@ -24,7 +24,7 @@
 #include "prometheus/labels/Relabel.h"
 
 namespace logtail {
-class ProcessorRelabelMetricNative : public Processor {
+class ProcessorPromRelabelMetricNative : public Processor {
 public:
     static const std::string sName;
 
@@ -41,7 +41,7 @@ private:
     std::vector<RelabelConfig> mRelabelConfigs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorRelabelMetricNativeUnittest;
+    friend class ProcessorPromRelabelMetricNativeUnittest;
     friend class InputPrometheusUnittest;
 #endif
 };
