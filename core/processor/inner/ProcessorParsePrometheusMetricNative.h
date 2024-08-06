@@ -8,7 +8,7 @@
 #include "prometheus/labels/TextParser.h"
 
 namespace logtail {
-class ProcessorLogToMetricNative : public Processor {
+class ProcessorParsePrometheusMetricNative : public Processor {
 public:
     static const std::string sName;
 

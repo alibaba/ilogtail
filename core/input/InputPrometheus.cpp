@@ -26,7 +26,7 @@
 #include "logger/Logger.h"
 #include "pipeline/PipelineContext.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "processor/inner/ProcessorLogToMetricNative.h"
+#include "processor/inner/ProcessorParsePrometheusMetricNative.h"
 #include "processor/inner/ProcessorRelabelMetricNative.h"
 #include "prometheus/Constants.h"
 #include "prometheus/PrometheusInputRunner.h"
@@ -83,7 +83,7 @@ bool InputPrometheus::CreateInnerProcessors(const Json::Value& inputConfig, uint
     unique_ptr<ProcessorInstance> processor;
     {
         processor
-            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorLogToMetricNative::sName, to_string(++pluginIdx));
+            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParsePrometheusMetricNative::sName, to_string(++pluginIdx));
         if (!processor->Init(inputConfig, *mContext)) {
             return false;
         }

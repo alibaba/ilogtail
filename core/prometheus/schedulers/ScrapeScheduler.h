@@ -72,7 +72,7 @@ private:
     size_t mInputIndex;
     std::shared_ptr<Timer> mTimer;
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorLogToMetricNativeUnittest;
+    friend class ProcessorParsePrometheusMetricUnittest;
     friend class ScrapeSchedulerUnittest;
     std::vector<std::shared_ptr<ProcessQueueItem>> mItem;
 #endif

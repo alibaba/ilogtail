@@ -18,7 +18,7 @@
 #include "MetricEvent.h"
 #include "StringTools.h"
 #include "common/JsonUtil.h"
-#include "processor/inner/ProcessorLogToMetricNative.h"
+#include "processor/inner/ProcessorParsePrometheusMetricNative.h"
 #include "prometheus/Constants.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
@@ -27,7 +27,7 @@
 using namespace std;
 
 namespace logtail {
-class ProcessorLogToMetricNativeUnittest : public testing::Test {
+class ProcessorParsePrometheusMetricUnittest : public testing::Test {
 public:
     void SetUp() override { mContext.SetConfigName("project##config_0"); }
 
@@ -37,9 +37,9 @@ public:
     PipelineContext mContext;
 };
 
-void ProcessorLogToMetricNativeUnittest::TestInit() {
+void ProcessorParsePrometheusMetricUnittest::TestInit() {
     Json::Value config;
-    ProcessorLogToMetricNative processor;
+    ProcessorParsePrometheusMetricNative processor;
     processor.SetContext(mContext);
 
     // success config
@@ -54,11 +54,11 @@ void ProcessorLogToMetricNativeUnittest::TestInit() {
     APSARA_TEST_TRUE(processor.Init(config));
 }
 
-void ProcessorLogToMetricNativeUnittest::TestProcess() {
+void ProcessorParsePrometheusMetricUnittest::TestProcess() {
     // make config
     Json::Value config;
 
-    ProcessorLogToMetricNative processor;
+    ProcessorParsePrometheusMetricNative processor;
     processor.SetContext(mContext);
 
     string configStr;
@@ -121,8 +121,8 @@ void ProcessorLogToMetricNativeUnittest::TestProcess() {
     APSARA_TEST_EQUAL("test_metric8", eventGroup.GetEvents().at(7).Cast<MetricEvent>().GetName());
 }
 
-UNIT_TEST_CASE(ProcessorLogToMetricNativeUnittest, TestInit)
-UNIT_TEST_CASE(ProcessorLogToMetricNativeUnittest, TestProcess)
+UNIT_TEST_CASE(ProcessorParsePrometheusMetricUnittest, TestInit)
+UNIT_TEST_CASE(ProcessorParsePrometheusMetricUnittest, TestProcess)
 
 } // namespace logtail
 
