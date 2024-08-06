@@ -568,25 +568,22 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     std::string configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
-                    "Filter": 
-                    {
-                        "NamespaceFilter": [
-                            {
-                                "NamespaceType": "Pid",
-                                "ValueList": [
-                                    "4026531833"
-                                ]
-                            },
-                            {
-                                "NamespaceType": "Mnt",
-                                "ValueList": [
-                                    "4026531834"
-                                ]
-                            }
-                        ]
-                    }
+                    "NamespaceFilter": [
+                        {
+                            "NamespaceType": "Pid",
+                            "ValueList": [
+                                "4026531833"
+                            ]
+                        },
+                        {
+                            "NamespaceType": "Mnt",
+                            "ValueList": [
+                                "4026531834"
+                            ]
+                        }
+                    ]
                 }
             ]
         }
@@ -643,10 +640,10 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     std::string configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80],
                         "SourceAddrBlackList": ["127.0.0.1/8"],
@@ -655,7 +652,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
                 },
                 {
                     "CallName": ["tcp_sendmsg"],
-                    "Filter": {
+                    "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80]
                     }
@@ -715,10 +712,10 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     std::string configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ConfigList": [
+            "ProbeConfigList": [
                 {
                     "CallName": ["security_file_permission"],
-                    "Filter": [
+                    "FilePathFilter": [
                         {
                             "FilePath": "/etc",
                             "FileName": "passwd"
