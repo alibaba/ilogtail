@@ -161,12 +161,7 @@ func (m *DeferredDeletionMetaStore) handleDeferredDeleteEvent(event *K8sMetaEven
 
 func (m *DeferredDeletionMetaStore) handleTimerEvent() {
 	// flush all
-	m.lock.Lock()
-	itemList := make([]*K8sMetaEvent, 0)
-	for _, item := range m.Items {
-		itemList = append(itemList, item)
-	}
-	m.lock.Unlock()
+	itemList := m.List()
 	for _, handler := range m.timerHandlers {
 		handler(itemList)
 	}
