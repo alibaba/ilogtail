@@ -66,7 +66,7 @@ void SourceManager::Init() {
   mBinaryPath = GetProcessExecutionDir();
   mFullLibName = "lib" + m_lib_name_ + ".so";
   for (auto& x : mRunning) {
-    x = 0;
+    x = false;
   }
 }
 
@@ -153,19 +153,19 @@ bool SourceManager::CheckPluginRunning(nami::PluginType plugin_type) {
     return false;
   }
 
-  return mRunning[int(plugin_type)] > 0;
+  return mRunning[int(plugin_type)];
 }
 
 bool SourceManager::StartPlugin(nami::PluginType plugin_type, 
                 std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
-  bool running = CheckPluginRunning(plugin_type);
-  if (running && mRunning[int(plugin_type)] == 1) {
-    // already started ... 
-    LOG_WARNING(sLogger, ("plugin already started, skip loading", "only support ONE config") ("type:", int(plugin_type)));
-    return false;
-  }
+  // bool running = CheckPluginRunning(plugin_type);
+  // if (running && mRunning[int(plugin_type)] == 1) {
+  //   // already started ... 
+  //   LOG_WARNING(sLogger, ("plugin already started, skip loading", "only support ONE config") ("type:", int(plugin_type)));
+  //   return false;
+  // }
 
-  if (running && mRunning[int(plugin_type)] == 2) {
+  if (CheckPluginRunning(plugin_type)) {
     // plugin update ... 
     return UpdatePlugin(plugin_type, std::move(config));
   }
@@ -179,7 +179,7 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
     mConfig = conf;
-    mRunning[int(plugin_type)] = 1;
+    mRunning[int(plugin_type)] = true;
     return true;
 #endif
   void* f = mFuncs[(int)ebpf_func::EBPF_INIT];
@@ -189,7 +189,7 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
   }
   auto init_f = (init_func)f;
   int res = init_f(conf);
-  if (!res) mRunning[int(plugin_type)] = 1;
+  if (!res) mRunning[int(plugin_type)] = true;
   return !res;
 }
 
@@ -217,7 +217,7 @@ bool SourceManager::UpdatePlugin(nami::PluginType plugin_type,
 
   auto update_f = (update_func)f;
   int res = update_f(conf);
-  if (!res) mRunning[int(plugin_type)] = 1;
+  if (!res) mRunning[int(plugin_type)] = true;
   return !res;
 }
 
@@ -250,7 +250,6 @@ bool SourceManager::SuspendPlugin(nami::PluginType plugin_type) {
     return false;
   }
 
-  mRunning[int(plugin_type)] = 2;
   return true;
 }
 
@@ -266,7 +265,7 @@ bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
 
 #ifdef APSARA_UNIT_TEST_MAIN
   mConfig = config;
-  mRunning[int(plugin_type)] = 0;
+  mRunning[int(plugin_type)] = false;
   return true;
 #endif
 
@@ -278,7 +277,7 @@ bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
 
   auto remove_f = (remove_func)f;
   int res = remove_f(config);
-  if (!res) mRunning[int(plugin_type)] = 0;
+  if (!res) mRunning[int(plugin_type)] = false;
   return !res;
 }
 

@@ -45,6 +45,8 @@ public:
 
     void Stop();
 
+    std::string CheckLoadedPipelineName(nami::PluginType type);
+
     bool EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
@@ -69,6 +71,8 @@ private:
     std::unique_ptr<SecurityHandler> mNetworkSecureCB;
     std::unique_ptr<SecurityHandler> mProcessSecureCB;
     std::unique_ptr<SecurityHandler> mFileSecureCB;
+
+    std::array<std::string, (int)nami::PluginType::MAX> mLoadedPipeline = {};
 
     eBPFAdminConfig mAdminConfig;
     volatile bool mInited = false;

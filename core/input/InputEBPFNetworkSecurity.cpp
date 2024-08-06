@@ -16,7 +16,7 @@
 
 #include "ebpf/include/export.h"
 #include "ebpf/eBPFServer.h"
-
+#include "logger/Logger.h"
 
 using namespace std;
 
@@ -24,7 +24,17 @@ namespace logtail {
 
 const std::string InputEBPFNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
 
+// enable: init -> start
+// update: init -> stop(false) -> start
+// stop: stop(true)
 bool InputEBPFNetworkSecurity::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+    std::string prev_pipeline_name = ebpf::eBPFServer::GetInstance()->CheckLoadedPipelineName(nami::PluginType::NETWORK_SECURITY);
+    std::string pipeline_name = mContext->GetConfigName();
+    if (prev_pipeline_name.size() && prev_pipeline_name != pipeline_name) {
+        LOG_WARNING(sLogger, ("pipeline already loaded", "NETWORK_SECURITY")("prev pipeline", prev_pipeline_name)("curr pipeline", pipeline_name));
+        return false;
+    }
+
     return mSecurityOptions.Init(ebpf::SecurityFilterType::NETWORK, config, mContext, sName);
 }
 

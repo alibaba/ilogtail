@@ -66,6 +66,14 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
                         const logtail::PipelineContext* ctx, 
                         const std::variant<SecurityOptions*, nami::ObserverProcessOption*, nami::ObserverFileOption*, nami::ObserverNetworkOption*> options) {
 
+    std::string prev_pipeline_name = CheckLoadedPipelineName(type);
+    if (prev_pipeline_name.size() && prev_pipeline_name != pipeline_name) {
+        LOG_WARNING(sLogger, ("pipeline already loaded, plugin type", int(type))("prev pipeline", prev_pipeline_name)("curr pipeline", pipeline_name));
+        return false;
+    }
+
+    mLoadedPipeline[int(type)] = pipeline_name;
+
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;
     bool ret = false;
@@ -136,7 +144,13 @@ bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_
 }
 
 bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginType type) {
+    std::string prev_pipeline = CheckLoadedPipelineName(type);
+    if (prev_pipeline == pipeline_name) mLoadedPipeline[int(type)] = "";
     return mSourceManager->StopPlugin(type);;
+}
+
+std::string eBPFServer::CheckLoadedPipelineName(nami::PluginType type) {
+    return mLoadedPipeline[int(type)];
 }
 
 bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginType type) {

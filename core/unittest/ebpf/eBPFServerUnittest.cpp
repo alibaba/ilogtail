@@ -618,7 +618,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::PROCESS_SECURITY);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mCtx, nullptr);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mPluginIdx, 0);
-    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::PROCESS_SECURITY)] == 2);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::PROCESS_SECURITY)]);
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "test", 0,
@@ -689,7 +689,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::NETWORK_SECURITY);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mCtx, nullptr);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mPluginIdx, 0);
-    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_SECURITY)] == 2);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_SECURITY)]);
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "input_ebpf_sockettraceprobe_security", 0,
@@ -762,7 +762,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::FILE_SECURITY);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mCtx, nullptr);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mPluginIdx, 0);
-    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::FILE_SECURITY)] == 2);
+    EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::FILE_SECURITY)]);
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
         "input_ebpf_fileprobe_security", 0,
