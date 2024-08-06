@@ -500,8 +500,8 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                            const PipelineContext* mContext,
                            const std::string& sName) {
     std::string errorMsg;
-    // ProbeConfigList (Mandatory)
-    if (!IsValidList(config, "ProbeConfigList", errorMsg)) {
+    // ProbeConfig (Mandatory)
+    if (!IsValidList(config, "ProbeConfig", errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
                            mContext->GetAlarm(),
                            errorMsg,
@@ -511,7 +511,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                            mContext->GetLogstoreName(),
                            mContext->GetRegion());
     }
-    for (auto& innerConfig : config["ProbeConfigList"]) {
+    for (auto& innerConfig : config["ProbeConfig"]) {
         nami::SecurityOption thisSecurityOption;
 
         std::string errorMsg;

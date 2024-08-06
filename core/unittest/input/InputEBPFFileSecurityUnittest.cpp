@@ -56,7 +56,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
@@ -86,7 +86,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
@@ -131,7 +131,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
@@ -153,7 +153,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
@@ -181,7 +181,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
@@ -202,7 +202,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FileName": "passwd"

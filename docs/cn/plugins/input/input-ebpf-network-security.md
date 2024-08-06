@@ -13,17 +13,17 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_network\_security  |
-|  ProbeConfigList  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ProbeConfigList.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ProbeConfigList.AddrFilter  |  object  |  是  |  /  |  过滤参数  |
-|  ProbeConfigList.AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
-|  ProbeConfigList.AddrFilter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
-|  ProbeConfigList.AddrFilter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
-|  ProbeConfigList.AddrFilter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
-|  ProbeConfigList.AddrFilter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
-|  ProbeConfigList.AddrFilter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
-|  ProbeConfigList.AddrFilter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
-|  ProbeConfigList.AddrFilter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
+|  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
+|  ProbeConfig.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
+|  ProbeConfig.AddrFilter  |  object  |  是  |  /  |  过滤参数  |
+|  ProbeConfig.AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
+|  ProbeConfig.AddrFilter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
+|  ProbeConfig.AddrFilter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
+|  ProbeConfig.AddrFilter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
+|  ProbeConfig.AddrFilter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
+|  ProbeConfig.AddrFilter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
+|  ProbeConfig.AddrFilter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
+|  ProbeConfig.AddrFilter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
 
 ## 样例
 
@@ -41,7 +41,7 @@ TODO
 enable: true
 inputs:
   - Type: input_ebpf_sockettraceprobe_security
-    ProbeConfigList:
+    ProbeConfig:
       - CallName: 
         - "tcp_connect"
         - "tcp_close"

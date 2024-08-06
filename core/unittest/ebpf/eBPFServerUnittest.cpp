@@ -568,7 +568,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     std::string configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "NamespaceFilter": [
                         {
@@ -640,7 +640,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     std::string configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
                     "AddrFilter": {
@@ -712,7 +712,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     std::string configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [

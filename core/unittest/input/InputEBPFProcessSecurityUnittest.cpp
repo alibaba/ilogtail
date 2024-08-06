@@ -54,7 +54,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "NamespaceFilter": [
                         {
@@ -90,7 +90,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "NamespaceBlackFilter": [
                         {
@@ -126,7 +126,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                 }
             ]
@@ -150,7 +150,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "NamespaceBlackAAAAAAFilter": [
                         {
@@ -175,7 +175,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "NamespaceBlackFilter": [
                         {
@@ -207,7 +207,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     // configStr = R"(
     //     {
     //         "Type": "input_ebpf_processprobe_security",
-    //         "ProbeConfigList": [
+    //         "ProbeConfig": [
     //             {
 //                     "NamespaceFilter": [
 //                         {
@@ -234,7 +234,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {   
                     {
                         "NamespaceType": "Pid",

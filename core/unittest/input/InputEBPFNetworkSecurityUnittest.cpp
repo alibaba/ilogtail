@@ -54,7 +54,7 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
                     "AddrFilter": {
@@ -106,7 +106,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
                     "AddrFilter": {
@@ -151,7 +151,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
                     "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
@@ -175,7 +175,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     configStr = R"(
         {
             "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfigList": [
+            "ProbeConfig": [
                 {
                     "CallName": ["tcp_connect", "tcp_close"],
                     "AddrFilter": {
