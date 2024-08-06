@@ -57,8 +57,15 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
 }
 
 void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
+    if (response.mStatusCode == 304) {
+        // not modified
+        return;
+    }
     if (response.mStatusCode != 200) {
         return;
+    }
+    if (response.mHeader.count(prometheus::ETAG)) {
+        mETag = response.mHeader.at(prometheus::ETAG);
     }
     const string& content = response.mBody;
     vector<Labels> targetGroup;
@@ -238,6 +245,9 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
     httpHeader[prometheus::ACCEPT] = prometheus::APPLICATION_JSON;
     httpHeader[prometheus::X_PROMETHEUS_REFRESH_INTERVAL_SECONDS] = ToString(prometheus::RefeshIntervalSeconds);
     httpHeader[prometheus::USER_AGENT] = prometheus::PROMETHEUS_PREFIX + mPodName;
+    if (!mETag.empty()) {
+        httpHeader[prometheus::IF_NONE_MATCH] = mETag;
+    }
     auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
                                                      false,
                                                      mServiceHost,

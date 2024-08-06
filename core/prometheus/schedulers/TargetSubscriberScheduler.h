@@ -75,6 +75,8 @@ private:
     std::string mJobName;
     std::shared_ptr<Timer> mTimer;
 
+    std::string mETag;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TargetSubscriberSchedulerUnittest;
     friend class InputPrometheusUnittest;
