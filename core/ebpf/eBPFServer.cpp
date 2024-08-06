@@ -82,7 +82,6 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     switch(type) {
     case nami::PluginType::PROCESS_SECURITY: {
         nami::ProcessConfig pconfig;
-        // pconfig.process_security_cb_ = std::bind(&SecurityHandler::handle, mProcessSecureCB.get(), std::placeholders::_1);
         pconfig.process_security_cb_ = [this](auto events) { return mProcessSecureCB->handle(std::move(events)); };
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         pconfig.options_ = opts->mOptionList;
@@ -94,8 +93,6 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     case nami::PluginType::NETWORK_OBSERVE:{
         nami::NetworkObserveConfig nconfig;
-        // nconfig.measure_cb_ = std::bind(&MeterHandler::handle, mMeterCB.get(), std::placeholders::_1, std::placeholders::_2);
-        // nconfig.span_cb_ = std::bind(&SpanHandler::handle, mSpanCB.get(), std::placeholders::_1);
         nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
         nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
         config = std::move(nconfig);
@@ -107,7 +104,6 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     case nami::PluginType::NETWORK_SECURITY:{
         nami::NetworkSecurityConfig nconfig;
-        // nconfig.network_security_cb_ = std::bind(&SecurityHandler::handle, mNetworkSecureCB.get(), std::placeholders::_1);
         nconfig.network_security_cb_ = [this](auto events) { return mNetworkSecureCB->handle(std::move(events)); };
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         nconfig.options_ = opts->mOptionList;
@@ -119,7 +115,6 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     case nami::PluginType::FILE_SECURITY:{
         nami::FileSecurityConfig fconfig;
-        // fconfig.file_security_cb_ = std::bind(&SecurityHandler::handle, mFileSecureCB.get(), std::placeholders::_1);
         fconfig.file_security_cb_ = [this](auto events) { return mFileSecureCB->handle(std::move(events)); };
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         fconfig.options_ = opts->mOptionList;
