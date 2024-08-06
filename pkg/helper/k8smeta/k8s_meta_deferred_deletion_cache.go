@@ -55,12 +55,12 @@ func (m *DeferredDeletionMetaStore) Get(key []string) map[string][]*K8sMetaEvent
 	defer m.lock.RUnlock()
 	result := make(map[string][]*K8sMetaEvent)
 	for _, k := range key {
-		if realKeys, ok := m.Index[k]; !ok {
+		realKeys, ok := m.Index[k]
+		if !ok {
 			return nil
-		} else {
-			for _, realKey := range realKeys {
-				result[k] = append(result[k], m.Items[realKey])
-			}
+		}
+		for _, realKey := range realKeys {
+			result[k] = append(result[k], m.Items[realKey])
 		}
 	}
 	return result
