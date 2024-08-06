@@ -253,7 +253,7 @@ bool InitSecurityFileFilter(const Json::Value& config,
                             const PipelineContext* mContext,
                             const std::string& sName) {
     std::string errorMsg;
-    for (auto& fileFilterItem : config["Filter"]) {
+    for (auto& fileFilterItem : config["FilePathFilter"]) {
         nami::SecurityFileFilterItem thisFileFilterItem;
         // FilePath (Mandatory)
         if (!GetMandatoryStringParam(fileFilterItem, "FilePath", thisFileFilterItem.mFilePath, errorMsg)) {
