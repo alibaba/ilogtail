@@ -574,6 +574,8 @@ bool PipelineConfig::Parse() {
                                    mRegion);
             }
             mRouter.emplace_back(i, itr);
+        } else {
+            mRouter.emplace_back(i, nullptr);
         }
     }
 

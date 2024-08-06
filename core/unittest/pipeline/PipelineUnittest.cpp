@@ -279,9 +279,8 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
-    APSARA_TEST_TRUE(pipeline->mRouter.has_value());
-    APSARA_TEST_EQUAL(1U, pipeline->mRouter->mConditions.size());
-    APSARA_TEST_EQUAL(2U, pipeline->mRouter->mFlusherCnt);
+    APSARA_TEST_EQUAL(1U, pipeline->mRouter.mConditions.size());
+    APSARA_TEST_EQUAL(1U, pipeline->mRouter.mAlwaysMatchedFlusherIdx.size());
 }
 
 void PipelineUnittest::OnFailedInit() const {
@@ -2778,6 +2777,10 @@ void PipelineUnittest::TestSend() const {
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
+        vector<pair<size_t, const Json::Value*>> configs;
+        configs.emplace_back(0, nullptr);
+        configs.emplace_back(1, nullptr);
+        pipeline.mRouter.Init(configs, ctx);
         {
             // all valid
             vector<PipelineEventGroup> group;
@@ -2791,6 +2794,8 @@ void PipelineUnittest::TestSend() const {
             vector<PipelineEventGroup> group;
             group.emplace_back(make_shared<SourceBuffer>());
             APSARA_TEST_FALSE(pipeline.Send(std::move(group)));
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = true;
         }
     }
     {
@@ -2825,7 +2830,8 @@ void PipelineUnittest::TestSend() const {
         for (Json::Value::ArrayIndex i = 0; i < configJson.size(); ++i) {
             configs.emplace_back(i, &configJson[i]);
         }
-        pipeline.mRouter.emplace(2).Init(configs, ctx);
+        configs.emplace_back(configJson.size(), nullptr);
+        pipeline.mRouter.Init(configs, ctx);
 
         {
             vector<PipelineEventGroup> group;

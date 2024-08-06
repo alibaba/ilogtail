@@ -24,23 +24,22 @@ namespace logtail {
 
 bool Router::Init(std::vector<pair<size_t, const Json::Value*>> configs, const PipelineContext& ctx) {
     for (auto& item : configs) {
-        mConditions.emplace_back(item.first, Condition());
-        if (!mConditions.back().second.Init(*item.second, ctx)) {
-            return false;
+        if (item.second != nullptr) {
+            mConditions.emplace_back(item.first, Condition());
+            if (!mConditions.back().second.Init(*item.second, ctx)) {
+                return false;
+            }
+        } else {
+            mAlwaysMatchedFlusherIdx.push_back(item.first);
         }
     }
     return true;
 }
 
 vector<size_t> Router::Route(const PipelineEventGroup& g) const {
-    vector<size_t> res;
-    for (size_t i = 0, condIdx = 0; i < mFlusherCnt; ++i) {
-        if (condIdx < mConditions.size() && mConditions[condIdx].first == i) {
-            if (mConditions[condIdx].second.Check(g)) {
-                res.push_back(i);
-            }
-            ++condIdx;
-        } else {
+    vector<size_t> res(mAlwaysMatchedFlusherIdx);
+    for (size_t i = 0; i < mConditions.size(); ++i) {
+        if (mConditions[i].second.Check(g)) {
             res.push_back(i);
         }
     }

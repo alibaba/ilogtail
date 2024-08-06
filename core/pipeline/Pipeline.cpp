@@ -157,11 +157,9 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ++mPluginCntMap["flushers"][name];
     }
 
-    if (!config.mRouter.empty()) {
-        // route is only enabled in native flushing mode, thus the index in config is the same as that in mFlushers
-        if (!mRouter.emplace(mFlushers.size()).Init(config.mRouter, mContext)) {
-            return false;
-        }
+    // route is only enabled in native flushing mode, thus the index in config is the same as that in mFlushers
+    if (!mRouter.Init(config.mRouter, mContext)) {
+        return false;
     }
 
     for (auto detail : config.mExtensions) {
@@ -297,16 +295,9 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputInd
 }
 
 bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
-    static vector<size_t> allFlusherIdx(mFlushers.size());
-    static bool isInited = false;
-    if (!isInited) {
-        iota(allFlusherIdx.begin(), allFlusherIdx.end(), 0);
-        isInited = true;
-    }
-    
     bool allSucceeded = true;
     for (auto& group : groupList) {
-        auto flusherIdx = mRouter ? mRouter->Route(group) : allFlusherIdx;
+        auto flusherIdx = mRouter.Route(group);
         for (size_t i = 0; i < flusherIdx.size(); ++i) {
             if (i + 1 != flusherIdx.size()) {
                 allSucceeded = mFlushers[flusherIdx[i]]->Send(group.Copy()) && allSucceeded;

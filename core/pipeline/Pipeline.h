@@ -19,7 +19,6 @@
 #include <json/json.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -70,7 +69,7 @@ private:
     std::vector<std::unique_ptr<InputInstance>> mInputs;
     std::vector<std::unique_ptr<ProcessorInstance>> mProcessorLine;
     std::vector<std::unique_ptr<FlusherInstance>> mFlushers;
-    std::optional<Router> mRouter;
+    Router mRouter;
     Json::Value mGoPipelineWithInput;
     Json::Value mGoPipelineWithoutInput;
     mutable PipelineContext mContext;

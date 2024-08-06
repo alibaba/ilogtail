@@ -30,14 +30,12 @@ class Flusher;
 
 class Router {
 public:
-    Router(size_t cnt): mFlusherCnt(cnt) {}
-
     bool Init(std::vector<std::pair<size_t, const Json::Value*>> config, const PipelineContext& ctx);
     std::vector<size_t> Route(const PipelineEventGroup& g) const;
 
 private:
     std::vector<std::pair<size_t, Condition>> mConditions;
-    size_t mFlusherCnt = 0;
+    std::vector<size_t> mAlwaysMatchedFlusherIdx;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class RouterUnittest;

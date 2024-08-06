@@ -48,7 +48,7 @@ void RouterUnittest::TestInit() {
             configs.emplace_back(i, &configJson[i]);
         }
 
-        Router router(2);
+        Router router;
         APSARA_TEST_TRUE(router.Init(configs, ctx));
         APSARA_TEST_EQUAL(1U, router.mConditions.size());
         APSARA_TEST_EQUAL(0U, router.mConditions[0].first);
@@ -67,7 +67,7 @@ void RouterUnittest::TestInit() {
             configs.emplace_back(i, &configJson[i]);
         }
 
-        Router router(2);
+        Router router;
         APSARA_TEST_FALSE(router.Init(configs, ctx));
     }
     {
@@ -82,7 +82,7 @@ void RouterUnittest::TestInit() {
             configs.emplace_back(i, &configJson[i]);
         }
 
-        Router router(2);
+        Router router;
         APSARA_TEST_FALSE(router.Init(configs, ctx));
     }
 }
@@ -103,16 +103,17 @@ void RouterUnittest::TestRoute() {
     for (Json::Value::ArrayIndex i = 0; i < configJson.size(); ++i) {
         configs.emplace_back(i, &configJson[i]);
     }
+    configs.emplace_back(configJson.size(), nullptr);
 
-    Router router(2);
+    Router router;
     router.Init(configs, ctx);
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
         g.AddLogEvent();
         auto res = router.Route(g);
         APSARA_TEST_EQUAL(2U, res.size());
-        APSARA_TEST_EQUAL(0U, res[0]);
-        APSARA_TEST_EQUAL(1U, res[1]);
+        APSARA_TEST_EQUAL(1U, res[0]);
+        APSARA_TEST_EQUAL(0U, res[1]);
     }
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
