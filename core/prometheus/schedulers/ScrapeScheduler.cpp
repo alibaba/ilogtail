@@ -106,7 +106,7 @@ string ScrapeScheduler::GetId() const {
 }
 
 void ScrapeScheduler::ScheduleNext() {
-    auto future = std::make_shared<PromTaskFuture>();
+    auto future = std::make_shared<PromFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
         this->OnMetricResult(response);
         ExecDone();
@@ -134,10 +134,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                                      mScrapeConfigPtr->mQueryString,
                                                      mScrapeConfigPtr->mHeaders,
                                                      "",
-                                                     this->mFuture,
-                                                     mScrapeConfigPtr->mScrapeIntervalSeconds,
-                                                     execTime,
-                                                     mTimer);
+                                                     this->mFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;
 }

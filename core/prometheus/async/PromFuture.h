@@ -5,9 +5,9 @@
 
 namespace logtail {
 
-class PromTaskFuture {
+class PromFuture {
 public:
-    virtual ~PromTaskFuture() = default;
+    virtual ~PromFuture() = default;
 
     // Process should support oneshot and streaming mode.
     void Process(const HttpResponse&);

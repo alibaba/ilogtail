@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "prometheus/async/PromTaskFuture.h"
+#include "prometheus/async/PromFuture.h"
 
 namespace logtail {
 class BaseScheduler {
@@ -27,6 +27,6 @@ protected:
     int64_t mInterval = 0;
 
     ReadWriteLock mLock;
-    std::shared_ptr<PromTaskFuture> mFuture;
+    std::shared_ptr<PromFuture> mFuture;
 };
 } // namespace logtail

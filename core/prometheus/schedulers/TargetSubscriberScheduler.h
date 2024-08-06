@@ -59,14 +59,12 @@ public:
     uint64_t mUnRegisterMs;
 
 private:
-    bool ParseTargetGroups(const std::string& content, std::vector<Labels>& targetGroups);
+    bool ParseScrapeSchedulerGroup(const std::string& content, std::vector<Labels>& scrapeSchedulerGroup);
 
-    std::set<std::shared_ptr<ScrapeScheduler>> BuildScrapeSchedulerSet(std::vector<Labels>& targetGroups);
+    std::set<std::shared_ptr<ScrapeScheduler>> BuildScrapeSchedulerSet(std::vector<Labels>& scrapeSchedulerGroup);
 
     std::unique_ptr<TimerEvent> BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime);
     void UpdateScrapeScheduler(std::set<std::shared_ptr<ScrapeScheduler>>&);
-
-    uint64_t GetRandSleep(const std::string& hash) const;
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 

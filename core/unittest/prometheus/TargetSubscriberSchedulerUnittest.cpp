@@ -32,7 +32,6 @@ namespace logtail {
 class TargetSubscriberSchedulerUnittest : public ::testing::Test {
 public:
     void OnInitScrapeJobEvent();
-    void OnGetRandSleep();
     void TestProcess();
     void TestParseTargetGroups();
 
@@ -154,13 +153,7 @@ void TargetSubscriberSchedulerUnittest::OnInitScrapeJobEvent() {
     APSARA_TEST_EQUAL(targetSubscriber->mJobName, "_kube-state-metrics");
 }
 
-void TargetSubscriberSchedulerUnittest::OnGetRandSleep() {
-    std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
-    APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
-    auto rand1 = targetSubscriber->GetRandSleep("192.168.22.7:8080");
-    auto rand2 = targetSubscriber->GetRandSleep("192.168.22.8:8080");
-    APSARA_TEST_NOT_EQUAL(rand1, rand2);
-}
+
 
 void TargetSubscriberSchedulerUnittest::TestProcess() {
     std::shared_ptr<TargetSubscriberScheduler> targetSubscriber = std::make_shared<TargetSubscriberScheduler>();
@@ -182,12 +175,11 @@ void TargetSubscriberSchedulerUnittest::TestParseTargetGroups() {
     APSARA_TEST_TRUE(targetSubscriber->Init(mConfig["ScrapeConfig"]));
 
     std::vector<Labels> newScrapeSchedulerSet;
-    APSARA_TEST_TRUE(targetSubscriber->ParseTargetGroups(mHttpResponse.mBody, newScrapeSchedulerSet));
+    APSARA_TEST_TRUE(targetSubscriber->ParseScrapeSchedulerGroup(mHttpResponse.mBody, newScrapeSchedulerSet));
     APSARA_TEST_EQUAL(2UL, newScrapeSchedulerSet.size());
 }
 
 UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, OnInitScrapeJobEvent)
-UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, OnGetRandSleep)
 UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, TestProcess)
 UNIT_TEST_CASE(TargetSubscriberSchedulerUnittest, TestParseTargetGroups)
 

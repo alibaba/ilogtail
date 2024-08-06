@@ -103,7 +103,8 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     APSARA_TEST_EQUAL((size_t)1, scraperGroup->mTargetSubscriberSchedulerMap.count("test_job"));
     scraperGroup->RemoveScrapeJob("test_job");
 
-    APSARA_TEST_TRUE(scraperGroup->mTargetSubscriberSchedulerMap.find("test_job") == scraperGroup->mTargetSubscriberSchedulerMap.end());
+    APSARA_TEST_TRUE(scraperGroup->mTargetSubscriberSchedulerMap.find("test_job")
+                     == scraperGroup->mTargetSubscriberSchedulerMap.end());
 
     // stop scraper group to clean up
     scraperGroup->Stop();

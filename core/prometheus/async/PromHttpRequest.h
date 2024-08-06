@@ -2,8 +2,8 @@
 #include <cstdint>
 #include <string>
 
-#include "prometheus/Mock.h"
-#include "prometheus/async/PromTaskFuture.h"
+#include "common/http/HttpRequest.h"
+#include "prometheus/async/PromFuture.h"
 
 
 namespace logtail {
@@ -18,10 +18,7 @@ public:
                     const std::string& query,
                     const std::map<std::string, std::string>& header,
                     const std::string& body,
-                    std::shared_ptr<PromTaskFuture> event,
-                    uint64_t intervalSeconds,
-                    std::chrono::steady_clock::time_point execTime,
-                    std::shared_ptr<Timer> timer);
+                    std::shared_ptr<PromFuture> future);
     PromHttpRequest(const PromHttpRequest&) = default;
     ~PromHttpRequest() override = default;
 
@@ -29,15 +26,9 @@ public:
     [[nodiscard]] bool IsContextValid() const override;
 
 private:
-    [[nodiscard]] std::unique_ptr<TimerEvent> BuildTimerEvent() const;
-    std::chrono::steady_clock::time_point GetNextExecTime() const;
     void SetNextExecTime(std::chrono::steady_clock::time_point execTime);
 
-    std::shared_ptr<PromTaskFuture> mFuture;
-
-    int64_t mIntervalSeconds;
-    std::chrono::steady_clock::time_point mExecTime;
-    std::shared_ptr<Timer> mTimer;
+    std::shared_ptr<PromFuture> mFuture;
 };
 
 } // namespace logtail

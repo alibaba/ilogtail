@@ -1,10 +1,10 @@
-#include "prometheus/async/PromTaskFuture.h"
+#include "prometheus/async/PromFuture.h"
 
 #include "common/Lock.h"
 
 namespace logtail {
 
-void PromTaskFuture::Process(const HttpResponse& response) {
+void PromFuture::Process(const HttpResponse& response) {
     if (IsCancelled()) {
         return;
     }
@@ -13,16 +13,16 @@ void PromTaskFuture::Process(const HttpResponse& response) {
     }
 }
 
-void PromTaskFuture::AddDoneCallback(std::function<void(const HttpResponse&)>&& callback) {
+void PromFuture::AddDoneCallback(std::function<void(const HttpResponse&)>&& callback) {
     mDoneCallbacks.emplace_back(std::move(callback));
 }
 
-void PromTaskFuture::Cancel() {
+void PromFuture::Cancel() {
     WriteLock lock(mStateRWLock);
     mValidState = false;
 }
 
-bool PromTaskFuture::IsCancelled() {
+bool PromFuture::IsCancelled() {
     ReadLock lock(mStateRWLock);
     return mValidState;
 }

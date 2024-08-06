@@ -30,7 +30,7 @@
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
 #include "prometheus/async//PromHttpRequest.h"
-#include "prometheus/async//PromTaskFuture.h"
+#include "prometheus/async//PromFuture.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
 
 using namespace std;
@@ -62,7 +62,7 @@ void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
     }
     const string& content = response.mBody;
     vector<Labels> targetGroup;
-    if (!ParseTargetGroups(content, targetGroup)) {
+    if (!ParseScrapeSchedulerGroup(content, targetGroup)) {
         return;
     }
     set<shared_ptr<ScrapeScheduler>> newScrapeSchedulerSet = BuildScrapeSchedulerSet(targetGroup);
@@ -106,21 +106,7 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeSched
     }
 }
 
-
-uint64_t TargetSubscriberScheduler::GetRandSleep(const string& hash) const {
-    const string& key = hash;
-    uint64_t h = XXH64(key.c_str(), key.length(), 0);
-    uint64_t randSleep
-        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
-    uint64_t sleepOffset
-        = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
-    if (randSleep < sleepOffset) {
-        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
-    }
-    randSleep -= sleepOffset;
-    return randSleep;
-}
-bool TargetSubscriberScheduler::ParseTargetGroups(const std::string& content, std::vector<Labels>& targetGroups) {
+bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& content, std::vector<Labels>& scrapeSchedulerGroup) {
     string errs;
     Json::Value root;
     if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
@@ -153,7 +139,9 @@ bool TargetSubscriberScheduler::ParseTargetGroups(const std::string& content, st
         // Parse labels
         Labels labels;
         labels.Push(Label{prometheus::JOB, mJobName});
-        labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
+        if (!targets.empty()) {
+            labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
+        }
         labels.Push(Label{prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme});
         labels.Push(Label{prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath});
         labels.Push(
@@ -169,7 +157,7 @@ bool TargetSubscriberScheduler::ParseTargetGroups(const std::string& content, st
                 labels.Push(Label{labelKey, element[prometheus::LABELS][labelKey].asString()});
             }
         }
-        targetGroups.push_back(labels);
+        scrapeSchedulerGroup.push_back(labels);
     }
     return true;
 }
@@ -198,7 +186,7 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
             try {
                 port = stoi(address.substr(m + 1));
             } catch (...) {
-                port = 9100;
+                continue;
             }
         }
 
@@ -222,7 +210,7 @@ string TargetSubscriberScheduler::GetId() const {
 }
 
 void TargetSubscriberScheduler::ScheduleNext() {
-    auto future = std::make_shared<PromTaskFuture>();
+    auto future = std::make_shared<PromFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
         this->OnSubscription(response);
         ExecDone();
@@ -255,10 +243,7 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
                                                      "collector_id=" + mPodName,
                                                      httpHeader,
                                                      "",
-                                                     this->mFuture,
-                                                     mInterval,
-                                                     execTime,
-                                                     mTimer);
+                                                     this->mFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
 
     return timerEvent;
