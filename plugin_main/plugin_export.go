@@ -279,7 +279,7 @@ func initPluginBase(cfgStr string) int {
 			instance := k8smeta.GetMetaManagerInstance()
 			err := instance.Init("")
 			if err != nil {
-				logger.Error(context.Background(), "K8S_META_INIT_FAIL", "init k8s meta manager", "fail")
+				logger.Error(context.Background(), "K8S_META_INIT_FAIL", "init k8s meta manager fail", err)
 				return
 			}
 			stopCh := make(chan struct{})
