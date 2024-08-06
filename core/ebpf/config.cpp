@@ -247,7 +247,6 @@ bool InitObserverNetworkOption(const Json::Value& config,
 }
 
 //////
-// 之后考虑将这几个函数拆分到input中的各个插件里面
 bool InitSecurityFileFilter(const Json::Value& config,
                             nami::SecurityFileFilter& thisFileFilter,
                             const PipelineContext* mContext,
