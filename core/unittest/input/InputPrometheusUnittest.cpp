@@ -212,12 +212,12 @@ void InputPrometheusUnittest::OnPipelineUpdate() {
     APSARA_TEST_TRUE(input->Init(configJson, pluginIndex, optionalGoPipeline));
 
     APSARA_TEST_TRUE(input->Start());
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("_arms-prom/node-exporter/0")
-                     != PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("_arms-prom/node-exporter/0")
+                     != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
 
     APSARA_TEST_TRUE(input->Stop(true));
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.find("_arms-prom/node-exporter/0")
-                     == PrometheusInputRunner::GetInstance()->mPrometheusInputsSet.end());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("_arms-prom/node-exporter/0")
+                     == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
 
 }
 

@@ -24,7 +24,6 @@
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
-#include "prometheus/ScraperGroup.h"
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
 
@@ -36,39 +35,41 @@ using namespace std;
 
 namespace logtail {
 
-PrometheusInputRunner::PrometheusInputRunner() {
+PrometheusInputRunner::PrometheusInputRunner() : mUnRegisterMs(0) {
     mIsStarted.store(false);
     mClient = std::make_unique<sdk::CurlClient>();
 
     mServiceHost = STRING_FLAG(SERVICE_HOST);
     mServicePort = INT32_FLAG(SERVICE_PORT);
     mPodName = STRING_FLAG(_pod_name_);
-
-    mScraperGroup = make_unique<ScraperGroup>();
-
-    mScraperGroup->mServiceHost = mServiceHost;
-    mScraperGroup->mServicePort = mServicePort;
-    mScraperGroup->mPodName = mPodName;
+    mTimer = std::make_shared<Timer>();
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
 void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber) {
-    {
-        WriteLock lock(mReadWriteLock);
-        mPrometheusInputsSet.insert(targetSubscriber->GetId());
-    }
+    RemoveScrapeInput(targetSubscriber->GetId());
+
     targetSubscriber->mServiceHost = mServiceHost;
     targetSubscriber->mServicePort = mServicePort;
     targetSubscriber->mPodName = mPodName;
 
-    mScraperGroup->UpdateScrapeJob(std::move(targetSubscriber));
+    targetSubscriber->mUnRegisterMs = mUnRegisterMs;
+    targetSubscriber->SetTimer(mTimer);
+    targetSubscriber->SetFirstExecTime(std::chrono::steady_clock::now());
+    // 1. add subscriber to mTargetSubscriberSchedulerMap
+    {
+        WriteLock lock(mSubscriberMapRWLock);
+        mTargetSubscriberSchedulerMap[targetSubscriber->GetId()] = targetSubscriber;
+    }
+    // 2. build Ticker Event and add it to Timer
+    targetSubscriber->ScheduleNext();
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
-    mScraperGroup->RemoveScrapeJob(jobName);
-    {
-        WriteLock lock(mReadWriteLock);
-        mPrometheusInputsSet.erase(jobName);
+    WriteLock lock(mSubscriberMapRWLock);
+    if (mTargetSubscriberSchedulerMap.count(jobName)) {
+        mTargetSubscriberSchedulerMap[jobName]->Cancel();
+        mTargetSubscriberSchedulerMap.erase(jobName);
     }
 }
 
@@ -80,67 +81,77 @@ void PrometheusInputRunner::Start() {
     }
     mIsStarted.store(true);
 
-    // only register when operator exist
-    if (!mServiceHost.empty()) {
-        int retry = 0;
-        while (true) {
-            ++retry;
-            sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
-            if (httpResponse.statusCode != 200) {
-                LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
-                if (retry % 3 == 0) {
-                    LOG_INFO(sLogger, ("register failed, retried", ToString(retry)));
-                }
-            } else {
-                // register success
-                // response will be { "unregister_ms": 30000 }
-                if (!httpResponse.content.empty()) {
-                    string responseStr = httpResponse.content;
-                    string errMsg;
-                    Json::Value responseJson;
-                    if (!ParseJsonTable(responseStr, responseJson, errMsg)) {
-                        LOG_ERROR(sLogger, ("register failed, parse response failed", responseStr));
+    mThreadRes = std::async(launch::async, [this]() {
+        mTimer->Init();
+        // only register when operator exist
+        if (!mServiceHost.empty()) {
+            int retry = 0;
+            while (mIsThreadRunning.load()) {
+                ++retry;
+                sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
+                if (httpResponse.statusCode != 200) {
+                    LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
+                    if (retry % 3 == 0) {
+                        LOG_INFO(sLogger, ("register failed, retried", ToString(retry)));
                     }
-                    if (responseJson.isMember(prometheus::UNREGISTER_MS)
-                        && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
-                        mScraperGroup->mUnRegisterMs = responseJson[prometheus::UNREGISTER_MS].asUInt64();
+                } else {
+                    // register success
+                    // response will be { "unregister_ms": 30000 }
+                    if (!httpResponse.content.empty()) {
+                        string responseStr = httpResponse.content;
+                        string errMsg;
+                        Json::Value responseJson;
+                        if (!ParseJsonTable(responseStr, responseJson, errMsg)) {
+                            LOG_ERROR(sLogger, ("register failed, parse response failed", responseStr));
+                        }
+                        if (responseJson.isMember(prometheus::UNREGISTER_MS)
+                            && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
+                            mUnRegisterMs = responseJson[prometheus::UNREGISTER_MS].asUInt64();
+                        }
                     }
+                    LOG_INFO(sLogger, ("Register Success", mPodName));
+                    break;
                 }
-                break;
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-        LOG_INFO(sLogger, ("Register Success", mPodName));
-    }
-    mScraperGroup->Start();
+    });
 }
 
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
-    mIsStarted.store(false);
-    // only unregister when operator exist
-    if (!mServiceHost.empty()) {
-        for (int retry = 0; retry < 3; ++retry) {
-            sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::UNREGISTER_COLLECTOR_PATH);
-            if (httpResponse.statusCode != 200) {
-                LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
-            } else {
-                break;
-            }
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        LOG_INFO(sLogger, ("Unregister Success", mPodName));
+
+    if (!mIsStarted.load()) {
+        return;
     }
-    mScraperGroup->Stop();
+    mIsStarted.store(false);
+    mIsThreadRunning.store(false);
+
+    mTimer->Stop();
 
     {
-        WriteLock lock(mReadWriteLock);
-        mPrometheusInputsSet.clear();
+        WriteLock lock(mSubscriberMapRWLock);
+        mTargetSubscriberSchedulerMap.clear();
+    }
+    // only unregister when operator exist
+    if (!mServiceHost.empty()) {
+        auto res = std::async(launch::async, [this]() {
+            for (int retry = 0; retry < 3; ++retry) {
+                sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::UNREGISTER_COLLECTOR_PATH);
+                if (httpResponse.statusCode != 200) {
+                    LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
+                } else {
+                    LOG_INFO(sLogger, ("Unregister Success", mPodName));
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        });
     }
 }
 
-sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) {
+sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) const {
     map<string, string> httpHeader;
     httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
     sdk::HttpMessage httpResponse;
@@ -164,7 +175,7 @@ sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) {
 }
 
 bool PrometheusInputRunner::HasRegisteredPlugin() {
-    ReadLock lock(mReadWriteLock);
-    return !mPrometheusInputsSet.empty();
+    ReadLock lock(mSubscriberMapRWLock);
+    return !mTargetSubscriberSchedulerMap.empty();
 }
 }; // namespace logtail

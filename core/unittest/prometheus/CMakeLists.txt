@@ -28,9 +28,6 @@ target_link_libraries(target_subscriber_scheduler_unittest ${UT_BASE_TARGET})
 add_executable(scrape_scheduler_unittest ScrapeSchedulerUnittest.cpp)
 target_link_libraries(scrape_scheduler_unittest ${UT_BASE_TARGET})
 
-add_executable(scraper_group_unittest ScraperGroupUnittest.cpp)
-target_link_libraries(scraper_group_unittest ${UT_BASE_TARGET})
-
 add_executable(prometheus_input_runner_unittest PrometheusInputRunnerUnittest.cpp)
 target_link_libraries(prometheus_input_runner_unittest ${UT_BASE_TARGET})
 
@@ -49,7 +46,6 @@ gtest_discover_tests(labels_unittest)
 gtest_discover_tests(relabel_unittest)
 gtest_discover_tests(scrape_scheduler_unittest)
 gtest_discover_tests(target_subscriber_scheduler_unittest)
-gtest_discover_tests(scraper_group_unittest)
 gtest_discover_tests(prometheus_input_runner_unittest)
 gtest_discover_tests(textparser_unittest)
 gtest_discover_tests(textparser_benchmark)

@@ -21,7 +21,6 @@
 #include <string>
 
 #include "common/Lock.h"
-#include "prometheus/ScraperGroup.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
@@ -52,12 +51,12 @@ private:
     PrometheusInputRunner();
     ~PrometheusInputRunner() = default;
 
-    sdk::HttpMessage SendRegisterMessage(const std::string& url);
+    sdk::HttpMessage SendRegisterMessage(const std::string& url) const;
 
     std::atomic<bool> mIsStarted;
 
-    mutable ReadWriteLock mReadWriteLock;
-    std::unordered_set<std::string> mPrometheusInputsSet;
+    std::future<void> mThreadRes;
+    std::atomic<bool> mIsThreadRunning = true;
 
     std::unique_ptr<sdk::CurlClient> mClient;
 
@@ -65,7 +64,12 @@ private:
     int32_t mServicePort;
     std::string mPodName;
 
-    std::unique_ptr<ScraperGroup> mScraperGroup;
+    std::shared_ptr<Timer> mTimer;
+
+    ReadWriteLock mSubscriberMapRWLock;
+    std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
+
+    uint64_t mUnRegisterMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;
