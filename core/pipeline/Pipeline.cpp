@@ -73,8 +73,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string name = detail["Type"].asString();
-        unique_ptr<InputInstance> input
-            = PluginRegistry::GetInstance()->CreateInput(name, GenNextPluginMeta(false));
+        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
             if (!input->Init(detail, mContext, i, optionalGoPipeline)) {
@@ -120,6 +119,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     for (auto detail : config.mAggregators) {
+        GenNextPluginMeta(false);
         if (ShouldAddPluginToGoPipelineWithInput()) {
             AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithInput);
         } else {
@@ -160,6 +160,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     for (auto detail : config.mExtensions) {
+        GenNextPluginMeta(false);
         if (!mGoPipelineWithInput.isNull()) {
             AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithInput);
         }
@@ -366,8 +367,16 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
 void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    std::string typeAndId(plugin["Type"].asString().begin(), plugin["Type"].asString().end());
-    res["type"] = typeAndId + "/" + std::to_string(mPluginID.fetch_add(1));
+    if (plugin.isObject() && plugin.isMember("Type")) {
+        if (plugin["Type"].isString()) {
+            // Do not add mPluginID, GenNextPluginMeta is called before AddPluginToGoPipeline
+            res["type"] = plugin["Type"].asString() + "/" + std::to_string(mPluginID.load());
+        } else {
+            res["type"] = plugin["Type"];
+        }
+    } else {
+        res["type"] = "";
+    }
     res["detail"] = detail;
     dst[module].append(res);
 }
@@ -423,6 +432,15 @@ bool Pipeline::LoadGoPipelines() const {
         }
     }
     return true;
+}
+
+std::string Pipeline::GetNowPluginID() {
+    return std::to_string(mPluginID.load());
+}
+
+std::string Pipeline::GenNextPluginID() {
+    mPluginID.fetch_add(1);
+    return std::to_string(mPluginID.load());
 }
 
 PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {

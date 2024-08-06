@@ -35,9 +35,9 @@ func (wrapper *ProcessorWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
 
 func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol.Log {
 	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
-	startTime := time.Now()
+	startTime := time.Now().UnixMilli()
 	result := wrapper.Processor.ProcessLogs(logArray)
-	wrapper.procTimeMS.Add(time.Since(startTime).Milliseconds())
+	wrapper.procTimeMS.Add(time.Now().UnixMilli() - startTime)
 	wrapper.procOutRecordsTotal.Add(int64(len(result)))
 	return result
 }

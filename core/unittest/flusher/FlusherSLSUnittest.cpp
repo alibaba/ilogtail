@@ -26,6 +26,7 @@
 #include "flusher/sls/FlusherSLS.h"
 #include "flusher/sls/PackIdManager.h"
 #include "flusher/sls/SLSClientManager.h"
+#include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/ProcessQueueManager.h"
@@ -55,7 +56,10 @@ public:
     void OnGoPipelineSend();
 
 protected:
-    void SetUp() override { ctx.SetConfigName("test_config"); }
+    void SetUp() override {
+        ctx.SetConfigName("test_config");
+        ctx.SetPipeline(pipeline);
+    }
 
     void TearDown() override {
         PackIdManager::GetInstance()->mPackIdSeq.clear();
@@ -65,6 +69,7 @@ protected:
     }
 
 private:
+    Pipeline pipeline;
     PipelineContext ctx;
 };
 
@@ -344,7 +349,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
         {
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/4",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -354,11 +359,12 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
+    pipeline.mPluginID.store(4);
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     flusher->SetMetricsRecordRef(FlusherSLS::sName, "1", "1", "1");
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
+    APSARA_TEST_EQUAL(optionalGoPipelineJson.toStyledString(), optionalGoPipeline.toStyledString());
     SenderQueueManager::GetInstance()->Clear();
 }
 

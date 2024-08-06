@@ -58,6 +58,8 @@ public:
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
+    std::string GetNowPluginID();
+    std::string GenNextPluginID();
     PluginInstance::PluginMeta GenNextPluginMeta(bool lastOne);
 
 private:
@@ -81,7 +83,9 @@ private:
     friend class PipelineMock;
     friend class PipelineUnittest;
     friend class InputFileUnittest;
+    friend class InputContainerStdioUnittest;
     friend class ProcessorTagNativeUnittest;
+    friend class FlusherSLSUnittest;
 #endif
 };
 

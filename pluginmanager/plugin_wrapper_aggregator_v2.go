@@ -50,9 +50,11 @@ func (p *AggregatorWrapperV2) Init(pluginMeta *pipeline.PluginMeta) error {
 
 func (p *AggregatorWrapperV2) Record(events *models.PipelineGroupEvents, context pipeline.PipelineContext) error {
 	p.aggrInRecordsTotal.Add(int64(len(events.Events)))
+	startTime := time.Now()
 	err := p.Aggregator.Record(events, context)
 	if err == nil {
 		p.aggrOutRecordsTotal.Add(int64(len(events.Events)))
+		p.aggrTimeMS.Add(time.Since(startTime).Milliseconds())
 	}
 	return err
 }

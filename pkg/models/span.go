@@ -149,6 +149,62 @@ func (m *Span) GetObservedTimestamp() uint64 {
 	return 0
 }
 
+func (s *Span) GetSize() int64 {
+	if s == nil {
+		return 0
+	}
+
+	var size int64 = 0
+
+	// Calculate size of string fields
+	size += int64(len(s.TraceID))
+	size += int64(len(s.SpanID))
+	size += int64(len(s.ParentSpanID))
+	size += int64(len(s.Name))
+	size += int64(len(s.TraceState))
+
+	// Calculate size of Tags
+	if s.Tags.Len() > 0 {
+		sortedTags := s.Tags.SortTo(nil)
+		for _, tags := range sortedTags {
+			size += int64(len(tags.Key))
+			size += int64(len(tags.Value))
+		}
+	}
+
+	// Calculate size of Links
+	for _, link := range s.Links {
+		if link != nil {
+			size += int64(len(link.TraceID))
+			size += int64(len(link.SpanID))
+			size += int64(len(link.TraceState))
+			if link.Tags.Len() > 0 {
+				sortedTags := link.Tags.SortTo(nil)
+				for _, tags := range sortedTags {
+					size += int64(len(tags.Key))
+					size += int64(len(tags.Value))
+				}
+			}
+		}
+	}
+
+	// Calculate size of Events
+	for _, event := range s.Events {
+		if event != nil {
+			size += int64(len(event.Name))
+			if event.Tags.Len() > 0 {
+				sortedTags := event.Tags.SortTo(nil)
+				for _, tags := range sortedTags {
+					size += int64(len(tags.Key))
+					size += int64(len(tags.Value))
+				}
+			}
+		}
+	}
+
+	return size
+}
+
 func (m *Span) SetObservedTimestamp(timestamp uint64) {
 	if m != nil {
 		m.ObservedTimestamp = timestamp

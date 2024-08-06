@@ -81,6 +81,10 @@ func (m *Log) GetOffset() uint64 {
 	return 0
 }
 
+func (m *Log) GetSize() int64 {
+	return int64(len(m.GetBody()))
+}
+
 func (m *Log) SetOffset(offset uint64) {
 	if m != nil {
 		m.Offset = offset

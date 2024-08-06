@@ -56,6 +56,7 @@ protected:
     void SetUp() override {
         p.mName = "test_config";
         ctx.SetConfigName("test_config");
+        p.mPluginID.store(0);
         ctx.SetPipeline(p);
     }
 
@@ -204,7 +205,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
                 },
                 "inputs": [
                     {                
-                        "type": "metric_container_info",
+                        "type": "metric_container_info/2",
                         "detail": {
                             "CollectingContainersMeta": true,
                             "FilePattern": "*.log",
@@ -221,9 +222,10 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     optionalGoPipelineJson["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
+    PluginInstance::PluginMeta meta = ctx.GetPipeline().GenNextPluginMeta(false);
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
+    input->SetMetricsRecordRef(InputFile::sName, meta.mPluginID, meta.mNodeID, meta.mChildNodeID);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
     APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());

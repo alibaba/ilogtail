@@ -78,7 +78,7 @@ func (p *pluginv1Runner) AddDefaultFlusherIfEmpty() error {
 	if len(p.FlusherPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
 		category, options := flags.GetFlusherConfiguration()
-		pluginMeta := p.LogstoreConfig.genPluginMeta(category, true, false)
+		pluginMeta := p.LogstoreConfig.genPluginMeta(category, true, true)
 		if err := loadFlusher(pluginMeta, p.LogstoreConfig, options); err != nil {
 			return err
 		}

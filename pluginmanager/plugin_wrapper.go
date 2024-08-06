@@ -122,6 +122,7 @@ type FlusherWrapper struct {
 	Interval time.Duration
 
 	flusherInRecordsTotal      pipeline.CounterMetric
+	flusherInRecordsSizeBytes  pipeline.CounterMetric
 	flusherSuccessRecordsTotal pipeline.CounterMetric
 	flusherDiscardRecordsTotal pipeline.CounterMetric
 	flusherSuccessTimeMs       pipeline.LatencyMetric
@@ -134,6 +135,7 @@ func (w *FlusherWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 	w.MetricRecord = w.Config.Context.RegisterMetricRecord(labels)
 
 	w.flusherInRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, "flusher_in_records_total")
+	w.flusherInRecordsSizeBytes = helper.NewCounterMetricAndRegister(w.MetricRecord, "flusher_in_records_size_bytes")
 	w.flusherDiscardRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, "flusher_discard_records_total")
 	w.flusherSuccessRecordsTotal = helper.NewCounterMetricAndRegister(w.MetricRecord, "flusher_success_records_total")
 	w.flusherSuccessTimeMs = helper.NewLatencyMetricAndRegister(w.MetricRecord, "flusher_success_time_ms")

@@ -44,8 +44,9 @@ void InputInstanceUnittest::TestName() const {
 void InputInstanceUnittest::TestInit() const {
     unique_ptr<InputInstance> input = make_unique<InputInstance>(new InputMock(), PluginInstance::PluginMeta("0", "0", "1"));
     Json::Value config, opt;
+    Pipeline pipeline;
     PipelineContext context;
-    uint32_t pluginIdx = 0;
+    context.SetPipeline(pipeline);
     APSARA_TEST_TRUE(input->Init(config, context, 0U, opt));
     APSARA_TEST_EQUAL(&context, &input->GetPlugin()->GetContext());
     APSARA_TEST_EQUAL(0U, input->GetPlugin()->mIndex);
