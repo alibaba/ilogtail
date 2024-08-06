@@ -2809,11 +2809,6 @@ void PipelineUnittest::TestSend() const {
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
-        {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
-            flusher->Init(Json::Value(), ctx, tmp);
-            pipeline.mFlushers.emplace_back(std::move(flusher));
-        }
 
         Json::Value configJson;
         string errorMsg;
@@ -2821,9 +2816,8 @@ void PipelineUnittest::TestSend() const {
             [
                 {
                     "Type": "event_type",
-                    "Condition": "log"
-                },
-                "unmatched"
+                    "Value": "log"
+                }
             ]
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -2831,17 +2825,13 @@ void PipelineUnittest::TestSend() const {
         for (Json::Value::ArrayIndex i = 0; i < configJson.size(); ++i) {
             configs.emplace_back(i, &configJson[i]);
         }
-        pipeline.mRouter.emplace(3).Init(configs, ctx);
+        pipeline.mRouter.emplace(2).Init(configs, ctx);
 
         {
-            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[1]->GetPlugin()))->mIsValid
-                = false;
             vector<PipelineEventGroup> group;
             group.emplace_back(make_shared<SourceBuffer>());
             group[0].AddLogEvent();
             APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
-            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[1]->GetPlugin()))->mIsValid
-                = true;
         }
         {
             const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
