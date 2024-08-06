@@ -71,10 +71,10 @@ void ScraperGroupUnittest::OnUpdateScrapeJob() {
 
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
-    APSARA_TEST_TRUE(scraperGroup->mJobEventMap.empty());
+    APSARA_TEST_TRUE(scraperGroup->mTargetSubscriberSchedulerMap.empty());
     scraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
 
-    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mJobEventMap.count("test_job"));
+    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mTargetSubscriberSchedulerMap.count("test_job"));
 }
 
 void ScraperGroupUnittest::OnRemoveScrapeJob() {
@@ -98,13 +98,13 @@ void ScraperGroupUnittest::OnRemoveScrapeJob() {
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
 
-    APSARA_TEST_TRUE(scraperGroup->mJobEventMap.empty());
+    APSARA_TEST_TRUE(scraperGroup->mTargetSubscriberSchedulerMap.empty());
     scraperGroup->UpdateScrapeJob(std::move(scrapeJobPtr));
 
-    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mJobEventMap.count("test_job"));
+    APSARA_TEST_EQUAL((size_t)1, scraperGroup->mTargetSubscriberSchedulerMap.count("test_job"));
     scraperGroup->RemoveScrapeJob("test_job");
 
-    APSARA_TEST_TRUE(scraperGroup->mJobEventMap.find("test_job") == scraperGroup->mJobEventMap.end());
+    APSARA_TEST_TRUE(scraperGroup->mTargetSubscriberSchedulerMap.find("test_job") == scraperGroup->mTargetSubscriberSchedulerMap.end());
 
     // stop scraper group to clean up
     scraperGroup->Stop();
@@ -122,7 +122,7 @@ void ScraperGroupUnittest::TestStartAndStop() {
         std::lock_guard<mutex> lock(scraperGroup->mStartMux);
         APSARA_TEST_EQUAL(scraperGroup->mIsStarted, false);
     }
-    APSARA_TEST_EQUAL(0UL, scraperGroup->mJobEventMap.size());
+    APSARA_TEST_EQUAL(0UL, scraperGroup->mTargetSubscriberSchedulerMap.size());
 }
 
 UNIT_TEST_CASE(ScraperGroupUnittest, OnUpdateScrapeJob)

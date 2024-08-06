@@ -39,7 +39,7 @@ void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetSubscriberScheduler> ta
     targetSubscriber->SetFirstExecTime(std::chrono::steady_clock::now());
     // 1. add job to mJobEventMap
     WriteLock lock(mJobRWLock);
-    mJobEventMap[targetSubscriber->GetId()] = targetSubscriber;
+    mTargetSubscriberSchedulerMap[targetSubscriber->GetId()] = targetSubscriber;
 
     // 2. build Ticker Event and add it to Timer
     targetSubscriber->ScheduleNext();
@@ -47,9 +47,9 @@ void ScraperGroup::UpdateScrapeJob(std::shared_ptr<TargetSubscriberScheduler> ta
 
 void ScraperGroup::RemoveScrapeJob(const string& jobName) {
     WriteLock lock(mJobRWLock);
-    if (mJobEventMap.count(jobName)) {
-        mJobEventMap[jobName]->Cancel();
-        mJobEventMap.erase(jobName);
+    if (mTargetSubscriberSchedulerMap.count(jobName)) {
+        mTargetSubscriberSchedulerMap[jobName]->Cancel();
+        mTargetSubscriberSchedulerMap.erase(jobName);
     }
 }
 
@@ -71,7 +71,7 @@ void ScraperGroup::Stop() {
     // 2. clear resources
     {
         WriteLock lock(mJobRWLock);
-        mJobEventMap.clear();
+        mTargetSubscriberSchedulerMap.clear();
     }
     {
         lock_guard<mutex> lock(mStartMux);

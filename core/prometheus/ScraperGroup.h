@@ -54,7 +54,7 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     ReadWriteLock mJobRWLock;
-    std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mJobEventMap;
+    std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
 
     std::mutex mStartMux;
     bool mIsStarted;
