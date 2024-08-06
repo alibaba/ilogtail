@@ -54,17 +54,18 @@ void ScraperGroup::RemoveScrapeJob(const string& jobName) {
 }
 
 void ScraperGroup::Start() {
-    {
-        lock_guard<mutex> lock(mStartMux);
-        if (mIsStarted) {
-            return;
-        }
-        mIsStarted = true;
+    if (mIsStarted.load()) {
+        return;
     }
+    mIsStarted.store(true);
     mThreadRes = std::async(launch::async, [this]() { mTimer->Init(); });
 }
 
 void ScraperGroup::Stop() {
+    if (!mIsStarted.load()) {
+        return;
+    }
+    mIsStarted.store(false);
     // 1. stop threads
     mTimer->Stop();
 
@@ -73,13 +74,7 @@ void ScraperGroup::Stop() {
         WriteLock lock(mJobRWLock);
         mTargetSubscriberSchedulerMap.clear();
     }
-    {
-        lock_guard<mutex> lock(mStartMux);
-        if (!mIsStarted) {
-            return;
-        }
-        mIsStarted = false;
-    }
+
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("scraper group", "stopped successfully"));

@@ -52,7 +52,9 @@ private:
     PrometheusInputRunner();
     ~PrometheusInputRunner() = default;
 
-    sdk::HttpMessage SendGetRequest(const std::string& url);
+    sdk::HttpMessage SendRegisterMessage(const std::string& url);
+
+    std::atomic<bool> mIsStarted;
 
     mutable ReadWriteLock mReadWriteLock;
     std::unordered_set<std::string> mPrometheusInputsSet;

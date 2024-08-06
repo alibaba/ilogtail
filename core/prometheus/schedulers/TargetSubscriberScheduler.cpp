@@ -29,8 +29,8 @@
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
-#include "prometheus/async//PromHttpRequest.h"
 #include "prometheus/async//PromFuture.h"
+#include "prometheus/async//PromHttpRequest.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
 
 using namespace std;
@@ -106,7 +106,8 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeSched
     }
 }
 
-bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& content, std::vector<Labels>& scrapeSchedulerGroup) {
+bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& content,
+                                                          std::vector<Labels>& scrapeSchedulerGroup) {
     string errs;
     Json::Value root;
     if (!ParseJsonTable(content, root, errs) || !root.isArray()) {
@@ -149,7 +150,9 @@ bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& con
         labels.Push(
             Label{prometheus::SCRAPE_TIMEOUT_LABEL_NAME, SecondToDuration(mScrapeConfigPtr->mScrapeTimeoutSeconds)});
         for (const auto& pair : mScrapeConfigPtr->mParams) {
-            labels.Push(Label{prometheus::PARAM_LABEL_NAME + pair.first, pair.second[0]});
+            if (!pair.second.empty()) {
+                labels.Push(Label{prometheus::PARAM_LABEL_NAME + pair.first, pair.second[0]});
+            }
         }
 
         if (element.isMember(prometheus::LABELS) && element[prometheus::LABELS].isObject()) {
@@ -167,17 +170,17 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
     set<shared_ptr<ScrapeScheduler>> scrapeSchedulerSet;
     for (const auto& labels : targetGroups) {
         // Relabel Config
-        Labels result = Labels();
-        bool keep = prometheus::Process(labels, mScrapeConfigPtr->mRelabelConfigs, result);
+        Labels resultLabel = Labels();
+        bool keep = prometheus::Process(labels, mScrapeConfigPtr->mRelabelConfigs, resultLabel);
         if (!keep) {
             continue;
         }
-        result.RemoveMetaLabels();
-        if (result.Size() == 0) {
+        resultLabel.RemoveMetaLabels();
+        if (resultLabel.Size() == 0) {
             continue;
         }
 
-        string address = result.Get(prometheus::ADDRESS_LABEL_NAME);
+        string address = resultLabel.Get(prometheus::ADDRESS_LABEL_NAME);
         auto m = address.find(':');
         string host;
         int32_t port = 0;
@@ -191,7 +194,7 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
         }
 
         auto scrapeScheduler
-            = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, result, mQueueKey, mInputIndex);
+            = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, resultLabel, mQueueKey, mInputIndex);
         scrapeScheduler->SetFirstExecTime(std::chrono::steady_clock::now()
                                           + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep()));
 

@@ -41,7 +41,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
-    static bool isPrometheusInputRunnerStarted = false;
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
     static bool isInputStreamStarted = false;
 #endif
@@ -91,10 +90,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
     if (isInputPrometheusChanged) {
-        if (!isPrometheusInputRunnerStarted) {
-            PrometheusInputRunner::GetInstance()->Start();
-            isPrometheusInputRunnerStarted = true;
-        }
+        PrometheusInputRunner::GetInstance()->Start();
     }
 #endif
 

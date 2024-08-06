@@ -56,8 +56,7 @@ private:
     ReadWriteLock mJobRWLock;
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
 
-    std::mutex mStartMux;
-    bool mIsStarted;
+    std::atomic<bool> mIsStarted;
     std::future<void> mThreadRes;
 
 #ifdef APSARA_UNIT_TEST_MAIN
