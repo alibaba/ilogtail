@@ -37,7 +37,6 @@ public:
 
 private:
     std::vector<std::pair<size_t, Condition>> mConditions;
-    std::optional<size_t> mUnmatchedIdx;
     size_t mFlusherCnt = 0;
 
 #ifdef APSARA_UNIT_TEST_MAIN

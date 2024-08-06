@@ -24,23 +24,9 @@ namespace logtail {
 
 bool Router::Init(std::vector<pair<size_t, const Json::Value*>> configs, const PipelineContext& ctx) {
     for (auto& item : configs) {
-        if (item.second->isString()) {
-            if (item.second->asString() != "unmatched") {
-                PARAM_ERROR_RETURN(ctx.GetLogger(),
-                                   ctx.GetAlarm(),
-                                   "param Match is not valid",
-                                   noModule,
-                                   ctx.GetConfigName(),
-                                   ctx.GetProjectName(),
-                                   ctx.GetLogstoreName(),
-                                   ctx.GetRegion());
-            }
-            mUnmatchedIdx.emplace(item.first);
-        } else {
-            mConditions.emplace_back(item.first, Condition());
-            if (!mConditions.back().second.Init(*item.second, ctx)) {
-                return false;
-            }
+        mConditions.emplace_back(item.first, Condition());
+        if (!mConditions.back().second.Init(*item.second, ctx)) {
+            return false;
         }
     }
     return true;
@@ -48,20 +34,15 @@ bool Router::Init(std::vector<pair<size_t, const Json::Value*>> configs, const P
 
 vector<size_t> Router::Route(const PipelineEventGroup& g) const {
     vector<size_t> res;
-    bool matched = false;
     for (size_t i = 0, condIdx = 0; i < mFlusherCnt; ++i) {
         if (condIdx < mConditions.size() && mConditions[condIdx].first == i) {
             if (mConditions[condIdx].second.Check(g)) {
-                matched = true;
                 res.push_back(i);
             }
             ++condIdx;
-        } else if (mUnmatchedIdx.has_value() && mUnmatchedIdx.value() != i) {
+        } else {
             res.push_back(i);
         }
-    }
-    if (!matched && mUnmatchedIdx.has_value()) {
-        res.push_back(mUnmatchedIdx.value());
     }
     return res;
 }

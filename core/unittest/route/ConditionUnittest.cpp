@@ -36,7 +36,7 @@ void ConditionUnittest::TestInit() {
         configStr = R"(
             {
                 "Type": "event_type",
-                "Condition": "log"
+                "Value": "log"
             }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -47,14 +47,15 @@ void ConditionUnittest::TestInit() {
     {
         configStr = R"(
             {
-                "Type": "tag_value",
-                "Condition": "INFO"
+                "Type": "tag",
+                "Key": "level",
+                "Value": "INFO"
             }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         Condition cond;
         APSARA_TEST_TRUE(cond.Init(configJson, ctx));
-        APSARA_TEST_EQUAL(Condition::Type::TAG_VALUE, cond.mType);
+        APSARA_TEST_EQUAL(Condition::Type::TAG, cond.mType);
     }
     {
         configStr = R"(
@@ -69,7 +70,7 @@ void ConditionUnittest::TestInit() {
     {
         configStr = R"(
             {
-                "type": "tag_value"
+                "type": "tag"
             }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -120,7 +121,7 @@ void ConditionUnittest::TestInit() {
         configStr = R"(
             {
                 "Type": "event_type",
-                "Condition": "unknown"
+                "Value": "unknown"
             }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -136,7 +137,7 @@ void ConditionUnittest::TestCheck() {
         string configStr = R"(
             {
                 "Type": "event_type",
-                "Condition": "log"
+                "Value": "log"
             }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -151,8 +152,9 @@ void ConditionUnittest::TestCheck() {
         Json::Value configJson;
         string configStr = R"(
             {
-                "Type": "tag_value",
-                "Condition": "INFO"
+                "Type": "tag",
+                "Key": "level",
+                "Value": "INFO"
             }
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -160,7 +162,7 @@ void ConditionUnittest::TestCheck() {
         APSARA_TEST_TRUE(cond.Init(configJson, ctx));
 
         PipelineEventGroup g(make_shared<SourceBuffer>());
-        g.SetTag(TagValueCondition::sTagKey, "INFO");
+        g.SetTag(string("level"), string("INFO"));
         APSARA_TEST_TRUE(cond.Check(g));
     }
 }
@@ -181,34 +183,60 @@ void EventTypeConditionUnittest::TestInit() {
     Json::Value configJson;
     string configStr, errorMsg;
     {
-        configStr = R"("log")";
+        configStr = R"(
+            {
+                "Value": "log"
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         EventTypeCondition cond;
         APSARA_TEST_TRUE(cond.Init(configJson, ctx));
         APSARA_TEST_EQUAL(PipelineEvent::Type::LOG, cond.mType);
     }
     {
-        configStr = R"("metric")";
+        configStr = R"(
+            {
+                "Value": "metric"
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         EventTypeCondition cond;
         APSARA_TEST_TRUE(cond.Init(configJson, ctx));
         APSARA_TEST_EQUAL(PipelineEvent::Type::METRIC, cond.mType);
     }
     {
-        configStr = R"("trace")";
+        configStr = R"(
+            {
+                "Value": "trace"
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         EventTypeCondition cond;
         APSARA_TEST_TRUE(cond.Init(configJson, ctx));
         APSARA_TEST_EQUAL(PipelineEvent::Type::SPAN, cond.mType);
     }
     {
-        configStr = R"("unknown")";
+        configStr = R"(
+            {
+                "Value": "unknown"
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         EventTypeCondition cond;
         APSARA_TEST_FALSE(cond.Init(configJson, ctx));
     }
     {
-        configStr = R"(true)";
+        configStr = R"(
+            {
+                "Value": true
+            }
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        EventTypeCondition cond;
+        APSARA_TEST_FALSE(cond.Init(configJson, ctx));
+    }
+    {
+        configStr = "{}";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
         EventTypeCondition cond;
         APSARA_TEST_FALSE(cond.Init(configJson, ctx));
@@ -218,7 +246,11 @@ void EventTypeConditionUnittest::TestInit() {
 void EventTypeConditionUnittest::TestCheck() {
     Json::Value configJson;
     string errorMsg;
-    string configStr = R"("log")";
+    string configStr = R"(
+        {
+            "Value": "log"
+        }
+    )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     EventTypeCondition cond;
     APSARA_TEST_TRUE(cond.Init(configJson, ctx));
@@ -237,7 +269,7 @@ void EventTypeConditionUnittest::TestCheck() {
 UNIT_TEST_CASE(EventTypeConditionUnittest, TestInit)
 UNIT_TEST_CASE(EventTypeConditionUnittest, TestCheck)
 
-class TagValueConditionUnittest : public testing::Test {
+class TagConditionUnittest : public testing::Test {
 public:
     void TestInit();
     void TestCheck();
@@ -246,55 +278,77 @@ private:
     PipelineContext ctx;
 };
 
-void TagValueConditionUnittest::TestInit() {
+void TagConditionUnittest::TestInit() {
     Json::Value configJson;
     string configStr, errorMsg;
     {
-        configStr = R"("INFO")";
+        configStr = R"(
+            {
+                "Key": "level",
+                "Value": "INFO"
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-        TagValueCondition cond;
+        TagCondition cond;
         APSARA_TEST_TRUE(cond.Init(configJson, ctx));
-        APSARA_TEST_EQUAL("INFO", cond.mContent);
+        APSARA_TEST_EQUAL("level", cond.mKey);
+        APSARA_TEST_EQUAL("INFO", cond.mValue);
     }
     {
-        configStr = R"("")";
+        configStr = R"(
+            {
+                "Key": "",
+                "Value": "INFO"
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-        TagValueCondition cond;
+        TagCondition cond;
         APSARA_TEST_FALSE(cond.Init(configJson, ctx));
     }
     {
-        configStr = R"(true)";
+        configStr = R"(
+            {
+                "Key": "level",
+                "Value": ""
+            }
+        )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-        TagValueCondition cond;
+        TagCondition cond;
         APSARA_TEST_FALSE(cond.Init(configJson, ctx));
     }
 }
 
-void TagValueConditionUnittest::TestCheck() {
+void TagConditionUnittest::TestCheck() {
     Json::Value configJson;
     string errorMsg;
-    string configStr = R"("INFO")";
+    string configStr = R"(
+        {
+            "Key": "level",
+            "Value": "INFO"
+        }
+    )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    TagValueCondition cond;
+    TagCondition cond;
     APSARA_TEST_TRUE(cond.Init(configJson, ctx));
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
-        g.SetTag(TagValueCondition::sTagKey, "INFO");
+        g.SetTag(string("level"), string("INFO"));
         APSARA_TEST_TRUE(cond.Check(g));
     }
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
-        g.SetTag(TagValueCondition::sTagKey, "ERROR");
+        g.SetTag(string("level"), string("ERROR"));
         APSARA_TEST_FALSE(cond.Check(g));
     }
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
+        g.SetTag(string("unknown"), string("INFO"));
         APSARA_TEST_FALSE(cond.Check(g));
     }
 }
 
-UNIT_TEST_CASE(TagValueConditionUnittest, TestInit)
-UNIT_TEST_CASE(TagValueConditionUnittest, TestCheck)
+UNIT_TEST_CASE(TagConditionUnittest, TestInit)
+UNIT_TEST_CASE(TagConditionUnittest, TestCheck)
 
 } // namespace logtail
 

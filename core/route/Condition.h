@@ -38,18 +38,17 @@ private:
 #endif
 };
 
-class TagValueCondition {
+class TagCondition {
 public:
     bool Init(const Json::Value& config, const PipelineContext& ctx);
     bool Check(const PipelineEventGroup& g) const;
 
 private:
-    static std::string sTagKey;
-
-    std::string mContent;
+    std::string mKey;
+    std::string mValue;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class TagValueConditionUnittest;
+    friend class TagConditionUnittest;
     friend class ConditionUnittest;
 #endif
 };
@@ -60,10 +59,10 @@ public:
     bool Check(const PipelineEventGroup& g) const;
 
 private:
-    enum class Type { EVENT_TYPE, TAG_VALUE };
+    enum class Type { EVENT_TYPE, TAG };
 
     Type mType;
-    std::variant<EventTypeCondition, TagValueCondition> mDetail;
+    std::variant<EventTypeCondition, TagCondition> mDetail;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ConditionUnittest;

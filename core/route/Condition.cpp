@@ -22,27 +22,27 @@ namespace logtail {
 
 bool EventTypeCondition::Init(const Json::Value& config, const PipelineContext& ctx) {
     string errorMsg;
-    if (!config.isString()) {
+    string value;
+    if (!GetMandatoryStringParam(config, "Match.Value", value, errorMsg)) {
         PARAM_ERROR_RETURN(ctx.GetLogger(),
                            ctx.GetAlarm(),
-                           "param Match.Condition is not of type string",
+                           errorMsg,
                            noModule,
                            ctx.GetConfigName(),
                            ctx.GetProjectName(),
                            ctx.GetLogstoreName(),
                            ctx.GetRegion());
     }
-    string type = config.asString();
-    if (type == "log") {
+    if (value == "log") {
         mType = PipelineEvent::Type::LOG;
-    } else if (type == "metric") {
+    } else if (value == "metric") {
         mType = PipelineEvent::Type::METRIC;
-    } else if (type == "trace") {
+    } else if (value == "trace") {
         mType = PipelineEvent::Type::SPAN;
     } else {
         PARAM_ERROR_RETURN(ctx.GetLogger(),
                            ctx.GetAlarm(),
-                           "param Match.Condition is not valid",
+                           "param Match.Value is not valid",
                            noModule,
                            ctx.GetConfigName(),
                            ctx.GetProjectName(),
@@ -59,14 +59,14 @@ bool EventTypeCondition::Check(const PipelineEventGroup& g) const {
     return g.GetEvents()[0]->GetType() == mType;
 }
 
-string TagValueCondition::sTagKey = "route.condition";
-
-bool TagValueCondition::Init(const Json::Value& config, const PipelineContext& ctx) {
+bool TagCondition::Init(const Json::Value& config, const PipelineContext& ctx) {
     string errorMsg;
-    if (!config.isString()) {
+
+    // Key
+    if (!GetMandatoryStringParam(config, "Match.Key", mKey, errorMsg)) {
         PARAM_ERROR_RETURN(ctx.GetLogger(),
                            ctx.GetAlarm(),
-                           "param Match.Condition is not of type string",
+                           errorMsg,
                            noModule,
                            ctx.GetConfigName(),
                            ctx.GetProjectName(),
@@ -74,11 +74,11 @@ bool TagValueCondition::Init(const Json::Value& config, const PipelineContext& c
                            ctx.GetRegion());
     }
 
-    mContent = config.asString();
-    if (mContent.empty()) {
+    // Value
+    if (!GetMandatoryStringParam(config, "Match.Value", mValue, errorMsg)) {
         PARAM_ERROR_RETURN(ctx.GetLogger(),
                            ctx.GetAlarm(),
-                           "mandatory string param Match.Condition is empty",
+                           errorMsg,
                            noModule,
                            ctx.GetConfigName(),
                            ctx.GetProjectName(),
@@ -89,12 +89,23 @@ bool TagValueCondition::Init(const Json::Value& config, const PipelineContext& c
     return true;
 }
 
-bool TagValueCondition::Check(const PipelineEventGroup& g) const {
-    return g.GetTag(sTagKey) == mContent;
+bool TagCondition::Check(const PipelineEventGroup& g) const {
+    return g.GetTag(mKey) == mValue;
 }
 
 bool Condition::Init(const Json::Value& config, const PipelineContext& ctx) {
     string errorMsg;
+
+    if (!config.isObject()) {
+        PARAM_ERROR_RETURN(ctx.GetLogger(),
+                           ctx.GetAlarm(),
+                           "param Match is not of type object",
+                           noModule,
+                           ctx.GetConfigName(),
+                           ctx.GetProjectName(),
+                           ctx.GetLogstoreName(),
+                           ctx.GetRegion());
+    }
 
     // Type
     string type;
@@ -109,8 +120,8 @@ bool Condition::Init(const Json::Value& config, const PipelineContext& ctx) {
                            ctx.GetRegion());
     } else if (type == "event_type") {
         mType = Type::EVENT_TYPE;
-    } else if (type == "tag_value") {
-        mType = Type::TAG_VALUE;
+    } else if (type == "tag") {
+        mType = Type::TAG;
     } else {
         PARAM_ERROR_RETURN(ctx.GetLogger(),
                            ctx.GetAlarm(),
@@ -122,27 +133,14 @@ bool Condition::Init(const Json::Value& config, const PipelineContext& ctx) {
                            ctx.GetRegion());
     }
 
-    // Condition
-    const char* key = "Condition";
-    const Json::Value* itr = config.find(key, key + strlen(key));
-    if (itr == nullptr) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(),
-                           ctx.GetAlarm(),
-                           "mandatory param Match.Condition is missing",
-                           noModule,
-                           ctx.GetConfigName(),
-                           ctx.GetProjectName(),
-                           ctx.GetLogstoreName(),
-                           ctx.GetRegion());
-    }
     switch (mType) {
         case Type::EVENT_TYPE:
-            if (!mDetail.emplace<EventTypeCondition>().Init(*itr, ctx)) {
+            if (!mDetail.emplace<EventTypeCondition>().Init(config, ctx)) {
                 return false;
             }
             break;
-        case Type::TAG_VALUE:
-            if (!mDetail.emplace<TagValueCondition>().Init(*itr, ctx)) {
+        case Type::TAG:
+            if (!mDetail.emplace<TagCondition>().Init(config, ctx)) {
                 return false;
             }
             break;
@@ -157,8 +155,8 @@ bool Condition::Check(const PipelineEventGroup& g) const {
     switch (mType) {
         case Type::EVENT_TYPE:
             return get_if<EventTypeCondition>(&mDetail)->Check(g);
-        case Type::TAG_VALUE:
-            return get_if<TagValueCondition>(&mDetail)->Check(g);
+        case Type::TAG:
+            return get_if<TagCondition>(&mDetail)->Check(g);
         default:
             return false;
     }

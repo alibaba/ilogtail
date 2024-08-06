@@ -257,8 +257,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
                     "Project": "test_project",
                     "Logstore": "test_logstore_1",
                     "Region": "test_region",
-                    "Endpoint": "test_endpoint",
-                    "Match": "unmatched"
+                    "Endpoint": "test_endpoint"
                 },
                 {
                     "Type": "flusher_sls",
@@ -268,15 +267,8 @@ void PipelineUnittest::OnSuccessfulInit() const {
                     "Endpoint": "test_endpoint",
                     "Match": {
                         "Type": "event_type",
-                        "Condition": "log"
+                        "Value": "log"
                     }
-                },
-                {
-                    "Type": "flusher_sls",
-                    "Project": "test_project",
-                    "Logstore": "test_logstore_3",
-                    "Region": "test_region",
-                    "Endpoint": "test_endpoint"
                 }
             ]
         }
@@ -289,9 +281,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_TRUE(pipeline->mRouter.has_value());
     APSARA_TEST_EQUAL(1U, pipeline->mRouter->mConditions.size());
-    APSARA_TEST_TRUE(pipeline->mRouter->mUnmatchedIdx.has_value());
-    APSARA_TEST_EQUAL(0U, pipeline->mRouter->mUnmatchedIdx.value());
-    APSARA_TEST_EQUAL(3U, pipeline->mRouter->mFlusherCnt);
+    APSARA_TEST_EQUAL(2U, pipeline->mRouter->mFlusherCnt);
 }
 
 void PipelineUnittest::OnFailedInit() const {

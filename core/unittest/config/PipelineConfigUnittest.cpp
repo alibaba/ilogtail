@@ -119,7 +119,10 @@ void PipelineConfigUnittest::HandleValidConfig() const {
             "flushers": [
                 {
                     "Type": "flusher_sls",
-                    "Match": "unmatched"
+                    "Match": {
+                        "Type": "event_type",
+                        "Value": "log"
+                    }
                 }
             ]
         }
@@ -402,7 +405,10 @@ void PipelineConfigUnittest::HandleValidConfig() const {
             "flushers": [
                 {
                     "Type": "flusher_sls",
-                    "Match": "unmatched"
+                    "Match": {
+                        "Type": "event_type",
+                        "Value": "log"
+                    }
                 }
             ]
         }

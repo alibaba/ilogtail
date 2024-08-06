@@ -38,9 +38,8 @@ void RouterUnittest::TestInit() {
             [
                 {
                     "Type": "event_type",
-                    "Condition": "log"
-                },
-                "unmatched"
+                    "Value": "log"
+                }
             ]
         )";
         APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -49,11 +48,10 @@ void RouterUnittest::TestInit() {
             configs.emplace_back(i, &configJson[i]);
         }
 
-        Router router(3);
+        Router router(2);
         APSARA_TEST_TRUE(router.Init(configs, ctx));
-        APSARA_TEST_EQUAL(1, router.mConditions.size());
-        APSARA_TEST_EQUAL(0, router.mConditions[0].first);
-        APSARA_TEST_EQUAL(1, router.mUnmatchedIdx.value());
+        APSARA_TEST_EQUAL(1U, router.mConditions.size());
+        APSARA_TEST_EQUAL(0U, router.mConditions[0].first);
     }
     {
         string configStr = R"(
@@ -69,7 +67,7 @@ void RouterUnittest::TestInit() {
             configs.emplace_back(i, &configJson[i]);
         }
 
-        Router router(3);
+        Router router(2);
         APSARA_TEST_FALSE(router.Init(configs, ctx));
     }
     {
@@ -84,7 +82,7 @@ void RouterUnittest::TestInit() {
             configs.emplace_back(i, &configJson[i]);
         }
 
-        Router router(3);
+        Router router(2);
         APSARA_TEST_FALSE(router.Init(configs, ctx));
     }
 }
@@ -94,10 +92,9 @@ void RouterUnittest::TestRoute() {
     string errorMsg;
     string configStr = R"(
         [
-            "unmatched",
             {
                 "Type": "event_type",
-                "Condition": "log"
+                "Value": "log"
             }
         ]
     )";
@@ -107,23 +104,22 @@ void RouterUnittest::TestRoute() {
         configs.emplace_back(i, &configJson[i]);
     }
 
-    Router router(3);
+    Router router(2);
     router.Init(configs, ctx);
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
         g.AddLogEvent();
         auto res = router.Route(g);
-        APSARA_TEST_EQUAL(2, res.size());
-        APSARA_TEST_EQUAL(1, res[0]);
-        APSARA_TEST_EQUAL(2, res[1]);
+        APSARA_TEST_EQUAL(2U, res.size());
+        APSARA_TEST_EQUAL(0U, res[0]);
+        APSARA_TEST_EQUAL(1U, res[1]);
     }
     {
         PipelineEventGroup g(make_shared<SourceBuffer>());
         g.AddMetricEvent();
         auto res = router.Route(g);
-        APSARA_TEST_EQUAL(2, res.size());
-        APSARA_TEST_EQUAL(2, res[0]);
-        APSARA_TEST_EQUAL(0, res[1]);
+        APSARA_TEST_EQUAL(1U, res.size());
+        APSARA_TEST_EQUAL(1U, res[0]);
     }
 }
 
