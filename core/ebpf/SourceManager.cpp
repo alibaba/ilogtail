@@ -158,13 +158,6 @@ bool SourceManager::CheckPluginRunning(nami::PluginType plugin_type) {
 
 bool SourceManager::StartPlugin(nami::PluginType plugin_type, 
                 std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config) {
-  // bool running = CheckPluginRunning(plugin_type);
-  // if (running && mRunning[int(plugin_type)] == 1) {
-  //   // already started ... 
-  //   LOG_WARNING(sLogger, ("plugin already started, skip loading", "only support ONE config") ("type:", int(plugin_type)));
-  //   return false;
-  // }
-
   if (CheckPluginRunning(plugin_type)) {
     // plugin update ... 
     return UpdatePlugin(plugin_type, std::move(config));

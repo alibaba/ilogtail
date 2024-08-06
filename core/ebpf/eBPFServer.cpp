@@ -146,7 +146,10 @@ bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_
 bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginType type) {
     std::string prev_pipeline = CheckLoadedPipelineName(type);
     if (prev_pipeline == pipeline_name) mLoadedPipeline[int(type)] = "";
-    return mSourceManager->StopPlugin(type);;
+    else {
+        LOG_WARNING(sLogger, ("prev pipeline", prev_pipeline)("curr pipeline", pipeline_name));
+    }
+    return mSourceManager->StopPlugin(type);
 }
 
 std::string eBPFServer::CheckLoadedPipelineName(nami::PluginType type) {
