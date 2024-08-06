@@ -235,19 +235,17 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
         {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
-                {   
-                    {
-                        "NamespaceType": "Pid",
-                        "ValueList": [
-                            "4026531833"
-                        ]
-                    },
-                    {
-                        "NamespaceType": "Mnt",
-                        "ValueList": [
-                            "4026531834"
-                        ]
-                    }
+                {
+                    "NamespaceType": "Pid",
+                    "ValueList": [
+                        "4026531833"
+                    ]
+                },
+                {
+                    "NamespaceType": "Mnt",
+                    "ValueList": [
+                        "4026531834"
+                    ]
                 }
             ]
         }
