@@ -21,6 +21,7 @@
 #include <cmath>
 #include <string>
 
+#include "Constants.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "models/MetricEvent.h"
@@ -30,7 +31,7 @@ using namespace std;
 
 namespace logtail {
 
-inline bool StringViewToDouble(StringView sv, double& value) {
+inline bool StringViewToDouble(const StringView& sv, double& value) {
     const char* str = sv.data();
     char* end = nullptr;
     errno = 0;
@@ -44,18 +45,70 @@ inline bool StringViewToDouble(StringView sv, double& value) {
     return true;
 }
 
+inline bool IsWhitespace(char c) {
+    // Prometheus treats ' ' and '\t' as whitespace
+    // according to
+    // https://github.com/prometheus/docs/blob/master/content/docs/instrumenting/exposition_formats.md#text-format-details
+    return c == ' ' || c == '\t';
+}
+
+bool IsValidMetric(const StringView& line) {
+    for (auto c : line) {
+        if (IsWhitespace(c)) {
+            continue;
+        }
+        if (c == '#') {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+std::vector<StringView> SplitStringView(const std::string& s, char delimiter) {
+    std::vector<StringView> result;
+
+    size_t start = 0;
+    size_t end = 0;
+
+    while ((end = s.find(delimiter, start)) != std::string::npos) {
+        result.emplace_back(s.data() + start, end - start);
+        start = end + 1;
+    }
+    if (start < s.size()) {
+        result.emplace_back(s.data() + start, s.size() - start);
+    }
+
+    return result;
+}
+
+
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
 
-    for (const auto& line : SplitString(content, "\n")) {
-        auto newLine = TrimString(line);
-        if (newLine.empty() || newLine[0] == '#') {
+    for (const auto& line : SplitStringView(content, '\n')) {
+        if (!IsValidMetric(line)) {
             continue;
         }
         auto metricEvent = eGroup.CreateMetricEvent();
-        if (ParseLine(newLine, defaultNanoTs, *metricEvent)) {
+        if (ParseLine(line, defaultNanoTs, *metricEvent)) {
             eGroup.MutableEvents().emplace_back(std::move(metricEvent));
         }
+    }
+
+    return eGroup;
+}
+
+PipelineEventGroup TextParser::BuildLogGroup(const string& content, uint64_t defaultNanoTs) {
+    PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
+
+    for (const auto& line : SplitString(content, "\n")) {
+        if (!IsValidMetric(line)) {
+            continue;
+        }
+        auto* logEvent = eGroup.AddLogEvent();
+        logEvent->SetContent(prometheus::PROMETHEUS, line);
+        logEvent->SetTimestamp(defaultNanoTs / 1000000000, defaultNanoTs % 1000000000);
     }
 
     return eGroup;
@@ -116,7 +169,7 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
 
 void TextParser::HandleStart(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (std::isspace(c)) {
+    while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
@@ -130,16 +183,16 @@ void TextParser::HandleStart(char c, MetricEvent&) {
 void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
         ++mTokenLength;
-    } else if (c == '{' || std::isspace(c)) {
+    } else if (c == '{' || IsWhitespace(c)) {
         metricEvent.SetName(mLine.substr(mPos - mTokenLength - 1, mTokenLength).to_string());
         mTokenLength = 0;
         // need to solve these case, but don't point mPos to Value
         // {Space}* OpenBrace
         // {Space}+ Value
-        while (std::isspace(c) && mPos < mLine.size() && std::isspace(mLine[mPos])) {
+        while (IsWhitespace(c) && mPos < mLine.size() && std::isspace(mLine[mPos])) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         }
-        if (std::isspace(c)) {
+        if (IsWhitespace(c)) {
             // Space OpenBrace
             if (mLine[mPos] == '{') {
                 mPos++;
@@ -163,7 +216,7 @@ void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
 
 void TextParser::HandleOpenBrace(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (std::isspace(c)) {
+    while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
@@ -180,11 +233,11 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
 void TextParser::HandleLabelName(char c, MetricEvent&) {
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
         ++mTokenLength;
-    } else if (c == '=' || std::isspace(c)) {
+    } else if (c == '=' || IsWhitespace(c)) {
         mLabelName = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
         mTokenLength = 0;
         // Ignore subsequent spaces
-        while (std::isspace(c)) {
+        while (IsWhitespace(c)) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
         }
         if (c != '=') {
@@ -199,7 +252,7 @@ void TextParser::HandleLabelName(char c, MetricEvent&) {
 
 void TextParser::HandleEqualSign(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (std::isspace(c)) {
+    while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (c == '"') {
@@ -223,7 +276,7 @@ void TextParser::HandleLabelValue(char c, MetricEvent& metricEvent) {
 
 void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
     // Ignore subsequent spaces
-    while (std::isspace(c)) {
+    while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (c == ',') {
@@ -239,7 +292,7 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
 void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
     if (std::isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
         ++mTokenLength;
-    } else if (std::isspace(c)) {
+    } else if (IsWhitespace(c)) {
         auto tmpSampleValue = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
 
         if (!StringViewToDouble(tmpSampleValue, mSampleValue)) {
@@ -274,9 +327,9 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
 void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
     if (std::isdigit(c)) {
         ++mTokenLength;
-    } else if (std::isspace(c) || c == '\0') {
+    } else if (IsWhitespace(c) || c == '\0') {
         if (mTokenLength) {
-            auto tmpTimestamp = mLine.substr(mPos - mTokenLength - (std::isspace(c) ? 1 : 0), mTokenLength);
+            auto tmpTimestamp = mLine.substr(mPos - mTokenLength - (IsWhitespace(c) ? 1 : 0), mTokenLength);
             auto [ptr, ec]
                 = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), mNanoTimestamp);
             if (ec != std::errc()) {

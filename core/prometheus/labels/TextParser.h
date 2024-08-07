@@ -42,6 +42,7 @@ public:
     TextParser() = default;
 
     PipelineEventGroup Parse(const std::string& content, uint64_t defaultNanoTs);
+    PipelineEventGroup BuildLogGroup(const std::string& content, uint64_t defaultNanoTs);
 
     bool ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
 
