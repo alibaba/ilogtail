@@ -27,8 +27,8 @@
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
 
-DEFINE_FLAG_STRING(SERVICE_HOST, "service host", "");
-DEFINE_FLAG_INT32(SERVICE_PORT, "service port", 8888);
+DEFINE_FLAG_STRING(loong_collector_operator_service, "loong collector operator service", "");
+DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operator service port", 8888);
 DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 using namespace std;
@@ -39,8 +39,8 @@ PrometheusInputRunner::PrometheusInputRunner() : mUnRegisterMs(0) {
     mIsStarted.store(false);
     mClient = std::make_unique<sdk::CurlClient>();
 
-    mServiceHost = STRING_FLAG(SERVICE_HOST);
-    mServicePort = INT32_FLAG(SERVICE_PORT);
+    mServiceHost = STRING_FLAG(loong_collector_operator_service);
+    mServicePort = INT32_FLAG(loong_collector_operator_service_port);
     mPodName = STRING_FLAG(_pod_name_);
     mTimer = std::make_shared<Timer>();
 }

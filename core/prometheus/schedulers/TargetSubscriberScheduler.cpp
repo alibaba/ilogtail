@@ -25,7 +25,6 @@
 #include "Common.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
-#include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
@@ -144,12 +143,13 @@ bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& con
                 }
             }
         }
+        if (targets.empty()) {
+            continue;
+        }
         // Parse labels
         Labels labels;
         labels.Push(Label{prometheus::JOB, mJobName});
-        if (!targets.empty()) {
-            labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
-        }
+        labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
         labels.Push(Label{prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme});
         labels.Push(Label{prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath});
         labels.Push(
@@ -189,17 +189,17 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
 
         string address = resultLabel.Get(prometheus::ADDRESS_LABEL_NAME);
         auto m = address.find(':');
-        string host;
+        if (m == string::npos) {
+            continue;
+        }
         int32_t port = 0;
-        if (m != string::npos) {
-            host = address.substr(0, m);
-            try {
-                port = stoi(address.substr(m + 1));
-            } catch (...) {
-                continue;
-            }
+        try {
+            port = stoi(address.substr(m + 1));
+        } catch (...) {
+            continue;
         }
 
+        string host = address.substr(0, m);
         auto scrapeScheduler
             = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, resultLabel, mQueueKey, mInputIndex);
         scrapeScheduler->SetFirstExecTime(std::chrono::steady_clock::now()
