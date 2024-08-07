@@ -299,6 +299,13 @@ bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
     for (auto& group : groupList) {
         auto flusherIdx = mRouter.Route(group);
         for (size_t i = 0; i < flusherIdx.size(); ++i) {
+            if (flusherIdx[i] >= mFlushers.size()) {
+                LOG_ERROR(
+                    sLogger,
+                    ("unexpected error", "invalid flusher index")("flusher index", flusherIdx[i])("config", mName));
+                allSucceeded = false;
+                continue;
+            }
             if (i + 1 != flusherIdx.size()) {
                 allSucceeded = mFlushers[flusherIdx[i]]->Send(group.Copy()) && allSucceeded;
             } else {
