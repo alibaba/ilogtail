@@ -65,10 +65,12 @@ void ProcessQueueManagerUnittest::TestUpdateQueue() {
     auto iter = sProcessQueueManager->mQueues[key];
     APSARA_TEST_TRUE(iter == prev(sProcessQueueManager->mPriorityQueue[0].end()));
     APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == iter);
-    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mCapacity, iter->mCapacity);
-    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mLowWatermark, iter->mLowWatermark);
-    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mHighWatermark, iter->mHighWatermark);
-    APSARA_TEST_EQUAL("test_config_1", iter->GetConfigName());
+    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mCapacity, (*iter)->mCapacity);
+    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mLowWatermark,
+                      static_cast<BoundedProcessQueue*>(iter->get())->mLowWatermark);
+    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mHighWatermark,
+                      static_cast<BoundedProcessQueue*>(iter->get())->mHighWatermark);
+    APSARA_TEST_EQUAL("test_config_1", (*iter)->GetConfigName());
 
     // create queue
     //   and current index is valid before creation
@@ -189,10 +191,10 @@ void ProcessQueueManagerUnittest::TestSetQueueUpstreamAndDownStream() {
     sProcessQueueManager->CreateOrUpdateQueue(0, 0);
 
     // queue exists
-    APSARA_TEST_TRUE(sProcessQueueManager->SetDownStreamQueues(0, vector<SenderQueueInterface*>()));
+    APSARA_TEST_TRUE(sProcessQueueManager->SetDownStreamQueues(0, vector<BoundedSenderQueueInterface*>()));
     APSARA_TEST_TRUE(sProcessQueueManager->SetFeedbackInterface(0, vector<FeedbackInterface*>()));
     // queue not exists
-    APSARA_TEST_FALSE(sProcessQueueManager->SetDownStreamQueues(1, vector<SenderQueueInterface*>()));
+    APSARA_TEST_FALSE(sProcessQueueManager->SetDownStreamQueues(1, vector<BoundedSenderQueueInterface*>()));
     APSARA_TEST_FALSE(sProcessQueueManager->SetFeedbackInterface(1, vector<FeedbackInterface*>()));
 }
 
@@ -213,7 +215,7 @@ void ProcessQueueManagerUnittest::TestPushQueue() {
     APSARA_TEST_EQUAL(2, sProcessQueueManager->PushQueue(2, make_unique<ProcessQueueItem>(std::move(*sEventGroup), 0)));
 
     // invalid to push
-    sProcessQueueManager->mQueues[0]->mValidToPush = false;
+    static_cast<BoundedProcessQueue*>(sProcessQueueManager->mQueues[0]->get())->mValidToPush = false;
     APSARA_TEST_FALSE(sProcessQueueManager->IsValidToPush(0));
     APSARA_TEST_EQUAL(1, sProcessQueueManager->PushQueue(0, make_unique<ProcessQueueItem>(std::move(*sEventGroup), 0)));
 
@@ -305,14 +307,14 @@ void ProcessQueueManagerUnittest::OnPipelineUpdate() {
     ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(2, 0, "test_config_2", vector<RangeCheckpointPtr>(5));
 
     sProcessQueueManager->InvalidatePop("test_config_1");
-    APSARA_TEST_FALSE(sProcessQueueManager->mQueues[key]->mValidToPop);
+    APSARA_TEST_FALSE((*sProcessQueueManager->mQueues[key])->mValidToPop);
 
     sProcessQueueManager->InvalidatePop("test_config_2");
     APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPop);
     APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[2]->mValidToPop);
 
     sProcessQueueManager->ValidatePop("test_config_1");
-    APSARA_TEST_TRUE(sProcessQueueManager->mQueues[key]->mValidToPop);
+    APSARA_TEST_TRUE((*sProcessQueueManager->mQueues[key])->mValidToPop);
 
     sProcessQueueManager->ValidatePop("test_config_2");
     APSARA_TEST_TRUE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPop);

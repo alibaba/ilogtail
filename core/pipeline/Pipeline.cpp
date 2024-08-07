@@ -247,7 +247,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ProcessQueueManager::GetInstance()->SetFeedbackInterface(
             mContext.GetProcessQueueKey(), vector<FeedbackInterface*>(feedbackSet.begin(), feedbackSet.end()));
 
-        vector<SenderQueueInterface*> senderQueues;
+        vector<BoundedSenderQueueInterface*> senderQueues;
         for (const auto& flusher : mFlushers) {
             senderQueues.push_back(SenderQueueManager::GetInstance()->GetQueue(flusher->GetQueueKey()));
         }

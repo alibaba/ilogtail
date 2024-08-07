@@ -26,6 +26,7 @@
 #include "plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "queue/BoundedProcessQueue.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
 #include "unittest/Unittest.h"
@@ -2326,7 +2327,7 @@ void PipelineUnittest::TestProcessQueue() const {
     unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
     QueueKey key;
-    list<ProcessQueue>::iterator que;
+    list<unique_ptr<ProcessQueueInterface>>::iterator que;
 
     // new pipeline
     configStr = R"(
@@ -2363,13 +2364,13 @@ void PipelineUnittest::TestProcessQueue() const {
     key = QueueKeyManager::GetInstance()->GetKey(configName);
     que = ProcessQueueManager::GetInstance()->mQueues[key];
     // queue level
-    APSARA_TEST_EQUAL(configName, que->GetConfigName());
-    APSARA_TEST_EQUAL(key, que->GetKey());
-    APSARA_TEST_EQUAL(0U, que->GetPriority());
-    APSARA_TEST_EQUAL(1U, que->mUpStreamFeedbacks.size());
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(0U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks.size());
     APSARA_TEST_EQUAL(InputFeedbackInterfaceRegistry::GetInstance()->GetFeedbackInterface("input_file"),
-                      que->mUpStreamFeedbacks[0]);
-    APSARA_TEST_EQUAL(1U, que->mDownStreamQueues.size());
+                      static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks[0]);
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
     // pipeline level
     APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
     // manager level
@@ -2410,13 +2411,13 @@ void PipelineUnittest::TestProcessQueue() const {
     key = QueueKeyManager::GetInstance()->GetKey(configName);
     que = ProcessQueueManager::GetInstance()->mQueues[key];
     // queue level
-    APSARA_TEST_EQUAL(configName, que->GetConfigName());
-    APSARA_TEST_EQUAL(key, que->GetKey());
-    APSARA_TEST_EQUAL(3U, que->GetPriority());
-    APSARA_TEST_EQUAL(1U, que->mUpStreamFeedbacks.size());
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(3U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks.size());
     APSARA_TEST_EQUAL(InputFeedbackInterfaceRegistry::GetInstance()->GetFeedbackInterface("input_file"),
-                      que->mUpStreamFeedbacks[0]);
-    APSARA_TEST_EQUAL(1U, que->mDownStreamQueues.size());
+                      static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks[0]);
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
     // pipeline level
     APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
     // manager level

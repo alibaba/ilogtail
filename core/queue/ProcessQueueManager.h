@@ -26,10 +26,10 @@
 #include <vector>
 
 #include "common/FeedbackInterface.h"
-#include "queue/FeedbackQueueKey.h"
-#include "queue/ProcessQueue.h"
+#include "queue/QueueKey.h"
+#include "queue/ProcessQueueInterface.h"
 #include "queue/ProcessQueueItem.h"
-#include "queue/SenderQueueInterface.h"
+#include "queue/BoundedSenderQueueInterface.h"
 
 namespace logtail {
 
@@ -54,7 +54,7 @@ public:
     int PushQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool PopItem(int64_t threadNo, std::unique_ptr<ProcessQueueItem>& item, std::string& configName);
     bool IsAllQueueEmpty() const;
-    bool SetDownStreamQueues(QueueKey key, std::vector<SenderQueueInterface*>&& ques);
+    bool SetDownStreamQueues(QueueKey key, std::vector<BoundedSenderQueueInterface*>&& ques);
     bool SetFeedbackInterface(QueueKey key, std::vector<FeedbackInterface*>&& feedback);
     void InvalidatePop(const std::string& configName);
     void ValidatePop(const std::string& configName);
@@ -73,9 +73,9 @@ private:
     void ResetCurrentQueueIndex();
 
     mutable std::mutex mQueueMux;
-    std::unordered_map<QueueKey, std::list<ProcessQueue>::iterator> mQueues;
-    std::list<ProcessQueue> mPriorityQueue[sMaxPriority + 1];
-    std::pair<uint32_t, std::list<ProcessQueue>::iterator> mCurrentQueueIndex;
+    std::unordered_map<QueueKey, std::list<std::unique_ptr<ProcessQueueInterface>>::iterator> mQueues;
+    std::list<std::unique_ptr<ProcessQueueInterface>> mPriorityQueue[sMaxPriority + 1];
+    std::pair<uint32_t, std::list<std::unique_ptr<ProcessQueueInterface>>::iterator> mCurrentQueueIndex;
 
     mutable std::mutex mStateMux;
     mutable std::condition_variable mCond;
