@@ -1,4 +1,5 @@
 import argparse
+import os
 import subprocess
 
 def get_changed_files():
@@ -47,4 +48,5 @@ if __name__ == '__main__':
             else:
                 print(line)
     if len(not_satified) > 0:
-        raise Exception(f"Coverage rate is less than 50% for the following files: {not_satified}")
+        print(f"Coverage rate is less than 50% for the following files: {not_satified}")
+        os._exit(1)
