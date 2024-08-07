@@ -50,16 +50,16 @@ private:
     inline void NextState(TextState newState) { mState = newState; }
     void HandleError(const std::string& errMsg);
 
-    void HandleStart(char c, MetricEvent& metricEvent);
-    void HandleMetricName(char c, MetricEvent& metricEvent);
-    void HandleOpenBrace(char c, MetricEvent& metricEvent);
-    void HandleLabelName(char c, MetricEvent& metricEvent);
-    void HandleEqualSign(char c, MetricEvent& metricEvent);
-    void HandleLabelValue(char c, MetricEvent& metricEvent);
-    void HandleCommaOrCloseBrace(char c, MetricEvent& metricEvent);
-    void HandleSampleValue(char c, MetricEvent& metricEvent);
-    void HandleTimestamp(char c, MetricEvent& metricEvent);
-    void HandleSpace(char c, MetricEvent& metricEvent);
+    void HandleStart(MetricEvent& metricEvent);
+    void HandleMetricName(MetricEvent& metricEvent);
+    void HandleOpenBrace(MetricEvent& metricEvent);
+    void HandleLabelName(MetricEvent& metricEvent);
+    void HandleEqualSign(MetricEvent& metricEvent);
+    void HandleLabelValue(MetricEvent& metricEvent);
+    void HandleCommaOrCloseBrace(MetricEvent& metricEvent);
+    void HandleSampleValue(MetricEvent& metricEvent);
+    void HandleTimestamp(MetricEvent& metricEvent);
+    void HandleSpace(MetricEvent& metricEvent);
 
     void SkipSpaceIfHasNext();
 

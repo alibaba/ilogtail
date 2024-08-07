@@ -125,41 +125,7 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
         mNanoTimestamp = defaultNanoTs;
     }
 
-    while (mState != TextState::Done && mState != TextState::Error) {
-        char currentChar = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
-        switch (mState) {
-            case TextState::Start:
-                HandleStart(currentChar, metricEvent);
-                break;
-            case TextState::MetricName:
-                HandleMetricName(currentChar, metricEvent);
-                break;
-            case TextState::OpenBrace:
-                HandleOpenBrace(currentChar, metricEvent);
-                break;
-            case TextState::LabelName:
-                HandleLabelName(currentChar, metricEvent);
-                break;
-            case TextState::EqualSign:
-                HandleEqualSign(currentChar, metricEvent);
-                break;
-            case TextState::LabelValue:
-                HandleLabelValue(currentChar, metricEvent);
-                break;
-            case TextState::CommaOrCloseBrace:
-                HandleCommaOrCloseBrace(currentChar, metricEvent);
-                break;
-            case TextState::SampleValue:
-                HandleSampleValue(currentChar, metricEvent);
-                break;
-            case TextState::Timestamp:
-                HandleTimestamp(currentChar, metricEvent);
-                break;
-            default:
-                HandleError("unknown state");
-                break;
-        }
-    }
+    HandleStart(metricEvent);
 
     if (mState == TextState::Done) {
         return true;
@@ -168,11 +134,12 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
     return false;
 }
 
-void TextParser::HandleStart(char c, MetricEvent&) {
+void TextParser::HandleStart(MetricEvent&) {
     // Ignore subsequent spaces
-    while (IsWhitespace(c)) {
-        c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
+    while (IsWhitespace(mLine[mPos])) {
+        ++mPos;
     }
+    auto c = mLine[mPos];
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
         ++mTokenLength;
         NextState(TextState::MetricName);
@@ -181,7 +148,7 @@ void TextParser::HandleStart(char c, MetricEvent&) {
     }
 }
 
-void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
+void TextParser::HandleMetricName(MetricEvent& metricEvent) {
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
         ++mTokenLength;
     } else if (c == '{' || IsWhitespace(c)) {
@@ -215,7 +182,7 @@ void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
     }
 }
 
-void TextParser::HandleOpenBrace(char c, MetricEvent&) {
+void TextParser::HandleOpenBrace(MetricEvent&) {
     // Ignore subsequent spaces
     while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
@@ -231,7 +198,7 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
     }
 }
 
-void TextParser::HandleLabelName(char c, MetricEvent&) {
+void TextParser::HandleLabelName(MetricEvent&) {
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
         ++mTokenLength;
     } else if (c == '=' || IsWhitespace(c)) {
@@ -251,7 +218,7 @@ void TextParser::HandleLabelName(char c, MetricEvent&) {
     }
 }
 
-void TextParser::HandleEqualSign(char c, MetricEvent&) {
+void TextParser::HandleEqualSign(MetricEvent&) {
     // Ignore subsequent spaces
     while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
@@ -263,7 +230,7 @@ void TextParser::HandleEqualSign(char c, MetricEvent&) {
     }
 }
 
-void TextParser::HandleLabelValue(char c, MetricEvent& metricEvent) {
+void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
     if (c == '"') {
         metricEvent.SetTag(mLabelName, mLine.substr(mPos - mTokenLength - 1, mTokenLength));
         mTokenLength = 0;
@@ -275,7 +242,7 @@ void TextParser::HandleLabelValue(char c, MetricEvent& metricEvent) {
     }
 }
 
-void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
+void TextParser::HandleCommaOrCloseBrace(MetricEvent&) {
     // Ignore subsequent spaces
     while (IsWhitespace(c)) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
@@ -290,7 +257,7 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
     }
 }
 
-void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
+void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     if (IsWhitespace(c)) {
         auto tmpSampleValue = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
 
@@ -323,7 +290,7 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
     }
 }
 
-void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
+void TextParser::HandleTimestamp(MetricEvent& metricEvent) {
     if (std::isdigit(c)) {
         ++mTokenLength;
     } else if (IsWhitespace(c) || c == '\0') {
