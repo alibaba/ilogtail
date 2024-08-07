@@ -1058,15 +1058,6 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
         // If flush timeout event, we should filter whether the event is legacy.
         if (event->GetLastReadPos() == GetLastReadPos() && event->GetLastFilePos() == mLastFilePos
             && event->GetInode() == mDevInode.inode) {
-            // For the scenario: log rotation, the last line needs to be read by timeout, which is a normal situation.
-            // So here only local warning is given, don't raise alarm.
-            LOG_WARNING(sLogger,
-                        ("read log", "timeout")("project", GetProject())("logstore", GetLogstore())(
-                            "config", GetConfigName())("log reader queue name", mHostLogPath)("log path", mRealLogPath)(
-                            "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
-                            "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
-                            "last file position", mLastFilePos)("last file size", mLastFileSize)(
-                            "read size", mLastFilePos - lastFilePos)("log", logBuffer.rawBuffer));
             tryRollback = false;
         } else {
             return false;
@@ -1081,6 +1072,17 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
             }
             logBuffer.exactlyOnceCheckpoint = mEOOption->selectedCheckpoint;
         }
+    }
+    if (!tryRollback && !moreData) {
+        // For the scenario: log rotation, the last line needs to be read by timeout, which is a normal situation.
+        // So here only local warning is given, don't raise alarm.
+        LOG_WARNING(sLogger,
+                    ("read log timeout", "force read")("project", GetProject())("logstore", GetLogstore())(
+                        "config", GetConfigName())("log reader queue name", mHostLogPath)("log path", mRealLogPath)(
+                        "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                        "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                        "last file position", mLastFilePos)("last file size", mLastFileSize)(
+                        "read size", mLastFilePos - lastFilePos)("log", logBuffer.rawBuffer));
     }
     LOG_DEBUG(sLogger,
               ("read log file", mRealLogPath)("last file pos", mLastFilePos)("last file size", mLastFileSize)(
