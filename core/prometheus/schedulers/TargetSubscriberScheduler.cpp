@@ -240,6 +240,14 @@ void TargetSubscriberScheduler::ScheduleNext() {
     mTimer->PushEvent(std::move(event));
 }
 
+void TargetSubscriberScheduler::Cancel() {
+    {
+        WriteLock lock(mLock);
+        mValidState = false;
+    }
+    CancelAllScrapeScheduler();
+}
+
 std::unique_ptr<TimerEvent>
 TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime) {
     map<string, string> httpHeader;
@@ -264,6 +272,7 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
 }
 
 void TargetSubscriberScheduler::CancelAllScrapeScheduler() {
+    ReadLock lock(mRWLock);
     for (const auto& scrapeScheduler : mScrapeSchedulerSet) {
         scrapeScheduler->Cancel();
     }

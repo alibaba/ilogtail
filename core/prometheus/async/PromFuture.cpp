@@ -5,20 +5,14 @@
 namespace logtail {
 
 void PromFuture::Process(const HttpResponse& response) {
-    {
-        WriteLock lock(mStateRWLock);
-        if (mState == PromFutureState::New) {
-            mState = PromFutureState::Processing;
-        } else {
-            return;
-        }
-    }
-    {
-        WriteLock lock(mStateRWLock);
+    WriteLock lock(mStateRWLock);
+    if (mState == PromFutureState::New) {
         for (auto& callback : mDoneCallbacks) {
             callback(response);
         }
         mState = PromFutureState::Done;
+    } else {
+        return;
     }
 }
 

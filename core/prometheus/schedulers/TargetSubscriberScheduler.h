@@ -45,6 +45,7 @@ public:
     std::string GetId() const;
 
     void ScheduleNext() override;
+    void Cancel() override;
 
     // from pipeline context
     QueueKey mQueueKey;

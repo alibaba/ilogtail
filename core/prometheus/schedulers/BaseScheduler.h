@@ -19,7 +19,7 @@ public:
 
     void SetFirstExecTime(std::chrono::steady_clock::time_point firstExecTime);
 
-    void Cancel();
+    virtual void Cancel();
 
 protected:
     bool IsCancelled();
