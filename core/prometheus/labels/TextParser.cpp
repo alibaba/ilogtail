@@ -51,7 +51,7 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
     mPos = 0;
     mState = TextState::Start;
     mLabelName.clear();
-    mToken.clear();
+    mTokenLength = 0;
     if (defaultNanoTs > 0) {
         mNanoTimestamp = defaultNanoTs;
     }
@@ -105,7 +105,7 @@ void TextParser::HandleStart(char c, MetricEvent&) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
-        mToken += c;
+        ++mTokenLength;
         NextState(TextState::MetricName);
     } else {
         HandleError("expected metric name");
@@ -114,10 +114,10 @@ void TextParser::HandleStart(char c, MetricEvent&) {
 
 void TextParser::HandleMetricName(char c, MetricEvent& metricEvent) {
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
-        mToken += c;
+        ++mTokenLength;
     } else if (c == '{' || std::isspace(c)) {
-        metricEvent.SetName(mToken);
-        mToken.clear();
+        metricEvent.SetName(mLine.substr(mPos - mTokenLength - 1, mTokenLength).to_string());
+        mTokenLength = 0;
         // need to solve these case, but don't point mPos to Value
         // {Space}* OpenBrace
         // {Space}+ Value
@@ -152,7 +152,7 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
         c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
     }
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
-        mToken += c;
+        ++mTokenLength;
         NextState(TextState::LabelName);
     } else if (c == '}') {
         SkipSpaceIfHasNext();
@@ -164,10 +164,10 @@ void TextParser::HandleOpenBrace(char c, MetricEvent&) {
 
 void TextParser::HandleLabelName(char c, MetricEvent&) {
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
-        mToken += c;
+        ++mTokenLength;
     } else if (c == '=' || std::isspace(c)) {
-        mLabelName = mToken;
-        mToken.clear();
+        mLabelName = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
+        mTokenLength = 0;
         // Ignore subsequent spaces
         while (std::isspace(c)) {
             c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
@@ -196,13 +196,13 @@ void TextParser::HandleEqualSign(char c, MetricEvent&) {
 
 void TextParser::HandleLabelValue(char c, MetricEvent& metricEvent) {
     if (c == '"') {
-        metricEvent.SetTag(mLabelName, mToken);
-        mToken.clear();
+        metricEvent.SetTag(mLabelName, mLine.substr(mPos - mTokenLength - 1, mTokenLength));
+        mTokenLength = 0;
         NextState(TextState::CommaOrCloseBrace);
     } else if (c == '\0') {
         HandleError("unexpected end of input in label value");
     } else {
-        mToken += c;
+        ++mTokenLength;
     }
 }
 
@@ -223,27 +223,35 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
 
 void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
     if (std::isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
-        mToken += c;
-    } else if (c == ' ' || c == '\0') {
+        ++mTokenLength;
+    } else if (std::isspace(c)) {
         try {
-            mSampleValue = stod(mToken);
+            mSampleValue = stod(mLine.substr(mPos - mTokenLength - 1, mTokenLength).to_string());
         } catch (...) {
             HandleError("invalid sample value");
-            mToken.clear();
+            mTokenLength = 0;
             return;
         }
         metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
-        mToken.clear();
+        mTokenLength = 0;
 
-        if (c == ' ') {
-            SkipSpaceIfHasNext();
-            NextState(TextState::Timestamp);
-        } else {
-            time_t timestamp = mNanoTimestamp / 1000000000;
-            auto ns = mNanoTimestamp % 1000000000;
-            metricEvent.SetTimestamp(timestamp, ns);
-            NextState(TextState::Done);
+        SkipSpaceIfHasNext();
+        NextState(TextState::Timestamp);
+    } else if (c == '\0') {
+        try {
+            mSampleValue = stod(mLine.substr(mPos - mTokenLength, mTokenLength).to_string());
+        } catch (...) {
+            HandleError("invalid sample value");
+            mTokenLength = 0;
+            return;
         }
+        metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
+        mTokenLength = 0;
+
+        time_t timestamp = mNanoTimestamp / 1000000000;
+        auto ns = mNanoTimestamp % 1000000000;
+        metricEvent.SetTimestamp(timestamp, ns);
+        NextState(TextState::Done);
     } else {
         HandleError("invalid character in sample value");
     }
@@ -251,20 +259,22 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
 
 void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
     if (std::isdigit(c)) {
-        mToken += c;
-    } else if (c == ' ' || c == '\0') {
-        if (!mToken.empty()) {
+        ++mTokenLength;
+    } else if (std::isspace(c) || c == '\0') {
+        if (mTokenLength) {
             try {
-                mNanoTimestamp = stoull(mToken) * 1000000;
+                mNanoTimestamp
+                    = stoull(mLine.substr(mPos - mTokenLength - (std::isspace(c) ? 1 : 0), mTokenLength).to_string())
+                    * 1000000;
             } catch (...) {
                 HandleError("invalid timestamp");
-                mToken.clear();
+                mTokenLength = 0;
                 return;
             }
             time_t timestamp = mNanoTimestamp / 1000000000;
             auto ns = mNanoTimestamp % 1000000000;
             metricEvent.SetTimestamp(timestamp, ns);
-            mToken.clear();
+            mTokenLength = 0;
         }
         NextState(TextState::Done);
     } else {

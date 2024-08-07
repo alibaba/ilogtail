@@ -66,12 +66,10 @@ private:
     StringView mLine;
     std::size_t mPos{0};
 
-    std::string mMetricName;
-    std::string mLabelName;
-    std::string mLabelValue;
+    StringView mLabelName;
     double mSampleValue{0.0};
     uint64_t mNanoTimestamp{0};
-    std::string mToken;
+    std::size_t mTokenLength{0};
 
 
 #ifdef APSARA_UNIT_TEST_MAIN
