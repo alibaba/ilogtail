@@ -234,7 +234,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(mContext.GetProcessQueueKey(), priority);
+        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(
+            mContext.GetProcessQueueKey(), priority, ProcessQueueManager::QueueType::BOUNDED);
 
         unordered_set<FeedbackInterface*> feedbackSet;
         for (const auto& input : mInputs) {

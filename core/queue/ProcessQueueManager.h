@@ -26,15 +26,19 @@
 #include <vector>
 
 #include "common/FeedbackInterface.h"
-#include "queue/QueueKey.h"
+#include "queue/BoundedSenderQueueInterface.h"
 #include "queue/ProcessQueueInterface.h"
 #include "queue/ProcessQueueItem.h"
-#include "queue/BoundedSenderQueueInterface.h"
+#include "queue/QueueKey.h"
 
 namespace logtail {
 
 class ProcessQueueManager : public FeedbackInterface {
 public:
+    using ProcessQueueIterator = std::list<std::unique_ptr<ProcessQueueInterface>>::iterator;
+
+    enum class QueueType { BOUNDED, CIRCULAR };
+
     static constexpr uint32_t sMaxPriority = 3;
 
     ProcessQueueManager(const ProcessQueueManager&) = delete;
@@ -47,7 +51,7 @@ public:
 
     void Feedback(QueueKey key) override { Trigger(); }
 
-    bool CreateOrUpdateQueue(QueueKey key, uint32_t priority);
+    bool CreateOrUpdateQueue(QueueKey key, uint32_t priority, QueueType type);
     bool DeleteQueue(QueueKey key);
     bool IsValidToPush(QueueKey key) const;
     // 0: success, 1: queue is full, 2: queue not found
@@ -70,12 +74,14 @@ private:
     ProcessQueueManager();
     ~ProcessQueueManager() = default;
 
+    void CreateQueue(QueueKey key, uint32_t priority, QueueType type);
+    void DeleteQueueEntity(const ProcessQueueIterator& iter);
     void ResetCurrentQueueIndex();
 
     mutable std::mutex mQueueMux;
-    std::unordered_map<QueueKey, std::list<std::unique_ptr<ProcessQueueInterface>>::iterator> mQueues;
+    std::unordered_map<QueueKey, std::pair<ProcessQueueIterator, QueueType>> mQueues;
     std::list<std::unique_ptr<ProcessQueueInterface>> mPriorityQueue[sMaxPriority + 1];
-    std::pair<uint32_t, std::list<std::unique_ptr<ProcessQueueInterface>>::iterator> mCurrentQueueIndex;
+    std::pair<uint32_t, ProcessQueueIterator> mCurrentQueueIndex;
 
     mutable std::mutex mStateMux;
     mutable std::condition_variable mCond;

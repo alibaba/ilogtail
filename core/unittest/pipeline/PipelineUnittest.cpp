@@ -2327,7 +2327,7 @@ void PipelineUnittest::TestProcessQueue() const {
     unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
     QueueKey key;
-    list<unique_ptr<ProcessQueueInterface>>::iterator que;
+    ProcessQueueManager::ProcessQueueIterator que;
 
     // new pipeline
     configStr = R"(
@@ -2362,7 +2362,7 @@ void PipelineUnittest::TestProcessQueue() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
-    que = ProcessQueueManager::GetInstance()->mQueues[key];
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
     // queue level
     APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
     APSARA_TEST_EQUAL(key, (*que)->GetKey());
@@ -2377,7 +2377,7 @@ void PipelineUnittest::TestProcessQueue() const {
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[0].size());
     APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[0].begin()
-                     == ProcessQueueManager::GetInstance()->mQueues[key]);
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
 
     // update pipeline with different priority
     configStr = R"(
@@ -2409,7 +2409,7 @@ void PipelineUnittest::TestProcessQueue() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
-    que = ProcessQueueManager::GetInstance()->mQueues[key];
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
     // queue level
     APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
     APSARA_TEST_EQUAL(key, (*que)->GetKey());
@@ -2424,7 +2424,7 @@ void PipelineUnittest::TestProcessQueue() const {
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[3].size());
     APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[3].begin()
-                     == ProcessQueueManager::GetInstance()->mQueues[key]);
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
 
     // delete pipeline
     pipeline->RemoveProcessQueue();
