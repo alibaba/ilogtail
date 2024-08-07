@@ -598,67 +598,6 @@ void LogFileReader::SetReadFromBeginning() {
     mFirstWatched = false;
 }
 
-int LogFileReader::ParseAllLines(
-    char* buffer, size_t size, int32_t bootTime, const std::string& timeFormat, int32_t& parsedTime, int& pos) {
-    std::vector<int> lineFeedPos;
-    int begin = 0;
-    // here we push back 0 because the pos 0 must be the beginning of the first line
-    lineFeedPos.push_back(begin);
-
-    // data in buffer is between [0, size)
-    for (int i = 1; i < (int)size; ++i) {
-        if (buffer[i] == '\n') {
-            buffer[i] = '\0';
-            begin = i + 1;
-            // if begin == size, we meet the end of all lines buffer
-            if (begin < (int)size)
-                lineFeedPos.push_back(begin);
-        }
-    }
-
-    // parse first and last line
-    size_t firstLogIndex = 0, lastLogIndex = lineFeedPos.size() - 1;
-    int32_t firstLogTime = -1, lastLogTime = -1;
-    for (size_t i = 0; i < lineFeedPos.size(); ++i) {
-        firstLogTime = ParseTime(buffer + lineFeedPos[i], timeFormat);
-        if (firstLogTime != -1) {
-            firstLogIndex = i;
-            break;
-        }
-    }
-    if (firstLogTime >= bootTime) {
-        parsedTime = firstLogTime;
-        pos = lineFeedPos[firstLogIndex];
-        return 1;
-    }
-
-    for (int i = (int)lineFeedPos.size() - 1; i >= 0; --i) {
-        lastLogTime = ParseTime(buffer + lineFeedPos[i], timeFormat);
-        if (lastLogTime != -1) {
-            lastLogIndex = (size_t)i;
-            break;
-        }
-    }
-    if (lastLogTime < bootTime) {
-        parsedTime = lastLogTime;
-        pos = lineFeedPos[lastLogIndex];
-        return 2;
-    }
-
-    // parse all lines, now fisrtLogTime < bootTime, lastLogTime >= booTime
-    for (size_t i = firstLogIndex + 1; i < lastLogIndex; ++i) {
-        parsedTime = ParseTime(buffer + lineFeedPos[i], timeFormat);
-        if (parsedTime >= bootTime) {
-            pos = lineFeedPos[i];
-            return 0;
-        }
-    }
-
-    parsedTime = lastLogTime;
-    pos = lineFeedPos[lastLogIndex];
-    return 0;
-}
-
 int32_t LogFileReader::ParseTime(const char* buffer, const std::string& timeFormat) {
     struct tm tm;
     memset(&tm, 0, sizeof(tm));
