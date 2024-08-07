@@ -1,6 +1,7 @@
 import argparse
-import os
 import subprocess
+import sys
+import time
 
 def get_changed_files():
     try:
@@ -43,10 +44,10 @@ if __name__ == '__main__':
                         coverage_rate = int(units[3][:-1])
                         if coverage_rate < 50:
                             not_satified.append(changed_file)
-                        print(line)
+                        print(line, flush=True)
                         break
             else:
-                print(line)
+                print(line, flush=True)
     if len(not_satified) > 0:
-        print(f"Coverage rate is less than 50% for the following files: {not_satified}")
-        os._exit(1)
+        print(f"Coverage rate is less than 50% for the following files: {not_satified}", flush=True)
+        sys.exit(1)
