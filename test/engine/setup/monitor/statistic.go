@@ -11,9 +11,11 @@ type Info struct {
 	maxVal float64
 	avgVal float64
 	cnt    int64
+	values []float64
 }
 
 func (s *Info) Add(val float64) {
+	s.values = append(s.values, val)
 	if s.cnt < 1 {
 		s.maxVal = val
 		s.avgVal = val
@@ -69,12 +71,35 @@ type StatisticItem struct {
 	Unit  string  `json:"unit"`
 }
 
-func (m *Statistic) MarshalJSON() ([]byte, error) {
+func (m *Statistic) MarshalStatisticJSON() ([]byte, error) {
 	items := []StatisticItem{
-		{"CPU_Usage_Max-" + m.name, m.cpu.maxVal, "%"},
-		{"CPU_Usage_Avg-" + m.name, m.cpu.avgVal, "%"},
-		{"Memory_Usage_Max-" + m.name, m.mem.maxVal, "MB"},
-		{"Memory_Usage_Avg-" + m.name, m.mem.avgVal, "MB"},
+		{"CPU_Usage_Max - " + m.name, m.cpu.maxVal, "%"},
+		{"CPU_Usage_Avg - " + m.name, m.cpu.avgVal, "%"},
+		{"Memory_Usage_Max - " + m.name, m.mem.maxVal, "MB"},
+		{"Memory_Usage_Avg - " + m.name, m.mem.avgVal, "MB"},
+	}
+
+	// Serialize the slice to JSON
+	jsonData, err := json.MarshalIndent(items, "", "    ")
+	if err != nil {
+		fmt.Println("Error serializing statistics:", err)
+		return nil, err
+	}
+
+	// Output the JSON string
+	return jsonData, nil
+}
+
+type RecordsItem struct {
+	Name    string    `json:"name"`
+	Records []float64 `json:"records"`
+	Unit    string    `json:"unit"`
+}
+
+func (m *Statistic) MarshalRecordsJSON() ([]byte, error) {
+	items := []RecordsItem{
+		{"CPU_Usage - " + m.name, m.cpu.values, "%"},
+		{"Memory_Usage - " + m.name, m.mem.values, "MB"},
 	}
 
 	// Serialize the slice to JSON

@@ -60,7 +60,8 @@ func monitoring(client *client.Client, containerName string) {
 	// create csv file
 	root, _ := filepath.Abs(".")
 	reportDir := root + "/report/"
-	benchmarkFile := reportDir + config.CaseName + "_benchmark.json"
+	statisticFile := reportDir + config.CaseName + "_statistic.json"
+	recordsFile := reportDir + config.CaseName + "_records.json"
 	// new ticker
 	ticker := time.NewTicker(interval * time.Second)
 	defer ticker.Stop()
@@ -71,8 +72,10 @@ func monitoring(client *client.Client, containerName string) {
 		select {
 		case <-stopCh:
 			isMonitoring.Store(false)
-			bytes, _ := monitorStatistic.MarshalJSON()
-			_ = os.WriteFile(benchmarkFile, bytes, 0600)
+			bytes, _ := monitorStatistic.MarshalStatisticJSON()
+			_ = os.WriteFile(statisticFile, bytes, 0600)
+			bytes, _ = monitorStatistic.MarshalRecordsJSON()
+			_ = os.WriteFile(recordsFile, bytes, 0600)
 			return
 		case <-ticker.C:
 			// 获取容器信息
