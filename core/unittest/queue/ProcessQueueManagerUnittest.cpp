@@ -27,7 +27,7 @@ namespace logtail {
 
 class ProcessQueueManagerUnittest : public testing::Test {
 public:
-    void TestUpdateQueue();
+    void TestUpdateSameTypeQueue();
     void TestDeleteQueue();
     void TestSetQueueUpstreamAndDownStream();
     void TestPushQueue();
@@ -55,7 +55,7 @@ private:
 unique_ptr<PipelineEventGroup> ProcessQueueManagerUnittest::sEventGroup;
 ProcessQueueManager* ProcessQueueManagerUnittest::sProcessQueueManager;
 
-void ProcessQueueManagerUnittest::TestUpdateQueue() {
+void ProcessQueueManagerUnittest::TestUpdateSameTypeQueue() {
     // create queue
     //   and current index is invalid before creation
     QueueKey key = QueueKeyManager::GetInstance()->GetKey("test_config_1");
@@ -321,7 +321,7 @@ void ProcessQueueManagerUnittest::OnPipelineUpdate() {
     APSARA_TEST_TRUE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[2]->mValidToPop);
 }
 
-UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestUpdateQueue)
+UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestUpdateSameTypeQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestSetQueueUpstreamAndDownStream)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestPushQueue)
