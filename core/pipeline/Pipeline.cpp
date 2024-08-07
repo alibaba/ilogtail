@@ -127,6 +127,18 @@ bool Pipeline::Init(PipelineConfig&& config) {
         }
         ++mPluginCntMap["aggregators"][(*detail)["Type"].asString()];
     }
+    if (config.mAggregators.size() == 0 && config.ShouldNativeFlusherConnectedByGoPipeline()) {
+        // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
+        // to cpp flusher. gen aggregator_default's plugin_id here
+        GenNextPluginMeta(false);
+        Json::Value aggregatorDefault;
+        aggregatorDefault["Type"] = "aggregator_default";
+        if (ShouldAddPluginToGoPipelineWithInput()) {
+            AddPluginToGoPipeline(aggregatorDefault, "aggregators", mGoPipelineWithInput);
+        } else {
+            AddPluginToGoPipeline(aggregatorDefault, "aggregators", mGoPipelineWithoutInput);
+        }
+    }
 
     for (auto detail : config.mFlushers) {
         string name = (*detail)["Type"].asString();

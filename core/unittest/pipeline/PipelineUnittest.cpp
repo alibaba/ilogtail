@@ -2644,9 +2644,15 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
                     "detail": {}
                 }
             ],
+            "aggregators": [
+                {
+                    "type": "aggregator_default/6",
+                    "detail": {}
+                }
+            ],
             "flushers": [
                 {
-                    "type": "flusher_sls/6",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
