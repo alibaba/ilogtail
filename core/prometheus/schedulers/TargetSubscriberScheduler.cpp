@@ -76,7 +76,7 @@ void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
 }
 
 void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeScheduler>>& newScrapeSchedulerSet) {
-    set<shared_ptr<ScrapeScheduler>> diff;
+    vector<shared_ptr<ScrapeScheduler>> diff;
     {
         WriteLock lock(mRWLock);
 
@@ -85,10 +85,10 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeSched
                        mScrapeSchedulerSet.end(),
                        newScrapeSchedulerSet.begin(),
                        newScrapeSchedulerSet.end(),
-                       inserter(diff, diff.begin()));
+                       inserter(diff, diff.end()));
         for (const auto& work : diff) {
             mScrapeSchedulerSet.erase(work);
-            mScrapeMap[work->GetId()]->Cancel();
+            work->Cancel();
         }
         diff.clear();
 
@@ -97,10 +97,9 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeSched
                        newScrapeSchedulerSet.end(),
                        mScrapeSchedulerSet.begin(),
                        mScrapeSchedulerSet.end(),
-                       inserter(diff, diff.begin()));
+                       inserter(diff, diff.end()));
         for (const auto& work : diff) {
             mScrapeSchedulerSet.insert(work);
-            mScrapeMap[work->GetId()] = work;
         }
     }
 
@@ -229,7 +228,9 @@ void TargetSubscriberScheduler::ScheduleNext() {
 
     {
         WriteLock lock(mLock);
-        if (mFuture && mFuture->IsCancelled()) {
+        if (IsCancelled()) {
+            mFuture->Cancel();
+            CancelAllScrapeScheduler();
             return;
         }
         mFuture = future;
@@ -260,6 +261,12 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
 
     return timerEvent;
+}
+
+void TargetSubscriberScheduler::CancelAllScrapeScheduler() {
+    for (const auto& scrapeScheduler : mScrapeSchedulerSet) {
+        scrapeScheduler->Cancel();
+    }
 }
 
 

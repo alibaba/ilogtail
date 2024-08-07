@@ -22,11 +22,14 @@ public:
     void Cancel();
 
 protected:
+    bool IsCancelled();
+
     std::chrono::steady_clock::time_point mFirstExecTime;
     int64_t mExecCount = 0;
     int64_t mInterval = 0;
 
     ReadWriteLock mLock;
+    bool mValidState = true;
     std::shared_ptr<PromFuture> mFuture;
 };
 } // namespace logtail

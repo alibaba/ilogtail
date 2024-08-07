@@ -115,7 +115,8 @@ void ScrapeScheduler::ScheduleNext() {
 
     {
         WriteLock lock(mLock);
-        if (mFuture && mFuture->IsCancelled()) {
+        if (IsCancelled()) {
+            mFuture->Cancel();
             return;
         }
         mFuture = future;

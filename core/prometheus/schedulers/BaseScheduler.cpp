@@ -15,6 +15,11 @@ void BaseScheduler::SetFirstExecTime(std::chrono::steady_clock::time_point first
 
 void BaseScheduler::Cancel() {
     WriteLock lock(mLock);
-    mFuture->Cancel();
+    mValidState = false;
+}
+
+bool BaseScheduler::IsCancelled() {
+    ReadLock lock(mLock);
+    return mValidState;
 }
 } // namespace logtail

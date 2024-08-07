@@ -5,20 +5,19 @@
 
 namespace logtail {
 
+enum class PromFutureState { New, Processing, Done };
+
 class PromFuture {
 public:
-    virtual ~PromFuture() = default;
-
     // Process should support oneshot and streaming mode.
     void Process(const HttpResponse&);
 
     void AddDoneCallback(std::function<void(const HttpResponse&)>&& callback);
 
     void Cancel();
-    bool IsCancelled();
 
 protected:
-    bool mValidState = true;
+    PromFutureState mState = {PromFutureState::New};
     ReadWriteLock mStateRWLock;
 
     std::vector<std::function<void(const HttpResponse&)>> mDoneCallbacks;

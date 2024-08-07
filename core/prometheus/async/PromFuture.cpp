@@ -5,11 +5,20 @@
 namespace logtail {
 
 void PromFuture::Process(const HttpResponse& response) {
-    if (IsCancelled()) {
-        return;
+    {
+        WriteLock lock(mStateRWLock);
+        if (mState == PromFutureState::New) {
+            mState = PromFutureState::Processing;
+        } else {
+            return;
+        }
     }
-    for (auto& callback : mDoneCallbacks) {
-        callback(response);
+    {
+        WriteLock lock(mStateRWLock);
+        for (auto& callback : mDoneCallbacks) {
+            callback(response);
+        }
+        mState = PromFutureState::Done;
     }
 }
 
@@ -19,12 +28,7 @@ void PromFuture::AddDoneCallback(std::function<void(const HttpResponse&)>&& call
 
 void PromFuture::Cancel() {
     WriteLock lock(mStateRWLock);
-    mValidState = false;
-}
-
-bool PromFuture::IsCancelled() {
-    ReadLock lock(mStateRWLock);
-    return mValidState;
+    mState = PromFutureState::Done;
 }
 
 } // namespace logtail

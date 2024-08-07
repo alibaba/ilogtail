@@ -66,11 +66,12 @@ private:
     std::unique_ptr<TimerEvent> BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime);
     void UpdateScrapeScheduler(std::set<std::shared_ptr<ScrapeScheduler>>&);
 
+    void CancelAllScrapeScheduler();
+
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     ReadWriteLock mRWLock;
     std::set<std::shared_ptr<ScrapeScheduler>> mScrapeSchedulerSet;
-    std::map<std::string, std::shared_ptr<ScrapeScheduler>> mScrapeMap;
 
     std::string mJobName;
     std::shared_ptr<Timer> mTimer;
