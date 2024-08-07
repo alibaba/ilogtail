@@ -38,8 +38,7 @@ func (wrapper *FlusherWrapperV1) IsReady(projectName string, logstoreName string
 }
 
 func (wrapper *FlusherWrapperV1) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	var total int64 = 0
-	var size int64 = 0
+	var total, size int64
 	for _, logGroup := range logGroupList {
 		total += int64(len(logGroup.Logs))
 		size += int64(logGroup.Size())

@@ -37,8 +37,7 @@ func (wrapper *FlusherWrapperV2) IsReady(projectName string, logstoreName string
 }
 
 func (wrapper *FlusherWrapperV2) Export(pipelineGroupEvents []*models.PipelineGroupEvents, pipelineContext pipeline.PipelineContext) error {
-	var total int64 = 0
-	var size int64 = 0
+	var total, size int64
 	for _, groups := range pipelineGroupEvents {
 		total += int64(len(groups.Events))
 		for _, event := range groups.Events {

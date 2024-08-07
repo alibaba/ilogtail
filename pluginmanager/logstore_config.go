@@ -853,7 +853,7 @@ func (lc *LogstoreConfig) genPluginMeta(pluginName string, genNodeID bool, lastO
 			if genNodeID {
 				nodeID, childNodeID = lc.genNodeID(lastOne)
 			}
-			if pluginID, err := strconv.Atoi(pluginTypeWithID[ids+1:]); err == nil {
+			if pluginID, err := strconv.ParseInt(pluginTypeWithID[ids+1:], 10, 32); err == nil {
 				atomic.StoreInt32(&lc.pluginID, int32(pluginID))
 			}
 			return &pipeline.PluginMeta{
