@@ -72,6 +72,8 @@ private:
     uint64_t mNanoTimestamp{0};
     std::size_t mTokenLength{0};
 
+    bool mNoEscapes = true;
+
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TextParserUnittest;

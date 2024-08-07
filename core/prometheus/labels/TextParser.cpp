@@ -120,6 +120,7 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
     mState = TextState::Start;
     mLabelName.clear();
     mTokenLength = 0;
+    mNoEscapes = line.find('\\') == StringView::npos;
     if (defaultNanoTs > 0) {
         mNanoTimestamp = defaultNanoTs;
     }
@@ -290,9 +291,7 @@ void TextParser::HandleCommaOrCloseBrace(char c, MetricEvent&) {
 }
 
 void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
-    if (std::isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
-        ++mTokenLength;
-    } else if (IsWhitespace(c)) {
+    if (IsWhitespace(c)) {
         auto tmpSampleValue = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
 
         if (!StringViewToDouble(tmpSampleValue, mSampleValue)) {
@@ -320,7 +319,7 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
         metricEvent.SetTimestamp(timestamp, ns);
         NextState(TextState::Done);
     } else {
-        HandleError("invalid character in sample value");
+        ++mTokenLength;
     }
 }
 
