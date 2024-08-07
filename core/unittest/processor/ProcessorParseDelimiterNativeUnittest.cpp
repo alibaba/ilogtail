@@ -1824,6 +1824,15 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
+                        "content" : "2013-10-31 21:03:49,POST,'PutData?Category=Yun'Os'AccountOpLog',0.024"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
                         "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs''AccountOpLog',0.024"
                     },
                     "timestamp" : 12345678901,
@@ -1891,6 +1900,15 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                     "contents" :
                     {
                         "rawLog": "2013-10-31 21:03:49,POST,''PutData?Category=YunOsAccountOpLog',0.024"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "rawLog": "2013-10-31 21:03:49,POST,'PutData?Category=Yun'Os'AccountOpLog',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
