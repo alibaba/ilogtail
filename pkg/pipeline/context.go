@@ -77,15 +77,15 @@ func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
 
 // ExportMetricRecords is used for exporting metrics records.
 // It will replace Serialize in the future.
-func (m *MetricsRecord) ExportMetricRecords() []map[string]string {
+func (m *MetricsRecord) ExportMetricRecords() map[string]string {
 	m.RLock()
 	defer m.RUnlock()
 
-	records := make([]map[string]string, 0)
+	record := map[string]string{}
+	m.insertLabels(record)
 	for _, metricCollector := range m.MetricCollectors {
 		metrics := metricCollector.Collect()
-		record := map[string]string{}
-		m.insertLabels(record)
+
 		for _, metric := range metrics {
 			singleMetricRecord := metric.Export()
 			if len(singleMetricRecord) == 0 {
@@ -95,9 +95,8 @@ func (m *MetricsRecord) ExportMetricRecords() []map[string]string {
 			valueValue := singleMetricRecord[valueName]
 			record["value."+valueName] = valueValue
 		}
-		records = append(records, record)
 	}
-	return records
+	return record
 }
 
 func GetCommonLabels(context Context, pluginMeta *PluginMeta) []LabelPair {
@@ -143,6 +142,6 @@ type Context interface {
 	// APIs for self monitor
 	RegisterMetricRecord(labels []LabelPair) *MetricsRecord // for v1.8.8 compatible
 	GetMetricRecord() *MetricsRecord                        // for v1.8.8 compatible
-	ExportMetricRecords() []map[string]string               // for v1.8.8 compatible
+	ExportMetricRecords() []map[string]string
 	MetricSerializeToPB(logGroup *protocol.LogGroup)
 }

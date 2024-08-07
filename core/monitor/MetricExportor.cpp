@@ -110,13 +110,13 @@ void MetricExportor::PushMetrics(bool forceSend) {
         return;
     }
 
-    PushCoreMetrics();
+    PushCppMetrics();
     if (LogtailPlugin::GetInstance()->IsPluginOpened()) {
         PushGoPluginMetrics();
     }
 }
 
-void MetricExportor::PushCoreMetrics() {
+void MetricExportor::PushCppMetrics() {
     ReadMetrics::GetInstance()->UpdateMetrics();
 
     if ("sls" == STRING_FLAG(metrics_report_method)) {

@@ -32,7 +32,7 @@ public:
 private:
     MetricExportor();
 
-    void PushCoreMetrics();
+    void PushCppMetrics();
     void PushGoPluginMetrics();
 
     void SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
