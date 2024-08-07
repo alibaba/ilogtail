@@ -40,11 +40,11 @@ if __name__ == '__main__':
                             line_cache = line
                             continue
                         coverage_rate = int(units[3][:-1])
-                        if coverage_rate < 80:
+                        if coverage_rate < 50:
                             not_satified.append(changed_file)
                         print(line)
                         break
             else:
                 print(line)
     if len(not_satified) > 0:
-        print(f"Coverage rate is less than 80% for the following files: {not_satified}")
+        raise Exception(f"Coverage rate is less than 50% for the following files: {not_satified}")
