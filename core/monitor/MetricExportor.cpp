@@ -38,56 +38,6 @@ namespace logtail {
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
 }
 
-/*
-go指标的原始数据是如下格式：
-{"__name__":"proc_in_records_total","child_node_id":"2","config_name":"##1.0##xuanyang-test$collect-self-logs-go","logstore":"","node_id":"1","plugin_id":"4","plugin_name":"processor_regex","proc_in_records_total":"29.0000","project":"",}
-{"__name__":"proc_out_records_total","child_node_id":"2","config_name":"##1.0##xuanyang-test$collect-self-logs-go","logstore":"","node_id":"1","plugin_id":"4","plugin_name":"processor_regex","proc_out_records_total":"29.0000","project":""}
-{"__name__":"proc_time_ms","child_node_id":"2","config_name":"##1.0##xuanyang-test$collect-self-logs-go","logstore":"","node_id":"1","plugin_id":"4","plugin_name":"processor_regex","proc_time_ms":"0.0000","project":""}
-需要聚合成C++的指标格式：
-{"label.child_node_id":"3","label.config_name":"##1.0##xuanyang-test$collect-metrics","label.logstore":"opensource-self-monitor","label.node_id":"2","label.plugin_id":"2","label.plugin_name":"processor_split_string_native","label.project":"xuanyang-test","label.region":"cn-shanghai","time":1722920556,"value.proc_in_records_total":"1","value.proc_out_records_total":"134","value.proc_time_ms":"833"}
-*/
-void aggregateGoPluginMetrics(std::vector<std::map<std::string, std::string>>& goPluginMetricsList) {
-    // 使用map来存储聚合后的结果
-    std::map<std::map<std::string, std::string>, std::map<std::string, std::string>> aggregatedMetrics;
-
-    for (auto& metric : goPluginMetricsList) {
-        auto nameIt = metric.find("__name__");
-        if (nameIt == metric.end()) {
-            continue;
-        }
-
-        std::string name = nameIt->second;
-        metric.erase(nameIt);
-
-        std::map<std::string, std::string> labels;
-        std::string valueKey;
-        std::string valueValue;
-
-        for (auto& [key, value] : metric) {
-            if (key == name) {
-                valueKey = VALUE_PREFIX + key;
-                valueValue = value;
-            } else {
-                labels.emplace(LABEL_PREFIX + key, value);
-            }
-        }
-
-        // 将值添加到聚合map中
-        aggregatedMetrics[std::move(labels)][valueKey] = valueValue;
-    }
-
-    // 清空原始列表并用聚合后的结果填充
-    goPluginMetricsList.clear();
-
-    for (auto& [labels, values] : aggregatedMetrics) {
-        std::map<std::string, std::string> newMetric = std::move(labels);
-        for (auto& [key, value] : values) {
-            newMetric.emplace(std::move(key), std::move(value));
-        }
-        goPluginMetricsList.push_back(std::move(newMetric));
-    }
-}
-
 void processGoPluginMetricsListToLogGroupMap(std::vector<std::map<std::string, std::string>>& goPluginMetircsList,
                                              std::map<std::string, sls_logs::LogGroup*>& goLogGroupMap) {
     for (auto& item : goPluginMetircsList) {
@@ -183,7 +133,6 @@ void MetricExportor::PushCoreMetrics() {
 void MetricExportor::PushGoPluginMetrics() {
     std::vector<std::map<std::string, std::string>> goPluginMetircsList;
     LogtailPlugin::GetInstance()->GetPipelineMetrics(goPluginMetircsList);
-    aggregateGoPluginMetrics(goPluginMetircsList);
 
     if (goPluginMetircsList.size() == 0) {
         return;

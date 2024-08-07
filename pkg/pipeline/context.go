@@ -30,6 +30,8 @@ type CommonContext struct {
 
 type LabelPair = Label
 
+const SelfMetricNameKey = "__name__"
+
 type MetricsRecord struct {
 	Context Context
 	Labels  []LabelPair
@@ -46,7 +48,7 @@ func (m *MetricsRecord) appendLabels(log *protocol.Log) {
 
 func (m *MetricsRecord) insertLabels(record map[string]string) {
 	for _, label := range m.Labels {
-		record[label.Key] = label.Value
+		record["label."+label.Key] = label.Value
 	}
 }
 
@@ -82,15 +84,18 @@ func (m *MetricsRecord) ExportMetricRecords() []map[string]string {
 	records := make([]map[string]string, 0)
 	for _, metricCollector := range m.MetricCollectors {
 		metrics := metricCollector.Collect()
+		record := map[string]string{}
+		m.insertLabels(record)
 		for _, metric := range metrics {
-			record := metric.Export()
-			if len(record) == 0 {
+			singleMetricRecord := metric.Export()
+			if len(singleMetricRecord) == 0 {
 				continue
 			}
-
-			m.insertLabels(record)
-			records = append(records, record)
+			valueName := singleMetricRecord[SelfMetricNameKey]
+			valueValue := singleMetricRecord[valueName]
+			record["value."+valueName] = valueValue
 		}
+		records = append(records, record)
 	}
 	return records
 }
