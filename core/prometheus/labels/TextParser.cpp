@@ -17,6 +17,7 @@
 #include "prometheus/labels/TextParser.h"
 
 #include <boost/algorithm/string.hpp>
+#include <charconv>
 #include <cmath>
 #include <string>
 
@@ -28,6 +29,20 @@
 using namespace std;
 
 namespace logtail {
+
+inline bool StringViewToDouble(StringView sv, double& value) {
+    const char* str = sv.data();
+    char* end = nullptr;
+    errno = 0;
+    value = std::strtod(str, &end);
+    if (end == str) {
+        return false;
+    }
+    if (errno == ERANGE) {
+        return false;
+    }
+    return true;
+}
 
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
@@ -225,9 +240,9 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
     if (std::isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
         ++mTokenLength;
     } else if (std::isspace(c)) {
-        try {
-            mSampleValue = stod(mLine.substr(mPos - mTokenLength - 1, mTokenLength).to_string());
-        } catch (...) {
+        auto tmpSampleValue = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
+
+        if (!StringViewToDouble(tmpSampleValue, mSampleValue)) {
             HandleError("invalid sample value");
             mTokenLength = 0;
             return;
@@ -238,9 +253,8 @@ void TextParser::HandleSampleValue(char c, MetricEvent& metricEvent) {
         SkipSpaceIfHasNext();
         NextState(TextState::Timestamp);
     } else if (c == '\0') {
-        try {
-            mSampleValue = stod(mLine.substr(mPos - mTokenLength, mTokenLength).to_string());
-        } catch (...) {
+        auto tmpSampleValue = mLine.substr(mPos - mTokenLength, mTokenLength);
+        if (!StringViewToDouble(tmpSampleValue, mSampleValue)) {
             HandleError("invalid sample value");
             mTokenLength = 0;
             return;
@@ -262,15 +276,15 @@ void TextParser::HandleTimestamp(char c, MetricEvent& metricEvent) {
         ++mTokenLength;
     } else if (std::isspace(c) || c == '\0') {
         if (mTokenLength) {
-            try {
-                mNanoTimestamp
-                    = stoull(mLine.substr(mPos - mTokenLength - (std::isspace(c) ? 1 : 0), mTokenLength).to_string())
-                    * 1000000;
-            } catch (...) {
+            auto tmpTimestamp = mLine.substr(mPos - mTokenLength - (std::isspace(c) ? 1 : 0), mTokenLength);
+            auto [ptr, ec]
+                = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), mNanoTimestamp);
+            if (ec != std::errc()) {
                 HandleError("invalid timestamp");
                 mTokenLength = 0;
                 return;
             }
+            mNanoTimestamp *= 1000000;
             time_t timestamp = mNanoTimestamp / 1000000000;
             auto ns = mNanoTimestamp % 1000000000;
             metricEvent.SetTimestamp(timestamp, ns);
