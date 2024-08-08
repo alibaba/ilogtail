@@ -29,6 +29,7 @@
 #include "queue/BoundedSenderQueueInterface.h"
 #include "queue/ProcessQueueInterface.h"
 #include "queue/ProcessQueueItem.h"
+#include "queue/QueueParam.h"
 #include "queue/QueueKey.h"
 
 namespace logtail {
@@ -77,6 +78,8 @@ private:
     void CreateQueue(QueueKey key, uint32_t priority, QueueType type);
     void DeleteQueueEntity(const ProcessQueueIterator& iter);
     void ResetCurrentQueueIndex();
+
+    BoundedQueueParam mBoundedQueueParam;
 
     mutable std::mutex mQueueMux;
     std::unordered_map<QueueKey, std::pair<ProcessQueueIterator, QueueType>> mQueues;

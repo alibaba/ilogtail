@@ -15,9 +15,12 @@
 #include "queue/ProcessQueueManager.h"
 
 #include "common/Flags.h"
+#include "queue/BoundedProcessQueue.h"
+#include "queue/CircularProcessQueue.h"
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/QueueKeyManager.h"
-#include "queue/QueueParam.h"
+
+DEFINE_FLAG_INT32(bounded_process_queue_capacity, "", 15);
 
 DECLARE_FLAG_INT32(process_thread_count);
 
@@ -25,7 +28,7 @@ using namespace std;
 
 namespace logtail {
 
-ProcessQueueManager::ProcessQueueManager() {
+ProcessQueueManager::ProcessQueueManager() : mBoundedQueueParam(INT32_FLAG(bounded_process_queue_capacity)) {
     ResetCurrentQueueIndex();
 }
 
@@ -256,15 +259,16 @@ void ProcessQueueManager::CreateQueue(QueueKey key, uint32_t priority, QueueType
     switch (type) {
         case QueueType::BOUNDED:
             mPriorityQueue[priority].emplace_back(
-                make_unique<BoundedProcessQueue>(ProcessQueueParam::GetInstance()->mCapacity,
-                                                 ProcessQueueParam::GetInstance()->mLowWatermark,
-                                                 ProcessQueueParam::GetInstance()->mHighWatermark,
+                make_unique<BoundedProcessQueue>(mBoundedQueueParam.GetCapacity(),
+                                                 mBoundedQueueParam.GetLowWatermark(),
+                                                 mBoundedQueueParam.GetHighWatermark(),
                                                  key,
                                                  priority,
                                                  QueueKeyManager::GetInstance()->GetName(key)));
             break;
         case QueueType::CIRCULAR:
-            // TODO: implement
+            mPriorityQueue[priority].emplace_back(
+                make_unique<CircularProcessQueue>(100, key, priority, QueueKeyManager::GetInstance()->GetName(key)));
             break;
     }
     mQueues[key] = make_pair(prev(mPriorityQueue[priority].end()), type);

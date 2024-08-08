@@ -52,6 +52,9 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) override {
+        if (config.isMember("SupportAck")) {
+            mSupportAck = config["SupportAck"].asBool();
+        }
         auto processor
             = PluginRegistry::GetInstance()->CreateProcessor(ProcessorInnerMock::sName, std::to_string(++pluginIdx));
         processor->Init(Json::Value(), *mContext);
@@ -60,6 +63,9 @@ public:
     }
     bool Start() override { return true; }
     bool Stop(bool isPipelineRemoving) override { return true; }
+    bool SupportAck() const override { return mSupportAck; }
+
+    bool mSupportAck = true;
 };
 
 const std::string InputMock::sName = "input_mock";
