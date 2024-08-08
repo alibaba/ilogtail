@@ -19,6 +19,7 @@
 #include "LogFileProfiler.h"
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
+#include "Monitor.h"
 #include "app_config/AppConfig.h"
 #include "common/FileSystemUtil.h"
 #include "common/RuntimeUtil.h"
@@ -110,10 +111,13 @@ void MetricExportor::PushMetrics(bool forceSend) {
         return;
     }
 
-    PushCppMetrics();
+    // go指标在Cpp指标前获取，是为了在 Cpp 部分指标做 SnapShot
+    // 前（即调用 ReadMetrics::GetInstance()->UpdateMetrics() 函数），把go部分的进程级指标填写到 Cpp
+    // 的进程级指标中去，随Cpp的进程级指标一起输出
     if (LogtailPlugin::GetInstance()->IsPluginOpened()) {
         PushGoPluginMetrics();
     }
+    PushCppMetrics();
 }
 
 void MetricExportor::PushCppMetrics() {
@@ -133,6 +137,45 @@ void MetricExportor::PushCppMetrics() {
 void MetricExportor::PushGoPluginMetrics() {
     std::vector<std::map<std::string, std::string>> goPluginMetircsList;
     LogtailPlugin::GetInstance()->GetPipelineMetrics(goPluginMetircsList);
+
+    // find process-level metrics
+    const std::string processLevelMetricKey = "metric-level";
+    const std::string processLevelMetricValue = "process";
+    auto it = std::remove_if(
+        goPluginMetircsList.begin(),
+        goPluginMetircsList.end(),
+        [processLevelMetricKey, processLevelMetricValue](const std::map<std::string, std::string>& m) {
+            return m.find(processLevelMetricKey) != m.end() && m.at(processLevelMetricKey) == processLevelMetricValue;
+        }
+    );
+    if (it != goPluginMetircsList.end()) {
+        // go cpu
+        static DoubleGaugePtr mGlobalCpuGo;
+        if (mGlobalCpuGo == nullptr) {
+            mGlobalCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_GLOBAL_CPU_GO);
+        }
+        if (auto cpu = it->find(METRIC_GLOBAL_CPU_GO); cpu != it->end()) {
+            mGlobalCpuGo->Set(std::stod(cpu->second));
+            LogtailMonitor::GetInstance()->UpdateMetric(METRIC_GLOBAL_CPU_GO, cpu->second);
+            it->erase(cpu);
+        }
+        // go mem
+        static IntGaugePtr mGlobalMemGo;
+        if (mGlobalMemGo == nullptr) {
+            mGlobalMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_MEMORY_GO);
+        }
+        if (auto mem = it->find(METRIC_GLOBAL_MEMORY_GO); mem != it->end()) {
+            mGlobalMemGo->Set(std::stoi(mem->second));
+            LogtailMonitor::GetInstance()->UpdateMetric(METRIC_GLOBAL_MEMORY_GO, mem->second);
+            it->erase(mem);
+        }
+        // other go metrics
+        for (auto metric: *it) {
+            LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
+        }
+        
+        goPluginMetircsList.erase(it);
+    }
 
     if (goPluginMetircsList.size() == 0) {
         return;

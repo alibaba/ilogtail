@@ -13,10 +13,32 @@
 // limitations under the License.
 package pluginmanager
 
+import (
+	"runtime"
+	"strconv"
+)
+
 func GetMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
 	}
+	metrics = append(metrics, GetProcessStat())
 	return metrics
+}
+
+func GetProcessStat() map[string]string {
+	recrods := map[string]string{}
+	recrods["metric-level"] = "process"
+	// cpu
+	// {
+	// 	recrods["global_cpu_go_used_cores"] = "0"
+	// }
+	// mem
+	{
+		memStat := runtime.MemStats{}
+		runtime.ReadMemStats(&memStat)
+		recrods["global_memory_go_used_mb"] = strconv.Itoa(int(memStat.Sys / 1024.0 / 1024.0))
+	}
+	return recrods
 }

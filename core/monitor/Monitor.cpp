@@ -115,8 +115,6 @@ bool LogtailMonitor::Init() {
     // init metrics
     mGlobalCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_GLOBAL_CPU);
     mGlobalMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_MEMORY);
-    mGlobalPluginTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
-    mGlobalEnvConfigTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
     mGlobalUsedSendingConcurrency
         = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
 
@@ -312,15 +310,12 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
 #endif
     UpdateMetric("config_prefer_real_ip", BOOL_FLAG(send_prefer_real_ip));
     UpdateMetric("plugin_enabled", LogtailPlugin::GetInstance()->IsPluginOpened());
-    mGlobalPluginTotal->Set(LogtailPlugin::GetInstance()->IsPluginOpened());
 #if defined(__linux__) && !defined(__ANDROID__)
     UpdateMetric("observer_enabled", ObserverManager::GetInstance()->Status());
 #endif
     const std::vector<sls_logs::LogTag>& envTags = AppConfig::GetInstance()->GetEnvTags();
     if (!envTags.empty()) {
-        size_t envConfigCount = envTags.size();
-        UpdateMetric("env_config_count", envConfigCount);
-        mGlobalEnvConfigTotal->Set(envConfigCount);
+        UpdateMetric("env_config_count", envTags.size());
     }
     int32_t usedSendingConcurrency = FlusherRunner::GetInstance()->GetSendingBufferCount();
     UpdateMetric("used_sending_concurrency", usedSendingConcurrency);
@@ -731,7 +726,9 @@ void LoongCollectorMonitor::Init() {
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
     // init value
     mDoubleGauges[METRIC_GLOBAL_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU);
+    // mDoubleGauges[METRIC_GLOBAL_CPU_GO] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU_GO);
     mIntGauges[METRIC_GLOBAL_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY);
+    mIntGauges[METRIC_GLOBAL_MEMORY_GO] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY_GO);
     mIntGauges[METRIC_GLOBAL_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_OPEN_FD_TOTAL);
     mIntGauges[METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL]
         = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL);
@@ -742,11 +739,11 @@ void LoongCollectorMonitor::Init() {
     mIntGauges[METRIC_GLOBAL_REGISTER_HANDLER_TOTAL]
         = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_REGISTER_HANDLER_TOTAL);
     mIntGauges[METRIC_GLOBAL_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONFIG_TOTAL);
-    mIntGauges[METRIC_GLOBAL_ENV_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
-    mIntGauges[METRIC_GLOBAL_CRD_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CRD_CONFIG_TOTAL);
-    mIntGauges[METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL);
-    mIntGauges[METRIC_GLOBAL_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
+    // mIntGauges[METRIC_GLOBAL_ENV_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
+    // mIntGauges[METRIC_GLOBAL_CRD_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CRD_CONFIG_TOTAL);
+    // mIntGauges[METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL]
+    //     = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_GLOBAL_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
     mIntGauges[METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL]
         = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
     mIntGauges[METRIC_GLOBAL_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
