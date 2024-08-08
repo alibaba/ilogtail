@@ -92,6 +92,7 @@ bool SourceManager::LoadDynamicLib(const std::string& lib_name) {
 
   mFuncs[(int)ebpf_func::EBPF_INIT] = LOAD_EBPF_FUNC_ADDR(init);
   mFuncs[(int)ebpf_func::EBPF_UPDATE] = LOAD_EBPF_FUNC_ADDR(update);
+  mFuncs[(int)ebpf_func::EBPF_SUSPEND] = LOAD_EBPF_FUNC_ADDR(suspend);
   mFuncs[(int)ebpf_func::EBPF_DEINIT] = LOAD_EBPF_FUNC_ADDR(deinit);
   mFuncs[(int)ebpf_func::EBPF_REMOVE] = LOAD_EBPF_FUNC_ADDR(removep);
   mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG] = LOAD_EBPF_FUNC_ADDR(ebpf_cleanup_dog);
@@ -101,6 +102,7 @@ bool SourceManager::LoadDynamicLib(const std::string& lib_name) {
 
   mOffsets[(int)ebpf_func::EBPF_INIT] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_INIT]);
   mOffsets[(int)ebpf_func::EBPF_UPDATE] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_UPDATE]);
+  mOffsets[(int)ebpf_func::EBPF_SUSPEND] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_SUSPEND]);
   mOffsets[(int)ebpf_func::EBPF_DEINIT] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_DEINIT]);
   mOffsets[(int)ebpf_func::EBPF_REMOVE] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_REMOVE]);
   mOffsets[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG] = LOAD_UPROBE_OFFSET(mFuncs[(int)ebpf_func::EBPF_SOCKET_TRACE_CLEAN_UP_DOG]);
@@ -242,8 +244,24 @@ bool SourceManager::SuspendPlugin(nami::PluginType plugin_type) {
     LOG_WARNING(sLogger, ("plugin not started, cannot suspend. type",  int(plugin_type)));
     return false;
   }
-
+  auto config = new nami::eBPFConfig;
+  config->plugin_type_ = plugin_type;
+  config->type = UpdataType::SECURE_UPDATE_TYPE_SUSPEND_PROBE;
+#ifdef APSARA_UNIT_TEST_MAIN
+  mConfig = config;
   return true;
+#endif
+  // ensure that sysak would not call handle()
+  void* f = mFuncs[(int)ebpf_func::EBPF_SUSPEND];
+  if (!f) {
+    LOG_ERROR(sLogger, ("failed to load dynamic lib, suspend func ptr is null", int(plugin_type)));
+    return false;
+  }
+
+  auto suspend_f = (suspend_func)f;
+  int res = suspend_f(config);
+
+  return !res;
 }
 
 bool SourceManager::StopPlugin(nami::PluginType plugin_type) {

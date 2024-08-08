@@ -17,6 +17,7 @@
 #include <mutex>
 
 #include "pipeline/PipelineContext.h"
+#include "queue/FeedbackQueueKey.h"
 
 namespace logtail{
 namespace ebpf {
@@ -24,18 +25,19 @@ namespace ebpf {
 class AbstractHandler {
 public:
     AbstractHandler() {}
-    AbstractHandler(logtail::PipelineContext* ctx, uint32_t idx) : mCtx(ctx), mPluginIdx(idx) {}
-    // context
-    void update_context(const logtail::PipelineContext* ctx, uint32_t index) { 
+    AbstractHandler(logtail::QueueKey key, uint32_t idx) : mQueueKey(key), mPluginIdx(idx) {}
+    void UpdateContext(bool flag, logtail::QueueKey key, uint32_t index) { 
         std::lock_guard<std::mutex> lock(mMux);
-        mCtx = ctx; 
+        mQueueKey = key;
         mPluginIdx = index;
+        mFlag = flag;
     }
 protected:
     std::mutex mMux;
-    const logtail::PipelineContext* mCtx = nullptr;
+    logtail::QueueKey mQueueKey = 0;
     uint64_t mProcessTotalCnt = 0;
     uint32_t mPluginIdx = 0;
+    bool mFlag = false;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;

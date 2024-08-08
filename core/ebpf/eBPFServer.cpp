@@ -38,27 +38,27 @@ void eBPFServer::Init() {
     auto configJson = AppConfig::GetInstance()->GetConfig();
     mAdminConfig.LoadEbpfConfig(configJson);
 #ifdef __ENTERPRISE__
-    mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, 0);
-    mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, 0);
+    mMeterCB = std::make_unique<ArmsMeterHandler>(-1, 0);
+    mSpanCB = std::make_unique<ArmsSpanHandler>(-1, 0);
 #else
-    mMeterCB = std::make_unique<OtelMeterHandler>(nullptr, 0);
-    mSpanCB = std::make_unique<OtelSpanHandler>(nullptr, 0);
+    mMeterCB = std::make_unique<OtelMeterHandler>(-1, 0);
+    mSpanCB = std::make_unique<OtelSpanHandler>(-1, 0);
 #endif
 
-    mNetworkSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
-    mProcessSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
-    mFileSecureCB = std::make_unique<SecurityHandler>(nullptr, 0);
+    mNetworkSecureCB = std::make_unique<SecurityHandler>(-1, 0);
+    mProcessSecureCB = std::make_unique<SecurityHandler>(-1, 0);
+    mFileSecureCB = std::make_unique<SecurityHandler>(-1, 0);
     mInited = true;
 }
 
 void eBPFServer::Stop() {
     LOG_INFO(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
-    if (mMeterCB) mMeterCB->update_context(nullptr, 0);
-    if (mSpanCB) mSpanCB->update_context(nullptr,0);
-    if (mNetworkSecureCB) mNetworkSecureCB->update_context(nullptr, 0);
-    if (mProcessSecureCB) mProcessSecureCB->update_context(nullptr, 0);
-    if (mFileSecureCB) mFileSecureCB->update_context(nullptr, 0);
+    if (mMeterCB) mMeterCB->UpdateContext(false, -1, -1);
+    if (mSpanCB) mSpanCB->UpdateContext(false, -1, -1);
+    if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(false, -1, -1);
+    if (mProcessSecureCB) mProcessSecureCB->UpdateContext(false, -1, -1);
+    if (mFileSecureCB) mFileSecureCB->UpdateContext(false, -1, -1);
 }
 
 bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
@@ -72,7 +72,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         return false;
     }
 
-    mLoadedPipeline[int(type)] = pipeline_name;
+    UpdatePipelineName(type, pipeline_name);
 
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;
@@ -87,7 +87,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         pconfig.options_ = opts->mOptionList;
         config = std::move(pconfig);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mProcessSecureCB->update_context(ctx, plugin_index);
+        if (ret) mProcessSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
 
@@ -97,8 +97,8 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
         config = std::move(nconfig);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mMeterCB->update_context(ctx, plugin_index);
-        if (ret) mSpanCB->update_context(ctx, plugin_index);
+        if (ret) mMeterCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
+        if (ret) mSpanCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
 
@@ -109,7 +109,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         nconfig.options_ = opts->mOptionList;
         config = std::move(nconfig);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mNetworkSecureCB->update_context(ctx, plugin_index);
+        if (ret) mNetworkSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
 
@@ -120,7 +120,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         fconfig.options_ = opts->mOptionList;
         config = std::move(fconfig);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mFileSecureCB->update_context(ctx, plugin_index);
+        if (ret) mFileSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
     default:
@@ -140,41 +140,57 @@ bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_
 
 bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginType type) {
     std::string prev_pipeline = CheckLoadedPipelineName(type);
-    if (prev_pipeline == pipeline_name) mLoadedPipeline[int(type)] = "";
+    if (prev_pipeline == pipeline_name) {
+        UpdatePipelineName(type, "");
+    }
     else {
         LOG_WARNING(sLogger, ("prev pipeline", prev_pipeline)("curr pipeline", pipeline_name));
+        return true;
     }
-    return mSourceManager->StopPlugin(type);
+    bool ret = mSourceManager->StopPlugin(type);
+    if (ret) UpdateCBContext(type, false , -1, -1);
+    return ret;
 }
 
 std::string eBPFServer::CheckLoadedPipelineName(nami::PluginType type) {
+    std::lock_guard<std::mutex> lk(mMtx);
     return mLoadedPipeline[int(type)];
+}
+
+void eBPFServer::UpdatePipelineName(nami::PluginType type, const std::string& name) {
+    std::lock_guard<std::mutex> lk(mMtx);
+    mLoadedPipeline[int(type)] = name;
+    return;
 }
 
 bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginType type) {
     // mark plugin status is update
     bool ret = mSourceManager->SuspendPlugin(type);
-    if (!ret) return false;
+    if (ret) UpdateCBContext(type, false, -1, -1);
+    return ret;
+}
+
+void eBPFServer::UpdateCBContext(nami::PluginType type, bool flag, logtail::QueueKey key, int idx) {
     switch (type) {
     case nami::PluginType::PROCESS_SECURITY:{
-        if (mProcessSecureCB) mProcessSecureCB->update_context(nullptr, 0);
-        return true;
+        if (mProcessSecureCB) mProcessSecureCB->UpdateContext(flag, key, idx);
+        return;
     }
     case nami::PluginType::NETWORK_OBSERVE:{
-        if (mMeterCB) mMeterCB->update_context(nullptr, 0);
-        if (mSpanCB) mSpanCB->update_context(nullptr, 0);
-        return true;
+        if (mMeterCB) mMeterCB->UpdateContext(flag, key, idx);
+        if (mSpanCB) mSpanCB->UpdateContext(flag, key, idx);
+        return;
     }
     case nami::PluginType::NETWORK_SECURITY:{
-        if (mNetworkSecureCB) mNetworkSecureCB->update_context(nullptr, 0);
-        return true;
+        if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(flag, key, idx);
+        return;
     }
     case nami::PluginType::FILE_SECURITY:{
-        if (mFileSecureCB) mFileSecureCB->update_context(nullptr, 0);
-        return true;
+        if (mFileSecureCB) mFileSecureCB->UpdateContext(flag, key, idx);
+        return;
     }
     default:
-        return false;
+        return;
     }
 }
 

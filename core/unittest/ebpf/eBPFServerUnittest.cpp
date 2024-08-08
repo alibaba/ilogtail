@@ -524,18 +524,18 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     EXPECT_TRUE(network_conf.so_.size());
     EXPECT_TRUE(network_conf.so_.find("libnetwork_observer.so") != std::string::npos);
     EXPECT_TRUE(network_conf.so_size_ != 0);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mQueueKey, ctx.GetProcessQueueKey());
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mQueueKey, ctx.GetProcessQueueKey());
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 1);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 
     // do suspend
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::NETWORK_OBSERVE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 0);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 0);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mQueueKey, -1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mQueueKey, -1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, -1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, -1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 
     // do update
@@ -552,8 +552,8 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     GenerateBatchMeasure(network_conf.measure_cb_);
     GenerateBatchSpan(network_conf.span_cb_);
     auto after_conf = std::get<nami::NetworkObserveConfig>(conf->config_);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mCtx, &ctx);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mQueueKey, ctx.GetProcessQueueKey());
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mQueueKey, ctx.GetProcessQueueKey());
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mPluginIdx, 8);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mPluginIdx, 8);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mMeterCB->mProcessTotalCnt, 19);
@@ -561,6 +561,8 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
 
     // do stop
     ebpf::eBPFServer::GetInstance()->DisablePlugin("test", nami::PluginType::NETWORK_OBSERVE);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mQueueKey,-1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mFlag,false);
     EXPECT_TRUE(!ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 }
 
@@ -616,8 +618,8 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
 
     // do suspend
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::PROCESS_SECURITY);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mCtx, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mPluginIdx, 0);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mQueueKey, -1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mPluginIdx, -1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::PROCESS_SECURITY)]);
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
@@ -632,7 +634,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     auto after_conf = std::get<nami::ProcessConfig>(conf->config_);
 
     GenerateBatchEvent(after_conf.process_security_cb_, SecureEventType::SECURE_EVENT_TYPE_PROCESS_SECURE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mQueueKey, ctx.GetProcessQueueKey());
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mProcessSecureCB->mProcessTotalCnt, 1000);
 }
 
@@ -687,8 +689,8 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
 
     // do suspend
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::NETWORK_SECURITY);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mCtx, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mPluginIdx, 0);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mQueueKey, -1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mPluginIdx, -1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_SECURITY)]);
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
@@ -704,7 +706,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     auto after_conf = std::get<nami::NetworkSecurityConfig>(conf->config_);
 
     GenerateBatchEvent(after_conf.network_security_cb_, SecureEventType::SECURE_EVENT_TYPE_SOCKET_SECURE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mQueueKey, ctx.GetProcessQueueKey());
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mProcessTotalCnt, 1000);
 }
 
@@ -760,8 +762,8 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
 
     // do suspend
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::FILE_SECURITY);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mCtx, nullptr);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mPluginIdx, 0);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mQueueKey, -1);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mPluginIdx, -1);
     EXPECT_TRUE(ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::FILE_SECURITY)]);
 
     res = ebpf::eBPFServer::GetInstance()->EnablePlugin(
@@ -777,7 +779,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     auto after_conf = std::get<nami::FileSecurityConfig>(conf->config_);
 
     GenerateBatchEvent(after_conf.file_security_cb_, SecureEventType::SECURE_EVENT_TYPE_FILE_SECURE);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mCtx, &ctx);
+    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mQueueKey, ctx.GetProcessQueueKey());
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mProcessTotalCnt, 1000);
 }
 

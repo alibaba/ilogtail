@@ -28,17 +28,17 @@
 namespace logtail {
 namespace ebpf {
 
-SecurityHandler::SecurityHandler(logtail::PipelineContext* ctx, uint32_t idx) 
-    : AbstractHandler(ctx, idx) {
+SecurityHandler::SecurityHandler(logtail::QueueKey key, uint32_t idx) 
+    : AbstractHandler(key, idx) {
     mHostName = GetHostName();
     mHostIp = GetHostIp();
 }
 
 void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events) {
-    
     if (events.empty()) {
         return ;
     }
+    
     std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();;
     PipelineEventGroup event_group(source_buffer);
     // aggregate to pipeline event group
@@ -62,11 +62,11 @@ void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>
 #endif
     {
         std::lock_guard<std::mutex> lock(mMux);
-        if (!mCtx) return;
+        if (!mFlag) return;
         std::unique_ptr<ProcessQueueItem> item = 
                 std::unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(event_group), mPluginIdx));
         
-        if (ProcessQueueManager::GetInstance()->PushQueue(mCtx->GetProcessQueueKey(), std::move(item))) {
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
             LOG_WARNING(sLogger, ("Push queue failed!", events.size()));
         }
     }

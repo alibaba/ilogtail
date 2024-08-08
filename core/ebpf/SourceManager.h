@@ -69,15 +69,16 @@ private:
                 std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config);
 
     enum class ebpf_func {
-        EBPF_INIT = 0,
-        EBPF_UPDATE = 1,
-        EBPF_DEINIT = 2,
-        EBPF_REMOVE = 3,
-        EBPF_SOCKET_TRACE_CLEAN_UP_DOG = 4,
-        EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR = 5,
-        EBPF_SOCKET_TRACE_DISABLE_PROCESS = 6,
-        EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE = 7,
-        EBPF_MAX = 8,
+        EBPF_INIT,
+        EBPF_UPDATE,
+        EBPF_SUSPEND,
+        EBPF_DEINIT,
+        EBPF_REMOVE,
+        EBPF_SOCKET_TRACE_CLEAN_UP_DOG,
+        EBPF_SOCKET_TRACE_UPDATE_CONN_ADDR,
+        EBPF_SOCKET_TRACE_DISABLE_PROCESS,
+        EBPF_SOCKET_TRACE_UPDATE_CONN_ROLE,
+        EBPF_MAX,
     };
 
     std::shared_ptr<DynamicLibLoader> mLib;

@@ -19,6 +19,7 @@
 #include <map>
 #include <array>
 #include <memory>
+#include <mutex>
 
 #include "pipeline/PipelineContext.h"
 #include "ebpf/SourceManager.h"
@@ -46,6 +47,7 @@ public:
     void Stop();
 
     std::string CheckLoadedPipelineName(nami::PluginType type);
+    void UpdatePipelineName(nami::PluginType type, const std::string& name);
 
     bool EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
@@ -64,6 +66,8 @@ private:
     eBPFServer() = default;
     ~eBPFServer() = default;
 
+    void UpdateCBContext(nami::PluginType type, bool flag, logtail::QueueKey key, int idx);
+
     std::unique_ptr<SourceManager> mSourceManager;
     // source manager
     std::unique_ptr<MeterHandler> mMeterCB;
@@ -72,6 +76,7 @@ private:
     std::unique_ptr<SecurityHandler> mProcessSecureCB;
     std::unique_ptr<SecurityHandler> mFileSecureCB;
 
+    std::mutex mMtx;
     std::array<std::string, (int)nami::PluginType::MAX> mLoadedPipeline = {};
 
     eBPFAdminConfig mAdminConfig;

@@ -18,32 +18,33 @@
 
 #include "ebpf/handler/AbstractHandler.h"
 #include "ebpf/include/export.h"
+#include "queue/FeedbackQueueKey.h"
 
 namespace logtail {
 namespace ebpf {
 
 class MeterHandler : public AbstractHandler {
 public:
-    MeterHandler(logtail::PipelineContext* ctx, uint32_t idx) : AbstractHandler(ctx, idx) {}
+    MeterHandler(QueueKey key, uint32_t idx) : AbstractHandler(key, idx) {}
 
     virtual void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&&, uint64_t) = 0;
 };
 
 class OtelMeterHandler : public MeterHandler {
 public:
-    OtelMeterHandler(PipelineContext* ctx, uint32_t idx) : MeterHandler(ctx, idx) {}
+    OtelMeterHandler(QueueKey key, uint32_t idx) : MeterHandler(key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) override;
 };
 
 class SpanHandler : public AbstractHandler {
 public:
-    SpanHandler(logtail::PipelineContext* ctx, uint32_t idx) : AbstractHandler(ctx, idx) {}
+    SpanHandler(QueueKey key, uint32_t idx) : AbstractHandler(key, idx) {}
     virtual void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) = 0;
 };
 
 class OtelSpanHandler : public SpanHandler {
 public:
-    OtelSpanHandler(PipelineContext* ctx, uint32_t idx) : SpanHandler(ctx, idx) {}
+    OtelSpanHandler(QueueKey key, uint32_t idx) : SpanHandler(key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) override;
 };
 
@@ -51,13 +52,13 @@ public:
 
 class ArmsMeterHandler : public MeterHandler {
 public:
-    ArmsMeterHandler(PipelineContext* ctx, uint32_t idx) : MeterHandler(ctx, idx) {}
+    ArmsMeterHandler(QueueKey key, uint32_t idx) : MeterHandler(key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) override;
 };
 
 class ArmsSpanHandler : public SpanHandler {
 public:
-    ArmsSpanHandler(PipelineContext* ctx, uint32_t idx) : SpanHandler(ctx, idx) {}
+    ArmsSpanHandler(QueueKey key, uint32_t idx) : SpanHandler(key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) override;
 };
 
