@@ -15,6 +15,8 @@
 #include "queue/ProcessQueueManager.h"
 
 #include "common/Flags.h"
+#include "queue/BoundedProcessQueue.h"
+#include "queue/CircularProcessQueue.h"
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/QueueKeyManager.h"
 #include "queue/QueueParam.h"
@@ -264,7 +266,11 @@ void ProcessQueueManager::CreateQueue(QueueKey key, uint32_t priority, QueueType
                                                  QueueKeyManager::GetInstance()->GetName(key)));
             break;
         case QueueType::CIRCULAR:
-            // TODO: implement
+            mPriorityQueue[priority].emplace_back(
+                make_unique<CircularProcessQueue>(ProcessQueueParam::GetInstance()->mCapacity,
+                                                  key,
+                                                  priority,
+                                                  QueueKeyManager::GetInstance()->GetName(key)));
             break;
     }
     mQueues[key] = make_pair(prev(mPriorityQueue[priority].end()), type);

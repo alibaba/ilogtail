@@ -236,11 +236,19 @@ bool Pipeline::Init(PipelineConfig&& config) {
         if (mContext.GetProcessQueueKey() == -1) {
             mContext.SetProcessQueueKey(QueueKeyManager::GetInstance()->GetKey(mName));
         }
+        
+        // use circular buffer if any input does not support ack
+        ProcessQueueManager::QueueType type = ProcessQueueManager::QueueType::BOUNDED;
+        for (auto& input : mInputs) {
+            if (!input->SupportAck()) {
+                type = ProcessQueueManager::QueueType::CIRCULAR;
+                break;
+            }
+        }
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(
-            mContext.GetProcessQueueKey(), priority, ProcessQueueManager::QueueType::BOUNDED);
+        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(mContext.GetProcessQueueKey(), priority, type);
 
         unordered_set<FeedbackInterface*> feedbackSet;
         for (const auto& input : mInputs) {

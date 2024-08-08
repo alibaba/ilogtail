@@ -68,7 +68,6 @@ protected:
         string configStr, errorMsg;
         unique_ptr<PipelineConfig> config;
         unique_ptr<Pipeline> pipeline;
-        list<ProcessQueueInterface>::iterator que;
 
         // new pipeline
         configStr = R"(

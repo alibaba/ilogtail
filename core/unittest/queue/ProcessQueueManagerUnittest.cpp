@@ -28,6 +28,7 @@ namespace logtail {
 class ProcessQueueManagerUnittest : public testing::Test {
 public:
     void TestUpdateSameTypeQueue();
+    void TestUpdateDifferentTypeQueue();
     void TestDeleteQueue();
     void TestSetQueueUpstreamAndDownStream();
     void TestPushQueue();
@@ -137,6 +138,35 @@ void ProcessQueueManagerUnittest::TestUpdateSameTypeQueue() {
     APSARA_TEST_EQUAL(3U, sProcessQueueManager->mPriorityQueue[1].size());
     APSARA_TEST_TRUE(sProcessQueueManager->mQueues[0].first == prev(sProcessQueueManager->mPriorityQueue[0].end()));
     APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == sProcessQueueManager->mQueues[0].first);
+}
+
+void ProcessQueueManagerUnittest::TestUpdateDifferentTypeQueue() {
+    sProcessQueueManager->CreateOrUpdateQueue(0, 0, ProcessQueueManager::QueueType::BOUNDED);
+    sProcessQueueManager->CreateOrUpdateQueue(1, 0, ProcessQueueManager::QueueType::BOUNDED);
+
+    // current index not equal to the updated queue
+    APSARA_TEST_TRUE(sProcessQueueManager->CreateOrUpdateQueue(1, 0, ProcessQueueManager::QueueType::CIRCULAR));
+    APSARA_TEST_EQUAL(2U, sProcessQueueManager->mQueues.size());
+    APSARA_TEST_EQUAL(2U, sProcessQueueManager->mPriorityQueue[0].size());
+    APSARA_TEST_TRUE(sProcessQueueManager->mQueues[1].first == prev(sProcessQueueManager->mPriorityQueue[0].end()));
+    APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == sProcessQueueManager->mQueues[0].first);
+
+    // current index equals to the updated queue
+    //   and the updated queue is not the last in the list
+    APSARA_TEST_TRUE(sProcessQueueManager->CreateOrUpdateQueue(0, 0, ProcessQueueManager::QueueType::CIRCULAR));
+    APSARA_TEST_EQUAL(2U, sProcessQueueManager->mQueues.size());
+    APSARA_TEST_EQUAL(2U, sProcessQueueManager->mPriorityQueue[0].size());
+    APSARA_TEST_TRUE(sProcessQueueManager->mQueues[0].first == prev(sProcessQueueManager->mPriorityQueue[0].end()));
+    APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == sProcessQueueManager->mQueues[1].first);
+
+    // current index equals to the update queue
+    //   and the updated queue is the last in the list
+    sProcessQueueManager->mCurrentQueueIndex.second = prev(sProcessQueueManager->mPriorityQueue[0].end());
+    APSARA_TEST_TRUE(sProcessQueueManager->CreateOrUpdateQueue(0, 0, ProcessQueueManager::QueueType::BOUNDED));
+    APSARA_TEST_EQUAL(2U, sProcessQueueManager->mQueues.size());
+    APSARA_TEST_EQUAL(2U, sProcessQueueManager->mPriorityQueue[0].size());
+    APSARA_TEST_TRUE(sProcessQueueManager->mQueues[0].first == prev(sProcessQueueManager->mPriorityQueue[0].end()));
+    APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == sProcessQueueManager->mQueues[1].first);
 }
 
 void ProcessQueueManagerUnittest::TestDeleteQueue() {
@@ -322,6 +352,7 @@ void ProcessQueueManagerUnittest::OnPipelineUpdate() {
 }
 
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestUpdateSameTypeQueue)
+UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestUpdateDifferentTypeQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestDeleteQueue)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestSetQueueUpstreamAndDownStream)
 UNIT_TEST_CASE(ProcessQueueManagerUnittest, TestPushQueue)
