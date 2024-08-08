@@ -62,6 +62,7 @@ private:
     void HandleSpace(MetricEvent& metricEvent);
 
     void SkipSpaceIfHasNext();
+    void SkipLeadingWhitespace();
 
     TextState mState{TextState::Start};
     StringView mLine;

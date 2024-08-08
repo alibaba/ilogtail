@@ -134,85 +134,61 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
     return false;
 }
 
-void TextParser::HandleStart(MetricEvent&) {
-    // Ignore subsequent spaces
-    while (IsWhitespace(mLine[mPos])) {
-        ++mPos;
-    }
-    auto c = mLine[mPos];
+void TextParser::HandleStart(MetricEvent& metricEvent) {
+    SkipLeadingWhitespace();
+    auto c = c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
-        ++mTokenLength;
-        NextState(TextState::MetricName);
+        HandleMetricName(metricEvent);
     } else {
         HandleError("expected metric name");
     }
 }
 
 void TextParser::HandleMetricName(MetricEvent& metricEvent) {
-    if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
-        ++mTokenLength;
-    } else if (c == '{' || IsWhitespace(c)) {
+    char c = c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
+    if (std::isalpha(c) || c == '_') {
+        while (std::isalpha(c) || c == '_' || c == ':' || std::isdigit(c)) {
+            ++mTokenLength;
+            ++mPos;
+            c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
+        }
         metricEvent.SetName(mLine.substr(mPos - mTokenLength - 1, mTokenLength).to_string());
         mTokenLength = 0;
-        // need to solve these case, but don't point mPos to Value
-        // {Space}* OpenBrace
-        // {Space}+ Value
-        while (IsWhitespace(c) && mPos < mLine.size() && std::isspace(mLine[mPos])) {
-            c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
-        }
-        if (IsWhitespace(c)) {
-            // Space OpenBrace
-            if (mLine[mPos] == '{') {
-                mPos++;
-                NextState(TextState::OpenBrace);
-            } else {
-                // Space Value
-                NextState(TextState::SampleValue);
-            }
-        } else if (c == '{') {
-            // OpenBrace
-            NextState(TextState::OpenBrace);
+        SkipLeadingWhitespace();
+        if (mPos < mLine.size() && mLine[mPos] == '{') {
+            ++mPos;
+            SkipLeadingWhitespace();
+            HandleLabelName(metricEvent);
         } else {
-            // Value
-            HandleError("invalid character in metric name");
+            HandleSampleValue(metricEvent);
         }
-
     } else {
         HandleError("invalid character in metric name");
     }
 }
 
-void TextParser::HandleOpenBrace(MetricEvent&) {
-    // Ignore subsequent spaces
-    while (IsWhitespace(c)) {
-        c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
-    }
-    if (std::isalpha(c) || c == '-' || c == '_' || c == ':') {
-        ++mTokenLength;
-        NextState(TextState::LabelName);
-    } else if (c == '}') {
-        SkipSpaceIfHasNext();
-        NextState(TextState::SampleValue);
-    } else {
-        HandleError("expected label name after '{'");
-    }
-}
-
-void TextParser::HandleLabelName(MetricEvent&) {
-    if (std::isalpha(c) || c == '-' || c == '_' || c == ':' || std::isdigit(c)) {
-        ++mTokenLength;
-    } else if (c == '=' || IsWhitespace(c)) {
+void TextParser::HandleLabelName(MetricEvent& metricEvent) {
+    char c = c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
+    if (std::isalpha(c) || c == '_') {
+        while (std::isalpha(c) || c == '_' || c == ':' || std::isdigit(c)) {
+            ++mTokenLength;
+            ++mPos;
+            c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
+        }
         mLabelName = mLine.substr(mPos - mTokenLength - 1, mTokenLength);
         mTokenLength = 0;
-        // Ignore subsequent spaces
-        while (IsWhitespace(c)) {
-            c = (mPos < mLine.size()) ? mLine[mPos++] : '\0';
-        }
+        SkipLeadingWhitespace();
         if (c != '=') {
             HandleError("expected '=' after label name");
             return;
         }
-        NextState(TextState::EqualSign);
+        ++mPos;
+        SkipLeadingWhitespace();
+        HandleEqualSign(metricEvent);
+    } else if (c == '}') {
+        ++mPos;
+        SkipLeadingWhitespace();
+        HandleSampleValue(metricEvent);
     } else {
         HandleError("invalid character in label name");
     }
@@ -330,6 +306,12 @@ void TextParser::SkipSpaceIfHasNext() {
         if (mPos < mLine.length() && !std::isspace(mLine[mPos])) {
             break;
         }
+    }
+}
+
+void TextParser::SkipLeadingWhitespace() {
+    while (mPos < mLine.length() && (mLine[mPos] == ' ' || mLine[mPos] == '\t')) {
+        mPos++;
     }
 }
 
