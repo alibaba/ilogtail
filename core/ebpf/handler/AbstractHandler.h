@@ -25,12 +25,14 @@ namespace ebpf {
 class AbstractHandler {
 public:
     AbstractHandler() {}
-    AbstractHandler(logtail::QueueKey key, uint32_t idx) : mQueueKey(key), mPluginIdx(idx) {}
-    void UpdateContext(logtail::QueueKey key, uint32_t index) { 
+    AbstractHandler(const logtail::PipelineContext* ctx, logtail::QueueKey key, uint32_t idx) : mCtx(ctx), mQueueKey(key), mPluginIdx(idx) {}
+    void UpdateContext(const logtail::PipelineContext* ctx, logtail::QueueKey key, uint32_t index) { 
+        mCtx = ctx;
         mQueueKey = key;
         mPluginIdx = index;
     }
 protected:
+    const logtail::PipelineContext* mCtx = nullptr;
     logtail::QueueKey mQueueKey = 0;
     uint64_t mProcessTotalCnt = 0;
     uint32_t mPluginIdx = 0;

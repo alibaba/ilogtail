@@ -66,7 +66,7 @@ private:
     eBPFServer() = default;
     ~eBPFServer() = default;
 
-    void UpdateCBContext(nami::PluginType type, logtail::QueueKey key, int idx);
+    void UpdateCBContext(nami::PluginType type, const logtail::PipelineContext* ctx, logtail::QueueKey key, int idx);
 
     std::unique_ptr<SourceManager> mSourceManager;
     // source manager

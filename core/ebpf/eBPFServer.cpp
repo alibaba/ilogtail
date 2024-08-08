@@ -38,16 +38,16 @@ void eBPFServer::Init() {
     auto configJson = AppConfig::GetInstance()->GetConfig();
     mAdminConfig.LoadEbpfConfig(configJson);
 #ifdef __ENTERPRISE__
-    mMeterCB = std::make_unique<ArmsMeterHandler>(-1, 0);
-    mSpanCB = std::make_unique<ArmsSpanHandler>(-1, 0);
+    mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, -1, 0);
+    mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, -1, 0);
 #else
-    mMeterCB = std::make_unique<OtelMeterHandler>(-1, 0);
-    mSpanCB = std::make_unique<OtelSpanHandler>(-1, 0);
+    mMeterCB = std::make_unique<OtelMeterHandler>(nullptr, -1, 0);
+    mSpanCB = std::make_unique<OtelSpanHandler>(nullptr, -1, 0);
 #endif
 
-    mNetworkSecureCB = std::make_unique<SecurityHandler>(-1, 0);
-    mProcessSecureCB = std::make_unique<SecurityHandler>(-1, 0);
-    mFileSecureCB = std::make_unique<SecurityHandler>(-1, 0);
+    mNetworkSecureCB = std::make_unique<SecurityHandler>(nullptr, -1, 0);
+    mProcessSecureCB = std::make_unique<SecurityHandler>(nullptr, -1, 0);
+    mFileSecureCB = std::make_unique<SecurityHandler>(nullptr, -1, 0);
     mInited = true;
 }
 
@@ -55,11 +55,11 @@ void eBPFServer::Stop() {
     LOG_INFO(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
     // UpdateContext must after than StopPlugin
-    if (mMeterCB) mMeterCB->UpdateContext(-1, -1);
-    if (mSpanCB) mSpanCB->UpdateContext(-1, -1);
-    if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(-1, -1);
-    if (mProcessSecureCB) mProcessSecureCB->UpdateContext(-1, -1);
-    if (mFileSecureCB) mFileSecureCB->UpdateContext(-1, -1);
+    if (mMeterCB) mMeterCB->UpdateContext(nullptr, -1, -1);
+    if (mSpanCB) mSpanCB->UpdateContext(nullptr,-1, -1);
+    if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(nullptr,-1, -1);
+    if (mProcessSecureCB) mProcessSecureCB->UpdateContext(nullptr,-1, -1);
+    if (mFileSecureCB) mFileSecureCB->UpdateContext(nullptr, -1, -1);
 }
 
 bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
@@ -88,7 +88,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         pconfig.options_ = opts->mOptionList;
         config = std::move(pconfig);
         // UpdateContext must ahead of StartPlugin
-        mProcessSecureCB->UpdateContext(ctx->GetProcessQueueKey(), plugin_index);
+        mProcessSecureCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
         break;
     }
@@ -98,8 +98,8 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
         nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
         config = std::move(nconfig);
-        mMeterCB->UpdateContext(ctx->GetProcessQueueKey(), plugin_index);
-        mSpanCB->UpdateContext(ctx->GetProcessQueueKey(), plugin_index);
+        mMeterCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
+        mSpanCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
         break;
     }
@@ -111,7 +111,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         nconfig.options_ = opts->mOptionList;
         config = std::move(nconfig);
         // UpdateContext must ahead of StartPlugin
-        mNetworkSecureCB->UpdateContext(ctx->GetProcessQueueKey(), plugin_index);
+        mNetworkSecureCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
         break;
     }
@@ -123,7 +123,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         fconfig.options_ = opts->mOptionList;
         config = std::move(fconfig);
         // UpdateContext must ahead of StartPlugin
-        mFileSecureCB->UpdateContext(ctx->GetProcessQueueKey(), plugin_index);
+        mFileSecureCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
         break;
     }
@@ -153,7 +153,7 @@ bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginTyp
     }
     bool ret = mSourceManager->StopPlugin(type);
     // UpdateContext must after than StopPlugin
-    if (ret) UpdateCBContext(type , -1, -1);
+    if (ret) UpdateCBContext(type, nullptr, -1, -1);
     return ret;
 }
 
@@ -171,27 +171,27 @@ void eBPFServer::UpdatePipelineName(nami::PluginType type, const std::string& na
 bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginType type) {
     // mark plugin status is update
     bool ret = mSourceManager->SuspendPlugin(type);
-    if (ret) UpdateCBContext(type, -1, -1);
+    if (ret) UpdateCBContext(type, nullptr, -1, -1);
     return ret;
 }
 
-void eBPFServer::UpdateCBContext(nami::PluginType type, logtail::QueueKey key, int idx) {
+void eBPFServer::UpdateCBContext(nami::PluginType type, const logtail::PipelineContext* ctx, logtail::QueueKey key, int idx) {
     switch (type) {
     case nami::PluginType::PROCESS_SECURITY:{
-        if (mProcessSecureCB) mProcessSecureCB->UpdateContext(key, idx);
+        if (mProcessSecureCB) mProcessSecureCB->UpdateContext(ctx, key, idx);
         return;
     }
     case nami::PluginType::NETWORK_OBSERVE:{
-        if (mMeterCB) mMeterCB->UpdateContext(key, idx);
-        if (mSpanCB) mSpanCB->UpdateContext(key, idx);
+        if (mMeterCB) mMeterCB->UpdateContext(ctx, key, idx);
+        if (mSpanCB) mSpanCB->UpdateContext(ctx, key, idx);
         return;
     }
     case nami::PluginType::NETWORK_SECURITY:{
-        if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(key, idx);
+        if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(ctx, key, idx);
         return;
     }
     case nami::PluginType::FILE_SECURITY:{
-        if (mFileSecureCB) mFileSecureCB->UpdateContext(key, idx);
+        if (mFileSecureCB) mFileSecureCB->UpdateContext(ctx, key, idx);
         return;
     }
     default:

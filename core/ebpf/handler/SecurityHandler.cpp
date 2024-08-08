@@ -28,8 +28,8 @@
 namespace logtail {
 namespace ebpf {
 
-SecurityHandler::SecurityHandler(logtail::QueueKey key, uint32_t idx) 
-    : AbstractHandler(key, idx) {
+SecurityHandler::SecurityHandler(const logtail::PipelineContext* ctx, logtail::QueueKey key, uint32_t idx) 
+    : AbstractHandler(ctx, key, idx) {
     mHostName = GetHostName();
     mHostIp = GetHostIp();
 }
@@ -64,7 +64,7 @@ void SecurityHandler::handle(std::vector<std::unique_ptr<AbstractSecurityEvent>>
             std::unique_ptr<ProcessQueueItem>(new ProcessQueueItem(std::move(event_group), mPluginIdx));
     
     if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-        LOG_WARNING(sLogger, ("Push queue failed!", events.size()));
+        LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("Push queue failed!", events.size()));
     }
 }
 

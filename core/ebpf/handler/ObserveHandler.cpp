@@ -79,7 +79,7 @@ void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 #endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-            LOG_WARNING(sLogger, ("[Otel Metrics] push queue failed!", ""));
+            LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Otel Metrics] push queue failed!", ""));
         }
         
     }
@@ -111,7 +111,7 @@ void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-            LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
+            LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Span] push queue failed!", ""));
         }
         
     }
@@ -191,7 +191,7 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-            LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
+            LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Span] push queue failed!", ""));
         }
     }
 
@@ -234,7 +234,7 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 #endif
         std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-            LOG_WARNING(sLogger, ("[Metrics] push queue failed!", ""));
+            LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Metrics] push queue failed!", ""));
         }
 
     }

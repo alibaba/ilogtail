@@ -25,26 +25,26 @@ namespace ebpf {
 
 class MeterHandler : public AbstractHandler {
 public:
-    MeterHandler(QueueKey key, uint32_t idx) : AbstractHandler(key, idx) {}
+    MeterHandler(const logtail::PipelineContext* ctx, QueueKey key, uint32_t idx) : AbstractHandler(ctx, key, idx) {}
 
     virtual void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&&, uint64_t) = 0;
 };
 
 class OtelMeterHandler : public MeterHandler {
 public:
-    OtelMeterHandler(QueueKey key, uint32_t idx) : MeterHandler(key, idx) {}
+    OtelMeterHandler(const logtail::PipelineContext* ctx, QueueKey key, uint32_t idx) : MeterHandler(ctx, key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) override;
 };
 
 class SpanHandler : public AbstractHandler {
 public:
-    SpanHandler(QueueKey key, uint32_t idx) : AbstractHandler(key, idx) {}
+    SpanHandler(const logtail::PipelineContext* ctx, QueueKey key, uint32_t idx) : AbstractHandler(ctx, key, idx) {}
     virtual void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) = 0;
 };
 
 class OtelSpanHandler : public SpanHandler {
 public:
-    OtelSpanHandler(QueueKey key, uint32_t idx) : SpanHandler(key, idx) {}
+    OtelSpanHandler(const logtail::PipelineContext* ctx, QueueKey key, uint32_t idx) : SpanHandler(ctx, key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) override;
 };
 
@@ -52,13 +52,13 @@ public:
 
 class ArmsMeterHandler : public MeterHandler {
 public:
-    ArmsMeterHandler(QueueKey key, uint32_t idx) : MeterHandler(key, idx) {}
+    ArmsMeterHandler(const logtail::PipelineContext* ctx, QueueKey key, uint32_t idx) : MeterHandler(ctx, key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) override;
 };
 
 class ArmsSpanHandler : public SpanHandler {
 public:
-    ArmsSpanHandler(QueueKey key, uint32_t idx) : SpanHandler(key, idx) {}
+    ArmsSpanHandler(const logtail::PipelineContext* ctx, QueueKey key, uint32_t idx) : SpanHandler(ctx, key, idx) {}
     void handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&) override;
 };
 
