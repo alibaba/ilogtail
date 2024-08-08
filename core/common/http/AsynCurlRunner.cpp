@@ -83,6 +83,7 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
                                    request->mBody,
                                    request->mResponse,
                                    headers,
+                                   request->mTimeout,
                                    AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
@@ -192,7 +193,7 @@ void AsynCurlRunner::HandleCompletedRequests() {
                 }
                 default:
                     // considered as network error
-                    if (++request->mTryCnt <= 3) {
+                    if (++request->mTryCnt <= request->mMaxTryCnt) {
                         LOG_WARNING(sLogger,
                                     ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt)(
                                         "errMsg", curl_easy_strerror(msg->data.result)));

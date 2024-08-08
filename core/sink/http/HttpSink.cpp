@@ -84,6 +84,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
                                    request->mBody,
                                    request->mResponse,
                                    headers,
+                                   request->mTimeout,
                                    AppConfig::GetInstance()->IsHostIPReplacePolicyEnabled(),
                                    AppConfig::GetInstance()->GetBindInterface());
     if (curl == nullptr) {
@@ -204,7 +205,7 @@ void HttpSink::HandleCompletedRequests() {
                 }
                 default:
                     // considered as network error
-                    if (++request->mTryCnt <= 3) {
+                    if (++request->mTryCnt <= request->mMaxTryCnt) {
                         LOG_WARNING(
                             sLogger,
                             ("failed to send request", "retry immediately")("item address", request->mItem)(
