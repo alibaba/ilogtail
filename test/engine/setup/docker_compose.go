@@ -16,8 +16,14 @@ import (
 
 const dependencyHome = "test_cases"
 
+var dockerComposeType = "e2e"
+
 type DockerComposeEnv struct {
 	BootController *controller.BootController
+}
+
+func SetDockerComposeType(t string) {
+	dockerComposeType = t
 }
 
 func StartDockerComposeEnv(ctx context.Context, dependencyName string) (context.Context, error) {
@@ -28,7 +34,7 @@ func StartDockerComposeEnv(ctx context.Context, dependencyName string) (context.
 			return ctx, err
 		}
 		dockerComposeEnv.BootController = new(controller.BootController)
-		if err = dockerComposeEnv.BootController.Init(); err != nil {
+		if err = dockerComposeEnv.BootController.Init(dockerComposeType); err != nil {
 			return ctx, err
 		}
 

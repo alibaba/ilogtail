@@ -33,10 +33,17 @@ type Booter interface {
 }
 
 // Load configuration to the Booter.
-func Load() error {
+func Load(loadType string) error {
 	mu.Lock()
 	defer mu.Unlock()
-	instance = NewComposeBooter()
+	switch loadType {
+	case "e2e":
+		instance = NewComposeBooter()
+	case "benchmark":
+		instance = NewComposeBenchmarkBooter()
+	default:
+		return errors.New("invalid load type")
+	}
 	return nil
 }
 
