@@ -23,19 +23,7 @@
 
 namespace logtail {
 
-enum class TextState {
-    Start,
-    MetricName,
-    OpenBrace,
-    LabelName,
-    EqualSign,
-    LabelValue,
-    CommaOrCloseBrace,
-    SampleValue,
-    Timestamp,
-    Done,
-    Error
-};
+enum class TextState { Start, Done, Error };
 
 class TextParser {
 public:
@@ -47,7 +35,6 @@ public:
     bool ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
 
 private:
-    inline void NextState(TextState newState) { mState = newState; }
     void HandleError(const std::string& errMsg);
 
     void HandleStart(MetricEvent& metricEvent);
