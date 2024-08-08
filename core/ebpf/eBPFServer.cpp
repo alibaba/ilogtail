@@ -86,8 +86,8 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         pconfig.options_ = opts->mOptionList;
         config = std::move(pconfig);
+        mProcessSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mProcessSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
 
@@ -96,9 +96,9 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
         nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
         config = std::move(nconfig);
+        mMeterCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
+        mSpanCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mMeterCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
-        if (ret) mSpanCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
 
@@ -108,8 +108,8 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         nconfig.options_ = opts->mOptionList;
         config = std::move(nconfig);
+        mNetworkSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mNetworkSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
 
@@ -119,8 +119,8 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         fconfig.options_ = opts->mOptionList;
         config = std::move(fconfig);
+        mFileSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
-        if (ret) mFileSecureCB->UpdateContext(true, ctx->GetProcessQueueKey(), plugin_index);
         break;
     }
     default:

@@ -27,13 +27,11 @@ public:
     AbstractHandler() {}
     AbstractHandler(logtail::QueueKey key, uint32_t idx) : mQueueKey(key), mPluginIdx(idx) {}
     void UpdateContext(bool flag, logtail::QueueKey key, uint32_t index) { 
-        std::lock_guard<std::mutex> lock(mMux);
         mQueueKey = key;
         mPluginIdx = index;
         mFlag = flag;
     }
 protected:
-    std::mutex mMux;
     logtail::QueueKey mQueueKey = 0;
     uint64_t mProcessTotalCnt = 0;
     uint32_t mPluginIdx = 0;
