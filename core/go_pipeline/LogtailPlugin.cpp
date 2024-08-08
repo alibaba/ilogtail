@@ -471,7 +471,7 @@ void LogtailPlugin::GetPipelineMetrics(std::vector<std::map<std::string, std::st
                             item.insert(std::make_pair(std::string(innerkv->key), std::string(innerkv->value)));
                             free(innerkv->key);
                             free(innerkv->value);
-                            free(innerkv);                   
+                            free(innerkv);
                         }
                     }
                     free(innerpm->keyValues);

@@ -15,14 +15,12 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"sync"
 	"sync/atomic"
 	"time"
-)
 
-const SelfMetricNameKey = "__name__"
+	"github.com/alibaba/ilogtail/pkg/protocol"
+)
 
 var mu sync.Mutex
 
