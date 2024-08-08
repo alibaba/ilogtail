@@ -122,18 +122,23 @@ void PrometheusInputRunner::Start() {
 void PrometheusInputRunner::Stop() {
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
 
-    if (!mIsStarted.load()) {
-        return;
-    }
     mIsStarted.store(false);
     mIsThreadRunning.store(false);
+    CancelAllTargetSubscriber();
 
-    mTimer->Stop();
+    if (mTimer) {
+        mTimer->Stop();
+    }
 
     {
         WriteLock lock(mSubscriberMapRWLock);
         mTargetSubscriberSchedulerMap.clear();
     }
+
+    if (!mIsStarted.load()) {
+        return;
+    }
+
     // only unregister when operator exist
     if (!mServiceHost.empty()) {
         auto res = std::async(launch::async, [this]() {
@@ -177,5 +182,12 @@ sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) c
 bool PrometheusInputRunner::HasRegisteredPlugin() {
     ReadLock lock(mSubscriberMapRWLock);
     return !mTargetSubscriberSchedulerMap.empty();
+}
+
+void PrometheusInputRunner::CancelAllTargetSubscriber() {
+    ReadLock lock(mSubscriberMapRWLock);
+    for (auto& it : mTargetSubscriberSchedulerMap) {
+        it.second->Cancel();
+    }
 }
 }; // namespace logtail

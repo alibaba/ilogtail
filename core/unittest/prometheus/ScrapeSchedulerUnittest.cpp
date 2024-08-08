@@ -142,11 +142,11 @@ void ScrapeSchedulerUnittest::TestReceiveMessage() {
 
 
     // before
-    APSARA_TEST_EQUAL(true, event->mFuture->IsCancelled());
+    APSARA_TEST_EQUAL(true, event->IsCancelled());
 
 
     // after
-    APSARA_TEST_EQUAL(false, event->mFuture->IsCancelled());
+    APSARA_TEST_EQUAL(false, event->IsCancelled());
 }
 
 UNIT_TEST_CASE(ScrapeSchedulerUnittest, TestInitscrapeScheduler)

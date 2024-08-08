@@ -119,15 +119,20 @@ public:
 
 protected:
     void SetUp() override {
-        setenv("POD_NAME", "prometheus-test", 1);
-        setenv("OPERATOR_HOST", "127.0.0.1", 1);
-        setenv("OPERATOR_PORT", "12345", 1);
+        setenv("_pod_name_", "prometheus-test", 1);
+        setenv("loong_collector_operator_service", "127.0.0.1", 1);
+        setenv("loong_collector_operator_service_port", "8888", 1);
+
+        PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();
     }
+
     void TearDown() override {
-        unsetenv("POD_NAME");
-        unsetenv("OPERATOR_HOST");
-        unsetenv("OPERATOR_PORT");
+        unsetenv("_pod_name_");
+        unsetenv("loong_collector_operator_service");
+        unsetenv("loong_collector_operator_service_port");
     }
+
+    static void SetUpTestCase() { PrometheusInputRunner::GetInstance()->Stop(); }
 
 private:
 };
@@ -185,10 +190,15 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
+    // before
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
+                     == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
+
     // update scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
                      != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
+
     PrometheusInputRunner::GetInstance()->RemoveScrapeInput("test_job");
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
                      == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());

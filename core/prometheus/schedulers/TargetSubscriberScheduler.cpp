@@ -225,14 +225,13 @@ void TargetSubscriberScheduler::ScheduleNext() {
         ExecDone();
         this->ScheduleNext();
     });
+    if (IsCancelled()) {
+        mFuture->Cancel();
+        return;
+    }
 
     {
         WriteLock lock(mLock);
-        if (IsCancelled()) {
-            mFuture->Cancel();
-            CancelAllScrapeScheduler();
-            return;
-        }
         mFuture = future;
     }
 

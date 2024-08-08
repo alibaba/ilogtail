@@ -20,6 +20,6 @@ void BaseScheduler::Cancel() {
 
 bool BaseScheduler::IsCancelled() {
     ReadLock lock(mLock);
-    return mValidState;
+    return !mValidState;
 }
 } // namespace logtail

@@ -53,6 +53,8 @@ private:
 
     sdk::HttpMessage SendRegisterMessage(const std::string& url) const;
 
+    void CancelAllTargetSubscriber();
+
     std::atomic<bool> mIsStarted;
 
     std::future<void> mThreadRes;
