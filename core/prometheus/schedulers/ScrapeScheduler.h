@@ -21,8 +21,8 @@
 
 #include "BaseScheduler.h"
 #include "common/http/HttpResponse.h"
+#include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
-#include "prometheus/Mock.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 #include "queue/QueueKey.h"
 

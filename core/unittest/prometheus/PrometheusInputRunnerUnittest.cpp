@@ -132,8 +132,6 @@ protected:
         unsetenv("loong_collector_operator_service_port");
     }
 
-    static void SetUpTestCase() { PrometheusInputRunner::GetInstance()->Stop(); }
-
 private:
 };
 
@@ -168,7 +166,7 @@ void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
     // after
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
                      != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-    PrometheusInputRunner::GetInstance()->Stop();
+    PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.clear();
 }
 
 void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
@@ -177,7 +175,7 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     Json::Value config;
     configStr = R"JSON(
     {
-        "job_name": "test_job",
+        "job_name": "test_job1",
         "scheme": "http",
         "metrics_path": "/metrics",
         "scrape_interval": "30s",
@@ -191,18 +189,18 @@ void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
 
     // before
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job1")
                      == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
 
     // update scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job1")
                      != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
 
-    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("test_job");
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
+    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("test_job1");
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job1")
                      == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-    PrometheusInputRunner::GetInstance()->Stop();
+    PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.clear();
 }
 
 void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
@@ -220,8 +218,6 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     }
     )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    Labels labels;
-    labels.Push(Label{"__address__", "192.168.22.7:8080"});
 
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));

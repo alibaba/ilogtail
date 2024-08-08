@@ -22,6 +22,7 @@
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
+#include "common/timer/Timer.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "sdk/Common.h"
@@ -80,9 +81,9 @@ void PrometheusInputRunner::Start() {
         return;
     }
     mIsStarted.store(true);
+    mTimer->Init();
 
     mThreadRes = std::async(launch::async, [this]() {
-        mTimer->Init();
         // only register when operator exist
         if (!mServiceHost.empty()) {
             int retry = 0;
@@ -126,17 +127,11 @@ void PrometheusInputRunner::Stop() {
     mIsThreadRunning.store(false);
     CancelAllTargetSubscriber();
 
-    if (mTimer) {
-        mTimer->Stop();
-    }
+    mTimer->Stop();
 
     {
         WriteLock lock(mSubscriberMapRWLock);
         mTargetSubscriberSchedulerMap.clear();
-    }
-
-    if (!mIsStarted.load()) {
-        return;
     }
 
     // only unregister when operator exist

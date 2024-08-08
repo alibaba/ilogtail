@@ -21,6 +21,7 @@
 #include <string>
 
 #include "common/Lock.h"
+#include "common/timer/Timer.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"

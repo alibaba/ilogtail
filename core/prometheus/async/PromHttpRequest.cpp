@@ -15,8 +15,11 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
                                  const std::string& query,
                                  const std::map<std::string, std::string>& header,
                                  const std::string& body,
+                                 uint32_t timeout,
+                                 uint32_t maxTryCnt,
                                  std::shared_ptr<PromFuture> future)
-    : AsynHttpRequest(method, httpsFlag, host, port, url, query, header, body), mFuture(std::move(future)) {
+    : AsynHttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt),
+      mFuture(std::move(future)) {
 }
 
 void PromHttpRequest::OnSendDone(const HttpResponse& response) {

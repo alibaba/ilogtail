@@ -25,11 +25,13 @@
 #include "Common.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
+#include "common/timer/HttpRequestTimerEvent.h"
+#include "common/timer/Timer.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
-#include "prometheus/async//PromFuture.h"
-#include "prometheus/async//PromHttpRequest.h"
+#include "prometheus/async/PromFuture.h"
+#include "prometheus/async/PromHttpRequest.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
 
 using namespace std;
@@ -264,6 +266,8 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
                                                      "collector_id=" + mPodName,
                                                      httpHeader,
                                                      "",
+                                                     prometheus::RefeshIntervalSeconds,
+                                                     1,
                                                      this->mFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
 

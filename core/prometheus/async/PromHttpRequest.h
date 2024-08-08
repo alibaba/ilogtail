@@ -18,6 +18,8 @@ public:
                     const std::string& query,
                     const std::map<std::string, std::string>& header,
                     const std::string& body,
+                    uint32_t timeout,
+                    uint32_t maxTryCnt,
                     std::shared_ptr<PromFuture> future);
     PromHttpRequest(const PromHttpRequest&) = default;
     ~PromHttpRequest() override = default;

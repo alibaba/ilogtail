@@ -26,13 +26,14 @@
 #include "Common.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
+#include "common/timer/HttpRequestTimerEvent.h"
+#include "common/timer/Timer.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
-#include "prometheus/Mock.h"
 #include "prometheus/async/PromHttpRequest.h"
-#include "queue/QueueKey.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
+#include "queue/QueueKey.h"
 
 using namespace std;
 
@@ -136,6 +137,9 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                                      mScrapeConfigPtr->mQueryString,
                                                      mScrapeConfigPtr->mHeaders,
                                                      "",
+                                                     mScrapeConfigPtr->mScrapeTimeoutSeconds,
+                                                     mScrapeConfigPtr->mScrapeIntervalSeconds
+                                                         / mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                                      this->mFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;

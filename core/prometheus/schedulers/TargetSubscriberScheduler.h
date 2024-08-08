@@ -23,11 +23,12 @@
 #include <string>
 
 #include "common/http/HttpResponse.h"
-#include "prometheus/Mock.h"
+#include "common/timer/Timer.h"
 #include "prometheus/schedulers/BaseScheduler.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
 #include "queue/QueueKey.h"
+
 
 namespace logtail {
 
