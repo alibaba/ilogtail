@@ -17,7 +17,6 @@
 #include <mutex>
 
 #include "pipeline/PipelineContext.h"
-#include "queue/FeedbackQueueKey.h"
 
 namespace logtail{
 namespace ebpf {

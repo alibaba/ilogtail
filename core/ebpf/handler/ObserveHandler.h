@@ -18,7 +18,6 @@
 
 #include "ebpf/handler/AbstractHandler.h"
 #include "ebpf/include/export.h"
-#include "queue/FeedbackQueueKey.h"
 
 namespace logtail {
 namespace ebpf {
