@@ -562,7 +562,6 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
     // do stop
     ebpf::eBPFServer::GetInstance()->DisablePlugin("test", nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mQueueKey,-1);
-    EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mSpanCB->mFlag,false);
     EXPECT_TRUE(!ebpf::eBPFServer::GetInstance()->mSourceManager->mRunning[int(nami::PluginType::NETWORK_OBSERVE)]);
 }
 

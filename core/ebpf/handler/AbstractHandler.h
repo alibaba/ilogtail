@@ -26,16 +26,14 @@ class AbstractHandler {
 public:
     AbstractHandler() {}
     AbstractHandler(logtail::QueueKey key, uint32_t idx) : mQueueKey(key), mPluginIdx(idx) {}
-    void UpdateContext(bool flag, logtail::QueueKey key, uint32_t index) { 
+    void UpdateContext(logtail::QueueKey key, uint32_t index) { 
         mQueueKey = key;
         mPluginIdx = index;
-        mFlag = flag;
     }
 protected:
     logtail::QueueKey mQueueKey = 0;
     uint64_t mProcessTotalCnt = 0;
     uint32_t mPluginIdx = 0;
-    bool mFlag = false;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;

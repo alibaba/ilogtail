@@ -77,15 +77,9 @@ void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        {
-            std::lock_guard<std::mutex> lock(mMux);
-            if (!mFlag) {
-                continue;
-            }
-            std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
-            if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-                LOG_WARNING(sLogger, ("[Otel Metrics] push queue failed!", ""));
-            }
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
+            LOG_WARNING(sLogger, ("[Otel Metrics] push queue failed!", ""));
         }
         
     }
@@ -115,15 +109,9 @@ void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        {
-            std::lock_guard<std::mutex> lock(mMux);
-            if (!mFlag) {
-                continue;
-            }
-            std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
-            if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-                LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
-            }
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
+            LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
         }
         
     }
@@ -201,15 +189,10 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        {
-            std::lock_guard<std::mutex> lock(mMux);
-            std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
-            if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-                LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
-            }
-
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
+            LOG_WARNING(sLogger, ("[Span] push queue failed!", ""));
         }
-
     }
 
     return;
@@ -249,17 +232,11 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        {
-            std::lock_guard<std::mutex> lock(mMux);
-            if (!mFlag) {
-                continue;;
-            }
-            std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
-            if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-                LOG_WARNING(sLogger, ("[Metrics] push queue failed!", ""));
-            }
-
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
+            LOG_WARNING(sLogger, ("[Metrics] push queue failed!", ""));
         }
+
     }
     return;
 }
