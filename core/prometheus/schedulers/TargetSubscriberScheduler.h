@@ -63,17 +63,17 @@ public:
 private:
     bool ParseScrapeSchedulerGroup(const std::string& content, std::vector<Labels>& scrapeSchedulerGroup);
 
-    std::set<std::shared_ptr<ScrapeScheduler>> BuildScrapeSchedulerSet(std::vector<Labels>& scrapeSchedulerGroup);
+    std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>> BuildScrapeSchedulerSet(std::vector<Labels>& scrapeSchedulerGroup);
 
     std::unique_ptr<TimerEvent> BuildSubscriberTimerEvent(std::chrono::steady_clock::time_point execTime);
-    void UpdateScrapeScheduler(std::set<std::shared_ptr<ScrapeScheduler>>&);
+    void UpdateScrapeScheduler(std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>>&);
 
     void CancelAllScrapeScheduler();
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     ReadWriteLock mRWLock;
-    std::set<std::shared_ptr<ScrapeScheduler>> mScrapeSchedulerSet;
+    std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>> mScrapeSchedulerMap;
 
     std::string mJobName;
     std::shared_ptr<Timer> mTimer;

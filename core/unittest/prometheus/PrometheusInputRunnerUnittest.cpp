@@ -20,7 +20,6 @@
 #include "JsonUtil.h"
 #include "json/value.h"
 #include "prometheus/PrometheusInputRunner.h"
-#include "prometheus/labels/Labels.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -113,8 +112,6 @@ void InputRunnerMockHttpClient::Send(const std::string&,
 
 class PrometheusInputRunnerUnittest : public testing::Test {
 public:
-    void OnUpdateScrapeInput();
-    void OnRemoveScrapeInput();
     void OnSuccessfulStartAndStop();
 
 protected:
@@ -134,74 +131,6 @@ protected:
 
 private:
 };
-
-
-void PrometheusInputRunnerUnittest::OnUpdateScrapeInput() {
-    string errorMsg;
-    string configStr;
-    Json::Value config;
-    configStr = R"JSON(
-    {
-        "job_name": "test_job",
-        "scheme": "http",
-        "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
-    }
-    )JSON";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-
-    // build scrape job and target
-    Labels labels;
-    labels.Push(Label{"__address__", "192.168.22.7:8080"});
-    std::unique_ptr<TargetSubscriberScheduler> targetSubscriber = make_unique<TargetSubscriberScheduler>();
-    APSARA_TEST_TRUE(targetSubscriber->Init(config));
-
-    // before
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
-                     == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-    // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(targetSubscriber));
-
-    // after
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
-                     != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-    PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.clear();
-}
-
-void PrometheusInputRunnerUnittest::OnRemoveScrapeInput() {
-    string errorMsg;
-    string configStr;
-    Json::Value config;
-    configStr = R"JSON(
-    {
-        "job_name": "test_job1",
-        "scheme": "http",
-        "metrics_path": "/metrics",
-        "scrape_interval": "30s",
-        "scrape_timeout": "30s"
-    }
-    )JSON";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    // build scrape job and target
-
-    std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
-    APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
-
-    // before
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job1")
-                     == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-
-    // update scrapeJob
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job1")
-                     != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-
-    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("test_job1");
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job1")
-                     == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
-    PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.clear();
-}
 
 void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     // build scrape job and target
@@ -231,14 +160,15 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
                      != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
 
 
-    // stop
-    PrometheusInputRunner::GetInstance()->Stop();
+    // remove
+    PrometheusInputRunner::GetInstance()->RemoveScrapeInput("test_job");
+
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
                      == PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
+    // stop
+    PrometheusInputRunner::GetInstance()->Stop();
 }
 
-UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnUpdateScrapeInput)
-UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnRemoveScrapeInput)
 UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnSuccessfulStartAndStop)
 
 } // namespace logtail

@@ -162,12 +162,12 @@ void TargetSubscriberSchedulerUnittest::TestProcess() {
     // if status code is not 200
     mHttpResponse.mStatusCode = 404;
     targetSubscriber->OnSubscription(mHttpResponse);
-    APSARA_TEST_EQUAL(0UL, targetSubscriber->mScrapeSchedulerSet.size());
+    APSARA_TEST_EQUAL(0UL, targetSubscriber->mScrapeSchedulerMap.size());
 
     // if status code is 200
     mHttpResponse.mStatusCode = 200;
     targetSubscriber->OnSubscription(mHttpResponse);
-    APSARA_TEST_EQUAL(2UL, targetSubscriber->mScrapeSchedulerSet.size());
+    APSARA_TEST_EQUAL(2UL, targetSubscriber->mScrapeSchedulerMap.size());
 }
 
 void TargetSubscriberSchedulerUnittest::TestParseTargetGroups() {

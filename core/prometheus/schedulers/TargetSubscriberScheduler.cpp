@@ -73,42 +73,32 @@ void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
     if (!ParseScrapeSchedulerGroup(content, targetGroup)) {
         return;
     }
-    set<shared_ptr<ScrapeScheduler>> newScrapeSchedulerSet = BuildScrapeSchedulerSet(targetGroup);
+    std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>> newScrapeSchedulerSet
+        = BuildScrapeSchedulerSet(targetGroup);
     UpdateScrapeScheduler(newScrapeSchedulerSet);
 }
 
-void TargetSubscriberScheduler::UpdateScrapeScheduler(set<shared_ptr<ScrapeScheduler>>& newScrapeSchedulerSet) {
-    vector<shared_ptr<ScrapeScheduler>> diff;
+void TargetSubscriberScheduler::UpdateScrapeScheduler(
+    std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>>& newScrapeSchedulerMap) {
     {
         WriteLock lock(mRWLock);
 
         // remove obsolete scrape work
-        set_difference(mScrapeSchedulerSet.begin(),
-                       mScrapeSchedulerSet.end(),
-                       newScrapeSchedulerSet.begin(),
-                       newScrapeSchedulerSet.end(),
-                       inserter(diff, diff.end()));
-        for (const auto& work : diff) {
-            mScrapeSchedulerSet.erase(work);
-            work->Cancel();
+        for (const auto& [k, v] : mScrapeSchedulerMap) {
+            if (newScrapeSchedulerMap.find(k) == newScrapeSchedulerMap.end()) {
+                mScrapeSchedulerMap[k]->Cancel();
+                mScrapeSchedulerMap.erase(k);
+            }
         }
-        diff.clear();
 
         // save new scrape work
-        set_difference(newScrapeSchedulerSet.begin(),
-                       newScrapeSchedulerSet.end(),
-                       mScrapeSchedulerSet.begin(),
-                       mScrapeSchedulerSet.end(),
-                       inserter(diff, diff.end()));
-        for (const auto& work : diff) {
-            mScrapeSchedulerSet.insert(work);
-        }
-    }
-
-    // create new scrape event
-    if (mTimer) {
-        for (const auto& work : diff) {
-            work->ScheduleNext();
+        for (const auto& [k, v] : newScrapeSchedulerMap) {
+            if (mScrapeSchedulerMap.find(k) == mScrapeSchedulerMap.end()) {
+                mScrapeSchedulerMap[k] = v;
+                if (mTimer) {
+                    v->ScheduleNext();
+                }
+            }
         }
     }
 }
@@ -173,9 +163,9 @@ bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& con
     return true;
 }
 
-std::set<std::shared_ptr<ScrapeScheduler>>
+std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>>
 TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGroups) {
-    set<shared_ptr<ScrapeScheduler>> scrapeSchedulerSet;
+    std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>> scrapeSchedulerMap;
     for (const auto& labels : targetGroups) {
         // Relabel Config
         Labels resultLabel = Labels();
@@ -207,9 +197,9 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
                                           + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep()));
 
         scrapeScheduler->SetTimer(mTimer);
-        scrapeSchedulerSet.insert(scrapeScheduler);
+        scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
     }
-    return scrapeSchedulerSet;
+    return scrapeSchedulerMap;
 }
 
 void TargetSubscriberScheduler::SetTimer(shared_ptr<Timer> timer) {
@@ -242,6 +232,7 @@ void TargetSubscriberScheduler::ScheduleNext() {
 }
 
 void TargetSubscriberScheduler::Cancel() {
+    mFuture->Cancel();
     {
         WriteLock lock(mLock);
         mValidState = false;
@@ -276,8 +267,8 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
 
 void TargetSubscriberScheduler::CancelAllScrapeScheduler() {
     ReadLock lock(mRWLock);
-    for (const auto& scrapeScheduler : mScrapeSchedulerSet) {
-        scrapeScheduler->Cancel();
+    for (const auto& [k, v] : mScrapeSchedulerMap) {
+        v->Cancel();
     }
 }
 
