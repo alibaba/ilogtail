@@ -66,10 +66,10 @@ void ProcessQueueManagerUnittest::TestUpdateSameTypeQueue() {
     auto iter = sProcessQueueManager->mQueues[key].first;
     APSARA_TEST_TRUE(iter == prev(sProcessQueueManager->mPriorityQueue[0].end()));
     APSARA_TEST_TRUE(sProcessQueueManager->mCurrentQueueIndex.second == iter);
-    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mCapacity, (*iter)->mCapacity);
-    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mLowWatermark,
+    APSARA_TEST_EQUAL(sProcessQueueManager->mBoundedQueueParam.GetCapacity(), (*iter)->mCapacity);
+    APSARA_TEST_EQUAL(sProcessQueueManager->mBoundedQueueParam.GetLowWatermark(),
                       static_cast<BoundedProcessQueue*>(iter->get())->mLowWatermark);
-    APSARA_TEST_EQUAL(ProcessQueueParam::GetInstance()->mHighWatermark,
+    APSARA_TEST_EQUAL(sProcessQueueManager->mBoundedQueueParam.GetHighWatermark(),
                       static_cast<BoundedProcessQueue*>(iter->get())->mHighWatermark);
     APSARA_TEST_EQUAL("test_config_1", (*iter)->GetConfigName());
 
