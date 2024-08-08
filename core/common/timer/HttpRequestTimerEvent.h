@@ -1,11 +1,11 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,23 +16,23 @@
 
 #pragma once
 
-#include <unordered_set>
+#include <memory>
 
-#include "common/FeedbackInterface.h"
-#include "queue/QueueKey.h"
+#include "common/http/HttpRequest.h"
+#include "common/timer/TimerEvent.h"
 
 namespace logtail {
 
-class FeedbackInterfaceMock : public FeedbackInterface {
+class HttpRequestTimerEvent : public TimerEvent {
 public:
-    void Feedback(int64_t key) override { mFeedbackedKeys.insert(key); };
+    HttpRequestTimerEvent(std::chrono::steady_clock::time_point execTime, std::unique_ptr<AsynHttpRequest>&& request)
+        : TimerEvent(execTime), mRequest(std::move(request)) {}
 
-    size_t HasFeedback(QueueKey key) const { return mFeedbackedKeys.find(key) != mFeedbackedKeys.end(); }
-
-    void Clear() { mFeedbackedKeys.clear(); }
+    bool IsValid() const override;
+    bool Execute() override;
 
 private:
-    std::unordered_set<QueueKey> mFeedbackedKeys;
+    std::unique_ptr<AsynHttpRequest> mRequest;
 };
 
 } // namespace logtail

@@ -24,6 +24,9 @@
 
 namespace logtail {
 
+static constexpr uint32_t sDefaultTimeoutSec = 15;
+static constexpr uint32_t sDefaultMaxTryCnt = 3;
+
 struct HttpRequest {
     std::string mMethod;
     // TODO: upgrade curl to 7.62, and replace the following 4 members
@@ -36,6 +39,8 @@ struct HttpRequest {
     std::string mBody;
     std::string mHost;
     int32_t mPort;
+    uint32_t mTimeout = sDefaultTimeoutSec;
+    uint32_t mMaxTryCnt = sDefaultMaxTryCnt;
 
     uint32_t mTryCnt = 1;
     time_t mLastSendTime = 0;
@@ -47,7 +52,9 @@ struct HttpRequest {
                 const std::string& url,
                 const std::string& query,
                 const std::map<std::string, std::string>& header,
-                const std::string& body)
+                const std::string& body,
+                uint32_t timeout = sDefaultTimeoutSec,
+                uint32_t maxTryCnt = sDefaultMaxTryCnt)
         : mMethod(method),
           mHTTPSFlag(httpsFlag),
           mUrl(url),
@@ -55,7 +62,9 @@ struct HttpRequest {
           mHeader(header),
           mBody(body),
           mHost(host),
-          mPort(port) {}
+          mPort(port),
+          mTimeout(timeout),
+          mMaxTryCnt(maxTryCnt) {}
     virtual ~HttpRequest() = default;
 };
 
@@ -71,8 +80,10 @@ struct AsynHttpRequest : public HttpRequest {
                     const std::string& url,
                     const std::string& query,
                     const std::map<std::string, std::string>& header,
-                    const std::string& body)
-        : HttpRequest(method, httpsFlag, host, port, url, query, header, body) {}
+                    const std::string& body,
+                    uint32_t timeout = sDefaultTimeoutSec,
+                    uint32_t maxTryCnt = sDefaultMaxTryCnt)
+        : HttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt) {}
 
     virtual bool IsContextValid() const = 0;
     virtual void OnSendDone(const HttpResponse& response) = 0;
