@@ -143,19 +143,6 @@ using NamiHandleBatchSpanFunc = std::function<void(std::vector<std::unique_ptr<A
 // observe security
 using NamiHandleBatchDataEventFn = std::function<void(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events)>;
 
-
-
-struct ObserverProcessOption {
-    std::vector<std::string> mIncludeCmdRegex;
-    std::vector<std::string> mExcludeCmdRegex;
-};
-
-struct ObserverFileOption {
-    std::string mProfileRemoteServer;
-    bool mCpuSkipUpload = false;
-    bool mMemSkipUpload = false;
-};
-
 struct ObserverNetworkOption {
     std::vector<std::string> mEnableProtocols;
     bool mDisableProtocolParse = false;

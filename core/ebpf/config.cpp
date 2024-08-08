@@ -41,80 +41,6 @@ static const bool DEFUALT_PROCESS_ENABLE_OOM_DETECT = false;
 //////
 bool IsProcessNamespaceFilterTypeValid(const std::string& type);
 
-bool InitObserverFileOptionInner(const Json::Value& probeConfig,
-                            nami::ObserverFileOption& thisObserverFileOption,
-                            const PipelineContext* mContext,
-                            const std::string& sName) {
-    std::string errorMsg;
-    // ProfileRemoteServer (Optional)
-    if (!GetOptionalStringParam(
-            probeConfig, "ProfileRemoteServer", thisObserverFileOption.mProfileRemoteServer, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                             mContext->GetAlarm(),
-                             errorMsg,
-                             sName,
-                             mContext->GetConfigName(),
-                             mContext->GetProjectName(),
-                             mContext->GetLogstoreName(),
-                             mContext->GetRegion());
-    }
-    // CpuSkipUpload (Optional)
-    if (!GetOptionalBoolParam(probeConfig, "CpuSkipUpload", thisObserverFileOption.mCpuSkipUpload, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              false,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
-    }
-    // MemSkipUpload (Optional)
-    if (!GetOptionalBoolParam(probeConfig, "MemSkipUpload", thisObserverFileOption.mMemSkipUpload, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              mContext->GetAlarm(),
-                              errorMsg,
-                              false,
-                              sName,
-                              mContext->GetConfigName(),
-                              mContext->GetProjectName(),
-                              mContext->GetLogstoreName(),
-                              mContext->GetRegion());
-    }
-    return true;
-}
-
-bool InitObserverProcessOptionInner(const Json::Value& probeConfig,
-                               nami::ObserverProcessOption& thisObserverProcessOption,
-                               const PipelineContext* mContext,
-                               const std::string& sName) {
-    std::string errorMsg;
-    // IncludeCmdRegex (Optional)
-    if (!GetOptionalListParam(probeConfig, "IncludeCmdRegex", thisObserverProcessOption.mIncludeCmdRegex, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                             mContext->GetAlarm(),
-                             errorMsg,
-                             sName,
-                             mContext->GetConfigName(),
-                             mContext->GetProjectName(),
-                             mContext->GetLogstoreName(),
-                             mContext->GetRegion());
-    }
-    // ExcludeCmdRegex (Optional)
-    if (!GetOptionalListParam(probeConfig, "ExcludeCmdRegex", thisObserverProcessOption.mExcludeCmdRegex, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                             mContext->GetAlarm(),
-                             errorMsg,
-                             sName,
-                             mContext->GetConfigName(),
-                             mContext->GetProjectName(),
-                             mContext->GetLogstoreName(),
-                             mContext->GetRegion());
-    }
-    return true;
-}
-
 bool InitObserverNetworkOptionInner(const Json::Value& probeConfig,
                                nami::ObserverNetworkOption& thisObserverNetworkOption,
                                const PipelineContext* mContext,
@@ -211,29 +137,6 @@ bool ExtractProbeConfig(const Json::Value& config, const PipelineContext* mConte
     return true;
 }
 
-bool InitObserverFileOption(const Json::Value& config,
-                            nami::ObserverFileOption& thisObserverFileOption,
-                            const PipelineContext* mContext,
-                            const std::string& sName) {
-    Json::Value probeConfig;
-    if (!ExtractProbeConfig(config, mContext, sName, probeConfig)) {
-        return false;
-    }
-
-    return InitObserverFileOptionInner(probeConfig, thisObserverFileOption, mContext, sName);
-
-}
-bool InitObserverProcessOption(const Json::Value& config, 
-                               nami::ObserverProcessOption& thisObserverProcessOption,
-                               const PipelineContext* mContext,
-                               const std::string& sName) {
-    Json::Value probeConfig;
-    if (!ExtractProbeConfig(config, mContext, sName, probeConfig)) {
-        return false;
-    }
-
-    return InitObserverProcessOptionInner(probeConfig, thisObserverProcessOption, mContext, sName);
-}
 bool InitObserverNetworkOption(const Json::Value& config, 
                                nami::ObserverNetworkOption& thisObserverNetworkOption,
                                const PipelineContext* mContext,

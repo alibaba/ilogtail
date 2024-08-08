@@ -29,14 +29,6 @@ namespace ebpf {
 /////////////////////  /////////////////////
 
 enum class ObserverType { PROCESS, FILE, NETWORK };
-bool InitObserverFileOption(const Json::Value& config,
-                            nami::ObserverFileOption& thisObserverFileOption,
-                            const PipelineContext* mContext,
-                            const std::string& sName);
-bool InitObserverProcessOption(const Json::Value& config, 
-                               nami::ObserverProcessOption& thisObserverProcessOption,
-                               const PipelineContext* mContext,
-                               const std::string& sName);
 bool InitObserverNetworkOption(const Json::Value& config, 
                                nami::ObserverNetworkOption& thisObserverNetworkOption,
                                const PipelineContext* mContext,

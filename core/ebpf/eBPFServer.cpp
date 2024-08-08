@@ -65,7 +65,7 @@ void eBPFServer::Stop() {
 bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverProcessOption*, nami::ObserverFileOption*, nami::ObserverNetworkOption*> options) {
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
 
     std::string prev_pipeline_name = CheckLoadedPipelineName(type);
     if (prev_pipeline_name.size() && prev_pipeline_name != pipeline_name) {
@@ -138,7 +138,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverProcessOption*, nami::ObserverFileOption*, nami::ObserverNetworkOption*> options) {
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
     return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options);
 }
 

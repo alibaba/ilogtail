@@ -15,7 +15,6 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/config.h"
-#include "input/InputEBPFFileObserver.h"
 
 namespace logtail {
 namespace ebpf {
