@@ -224,7 +224,7 @@ void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
         this->OnSubscription(response);
-        ExecDone();
+        this->ExecDone();
         this->ScheduleNext();
     });
     if (IsCancelled()) {

@@ -110,7 +110,7 @@ void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
     future->AddDoneCallback([this](const HttpResponse& response) {
         this->OnMetricResult(response);
-        ExecDone();
+        this->ExecDone();
         this->ScheduleNext();
     });
 
