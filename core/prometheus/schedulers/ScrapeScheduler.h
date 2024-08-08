@@ -24,7 +24,7 @@
 #include "models/PipelineEventGroup.h"
 #include "prometheus/Mock.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
-#include "queue/FeedbackQueueKey.h"
+#include "queue/QueueKey.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "queue/ProcessQueueItem.h"

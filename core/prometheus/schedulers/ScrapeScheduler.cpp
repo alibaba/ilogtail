@@ -30,7 +30,7 @@
 #include "prometheus/Constants.h"
 #include "prometheus/Mock.h"
 #include "prometheus/async/PromHttpRequest.h"
-#include "queue/FeedbackQueueKey.h"
+#include "queue/QueueKey.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
 
