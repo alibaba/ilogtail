@@ -14,8 +14,9 @@
 package pluginmanager
 
 import (
-	"runtime"
+	"runtime/metrics"
 	"strconv"
+	"strings"
 )
 
 func GetMetrics() []map[string]string {
@@ -30,15 +31,39 @@ func GetMetrics() []map[string]string {
 func GetProcessStat() map[string]string {
 	recrods := map[string]string{}
 	recrods["metric-level"] = "process"
-	// cpu
-	// {
-	// 	recrods["global_cpu_go_used_cores"] = "0"
-	// }
-	// mem
-	{
-		memStat := runtime.MemStats{}
-		runtime.ReadMemStats(&memStat)
-		recrods["global_memory_go_used_mb"] = strconv.Itoa(int(memStat.Sys / 1024.0 / 1024.0))
+	// key is the metric key in runtime/metrics, value is agent's metric key
+	metricNames := map[string]string{
+		// cpu
+		// "": "global_cpu_go_used_cores",
+		// mem. All memory mapped by the Go runtime into the current process as read-write. Note that this does not include memory mapped by code called via cgo or via the syscall package. Sum of all metrics in /memory/classes.
+		"/memory/classes/total:bytes": "global_memory_go_used_mb",
+		// go routines cnt. Count of live goroutines.
+		"/sched/goroutines:goroutines": "global_go_routines_total",
+	}
+
+	// metrics to read from runtime/metrics
+	samples := make([]metrics.Sample, 0)
+	for name := range metricNames {
+		samples = append(samples, metrics.Sample{Name: name})
+	}
+	metrics.Read(samples)
+
+	// push results to recrods
+	for _, sample := range samples {
+		recordName := metricNames[sample.Name]
+		recordValue := sample.Value
+		recordValueString := ""
+		switch recordValue.Kind() {
+		case metrics.KindUint64:
+			if strings.HasSuffix(recordName, "_mb") {
+				recordValueString = strconv.FormatUint(recordValue.Uint64()/1024/1024, 10)
+			} else {
+				recordValueString = strconv.FormatUint(recordValue.Uint64(), 10)
+			}
+		case metrics.KindFloat64:
+			recordValueString = strconv.FormatFloat(recordValue.Float64(), 'g', -1, 64)
+		}
+		recrods[recordName] = recordValueString
 	}
 	return recrods
 }
