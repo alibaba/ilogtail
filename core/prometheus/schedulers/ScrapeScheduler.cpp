@@ -154,6 +154,14 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
     return timerEvent;
 }
 
+void ScrapeScheduler::Cancel() {
+    mFuture->Cancel();
+    {
+        WriteLock lock(mLock);
+        mValidState = false;
+    }
+}
+
 uint64_t ScrapeScheduler::GetRandSleep() const {
     const string& key = mHash;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
