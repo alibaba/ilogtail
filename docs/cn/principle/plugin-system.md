@@ -38,7 +38,7 @@
 
 如上图所示，插件系统目前的主体由 Input、Processor、Aggregator 和 Flusher 四部分组成，针对每一个配置，它们之间的关系：
 
-- Input: 作为输入层，一个配置可以同时配置多个 input，它们可以同时工作，采集所得到的数据将递交给 processor。
+- Input: 作为输入层，目前一个配置支持配置一个 input，它们可以同时工作，采集所得到的数据将递交给 processor。
 - Processor: 作为处理层，可以对输入的数据进行过滤，比如检查特定字段是否符合要求或是对字段进行增删改。每一个配置可以同时配置多个 processor，它们之间采用串行结构，即上一个 processor 的输出作为下一个 processor 的输入，最后一个 processor 的输出会传递到 aggregator。
 - Aggregator: 作为聚合层，可以将数据按照需要的形式进行聚合，比如将多个数据打包成组、统计数据中某些字段的最大值最小值等。类似 input，一个配置可以同时配置多个 aggregator 来实现不同目的。Aggregator 可以在新数据到来时主动地将处理后数据递交给 flusher，也可以设置一个刷新间隔，周期性地将数据递交给 flusher。
 - Flusher: 作为输出层，将数据按照配置输出到指定的目标，比如本地文件、iLogtail（通过 adaptor 的接口）等。一个配置可以同时配置多个 flusher，从而一份数据可以同时输出到多个目标。
