@@ -28,8 +28,6 @@ public:
         return ptr;
     }
     void PushMetrics(bool forceSend);
-    void PushCoreMetrics();
-    void PushGoPluginMetrics();
 
 private:
     MetricExportor();

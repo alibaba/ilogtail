@@ -208,7 +208,7 @@ func Test_LatencyMetricVectorWithDynamicLabel(t *testing.T) {
 		valueAsIndex := 0 // int(latency.Collect().Value / 1000)
 		metricName := func() string {
 			for k, v := range records {
-				if k == SelfMetricNameKey {
+				if k == pipeline.SelfMetricNameKey {
 					return v
 				}
 			}
