@@ -212,13 +212,13 @@ cassandra_token_ownership_ratio 78.9)";
         IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 24.0));
 
     // Incorrectly escaped backlash. This is real-world case, which must be supported.
-    // rawData = R"(mssql_sql_server_active_transactions_sec{loginname="domain\somelogin",env="develop"} 56)";
-    // res = parser.Parse(rawData, 0);
-    // APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName(), "mssql_sql_server_active_transactions_sec");
-    // APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("loginname").data(), "domain\\somelogin");
-    // APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("env").data(), "develop");
-    // APSARA_TEST_TRUE(
-    //     IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 56.0));
+    rawData = R"(mssql_sql_server_active_transactions_sec{loginname="domain\somelogin",env="develop"} 56)";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName(), "mssql_sql_server_active_transactions_sec");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("loginname").data(), "domain\\somelogin");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("env").data(), "develop");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 56.0));
 
     rawData = R"(foo_bucket{le="10",a="#b"} 17)";
     res = parser.Parse(rawData, 0);
@@ -259,12 +259,45 @@ cassandra_token_ownership_ratio 78.9)";
                       std::numeric_limits<double>::infinity());
 
     // tags
-    // rawData = R"(foo{bar="b\"a\\z"} -1.2)";
-    // res = parser.Parse(rawData, 0);
-    // APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName(), "foo");
-    // APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("bar").data(), "b\"a\\z");
-    // APSARA_TEST_TRUE(
-    //     IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, -1.2));
+    rawData = R"(foo{bar="b\"a\\z"} -1.2)";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName(), "foo");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("bar").data(), "b\"a\\z");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, -1.2));
+
+    // Empty tags
+    rawData = R"(foo {bar="baz",aa="",x="y"} 1 2)";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName(), "foo");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("bar").data(), "baz");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("aa").data(), "");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("x").data(), "y");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 1.0));
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestampNanosecond(), 2000000);
+
+    // Multi lines with invalid line
+    rawData = "\t foo\t {  } 0.3\t 2\naaa\n  barbaz 0.34 43\n";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().size(), 2UL);
+    APSARA_TEST_EQUAL(res.GetEvents()[0].Cast<MetricEvent>().GetName(), "foo");
+    APSARA_TEST_TRUE(IsDoubleEqual(res.GetEvents()[0].Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 0.3));
+    APSARA_TEST_EQUAL(res.GetEvents()[0].Cast<MetricEvent>().GetTimestampNanosecond(), 2000000);
+    APSARA_TEST_EQUAL(res.GetEvents()[1].Cast<MetricEvent>().GetName(), "barbaz");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents()[1].Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 0.34));
+    APSARA_TEST_EQUAL(res.GetEvents()[1].Cast<MetricEvent>().GetTimestampNanosecond(), 43000000);
+
+    // Spaces around tags
+    rawData = R"(vm_accounting	{   name="vminsertRows", accountID = "1" , projectID=	"1"   } 277779100)";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName(), "vm_accounting");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("name").data(), "vminsertRows");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("accountID").data(), "1");
+    APSARA_TEST_STREQ(res.GetEvents().back().Cast<MetricEvent>().GetTag("projectID").data(), "1");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 277779100.0));
 }
 UNIT_TEST_CASE(TextParserUnittest, TestParseSuccess)
 

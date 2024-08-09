@@ -208,6 +208,7 @@ void TextParser::HandleEqualSign(MetricEvent& metricEvent) {
 void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
     // left quote has been consumed
     if (mNoEscapes) {
+        // Fast path - the line has no escape chars
         while (mPos < mLine.size() && mLine[mPos] != '"') {
             ++mPos;
             ++mTokenLength;
@@ -216,23 +217,61 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
             HandleError("unexpected end of input in label value");
         }
         metricEvent.SetTag(mLabelName, mLine.substr(mPos - mTokenLength, mTokenLength));
-        mTokenLength = 0;
-        ++mPos;
-        SkipLeadingWhitespace();
-        char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
-        if (c == ',' || c == '}') {
-            HandleCommaOrCloseBrace(metricEvent);
-        } else {
-            HandleError("unexpected end of input in label value");
-        }
+
     } else {
-        HandleError("unsupported escape sequence");
-        // while (mPos < mLine.size() && mLine[mPos] == '"' && mLine[mPos - 1] != '\\') {
-        //     ++mPos;
-        // }
-        // if (mPos == mLine.size()) {
-        //     HandleError("unexpected end of input in label value");
-        // }
+        // Slow path - the line contains escape chars
+        auto lPos = mPos;
+        while (mPos < mLine.size()) {
+            if (mLine[mPos] == '"') {
+                int lPos = mPos - 1;
+                while (lPos >= 0 && mLine[lPos] == '\\') {
+                    --lPos;
+                }
+                if ((mPos - lPos) % 2 == 1) {
+                    break;
+                }
+            }
+            ++mPos;
+        }
+        if (mPos == mLine.size()) {
+            HandleError("unexpected end of input in label value");
+        } else {
+            string labelValue;
+            while (lPos < mPos) {
+                if (mLine[lPos] == '\\') {
+                    if (lPos + 1 < mPos) {
+                        switch (mLine[lPos + 1]) {
+                            case '\\':
+                            case '\"':
+                            case 'n':
+                                labelValue.push_back(mLine[lPos + 1]);
+                                break;
+                            default:
+                                labelValue.push_back('\\');
+                                labelValue.push_back(mLine[lPos + 1]);
+                                break;
+                        }
+                        lPos += 2;
+                    } else {
+                        labelValue.push_back('\\');
+                        lPos += 1;
+                    }
+                } else {
+                    labelValue.push_back(mLine[lPos]);
+                    lPos += 1;
+                }
+            }
+            metricEvent.SetTag(mLabelName.to_string(), labelValue);
+        }
+    }
+    mTokenLength = 0;
+    ++mPos;
+    SkipLeadingWhitespace();
+    char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
+    if (c == ',' || c == '}') {
+        HandleCommaOrCloseBrace(metricEvent);
+    } else {
+        HandleError("unexpected end of input in label value");
     }
 }
 
@@ -256,7 +295,6 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
         ++mPos;
         ++mTokenLength;
     }
-    char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
 
     auto tmpSampleValue = mLine.substr(mPos - mTokenLength, mTokenLength);
 
@@ -268,7 +306,7 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
     mTokenLength = 0;
     SkipLeadingWhitespace();
-    c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
+    char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     if (c == '\0') {
         time_t timestamp = mNanoTimestamp / 1000000000;
         auto ns = mNanoTimestamp % 1000000000;
