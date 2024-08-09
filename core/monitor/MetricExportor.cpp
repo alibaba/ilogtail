@@ -19,7 +19,6 @@
 #include "LogFileProfiler.h"
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
-#include "Monitor.h"
 #include "app_config/AppConfig.h"
 #include "common/FileSystemUtil.h"
 #include "common/RuntimeUtil.h"
@@ -36,12 +35,45 @@ DECLARE_FLAG_STRING(metrics_report_method);
 
 namespace logtail {
 
+const std::string processLevelMetricKey = "metric-level";
+const std::string processLevelMetricValue = "process";
+
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
+    // mGlobalCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_GLOBAL_CPU_GO);
+    mGlobalMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_MEMORY_GO);
 }
 
-void processGoPluginMetricsListToLogGroupMap(std::vector<std::map<std::string, std::string>>& goPluginMetircsList,
-                                             std::map<std::string, sls_logs::LogGroup*>& goLogGroupMap) {
+void MetricExportor::SendGoProcessMetricsToCpp(std::map<std::string, std::string>& metrics) {
+    // go cpu
+    // auto cpu = metrics.find(METRIC_GLOBAL_CPU_GO);
+    // if (cpu != metrics.end()) {
+    //     mGlobalCpuGo->Set(std::stod(cpu->second));
+    //     LogtailMonitor::GetInstance()->UpdateMetric(METRIC_GLOBAL_CPU_GO, cpu->second);
+    //     metrics.erase(cpu);
+    // }
+    // go mem
+    auto mem = metrics.find(METRIC_GLOBAL_MEMORY_GO);
+    if (mem != metrics.end()) {
+        mGlobalMemGo->Set(std::stoi(mem->second));
+        LogtailMonitor::GetInstance()->UpdateMetric(METRIC_GLOBAL_MEMORY_GO, mem->second);
+        metrics.erase(mem);
+    }
+    // other go metrics
+    for (auto metric : metrics) {
+        LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
+    }
+}
+
+void MetricExportor::ProcessGoPluginMetricsListToLogGroupMap(
+    std::vector<std::map<std::string, std::string>>& goPluginMetircsList,
+    std::map<std::string, sls_logs::LogGroup*>& goLogGroupMap) {
     for (auto& item : goPluginMetircsList) {
+        if (item.find(processLevelMetricKey) != item.end()) {
+            if (item.at(processLevelMetricKey) == processLevelMetricValue) {
+                SendGoProcessMetricsToCpp(item);
+                continue;
+            }
+        }
         std::string configName = "";
         std::string region = METRIC_REGION_DEFAULT;
         {
@@ -85,11 +117,17 @@ void processGoPluginMetricsListToLogGroupMap(std::vector<std::map<std::string, s
     }
 }
 
-void processGoPluginMetricsListToString(std::vector<std::map<std::string, std::string>>& goPluginMetircsList,
-                                        std::string& metricsContent) {
+void MetricExportor::ProcessGoPluginMetricsListToString(
+    std::vector<std::map<std::string, std::string>>& goPluginMetircsList, std::string& metricsContent) {
     std::ostringstream oss;
 
     for (auto& item : goPluginMetircsList) {
+        if (item.find(processLevelMetricKey) != item.end()) {
+            if (item.at(processLevelMetricKey) == processLevelMetricValue) {
+                SendGoProcessMetricsToCpp(item);
+                continue;
+            }
+        }
         Json::Value metricsRecordValue;
         auto now = GetCurrentLogtailTime();
         metricsRecordValue["time"]
@@ -137,57 +175,17 @@ void MetricExportor::PushCppMetrics() {
 void MetricExportor::PushGoPluginMetrics() {
     std::vector<std::map<std::string, std::string>> goPluginMetircsList;
     LogtailPlugin::GetInstance()->GetPipelineMetrics(goPluginMetircsList);
-
-    // find process-level metrics
-    const std::string processLevelMetricKey = "metric-level";
-    const std::string processLevelMetricValue = "process";
-    auto it = std::remove_if(
-        goPluginMetircsList.begin(),
-        goPluginMetircsList.end(),
-        [processLevelMetricKey, processLevelMetricValue](const std::map<std::string, std::string>& m) {
-            return m.find(processLevelMetricKey) != m.end() && m.at(processLevelMetricKey) == processLevelMetricValue;
-        }
-    );
-    if (it != goPluginMetircsList.end()) {
-        // go cpu
-        static DoubleGaugePtr mGlobalCpuGo;
-        if (mGlobalCpuGo == nullptr) {
-            mGlobalCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_GLOBAL_CPU_GO);
-        }
-        if (auto cpu = it->find(METRIC_GLOBAL_CPU_GO); cpu != it->end()) {
-            mGlobalCpuGo->Set(std::stod(cpu->second));
-            LogtailMonitor::GetInstance()->UpdateMetric(METRIC_GLOBAL_CPU_GO, cpu->second);
-            it->erase(cpu);
-        }
-        // go mem
-        static IntGaugePtr mGlobalMemGo;
-        if (mGlobalMemGo == nullptr) {
-            mGlobalMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_MEMORY_GO);
-        }
-        if (auto mem = it->find(METRIC_GLOBAL_MEMORY_GO); mem != it->end()) {
-            mGlobalMemGo->Set(std::stoi(mem->second));
-            LogtailMonitor::GetInstance()->UpdateMetric(METRIC_GLOBAL_MEMORY_GO, mem->second);
-            it->erase(mem);
-        }
-        // other go metrics
-        for (auto metric: *it) {
-            LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
-        }
-        
-        goPluginMetircsList.erase(it);
-    }
-
     if (goPluginMetircsList.size() == 0) {
         return;
     }
 
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> goLogGroupMap;
-        processGoPluginMetricsListToLogGroupMap(goPluginMetircsList, goLogGroupMap);
+        ProcessGoPluginMetricsListToLogGroupMap(goPluginMetircsList, goLogGroupMap);
         SendToSLS(goLogGroupMap);
     } else if ("file" == STRING_FLAG(metrics_report_method)) {
         std::string metricsContent;
-        processGoPluginMetricsListToString(goPluginMetircsList, metricsContent);
+        ProcessGoPluginMetricsListToString(goPluginMetircsList, metricsContent);
         SendToLocalFile(metricsContent, "self-metrics-go");
     }
 }
