@@ -14,7 +14,7 @@
 package pluginmanager
 
 import (
-	"runtime/metrics"
+	goruntimemetrics "runtime/metrics"
 	"strconv"
 	"strings"
 )
@@ -42,11 +42,11 @@ func GetProcessStat() map[string]string {
 	}
 
 	// metrics to read from runtime/metrics
-	samples := make([]metrics.Sample, 0)
+	samples := make([]goruntimemetrics.Sample, 0)
 	for name := range metricNames {
-		samples = append(samples, metrics.Sample{Name: name})
+		samples = append(samples, goruntimemetrics.Sample{Name: name})
 	}
-	metrics.Read(samples)
+	goruntimemetrics.Read(samples)
 
 	// push results to recrods
 	for _, sample := range samples {
@@ -54,13 +54,13 @@ func GetProcessStat() map[string]string {
 		recordValue := sample.Value
 		recordValueString := ""
 		switch recordValue.Kind() {
-		case metrics.KindUint64:
+		case goruntimemetrics.KindUint64:
 			if strings.HasSuffix(recordName, "_mb") {
 				recordValueString = strconv.FormatUint(recordValue.Uint64()/1024/1024, 10)
 			} else {
 				recordValueString = strconv.FormatUint(recordValue.Uint64(), 10)
 			}
-		case metrics.KindFloat64:
+		case goruntimemetrics.KindFloat64:
 			recordValueString = strconv.FormatFloat(recordValue.Float64(), 'g', -1, 64)
 		}
 		recrods[recordName] = recordValueString
