@@ -60,7 +60,7 @@ void TextParserBenchmark::TestParse100M() const {
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "elapsed: " << elapsed.count() << " seconds" << endl;
-    // elapsed: 2.25 seconds in release mode
+    // elapsed: 1.88 seconds in release mode
 }
 
 UNIT_TEST_CASE(TextParserBenchmark, TestParse100M)

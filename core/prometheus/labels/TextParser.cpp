@@ -151,7 +151,7 @@ void TextParser::HandleMetricName(MetricEvent& metricEvent) {
         ++mPos;
         c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     }
-    metricEvent.SetName(mLine.substr(mPos - mTokenLength, mTokenLength).to_string());
+    metricEvent.SetNameNoCopy(mLine.substr(mPos - mTokenLength, mTokenLength));
     mTokenLength = 0;
     SkipLeadingWhitespace();
     if (mPos < mLine.size()) {
@@ -216,7 +216,7 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
         if (mPos == mLine.size()) {
             HandleError("unexpected end of input in label value");
         }
-        metricEvent.SetTag(mLabelName, mLine.substr(mPos - mTokenLength, mTokenLength));
+        metricEvent.SetTagNoCopy(mLabelName, mLine.substr(mPos - mTokenLength, mTokenLength));
 
     } else {
         // Slow path - the line contains escape chars
