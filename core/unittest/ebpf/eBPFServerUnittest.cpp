@@ -97,36 +97,38 @@ void eBPFServerUnittest::TestLoadEbpfParametersV1() {
     // valid optional param
     configStr = R"(
         {
-            "ReceiveEventChanCap": 1024,
-            "AdminConfig": {
-                "DebugMode": true,
-                "LogLevel": "error",
-                "PushAllSpan": true
-            },
-            "AggregationConfig": {
-                "AggWindowSecond": 8
-            },
-            "ConverageConfig": {
-                "Strategy": "combine1"
-            },
-            "SampleConfig": {
-                "Strategy": "fixedRate1",
-                "Config": {
-                    "Rate": 0.001
+            "ebpf": {
+                "receive_event_chan_cap": 1024,
+                "admin_config": {
+                    "debug_mode": true,
+                    "log_level": "error",
+                    "push_all_span": true
+                },
+                "aggregation_config": {
+                    "agg_window_second": 8
+                },
+                "converage_config": {
+                    "strategy": "combine1"
+                },
+                "sample_config": {
+                    "strategy": "fixedRate1",
+                    "config": {
+                        "rate": 0.001
+                    }
+                },
+                "socket_probe_config": {
+                    "slow_request_threshold_ms": 5000,
+                    "max_conn_trackers": 100000,
+                    "max_band_width_mb_per_sec": 300,
+                    "max_raw_record_per_sec": 1000000
+                },
+                "profile_probe_config": {
+                    "profile_sample_rate": 100,
+                    "profile_upload_duration": 100
+                },
+                "process_probe_config": {
+                    "enable_oom_detect": true
                 }
-            },
-            "SocketProbeConfig": {
-                "SlowRequestThresholdMs": 5000,
-                "MaxConnTrackers": 100000,
-                "MaxBandWidthMbPerSec": 300,
-                "MaxRawRecordPerSec": 1000000
-            },
-            "ProfileProbeConfig": {
-                "ProfileSampleRate": 100,
-                "ProfileUploadDuration": 100
-            },
-            "ProcessProbeConfig": {
-                "EnableOOMDetect": true
             }
         }
     )";
@@ -161,25 +163,27 @@ void eBPFServerUnittest::TestDefaultAndLoadEbpfParameters() {
     // valid optional param
     configStr = R"(
         {
-            "ReceiveEventChanCap": 1024,
-            "SampleConfig": {
-                "Strategy": "fixedRate1",
-                "Config": {
-                    "Rate": 0.001
+            "ebpf": {
+                "receive_event_chan_cap": 1024,
+                "sample_config": {
+                    "strategy": "fixedRate1",
+                    "config": {
+                        "rate": 0.001
+                    }
+                },
+                "socket_probe_config": {
+                    "slow_request_threshold_ms": 5000,
+                    "max_conn_trackers": 100000,
+                    "max_band_width_mb_per_sec": 300,
+                    "max_raw_record_per_sec": 1000000
+                },
+                "profile_probe_config": {
+                    "profile_sample_rate": 100,
+                    "profile_upload_duration": 100
+                },
+                "process_probe_config": {
+                    "enable_oom_detect": true
                 }
-            },
-            "SocketProbeConfig": {
-                "SlowRequestThresholdMs": 5000,
-                "MaxConnTrackers": 100000,
-                "MaxBandWidthMbPerSec": 300,
-                "MaxRawRecordPerSec": 1000000
-            },
-            "ProfileProbeConfig": {
-                "ProfileSampleRate": 100,
-                "ProfileUploadDuration": 100
-            },
-            "ProcessProbeConfig": {
-                "EnableOOMDetect": true
             }
         }
     )";
@@ -236,8 +240,8 @@ void eBPFServerUnittest::TestDefaultEbpfParameters() {
 
 void eBPFServerUnittest::TestLoadEbpfParametersV2() {
     Json::Value value;
-    setJSON(value, "ReceiveEventChanCap", 4096);
-    setJSON(value, "AdminConfig.mDebugMode", false);
+    setJSON(value, "receive_event_chan_cap", 4096);
+    setJSON(value, "admin_config.debug_mode", false);
 
     writeLogtailConfigJSON(value);
     TestEbpfParameters();

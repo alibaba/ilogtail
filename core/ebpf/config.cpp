@@ -18,6 +18,7 @@
 #include "logger/Logger.h"
 #include "ebpf/config.h"
 #include "common/ParamExtractor.h"
+#include "common/Flags.h"
 
 namespace logtail {
 namespace ebpf {
@@ -37,6 +38,22 @@ static const int32_t DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC = 100000;
 static const int32_t DEFUALT_PROFILE_SAMPLE_RATE = 10;
 static const int32_t DEFUALT_PROFILE_UPLOAD_DURATION = 10;
 static const bool DEFUALT_PROCESS_ENABLE_OOM_DETECT = false;
+
+DEFINE_FLAG_INT32(ebpf_receive_event_chan_cap, "ebpf receive event chan cap", DEFUALT_RECEIVE_EVENT_CHAN_CAP);
+DEFINE_FLAG_BOOL(ebpf_admin_config_debug_mode, "ebpf admin config debug mode", DEFUALT_ADMIN_DEBUG_MODE);
+DEFINE_FLAG_STRING(ebpf_admin_config_log_level, "ebpf admin config log level", DEFUALT_ADMIN_LOG_LEVEL);
+DEFINE_FLAG_BOOL(ebpf_admin_config_push_all_span, "ebpf admin config push all span", DEFUALT_ADMIN_PUSH_ALL_SPAN);
+DEFINE_FLAG_INT32(ebpf_aggregation_config_agg_window_second, "ebpf aggregation config agg window second", DEFUALT_AGGREGATION_WINDOW_SECOND);
+DEFINE_FLAG_STRING(ebpf_converage_config_strategy, "ebpf converage config strategy", DEFUALT_CONVERAGE_STRATEGY);
+DEFINE_FLAG_STRING(ebpf_sample_config_strategy, "ebpf sample config strategy", DEFUALT_SAMPLE_STRATEGY);
+DEFINE_FLAG_DOUBLE(ebpf_sample_config_config_rate, "ebpf sample config config rate", DEFUALT_SAMPLE_RATE);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_slow_request_threshold_ms, "ebpf socket probe config slow request threshold ms", DEFUALT_SOCKET_SLOW_REQUEST_THRESHOLD_MS);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_conn_trackers, "ebpf socket probe config max conn trackers", DEFUALT_SOCKET_MAX_CONN_TRACKDERS);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_band_width_mb_per_sec, "ebpf socket probe config max band width mb per sec", DEFUALT_SOCKET_MAX_BAND_WITH_MB_PER_SEC);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_raw_record_per_sec, "ebpf socket probe config max raw record per sec", DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC);
+DEFINE_FLAG_INT32(ebpf_profile_probe_config_profile_sample_rate, "ebpf profile probe config profile sample rate", DEFUALT_PROFILE_SAMPLE_RATE);
+DEFINE_FLAG_INT32(ebpf_profile_probe_config_profile_upload_duration, "ebpf profile probe config profile upload duration", DEFUALT_PROFILE_UPLOAD_DURATION);
+DEFINE_FLAG_BOOL(ebpf_process_probe_config_enable_oom_detect, "ebpf process probe config enable oom detect", DEFUALT_PROCESS_ENABLE_OOM_DETECT);
 
 //////
 bool IsProcessNamespaceFilterTypeValid(const std::string& type);
@@ -500,170 +517,24 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
     return true;
 }
 
-
 //////
 void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
-    mReceiveEventChanCap = DEFUALT_RECEIVE_EVENT_CHAN_CAP;
-    std::string errorMsg;
-    // ReceiveEventChanCap (Optional)
-    if (!GetOptionalIntParam(confJson, "ReceiveEventChanCap", mReceiveEventChanCap, errorMsg)) {
-        LOG_ERROR(sLogger, ("load ReceiveEventChanCap fail", errorMsg));
-        return;
-    }
-    // AdminConfig (Optional)
-    mAdminConfig = AdminConfig{DEFUALT_ADMIN_DEBUG_MODE, DEFUALT_ADMIN_LOG_LEVEL, DEFUALT_ADMIN_PUSH_ALL_SPAN};
-    if (confJson.isMember("AdminConfig")) {
-        if (!confJson["AdminConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("AdminConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisAdminConfig = confJson["AdminConfig"];
-        // AdminConfig.DebugMode (Optional)
-        if (!GetOptionalBoolParam(thisAdminConfig, "DebugMode", mAdminConfig.mDebugMode, errorMsg)) {
-            LOG_ERROR(sLogger, ("load AdminConfig.DebugMode fail", errorMsg));
-            return;
-        }
-        // AdminConfig.LogLevel (Optional)
-        if (!GetOptionalStringParam(thisAdminConfig, "LogLevel", mAdminConfig.mLogLevel, errorMsg)) {
-            LOG_ERROR(sLogger, ("load AdminConfig.LogLevel fail", errorMsg));
-            return;
-        }
-        // AdminConfig.PushAllSpan (Optional)
-        if (!GetOptionalBoolParam(thisAdminConfig, "PushAllSpan", mAdminConfig.mPushAllSpan, errorMsg)) {
-            LOG_ERROR(sLogger, ("load AdminConfig.PushAllSpan fail", errorMsg));
-            return;
-        }
-    }
-    mAggregationConfig = AggregationConfig{DEFUALT_AGGREGATION_WINDOW_SECOND};
-    // AggregationConfig (Optional)
-    if (confJson.isMember("AggregationConfig")) {
-        if (!confJson["AggregationConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("AggregationConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisAggregationConfig = confJson["AggregationConfig"];
-        // AggregationConfig.AggWindowSecond (Optional)
-        if (!GetOptionalIntParam(
-                thisAggregationConfig, "AggWindowSecond", mAggregationConfig.mAggWindowSecond, errorMsg)) {
-            LOG_ERROR(sLogger, ("load AggregationConfig.AggWindowSecond fail", errorMsg));
-            return;
-        }
-    }
-    mConverageConfig = ConverageConfig{DEFUALT_CONVERAGE_STRATEGY};
-    // ConverageConfig (Optional)
-    if (confJson.isMember("ConverageConfig")) {
-        if (!confJson["ConverageConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("ConverageConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisConverageConfig = confJson["ConverageConfig"];
-        // ConverageConfig.Strategy (Optional)
-        if (!GetOptionalStringParam(thisConverageConfig, "Strategy", mConverageConfig.mStrategy, errorMsg)) {
-            LOG_ERROR(sLogger, ("load ConverageConfig.Strategy fail", errorMsg));
-            return;
-        }
-    }
-    mSampleConfig = SampleConfig{DEFUALT_SAMPLE_STRATEGY, {DEFUALT_SAMPLE_RATE}};
-    // SampleConfig (Optional)
-    if (confJson.isMember("SampleConfig")) {
-        if (!confJson["SampleConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("SampleConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisSampleConfig = confJson["SampleConfig"];
-        // SampleConfig.Strategy (Optional)
-        if (!GetOptionalStringParam(thisSampleConfig, "Strategy", mSampleConfig.mStrategy, errorMsg)) {
-            LOG_ERROR(sLogger, ("load SampleConfig.Strategy fail", errorMsg));
-            return;
-        }
-        // SampleConfig.Config (Optional)
-        if (thisSampleConfig.isMember("Config")) {
-            if (!thisSampleConfig["Config"].isObject()) {
-                LOG_ERROR(sLogger, ("SampleConfig.Config", " is not a map"));
-                return;
-            }
-            const Json::Value& thisSampleConfigConfig = thisSampleConfig["Config"];
-            // SampleConfig.Config.Rate (Optional)
-            if (!GetOptionalDoubleParam(thisSampleConfigConfig, "Rate", mSampleConfig.mConfig.mRate, errorMsg)) {
-                LOG_ERROR(sLogger, ("load SampleConfig.Config.Rate fail", errorMsg));
-                return;
-            }
-        }
-    }
-    mSocketProbeConfig = SocketProbeConfig{DEFUALT_SOCKET_SLOW_REQUEST_THRESHOLD_MS, DEFUALT_SOCKET_MAX_CONN_TRACKDERS, DEFUALT_SOCKET_MAX_BAND_WITH_MB_PER_SEC, DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC};
-    // for Observer
-    // SocketProbeConfig (Optional)
-    if (confJson.isMember("SocketProbeConfig")) {
-        if (!confJson["SocketProbeConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("SocketProbeConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisSocketProbeConfig = confJson["SocketProbeConfig"];
-        // SocketProbeConfig.SlowRequestThresholdMs (Optional)
-        if (!GetOptionalIntParam(thisSocketProbeConfig,
-                                 "SlowRequestThresholdMs",
-                                 mSocketProbeConfig.mSlowRequestThresholdMs,
-                                 errorMsg)) {
-            LOG_ERROR(sLogger, ("load SocketProbeConfig.SlowRequestThresholdMs fail", errorMsg));
-            return;
-        }
-        // SocketProbeConfig.MaxConnTrackers (Optional)
-        if (!GetOptionalIntParam(
-                thisSocketProbeConfig, "MaxConnTrackers", mSocketProbeConfig.mMaxConnTrackers, errorMsg)) {
-            LOG_ERROR(sLogger, ("load SocketProbeConfig.MaxConnTrackers fail", errorMsg));
-            return;
-        }
-        // SocketProbeConfig.MaxBandWidthMbPerSec (Optional)
-        if (!GetOptionalIntParam(
-                thisSocketProbeConfig, "MaxBandWidthMbPerSec", mSocketProbeConfig.mMaxBandWidthMbPerSec, errorMsg)) {
-            LOG_ERROR(sLogger, ("load SocketProbeConfig.MaxBandWidthMbPerSec fail", errorMsg));
-            return;
-        }
-        // SocketProbeConfig.MaxRawRecordPerSec (Optional)
-        if (!GetOptionalIntParam(
-                thisSocketProbeConfig, "MaxRawRecordPerSec", mSocketProbeConfig.mMaxRawRecordPerSec, errorMsg)) {
-            LOG_ERROR(sLogger, ("load SocketProbeConfig.MaxRawRecordPerSec fail", errorMsg));
-            return;
-        }
-    }
-    mProfileProbeConfig = ProfileProbeConfig{DEFUALT_PROFILE_SAMPLE_RATE, DEFUALT_PROFILE_UPLOAD_DURATION};
-    // ProfileProbeConfig (Optional)
-    if (confJson.isMember("ProfileProbeConfig")) {
-        if (!confJson["ProfileProbeConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("ProfileProbeConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisProfileProbeConfig = confJson["ProfileProbeConfig"];
-        // ProfileProbeConfig.ProfileSampleRate (Optional)
-        if (!GetOptionalIntParam(
-                thisProfileProbeConfig, "ProfileSampleRate", mProfileProbeConfig.mProfileSampleRate, errorMsg)) {
-            LOG_ERROR(sLogger, ("load ProfileProbeConfig.ProfileSampleRate fail", errorMsg));
-            return;
-        }
-        // ProfileProbeConfig.ProfileUploadDuration (Optional)
-        if (!GetOptionalIntParam(thisProfileProbeConfig,
-                                 "ProfileUploadDuration",
-                                 mProfileProbeConfig.mProfileUploadDuration,
-                                 errorMsg)) {
-            LOG_ERROR(sLogger, ("load ProfileProbeConfig.ProfileUploadDuration fail", errorMsg));
-            return;
-        }
-    }
-    mProcessProbeConfig = ProcessProbeConfig{DEFUALT_PROCESS_ENABLE_OOM_DETECT};
-    // ProcessProbeConfig (Optional)
-    if (confJson.isMember("ProcessProbeConfig")) {
-        if (!confJson["ProcessProbeConfig"].isObject()) {
-            LOG_ERROR(sLogger, ("ProcessProbeConfig", " is not a map"));
-            return;
-        }
-        const Json::Value& thisProcessProbeConfig = confJson["ProcessProbeConfig"];
-        // ProcessProbeConfig.EnableOOMDetect (Optional)
-        if (!GetOptionalBoolParam(
-                thisProcessProbeConfig, "EnableOOMDetect", mProcessProbeConfig.mEnableOOMDetect, errorMsg)) {
-            LOG_ERROR(sLogger, ("load ProcessProbeConfig.EnableOOMDetect fail", errorMsg));
-            return;
-        }
-    }
+    // receive_event_chan_cap (Optional)
+    mReceiveEventChanCap = FLAGS_ebpf_receive_event_chan_cap;
+    // admin_config (Optional)
+    mAdminConfig = AdminConfig{FLAGS_ebpf_admin_config_debug_mode, FLAGS_ebpf_admin_config_log_level, FLAGS_ebpf_admin_config_push_all_span};
+    // aggregation_config (Optional)
+    mAggregationConfig = AggregationConfig{FLAGS_ebpf_aggregation_config_agg_window_second};
+    // converage_config (Optional)
+    mConverageConfig = ConverageConfig{FLAGS_ebpf_converage_config_strategy};
+    // sample_config (Optional)
+    mSampleConfig = SampleConfig{FLAGS_ebpf_sample_config_strategy, {FLAGS_ebpf_sample_config_config_rate}};
+    // socket_probe_config (Optional)
+    mSocketProbeConfig = SocketProbeConfig{FLAGS_ebpf_socket_probe_config_slow_request_threshold_ms, FLAGS_ebpf_socket_probe_config_max_conn_trackers, FLAGS_ebpf_socket_probe_config_max_band_width_mb_per_sec, FLAGS_ebpf_socket_probe_config_max_raw_record_per_sec};
+    // profile_probe_config (Optional)
+    mProfileProbeConfig = ProfileProbeConfig{FLAGS_ebpf_profile_probe_config_profile_sample_rate, FLAGS_ebpf_profile_probe_config_profile_upload_duration};
+    // process_probe_config (Optional)
+    mProcessProbeConfig = ProcessProbeConfig{FLAGS_ebpf_process_probe_config_enable_oom_detect};
 }
 
 } // ebpf
