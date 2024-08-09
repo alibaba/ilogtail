@@ -21,11 +21,11 @@
 #include <cmath>
 #include <string>
 
-#include "Constants.h"
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
+#include "prometheus/Constants.h"
 
 using namespace std;
 
