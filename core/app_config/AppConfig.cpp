@@ -1041,10 +1041,6 @@ void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string
         }
         if (jsonvalue.isObject()) {
             RecurseParseJsonToFlags(jsonvalue, fullName);
-        } else if (jsonvalue.isArray()){
-            APSARA_LOG_INFO(sLogger,
-                        ("Set config flag failed", "can not convert array json value to flag")("flag name", fullName)(
-                            "jsonvalue", jsonvalue.toStyledString()));
         } else {
             if (sIgnoreKeySet.find(fullName) != sIgnoreKeySet.end()) {
                 continue;
