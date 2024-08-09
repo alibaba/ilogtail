@@ -43,7 +43,9 @@ extern const std::string METRIC_LABEL_VERSION;
 // global metrics values
 
 extern const std::string METRIC_GLOBAL_CPU;
+extern const std::string METRIC_GLOBAL_CPU_GO;
 extern const std::string METRIC_GLOBAL_MEMORY;
+extern const std::string METRIC_GLOBAL_MEMORY_GO;
 extern const std::string METRIC_GLOBAL_OPEN_FD_TOTAL;
 extern const std::string METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL;
 extern const std::string METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL;

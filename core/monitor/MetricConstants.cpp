@@ -41,7 +41,9 @@ const std::string METRIC_LABEL_VERSION = "version";
 // global metrics values
 
 const std::string METRIC_GLOBAL_CPU = "global_cpu_used_cores";
+const std::string METRIC_GLOBAL_CPU_GO = "global_cpu_go_used_cores";
 const std::string METRIC_GLOBAL_MEMORY = "global_memory_used_mb";
+const std::string METRIC_GLOBAL_MEMORY_GO = "global_memory_go_used_mb";
 const std::string METRIC_GLOBAL_OPEN_FD_TOTAL = "global_open_fd_total";
 const std::string METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL = "global_polling_dir_cache_size_total";
 const std::string METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL = "global_polling_file_cache_size_total";
