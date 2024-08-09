@@ -23,6 +23,7 @@
 #include <string>
 
 #include "Common.h"
+#include "TimeUtil.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
 #include "common/timer/HttpRequestTimerEvent.h"
@@ -198,10 +199,20 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
         string host = address.substr(0, m);
         auto scrapeScheduler
             = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, resultLabel, mQueueKey, mInputIndex);
-        scrapeScheduler->SetFirstExecTime(std::chrono::steady_clock::now()
-                                          + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep()));
 
         scrapeScheduler->SetTimer(mTimer);
+        // zero-cost upgrade
+        auto firstExecTime
+            = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep());
+
+        if (GetCurrentTimeInNanoSeconds() + scrapeScheduler->GetRandSleep() - mUnRegisterMs * 1000000
+            > (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000) {
+            // scrape once just now
+            scrapeScheduler->ScrapeOnce(std::chrono::steady_clock::now());
+        }
+
+        scrapeScheduler->SetFirstExecTime(firstExecTime);
+
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
     }
     return scrapeSchedulerMap;

@@ -51,6 +51,7 @@ public:
     std::string GetId() const;
 
     void ScheduleNext() override;
+    void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
 
     uint64_t GetRandSleep() const;
 

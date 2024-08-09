@@ -128,6 +128,15 @@ void ScrapeScheduler::ScheduleNext() {
     mTimer->PushEvent(std::move(event));
 }
 
+void ScrapeScheduler::ScrapeOnce(std::chrono::steady_clock::time_point execTime) {
+    auto future = std::make_shared<PromFuture>();
+    future->AddDoneCallback([this](const HttpResponse& response) { this->OnMetricResult(response); });
+    auto event = BuildScrapeTimerEvent(execTime);
+    if (mTimer) {
+        mTimer->PushEvent(std::move(event));
+    }
+}
+
 std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime) {
     auto request = std::make_unique<PromHttpRequest>(sdk::HTTP_GET,
                                                      mScrapeConfigPtr->mScheme == prometheus::HTTPS,
