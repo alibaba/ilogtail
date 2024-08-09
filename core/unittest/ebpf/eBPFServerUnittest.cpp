@@ -94,7 +94,7 @@ static int generateRandomInt(int bound) {
 void eBPFServerUnittest::TestLoadEbpfParametersV1() {
     Json::Value value;
     std::string configStr, errorMsg;
-    // valid optional param
+    // valid optional param, include all appconfig params
     configStr = R"(
         {
             "ebpf": {
@@ -240,8 +240,8 @@ void eBPFServerUnittest::TestDefaultEbpfParameters() {
 
 void eBPFServerUnittest::TestLoadEbpfParametersV2() {
     Json::Value value;
-    setJSON(value, "receive_event_chan_cap", 4096);
-    setJSON(value, "admin_config.debug_mode", false);
+    setJSON(value, "ebpf_receive_event_chan_cap", 4096);
+    setJSON(value, "ebpf_admin_config_debug_mode", false);
 
     writeLogtailConfigJSON(value);
     TestEbpfParameters();

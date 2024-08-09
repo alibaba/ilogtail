@@ -20,40 +20,24 @@
 #include "common/ParamExtractor.h"
 #include "common/Flags.h"
 
+DEFINE_FLAG_INT32(ebpf_receive_event_chan_cap, "ebpf receive kernel event queue size", 4096);
+DEFINE_FLAG_BOOL(ebpf_admin_config_debug_mode, "ebpf admin config debug mode", false);
+DEFINE_FLAG_STRING(ebpf_admin_config_log_level, "ebpf admin config log level", "warn");
+DEFINE_FLAG_BOOL(ebpf_admin_config_push_all_span, "if admin config push all span", false);
+DEFINE_FLAG_INT32(ebpf_aggregation_config_agg_window_second, "ebpf data aggregation window time", 15);
+DEFINE_FLAG_STRING(ebpf_converage_config_strategy, "ebpf converage strategy", "combine");
+DEFINE_FLAG_STRING(ebpf_sample_config_strategy, "ebpf sample strategy", "fixedRate");
+DEFINE_FLAG_DOUBLE(ebpf_sample_config_config_rate, "ebpf sample rate", 0.01);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_slow_request_threshold_ms, "ebpf socket probe slow request threshold", 500);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_conn_trackers, "ebpf socket probe max connect trackers", 10000);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_band_width_mb_per_sec, "ebpf socket probe max bandwidth per sec", 30);
+DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_raw_record_per_sec, "ebpf socket probe max raw record per sec", 100000);
+DEFINE_FLAG_INT32(ebpf_profile_probe_config_profile_sample_rate, "ebpf profile probe profile sample rate", 10);
+DEFINE_FLAG_INT32(ebpf_profile_probe_config_profile_upload_duration, "ebpf profile probe profile upload duration", 10);
+DEFINE_FLAG_BOOL(ebpf_process_probe_config_enable_oom_detect, "if ebpf process probe enable oom detect", false);
+
 namespace logtail {
 namespace ebpf {
-
-static const int32_t DEFUALT_RECEIVE_EVENT_CHAN_CAP = 4096;
-static const bool DEFUALT_ADMIN_DEBUG_MODE = false;
-static const std::string DEFUALT_ADMIN_LOG_LEVEL = "warn";
-static const bool DEFUALT_ADMIN_PUSH_ALL_SPAN = false;
-static const int32_t DEFUALT_AGGREGATION_WINDOW_SECOND = 15;
-static const std::string DEFUALT_CONVERAGE_STRATEGY = "combine";
-static const std::string DEFUALT_SAMPLE_STRATEGY = "fixedRate";
-static const double DEFUALT_SAMPLE_RATE = 0.01;
-static const int32_t DEFUALT_SOCKET_SLOW_REQUEST_THRESHOLD_MS = 500;
-static const int32_t DEFUALT_SOCKET_MAX_CONN_TRACKDERS = 10000;
-static const int32_t DEFUALT_SOCKET_MAX_BAND_WITH_MB_PER_SEC = 30;
-static const int32_t DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC = 100000;
-static const int32_t DEFUALT_PROFILE_SAMPLE_RATE = 10;
-static const int32_t DEFUALT_PROFILE_UPLOAD_DURATION = 10;
-static const bool DEFUALT_PROCESS_ENABLE_OOM_DETECT = false;
-
-DEFINE_FLAG_INT32(ebpf_receive_event_chan_cap, "ebpf receive event chan cap", DEFUALT_RECEIVE_EVENT_CHAN_CAP);
-DEFINE_FLAG_BOOL(ebpf_admin_config_debug_mode, "ebpf admin config debug mode", DEFUALT_ADMIN_DEBUG_MODE);
-DEFINE_FLAG_STRING(ebpf_admin_config_log_level, "ebpf admin config log level", DEFUALT_ADMIN_LOG_LEVEL);
-DEFINE_FLAG_BOOL(ebpf_admin_config_push_all_span, "ebpf admin config push all span", DEFUALT_ADMIN_PUSH_ALL_SPAN);
-DEFINE_FLAG_INT32(ebpf_aggregation_config_agg_window_second, "ebpf aggregation config agg window second", DEFUALT_AGGREGATION_WINDOW_SECOND);
-DEFINE_FLAG_STRING(ebpf_converage_config_strategy, "ebpf converage config strategy", DEFUALT_CONVERAGE_STRATEGY);
-DEFINE_FLAG_STRING(ebpf_sample_config_strategy, "ebpf sample config strategy", DEFUALT_SAMPLE_STRATEGY);
-DEFINE_FLAG_DOUBLE(ebpf_sample_config_config_rate, "ebpf sample config config rate", DEFUALT_SAMPLE_RATE);
-DEFINE_FLAG_INT32(ebpf_socket_probe_config_slow_request_threshold_ms, "ebpf socket probe config slow request threshold ms", DEFUALT_SOCKET_SLOW_REQUEST_THRESHOLD_MS);
-DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_conn_trackers, "ebpf socket probe config max conn trackers", DEFUALT_SOCKET_MAX_CONN_TRACKDERS);
-DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_band_width_mb_per_sec, "ebpf socket probe config max band width mb per sec", DEFUALT_SOCKET_MAX_BAND_WITH_MB_PER_SEC);
-DEFINE_FLAG_INT32(ebpf_socket_probe_config_max_raw_record_per_sec, "ebpf socket probe config max raw record per sec", DEFUALT_SOCKET_MAX_RAW_RECORD_PER_SEC);
-DEFINE_FLAG_INT32(ebpf_profile_probe_config_profile_sample_rate, "ebpf profile probe config profile sample rate", DEFUALT_PROFILE_SAMPLE_RATE);
-DEFINE_FLAG_INT32(ebpf_profile_probe_config_profile_upload_duration, "ebpf profile probe config profile upload duration", DEFUALT_PROFILE_UPLOAD_DURATION);
-DEFINE_FLAG_BOOL(ebpf_process_probe_config_enable_oom_detect, "ebpf process probe config enable oom detect", DEFUALT_PROCESS_ENABLE_OOM_DETECT);
 
 //////
 bool IsProcessNamespaceFilterTypeValid(const std::string& type);
@@ -520,21 +504,21 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
 //////
 void eBPFAdminConfig::LoadEbpfConfig(const Json::Value& confJson) {
     // receive_event_chan_cap (Optional)
-    mReceiveEventChanCap = FLAGS_ebpf_receive_event_chan_cap;
+    mReceiveEventChanCap = INT32_FLAG(ebpf_receive_event_chan_cap);
     // admin_config (Optional)
-    mAdminConfig = AdminConfig{FLAGS_ebpf_admin_config_debug_mode, FLAGS_ebpf_admin_config_log_level, FLAGS_ebpf_admin_config_push_all_span};
+    mAdminConfig = AdminConfig{BOOL_FLAG(ebpf_admin_config_debug_mode), STRING_FLAG(ebpf_admin_config_log_level), BOOL_FLAG(ebpf_admin_config_push_all_span)};
     // aggregation_config (Optional)
-    mAggregationConfig = AggregationConfig{FLAGS_ebpf_aggregation_config_agg_window_second};
+    mAggregationConfig = AggregationConfig{INT32_FLAG(ebpf_aggregation_config_agg_window_second)};
     // converage_config (Optional)
-    mConverageConfig = ConverageConfig{FLAGS_ebpf_converage_config_strategy};
+    mConverageConfig = ConverageConfig{STRING_FLAG(ebpf_converage_config_strategy)};
     // sample_config (Optional)
-    mSampleConfig = SampleConfig{FLAGS_ebpf_sample_config_strategy, {FLAGS_ebpf_sample_config_config_rate}};
+    mSampleConfig = SampleConfig{STRING_FLAG(ebpf_sample_config_strategy), {DOUBLE_FLAG(ebpf_sample_config_config_rate)}};
     // socket_probe_config (Optional)
-    mSocketProbeConfig = SocketProbeConfig{FLAGS_ebpf_socket_probe_config_slow_request_threshold_ms, FLAGS_ebpf_socket_probe_config_max_conn_trackers, FLAGS_ebpf_socket_probe_config_max_band_width_mb_per_sec, FLAGS_ebpf_socket_probe_config_max_raw_record_per_sec};
+    mSocketProbeConfig = SocketProbeConfig{INT32_FLAG(ebpf_socket_probe_config_slow_request_threshold_ms), INT32_FLAG(ebpf_socket_probe_config_max_conn_trackers), INT32_FLAG(ebpf_socket_probe_config_max_band_width_mb_per_sec), INT32_FLAG(ebpf_socket_probe_config_max_raw_record_per_sec)};
     // profile_probe_config (Optional)
-    mProfileProbeConfig = ProfileProbeConfig{FLAGS_ebpf_profile_probe_config_profile_sample_rate, FLAGS_ebpf_profile_probe_config_profile_upload_duration};
+    mProfileProbeConfig = ProfileProbeConfig{INT32_FLAG(ebpf_profile_probe_config_profile_sample_rate), INT32_FLAG(ebpf_profile_probe_config_profile_upload_duration)};
     // process_probe_config (Optional)
-    mProcessProbeConfig = ProcessProbeConfig{FLAGS_ebpf_process_probe_config_enable_oom_detect};
+    mProcessProbeConfig = ProcessProbeConfig{BOOL_FLAG(ebpf_process_probe_config_enable_oom_detect)};
 }
 
 } // ebpf
