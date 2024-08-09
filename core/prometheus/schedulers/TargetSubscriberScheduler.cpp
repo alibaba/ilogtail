@@ -82,13 +82,18 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
     std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>>& newScrapeSchedulerMap) {
     {
         WriteLock lock(mRWLock);
+        vector<string> toRemove;
 
         // remove obsolete scrape work
         for (const auto& [k, v] : mScrapeSchedulerMap) {
             if (newScrapeSchedulerMap.find(k) == newScrapeSchedulerMap.end()) {
-                mScrapeSchedulerMap[k]->Cancel();
-                mScrapeSchedulerMap.erase(k);
+                toRemove.push_back(k);
             }
+        }
+
+        for (auto& k : toRemove) {
+            mScrapeSchedulerMap[k]->Cancel();
+            mScrapeSchedulerMap.erase(k);
         }
 
         // save new scrape work
