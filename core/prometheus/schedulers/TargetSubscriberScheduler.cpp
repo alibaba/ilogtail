@@ -102,6 +102,12 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
             if (mScrapeSchedulerMap.find(k) == mScrapeSchedulerMap.end()) {
                 mScrapeSchedulerMap[k] = v;
                 if (mTimer) {
+                    // zero-cost upgrade
+                    if (GetCurrentTimeInNanoSeconds() + v->GetRandSleep() - mUnRegisterMs * 1000000
+                        > (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000) {
+                        // scrape once just now
+                        v->ScrapeOnce(std::chrono::steady_clock::now());
+                    }
                     v->ScheduleNext();
                 }
             }
@@ -201,15 +207,8 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
             = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, resultLabel, mQueueKey, mInputIndex);
 
         scrapeScheduler->SetTimer(mTimer);
-        // zero-cost upgrade
         auto firstExecTime
             = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep());
-
-        if (GetCurrentTimeInNanoSeconds() + scrapeScheduler->GetRandSleep() - mUnRegisterMs * 1000000
-            > (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000) {
-            // scrape once just now
-            scrapeScheduler->ScrapeOnce(std::chrono::steady_clock::now());
-        }
 
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
