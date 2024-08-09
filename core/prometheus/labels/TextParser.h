@@ -48,8 +48,7 @@ private:
     void HandleTimestamp(MetricEvent& metricEvent);
     void HandleSpace(MetricEvent& metricEvent);
 
-    void SkipSpaceIfHasNext();
-    void SkipLeadingWhitespace();
+    inline void SkipLeadingWhitespace();
 
     TextState mState{TextState::Start};
     StringView mLine;

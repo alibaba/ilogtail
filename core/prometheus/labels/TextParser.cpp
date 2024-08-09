@@ -65,9 +65,7 @@ bool IsValidMetric(const StringView& line) {
     return false;
 }
 
-std::vector<StringView> SplitStringView(const std::string& s, char delimiter) {
-    std::vector<StringView> result;
-
+void SplitStringView(const std::string& s, char delimiter, std::vector<StringView>& result) {
     size_t start = 0;
     size_t end = 0;
 
@@ -78,15 +76,15 @@ std::vector<StringView> SplitStringView(const std::string& s, char delimiter) {
     if (start < s.size()) {
         result.emplace_back(s.data() + start, s.size() - start);
     }
-
-    return result;
 }
 
 
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
-
-    for (const auto& line : SplitStringView(content, '\n')) {
+    vector<StringView> lines;
+    lines.reserve(content.size() / 100);
+    SplitStringView(content, '\n', lines);
+    for (const auto& line : lines) {
         if (!IsValidMetric(line)) {
             continue;
         }
@@ -178,8 +176,7 @@ void TextParser::HandleLabelName(MetricEvent& metricEvent) {
         mLabelName = mLine.substr(mPos - mTokenLength, mTokenLength);
         mTokenLength = 0;
         SkipLeadingWhitespace();
-        c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
-        if (c != '=') {
+        if (mPos == mLine.size() || mLine[mPos] != '=') {
             HandleError("expected '=' after label name");
             return;
         }
@@ -196,8 +193,7 @@ void TextParser::HandleLabelName(MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleEqualSign(MetricEvent& metricEvent) {
-    char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
-    if (c == '"') {
+    if (mPos < mLine.size() && mLine[mPos] == '"') {
         ++mPos;
         HandleLabelValue(metricEvent);
     } else {
@@ -267,8 +263,7 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
     mTokenLength = 0;
     ++mPos;
     SkipLeadingWhitespace();
-    char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
-    if (c == ',' || c == '}') {
+    if (mPos < mLine.size() && (mLine[mPos] == ',' || mLine[mPos] == '}')) {
         HandleCommaOrCloseBrace(metricEvent);
     } else {
         HandleError("unexpected end of input in label value");
@@ -306,8 +301,7 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
     mTokenLength = 0;
     SkipLeadingWhitespace();
-    char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
-    if (c == '\0') {
+    if (mPos == mLine.size()) {
         time_t timestamp = mNanoTimestamp / 1000000000;
         auto ns = mNanoTimestamp % 1000000000;
         metricEvent.SetTimestamp(timestamp, ns);
@@ -344,19 +338,7 @@ void TextParser::HandleError(const string& errMsg) {
     mState = TextState::Error;
 }
 
-void TextParser::SkipSpaceIfHasNext() {
-    // before entering this state, we should clear all space characters
-    while (mPos < mLine.length() && std::isspace(mLine[mPos])) {
-        mPos++;
-        // if next char is not space, we should stop
-        // because the main loop must read the next char
-        if (mPos < mLine.length() && !std::isspace(mLine[mPos])) {
-            break;
-        }
-    }
-}
-
-void TextParser::SkipLeadingWhitespace() {
+inline void TextParser::SkipLeadingWhitespace() {
     while (mPos < mLine.length() && IsWhitespace(mLine[mPos])) {
         mPos++;
     }

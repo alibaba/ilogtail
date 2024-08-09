@@ -56,7 +56,7 @@ test_metric5{k1="v1",k2="v2",} 9.9410452992e+10 1715829785083
 test_metric6{k1="v1",k2="v2", } 9.9410452992e+10 1715829785083
 test_metric7{k1="v1", k2="v2", } 9.9410452992e+10 1715829785083
 test_metric8{k1="v1", k2="v2", } 9.9410452992e+10 1715829785083
-        )""";
+)""";
     std::string m100MData;
     std::string m1000MData;
 };
@@ -70,7 +70,8 @@ void TextParserBenchmark::TestParse100M() const {
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "elapsed: " << elapsed.count() << " seconds" << endl;
-    // elapsed: 1.88 seconds in release mode
+    // elapsed: 1.71s in release mode
+    // elapsed: 551MB in release mode
 }
 
 void TextParserBenchmark::TestParse1000M() const {
@@ -82,7 +83,8 @@ void TextParserBenchmark::TestParse1000M() const {
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "elapsed: " << elapsed.count() << " seconds" << endl;
-    // elapsed: 17.8 seconds in release mode
+    // elapsed: 17.1s in release mode
+    // elapsed: 4960MB in release mode
 }
 
 UNIT_TEST_CASE(TextParserBenchmark, TestParse100M)
