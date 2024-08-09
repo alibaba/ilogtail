@@ -51,7 +51,7 @@ InputFile::InputFile()
     : mMaxCheckpointDirSearchDepth(static_cast<uint32_t>(INT32_FLAG(search_checkpoint_default_dir_depth))) {
 }
 
-bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
 
     if (!mFileDiscovery.Init(config, *mContext, sName)) {
@@ -85,7 +85,8 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
         }
         mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
         mFileDiscovery.SetDeduceAndSetContainerBaseDirFunc(DeduceAndSetContainerBaseDir);
-        mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline, &mFileDiscovery);
+        mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(
+            optionalGoPipeline, &mFileDiscovery, mContext->GetPipeline().GenNextPluginID());
     }
 
     if (!mFileReader.Init(config, *mContext, sName)) {
@@ -168,9 +169,11 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
     };
     mPluginMetricManager
         = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
+    // Register a Gauge metric to record PluginMetricManager‘s map size
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateIntGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
     mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
 
-    return CreateInnerProcessors(pluginIdx);
+    return CreateInnerProcessors();
 }
 
 bool InputFile::Start() {
@@ -198,19 +201,19 @@ bool InputFile::Stop(bool isPipelineRemoving) {
     return true;
 }
 
-bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
+bool InputFile::CreateInnerProcessors() {
     unique_ptr<ProcessorInstance> processor;
     {
         Json::Value detail;
         if (mContext->IsFirstProcessorJson() || mMultiline.mMode == MultilineOptions::Mode::JSON) {
             mContext->SetRequiringJsonReaderFlag(true);
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["SplitChar"] = Json::Value('\0');
             detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
         } else if (mMultiline.IsMultiline()) {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitMultilineLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(mMultiline.mContinuePattern);
@@ -224,8 +227,8 @@ bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
                 detail["UnmatchedContentTreatment"] = Json::Value("single_line");
             }
         } else {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, *mContext)) {
@@ -236,7 +239,8 @@ bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
     }
     {
         Json::Value detail;
-        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIdx));
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName,
+                                                                   mContext->GetPipeline().GenNextPluginMeta(false));
         if (!processor->Init(detail, *mContext)) {
             // should not happen
             return false;

@@ -15,15 +15,29 @@
 package pluginmanager
 
 import (
+	"time"
+
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"time"
 )
 
-type FlusherWrapper struct {
-	Flusher       pipeline.FlusherV1
-	Config        *LogstoreConfig
-	LogGroupsChan chan *protocol.LogGroup
-	Interval      time.Duration
+type ProcessorWrapperV1 struct {
+	ProcessorWrapper
+	LogsChan  chan *pipeline.LogWithContext
+	Processor pipeline.ProcessorV1
+}
+
+func (wrapper *ProcessorWrapperV1) Init(pluginMeta *pipeline.PluginMeta) error {
+	wrapper.InitMetricRecord(pluginMeta)
+
+	return wrapper.Processor.Init(wrapper.Config.Context)
+}
+
+func (wrapper *ProcessorWrapperV1) Process(logArray []*protocol.Log) []*protocol.Log {
+	wrapper.procInRecordsTotal.Add(int64(len(logArray)))
+	startTime := time.Now().UnixMilli()
+	result := wrapper.Processor.ProcessLogs(logArray)
+	wrapper.procTimeMS.Add(time.Now().UnixMilli() - startTime)
+	wrapper.procOutRecordsTotal.Add(int64(len(result)))
+	return result
 }

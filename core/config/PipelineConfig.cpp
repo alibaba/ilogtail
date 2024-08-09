@@ -104,8 +104,7 @@ bool PipelineConfig::Parse() {
     string key, errorMsg;
     const Json::Value* itr = nullptr;
     LogtailAlarm& alarm = *LogtailAlarm::GetInstance();
-#ifdef __ENTERPRISE__
-    // to send alarm, project, logstore and region should be extracted first.
+    // to send alarm and init MetricsRecord, project, logstore and region should be extracted first.
     key = "flushers";
     itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr && itr->isArray()) {
@@ -122,7 +121,6 @@ bool PipelineConfig::Parse() {
             }
         }
     }
-#endif
 
     if (!GetOptionalUIntParam(*mDetail, "createTime", mCreateTime, errorMsg)) {
         PARAM_WARNING_DEFAULT(sLogger, alarm, errorMsg, mCreateTime, noModule, mName, mProject, mLogstore, mRegion);

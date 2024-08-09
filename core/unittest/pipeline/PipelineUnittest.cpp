@@ -39,6 +39,7 @@ namespace logtail {
 class PipelineUnittest : public ::testing::Test {
 public:
     void OnSuccessfulInit() const;
+
     void OnFailedInit() const;
     void OnInitVariousTopology() const;
     void TestProcessQueue() const;
@@ -100,6 +101,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+
     config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -188,7 +190,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
             },
             "inputs": [
                 {
-                    "type": "metric_container_info",
+                    "type": "metric_container_info/2",
                     "detail": {
                         "CollectingContainersMeta": true,
                         "LogPath": "/home",
@@ -199,7 +201,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ],
             "extensions": [
                 {
-                    "type": "ext_basicauth",
+                    "type": "ext_basicauth/6",
                     "detail": {}
                 }
             ]
@@ -215,13 +217,13 @@ void PipelineUnittest::OnSuccessfulInit() const {
             },
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/5",
                     "detail": {}
                 }
             ],
             "extensions": [
                 {
-                    "type": "ext_basicauth",
+                    "type": "ext_basicauth/6",
                     "detail": {}
                 }
             ]
@@ -570,19 +572,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/4",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/6",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -601,7 +603,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 5: extended -> extended -> native
@@ -642,25 +644,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/2",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/3",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/4",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -678,7 +680,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -771,19 +773,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -802,7 +804,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 8: extended -> (native -> extended) -> native
@@ -960,19 +962,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/2",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/3",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -990,7 +992,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -1070,13 +1072,13 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ]
@@ -1093,7 +1095,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 14: extended -> native -> extended
@@ -1205,19 +1207,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/4",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ]
@@ -1234,7 +1236,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 17: extended -> extended -> extended
@@ -1270,25 +1272,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/2",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/3",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/4",
                     "detail": {}
                 }
             ]
@@ -1304,7 +1306,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -1387,19 +1389,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/7",
                     "detail": {}
                 }
             ]
@@ -1416,7 +1418,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 20: extended -> (native -> extended) -> extended
@@ -1529,13 +1531,13 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/4",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/5",
                     "detail": {}
                 }
             ]
@@ -1552,7 +1554,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 23: extended -> none -> extended
@@ -1583,19 +1585,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/2",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/3",
                     "detail": {}
                 }
             ]
@@ -1611,7 +1613,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -1694,19 +1696,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/6",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/7",
                     "detail": {}
                 }
             ]
@@ -1723,7 +1725,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 26: extended -> native -> (native, extended)
@@ -1859,25 +1861,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/4",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/6",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/7",
                     "detail": {}
                 }
             ]
@@ -1894,7 +1896,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 29: extended -> extended -> (native, extended)
@@ -1938,31 +1940,31 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/2",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/3",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/4",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/5",
                     "detail": {}
                 }
             ]
@@ -1978,7 +1980,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -2077,25 +2079,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/8",
                     "detail": {}
                 }
             ]
@@ -2112,7 +2114,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 32: extended -> (native -> extended) -> (native, extended)
@@ -2249,19 +2251,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/4",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/5",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ]
@@ -2278,7 +2280,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 35: extended -> none -> (native, extended)
@@ -2317,25 +2319,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_context/2",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/3",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/4",
                     "detail": {}
                 }
             ]
@@ -2351,7 +2353,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -2631,7 +2633,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             },
             "inputs": [
                 {
-                    "type": "metric_container_info",
+                    "type": "metric_container_info/2",
                     "detail": {
                         "CollectingContainersMeta": true,
                         "LogPath": "/home",
@@ -2693,7 +2695,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             },
             "inputs": [
                 {
-                    "type": "metric_container_info",
+                    "type": "metric_container_info/2",
                     "detail": {
                         "CollectingContainersMeta": true,
                         "LogPath": "/home",
@@ -2713,13 +2715,19 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
+                    "detail": {}
+                }
+            ],
+            "aggregators": [
+                {
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -2736,20 +2744,21 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithInput.clear();
     goPipelineWithoutInput.clear();
 }
 
 void PipelineUnittest::TestProcess() const {
     Pipeline pipeline;
-    uint32_t pluginIdx = 0;
     PipelineContext ctx;
     Json::Value tmp;
-    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, to_string(++pluginIdx));
-    input->Init(Json::Value(), ctx, pluginIdx, 0, tmp);
+    ctx.SetPipeline(pipeline);
+
+    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, pipeline.GenNextPluginMeta(false));
+    input->Init(Json::Value(), ctx, 0, tmp);
     pipeline.mInputs.emplace_back(std::move(input));
-    auto processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, to_string(++pluginIdx));
+    auto processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, pipeline.GenNextPluginMeta(false));
     processor->Init(Json::Value(), ctx);
     pipeline.mProcessorLine.emplace_back(std::move(processor));
 
@@ -2766,15 +2775,14 @@ void PipelineUnittest::TestSend() const {
         // no route
         Pipeline pipeline;
         PipelineContext ctx;
-        uint32_t pluginIdx = 0;
         Json::Value tmp;
         {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
         {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
@@ -2857,15 +2865,14 @@ void PipelineUnittest::TestFlushBatch() const {
     Pipeline pipeline;
     pipeline.mName = configName;
     PipelineContext ctx;
-    uint32_t pluginIdx = 0;
     Json::Value tmp;
     {
-        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
         flusher->Init(Json::Value(), ctx, tmp);
         pipeline.mFlushers.emplace_back(std::move(flusher));
     }
     {
-        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
         flusher->Init(Json::Value(), ctx, tmp);
         pipeline.mFlushers.emplace_back(std::move(flusher));
     }

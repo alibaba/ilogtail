@@ -49,3 +49,7 @@ func (ByteArray) SetObservedTimestamp(timestamp uint64) {
 func (b ByteArray) Clone() PipelineEvent {
 	return b
 }
+
+func (b ByteArray) GetSize() int64 {
+	return int64(len(b))
+}

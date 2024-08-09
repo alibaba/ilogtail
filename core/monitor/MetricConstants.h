@@ -67,6 +67,8 @@ extern const std::string METRIC_LABEL_REGION;
 extern const std::string METRIC_LABEL_CONFIG_NAME;
 extern const std::string METRIC_LABEL_PLUGIN_NAME;
 extern const std::string METRIC_LABEL_PLUGIN_ID;
+extern const std::string METRIC_LABEL_NODE_ID;
+extern const std::string METRIC_LABEL_CHILD_NODE_ID;
 
 // input file plugin labels
 extern const std::string METRIC_LABEL_FILE_DEV;
@@ -119,5 +121,20 @@ extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
 // processor parse container log native metrics
 extern const std::string METRIC_PROC_PARSE_STDOUT_TOTAL;
 extern const std::string METRIC_PROC_PARSE_STDERR_TOTAL;
+
+// flusher common metrics
+extern const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES;
+extern const std::string METRIC_FLUSHER_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_TIME_MS;
+extern const std::string METRIC_FLUSHER_ERROR_TIME_MS;
+
+// flusher sls metrics
+extern const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
 
 } // namespace logtail

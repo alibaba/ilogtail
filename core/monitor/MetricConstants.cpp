@@ -65,6 +65,8 @@ const std::string METRIC_LABEL_REGION = "region";
 const std::string METRIC_LABEL_CONFIG_NAME = "config_name";
 const std::string METRIC_LABEL_PLUGIN_NAME = "plugin_name";
 const std::string METRIC_LABEL_PLUGIN_ID = "plugin_id";
+const std::string METRIC_LABEL_NODE_ID = "node_id";
+const std::string METRIC_LABEL_CHILD_NODE_ID = "child_node_id";
 
 // input file plugin labels
 const std::string METRIC_LABEL_FILE_DEV = "file_dev";
@@ -126,5 +128,20 @@ const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
 // processor parse container log native metrics
 const std::string METRIC_PROC_PARSE_STDOUT_TOTAL = "proc_parse_stdout_total";
 const std::string METRIC_PROC_PARSE_STDERR_TOTAL = "proc_parse_stderr_total";
+
+// flusher common metrics
+const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL = "flusher_in_records_total";
+const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES = "flusher_in_records_size_bytes";
+const std::string METRIC_FLUSHER_ERROR_TOTAL = "flusher_error_total";
+const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL = "flusher_discard_records_total";
+const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL = "flusher_success_records_total";
+const std::string METRIC_FLUSHER_SUCCESS_TIME_MS = "flusher_success_time_ms";
+const std::string METRIC_FLUSHER_ERROR_TIME_MS = "flusher_error_time_ms";
+
+// flusher sls metrics
+const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL = "flusher_network_error_total";
+const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL = "flusher_quota_error_total";
+const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
+const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
 
 } // namespace logtail
