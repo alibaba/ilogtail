@@ -29,11 +29,11 @@
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
 
-DEFINE_FLAG_STRING(loong_collector_operator_service, "loong collector operator service", "");
-DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operator service port", 8888);
-DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
-
 using namespace std;
+
+DECLARE_FLAG_STRING(loong_collector_operator_service);
+DECLARE_FLAG_INT32(loong_collector_operator_service_port);
+DECLARE_FLAG_STRING(_pod_name_);
 
 namespace logtail {
 
