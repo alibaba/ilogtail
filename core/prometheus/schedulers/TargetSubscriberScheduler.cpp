@@ -103,8 +103,13 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
                 mScrapeSchedulerMap[k] = v;
                 if (mTimer) {
                     // zero-cost upgrade
-                    if (GetCurrentTimeInNanoSeconds() + v->GetRandSleep() - mUnRegisterMs * 1000000
-                        > (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000) {
+                    if (mUnRegisterMs > 0
+                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000
+                            > mUnRegisterMs * 1000000)
+                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000 * 2
+                            < mUnRegisterMs * 1000000)) {
                         // scrape once just now
                         v->ScrapeOnce(std::chrono::steady_clock::now());
                     }
