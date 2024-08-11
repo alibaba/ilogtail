@@ -2,9 +2,7 @@ package trigger
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -18,13 +16,9 @@ func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, t
 	path = filepath.Join(config.CaseHome, path)
 	path = filepath.Clean(path)
 	_ = os.WriteFile(path, []byte{}, 0600)
+	file, _ := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304
 
-	command := fmt.Sprintf("echo '%s' >> %s", templateStr, path)
-
-	// interval = templateLen / speed
-	interval := time.Microsecond * time.Duration(len(templateStr)/speed)
-
-	limiter := rate.NewLimiter(rate.Every(interval), 1)
+	limiter := rate.NewLimiter(rate.Limit(speed*1024*1024), len(templateStr))
 
 	timeout := time.After(time.Minute * time.Duration(totalTime))
 
@@ -33,19 +27,17 @@ func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, t
 		// context is done
 		case <-ctx.Done():
 			// clear file
-			_ = os.WriteFile(path, []byte{}, 0600)
+			_ = file.Close()
 			return ctx, ctx.Err()
 		// all time is done
 		case <-timeout:
 			// clear file
-			_ = os.WriteFile(path, []byte{}, 0600)
+			_ = file.Close()
 			return ctx, nil
 		default:
-			if err := limiter.Wait(ctx); err != nil {
-				return ctx, err
+			if limiter.AllowN(time.Now(), len(templateStr)) {
+				_, _ = file.WriteString(templateStr + "\n")
 			}
-			cmd := exec.Command("sh", "-c", command)
-			_ = cmd.Run()
 		}
 	}
 }
