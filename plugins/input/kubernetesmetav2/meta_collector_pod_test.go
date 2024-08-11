@@ -1,4 +1,4 @@
-package service
+package kubernetesmetav2
 
 import (
 	"fmt"
@@ -57,10 +57,10 @@ func TestProcessPodEntity(t *testing.T) {
 			},
 		},
 	}
-	event := &k8smeta.K8sMetaEvent{
-		RawObject: obj,
+	objWrapper := &k8smeta.ObjectWrapper{
+		Raw: obj,
 	}
 	collector := &metaCollector{}
-	log := collector.processPodEntity(event, "create")
+	log := collector.processPodEntity(objWrapper, "create")
 	fmt.Println(log)
 }

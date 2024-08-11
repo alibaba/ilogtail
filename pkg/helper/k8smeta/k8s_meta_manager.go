@@ -9,8 +9,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	controllerConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 var metaManager *MetaManager
@@ -18,7 +20,7 @@ var metaManager *MetaManager
 var onceManager sync.Once
 
 type MetaProcessor interface {
-	Get(key []string) map[string][]*K8sMetaEvent
+	Get(key []string) map[string][]*ObjectWrapper
 	init(stopCh chan struct{}, pipelineCh chan *K8sMetaEvent)
 	watch(stopCh <-chan struct{})
 	flushRealTimeEvent(event *K8sMetaEvent)
@@ -63,10 +65,7 @@ func (m *MetaManager) Init(configPath string) (err error) {
 		}
 	} else {
 		// 创建 Kubernetes 客户端配置
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			return err
-		}
+		config = controllerConfig.GetConfigOrDie()
 	}
 	// 创建 Kubernetes 客户端
 	clientset, err := kubernetes.NewForConfig(config)
@@ -77,11 +76,11 @@ func (m *MetaManager) Init(configPath string) (err error) {
 
 	go func() {
 		m.ServiceProcessor = &serviceProcessor{
-			metaManager: m,
+			clientset: m.clientset,
 		}
 		m.ServiceProcessor.init(m.stopCh, m.eventCh)
 		m.PodProcessor = &podProcessor{
-			metaManager:      m,
+			clientset:        m.clientset,
 			serviceMetaStore: m.ServiceProcessor.metaStore,
 		}
 		m.PodProcessor.init(m.stopCh, m.eventCh)
@@ -95,6 +94,24 @@ func (m *MetaManager) Run(stopCh chan struct{}) {
 	m.stopCh = stopCh
 	m.runServer()
 	m.runFlush()
+}
+
+func (m *MetaManager) IsReady() bool {
+	return m.ready.Load()
+}
+
+func (m *MetaManager) List(resourceTypes []string) []*ObjectWrapper {
+	objs := make([]*ObjectWrapper, 0)
+	for _, resourceType := range resourceTypes {
+		switch resourceType {
+		case POD:
+			podServiceLink := util.Contains(resourceTypes, POD_SERVICE)
+			objs = append(objs, m.PodProcessor.List(podServiceLink)...)
+		case SERVICE:
+			objs = append(objs, m.ServiceProcessor.List()...)
+		}
+	}
+	return objs
 }
 
 func (m *MetaManager) RegisterFlush(ch chan *K8sMetaEvent, configName string, resourceType string) {
@@ -135,7 +152,7 @@ func (m *MetaManager) runFlush() {
 			select {
 			case event := <-m.eventCh:
 				m.pipelineChsLock.RLock()
-				pipelineChs := m.pipelineChs[event.ResourceType]
+				pipelineChs := m.pipelineChs[event.Object.ResourceType]
 				for _, pipelineCh := range pipelineChs {
 					select {
 					case pipelineCh.Ch <- event:

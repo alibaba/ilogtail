@@ -54,7 +54,7 @@ func main() {
 	} else if InitPluginBaseV2(globalCfg) != 0 {
 		return
 	}
-	if *flags.SingletonFlag {
+	if *flags.DeployMode == flags.DeploySingleton {
 		instance := k8smeta.GetMetaManagerInstance()
 		err := instance.Init("")
 		if err != nil {

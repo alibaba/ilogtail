@@ -275,7 +275,7 @@ func initPluginBase(cfgStr string) int {
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
 		LoadGlobalConfig(cfgStr)
-		if *flags.SingletonFlag {
+		if *flags.DeployMode == flags.DeploySingleton {
 			instance := k8smeta.GetMetaManagerInstance()
 			err := instance.Init("")
 			if err != nil {

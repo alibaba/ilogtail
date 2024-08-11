@@ -32,6 +32,12 @@ const (
 	defaultFlusherConfig = `{"type":"flusher_sls","detail":{}}`
 )
 
+const (
+	DeployDaemonset   = "daemonset"
+	DeployStatefulSet = "statefulset"
+	DeploySingleton   = "singleton"
+)
+
 // flags used to control ilogtail.
 var (
 	GlobalConfig     = flag.String("global", "./global.json", "global config.")
@@ -51,8 +57,8 @@ var (
 	InputField       = flag.String("input-field", "content", "input file")
 	InputLineLimit   = flag.Int("input-line-limit", 1000, "input file")
 	OutputFile       = flag.String("output-file", "./output.log", "output file")
+	DeployMode       = flag.String("DEPLOY_MODE", DeployDaemonset, "alibaba log deploy mode, daemonset or statefulset or singleton")
 	StatefulSetFlag  = flag.Bool("ALICLOUD_LOG_STATEFULSET_FLAG", false, "alibaba log export ports flag, set true if you want to use it")
-	SingletonFlag    = flag.Bool("ALICLOUD_LOG_SINGLETON_FLAG", false, "alibaba log singleton flag, set true if you want to use it")
 )
 
 var (
@@ -141,7 +147,7 @@ func OverrideByEnv() {
 	_ = util.InitFromEnvBool("LOGTAIL_FORCE_COLLECT_SELF_TELEMETRY", ForceSelfCollect, *ForceSelfCollect)
 	_ = util.InitFromEnvBool("LOGTAIL_HTTP_LOAD_CONFIG", HTTPLoadFlag, *HTTPLoadFlag)
 	_ = util.InitFromEnvBool("ALICLOUD_LOG_STATEFULSET_FLAG", StatefulSetFlag, *StatefulSetFlag)
-	_ = util.InitFromEnvBool("ALICLOUD_LOG_SINGLETON_FLAG", SingletonFlag, *SingletonFlag)
+	_ = util.InitFromEnvString("DEPLOY_MODE", DeployMode, *DeployMode)
 }
 
 type pipelineConfig struct {

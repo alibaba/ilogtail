@@ -8,6 +8,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -16,7 +17,7 @@ import (
 type podProcessor struct {
 	metaStore        *DeferredDeletionMetaStore
 	serviceMetaStore *DeferredDeletionMetaStore
-	metaManager      *MetaManager
+	clientset        *kubernetes.Clientset
 
 	eventCh    chan *K8sMetaEvent
 	pipelineCh chan *K8sMetaEvent
@@ -33,13 +34,22 @@ func (m *podProcessor) init(stopCh chan struct{}, pipelineCh chan *K8sMetaEvent)
 	m.stopCh = stopCh
 	m.pipelineCh = pipelineCh
 	store := NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 60, 120, cache.MetaNamespaceKeyFunc, idxRules...)
-	store.Start(m.flushPeriodEvent)
+	store.Start()
 	m.metaStore = store
 	m.watch(m.stopCh)
 }
 
-func (m *podProcessor) Get(key []string) map[string][]*K8sMetaEvent {
+func (m *podProcessor) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
+}
+
+func (m *podProcessor) List(service bool) []*ObjectWrapper {
+	objs := m.metaStore.List()
+	if service {
+		podServiceObjs := m.podServiceProcess(objs)
+		objs = append(objs, podServiceObjs...)
+	}
+	return objs
 }
 
 func generatePodIPKey(obj interface{}) ([]string, error) {
@@ -71,34 +81,40 @@ func generateHostIPKey(obj interface{}) ([]string, error) {
 }
 
 func (m *podProcessor) watch(stopCh <-chan struct{}) {
-	factory := informers.NewSharedInformerFactory(m.metaManager.clientset, time.Hour*24)
+	factory := informers.NewSharedInformerFactory(m.clientset, time.Hour*24)
 	informer := factory.Core().V1().Pods().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			nowTime := time.Now().Unix()
 			m.flushRealTimeEvent(&K8sMetaEvent{
-				EventType:    EventTypeAdd,
-				ResourceType: POD,
-				RawObject:    obj,
-				CreateTime:   nowTime,
-				UpdateTime:   nowTime,
+				EventType: EventTypeAdd,
+				Object: &ObjectWrapper{
+					ResourceType: POD,
+					Raw:          obj,
+					CreateTime:   nowTime,
+					UpdateTime:   nowTime,
+				},
 			})
 		},
 		UpdateFunc: func(oldObj interface{}, obj interface{}) {
 			nowTime := time.Now().Unix()
 			m.flushRealTimeEvent(&K8sMetaEvent{
-				EventType:    EventTypeUpdate,
-				ResourceType: POD,
-				RawObject:    obj,
-				CreateTime:   nowTime,
-				UpdateTime:   nowTime,
+				EventType: EventTypeUpdate,
+				Object: &ObjectWrapper{
+					ResourceType: POD,
+					Raw:          obj,
+					CreateTime:   nowTime,
+					UpdateTime:   nowTime,
+				},
 			})
 		},
 		DeleteFunc: func(obj interface{}) {
 			m.flushRealTimeEvent(&K8sMetaEvent{
-				EventType:    EventTypeDelete,
-				ResourceType: POD,
-				RawObject:    obj,
+				EventType: EventTypeDelete,
+				Object: &ObjectWrapper{
+					ResourceType: POD,
+					Raw:          obj,
+				},
 			})
 		},
 	})
@@ -125,30 +141,18 @@ func (m *podProcessor) flushRealTimeEvent(event *K8sMetaEvent) {
 	}
 }
 
-func (m *podProcessor) flushPeriodEvent(events []*K8sMetaEvent) {
-	podServiceEvent := m.podServiceProcess(events)
-	// flush to store pipeline, if block, discard and continue
-	for _, event := range append(events, podServiceEvent...) {
-		select {
-		case m.pipelineCh <- event:
-		default:
-			logger.Error(context.Background(), "ENTITY_PIPELINE_QUEUE_FULL", "pipelineCh is full, discard in current sync")
-		}
-	}
-}
-
-func (m *podProcessor) podServiceProcess(podList []*K8sMetaEvent) []*K8sMetaEvent {
+func (m *podProcessor) podServiceProcess(podList []*ObjectWrapper) []*ObjectWrapper {
 	serviceList := m.serviceMetaStore.List()
-	results := make([]*K8sMetaEvent, 0)
+	results := make([]*ObjectWrapper, 0)
 	matchers := make(map[string]labelMatchers)
 	for _, data := range serviceList {
-		service, ok := data.RawObject.(*v1.Service)
+		service, ok := data.Raw.(*v1.Service)
 		if !ok {
 			continue
 		}
 
 		_, ok = matchers[service.Namespace]
-		lm := newLabelMatcher(data.RawObject, labels.SelectorFromSet(service.Spec.Selector))
+		lm := newLabelMatcher(data.Raw, labels.SelectorFromSet(service.Spec.Selector))
 		if !ok {
 			matchers[service.Namespace] = []*labelMatcher{lm}
 		} else {
@@ -157,7 +161,7 @@ func (m *podProcessor) podServiceProcess(podList []*K8sMetaEvent) []*K8sMetaEven
 	}
 
 	for _, data := range podList {
-		pod, ok := data.RawObject.(*v1.Pod)
+		pod, ok := data.Raw.(*v1.Pod)
 		if !ok {
 			continue
 		}
@@ -168,10 +172,9 @@ func (m *podProcessor) podServiceProcess(podList []*K8sMetaEvent) []*K8sMetaEven
 		set := labels.Set(pod.Labels)
 		for _, s := range nsSelectors {
 			if !s.selector.Empty() && s.selector.Matches(set) {
-				results = append(results, &K8sMetaEvent{
-					EventType:    EventTypeUpdate,
+				results = append(results, &ObjectWrapper{
 					ResourceType: POD_SERVICE,
-					RawObject: &PodService{
+					Raw: &PodService{
 						Pod:     pod,
 						Service: s.obj.(*v1.Service),
 					},

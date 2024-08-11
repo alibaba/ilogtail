@@ -11,15 +11,14 @@ import (
 )
 
 type DeferredDeletionMetaStore struct {
-	keyFunc       cache.KeyFunc
-	indexRules    []IdxFunc
-	timerHandlers []TimerHandler
+	keyFunc    cache.KeyFunc
+	indexRules []IdxFunc
 
 	eventCh chan *K8sMetaEvent
 	stopCh  <-chan struct{}
 
 	// cache
-	Items map[string]*K8sMetaEvent
+	Items map[string]*ObjectWrapper
 	Index map[string][]string
 	lock  sync.RWMutex
 
@@ -29,14 +28,13 @@ type DeferredDeletionMetaStore struct {
 
 func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan struct{}, refreshInterval, gracePeriod int64, keyFunc cache.KeyFunc, indexRules ...IdxFunc) *DeferredDeletionMetaStore {
 	m := &DeferredDeletionMetaStore{
-		keyFunc:       keyFunc,
-		indexRules:    indexRules,
-		timerHandlers: make([]TimerHandler, 0),
+		keyFunc:    keyFunc,
+		indexRules: indexRules,
 
 		eventCh: eventCh,
 		stopCh:  stopCh,
 
-		Items: make(map[string]*K8sMetaEvent),
+		Items: make(map[string]*ObjectWrapper),
 		Index: make(map[string][]string),
 
 		refreshInterval: refreshInterval,
@@ -45,15 +43,14 @@ func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan stru
 	return m
 }
 
-func (m *DeferredDeletionMetaStore) Start(timerHandlers ...TimerHandler) {
-	m.timerHandlers = timerHandlers
+func (m *DeferredDeletionMetaStore) Start() {
 	go m.handleEvent()
 }
 
-func (m *DeferredDeletionMetaStore) Get(key []string) map[string][]*K8sMetaEvent {
+func (m *DeferredDeletionMetaStore) Get(key []string) map[string][]*ObjectWrapper {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	result := make(map[string][]*K8sMetaEvent)
+	result := make(map[string][]*ObjectWrapper)
 	for _, k := range key {
 		realKeys, ok := m.Index[k]
 		if !ok {
@@ -66,10 +63,10 @@ func (m *DeferredDeletionMetaStore) Get(key []string) map[string][]*K8sMetaEvent
 	return result
 }
 
-func (m *DeferredDeletionMetaStore) List() []*K8sMetaEvent {
+func (m *DeferredDeletionMetaStore) List() []*ObjectWrapper {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	result := make([]*K8sMetaEvent, 0)
+	result := make([]*ObjectWrapper, 0)
 	for _, item := range m.Items {
 		result = append(result, item)
 	}
@@ -77,7 +74,7 @@ func (m *DeferredDeletionMetaStore) List() []*K8sMetaEvent {
 }
 
 func (m *DeferredDeletionMetaStore) handleEvent() {
-	ticker := time.NewTicker(time.Duration(m.refreshInterval) * time.Second)
+	defer panicRecover()
 	for {
 		select {
 		case event := <-m.eventCh:
@@ -93,8 +90,6 @@ func (m *DeferredDeletionMetaStore) handleEvent() {
 			default:
 				logger.Error(context.Background(), "unknown event type", event.EventType)
 			}
-		case <-ticker.C:
-			m.handleTimerEvent()
 		case <-m.stopCh:
 			return
 		}
@@ -110,15 +105,15 @@ func (m *DeferredDeletionMetaStore) handleUpdateEvent(event *K8sMetaEvent) {
 }
 
 func (m *DeferredDeletionMetaStore) handleAddOrUpdateEvent(event *K8sMetaEvent) {
-	key, err := m.keyFunc(event.RawObject)
+	key, err := m.keyFunc(event.Object.Raw)
 	if err != nil {
 		logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "handle k8s meta with keyFunc error", err)
 		return
 	}
-	idxKeys := m.getIdxKeys(event)
+	idxKeys := m.getIdxKeys(event.Object)
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	m.Items[key] = event
+	m.Items[key] = event.Object
 	for _, idxKey := range idxKeys {
 		if _, ok := m.Index[idxKey]; !ok {
 			m.Index[idxKey] = make([]string, 0)
@@ -131,46 +126,62 @@ func (m *DeferredDeletionMetaStore) handleDeleteEvent(event *K8sMetaEvent) {
 	go func() {
 		// wait and add a deferred delete event
 		time.Sleep(time.Duration(m.gracePeriod) * time.Second)
+		event.Object.Deleted = true
 		m.eventCh <- &K8sMetaEvent{
-			EventType:    EventTypeDeferredDelete,
-			ResourceType: event.ResourceType,
-			RawObject:    event.RawObject,
+			EventType: EventTypeDeferredDelete,
+			Object:    event.Object,
 		}
 	}()
 }
 
 func (m *DeferredDeletionMetaStore) handleDeferredDeleteEvent(event *K8sMetaEvent) {
-	key, err := m.keyFunc(event.RawObject)
+	key, err := m.keyFunc(event.Object.Raw)
 	if err != nil {
 		logger.Error(context.Background(), "handleDeferredDeleteEvent keyFunc error", err)
 		return
 	}
-	idxKeys := m.getIdxKeys(event)
+	idxKeys := m.getIdxKeys(event.Object)
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	delete(m.Items, key)
-	for _, idxKey := range idxKeys {
-		for i, k := range m.Index[idxKey] {
-			if k == key {
-				m.Index[idxKey] = append(m.Index[idxKey][:i], m.Index[idxKey][i+1:]...)
-				break
+	if obj, ok := m.Items[key]; ok {
+		if obj.Deleted {
+			delete(m.Items, key)
+			for _, idxKey := range idxKeys {
+				for i, k := range m.Index[idxKey] {
+					if k == key {
+						m.Index[idxKey] = append(m.Index[idxKey][:i], m.Index[idxKey][i+1:]...)
+						break
+					}
+				}
+				if len(m.Index[idxKey]) == 0 {
+					delete(m.Index, idxKey)
+				}
+			}
+		} else {
+			// there is a new add event between delete event and deferred delete event
+			// clear invalid index
+			newIdxKeys := m.getIdxKeys(obj)
+			for i := range idxKeys {
+				if idxKeys[i] != newIdxKeys[i] {
+					for j, k := range m.Index[idxKeys[i]] {
+						if k == key {
+							m.Index[idxKeys[i]] = append(m.Index[idxKeys[i]][:j], m.Index[idxKeys[i]][j+1:]...)
+							break
+						}
+					}
+					if len(m.Index[idxKeys[i]]) == 0 {
+						delete(m.Index, idxKeys[i])
+					}
+				}
 			}
 		}
 	}
 }
 
-func (m *DeferredDeletionMetaStore) handleTimerEvent() {
-	// flush all
-	itemList := m.List()
-	for _, handler := range m.timerHandlers {
-		handler(itemList)
-	}
-}
-
-func (m *DeferredDeletionMetaStore) getIdxKeys(event *K8sMetaEvent) []string {
+func (m *DeferredDeletionMetaStore) getIdxKeys(obj *ObjectWrapper) []string {
 	result := make([]string, 0)
 	for _, rule := range m.indexRules {
-		idxKeys, err := rule(event.RawObject)
+		idxKeys, err := rule(obj.Raw)
 		if err != nil {
 			logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "handle k8s meta with idx rules error", err)
 			return nil
