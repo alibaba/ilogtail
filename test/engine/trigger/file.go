@@ -16,7 +16,7 @@ func GenerateLogToFile(ctx context.Context, speed, totalTime int, path string, t
 	path = filepath.Join(config.CaseHome, path)
 	path = filepath.Clean(path)
 	_ = os.WriteFile(path, []byte{}, 0600)
-	file, _ := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	file, _ := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304
 
 	limiter := rate.NewLimiter(rate.Limit(speed*1024*1024), len(templateStr))
 
