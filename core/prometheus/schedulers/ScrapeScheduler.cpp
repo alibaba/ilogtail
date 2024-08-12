@@ -55,6 +55,7 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
         + mScrapeConfigPtr->mMetricsPath
         + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabels.Hash());
+    mInstance = mHost + ":" + ToString(mPort);
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
 }
 
@@ -63,6 +64,11 @@ bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, time_t timestamp) {
+    mScrapeTimestamp = timestamp;
+    mScrapeDurationSeconds = time(nullptr) - timestamp;
+    mScrapeResponseSizeBytes = response.mBody.size();
+    mUpState = response.mStatusCode == 200;
+
     if (response.mStatusCode != 200) {
         string headerStr;
         for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
@@ -70,11 +76,19 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, time_t timest
         }
         LOG_WARNING(sLogger,
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
-        return;
     }
     auto eventGroup = BuildPipelineEventGroup(response.mBody, timestamp);
 
+    SetAutoMetricMeta(eventGroup);
     PushEventGroup(std::move(eventGroup));
+}
+
+void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP, ToString(mScrapeTimestamp));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, mInstance);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
 }
 PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content, time_t timestamp) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());

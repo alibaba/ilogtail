@@ -58,21 +58,28 @@ public:
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
+    void SetAutoMetricMeta(PipelineEventGroup& eGroup);
 
     PipelineEventGroup BuildPipelineEventGroup(const std::string& content, time_t timestamp);
-
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     std::string mHash;
     std::string mHost;
+    std::string mInstance;
     int32_t mPort;
     Labels mLabels;
 
     QueueKey mQueueKey;
     size_t mInputIndex;
     std::shared_ptr<Timer> mTimer;
+
+    // auto metrics
+    time_t mScrapeTimestamp = 0;
+    time_t mScrapeDurationSeconds = 0;
+    uint64_t mScrapeResponseSizeBytes = 0;
+    bool mUpState = true;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParsePrometheusMetricUnittest;
     friend class ScrapeSchedulerUnittest;
