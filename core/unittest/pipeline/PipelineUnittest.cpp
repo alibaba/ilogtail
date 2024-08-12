@@ -407,6 +407,38 @@ void PipelineUnittest::OnFailedInit() const {
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
+
+    // invalid inputs ack support
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_mock"
+                },
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": "unknown"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
 }
 
 void PipelineUnittest::OnInitVariousTopology() const {
@@ -2501,7 +2533,8 @@ void PipelineUnittest::TestProcessQueue() const {
         {
             "inputs": [
                 {
-                    "Type": "input_mock"
+                    "Type": "input_mock",
+                    "SupportAck": false
                 },
                 {
                     "Type": "input_mock",
@@ -2528,7 +2561,8 @@ void PipelineUnittest::TestProcessQueue() const {
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
     que = ProcessQueueManager::GetInstance()->mQueues[key].first;
-    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::CIRCULAR, ProcessQueueManager::GetInstance()->mQueues[key].second);
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::CIRCULAR,
+                      ProcessQueueManager::GetInstance()->mQueues[key].second);
     // queue level
     APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
     APSARA_TEST_EQUAL(key, (*que)->GetKey());

@@ -32,14 +32,19 @@ ProcessQueueManager::ProcessQueueManager() : mBoundedQueueParam(INT32_FLAG(bound
     ResetCurrentQueueIndex();
 }
 
-bool ProcessQueueManager::CreateOrUpdateQueue(QueueKey key, uint32_t priority, QueueType type) {
+bool ProcessQueueManager::CreateOrUpdateQueue(QueueKey key, uint32_t priority, QueueType type, size_t capacity) {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter != mQueues.end()) {
         if (iter->second.second != type) {
+            // queue type change only happen when all input plugin types are changed. in such case, old input data not
+            // been processed can be discarded since whole pipeline is actually changed.
             DeleteQueueEntity(iter->second.first);
-            CreateQueue(key, priority, type);
+            CreateQueue(key, priority, type, capacity);
         } else {
+            if (type == QueueType::CIRCULAR && capacity != (*iter->second.first)->Capacity()) {
+                static_cast<CircularProcessQueue*>(iter->second.first->get())->Reset(capacity);
+            }
             if ((*iter->second.first)->GetPriority() == priority) {
                 return false;
             }
@@ -57,7 +62,7 @@ bool ProcessQueueManager::CreateOrUpdateQueue(QueueKey key, uint32_t priority, Q
             }
         }
     } else {
-        CreateQueue(key, priority, type);
+        CreateQueue(key, priority, type, capacity);
     }
     if (mCurrentQueueIndex.second == mPriorityQueue[mCurrentQueueIndex.first].end()) {
         mCurrentQueueIndex.second = mPriorityQueue[mCurrentQueueIndex.first].begin();
@@ -255,7 +260,7 @@ void ProcessQueueManager::Trigger() {
     mCond.notify_one();
 }
 
-void ProcessQueueManager::CreateQueue(QueueKey key, uint32_t priority, QueueType type) {
+void ProcessQueueManager::CreateQueue(QueueKey key, uint32_t priority, QueueType type, size_t capacity) {
     switch (type) {
         case QueueType::BOUNDED:
             mPriorityQueue[priority].emplace_back(
@@ -267,8 +272,8 @@ void ProcessQueueManager::CreateQueue(QueueKey key, uint32_t priority, QueueType
                                                  QueueKeyManager::GetInstance()->GetName(key)));
             break;
         case QueueType::CIRCULAR:
-            mPriorityQueue[priority].emplace_back(
-                make_unique<CircularProcessQueue>(100, key, priority, QueueKeyManager::GetInstance()->GetName(key)));
+            mPriorityQueue[priority].emplace_back(make_unique<CircularProcessQueue>(
+                capacity, key, priority, QueueKeyManager::GetInstance()->GetName(key)));
             break;
     }
     mQueues[key] = make_pair(prev(mPriorityQueue[priority].end()), type);

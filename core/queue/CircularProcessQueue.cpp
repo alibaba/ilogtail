@@ -25,10 +25,6 @@ bool CircularProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
     mQueue[mHead] = std::move(item);
     mHead = (mHead + 1) % mCapacity;
     if (mHead == mTail) {
-        auto& tmp = mQueue[mHead];
-        LOG_WARNING(sLogger,
-                    ("circular buffer is full", "discard old data")(
-                        "config", QueueKeyManager::GetInstance()->GetName(mKey))("input idx", tmp->mInputIndex));
         mTail = (mTail + 1) % mCapacity;
     }
     return true;
@@ -48,9 +44,22 @@ size_t CircularProcessQueue::Size() const {
 }
 
 void CircularProcessQueue::Reset(size_t cap) {
-    mQueue.resize(cap + 1);
-    mQueue.clear();
-    mHead = mTail = 0;
+    vector<unique_ptr<ProcessQueueItem>> tmp(cap + 1);
+    size_t size = Size();
+    if (cap < size) {
+        LOG_WARNING(sLogger,
+                    ("new circular process queue capacity is smaller than old queue size", "discard old data")(
+                        "discard cnt", size - cap)("config", QueueKeyManager::GetInstance()->GetName(mKey)));
+    }
+
+    size_t begin = cap >= size ? mTail : (mTail + size - cap) % mCapacity;
+    size_t index = 0;
+    for (size_t i = begin; i != mHead; i = (i + 1) % mCapacity, ++index) {
+        tmp[index] = std::move(mQueue[i]);
+    }
+    mTail = 0;
+    mHead = index;
+    mQueue.swap(tmp);
     ProcessQueueInterface::Reset();
     QueueInterface::Reset(cap + 1);
 }

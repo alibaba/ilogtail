@@ -52,7 +52,7 @@ public:
 
     void Feedback(QueueKey key) override { Trigger(); }
 
-    bool CreateOrUpdateQueue(QueueKey key, uint32_t priority, QueueType type);
+    bool CreateOrUpdateQueue(QueueKey key, uint32_t priority, QueueType type, size_t capacity = 100);
     bool DeleteQueue(QueueKey key);
     bool IsValidToPush(QueueKey key) const;
     // 0: success, 1: queue is full, 2: queue not found
@@ -75,7 +75,7 @@ private:
     ProcessQueueManager();
     ~ProcessQueueManager() = default;
 
-    void CreateQueue(QueueKey key, uint32_t priority, QueueType type);
+    void CreateQueue(QueueKey key, uint32_t priority, QueueType type, size_t capacity);
     void DeleteQueueEntity(const ProcessQueueIterator& iter);
     void ResetCurrentQueueIndex();
 

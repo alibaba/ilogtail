@@ -236,19 +236,28 @@ bool Pipeline::Init(PipelineConfig&& config) {
         if (mContext.GetProcessQueueKey() == -1) {
             mContext.SetProcessQueueKey(QueueKeyManager::GetInstance()->GetKey(mName));
         }
-        
-        // use circular buffer if any input does not support ack
-        ProcessQueueManager::QueueType type = ProcessQueueManager::QueueType::BOUNDED;
+
+        // TODO: for go input, we currently assume bounded process queue
+        bool isInputSupportAck = mInputs.empty() ? true : mInputs[0]->SupportAck();
         for (auto& input : mInputs) {
-            if (!input->SupportAck()) {
-                type = ProcessQueueManager::QueueType::CIRCULAR;
-                break;
+            if (input->SupportAck() != isInputSupportAck) {
+                PARAM_ERROR_RETURN(mContext.GetLogger(),
+                                   mContext.GetAlarm(),
+                                   "not all inputs' ack support are the same",
+                                   noModule,
+                                   mName,
+                                   mContext.GetProjectName(),
+                                   mContext.GetLogstoreName(),
+                                   mContext.GetRegion());
             }
         }
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(mContext.GetProcessQueueKey(), priority, type);
+        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(
+            mContext.GetProcessQueueKey(),
+            priority,
+            isInputSupportAck ? ProcessQueueManager::QueueType::BOUNDED : ProcessQueueManager::QueueType::CIRCULAR);
 
         unordered_set<FeedbackInterface*> feedbackSet;
         for (const auto& input : mInputs) {
