@@ -29,7 +29,7 @@ func (m *serviceProcessor) init(stopCh chan struct{}, pipelineCh chan *K8sMetaEv
 	m.eventCh = make(chan *K8sMetaEvent, 100)
 	m.stopCh = stopCh
 	m.pipelineCh = pipelineCh
-	store := NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 60, 120, cache.MetaNamespaceKeyFunc, idxRules...)
+	store := NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
 	store.Start()
 	m.metaStore = store
 	m.watch(m.stopCh)

@@ -1,13 +1,13 @@
 package kubernetesmetav2
 
 import (
-	"fmt"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProcessPodEntity(t *testing.T) {
@@ -62,5 +62,89 @@ func TestProcessPodEntity(t *testing.T) {
 	}
 	collector := &metaCollector{}
 	log := collector.processPodEntity(objWrapper, "create")
-	fmt.Println(log)
+	assert.NotNilf(t, log, "log should not be nil")
+}
+
+func TestProcessPodReplicasetLink(t *testing.T) {
+	obj := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pod2",
+			Namespace: "ns2",
+			UID:       "uid2",
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Kind: "ReplicaSet",
+					Name: "rs1",
+				},
+			},
+		},
+	}
+	objWrapper := &k8smeta.ObjectWrapper{
+		Raw: obj,
+	}
+	collector := &metaCollector{}
+	log := collector.processPodReplicasetLink(objWrapper, "create")
+	assert.NotNilf(t, log, "log should not be nil")
+}
+
+func TestProcessPodReplicasetLinkNoOwner(t *testing.T) {
+	obj := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pod2",
+			Namespace: "ns2",
+			UID:       "uid2",
+		},
+	}
+	objWrapper := &k8smeta.ObjectWrapper{
+		Raw: obj,
+	}
+	collector := &metaCollector{}
+	log := collector.processPodReplicasetLink(objWrapper, "create")
+	assert.Nilf(t, log, "log should not be nil")
+}
+
+func TestProcessPodServiceLink(t *testing.T) {
+	obj1 := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pod2",
+			Namespace: "ns2",
+			UID:       "uid2",
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Kind: "Service",
+					Name: "svc1",
+				},
+			},
+			Labels: map[string]string{
+				"app": "nginx",
+			},
+		},
+	}
+	obj2 := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "svc1",
+			Namespace: "ns2",
+			UID:       "uid1",
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{
+					Name: "port1",
+					Port: 80,
+				},
+			},
+			Selector: map[string]string{
+				"app": "nginx",
+			},
+		},
+	}
+	objWrapper := &k8smeta.ObjectWrapper{
+		Raw: &k8smeta.PodService{
+			Pod:     obj1,
+			Service: obj2,
+		},
+	}
+	collector := &metaCollector{}
+	log := collector.processPodServiceLink(objWrapper, "create")
+	assert.NotNilf(t, log, "log should not be nil")
 }

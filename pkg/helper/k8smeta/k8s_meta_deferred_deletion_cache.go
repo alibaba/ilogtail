@@ -22,11 +22,10 @@ type DeferredDeletionMetaStore struct {
 	Index map[string][]string
 	lock  sync.RWMutex
 
-	refreshInterval int64
-	gracePeriod     int64
+	gracePeriod int64
 }
 
-func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan struct{}, refreshInterval, gracePeriod int64, keyFunc cache.KeyFunc, indexRules ...IdxFunc) *DeferredDeletionMetaStore {
+func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan struct{}, gracePeriod int64, keyFunc cache.KeyFunc, indexRules ...IdxFunc) *DeferredDeletionMetaStore {
 	m := &DeferredDeletionMetaStore{
 		keyFunc:    keyFunc,
 		indexRules: indexRules,
@@ -37,8 +36,7 @@ func NewDeferredDeletionMetaStore(eventCh chan *K8sMetaEvent, stopCh <-chan stru
 		Items: make(map[string]*ObjectWrapper),
 		Index: make(map[string][]string),
 
-		refreshInterval: refreshInterval,
-		gracePeriod:     gracePeriod,
+		gracePeriod: gracePeriod,
 	}
 	return m
 }
@@ -123,10 +121,19 @@ func (m *DeferredDeletionMetaStore) handleAddOrUpdateEvent(event *K8sMetaEvent) 
 }
 
 func (m *DeferredDeletionMetaStore) handleDeleteEvent(event *K8sMetaEvent) {
+	key, err := m.keyFunc(event.Object.Raw)
+	if err != nil {
+		logger.Error(context.Background(), "K8S_META_HANDLE_ALARM", "handle k8s meta with keyFunc error", err)
+		return
+	}
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if obj, ok := m.Items[key]; ok {
+		obj.Deleted = true
+	}
 	go func() {
 		// wait and add a deferred delete event
 		time.Sleep(time.Duration(m.gracePeriod) * time.Second)
-		event.Object.Deleted = true
 		m.eventCh <- &K8sMetaEvent{
 			EventType: EventTypeDeferredDelete,
 			Object:    event.Object,
