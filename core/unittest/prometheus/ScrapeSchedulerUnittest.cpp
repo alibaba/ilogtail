@@ -92,12 +92,12 @@ void ScrapeSchedulerUnittest::TestProcess() {
     APSARA_TEST_EQUAL(event.GetId(), "test_jobhttp://localhost:8080/metrics" + ToString(labels.Hash()));
     // if status code is not 200, no data will be processed
     mHttpResponse.mStatusCode = 503;
-    event.OnMetricResult(mHttpResponse);
+    event.OnMetricResult(mHttpResponse,0);
     APSARA_TEST_EQUAL(0UL, event.mItem.size());
     event.mItem.clear();
 
     mHttpResponse.mStatusCode = 200;
-    event.OnMetricResult(mHttpResponse);
+    event.OnMetricResult(mHttpResponse,0);
     APSARA_TEST_EQUAL(1UL, event.mItem.size());
     APSARA_TEST_EQUAL(11UL, event.mItem[0]->mEventGroup.GetEvents().size());
 }

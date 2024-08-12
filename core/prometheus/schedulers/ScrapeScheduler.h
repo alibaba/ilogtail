@@ -45,7 +45,7 @@ public:
 
     bool operator<(const ScrapeScheduler& other) const;
 
-    void OnMetricResult(const HttpResponse&);
+    void OnMetricResult(const HttpResponse&, time_t timestamp);
     void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
@@ -59,7 +59,7 @@ public:
 private:
     void PushEventGroup(PipelineEventGroup&&);
 
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, time_t timestampNs);
+    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, time_t timestamp);
 
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 

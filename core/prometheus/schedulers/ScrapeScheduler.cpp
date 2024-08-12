@@ -62,9 +62,7 @@ bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
     return mHash < other.mHash;
 }
 
-void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
-    // TODO(liqiang): get scrape timestamp
-    time_t timestampInNs = GetCurrentTimeInNanoSeconds();
+void ScrapeScheduler::OnMetricResult(const HttpResponse& response, time_t timestamp) {
     if (response.mStatusCode != 200) {
         string headerStr;
         for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
@@ -74,7 +72,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
         return;
     }
-    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestampInNs);
+    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestamp);
 
     PushEventGroup(std::move(eventGroup));
 }
@@ -108,8 +106,8 @@ string ScrapeScheduler::GetId() const {
 
 void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response) {
-        this->OnMetricResult(response);
+    future->AddDoneCallback([this](const HttpResponse& response, time_t timestamp) {
+        this->OnMetricResult(response, timestamp);
         this->ExecDone();
         this->ScheduleNext();
     });
@@ -130,7 +128,8 @@ void ScrapeScheduler::ScheduleNext() {
 
 void ScrapeScheduler::ScrapeOnce(std::chrono::steady_clock::time_point execTime) {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response) { this->OnMetricResult(response); });
+    future->AddDoneCallback(
+        [this](const HttpResponse& response, time_t timestamp) { this->OnMetricResult(response, timestamp); });
     mFuture = future;
     auto event = BuildScrapeTimerEvent(execTime);
     if (mTimer) {
