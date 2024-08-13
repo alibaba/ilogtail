@@ -24,8 +24,8 @@ class BoundedQueueParam {
 public:
     BoundedQueueParam(size_t cap, double ratio = 2.0 / 3)
         : mCapacity(cap), mHighWatermark(cap), mLowWatermark(cap * ratio), mRatio(ratio) {
-        if (mLowWatermark == 0) {
-            mLowWatermark = 1;
+        if (cap == 0) {
+            mCapacity = mHighWatermark = 1;
         }
     }
 
