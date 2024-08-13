@@ -63,9 +63,9 @@ bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
     return mHash < other.mHash;
 }
 
-void ScrapeScheduler::OnMetricResult(const HttpResponse& response, time_t timestamp) {
-    mScrapeTimestamp = timestamp;
-    mScrapeDurationSeconds = time(nullptr) - timestamp;
+void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampNanoSec) {
+    mScrapeTimestampNanoSec = timestampNanoSec;
+    mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInNanoSeconds() - timestampNanoSec) / 1000000000;
     mScrapeResponseSizeBytes = response.mBody.size();
     mUpState = response.mStatusCode == 200;
 
@@ -77,20 +77,21 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, time_t timest
         LOG_WARNING(sLogger,
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
     }
-    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestamp);
+    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestampNanoSec);
 
     SetAutoMetricMeta(eventGroup);
     PushEventGroup(std::move(eventGroup));
 }
 
 void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP, ToString(mScrapeTimestamp));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP, ToString(mScrapeTimestampNanoSec));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, mInstance);
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
 }
-PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content, time_t timestamp) {
+
+PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content, uint64_t) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     for (const auto& line : SplitString(content, "\r\n")) {
@@ -100,7 +101,6 @@ PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& c
         }
         auto* logEvent = eGroup.AddLogEvent();
         logEvent->SetContent(prometheus::PROMETHEUS, newLine);
-        logEvent->SetTimestamp(timestamp);
     }
 
     return eGroup;

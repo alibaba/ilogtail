@@ -23,7 +23,7 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
 }
 
 void PromHttpRequest::OnSendDone(const HttpResponse& response) {
-    mFuture->Process(response, mLastSendTime);
+    mFuture->Process(response, mLastSendTimeNanoSec);
 }
 
 [[nodiscard]] bool PromHttpRequest::IsContextValid() const {

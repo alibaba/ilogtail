@@ -45,7 +45,7 @@ public:
 
     bool operator<(const ScrapeScheduler& other) const;
 
-    void OnMetricResult(const HttpResponse&, time_t timestamp);
+    void OnMetricResult(const HttpResponse&, uint64_t timestampNanoSec);
     void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
@@ -60,7 +60,7 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
     void SetAutoMetricMeta(PipelineEventGroup& eGroup);
 
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, time_t timestamp);
+    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, uint64_t timestampNanoSec);
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
@@ -76,8 +76,8 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     // auto metrics
-    time_t mScrapeTimestamp = 0;
-    time_t mScrapeDurationSeconds = 0;
+    uint64_t mScrapeTimestampNanoSec = 0;
+    double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;
     bool mUpState = true;
 #ifdef APSARA_UNIT_TEST_MAIN
