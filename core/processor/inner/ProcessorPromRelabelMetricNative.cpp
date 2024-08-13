@@ -120,7 +120,7 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, StringV
         if (!result.Get(prometheus::NAME).empty()) {
             sourceEvent.SetName(result.Get(prometheus::NAME));
         }
-        sourceEvent.SetTag(prometheus::JOB_NAME, mJobName);
+        sourceEvent.SetTag(prometheus::JOB, mJobName);
         sourceEvent.SetTag(prometheus::INSTANCE, instance);
         return true;
     }
@@ -162,6 +162,10 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metric
         = StringTo<uint64_t>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED).to_string());
     AddMetric(metricGroup, prometheus::SCRAPE_SAMPLES_SCRAPED, samplesScraped, timestamp, nanoSec, instance);
 
+    auto seriesAdded
+        = StringTo<uint64_t>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SERIES_ADDED).to_string());
+    AddMetric(metricGroup, prometheus::SCRAPE_SERIES_ADDED, seriesAdded, timestamp, nanoSec, instance);
+
     AddMetric(metricGroup, prometheus::SCRAPE_TIMEOUT_SECONDS, mScrapeTimeoutSeconds, timestamp, nanoSec, instance);
 
     // up metric must be the last one
@@ -179,7 +183,7 @@ void ProcessorPromRelabelMetricNative::AddMetric(PipelineEventGroup& metricGroup
     metricEvent->SetName(name);
     metricEvent->SetValue<UntypedSingleValue>(value);
     metricEvent->SetTimestamp(timestamp, nanoSec);
-    metricEvent->SetTag(prometheus::JOB_NAME, mJobName);
+    metricEvent->SetTag(prometheus::JOB, mJobName);
     metricEvent->SetTag(prometheus::INSTANCE, instance);
 }
 
