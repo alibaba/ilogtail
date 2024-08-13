@@ -312,11 +312,16 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleTimestamp(MetricEvent& metricEvent) {
-    while (mPos < mLine.size() && (mLine[mPos] != ' ' && mLine[mPos] != '\t')) {
+    // '#' is for exemplars
+    while (mPos < mLine.size() && mLine[mPos] != ' ' && mLine[mPos] != '\t' && mLine[mPos] != '#') {
         ++mPos;
         ++mTokenLength;
     }
     auto tmpTimestamp = mLine.substr(mPos - mTokenLength, mTokenLength);
+    if (tmpTimestamp.size() == 0) {
+        mState = TextState::Done;
+        return;
+    }
     auto [ptr, ec] = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), mNanoTimestamp);
     if (ec != std::errc()) {
         HandleError("invalid timestamp");

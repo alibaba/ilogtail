@@ -63,12 +63,13 @@ UNIT_TEST_CASE(TextParserUnittest, TestParseMultipleLines)
 
 void TextParserUnittest::TestParseMetricWithTagsAndTimestamp() const {
     auto parser = TextParser();
-    const auto eGroup = parser.Parse(R"""(
+    string rawData = R"""(
     test_metric{k1="v1", k2="v2"} 9.9410452992e+10 1715829785083
     test_metric2{k1="v1", k2="v2"} 2.0 1715829785083
     test_metric3{k1="v1",k2="v2"} 4.2 92233720368547758080000
-    )""",
-                                     0);
+    )""";
+    const auto eGroup = parser.Parse(rawData, 0);
+
 
     // test_metric
     const auto& events = &eGroup.GetEvents();
@@ -96,9 +97,9 @@ UNIT_TEST_CASE(TextParserUnittest, TestParseMetricWithTagsAndTimestamp)
 
 void TextParserUnittest::TestParseMetricWithManyTags() const {
     auto parser = TextParser();
-    const auto eGroup = parser.Parse(
-        R"""(container_blkio_device_usage_total{container="",device="/dev/nvme0n1",id="/",image="",major="259",minor="0",name="",namespace="",operation="Async",pod=""} 9.9410452992e+10 1715829785083)""",
-        1715829785083);
+    string rawData
+        = R"""(container_blkio_device_usage_total{container="",device="/dev/nvme0n1",id="/",image="",major="259",minor="0",name="",namespace="",operation="Async",pod=""} 9.9410452992e+10 1715829785083)""";
+    const auto eGroup = parser.Parse(rawData, 1715829785083);
     const auto& events = &eGroup.GetEvents();
     APSARA_TEST_EQUAL(1UL, events->size());
     const auto& event = events->front();
@@ -300,7 +301,16 @@ cassandra_token_ownership_ratio 78.9)";
     APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTag("projectID").to_string(), "1");
     APSARA_TEST_TRUE(
         IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 277779100.0));
+
+    // Exemplars
+    rawData = "abc 123 456 # foobar";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName().to_string(), "abc");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 123.0));
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestampNanosecond(), 456000000);
 }
+
 UNIT_TEST_CASE(TextParserUnittest, TestParseSuccess)
 
 
