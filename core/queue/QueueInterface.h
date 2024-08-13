@@ -33,7 +33,6 @@ public:
     virtual bool Pop(T& item) = 0;
 
     bool Empty() const { return Size() == 0; }
-    size_t Capacity() const { return mCapacity; }
 
     QueueKey GetKey() const { return mKey; }
 

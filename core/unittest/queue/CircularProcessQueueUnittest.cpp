@@ -90,7 +90,7 @@ void CircularProcessQueueUnittest::TestReset() {
         mQueue->Pop(item);
         mQueue->Push(GenerateItem());
         mQueue->Reset(4);
-        APSARA_TEST_EQUAL(5U, mQueue->Capacity());
+        APSARA_TEST_EQUAL(5U, mQueue->mCapacity);
         APSARA_TEST_EQUAL(1U, mQueue->Size());
         APSARA_TEST_EQUAL(0U, mQueue->mTail);
         APSARA_TEST_EQUAL(1U, mQueue->mHead);
@@ -104,7 +104,7 @@ void CircularProcessQueueUnittest::TestReset() {
         mQueue->Push(GenerateItem());
         mQueue->Push(GenerateItem());
         mQueue->Reset(2);
-        APSARA_TEST_EQUAL(3U, mQueue->Capacity());
+        APSARA_TEST_EQUAL(3U, mQueue->mCapacity);
         APSARA_TEST_EQUAL(2U, mQueue->Size());
         APSARA_TEST_EQUAL(0U, mQueue->mTail);
         APSARA_TEST_EQUAL(2U, mQueue->mHead);

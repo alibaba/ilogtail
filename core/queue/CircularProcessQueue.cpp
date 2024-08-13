@@ -44,6 +44,10 @@ size_t CircularProcessQueue::Size() const {
 }
 
 void CircularProcessQueue::Reset(size_t cap) {
+    if (cap + 1 == mCapacity) {
+        return;
+    }
+
     vector<unique_ptr<ProcessQueueItem>> tmp(cap + 1);
     size_t size = Size();
     if (cap < size) {

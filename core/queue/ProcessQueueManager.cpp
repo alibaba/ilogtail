@@ -42,7 +42,7 @@ bool ProcessQueueManager::CreateOrUpdateQueue(QueueKey key, uint32_t priority, Q
             DeleteQueueEntity(iter->second.first);
             CreateQueue(key, priority, type, capacity);
         } else {
-            if (type == QueueType::CIRCULAR && capacity != (*iter->second.first)->Capacity()) {
+            if (type == QueueType::CIRCULAR) {
                 static_cast<CircularProcessQueue*>(iter->second.first->get())->Reset(capacity);
             }
             if ((*iter->second.first)->GetPriority() == priority) {
