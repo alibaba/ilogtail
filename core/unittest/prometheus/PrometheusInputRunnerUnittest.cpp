@@ -116,18 +116,14 @@ public:
 
 protected:
     void SetUp() override {
-        setenv("_pod_name_", "prometheus-test", 1);
-        setenv("loong_collector_operator_service", "127.0.0.1", 1);
-        setenv("loong_collector_operator_service_port", "8888", 1);
+        PrometheusInputRunner::GetInstance()->mServiceHost = "127.0.0.1";
+        PrometheusInputRunner::GetInstance()->mServicePort = 8080;
+        PrometheusInputRunner::GetInstance()->mPodName = "test_pod";
 
         PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();
     }
 
-    void TearDown() override {
-        unsetenv("_pod_name_");
-        unsetenv("loong_collector_operator_service");
-        unsetenv("loong_collector_operator_service_port");
-    }
+    void TearDown() override {}
 
 private:
 };
