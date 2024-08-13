@@ -139,12 +139,12 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metric
     auto instance = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE);
     uint64_t samplesPostMetricRelabel = metricGroup.GetEvents().size();
 
-    StringView scrapeDurationNanoSecondsStr = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION);
-    auto scrapeDurationSeconds = StringTo<double>(scrapeDurationNanoSecondsStr.to_string());
+    auto scrapeDurationSeconds
+        = StringTo<double>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION).to_string());
     AddMetric(metricGroup, prometheus::SCRAPE_DURATION_SECONDS, scrapeDurationSeconds, timestamp, nanoSec, instance);
 
-    StringView scrapeResponseSizeStr = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE);
-    auto scrapeResponseSize = StringTo<uint64_t>(scrapeResponseSizeStr.to_string());
+    auto scrapeResponseSize
+        = StringTo<uint64_t>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE).to_string());
     AddMetric(metricGroup, prometheus::SCRAPE_RESPONSE_SIZE_BYTES, scrapeResponseSize, timestamp, nanoSec, instance);
 
     if (mSampleLimit > 0) {
