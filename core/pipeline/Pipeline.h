@@ -88,6 +88,10 @@ private:
     friend class InputFileUnittest;
     friend class ProcessorTagNativeUnittest;
     friend class FlusherSLSUnittest;
+    friend class InputEBPFFileSecurityUnittest;
+    friend class InputEBPFProcessSecurityUnittest;
+    friend class InputEBPFNetworkSecurityUnittest;
+    friend class InputEBPFNetworkObserverUnittest;
 #endif
 };
 
