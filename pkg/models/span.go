@@ -225,23 +225,23 @@ func (m *Span) GetEvents() []*SpanEvent {
 	return noopSpanEvents
 }
 
-func (s *Span) GetSize() int64 {
-	if s == nil {
+func (m *Span) GetSize() int64 {
+	if m == nil {
 		return 0
 	}
 
-	var size int64 = 0
+	var size int64
 
 	// Calculate size of string fields
-	size += int64(len(s.TraceID))
-	size += int64(len(s.SpanID))
-	size += int64(len(s.ParentSpanID))
-	size += int64(len(s.Name))
-	size += int64(len(s.TraceState))
+	size += int64(len(m.TraceID))
+	size += int64(len(m.SpanID))
+	size += int64(len(m.ParentSpanID))
+	size += int64(len(m.Name))
+	size += int64(len(m.TraceState))
 
 	// Calculate size of Tags
-	if s.Tags.Len() > 0 {
-		sortedTags := s.Tags.SortTo(nil)
+	if m.Tags.Len() > 0 {
+		sortedTags := m.Tags.SortTo(nil)
 		for _, tags := range sortedTags {
 			size += int64(len(tags.Key))
 			size += int64(len(tags.Value))
@@ -249,7 +249,7 @@ func (s *Span) GetSize() int64 {
 	}
 
 	// Calculate size of Links
-	for _, link := range s.Links {
+	for _, link := range m.Links {
 		if link != nil {
 			size += int64(len(link.TraceID))
 			size += int64(len(link.SpanID))
@@ -265,7 +265,7 @@ func (s *Span) GetSize() int64 {
 	}
 
 	// Calculate size of Events
-	for _, event := range s.Events {
+	for _, event := range m.Events {
 		if event != nil {
 			size += int64(len(event.Name))
 			if event.Tags.Len() > 0 {
