@@ -89,19 +89,21 @@ static OperationOnFail DefaultOperation(uint32_t retryTimes) {
 
 void FlusherSLS::InitResource() {
 #ifndef APSARA_UNIT_TEST_MAIN
-    static bool sIsInited = false;
-    if (!sIsInited) {
+    if (!sIsResourceInited) {
         SLSControl::GetInstance()->Init();
         SLSClientManager::GetInstance()->Init();
         DiskBufferWriter::GetInstance()->Init();
-        sIsInited = true;
+        sIsResourceInited = true;
     }
 #endif
 }
 
 void FlusherSLS::RecycleResourceIfNotUsed() {
 #ifndef APSARA_UNIT_TEST_MAIN
-    SLSClientManager::GetInstance()->Stop();
+    if (sIsResourceInited) {
+        SLSClientManager::GetInstance()->Stop();
+        DiskBufferWriter::GetInstance()->Stop();
+    }
 #endif
 }
 
@@ -246,6 +248,8 @@ bool FlusherSLS::GetRegionStatus(const string& region) {
         return rst->second;
     }
 }
+
+bool FlusherSLS::sIsResourceInited = false;
 
 const string FlusherSLS::sName = "flusher_sls";
 
