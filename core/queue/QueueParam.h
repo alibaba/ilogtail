@@ -22,8 +22,12 @@ namespace logtail {
 
 class BoundedQueueParam {
 public:
-    BoundedQueueParam(size_t cap, double ratio = 2 / 3)
-        : mCapacity(cap), mHighWatermark(cap), mLowWatermark(cap * ratio), mRatio(ratio) {}
+    BoundedQueueParam(size_t cap, double ratio = 2.0 / 3)
+        : mCapacity(cap), mHighWatermark(cap), mLowWatermark(cap * ratio), mRatio(ratio) {
+        if (mLowWatermark == 0) {
+            mLowWatermark = 1;
+        }
+    }
 
     size_t GetCapacity() const { return mCapacity; }
     size_t GetHighWatermark() const { return mHighWatermark; }
@@ -33,7 +37,7 @@ private:
     size_t mCapacity;
     size_t mHighWatermark;
     size_t mLowWatermark;
-    double mRatio = 2 / 3;
+    double mRatio = 2.0 / 3;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueManagerUnittest;
