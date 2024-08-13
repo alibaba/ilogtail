@@ -120,7 +120,8 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
     mTokenLength = 0;
     mNoEscapes = line.find('\\') == StringView::npos;
     if (defaultNanoTs > 0) {
-        mNanoTimestamp = defaultNanoTs;
+        mTimestamp = defaultNanoTs / 1000000000;
+        mNanoTimestamp = defaultNanoTs % 1000000000;
     }
 
     HandleStart(metricEvent);
@@ -302,9 +303,7 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     mTokenLength = 0;
     SkipLeadingWhitespace();
     if (mPos == mLine.size()) {
-        time_t timestamp = mNanoTimestamp / 1000000000;
-        auto ns = mNanoTimestamp % 1000000000;
-        metricEvent.SetTimestamp(timestamp, ns);
+        metricEvent.SetTimestamp(mTimestamp, mNanoTimestamp);
         mState = TextState::Done;
     } else {
         HandleTimestamp(metricEvent);
@@ -322,15 +321,15 @@ void TextParser::HandleTimestamp(MetricEvent& metricEvent) {
         mState = TextState::Done;
         return;
     }
-    auto [ptr, ec] = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), mNanoTimestamp);
+    uint64_t nanoTimestamp = 0;
+    auto [ptr, ec] = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), nanoTimestamp);
     if (ec != std::errc()) {
         HandleError("invalid timestamp");
         mTokenLength = 0;
         return;
     }
-    mNanoTimestamp *= 1000000;
-    time_t timestamp = mNanoTimestamp / 1000000000;
-    auto ns = mNanoTimestamp % 1000000000;
+    time_t timestamp = nanoTimestamp / 1000;
+    auto ns = (nanoTimestamp % 1000) * 1000000;
     metricEvent.SetTimestamp(timestamp, ns);
     mTokenLength = 0;
 

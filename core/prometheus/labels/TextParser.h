@@ -56,7 +56,8 @@ private:
 
     StringView mLabelName;
     double mSampleValue{0.0};
-    uint64_t mNanoTimestamp{0};
+    time_t mTimestamp{0};
+    uint32_t mNanoTimestamp{0};
     std::size_t mTokenLength{0};
 
     bool mNoEscapes = true;
