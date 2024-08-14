@@ -275,23 +275,28 @@ void TextParser::HandleTimestamp(MetricEvent& metricEvent) {
         mState = TextState::Done;
         return;
     }
-    uint64_t nanoTimestamp = 0;
-    auto [ptr, ec] = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), nanoTimestamp);
+    uint64_t milliTimestamp = 0;
+    auto [ptr, ec] = std::from_chars(tmpTimestamp.data(), tmpTimestamp.data() + tmpTimestamp.size(), milliTimestamp);
     if (ec != std::errc()) {
         HandleError("invalid timestamp");
         mTokenLength = 0;
         return;
     }
-    time_t timestamp = nanoTimestamp / 1000;
-    auto ns = (nanoTimestamp % 1000) * 1000000;
-    metricEvent.SetTimestamp(timestamp, ns);
+    if (milliTimestamp >= 1UL << 31) {
+        time_t timestamp = milliTimestamp / 1000;
+        auto ns = (milliTimestamp % 1000) * 1000000;
+        metricEvent.SetTimestamp(timestamp, ns);
+    } else {
+        // OpenMetrics timestamp in Unix seconds
+        metricEvent.SetTimestamp(milliTimestamp);
+    }
+
     mTokenLength = 0;
 
     mState = TextState::Done;
 }
 
 void TextParser::HandleError(const string& errMsg) {
-    cout << errMsg << mLine << endl;
     LOG_WARNING(sLogger, ("text parser error parsing line", mLine.to_string() + errMsg));
     mState = TextState::Error;
 }

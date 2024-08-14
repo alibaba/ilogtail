@@ -37,8 +37,8 @@ bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e)
 }
 
 bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
-                                              EventsContainer& newEvents,
-                                              PipelineEventGroup& eGroup) {
+                                                  EventsContainer& newEvents,
+                                                  PipelineEventGroup& eGroup) {
     if (!IsSupportedEvent(e)) {
         return false;
     }

@@ -77,6 +77,7 @@ void TextParserUnittest::TestParseMetricWithTagsAndTimestamp() const {
     const auto& metric = event.Get<MetricEvent>();
     APSARA_TEST_EQUAL("test_metric", metric->GetName().to_string());
     APSARA_TEST_EQUAL(1715829785, metric->GetTimestamp());
+    APSARA_TEST_EQUAL(83000000, metric->GetTimestampNanosecond());
     APSARA_TEST_TRUE(IsDoubleEqual(9.9410452992e+10, metric->GetValue<UntypedSingleValue>()->mValue));
     APSARA_TEST_EQUAL("v1", metric->GetTag("k1").to_string());
     APSARA_TEST_EQUAL("v2", metric->GetTag("k2").to_string());
@@ -194,7 +195,7 @@ void TextParserUnittest::TestParseSuccess() {
     APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName().to_string(), "foobar");
     APSARA_TEST_TRUE(
         IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 123.456));
-    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestampNanosecond(), 789000000);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestamp(), 789);
 
     rawData = R"(
     # TYPE cassandra_token_ownership_ratio gauge
@@ -278,7 +279,7 @@ cassandra_token_ownership_ratio 78.9)";
     APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTag("x").to_string(), "y");
     APSARA_TEST_TRUE(
         IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 1.0));
-    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestampNanosecond(), 2000000);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestamp(), 2);
 
     // Multi lines with invalid line
     rawData = "\t foo\t {  } 0.3\t 2\naaa\n  barbaz 0.34 43\n";
@@ -286,11 +287,11 @@ cassandra_token_ownership_ratio 78.9)";
     APSARA_TEST_EQUAL(res.GetEvents().size(), 2UL);
     APSARA_TEST_EQUAL(res.GetEvents()[0].Cast<MetricEvent>().GetName().to_string(), "foo");
     APSARA_TEST_TRUE(IsDoubleEqual(res.GetEvents()[0].Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 0.3));
-    APSARA_TEST_EQUAL(res.GetEvents()[0].Cast<MetricEvent>().GetTimestampNanosecond(), 2000000);
+    APSARA_TEST_EQUAL(res.GetEvents()[0].Cast<MetricEvent>().GetTimestamp(), 2);
     APSARA_TEST_EQUAL(res.GetEvents()[1].Cast<MetricEvent>().GetName().to_string(), "barbaz");
     APSARA_TEST_TRUE(
         IsDoubleEqual(res.GetEvents()[1].Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 0.34));
-    APSARA_TEST_EQUAL(res.GetEvents()[1].Cast<MetricEvent>().GetTimestampNanosecond(), 43000000);
+    APSARA_TEST_EQUAL(res.GetEvents()[1].Cast<MetricEvent>().GetTimestamp(), 43);
 
     // Spaces around tags
     rawData = R"(vm_accounting	{   name="vminsertRows", accountID = "1" , projectID=	"1"   } 277779100)";
@@ -308,7 +309,7 @@ cassandra_token_ownership_ratio 78.9)";
     APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName().to_string(), "abc");
     APSARA_TEST_TRUE(
         IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 123.0));
-    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestampNanosecond(), 456000000);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestamp(), 456);
 }
 
 UNIT_TEST_CASE(TextParserUnittest, TestParseSuccess)
