@@ -54,7 +54,10 @@ PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNano
 PipelineEventGroup TextParser::BuildLogGroup(const string& content, uint64_t defaultNanoTs) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
-    for (const auto& line : SplitString(content, "\n")) {
+    vector<StringView> lines;
+    lines.reserve(content.size() / 100);
+    SplitStringView(content, '\n', lines);
+    for (const auto& line : lines) {
         if (!IsValidMetric(line)) {
             continue;
         }

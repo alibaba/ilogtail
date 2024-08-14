@@ -23,6 +23,7 @@
 #include "common/http/HttpResponse.h"
 #include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
+#include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 #include "queue/QueueKey.h"
 
@@ -59,7 +60,7 @@ public:
 private:
     void PushEventGroup(PipelineEventGroup&&);
 
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, time_t timestampNs);
+    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, uint64_t timestampNs);
 
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
@@ -69,6 +70,8 @@ private:
     std::string mHost;
     int32_t mPort;
     Labels mLabels;
+
+    std::unique_ptr<TextParser> mParser;
 
     QueueKey mQueueKey;
     size_t mInputIndex;
