@@ -25,59 +25,13 @@
 #include "logger/Logger.h"
 #include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
+#include "models/StringView.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Utils.h"
 
 using namespace std;
 
 namespace logtail {
-
-inline bool StringViewToDouble(const StringView& sv, double& value) {
-    const char* str = sv.data();
-    char* end = nullptr;
-    errno = 0;
-    value = std::strtod(str, &end);
-    if (end == str) {
-        return false;
-    }
-    if (errno == ERANGE) {
-        return false;
-    }
-    return true;
-}
-
-inline bool IsWhitespace(char c) {
-    // Prometheus treats ' ' and '\t' as whitespace
-    // according to
-    // https://github.com/prometheus/docs/blob/master/content/docs/instrumenting/exposition_formats.md#text-format-details
-    return c == ' ' || c == '\t';
-}
-
-bool IsValidMetric(const StringView& line) {
-    for (auto c : line) {
-        if (IsWhitespace(c)) {
-            continue;
-        }
-        if (c == '#') {
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-void SplitStringView(const std::string& s, char delimiter, std::vector<StringView>& result) {
-    size_t start = 0;
-    size_t end = 0;
-
-    while ((end = s.find(delimiter, start)) != std::string::npos) {
-        result.emplace_back(s.data() + start, end - start);
-        start = end + 1;
-    }
-    if (start < s.size()) {
-        result.emplace_back(s.data() + start, s.size() - start);
-    }
-}
-
 
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
@@ -287,7 +241,7 @@ void TextParser::HandleCommaOrCloseBrace(MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
-    while (mPos < mLine.size() && !IsWhitespace(mLine[mPos])) {
+    while (mPos < mLine.size() && !(mLine[mPos] == ' ' || mLine[mPos] == '\t')) {
         ++mPos;
         ++mTokenLength;
     }
@@ -343,7 +297,7 @@ void TextParser::HandleError(const string& errMsg) {
 }
 
 inline void TextParser::SkipLeadingWhitespace() {
-    while (mPos < mLine.length() && IsWhitespace(mLine[mPos])) {
+    while (mPos < mLine.length() && (mLine[mPos] == ' ' || mLine[mPos] == '\t')) {
         mPos++;
     }
 }
