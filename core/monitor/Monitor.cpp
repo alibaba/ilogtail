@@ -113,10 +113,10 @@ bool LogtailMonitor::Init() {
 #endif
 
     // init metrics
-    mGlobalCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_GLOBAL_CPU);
-    mGlobalMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_MEMORY);
+    mGlobalCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU);
+    mGlobalMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY);
     mGlobalUsedSendingConcurrency
-        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
+        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
 
     // Initialize monitor thread.
     mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
@@ -725,33 +725,34 @@ void LoongCollectorMonitor::Init() {
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
     // init value
-    mDoubleGauges[METRIC_GLOBAL_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU);
-    // mDoubleGauges[METRIC_GLOBAL_CPU_GO] = mMetricsRecordRef.CreateDoubleGauge(METRIC_GLOBAL_CPU_GO);
-    mIntGauges[METRIC_GLOBAL_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY);
-    mIntGauges[METRIC_GLOBAL_MEMORY_GO] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_MEMORY_GO);
-    mIntGauges[METRIC_GLOBAL_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_OPEN_FD_TOTAL);
-    mIntGauges[METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL);
-    mIntGauges[METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL);
-    mIntGauges[METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL);
-    mIntGauges[METRIC_GLOBAL_REGISTER_HANDLER_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_REGISTER_HANDLER_TOTAL);
-    mIntGauges[METRIC_GLOBAL_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONFIG_TOTAL);
-    // mIntGauges[METRIC_GLOBAL_ENV_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_ENV_CONFIG_TOTAL);
-    // mIntGauges[METRIC_GLOBAL_CRD_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CRD_CONFIG_TOTAL);
-    // mIntGauges[METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL]
-    //     = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL);
-    // mIntGauges[METRIC_GLOBAL_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PLUGIN_TOTAL);
-    mIntGauges[METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
-    mIntGauges[METRIC_GLOBAL_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
-    mIntGauges[METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL);
-    mIntGauges[METRIC_GLOBAL_SEND_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_SEND_QUEUE_TOTAL);
-    mIntGauges[METRIC_GLOBAL_USED_SENDING_CONCURRENCY]
-        = mMetricsRecordRef.CreateIntGauge(METRIC_GLOBAL_USED_SENDING_CONCURRENCY);
+    mDoubleGauges[METRIC_AGENT_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU);
+    // mDoubleGauges[METRIC_AGENT_CPU_GO] = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU_GO);
+    mIntGauges[METRIC_AGENT_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY);
+    mIntGauges[METRIC_AGENT_MEMORY_GO] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY_GO);
+    mIntGauges[METRIC_AGENT_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
+    mIntGauges[METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL);
+    mIntGauges[METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL);
+    mIntGauges[METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL);
+    mIntGauges[METRIC_AGENT_REGISTER_HANDLER_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
+    // mIntGauges[METRIC_AGENT_INSTANCE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_INSTANCE_CONFIG_TOTAL);
+    mIntGauges[METRIC_AGENT_PIPELINE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL]
+    //     = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PLUGIN_TOTAL);
+    mIntGauges[METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL);
+    mIntGauges[METRIC_AGENT_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PROCESS_QUEUE_TOTAL);
+    mIntGauges[METRIC_AGENT_SEND_QUEUE_FULL_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_SEND_QUEUE_FULL_TOTAL);
+    mIntGauges[METRIC_AGENT_SEND_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_SEND_QUEUE_TOTAL);
+    mIntGauges[METRIC_AGENT_USED_SENDING_CONCURRENCY]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
     LOG_INFO(sLogger, ("LoongCollectorMonitor", "started"));
 }
 

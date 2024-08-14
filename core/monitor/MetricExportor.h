@@ -39,7 +39,7 @@ private:
     // Send Methods
     void SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
     void SendToLocalFile(std::string& metricsContent, const std::string metricsFileNamePrefix);
-    void SendGoProcessMetrics(std::map<std::string, std::string>& metrics);
+    void SendGoAgentLevelMetrics(std::map<std::string, std::string>& metrics);
 
     // inner methods
     void SerializeGoPluginMetricsListToLogGroupMap(std::vector<std::map<std::string, std::string>>& goPluginMetircsList,

@@ -24,21 +24,21 @@ func GetMetrics() []map[string]string {
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
 	}
-	metrics = append(metrics, GetProcessStat())
+	metrics = append(metrics, GetAgentStat())
 	return metrics
 }
 
-func GetProcessStat() map[string]string {
+func GetAgentStat() map[string]string {
 	recrods := map[string]string{}
-	recrods["metric-level"] = "process"
+	recrods["metric-level"] = "agent"
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
 		// cpu
-		// "": "global_cpu_go_used_cores",
+		// "": "agent_go_cpu_percent",
 		// mem. All memory mapped by the Go runtime into the current process as read-write. Note that this does not include memory mapped by code called via cgo or via the syscall package. Sum of all metrics in /memory/classes.
-		"/memory/classes/total:bytes": "global_memory_go_used_mb",
+		"/memory/classes/total:bytes": "agent_go_memory_used_mb",
 		// go routines cnt. Count of live goroutines.
-		"/sched/goroutines:goroutines": "global_go_routines_total",
+		"/sched/goroutines:goroutines": "agent_go_routines_total",
 	}
 
 	// metrics to read from runtime/metrics
