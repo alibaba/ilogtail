@@ -82,7 +82,7 @@ void MetricExportor::PushGoMetrics() {
         if (goMetrics.find(processLevelMetricKey) != goMetrics.end()) {
             // Go process-level metrics
             if (goMetrics.at(processLevelMetricKey) == processLevelMetricValue) {
-                ProcessGoProcessMetrics(goMetrics);
+                SendGoProcessMetrics(goMetrics);
                 continue;
             }
         } else {
@@ -97,11 +97,11 @@ void MetricExportor::PushGoMetrics() {
     // send plugin-level metrics
     if ("sls" == STRING_FLAG(metrics_report_method)) {
         std::map<std::string, sls_logs::LogGroup*> goPluginMetircsLogGroupMap;
-        ProcessGoPluginMetricsListToLogGroupMap(goPluginMetircsList, goPluginMetircsLogGroupMap);
+        SerializeGoPluginMetricsListToLogGroupMap(goPluginMetircsList, goPluginMetircsLogGroupMap);
         SendToSLS(goPluginMetircsLogGroupMap);
     } else if ("file" == STRING_FLAG(metrics_report_method)) {
         std::string goPluginMetircsContent;
-        ProcessGoPluginMetricsListToString(goPluginMetircsList, goPluginMetircsContent);
+        SerializeGoPluginMetricsListToString(goPluginMetircsList, goPluginMetircsContent);
         SendToLocalFile(goPluginMetircsContent, "self-metrics-go");
     }
 }
@@ -172,7 +172,7 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
     }
 }
 
-void MetricExportor::ProcessGoProcessMetrics(std::map<std::string, std::string>& metrics) {
+void MetricExportor::SendGoProcessMetrics(std::map<std::string, std::string>& metrics) {
     for (auto metric : metrics) {
         if (metric.first == processLevelMetricKey) {
             continue;
@@ -187,13 +187,13 @@ void MetricExportor::ProcessGoProcessMetrics(std::map<std::string, std::string>&
     }
 }
 
-void MetricExportor::ProcessGoPluginMetricsListToLogGroupMap(
+void MetricExportor::SerializeGoPluginMetricsListToLogGroupMap(
     std::vector<std::map<std::string, std::string>>& goPluginMetircsList,
     std::map<std::string, sls_logs::LogGroup*>& goLogGroupMap) {
     for (auto& item : goPluginMetircsList) {
         if (item.find(processLevelMetricKey) != item.end()) {
             if (item.at(processLevelMetricKey) == processLevelMetricValue) {
-                ProcessGoProcessMetrics(item);
+                SendGoProcessMetrics(item);
                 continue;
             }
         }
@@ -240,14 +240,14 @@ void MetricExportor::ProcessGoPluginMetricsListToLogGroupMap(
     }
 }
 
-void MetricExportor::ProcessGoPluginMetricsListToString(
+void MetricExportor::SerializeGoPluginMetricsListToString(
     std::vector<std::map<std::string, std::string>>& goPluginMetircsList, std::string& metricsContent) {
     std::ostringstream oss;
 
     for (auto& item : goPluginMetircsList) {
         if (item.find(processLevelMetricKey) != item.end()) {
             if (item.at(processLevelMetricKey) == processLevelMetricValue) {
-                ProcessGoProcessMetrics(item);
+                SendGoProcessMetrics(item);
                 continue;
             }
         }
