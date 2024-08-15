@@ -126,7 +126,7 @@ void TextParser::HandleMetricName(MetricEvent& metricEvent) {
 void TextParser::HandleLabelName(MetricEvent& metricEvent) {
     char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     if (std::isalpha(c) || c == '_') {
-        while (std::isalpha(c) || c == '_' || c == ':' || std::isdigit(c)) {
+        while (std::isalpha(c) || c == '_' || std::isdigit(c)) {
             ++mTokenLength;
             ++mPos;
             c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
