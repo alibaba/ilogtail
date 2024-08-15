@@ -22,11 +22,16 @@ using namespace std;
 namespace logtail {
 
 bool CircularProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
-    mQueue[mHead] = std::move(item);
-    mHead = (mHead + 1) % mCapacity;
-    if (mHead == mTail) {
-        mTail = (mTail + 1) % mCapacity;
+    size_t newCnt = item->mEventGroup.GetEvents().size();
+    while (!mQueue.empty() && mEventCnt + newCnt > mCapacity) {
+        mEventCnt -= mQueue.front()->mEventGroup.GetEvents().size();
+        mQueue.pop_front();
     }
+    if (mEventCnt + newCnt > mCapacity) {
+        return false;
+    }
+    mQueue.push_back(std::move(item));
+    mEventCnt += newCnt;
     return true;
 }
 
@@ -34,38 +39,26 @@ bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     if (!IsValidToPop()) {
         return false;
     }
-    item = std::move(mQueue[mTail]);
-    mTail = (mTail + 1) % mCapacity;
+    item = std::move(mQueue.front());
+    mQueue.pop_front();
+    mEventCnt -= item->mEventGroup.GetEvents().size();
     return true;
 }
 
-size_t CircularProcessQueue::Size() const {
-    return mHead >= mTail ? mHead - mTail : mCapacity - (mTail - mHead);
-}
-
 void CircularProcessQueue::Reset(size_t cap) {
-    if (cap + 1 == mCapacity) {
-        return;
+    uint32_t cnt = 0;
+    while (!mQueue.empty() && mEventCnt > cap) {
+        mEventCnt -= mQueue.front()->mEventGroup.GetEvents().size();
+        mQueue.pop_front();
+        ++cnt;
     }
-
-    vector<unique_ptr<ProcessQueueItem>> tmp(cap + 1);
-    size_t size = Size();
-    if (cap < size) {
+    if (cnt > 0) {
         LOG_WARNING(sLogger,
-                    ("new circular process queue capacity is smaller than old queue size", "discard old data")(
-                        "discard cnt", size - cap)("config", QueueKeyManager::GetInstance()->GetName(mKey)));
+                    ("new circular process queue capacity is smaller than old queue size",
+                     "discard old data")("discard cnt", cnt)("config", QueueKeyManager::GetInstance()->GetName(mKey)));
     }
-
-    size_t begin = cap >= size ? mTail : (mTail + size - cap) % mCapacity;
-    size_t index = 0;
-    for (size_t i = begin; i != mHead; i = (i + 1) % mCapacity, ++index) {
-        tmp[index] = std::move(mQueue[i]);
-    }
-    mTail = 0;
-    mHead = index;
-    mQueue.swap(tmp);
     ProcessQueueInterface::Reset();
-    QueueInterface::Reset(cap + 1);
+    QueueInterface::Reset(cap);
 }
 
 } // namespace logtail

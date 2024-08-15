@@ -17,8 +17,8 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
 #include <memory>
-#include <vector>
 
 #include "queue/ProcessQueueInterface.h"
 #include "queue/QueueInterface.h"
@@ -30,9 +30,8 @@ class CircularProcessQueue : virtual public QueueInterface<std::unique_ptr<Proce
                              public ProcessQueueInterface {
 public:
     CircularProcessQueue(size_t cap, int64_t key, uint32_t priority, const std::string& config)
-        : QueueInterface<std::unique_ptr<ProcessQueueItem>>(key, cap + 1),
-          ProcessQueueInterface(key, cap + 1, priority, config),
-          mQueue(cap + 1) {}
+        : QueueInterface<std::unique_ptr<ProcessQueueItem>>(key, cap),
+          ProcessQueueInterface(key, cap, priority, config) {}
 
     bool Push(std::unique_ptr<ProcessQueueItem>&& item) override;
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
@@ -40,11 +39,10 @@ public:
     void Reset(size_t cap);
 
 private:
-    size_t Size() const override;
+    size_t Size() const override { return mEventCnt; }
 
-    std::vector<std::unique_ptr<ProcessQueueItem>> mQueue;
-    size_t mHead = 0; // the next write position
-    size_t mTail = 0; // the last read position
+    std::deque<std::unique_ptr<ProcessQueueItem>> mQueue;
+    size_t mEventCnt = 0;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class CircularProcessQueueUnittest;

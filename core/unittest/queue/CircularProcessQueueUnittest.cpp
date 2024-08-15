@@ -44,7 +44,13 @@ private:
     static const QueueKey sKey = 0;
     static const size_t sCap = 2;
 
-    unique_ptr<ProcessQueueItem> GenerateItem() { return make_unique<ProcessQueueItem>(std::move(*sEventGroup), 0); }
+    unique_ptr<ProcessQueueItem> GenerateItem(size_t cnt) {
+        PipelineEventGroup eventGroup(make_shared<SourceBuffer>());
+        for (size_t i = 0; i < cnt; ++i) {
+            eventGroup.AddLogEvent();
+        }
+        return make_unique<ProcessQueueItem>(std::move(eventGroup), 0);
+    }
 
     unique_ptr<CircularProcessQueue> mQueue;
     unique_ptr<BoundedSenderQueueInterface> mSenderQueue1;
@@ -54,14 +60,33 @@ private:
 unique_ptr<PipelineEventGroup> CircularProcessQueueUnittest::sEventGroup;
 
 void CircularProcessQueueUnittest::TestPush() {
-    APSARA_TEST_TRUE(mQueue->Push(GenerateItem()));
-    APSARA_TEST_EQUAL(1U, mQueue->Size());
+    unique_ptr<ProcessQueueItem> res;
+    {
+        auto item = GenerateItem(1);
+        auto p = item.get();
 
-    APSARA_TEST_TRUE(mQueue->Push(GenerateItem()));
-    APSARA_TEST_EQUAL(2U, mQueue->Size());
+        APSARA_TEST_TRUE(mQueue->Push(std::move(item)));
+        APSARA_TEST_EQUAL(1U, mQueue->Size());
+        mQueue->Pop(res);
+        APSARA_TEST_EQUAL(p, res.get());
+        APSARA_TEST_TRUE(mQueue->Empty());
+    }
+    {
+        auto item = GenerateItem(2);
+        auto p = item.get();
 
-    APSARA_TEST_TRUE(mQueue->Push(GenerateItem()));
-    APSARA_TEST_EQUAL(2U, mQueue->Size());
+        APSARA_TEST_TRUE(mQueue->Push(GenerateItem(1)));
+        APSARA_TEST_TRUE(mQueue->Push(std::move(item)));
+        APSARA_TEST_EQUAL(2U, mQueue->Size());
+        mQueue->Pop(res);
+        APSARA_TEST_EQUAL(p, res.get());
+        APSARA_TEST_TRUE(mQueue->Empty());
+    }
+    {
+        APSARA_TEST_TRUE(mQueue->Push(GenerateItem(1)));
+        APSARA_TEST_FALSE(mQueue->Push(GenerateItem(3)));
+        APSARA_TEST_TRUE(mQueue->Empty());
+    }
 }
 
 void CircularProcessQueueUnittest::TestPop() {
@@ -69,7 +94,7 @@ void CircularProcessQueueUnittest::TestPop() {
     // nothing to pop
     APSARA_TEST_FALSE(mQueue->Pop(item));
 
-    mQueue->Push(GenerateItem());
+    mQueue->Push(GenerateItem(1));
     // invalidate pop
     mQueue->InvalidatePop();
     APSARA_TEST_FALSE(mQueue->Pop(item));
@@ -81,34 +106,43 @@ void CircularProcessQueueUnittest::TestPop() {
     mSenderQueue1->mValidToPush = true;
 
     APSARA_TEST_TRUE(mQueue->Pop(item));
+    APSARA_TEST_TRUE(mQueue->Empty());
 }
 
 void CircularProcessQueueUnittest::TestReset() {
-    unique_ptr<ProcessQueueItem> item;
+    unique_ptr<ProcessQueueItem> res;
     {
-        mQueue->Push(GenerateItem());
-        mQueue->Pop(item);
-        mQueue->Push(GenerateItem());
+        auto item1 = GenerateItem(1);
+        auto p1 = item1.get();
+        auto item2 = GenerateItem(1);
+        auto p2 = item2.get();
+
+        mQueue->Push(std::move(item1));
+        mQueue->Push(std::move(item2));
         mQueue->Reset(4);
-        APSARA_TEST_EQUAL(5U, mQueue->mCapacity);
-        APSARA_TEST_EQUAL(1U, mQueue->Size());
-        APSARA_TEST_EQUAL(0U, mQueue->mTail);
-        APSARA_TEST_EQUAL(1U, mQueue->mHead);
+        APSARA_TEST_EQUAL(4U, mQueue->mCapacity);
+        APSARA_TEST_EQUAL(2U, mQueue->Size());
         APSARA_TEST_TRUE(mQueue->mDownStreamQueues.empty());
+        mQueue->Pop(res);
+        APSARA_TEST_EQUAL(p1, res.get());
+        mQueue->Pop(res);
+        APSARA_TEST_EQUAL(p2, res.get());
+        APSARA_TEST_TRUE(mQueue->Empty());
     }
     {
-        mQueue->Push(GenerateItem());
-        mQueue->Pop(item);
-        mQueue->Push(GenerateItem());
-        mQueue->Pop(item);
-        mQueue->Push(GenerateItem());
-        mQueue->Push(GenerateItem());
+        auto item1 = GenerateItem(2);
+        auto item2 = GenerateItem(1);
+        auto p2 = item2.get();
+
+        mQueue->Push(std::move(item1));
+        mQueue->Push(std::move(item2));
         mQueue->Reset(2);
-        APSARA_TEST_EQUAL(3U, mQueue->mCapacity);
-        APSARA_TEST_EQUAL(2U, mQueue->Size());
-        APSARA_TEST_EQUAL(0U, mQueue->mTail);
-        APSARA_TEST_EQUAL(2U, mQueue->mHead);
+        APSARA_TEST_EQUAL(2U, mQueue->mCapacity);
+        APSARA_TEST_EQUAL(1U, mQueue->Size());
         APSARA_TEST_TRUE(mQueue->mDownStreamQueues.empty());
+        mQueue->Pop(res);
+        APSARA_TEST_EQUAL(p2, res.get());
+        APSARA_TEST_TRUE(mQueue->Empty());
     }
 }
 
