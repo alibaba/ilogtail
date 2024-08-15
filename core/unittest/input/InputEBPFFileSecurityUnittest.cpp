@@ -63,12 +63,8 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
-                        {
-                            "FilePath": "/etc",
-                        },
-                        {
-                            "FilePath": "/bin"
-                        }
+                        "/etc",
+                        "/bin"
                     ]
                 }
             ]
@@ -80,10 +76,10 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
     nami::SecurityFileFilter thisFilter1 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    // APSARA_TEST_EQUAL(ebpf::SecurityProbeType::FILE, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("/etc", thisFilter1.mFileFilterItem[0].mFilePath);
-    APSARA_TEST_EQUAL("/bin", thisFilter1.mFileFilterItem[1].mFilePath);
+    APSARA_TEST_EQUAL("/etc", thisFilter1.mFilePathList[0]);
+    APSARA_TEST_EQUAL("/bin", thisFilter1.mFilePathList[1]);
 
     // valid optional param
     configStr = R"(
@@ -93,17 +89,9 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
-                        {
-                            "FilePath": "/etc",
-                            "FileName": "passwd"
-                        },
-                        {
-                            "FilePath": "/etc",
-                            "FileName": "shadow"
-                        },
-                        {
-                            "FilePath": "/bin"
-                        }
+                        "/etc/passwd",
+                        "/etc/shadow",
+                        "/bin"
                     ]
                 }
             ]
@@ -115,13 +103,11 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
     nami::SecurityFileFilter thisFilter2 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    // APSARA_TEST_EQUAL(ebpf::SecurityProbeType::FILE, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("/etc", thisFilter2.mFileFilterItem[0].mFilePath);
-    APSARA_TEST_EQUAL("passwd", thisFilter2.mFileFilterItem[0].mFileName);
-    APSARA_TEST_EQUAL("/etc", thisFilter2.mFileFilterItem[1].mFilePath);
-    APSARA_TEST_EQUAL("shadow", thisFilter2.mFileFilterItem[1].mFileName);
-    APSARA_TEST_EQUAL("/bin", thisFilter2.mFileFilterItem[2].mFilePath);
+    APSARA_TEST_EQUAL("/etc/passwd", thisFilter2.mFilePathList[0]);
+    APSARA_TEST_EQUAL("/etc/shadow", thisFilter2.mFilePathList[1]);
+    APSARA_TEST_EQUAL("/bin", thisFilter2.mFilePathList[2]);
 }
 
 void InputEBPFFileSecurityUnittest::OnFailedInit() {
@@ -136,12 +122,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
             "ProbeConfig": [
                 {
                     "CallName": ["security_file_permission"],
-                    "FilePathFilter": [
-                        {
-                            "FilePath": 1,
-                            "FileName": "name"
-                        }
-                    ]
+                    "FilePathFilter": [1]
                 }
             ]
         }
@@ -149,7 +130,11 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
+    nami::SecurityFileFilter thisFilter = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
+    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
+    APSARA_TEST_EQUAL(0, thisFilter.mFilePathList.size());
 
     // invalid optional param
     configStr = R"(
@@ -159,10 +144,8 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
-                        {
-                            "FilePath": "/etc",
-                            "FileName": 1
-                        }
+                        "/etc",
+                        1
                     ]
                 }
             ]
@@ -174,10 +157,10 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
     nami::SecurityFileFilter thisFilter1 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
+    // APSARA_TEST_EQUAL(ebpf::SecurityProbeType::FILE, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("/etc", thisFilter1.mFileFilterItem[0].mFilePath);
-    APSARA_TEST_EQUAL("", thisFilter1.mFileFilterItem[0].mFileName);
+    APSARA_TEST_EQUAL(1, thisFilter1.mFilePathList.size());
+    APSARA_TEST_EQUAL("/etc", thisFilter1.mFilePathList[0]);
 
     // lose mandatory param
     configStr = R"(
@@ -185,12 +168,6 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
-                    "FilePathFilter": [
-                        {
-                            "FileName": "passwd"
-                        }
-                    ]
                 }
             ]
         }
@@ -198,29 +175,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
-
-    // error param level
-    configStr = R"(
-        {
-            "Type": "input_ebpf_fileprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallName": ["security_file_permission"],
-                    "FileName": "passwd"
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
-    input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::FILE, input->mSecurityOptions.filter_Type);
-    APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL(
-        0, std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_).mFileFilterItem.size());
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
@@ -236,12 +191,8 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
-                        {
-                            "FilePath": "/etc",
-                        },
-                        {
-                            "FilePath": "/bin"
-                        }
+                        "/etc",
+                        "/bin"
                     ]
                 }
             ]
@@ -270,12 +221,8 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStop() {
                 {
                     "CallName": ["security_file_permission"],
                     "FilePathFilter": [
-                        {
-                            "FilePath": "/etc",
-                        },
-                        {
-                            "FilePath": "/bin"
-                        }
+                        "/etc",
+                        "/bin"
                     ]
                 }
             ]

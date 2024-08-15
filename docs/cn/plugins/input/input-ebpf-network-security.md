@@ -14,8 +14,8 @@
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_network\_security  |
 |  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ProbeConfig.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ProbeConfig.AddrFilter  |  object  |  是  |  /  |  过滤参数  |
+|  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
+|  ProbeConfig.AddrFilter  |  object  |  否  |  /  |  过滤参数  |
 |  ProbeConfig.AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
 |  ProbeConfig.AddrFilter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
 |  ProbeConfig.AddrFilter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |

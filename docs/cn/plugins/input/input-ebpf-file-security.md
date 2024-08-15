@@ -14,10 +14,8 @@
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_file\_security  |
 |  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ProbeConfig.CallName  |  \[string\]  |  否  |  空  |  系统调用函数  |
-|  ProbeConfig.FilePathFilter  |  \[object\]  |  是  |  /  |  过滤参数  |
-|  ProbeConfig.FilePathFilter.FilePath  |  string  |  是  |  /  |  文件路径  |
-|  ProbeConfig.FilePathFilter.FileName  |  string  |  否  |  空  |  文件名。不填 FileName 代表采集对应的 FilePath 下所有文件  |
+|  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
+|  ProbeConfig.FilePathFilter  |  \[string\]  |  否  |  空  |  使用文件路径以及文件名作为过滤参数，例如 "/etc/passwd"，遵循前缀匹配的原则  |
 
 ## 样例
 
@@ -39,14 +37,12 @@ inputs:
       - CallName: 
         - "security_file_permission"
         FilePathFilter: 
-          - FilePath: "/etc/"
-            FileName: "passwd"
-          - FilePath: "/lib"
+          - "/etc/passwd"
+          - "/lib"
       - CallName: 
         - "security_path_truncate"
         FilePathFilter: 
-          - FilePath: "/etc/"
-            FileName: "passwd"
+          - "/etc/passwd"
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true

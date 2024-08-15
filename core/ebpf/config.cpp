@@ -39,9 +39,6 @@ DEFINE_FLAG_BOOL(ebpf_process_probe_config_enable_oom_detect, "if ebpf process p
 namespace logtail {
 namespace ebpf {
 
-//////
-bool IsProcessNamespaceFilterTypeValid(const std::string& type);
-
 bool InitObserverNetworkOptionInner(const Json::Value& probeConfig,
                                nami::ObserverNetworkOption& thisObserverNetworkOption,
                                const PipelineContext* mContext,
@@ -156,139 +153,16 @@ bool InitSecurityFileFilter(const Json::Value& config,
                             const PipelineContext* mContext,
                             const std::string& sName) {
     std::string errorMsg;
-    for (auto& fileFilterItem : config["FilePathFilter"]) {
-        nami::SecurityFileFilterItem thisFileFilterItem;
-        // FilePath (Mandatory)
-        if (!GetMandatoryStringParam(fileFilterItem, "FilePath", thisFileFilterItem.mFilePath, errorMsg)) {
-            PARAM_ERROR_RETURN(mContext->GetLogger(),
-                               mContext->GetAlarm(),
-                               errorMsg,
-                               sName,
-                               mContext->GetConfigName(),
-                               mContext->GetProjectName(),
-                               mContext->GetLogstoreName(),
-                               mContext->GetRegion());
-        }
-        // FileName (Optional)
-        if (!GetOptionalStringParam(fileFilterItem, "FileName", thisFileFilterItem.mFileName, errorMsg)) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 errorMsg,
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        }
-        thisFileFilter.mFileFilterItem.emplace_back(thisFileFilterItem);
-    }
-    return true;
-}
-
-bool InitSecurityProcessFilter(const Json::Value& config,
-                               nami::SecurityProcessFilter& thisProcessFilter,
-                               const PipelineContext* mContext,
-                               const std::string& sName) {
-    std::string errorMsg;
-    // NamespaceFilter (Optional)
-    if (config.isMember("NamespaceFilter")) {
-        if (!config["NamespaceFilter"].isArray()) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 "NamespaceFilter is not of type list",
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        } else {
-            for (auto& namespaceFilterConfig : config["NamespaceFilter"]) {
-                nami::SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
-                // NamespaceType (Mandatory)
-                if (!GetMandatoryStringParam(
-                        namespaceFilterConfig, "NamespaceType", thisProcessNamespaceFilter.mNamespaceType, errorMsg)
-                    || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       errorMsg,
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                // ValueList (Mandatory)
-                if (!GetMandatoryListParam<std::string>(
-                        namespaceFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       errorMsg,
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                thisProcessFilter.mNamespaceFilter.emplace_back(thisProcessNamespaceFilter);
-            }
-        }
-    }
-
-    // NamespaceBlackFilter (Optional)
-    if (config.isMember("NamespaceBlackFilter")) {
-        // 如果用户两个filter都配置了，不去显式阻塞流水线，但是会打印警告并只执行白名单
-        if (config.isMember("NamespaceFilter")) {
-            PARAM_WARNING_IGNORE(
-                mContext->GetLogger(),
-                mContext->GetAlarm(),
-                "Both NamespaceFilter and NamespaceBlackFilter are configured, only NamespaceFilter will be executed",
-                sName,
-                mContext->GetConfigName(),
-                mContext->GetProjectName(),
-                mContext->GetLogstoreName(),
-                mContext->GetRegion());
-        } else if (!config["NamespaceBlackFilter"].isArray()) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 "NamespaceBlackFilter is not of type list",
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        } else {
-            for (auto& namespaceBlackFilterConfig : config["NamespaceBlackFilter"]) {
-                nami::SecurityProcessNamespaceFilter thisProcessNamespaceFilter;
-                // NamespaceType (Mandatory)
-                if (!GetMandatoryStringParam(namespaceBlackFilterConfig,
-                                             "NamespaceType",
-                                             thisProcessNamespaceFilter.mNamespaceType,
-                                             errorMsg)
-                    || !IsProcessNamespaceFilterTypeValid(thisProcessNamespaceFilter.mNamespaceType)) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       errorMsg,
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                // ValueList (Mandatory)
-                if (!GetMandatoryListParam<std::string>(
-                        namespaceBlackFilterConfig, "ValueList", thisProcessNamespaceFilter.mValueList, errorMsg)) {
-                    PARAM_ERROR_RETURN(mContext->GetLogger(),
-                                       mContext->GetAlarm(),
-                                       errorMsg,
-                                       sName,
-                                       mContext->GetConfigName(),
-                                       mContext->GetProjectName(),
-                                       mContext->GetLogstoreName(),
-                                       mContext->GetRegion());
-                }
-                thisProcessFilter.mNamespaceBlackFilter.emplace_back(thisProcessNamespaceFilter);
-            }
-        }
+    // FilePathFilter (Optional)
+    if (!GetOptionalListParam<std::string>(config, "FilePathFilter", thisFileFilter.mFilePathList, errorMsg)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     }
     return true;
 }
@@ -397,8 +271,52 @@ bool IsProcessNamespaceFilterTypeValid(const std::string& type) {
     return dic.find(type) != dic.end();
 }
 
+bool IsSecurityProbeCallNameValid(SecurityProbeType type,
+                                  const std::vector<std::string>& callNames,
+                                  std::string& errorMsg) {
+    const std::unordered_set<std::string> processCallName
+        = {"sys_enter_execve", "disassociate_ctty", "acct_process", "wake_up_new_task"};
+    const std::unordered_set<std::string> fileCallName
+        = {"security_file_permission", "security_file_mmap", "security_path_truncate"};
+    const std::unordered_set<std::string> networkCallName = {"tcp_connect", "tcp_close", "tcp_sendmsg"};
 
-bool SecurityOptions::Init(SecurityFilterType filterType,
+    switch (type) {
+        case SecurityProbeType::PROCESS: {
+            for (auto& callName : callNames) {
+                if (processCallName.find(callName) == processCallName.end()) {
+                    errorMsg = "Invalid call name for process security eBPF probe";
+                    return false;
+                }
+            }
+            break;
+        }
+        case SecurityProbeType::FILE: {
+            for (auto& callName : callNames) {
+                if (fileCallName.find(callName) == fileCallName.end()) {
+                    errorMsg = "Invalid call name for file security eBPF probe";
+                    return false;
+                }
+            }
+            break;
+        }
+        case SecurityProbeType::NETWORK: {
+            for (auto& callName : callNames) {
+                if (networkCallName.find(callName) == networkCallName.end()) {
+                    errorMsg = "Invalid call name for network security eBPF probe";
+                    return false;
+                }
+            }
+            break;
+        }
+        default: {
+            errorMsg = "Unknown security eBPF probe type";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool SecurityOptions::Init(SecurityProbeType probeType,
                            const Json::Value& config,
                            const PipelineContext* mContext,
                            const std::string& sName) {
@@ -418,21 +336,21 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
         nami::SecurityOption thisSecurityOption;
 
         std::string errorMsg;
-        // CallName (Optional)
-        if (!GetOptionalListParam<std::string>(innerConfig, "CallName", thisSecurityOption.call_names_, errorMsg)) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                mContext->GetAlarm(),
-                                errorMsg,
-                                sName,
-                                mContext->GetConfigName(),
-                                mContext->GetProjectName(),
-                                mContext->GetLogstoreName(),
-                                mContext->GetRegion());
+        // CallName (Mandatory)
+        if (!GetMandatoryListParam<std::string>(innerConfig, "CallName", thisSecurityOption.call_names_, errorMsg)
+            || !IsSecurityProbeCallNameValid(probeType, thisSecurityOption.call_names_, errorMsg)) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               errorMsg,
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
         }
-
-        // Filter
-        switch (filterType) {
-            case SecurityFilterType::FILE: {
+        // Filter (Optional)
+        switch (probeType) {
+            case SecurityProbeType::FILE: {
                 nami::SecurityFileFilter thisFileFilter;
                 if (!IsValidList(innerConfig, "FilePathFilter", errorMsg)) {
                     PARAM_WARNING_IGNORE(mContext->GetLogger(),
@@ -451,15 +369,7 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                 thisSecurityOption.filter_.emplace<nami::SecurityFileFilter>(thisFileFilter);
                 break;
             }
-            case SecurityFilterType::PROCESS: {
-                nami::SecurityProcessFilter thisProcessFilter;
-                if (!InitSecurityProcessFilter(innerConfig, thisProcessFilter, mContext, sName)) {
-                    return false;
-                }
-                thisSecurityOption.filter_.emplace<nami::SecurityProcessFilter>(thisProcessFilter);
-                break;
-            }
-            case SecurityFilterType::NETWORK: {
+            case SecurityProbeType::NETWORK: {
                 nami::SecurityNetworkFilter thisNetworkFilter;
                 if (!IsValidMap(innerConfig, "AddrFilter", errorMsg)) {
                     PARAM_WARNING_IGNORE(mContext->GetLogger(),
@@ -479,25 +389,30 @@ bool SecurityOptions::Init(SecurityFilterType filterType,
                 thisSecurityOption.filter_.emplace<nami::SecurityNetworkFilter>(thisNetworkFilter);
                 break;
             }
+            case SecurityProbeType::PROCESS: {
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     "Process security eBPF probe does not support filter",
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
+                break;
+            }
             default:
                 PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                    mContext->GetAlarm(),
-                                    "Unknown filter type",
-                                    sName,
-                                    mContext->GetConfigName(),
-                                    mContext->GetProjectName(),
-                                    mContext->GetLogstoreName(),
-                                    mContext->GetRegion());
-                return false;
+                                     mContext->GetAlarm(),
+                                     "Unknown security eBPF probe type",
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
         }
-
-
-        // if (!thisSecurityOption.Init(filterType, innerConfig, mContext, sName)) {
-        //     return false;
-        // }
         mOptionList.emplace_back(thisSecurityOption);
     }
-    mFilterType = filterType;
+    mProbeType = probeType;
     return true;
 }
 

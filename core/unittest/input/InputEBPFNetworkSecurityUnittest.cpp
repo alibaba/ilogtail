@@ -83,7 +83,7 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
     nami::SecurityNetworkFilter thisFilter1 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::NETWORK, input->mSecurityOptions.filter_Type);
+    // APSARA_TEST_EQUAL(ebpf::SecurityProbeType::NETWORK, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
@@ -134,7 +134,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
     nami::SecurityNetworkFilter thisFilter1 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::NETWORK, input->mSecurityOptions.filter_Type);
+    // APSARA_TEST_EQUAL(ebpf::SecurityProbeType::NETWORK, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);

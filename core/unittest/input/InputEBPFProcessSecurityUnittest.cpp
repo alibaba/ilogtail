@@ -53,25 +53,17 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
-    // only NamespaceFilter
+    // valid param
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "NamespaceFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": [
-                                "4026531833"
-                            ]
-                        },
-                        {
-                            "NamespaceType": "Mnt",
-                            "ValueList": [
-                                "4026531834"
-                            ]
-                        }
+                    "CallName": [
+                        "sys_enter_execve",
+                        "disassociate_ctty",
+                        "acct_process",
+                        "wake_up_new_task"
                     ]
                 }
             ]
@@ -82,65 +74,10 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    nami::SecurityProcessFilter thisFilter1 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
-    APSARA_TEST_EQUAL("4026531833", thisFilter1.mNamespaceFilter[0].mValueList[0]);
-    APSARA_TEST_EQUAL("Pid", thisFilter1.mNamespaceFilter[0].mNamespaceType);
-    APSARA_TEST_EQUAL("4026531834", thisFilter1.mNamespaceFilter[1].mValueList[0]);
-    APSARA_TEST_EQUAL("Mnt", thisFilter1.mNamespaceFilter[1].mNamespaceType);
-
-    // only NamespaceBlackFilter
-    configStr = R"(
-        {
-            "Type": "input_ebpf_processprobe_security",
-            "ProbeConfig": [
-                {
-                    "NamespaceBlackFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": [
-                                "4026531833"
-                            ]
-                        },
-                        {
-                            "NamespaceType": "Mnt",
-                            "ValueList": [
-                                "4026531834"
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFProcessSecurity());
-    input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    nami::SecurityProcessFilter thisFilter2 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
-    APSARA_TEST_EQUAL("4026531833", thisFilter2.mNamespaceBlackFilter[0].mValueList[0]);
-    APSARA_TEST_EQUAL("Pid", thisFilter2.mNamespaceBlackFilter[0].mNamespaceType);
-    APSARA_TEST_EQUAL("4026531834", thisFilter2.mNamespaceBlackFilter[1].mValueList[0]);
-    APSARA_TEST_EQUAL("Mnt", thisFilter2.mNamespaceBlackFilter[1].mNamespaceType);
-
-    // no NamespaceFilter and NamespaceBlackFilter
-    configStr = R"(
-        {
-            "Type": "input_ebpf_processprobe_security",
-            "ProbeConfig": [
-                {
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFProcessSecurity());
-    input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
+    APSARA_TEST_EQUAL("sys_enter_execve", input->mSecurityOptions.mOptionList[0].call_names_[0]);
+    APSARA_TEST_EQUAL("disassociate_ctty", input->mSecurityOptions.mOptionList[0].call_names_[1]);
+    APSARA_TEST_EQUAL("acct_process", input->mSecurityOptions.mOptionList[0].call_names_[2]);
+    APSARA_TEST_EQUAL("wake_up_new_task", input->mSecurityOptions.mOptionList[0].call_names_[3]);
 }
 
 void InputEBPFProcessSecurityUnittest::OnFailedInit() {
@@ -154,11 +91,11 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "NamespaceBlackAAAAAAFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": "4026531833"
-                        }
+                    "CallNameeee": [
+                        "sys_enter_execve",
+                        "disassociate_ctty",
+                        "acct_process",
+                        "wake_up_new_task"
                     ]
                 }
             ]
@@ -167,29 +104,15 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    nami::SecurityProcessFilter thisFilter1 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
-    APSARA_TEST_EQUAL(0, thisFilter1.mNamespaceFilter.size());
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
-    // invalid param: 1 NamespaceFilter and 1 NamespaceBlackFilter
+    // null callname
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "NamespaceBlackFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": ["4026531833"]
-                        }
-                    ],
-                    "NamespaceFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": ["4026531833"]
-                        }
+                    "CallName": [
                     ]
                 }
             ]
@@ -198,55 +121,16 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
-    nami::SecurityProcessFilter thisFilter2 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    APSARA_TEST_EQUAL(1, thisFilter2.mNamespaceFilter.size());
-    APSARA_TEST_EQUAL(0, thisFilter2.mNamespaceBlackFilter.size());
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
-    // // invalid param: 2 NamespaceFilter
-    // configStr = R"(
-    //     {
-    //         "Type": "input_ebpf_processprobe_security",
-    //         "ProbeConfig": [
-    //             {
-//                     "NamespaceFilter": [
-//                         {
-//                             "NamespaceType": "Pid",
-//                             "ValueList": ["4026531833"]
-//                         }
-//                     ],
-//                     "NamespaceFilter": [
-//                         {
-//                             "NamespaceType": "Pid",
-//                             "ValueList": ["4026531833"]
-//                         }
-//                     ]
-    //             }
-    //         ]
-    //     }
-    // )";
-    // APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    // input.reset(new InputEBPFProcessSecurity());
-    // input->SetContext(ctx);
-    // APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
-
-    // error param level
+    // no callname
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "NamespaceType": "Pid",
-                    "ValueList": [
-                        "4026531833"
-                    ]
-                },
-                {
-                    "NamespaceType": "Mnt",
-                    "ValueList": [
-                        "4026531834"
+                    "CallNameeee": [
+                        "1sys_enter_execve"
                     ]
                 }
             ]
@@ -255,12 +139,18 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    nami::SecurityProcessFilter thisFilter3 = std::get<nami::SecurityProcessFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    // APSARA_TEST_EQUAL(ebpf::SecurityFilterType::PROCESS, input->mSecurityOptions.filter_Type);
-    APSARA_TEST_EQUAL(0, thisFilter3.mNamespaceFilter.size());
-    APSARA_TEST_EQUAL(0, thisFilter3.mNamespaceBlackFilter.size());
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+
+    // no probeconfig
+    configStr = R"(
+        {
+            "Type": "input_ebpf_processprobe_security"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    input.reset(new InputEBPFProcessSecurity());
+    input->SetContext(ctx);
+    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
 }
 
 void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {
@@ -268,26 +158,18 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
-    // only NamespaceFilter
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "NamespaceFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": [
-                                "4026531833"
-                            ]
-                        },
-                        {
-                            "NamespaceType": "Mnt",
-                            "ValueList": [
-                                "4026531834"
-                            ]
-                        }
+                    "CallName": [
+                        "sys_enter_execve",
+                        "disassociate_ctty",
+                        "acct_process",
+                        "wake_up_new_task"
                     ]
+
                 }
             ]
         }
@@ -307,25 +189,16 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulStop() {
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
-    // only NamespaceFilter
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "NamespaceFilter": [
-                        {
-                            "NamespaceType": "Pid",
-                            "ValueList": [
-                                "4026531833"
-                            ]
-                        },
-                        {
-                            "NamespaceType": "Mnt",
-                            "ValueList": [
-                                "4026531834"
-                            ]
-                        }
+                    "CallName": [
+                        "sys_enter_execve",
+                        "disassociate_ctty",
+                        "acct_process",
+                        "wake_up_new_task"
                     ]
                 }
             ]
