@@ -44,8 +44,6 @@ public:
     ScrapeScheduler(const ScrapeScheduler&) = default;
     ~ScrapeScheduler() override = default;
 
-    bool operator<(const ScrapeScheduler& other) const;
-
     void OnMetricResult(const HttpResponse&);
     void SetTimer(std::shared_ptr<Timer> timer);
 

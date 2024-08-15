@@ -60,10 +60,6 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mParser = make_unique<TextParser>();
 }
 
-bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
-    return mHash < other.mHash;
-}
-
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
     // TODO(liqiang): get scrape timestamp
     time_t timestampInNs = GetCurrentTimeInNanoSeconds();
