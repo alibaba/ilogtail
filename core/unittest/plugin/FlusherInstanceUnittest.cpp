@@ -36,12 +36,14 @@ protected:
 };
 
 void FlusherInstanceUnittest::TestName() const {
-    unique_ptr<FlusherInstance> flusher = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_EQUAL(FlusherMock::sName, flusher->Name());
 }
 
 void FlusherInstanceUnittest::TestInit() const {
-    unique_ptr<FlusherInstance> flusher = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     Json::Value config, opt;
     PipelineContext context;
     APSARA_TEST_TRUE(flusher->Init(config, context, opt));
@@ -49,12 +51,14 @@ void FlusherInstanceUnittest::TestInit() const {
 }
 
 void FlusherInstanceUnittest::TestStart() const {
-    unique_ptr<FlusherInstance> flusher = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_TRUE(flusher->Start());
 }
 
 void FlusherInstanceUnittest::TestStop() const {
-    unique_ptr<FlusherInstance> flusher = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_TRUE(flusher->Stop(true));
 }
 

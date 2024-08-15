@@ -214,9 +214,9 @@ void InputContainerStdioUnittest::OnEnableContainerDiscovery() {
     PluginInstance::PluginMeta meta = ctx.GetPipeline().GenNextPluginMeta(false);
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, meta.mPluginID, meta.mNodeID, meta.mChildNodeID);
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(optionalGoPipelineJson.toStyledString(), optionalGoPipeline.toStyledString());
+    APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }
 
 void InputContainerStdioUnittest::OnPipelineUpdate() {
@@ -231,7 +231,6 @@ void InputContainerStdioUnittest::OnPipelineUpdate() {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.SetContext(ctx);
-    input.SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input.Init(configJson, optionalGoPipeline));
 
     APSARA_TEST_TRUE(input.Start());

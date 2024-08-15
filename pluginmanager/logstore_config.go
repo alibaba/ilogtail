@@ -124,7 +124,6 @@ type LogstoreConfig struct {
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
 	labels := pipeline.GetCommonLabels(context, &pipeline.PluginMeta{})
 	metricsRecord := context.RegisterLogstoreConfigMetricRecord(labels)
-
 	p.CollecLatencytMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "collect_latency")
 	p.RawLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "raw_log")
 	p.SplitLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "processed_log")
@@ -553,7 +552,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 				return nil, fmt.Errorf("invalid extension type")
 			}
 			logger.Debug(contextImp.GetRuntimeContext(), "add extension", typeName)
-
 			err = loadExtension(logstoreC.genPluginMeta(typeName, false, false), logstoreC, extension["detail"])
 			if err != nil {
 				return nil, err

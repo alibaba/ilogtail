@@ -56,6 +56,10 @@ APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexKV, 5);
 APSARA_UNIT_TEST_CASE(SplUnittest, TestTag, 6);
 //APSARA_UNIT_TEST_CASE(SplUnittest, TestMultiParse, 7);
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    return pluginMeta;
+}
 
 Json::Value SplUnittest::GetCastConfig(std::string spl) {
     Json::Value config;
@@ -63,11 +67,6 @@ Json::Value SplUnittest::GetCastConfig(std::string spl) {
     config["TimeoutMilliSeconds"] = Json::Value(1000);
     config["MaxMemoryBytes"] = Json::Value(50*1024*1024);
     return config;
-}
-
-PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
-    return pluginMeta;
 }
 
 void SplUnittest::TestInit() {
@@ -78,7 +77,7 @@ void SplUnittest::TestInit() {
         Json::Value config = GetCastConfig(line);
 
         ProcessorSPL& processor = *(new ProcessorSPL);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         
         bool init = processorInstance.Init(config, mContext);
         if (!init) {

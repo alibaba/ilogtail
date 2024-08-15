@@ -84,10 +84,15 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;
     friend class PipelineUnittest;
-    friend class InputFileUnittest;
     friend class InputContainerStdioUnittest;
+    friend class InputFileUnittest;
+    friend class InputPrometheusUnittest;
     friend class ProcessorTagNativeUnittest;
     friend class FlusherSLSUnittest;
+    friend class InputEBPFFileSecurityUnittest;
+    friend class InputEBPFProcessSecurityUnittest;
+    friend class InputEBPFNetworkSecurityUnittest;
+    friend class InputEBPFNetworkObserverUnittest;
 #endif
 };
 

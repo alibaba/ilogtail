@@ -66,7 +66,7 @@ UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestExtend);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestEmpty);
 
 PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
     return pluginMeta;
 }
 
@@ -209,7 +209,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -250,7 +250,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -333,7 +333,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -372,7 +372,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -482,7 +482,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -522,7 +522,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -609,7 +609,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -648,7 +648,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -730,7 +730,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-        
+
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
@@ -772,7 +772,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -855,7 +855,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -893,7 +893,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -980,7 +980,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -1019,7 +1019,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -1101,7 +1101,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-        
+
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
@@ -1144,7 +1144,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processorSplitLogStringNative;
             processorSplitLogStringNative.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
@@ -1233,7 +1233,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -1272,7 +1272,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processorSplitLogStringNative;
             processorSplitLogStringNative.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
@@ -1365,7 +1365,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["SplitChar"] = '\n';
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processor.Init(config));
@@ -1405,7 +1405,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitLogStringNative
+            // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processorSplitLogStringNative;
             processorSplitLogStringNative.SetContext(mContext);
             APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
@@ -1630,7 +1630,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             config["UnmatchedContentTreatment"] = "single_line";
             config["AppendingLogPositionMeta"] = false;
 
-                    // run function ProcessorSplitMultilineLogStringNative
+            // run function ProcessorSplitMultilineLogStringNative
             ProcessorSplitMultilineLogStringNative processor;
             processor.SetContext(mContext);
             processor.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
@@ -1701,7 +1701,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
         eventGroup.FromJsonString(inJson);
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         processor.Process(eventGroup);
         std::string expectJson = R"({
@@ -1844,8 +1844,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
         eventGroup.FromJsonString(inJson);
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-        std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         processor.Process(eventGroup);
         std::string expectJson = R"({
@@ -2440,8 +2439,7 @@ void ProcessorParseDelimiterNativeUnittest::TestEmpty() {
         eventGroup.FromJsonString(inJson);
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
-        std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         processor.Process(eventGroup);
         std::string expectJson = R"({

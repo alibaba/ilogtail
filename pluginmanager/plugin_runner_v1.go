@@ -86,23 +86,6 @@ func (p *pluginv1Runner) AddDefaultFlusherIfEmpty() error {
 	return nil
 }
 
-// func (p *pluginv1Runner) Initialized() error {
-// 	if len(p.AggregatorPlugins) == 0 {
-// 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
-// 		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	if len(p.FlusherPlugins) == 0 {
-// 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
-// 		category, options := flags.GetFlusherConfiguration()
-// 		if err := loadFlusher(category, p.LogstoreConfig, options); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
 func (p *pluginv1Runner) AddPlugin(pluginMeta *pipeline.PluginMeta, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:

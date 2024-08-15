@@ -53,7 +53,7 @@ UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventPreciseTim
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestCheckTime);
 
 PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
     return pluginMeta;
 }
 
@@ -716,7 +716,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTime() {
         config["SourceFormat"] = c.fmtStr;
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         LogtailTime outTime = {0, 0};
         uint64_t preciseTimestamp = 0;
@@ -750,7 +750,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -780,7 +780,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S.%f";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -811,7 +811,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         config["SourceFormat"] = "%s";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1484147107;
@@ -840,7 +840,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         config["SourceFormat"] = "%s";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1484147107;
@@ -871,7 +871,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         config["SourceFormat"] = "%H:%M:%S.%f %Y-%m-%d";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -922,7 +922,7 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S.%f";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325430300;
@@ -954,7 +954,7 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         config["SourceFormat"] = "%Y-%m-%d %H:%M:%S.%f";
         // run function
         ProcessorParseTimestampNative& processor = *(new ProcessorParseTimestampNative);
-            ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         time_t expectLogTimeBase = 1325405100;

@@ -225,7 +225,7 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
     PluginInstance::PluginMeta meta = ctx.GetPipeline().GenNextPluginMeta(false);
     input.reset(new InputFile());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputFile::sName, meta.mPluginID, meta.mNodeID, meta.mChildNodeID);
+    input->SetMetricsRecordRef(InputFile::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mEnableContainerDiscovery);
     APSARA_TEST_TRUE(input->mFileDiscovery.IsContainerDiscoveryEnabled());

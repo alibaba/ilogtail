@@ -27,9 +27,9 @@ type PipelineEvent interface {
 
 	GetObservedTimestamp() uint64
 
-	GetSize() int64
-
 	SetObservedTimestamp(uint64)
+
+	GetSize() int64
 
 	Clone() PipelineEvent
 }

@@ -79,10 +79,7 @@ func (p *LocalContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
-	metricsRecord := &pipeline.MetricsRecord{
-		Context: p,
-		Labels:  labels,
-	}
+	metricsRecord := &pipeline.MetricsRecord{Context: p, Labels: labels}
 
 	p.MetricsRecords = append(p.MetricsRecords, metricsRecord)
 	return metricsRecord

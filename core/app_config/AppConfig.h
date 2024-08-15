@@ -205,6 +205,11 @@ private:
      * @brief Overwrite gflags with the values in environment variales
      *
      */
+    void RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix);
+    /**
+     * @brief Overwrite gflags with the values in environment variales Recursively
+     *
+     */
     void ParseEnvToFlags();
 
     /**
@@ -407,6 +412,7 @@ public:
     friend class AppConfigUnittest;
     friend class PipelineUnittest;
     friend class InputFileUnittest;
+    friend class InputPrometheusUnittest;
     friend class InputContainerStdioUnittest;
     friend class BatcherUnittest;
 #endif

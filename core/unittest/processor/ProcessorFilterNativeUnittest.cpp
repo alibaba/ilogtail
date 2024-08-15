@@ -41,8 +41,8 @@ UNIT_TEST_CASE(ProcessorFilterNativeUnittest, TestLogFilterRule)
 UNIT_TEST_CASE(ProcessorFilterNativeUnittest, TestBaseFilter)
 UNIT_TEST_CASE(ProcessorFilterNativeUnittest, TestFilterNoneUtf8)
 
-PluginInstance::PluginMeta getPluginMeta() {
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
     return pluginMeta;
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2021 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import (
 
 /*---------------------
 Plugin Input
-
 The input plugin is used for reading data.
 ---------------------*/
 
@@ -58,7 +57,6 @@ type MetricWrapper struct {
 
 /*---------------------
 Plugin Processor
-
 The processor plugin is used for reading data.
 ---------------------*/
 
@@ -82,7 +80,6 @@ func (w *ProcessorWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 
 /*---------------------
 Plugin Aggregator
-
 The aggregator plugin is used for aggregating data.
 ---------------------*/
 
@@ -107,7 +104,6 @@ func (w *AggregatorWrapper) InitMetricRecord(pluginMeta *pipeline.PluginMeta) {
 
 /*---------------------
 Plugin Flusher
-
 The flusher plugin is used for sending data.
 ---------------------*/
 

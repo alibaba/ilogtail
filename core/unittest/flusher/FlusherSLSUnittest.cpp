@@ -56,7 +56,7 @@ public:
     void OnGoPipelineSend();
 
 protected:
-    void SetUp() override {
+    void SetUp() override { 
         ctx.SetConfigName("test_config");
         ctx.SetPipeline(pipeline);
     }

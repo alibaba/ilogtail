@@ -18,6 +18,7 @@
 #include "common/Constants.h"
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
 
@@ -37,6 +38,11 @@ public:
 UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestInit)
 UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestProcessJson)
 UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestProcessCommon)
+
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    return pluginMeta;
+}
 
 void ProcessorSplitLogStringNativeUnittest::TestInit() {
     // make config

@@ -54,6 +54,11 @@ UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLines);
 
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLinesWithProcessorMergeMultilineLogNative);
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    return pluginMeta;
+}
+
 Json::Value
 ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey = std::string("cast1"),
                                                           std::string method = "const",
@@ -71,11 +76,6 @@ ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey 
     config["ReplacedContentPattern"] = Json::Value(replacedContentPattern);
     config["ReplacingAll"] = Json::Value(replaceAll);
     return config;
-}
-
-PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
-    return pluginMeta;
 }
 
 void ProcessorDesensitizeNativeUnittest::TestMultipleLines() {
@@ -129,7 +129,6 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
 
         // make config
         Json::Value config = GetCastSensWordConfig("content");
-    
         config["SplitChar"] = "\n";
         config["AppendingLogPositionMeta"] = false;
 
@@ -260,7 +259,6 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
 
         // make config
         Json::Value config = GetCastSensWordConfig("content");
-
         config["StartPattern"] = "[asf|dbf].*";
         config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;

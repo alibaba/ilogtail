@@ -115,8 +115,8 @@ type Context interface {
 	GetCheckPointObject(key string, obj interface{}) (exist bool)
 
 	// APIs for self monitor
-	RegisterMetricRecord(labels []LabelPair) *MetricsRecord // for v1.8.8 compatible
-	GetMetricRecord() *MetricsRecord                        // for v1.8.8 compatible
+	RegisterMetricRecord(labels []LabelPair) *MetricsRecord
+	GetMetricRecord() *MetricsRecord
 	ExportMetricRecords() []map[string]string
 	RegisterLogstoreConfigMetricRecord(labels []LabelPair) *MetricsRecord
 	GetLogstoreConfigMetricRecord() *MetricsRecord

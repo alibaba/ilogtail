@@ -40,11 +40,11 @@ void StaticFlusherCreatorUnittest::TestIsDynamic() {
 
 void StaticFlusherCreatorUnittest::TestCreate() {
     StaticFlusherCreator<FlusherMock> creator;
-    unique_ptr<PluginInstance> processorMock = creator.Create({"0", "0", "1"});
-    APSARA_TEST_NOT_EQUAL(nullptr, processorMock.get());
-    APSARA_TEST_EQUAL_FATAL("0", processorMock->PluginID());
-    APSARA_TEST_EQUAL_FATAL("0", processorMock->NodeID());
-    APSARA_TEST_EQUAL_FATAL("1", processorMock->ChildNodeID());
+    unique_ptr<PluginInstance> flusherMock = creator.Create({"0", "0", "1"});
+    APSARA_TEST_NOT_EQUAL(nullptr, flusherMock.get());
+    APSARA_TEST_EQUAL_FATAL("0", flusherMock->PluginID());
+    APSARA_TEST_EQUAL_FATAL("0", flusherMock->NodeID());
+    APSARA_TEST_EQUAL_FATAL("1", flusherMock->ChildNodeID());
 }
 
 UNIT_TEST_CASE(StaticFlusherCreatorUnittest, TestName)

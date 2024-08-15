@@ -59,7 +59,7 @@ UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonRaw);
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestMultipleLines);
 
 PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
     return pluginMeta;
 }
 
@@ -125,7 +125,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\0';
             config["AppendingLogPositionMeta"] = false;
 
-        
+
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
@@ -208,7 +208,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\0';
             config["AppendingLogPositionMeta"] = false;
 
-        
+
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);

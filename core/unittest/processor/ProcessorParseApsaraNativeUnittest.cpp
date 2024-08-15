@@ -64,7 +64,7 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraEasyReadLogTimePars
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestApsaraLogLineParser);
 
 PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
     return pluginMeta;
 }
 
@@ -535,7 +535,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["RenamedSourceKey"] = "__raw__";
         config["AppendingLogPositionMeta"] = false;
 
-            // run function ProcessorSplitLogStringNative
+        // run function ProcessorSplitLogStringNative
         ProcessorSplitLogStringNative processorSplitLogStringNative;
         processorSplitLogStringNative.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
@@ -570,7 +570,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         config["UnmatchedContentTreatment"] = "single_line";
         config["AppendingLogPositionMeta"] = false;
 
-    
+
         // run function ProcessorSplitMultilineLogStringNative
         ProcessorSplitMultilineLogStringNative processorSplitMultilineLogStringNative;
         processorSplitMultilineLogStringNative.SetContext(mContext);

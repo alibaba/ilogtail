@@ -68,7 +68,7 @@ type MetricVector[T Metric] interface {
 }
 
 type Metric interface {
-	// Export as a map[string]string.
+	// Export as a map[string]string
 	Export() map[string]string
 }
 

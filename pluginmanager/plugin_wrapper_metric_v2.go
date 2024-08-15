@@ -15,7 +15,6 @@
 package pluginmanager
 
 import (
-	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 
 	"time"
@@ -27,11 +26,7 @@ type MetricWrapperV2 struct {
 }
 
 func (p *MetricWrapperV2) Init(pluginMeta *pipeline.PluginMeta, inputInterval int) error {
-	labels := pipeline.GetCommonLabels(p.Config.Context, pluginMeta)
-	p.MetricRecord = p.Config.Context.RegisterMetricRecord(labels)
-
-	p.inputRecordsTotal = helper.NewCounterMetricAndRegister(p.MetricRecord, "input_records_total")
-	p.inputRecordsSizeBytes = helper.NewCounterMetricAndRegister(p.MetricRecord, "input_records_size_bytes")
+	p.InitMetricRecord(pluginMeta)
 
 	interval, err := p.Input.Init(p.Config.Context)
 	if err != nil {

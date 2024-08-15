@@ -29,6 +29,10 @@
 
 using namespace logtail;
 
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    return pluginMeta;
+}
 
 std::string formatSize(long long size) {
     static const char* units[] = {" B", "KB", "MB", "GB", "TB"};
@@ -50,11 +54,6 @@ Json::Value GetCastConfig(std::string spl) {
     config["TimeoutMilliSeconds"] = Json::Value(1000);
     config["MaxMemoryBytes"] = Json::Value(50*1024*1024);
     return config;
-}
-
-PluginInstance::PluginMeta getPluginMeta(){
-    PluginInstance::PluginMeta pluginMeta{"testgetPluginMeta()", "testNodeID", "testNodeChildID"};
-    return pluginMeta;
 }
 
 static void BM_SplRegex(int size, int batchSize) {
