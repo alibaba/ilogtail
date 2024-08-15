@@ -318,7 +318,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -334,7 +333,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -351,7 +349,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "line\ncontinue\nendLine"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -359,12 +356,10 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -372,7 +367,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "line"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -380,7 +374,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -388,7 +381,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "endLine"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -396,7 +388,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -418,7 +409,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -434,7 +424,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "endLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -451,7 +440,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "line"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -459,12 +447,10 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -472,7 +458,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "endLine"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -480,7 +465,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -502,7 +486,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line1\ncontinue\nline2\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -517,7 +500,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                 "events": [
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -525,7 +507,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "line1"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -533,7 +514,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -541,7 +521,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "line2"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -549,7 +528,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -573,7 +551,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -582,7 +559,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "aaa" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -591,7 +567,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -610,7 +585,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue\nendLine"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -619,7 +593,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "continue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -628,7 +601,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "aaa" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -636,7 +608,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "line"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -644,7 +615,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -652,7 +622,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "endLine"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -660,7 +629,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content": "continue"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -681,7 +649,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -690,7 +657,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "aaa" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -699,7 +665,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "endLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -718,7 +683,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -727,7 +691,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "continue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -736,7 +699,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "aaa" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -745,7 +707,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "endLine"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -754,7 +715,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "continue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -775,7 +735,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "aaa" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -784,7 +743,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -803,7 +761,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "aaa" : "line\ncontinue\nendLine\ncontinue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -812,7 +769,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "line"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -821,7 +777,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "continue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -830,7 +785,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "endLine"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -839,7 +793,6 @@ void ProcessorMergeMultilineLogNativeUnittest::TestProcess() {
                             "content" : "continue"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -886,7 +839,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Exception"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -907,7 +859,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content":"Exception"
                     },
                     "timestamp":12345678901,
-                    "timestampNanosecond":0,
                     "type":1
                 }
             ]
@@ -937,7 +888,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Exception"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -955,7 +905,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content":"Exception"
                     },
                     "timestamp":12345678901,
-                    "timestampNanosecond":0,
                     "type":1
                 }
             ]
@@ -986,7 +935,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Except"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -996,7 +944,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1017,7 +964,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content":"Exception"
                     },
                     "timestamp":12345678901,
-                    "timestampNanosecond":0,
                     "type":1
                 }
             ]
@@ -1048,7 +994,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Except"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1057,7 +1002,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1078,7 +1022,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content":"Exception"
                     },
                     "timestamp":12345678901,
-                    "timestampNanosecond":0,
                     "type":1
                 }
             ]
@@ -1108,7 +1051,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Except"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1118,7 +1060,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1140,7 +1081,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Except"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1149,7 +1089,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1179,7 +1118,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Exc"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1189,7 +1127,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ept"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1198,7 +1135,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1220,7 +1156,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Exc"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1229,7 +1164,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "eption"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1260,7 +1194,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Exc"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1269,7 +1202,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ept"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1279,7 +1211,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1301,7 +1232,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "Except"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1310,7 +1240,6 @@ void ProcessEventsWithPartLogUnittest::TestProcessEventsWithPartLog() {
                         "content": "ion"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1345,7 +1274,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1355,7 +1283,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1364,7 +1291,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1373,7 +1299,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1382,7 +1307,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1399,7 +1323,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                 "events": [
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -1409,7 +1332,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1419,7 +1341,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1428,7 +1349,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1437,7 +1357,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1446,7 +1365,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -1467,7 +1385,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1486,7 +1403,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1495,7 +1411,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1504,7 +1419,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1513,7 +1427,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1534,12 +1447,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -1549,7 +1460,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1558,7 +1468,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1567,7 +1476,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1576,7 +1484,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -1597,7 +1504,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1607,7 +1513,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1625,7 +1530,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1634,7 +1538,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1643,7 +1546,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -1661,7 +1563,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1671,12 +1572,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -1685,7 +1584,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1694,7 +1592,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1703,7 +1600,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -1724,7 +1620,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Ex"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1734,7 +1629,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ce"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1743,7 +1637,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "ption"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1752,7 +1645,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                 ],
@@ -1770,7 +1662,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -1788,7 +1679,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -1797,12 +1687,10 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
                         "timestamp": 0,
-                        "timestampNanosecond": 0,
                         "type": 2
                     },
                     {
@@ -1811,7 +1699,6 @@ void ProcessEventsWithPartLogUnittest::TestProcess() {
                             "content": "Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -1872,7 +1759,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1901,7 +1787,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1923,7 +1808,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1947,7 +1831,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1969,7 +1852,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1992,7 +1874,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2014,7 +1895,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -2024,7 +1904,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2048,7 +1927,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2070,7 +1948,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2093,7 +1970,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
                << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2141,7 +2017,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2170,7 +2045,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2200,7 +2074,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2222,7 +2095,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2246,7 +2118,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2275,7 +2146,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2297,7 +2167,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2321,7 +2190,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2343,7 +2211,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2385,7 +2252,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2407,7 +2273,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2430,7 +2295,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2460,7 +2324,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2482,7 +2345,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -2492,7 +2354,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2515,7 +2376,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2537,7 +2397,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2579,7 +2438,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2608,7 +2466,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2637,7 +2494,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2659,7 +2515,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                    << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2682,7 +2537,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2711,7 +2565,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2733,7 +2586,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
                    << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2774,7 +2626,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2796,7 +2647,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                    << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2819,7 +2669,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2849,7 +2698,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2871,7 +2719,6 @@ void ProcessorMergeMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                    << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2931,7 +2778,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2953,7 +2799,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -2963,7 +2808,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -2986,7 +2830,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3008,7 +2851,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3018,7 +2860,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3042,7 +2883,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3064,7 +2904,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3074,7 +2913,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3084,7 +2922,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3107,7 +2944,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3129,7 +2965,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3139,7 +2974,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3149,7 +2983,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3173,7 +3006,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3195,7 +3027,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3205,7 +3036,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3228,7 +3058,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3250,7 +3079,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
                    << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3293,7 +3121,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3315,7 +3142,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3325,7 +3151,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3348,7 +3173,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3370,7 +3194,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3380,7 +3203,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3390,7 +3212,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3414,7 +3235,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3436,7 +3256,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3446,7 +3265,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3456,7 +3274,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3480,7 +3297,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3502,7 +3318,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3512,7 +3327,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3535,7 +3349,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3557,7 +3370,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3567,7 +3379,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3591,7 +3402,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3613,7 +3423,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3623,7 +3432,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3664,7 +3472,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3686,7 +3493,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3696,7 +3502,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3719,7 +3524,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3741,7 +3545,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3764,7 +3567,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3786,7 +3588,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -3796,7 +3597,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                    << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3819,7 +3619,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3841,7 +3640,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
                    << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3883,7 +3681,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3905,7 +3702,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3928,7 +3724,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3950,7 +3745,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                    << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                  {
@@ -3960,7 +3754,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -3983,7 +3776,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4005,7 +3797,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                    << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4028,7 +3819,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4050,7 +3840,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                    << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4073,7 +3862,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4095,7 +3883,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
                    << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4137,7 +3924,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4159,7 +3945,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                    << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4182,7 +3967,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4204,7 +3988,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4227,7 +4010,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -4249,7 +4031,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                    << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -4259,7 +4040,6 @@ void ProcessorMergeMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
                    << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]

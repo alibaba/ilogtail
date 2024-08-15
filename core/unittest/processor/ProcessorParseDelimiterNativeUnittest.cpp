@@ -1080,7 +1080,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
                         "__raw__": "123@@456"
                     },
                     "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
                     "type": 1
                 },
                 {
@@ -1088,7 +1087,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
                         "__raw__": "012@@345"
                     },
                     "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
                     "type": 1
                 }
             ]
@@ -1212,7 +1210,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
                         "b": "456"
                     },
                     "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
                     "type": 1
                 },
                 {
@@ -1222,7 +1219,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
                         "b": "345"
                     },
                     "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
                     "type": 1
                 }
             ]
@@ -1343,7 +1339,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
                         "c": "789"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond": 0,
                     "type" : 1
                 },
                 {
@@ -1354,7 +1349,6 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLinesWithProcessorMergeM
                         "c": "678"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond": 0,
                     "type" : 1
                 }
             ]

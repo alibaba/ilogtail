@@ -168,7 +168,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -177,7 +176,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:07.818486411+08:00 stdout P  in thread"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -186,7 +184,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:08.818486411+08:00 stdout P   'main'"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -195,7 +192,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  java.lang.NullPoinntterException"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -204,7 +200,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc1"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -213,7 +208,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc2"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -222,7 +216,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc3"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -231,7 +224,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  abc4"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -274,7 +266,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -283,7 +274,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:07.818486411+08:00 stdout P  in thread"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -292,7 +282,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:08.818486411+08:00 stdout P   'main'"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -301,7 +290,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  java.lang.NullPoinntterException"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -310,7 +298,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc1"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -319,7 +306,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc2"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -328,7 +314,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc3"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -337,7 +322,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  abc4"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -355,7 +339,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc1"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -365,7 +348,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc2"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -375,7 +357,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc3"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ],
@@ -412,7 +393,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -421,7 +401,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:07.818486411+08:00 stdout P  in thread"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -430,7 +409,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:08.818486411+08:00 stdout P   'main'"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -439,7 +417,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  java.lang.NullPoinntterException"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -448,7 +425,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc1"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -457,7 +433,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc2"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -466,7 +441,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc3"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -475,7 +449,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  abc4"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -494,7 +467,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": "Exception"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -505,7 +477,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " in thread"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -516,7 +487,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": "  'main'"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -526,7 +496,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " java.lang.NullPoinntterException"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -536,7 +505,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc4"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ],
@@ -574,7 +542,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P Exception"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -583,7 +550,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:07.818486411+08:00 stdout P  in thread"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -592,7 +558,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:08.818486411+08:00 stdout P   'main'"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -601,7 +566,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  java.lang.NullPoinntterException"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -610,7 +574,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc1"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -619,7 +582,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc2"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -628,7 +590,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stderr F  abc3"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     },
                     {
@@ -637,7 +598,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  abc4"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ]
@@ -656,7 +616,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": "Exception"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -667,7 +626,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " in thread"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -678,7 +636,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": "  'main'"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -688,7 +645,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " java.lang.NullPoinntterException"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -698,7 +654,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc1"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -708,7 +663,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc2"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -718,7 +672,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc3"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     },
                     {
@@ -728,7 +681,6 @@ void ProcessorParseContainerLogNativeUnittest::TestIgnoringStdoutStderr() {
                             "content": " abc4"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ],
@@ -770,7 +722,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P "
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -779,7 +730,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -788,7 +738,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout "
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -797,7 +746,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -806,7 +754,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00stdout"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -827,7 +774,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content": ""
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -838,7 +784,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content": "P"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -849,7 +794,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content": ""
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -858,7 +802,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -867,7 +810,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00stdout"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -892,7 +834,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P Exception"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -901,7 +842,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:07.818486411+08:00 stdout P  in thread"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -910,7 +850,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:08.818486411+08:00 stdout P   'main'"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -919,7 +858,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "2024-01-05T23:28:09.818486411+08:00 stdout F  java.lang.NullPoinntterException"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -940,7 +878,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "Exception"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -952,7 +889,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : " in thread"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -964,7 +900,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : "  'main'"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -975,7 +910,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLog() {
                         "content" : " java.lang.NullPoinntterException"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1004,7 +938,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
                     "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P Exception i\n2024-01-05T23:28:06.818486411+08:00 stdout P n thread  'main' java.lang.Null\n2024-01-05T23:28:06.818486411+08:00 stdout P PoinntterExcept\n2024-01-05T23:28:06.818486411+08:00 stdout F ion\n2024-01-05T23:28:06.818486411+08:00 stdout F      at com.example.myproject.Book.getTitle\n2024-01-05T23:28:06.818486411+08:00 stdout F      at com.example.myproject.Book.getTitle\n2024-01-05T23:28:06.818486411+08:00 stdout P      at com.exa\n2024-01-05T23:28:06.818486411+08:00 stdout P mple.myproject.Book.g\n2024-01-05T23:28:06.818486411+08:00 stdout P etTit\n2024-01-05T23:28:06.818486411+08:00 stdout F le\n2024-01-05T23:28:06.818486411+08:00 stdout F     ...23 more\n2024-01-05T23:31:06.818486411+08:00 stdout P Exception i\n2024-01-05T23:28:06.818486411+08:00 stdout P n thread  'main' java.lang.Null\n2024-01-05T23:28:06.818486411+08:00 stdout P PoinntterExcept\n2024-01-05T23:28:06.818486411+08:00 stdout F ion\n2024-01-05T23:28:06.818486411+08:00 stdout F      at com.example.myproject.Book.getTitle\n2024-01-05T23:28:06.818486411+08:00 stdout F      at com.example.myproject.Book.getTitle\n2024-01-05T23:28:06.818486411+08:00 stdout P      at com.exa\n2024-01-05T23:28:06.818486411+08:00 stdout P mple.myproject.Book.g\n2024-01-05T23:28:06.818486411+08:00 stdout P etTit\n2024-01-05T23:28:06.818486411+08:00 stdout F le\n2024-01-05T23:28:06.818486411+08:00 stdout F     ...23 more"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -1080,7 +1013,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
                     "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -1091,7 +1023,6 @@ void ProcessorParseContainerLogNativeUnittest::TestContainerdLogWithSplit() {
                     "content" : "Exception in thread  'main' java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ],
@@ -1116,7 +1047,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
                     "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793563414Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793566551Z\"}\n{\"log\":\"    ...23 more\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793569514Z\"}\n{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514807564Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514841003Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514853553Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514856538Z\"}\n{\"log\":\"    ...23 more\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:55:17.514858843Z\"}"
                 },
                 "timestamp": 12345678901,
-                "timestampNanosecond": 0,
                 "type": 1
             }
         ]
@@ -1193,7 +1123,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
                     "content" : "Exception in thread  \"main\" java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -1204,7 +1133,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParserWithSp
                     "content" : "Exception in thread  \"main\" java.lang.NullPoinntterException\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n     at com.example.myproject.Book.getTitle\n    ...23 more"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ],
@@ -1239,7 +1167,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log1\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1258,7 +1185,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log1\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1282,7 +1208,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1303,7 +1228,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": ""
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1327,7 +1251,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":1,\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1346,7 +1269,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":1,\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1374,7 +1296,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time1\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1394,7 +1315,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time1\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1419,7 +1339,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1439,7 +1358,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1464,7 +1382,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":1}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1484,7 +1401,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":1}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1512,7 +1428,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream1\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1532,7 +1447,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream1\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1557,7 +1471,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1577,7 +1490,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1602,7 +1514,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":1,\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp": 12345678901,
-                        "timestampNanosecond": 0,
                         "type": 1
                     }
                 ]
@@ -1622,7 +1533,6 @@ void ProcessorParseContainerLogNativeUnittest::TestDockerJsonLogLineParser() {
                             "content": "{\"log\":\"Exception in thread  \"main\" java.lang.NullPoinntterException\nn\\n\",\"stream\":1,\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                         },
                         "timestamp" : 12345678901,
-                        "timestampNanosecond" : 0,
                         "type" : 1
                     }
                 ],
@@ -1664,7 +1574,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P "
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1673,7 +1582,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout P"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1682,7 +1590,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout "
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1691,7 +1598,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content" : "2024-01-05T23:28:06.818486411+08:00 stdout"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1700,7 +1606,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content" : "2024-01-05T23:28:06.818486411+08:00stdout"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1721,7 +1626,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content": ""
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1732,7 +1636,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content": "P"
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
@@ -1743,7 +1646,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                         "content": ""
                     },
                     "timestamp" : 12345678901,
-                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ],
@@ -1782,7 +1684,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log1\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -1814,7 +1715,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -1834,7 +1734,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": ""
                             },
                             "timestamp" : 12345678901,
-                            "timestampNanosecond" : 0,
                             "type" : 1
                         }
                     ],
@@ -1859,7 +1758,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":1,\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -1895,7 +1793,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time1\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -1929,7 +1826,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":\"\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -1963,7 +1859,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"stdout\",\"time\":1}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -2000,7 +1895,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream1\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -2034,7 +1928,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":\"stdout\",\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
@@ -2068,7 +1961,6 @@ void ProcessorParseContainerLogNativeUnittest::TestKeepingSourceWhenParseFail() 
                                 "content": "{\"log\":\"Exception in thread  \\\"main\\\" java.lang.NullPoinntterException\\n\",\"stream\":1,\"time\":\"2024-02-19T03:49:37.793533014Z\"}\n{\"log\":\"     at com.example.myproject.Book.getTitle\\n\",\"stream\":\"std\",\"time\":\"2024-02-19T03:49:37.793559367Z\"}"
                             },
                             "timestamp": 12345678901,
-                            "timestampNanosecond": 0,
                             "type": 1
                         }
                     ]
