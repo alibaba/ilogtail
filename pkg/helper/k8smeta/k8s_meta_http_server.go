@@ -3,7 +3,6 @@ package k8smeta
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -34,13 +33,11 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	defer panicRecover()
 	portEnv := os.Getenv("KUBERNETES_METADATA_PORT")
 	if len(portEnv) == 0 {
-		logger.Error(context.Background(), "K8S_META_PORT_NOT_SET", "KUBERNETES_METADATA_PORT is not set")
-		return fmt.Errorf("KUBERNETES_METADATA_PORT is not set")
+		portEnv = "9000"
 	}
 	port, err := strconv.Atoi(portEnv)
 	if err != nil {
-		logger.Error(context.Background(), "K8S_META_PORT_INVALID", "KUBERNETES_METADATA_PORT is not a valid port number")
-		return fmt.Errorf("KUBERNETES_METADATA_PORT is not a valid port number")
+		port = 9000
 	}
 	server := &http.Server{ //nolint:gosec
 		Addr: ":" + strconv.Itoa(port),

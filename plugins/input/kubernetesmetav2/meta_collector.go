@@ -21,116 +21,92 @@ type metaCollector struct {
 	processors     map[string][]ProcessFunc
 	collector      pipeline.Collector
 
-	eventCh          chan *k8smeta.K8sMetaEvent
 	entityTypes      []string
 	entityBuffer     *models.PipelineGroupEvents
 	entityLinkBuffer *models.PipelineGroupEvents
+	lastSendTime     int64
 
 	stopCh chan struct{}
 }
 
 func (m *metaCollector) Start() error {
 	if m.serviceK8sMeta.Pod {
-		m.serviceK8sMeta.metaManager.RegisterFlush(m.eventCh, m.serviceK8sMeta.configName, k8smeta.POD)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD, m.handleEvent, m.serviceK8sMeta.Interval)
 		m.processors[k8smeta.POD] = append(m.processors[k8smeta.POD], m.processPodEntity)
 		m.processors[k8smeta.POD] = append(m.processors[k8smeta.POD], m.processPodReplicasetLink)
 		m.entityTypes = append(m.entityTypes, k8smeta.POD)
 	}
 	if m.serviceK8sMeta.Service {
-		m.serviceK8sMeta.metaManager.RegisterFlush(m.eventCh, m.serviceK8sMeta.configName, k8smeta.SERVICE)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.SERVICE, m.handleEvent, m.serviceK8sMeta.Interval)
 		m.processors[k8smeta.SERVICE] = append(m.processors[k8smeta.SERVICE], m.processServiceEntity)
 		m.entityTypes = append(m.entityTypes, k8smeta.SERVICE)
 	}
 	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.Service && m.serviceK8sMeta.PodServiceLink {
-		m.serviceK8sMeta.metaManager.RegisterFlush(m.eventCh, m.serviceK8sMeta.configName, k8smeta.POD_SERVICE)
+		// link data will be collected in pod registry
 		m.processors[k8smeta.POD_SERVICE] = append(m.processors[k8smeta.POD_SERVICE], m.processPodServiceLink)
 		m.entityTypes = append(m.entityTypes, k8smeta.POD_SERVICE)
 	}
-	m.handleEvent()
+	m.lastSendTime = time.Now().Unix()
 	return nil
 }
 
 func (m *metaCollector) Stop() error {
 	if m.serviceK8sMeta.Pod {
-		m.serviceK8sMeta.metaManager.UnRegisterFlush(m.serviceK8sMeta.configName, k8smeta.POD)
+		m.serviceK8sMeta.metaManager.UnRegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD)
 	}
 	if m.serviceK8sMeta.Service {
-		m.serviceK8sMeta.metaManager.UnRegisterFlush(m.serviceK8sMeta.configName, k8smeta.SERVICE)
+		m.serviceK8sMeta.metaManager.UnRegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.SERVICE)
+	}
+	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.Service && m.serviceK8sMeta.PodServiceLink {
+		m.serviceK8sMeta.metaManager.UnRegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_SERVICE)
 	}
 
 	return nil
 }
 
-func (m *metaCollector) handleEvent() {
-	go func() {
-		defer panicRecover()
-		for {
-			if !m.serviceK8sMeta.metaManager.IsReady() {
-				time.Sleep(time.Second)
-				continue
-			}
-			break
-		}
-		// handle timer once at first
-		m.handleTimer()
-		ticker := time.NewTicker(time.Second * time.Duration(m.serviceK8sMeta.Interval))
-		for {
-			select {
-			case <-m.stopCh:
-				return
-			case <-ticker.C:
-				m.handleTimer()
-			case data := <-m.eventCh:
-				switch data.EventType {
-				case k8smeta.EventTypeAdd:
-					m.handleAdd(data)
-				case k8smeta.EventTypeDelete:
-					m.handleDelete(data)
-				default:
-					m.handleUpdate(data)
-				}
-			case <-time.After(time.Second):
-				m.sendWithBuffer(nil, true)
-				m.sendWithBuffer(nil, false)
-			}
-		}
-	}()
+func (m *metaCollector) handleEvent(event *k8smeta.K8sMetaEvent) {
+	switch event.EventType {
+	case k8smeta.EventTypeAdd:
+		m.handleAdd(event)
+	case k8smeta.EventTypeUpdate:
+		m.handleUpdate(event)
+	case k8smeta.EventTypeDelete:
+		m.handleDelete(event)
+	default:
+		logger.Error(context.Background(), "UNKNOWN_EVENT_TYPE", "unknown event type", event.EventType)
+	}
 }
 
 func (m *metaCollector) handleAdd(event *k8smeta.K8sMetaEvent) {
-	for _, processor := range m.processors[event.Object.ResourceType] {
-		log := processor(event.Object, "create")
-		if log != nil {
-			m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+	if processors, ok := m.processors[event.Object.ResourceType]; ok {
+		for _, processor := range processors {
+			log := processor(event.Object, "create")
+			if log != nil {
+				m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+			}
 		}
 	}
 }
 
 func (m *metaCollector) handleUpdate(event *k8smeta.K8sMetaEvent) {
-	for _, processor := range m.processors[event.Object.ResourceType] {
-		log := processor(event.Object, "update")
-		if log != nil {
-			m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+	if processors, ok := m.processors[event.Object.ResourceType]; ok {
+		for _, processor := range processors {
+			log := processor(event.Object, "update")
+			if log != nil {
+				m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+			}
 		}
 	}
 }
 
 func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
-	for _, processor := range m.processors[event.Object.ResourceType] {
-		log := processor(event.Object, "delete")
-		if log != nil {
-			m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+	if processors, ok := m.processors[event.Object.ResourceType]; ok {
+		for _, processor := range processors {
+			log := processor(event.Object, "delete")
+			if log != nil {
+				m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+			}
 		}
-	}
-}
-
-func (m *metaCollector) handleTimer() {
-	metas := m.serviceK8sMeta.metaManager.List(m.entityTypes)
-	for _, meta := range metas {
-		m.handleUpdate(&k8smeta.K8sMetaEvent{
-			EventType: k8smeta.EventTypeUpdate,
-			Object:    meta,
-		})
 	}
 }
 
@@ -144,13 +120,14 @@ func (m *metaCollector) sendWithBuffer(event models.PipelineEvent, entity bool) 
 	if event != nil {
 		buffer.Events = append(buffer.Events, event)
 	}
-	if event == nil || len(buffer.Events) >= 100 {
+	if event == nil || len(buffer.Events) >= 16 || m.lastSendTime+3 < time.Now().Unix() {
 		// TODO: temporary convert from event group back to log, will fix after pipeline support Go input to C++ processor
 		for _, e := range buffer.Events {
 			log := convertPipelineEvent2Log(e)
 			m.collector.AddRawLog(log)
 		}
 		buffer.Events = buffer.Events[:0]
+		m.lastSendTime = time.Now().Unix()
 	}
 }
 

@@ -19,23 +19,26 @@ type podProcessor struct {
 	serviceMetaStore *DeferredDeletionMetaStore
 	clientset        *kubernetes.Clientset
 
-	eventCh    chan *K8sMetaEvent
-	pipelineCh chan *K8sMetaEvent
-	stopCh     chan struct{}
+	eventCh chan *K8sMetaEvent
+	stopCh  chan struct{}
 }
 
-func (m *podProcessor) init(stopCh chan struct{}, pipelineCh chan *K8sMetaEvent) {
+func NewPodProcessor(stopCh chan struct{}) *podProcessor {
 	idxRules := []IdxFunc{
 		generatePodIPKey,
 		generateContainerIDKey,
 		generateHostIPKey,
 	}
-	m.eventCh = make(chan *K8sMetaEvent, 100)
+	m := &podProcessor{}
 	m.stopCh = stopCh
-	m.pipelineCh = pipelineCh
-	store := NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
-	store.Start()
-	m.metaStore = store
+	m.eventCh = make(chan *K8sMetaEvent, 100)
+	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
+	m.serviceMetaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc)
+	return m
+}
+
+func (m *podProcessor) init() {
+	m.metaStore.Start()
 	m.watch(m.stopCh)
 }
 
@@ -43,13 +46,21 @@ func (m *podProcessor) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
 }
 
-func (m *podProcessor) List(service bool) []*ObjectWrapper {
-	objs := m.metaStore.List()
-	if service {
-		podServiceObjs := m.podServiceProcess(objs)
-		objs = append(objs, podServiceObjs...)
-	}
-	return objs
+func (m *podProcessor) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
+	m.metaStore.RegisterSendFunc(key, func(kme *K8sMetaEvent) {
+		sendFunc(kme)
+		services := m.podServiceProcess([]*ObjectWrapper{kme.Object})
+		for _, service := range services {
+			sendFunc(&K8sMetaEvent{
+				EventType: kme.EventType,
+				Object:    service,
+			})
+		}
+	}, interval)
+}
+
+func (m *podProcessor) UnRegisterSendFunc(key string) {
+	m.metaStore.UnRegisterSendFunc(key)
 }
 
 func generatePodIPKey(obj interface{}) ([]string, error) {
@@ -86,36 +97,36 @@ func (m *podProcessor) watch(stopCh <-chan struct{}) {
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			nowTime := time.Now().Unix()
-			m.flushRealTimeEvent(&K8sMetaEvent{
+			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeAdd,
 				Object: &ObjectWrapper{
-					ResourceType: POD,
-					Raw:          obj,
-					CreateTime:   nowTime,
-					UpdateTime:   nowTime,
+					ResourceType:      POD,
+					Raw:               obj,
+					FirstObservedTime: nowTime,
+					LastObservedTime:  nowTime,
 				},
-			})
+			}
 		},
 		UpdateFunc: func(oldObj interface{}, obj interface{}) {
 			nowTime := time.Now().Unix()
-			m.flushRealTimeEvent(&K8sMetaEvent{
+			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeUpdate,
 				Object: &ObjectWrapper{
-					ResourceType: POD,
-					Raw:          obj,
-					CreateTime:   nowTime,
-					UpdateTime:   nowTime,
+					ResourceType:      POD,
+					Raw:               obj,
+					FirstObservedTime: nowTime,
+					LastObservedTime:  nowTime,
 				},
-			})
+			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			m.flushRealTimeEvent(&K8sMetaEvent{
+			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeDelete,
 				Object: &ObjectWrapper{
 					ResourceType: POD,
 					Raw:          obj,
 				},
-			})
+			}
 		},
 	})
 	go factory.Start(stopCh)
@@ -127,17 +138,6 @@ func (m *podProcessor) watch(stopCh <-chan struct{}) {
 		} else {
 			break
 		}
-	}
-}
-
-func (m *podProcessor) flushRealTimeEvent(event *K8sMetaEvent) {
-	// flush to cache
-	m.eventCh <- event
-	// flush to store pipeline, if block, discard and continue
-	select {
-	case m.pipelineCh <- event:
-	default:
-		logger.Error(context.Background(), "ENTITY_PIPELINE_QUEUE_FULL", "pipelineCh is full, discard in current sync")
 	}
 }
 

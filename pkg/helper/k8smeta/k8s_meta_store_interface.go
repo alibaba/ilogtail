@@ -15,16 +15,16 @@ type K8sMetaEvent struct {
 }
 
 type ObjectWrapper struct {
-	ResourceType string
-	Raw          interface{}
-	CreateTime   int64
-	UpdateTime   int64
-	Deleted      bool
+	ResourceType      string
+	Raw               interface{}
+	FirstObservedTime int64
+	LastObservedTime  int64
+	Deleted           bool
 }
 
 type IdxFunc func(obj interface{}) ([]string, error)
 
-type TimerHandler func(events []*K8sMetaEvent)
+type SendFunc func(event *K8sMetaEvent)
 
 func panicRecover() {
 	if err := recover(); err != nil {

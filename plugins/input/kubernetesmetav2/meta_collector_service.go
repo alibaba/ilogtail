@@ -19,9 +19,9 @@ func (m *metaCollector) processServiceEntity(data *k8smeta.ObjectWrapper, method
 		log.Contents.Add(entityIDFieldName, genKeyByService(obj))
 		log.Contents.Add(entityMethodFieldName, method)
 
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.CreateTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.UpdateTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, defaultKeepAliveSeconds)
+		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
+		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
 
 		log.Contents.Add(entityNamespaceFieldName, obj.Namespace)
 		log.Contents.Add(entityNameFieldName, obj.Name)
