@@ -65,8 +65,10 @@ const char* const CREDENTIALS = "credentials";
 const char* const CREDENTIALS_FILE = "credentials_file";
 const char* const BASIC_AUTH = "basic_auth";
 const char* const USERNAME = "username";
+const char* const USERNAME_FILE = "username_file";
 const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
+const char* const BASIC_PREFIX = "Basic ";
 const char* const OAUTH2 = "oauth2";
 
 
