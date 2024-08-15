@@ -72,7 +72,7 @@ public:
     BaseLineParse(size_t size)
         : mSourceBuffer(std::make_unique<SourceBuffer>()),
           mStringBuffer(mSourceBuffer->AllocateStringBuffer(size + 1)) {}
-    virtual LineInfo GetLastLine(StringView buffer,
+    virtual LineInfo NewGetLastLine(StringView buffer,
                                  int32_t end,
                                  size_t protocolFunctionIndex,
                                  bool needSingleLine,
@@ -87,7 +87,7 @@ private:
 
 class ContainerdTextParser : public BaseLineParse {
 public:
-    LineInfo GetLastLine(StringView buffer,
+    LineInfo NewGetLastLine(StringView buffer,
                          int32_t end,
                          size_t protocolFunctionIndex,
                          bool needSingleLine,
@@ -99,7 +99,7 @@ public:
 
 class DockerJsonFileParser : public BaseLineParse {
 public:
-    LineInfo GetLastLine(StringView buffer,
+    LineInfo NewGetLastLine(StringView buffer,
                          int32_t end,
                          size_t protocolFunctionIndex,
                          bool needSingleLine,
@@ -110,7 +110,7 @@ public:
 
 class RawTextParser : public BaseLineParse {
 public:
-    LineInfo GetLastLine(StringView buffer,
+    LineInfo NewGetLastLine(StringView buffer,
                          int32_t end,
                          size_t protocolFunctionIndex,
                          bool needSingleLine,
@@ -588,7 +588,8 @@ private:
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
 
-    LineInfo GetLastLine(StringView buffer, int32_t end, bool needSingleLine = false);
+    StringView GetLastLine(StringView buffer, size_t end);
+    LineInfo NewGetLastLine(StringView buffer, int32_t end, bool needSingleLine = false);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);

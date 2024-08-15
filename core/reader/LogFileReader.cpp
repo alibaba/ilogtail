@@ -682,7 +682,6 @@ void LogFileReader::checkContainerType(LogFileOperator& op) {
 }
 
 void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
-    // 此处要不要取消mLastFilePos == 0的限制
     if (mLastFilePos == 0 || op.IsOpen() == false) {
         return;
     }
@@ -699,29 +698,58 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         free(readBuf);
         return;
     }
-    if (mMultilineConfig.first->GetStartPatternReg() == nullptr) {
-        for (size_t i = 0; i < readSizeReal - 1; ++i) {
-            if (readBuf[i] == '\n') {
-                mLastFilePos += i + 1;
-                mCache.clear();
-                free(readBuf);
-                return;
+    if(mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
+        if (mMultilineConfig.first->GetStartPatternReg() == nullptr) {
+            for (size_t i = 0; i < readSizeReal - 1; ++i) {
+                if (readBuf[i] == '\n') {
+                    mLastFilePos += i + 1;
+                    mCache.clear();
+                    free(readBuf);
+                    return;
+                }
+            }
+        } else {
+            string exception;
+            for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
+                if (readBuf[endPs] == '\n') {
+                    LineInfo line = NewGetLastLine(StringView(readBuf, readSizeReal - 1), endPs, true);
+                    if (BoostRegexSearch(
+                            line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                        mLastFilePos += line.lineBegin;
+                        mCache.clear();
+                        free(readBuf);
+                        return;
+                    }
+                }
             }
         }
     } else {
+        for (size_t i = 0; i < readSizeReal - 1; ++i) {
+            if (readBuf[i] == '\n') {
+                if (!mMultilineConfig.first->GetStartPatternReg()) {
+                    mLastFilePos += i + 1;
+                    mCache.clear();
+                    free(readBuf);
+                    return;
+                }
+                // cast '\n' to '\0'
+                readBuf[i] = '\0';
+            }
+        }
         string exception;
-        for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
-            if (readBuf[endPs] == '\n') {
-                LineInfo line = GetLastLine(StringView(readBuf, readSizeReal - 1), endPs, true);
-                if (BoostRegexSearch(
-                        line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
-                    mLastFilePos += line.lineBegin;
+        if (mMultilineConfig.first->GetStartPatternReg()) {
+            for (size_t i = 0; i < readSizeReal - 1; ++i) {
+                if (readBuf[i] == '\0'
+                    && BoostRegexMatch(
+                        readBuf + i + 1, readSize - i - 1, *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                    mLastFilePos += i + 1;
                     mCache.clear();
                     free(readBuf);
                     return;
                 }
             }
         }
+
     }
 
     LOG_WARNING(sLogger,
@@ -1987,51 +2015,88 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
         endPs = size;
     }
     rollbackLineFeedCount = 0;
-    // Multiline rollback
-    if (mMultilineConfig.first->IsMultiline()) {
-        std::string exception;
-        while (endPs >= 0) {
-            LineInfo content = GetLastLine(StringView(buffer, size), endPs, false);
-            if (mMultilineConfig.first->GetEndPatternReg()) {
-                // start + end, continue + end, end
-                if (BoostRegexSearch(content.data.data(),
-                                     content.data.size(),
-                                     *mMultilineConfig.first->GetEndPatternReg(),
-                                     exception)) {
-                    // Ensure the end line is complete
-                    if (buffer[content.lineEnd] == '\n') {
-                        return content.lineEnd + 1;
+    if(mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
+        // Multiline rollback
+        if (mMultilineConfig.first->IsMultiline()) {
+            std::string exception;
+            while (endPs >= 0) {
+                LineInfo content = NewGetLastLine(StringView(buffer, size), endPs, false);
+                if (mMultilineConfig.first->GetEndPatternReg()) {
+                    // start + end, continue + end, end
+                    if (BoostRegexSearch(content.data.data(),
+                                        content.data.size(),
+                                        *mMultilineConfig.first->GetEndPatternReg(),
+                                        exception)) {
+                        // Ensure the end line is complete
+                        if (buffer[content.lineEnd] == '\n') {
+                            return content.lineEnd + 1;
+                        }
                     }
+                } else if (mMultilineConfig.first->GetStartPatternReg()
+                        && BoostRegexSearch(content.data.data(),
+                                            content.data.size(),
+                                            *mMultilineConfig.first->GetStartPatternReg(),
+                                            exception)) {
+                    // start + continue, start
+                    rollbackLineFeedCount += content.rollbackLineFeedCount;
+                    // Keep all the buffer if rollback all
+                    return content.lineBegin;
                 }
-            } else if (mMultilineConfig.first->GetStartPatternReg()
-                       && BoostRegexSearch(content.data.data(),
-                                           content.data.size(),
-                                           *mMultilineConfig.first->GetStartPatternReg(),
-                                           exception)) {
-                // start + continue, start
                 rollbackLineFeedCount += content.rollbackLineFeedCount;
-                // Keep all the buffer if rollback all
-                return content.lineBegin;
+                endPs = content.lineBegin - 1;
             }
-            rollbackLineFeedCount += content.rollbackLineFeedCount;
-            endPs = content.lineBegin - 1;
         }
-    }
-    // Single line rollback or all unmatch rollback
-    rollbackLineFeedCount = 0;
-    if (buffer[size - 1] == '\n') {
-        endPs = size - 1;
+        // Single line rollback or all unmatch rollback
+        rollbackLineFeedCount = 0;
+        if (buffer[size - 1] == '\n') {
+            endPs = size - 1;
+        } else {
+            endPs = size;
+        }
+        LineInfo content = NewGetLastLine(StringView(buffer, size), endPs, true);
+        // 最后一行是完整行,且以 \n 结尾
+        if (content.fullLine && buffer[endPs] == '\n') {
+            return size;
+        }
+        content = NewGetLastLine(StringView(buffer, size), endPs, false);
+        rollbackLineFeedCount = content.rollbackLineFeedCount;
+        return content.lineBegin;
     } else {
-        endPs = size;
+        // Multiline rollback
+        if (mMultilineConfig.first->IsMultiline()) {
+            std::string exception;
+            while (endPs >= 0) {
+                StringView content = GetLastLine(StringView(buffer, size), endPs);
+                if (mMultilineConfig.first->GetEndPatternReg()) {
+                    // start + end, continue + end, end
+                    if (BoostRegexMatch(
+                            content.data(), content.size(), *mMultilineConfig.first->GetEndPatternReg(), exception)) {
+                        // Ensure the end line is complete
+                        if (buffer[endPs] == '\n') {
+                            return endPs + 1;
+                        }
+                    }
+                } else if (mMultilineConfig.first->GetStartPatternReg()
+                        && BoostRegexMatch(
+                            content.data(), content.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                    // start + continue, start
+                    ++rollbackLineFeedCount;
+                    // Keep all the buffer if rollback all
+                    return content.data() - buffer;
+                }
+                ++rollbackLineFeedCount;
+                endPs = content.data() - buffer - 1;
+            }
+        }
+        // Single line rollback or all unmatch rollback
+        rollbackLineFeedCount = 0;
+        if (buffer[size - 1] == '\n') {
+            return size;
+        }
+        StringView content = GetLastLine(StringView(buffer, size), size - 1);
+        ++rollbackLineFeedCount;
+        return content.data() - buffer;
     }
-    LineInfo content = GetLastLine(StringView(buffer, size), endPs, true);
-    // 最后一行是完整行,且以 \n 结尾
-    if (content.fullLine && buffer[endPs] == '\n') {
-        return size;
-    }
-    content = GetLastLine(StringView(buffer, size), endPs, false);
-    rollbackLineFeedCount = content.rollbackLineFeedCount;
-    return content.lineBegin;
 }
 
 /*
@@ -2054,9 +2119,9 @@ StringView LogFileReader::GetLastLine(StringView buffer, size_t end) {
     return StringView(buffer.data(), end);
 }
 
-LineInfo LogFileReader::GetLastLine(StringView buffer, int32_t end, bool needSingleLine) {
+LineInfo LogFileReader::NewGetLastLine(StringView buffer, int32_t end, bool needSingleLine) {
     size_t protocolFunctionIndex = mLineParsers.size() - 1;
-    return mLineParsers[protocolFunctionIndex]->GetLastLine(
+    return mLineParsers[protocolFunctionIndex]->NewGetLastLine(
         buffer, end, protocolFunctionIndex, needSingleLine, &mLineParsers);
 }
 
@@ -2174,7 +2239,7 @@ StringBuffer* BaseLineParse::GetStringBuffer() {
     return &mStringBuffer;
 }
 
-LineInfo RawTextParser::GetLastLine(StringView buffer,
+LineInfo RawTextParser::NewGetLastLine(StringView buffer,
                                    int32_t end,
                                    size_t protocolFunctionIndex,
                                    bool needSingleLine,
@@ -2202,7 +2267,7 @@ LineInfo RawTextParser::GetLastLine(StringView buffer,
             .fullLine = true};
 }
 
-LineInfo DockerJsonFileParser::GetLastLine(StringView buffer,
+LineInfo DockerJsonFileParser::NewGetLastLine(StringView buffer,
                                           int32_t end,
                                           size_t protocolFunctionIndex,
                                           bool needSingleLine,
@@ -2218,7 +2283,7 @@ LineInfo DockerJsonFileParser::GetLastLine(StringView buffer,
     size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
     LineInfo finalLine;
     while (!finalLine.fullLine) {
-        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
+        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->NewGetLastLine(
             buffer, end, nextProtocolFunctionIndex, needSingleLine, lineParsers);
         if (rawLine.data.back() == '\n') {
             rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
@@ -2280,7 +2345,7 @@ bool DockerJsonFileParser::parseLine(LineInfo rawLine, LineInfo& paseLine) {
     return true;
 }
 
-LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
+LineInfo ContainerdTextParser::NewGetLastLine(StringView buffer,
                                           int32_t end,
                                           size_t protocolFunctionIndex,
                                           bool needSingleLine,
@@ -2298,7 +2363,7 @@ LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
     size_t nextProtocolFunctionIndex = protocolFunctionIndex - 1;
 
     while (!finalLine.fullLine) {
-        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
+        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->NewGetLastLine(
             buffer, end, nextProtocolFunctionIndex, needSingleLine, lineParsers);
         if (rawLine.data.back() == '\n') {
             rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);
@@ -2339,7 +2404,7 @@ LineInfo ContainerdTextParser::GetLastLine(StringView buffer,
         }
 
         LineInfo previousLine;
-        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->GetLastLine(
+        LineInfo rawLine = (*lineParsers)[nextProtocolFunctionIndex]->NewGetLastLine(
             buffer, finalLine.lineBegin - 1, nextProtocolFunctionIndex, needSingleLine, lineParsers);
         if (rawLine.data.back() == '\n') {
             rawLine.data = StringView(rawLine.data.data(), rawLine.data.size() - 1);

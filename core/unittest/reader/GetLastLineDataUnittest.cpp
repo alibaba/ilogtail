@@ -100,7 +100,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -118,7 +118,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -136,7 +136,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -154,7 +154,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -172,7 +172,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -193,7 +193,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -211,7 +211,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -229,7 +229,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -247,7 +247,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -265,7 +265,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -285,7 +285,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -304,7 +304,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -324,7 +324,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -343,7 +343,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -363,7 +363,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -382,7 +382,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -402,7 +402,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -421,7 +421,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -441,7 +441,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -460,7 +460,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -479,7 +479,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -498,7 +498,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineSingleLine
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs, true);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs, true);
 
             APSARA_TEST_EQUAL("", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -529,7 +529,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -547,7 +547,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -565,7 +565,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -583,7 +583,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -601,7 +601,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog.substr(0, size - 1), line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -622,7 +622,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -640,7 +640,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -658,7 +658,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -676,7 +676,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -694,7 +694,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
                 APSARA_TEST_EQUAL(testLog, line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -714,7 +714,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -733,7 +733,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -753,7 +753,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -772,7 +772,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -792,7 +792,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -811,7 +811,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL(LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(int(expectedLog.size()), line.lineBegin);
@@ -831,7 +831,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -850,7 +850,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -870,7 +870,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456" + LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -889,7 +889,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("123456" + LOG_ERROR + "789", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -908,7 +908,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -927,7 +927,7 @@ void LastMatchedContainerdTextLineUnittest::TestLastContainerdTextLineMerge() {
             } else {
                 endPs = size;
             }
-            LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+            LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
 
             APSARA_TEST_EQUAL("", line.data.to_string());
             APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1012,7 +1012,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)",
                                   line.data.to_string());
@@ -1030,7 +1030,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1047,7 +1047,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1064,7 +1064,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1081,7 +1081,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1103,7 +1103,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)",
                                   line.data.to_string());
@@ -1123,7 +1123,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1142,7 +1142,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1161,7 +1161,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1180,7 +1180,7 @@ void LastMatchedDockerJsonFileUnittest::TestLastDockerJsonFile() {
                 } else {
                     endPs = size;
                 }
-                LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+                LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
                 APSARA_TEST_EQUAL(1, line.rollbackLineFeedCount);
                 APSARA_TEST_EQUAL("", line.data.to_string());
                 APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1268,7 +1268,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDock
         } else {
             endPs = size;
         }
-        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
         APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
         APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
         APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1293,7 +1293,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestContainerdTextWithDock
         } else {
             endPs = size;
         }
-        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
         APSARA_TEST_EQUAL(4, line.rollbackLineFeedCount);
         APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
         APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1322,7 +1322,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestDockerJsonWithContaine
         } else {
             endPs = size;
         }
-        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
         APSARA_TEST_EQUAL(2, line.rollbackLineFeedCount);
         APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
         APSARA_TEST_EQUAL(0, line.lineBegin);
@@ -1343,7 +1343,7 @@ void LastMatchedContainerdTextWithDockerJsonUnittest::TestDockerJsonWithContaine
         } else {
             endPs = size;
         }
-        LineInfo line = logFileReader.GetLastLine(testLog, endPs);
+        LineInfo line = logFileReader.NewGetLastLine(testLog, endPs);
         APSARA_TEST_EQUAL(3, line.rollbackLineFeedCount);
         APSARA_TEST_EQUAL(R"(Exception in thread  "main" java.lang.NullPoinntterException)", line.data.to_string());
         APSARA_TEST_EQUAL(0, line.lineBegin);
