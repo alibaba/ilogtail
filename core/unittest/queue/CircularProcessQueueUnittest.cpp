@@ -29,8 +29,6 @@ public:
     void TestReset();
 
 protected:
-    static void SetUpTestCase() { sEventGroup.reset(new PipelineEventGroup(make_shared<SourceBuffer>())); }
-
     void SetUp() override {
         mQueue.reset(new CircularProcessQueue(sCap, sKey, 1, "test_config"));
 
@@ -40,7 +38,6 @@ protected:
     }
 
 private:
-    static unique_ptr<PipelineEventGroup> sEventGroup;
     static const QueueKey sKey = 0;
     static const size_t sCap = 2;
 
@@ -56,8 +53,6 @@ private:
     unique_ptr<BoundedSenderQueueInterface> mSenderQueue1;
     unique_ptr<BoundedSenderQueueInterface> mSenderQueue2;
 };
-
-unique_ptr<PipelineEventGroup> CircularProcessQueueUnittest::sEventGroup;
 
 void CircularProcessQueueUnittest::TestPush() {
     unique_ptr<ProcessQueueItem> res;
