@@ -228,11 +228,7 @@ unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const string& name, co
 }
 
 bool PluginRegistry::IsValidGoPlugin(const string& name) const {
-    // If the plugin is not a C++ plugin, iLogtail core considers it is a go plugin.
-    // Go PluginManager validates the go plugins instead of C++ core.
-    return !IsValidNativeInputPlugin(name) &&
-        !IsValidNativeProcessorPlugin(name) &&
-        !IsValidNativeFlusherPlugin(name);
+    return mGoPlugins.find(name) != mGoPlugins.end();
 }
 
 bool PluginRegistry::IsValidNativeInputPlugin(const string& name) const {
