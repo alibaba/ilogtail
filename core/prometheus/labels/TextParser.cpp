@@ -177,11 +177,11 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
         auto lPos = mPos;
         while (mPos < mLine.size()) {
             if (mLine[mPos] == '"') {
-                int lPos = mPos - 1;
-                while (lPos >= 0 && mLine[lPos] == '\\') {
-                    --lPos;
+                int leftMovePos = mPos - 1;
+                while (leftMovePos >= 0 && mLine[leftMovePos] == '\\') {
+                    --leftMovePos;
                 }
-                if ((mPos - lPos) % 2 == 1) {
+                if ((mPos - leftMovePos) % 2 == 1) {
                     break;
                 }
             }
@@ -197,8 +197,10 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
                         switch (mLine[lPos + 1]) {
                             case '\\':
                             case '\"':
-                            case 'n':
                                 labelValue.push_back(mLine[lPos + 1]);
+                                break;
+                            case 'n':
+                                labelValue.push_back('\n');
                                 break;
                             default:
                                 labelValue.push_back('\\');
