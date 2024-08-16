@@ -38,6 +38,8 @@ private:
     bool InitBasicAuth(const Json::Value& basicAuth);
     bool InitAuthorization(const Json::Value& authorization);
 
+    bool ReadFromFile(const std::string& filePath, std::string& content);
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;
 #endif

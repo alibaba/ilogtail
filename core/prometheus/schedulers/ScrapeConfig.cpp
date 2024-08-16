@@ -173,11 +173,12 @@ bool ScrapeConfig::InitBasicAuth(const Json::Value& basicAuth) {
         LOG_ERROR(sLogger, ("basic auth config error", ""));
         return false;
     }
-    if (!usernameFile.empty() && !ReadFile(usernameFile, username)) {
+    if (!usernameFile.empty() && !ReadFromFile(usernameFile, username)) {
         LOG_ERROR(sLogger, ("read username_file failed, username_file", usernameFile));
         return false;
     }
-    if (!passwordFile.empty() && !ReadFile(passwordFile, password)) {
+
+    if (!passwordFile.empty() && !ReadFromFile(passwordFile, password)) {
         LOG_ERROR(sLogger, ("read password_file failed, password_file", passwordFile));
         return false;
     }
@@ -195,9 +196,6 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
 
     if (authorization.isMember(prometheus::TYPE) && authorization[prometheus::TYPE].isString()) {
         type = authorization[prometheus::TYPE].asString();
-    } else {
-        LOG_ERROR(sLogger, ("authorization config error", ""));
-        return false;
     }
     // if not set, use default type Bearer
     if (type.empty()) {
@@ -216,13 +214,22 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         return false;
     }
 
-    if (!credentialsFile.empty() && !ReadFile(credentialsFile, credentials)) {
+    if (!credentialsFile.empty() && !ReadFromFile(credentialsFile, credentials)) {
         LOG_ERROR(sLogger, ("authorization read file error", ""));
         return false;
     }
 
     mAuthHeaders[prometheus::A_UTHORIZATION] = type + " " + credentials;
     return true;
+}
+
+bool ScrapeConfig::ReadFromFile(const std::string& filePath, std::string& content) {
+#ifdef APSARA_UNIT_TEST_MAIN
+    content = filePath;
+    return true;
+#else
+    return ReadFile(filePath, content);
+#endif
 }
 
 } // namespace logtail

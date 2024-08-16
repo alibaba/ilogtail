@@ -13,6 +13,8 @@ class ScrapeConfigUnittest : public testing::Test {
 public:
     void TestInit();
     void TestAuth();
+    void TestBasicAuth();
+    void TestAuthorization();
 };
 
 void ScrapeConfigUnittest::TestInit() {
@@ -89,41 +91,6 @@ void ScrapeConfigUnittest::TestAuth() {
     string errorMsg;
     string configStr;
 
-    configStr = R"JSON({
-        "job_name": "test_job",
-            "scrape_interval": "30s",
-            "scrape_timeout": "30s",
-            "metrics_path": "/metrics",
-            "scheme": "http",
-            "basic_auth": {
-                "username": "test_user",
-                "password": "test_password"
-            }
-        })JSON";
-
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    APSARA_TEST_TRUE(scrapeConfig.Init(config));
-    // basic auth
-    APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Basic dGVzdF91c2VyOnRlc3RfcGFzc3dvcmQ=");
-
-    configStr = R"JSON({
-        "job_name": "test_job",
-            "scrape_interval": "30s",
-            "scrape_timeout": "30s",
-            "metrics_path": "/metrics",
-            "scheme": "http",
-            "authorization": {
-                "type": "Bearer",
-                "credentials": "test_token"
-            }
-        })JSON";
-
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
-    scrapeConfig.mAuthHeaders.clear();
-    APSARA_TEST_TRUE(scrapeConfig.Init(config));
-    // bearer auth
-    APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Bearer test_token");
-
     // error config
     configStr = R"JSON({
         "job_name": "test_job",
@@ -143,11 +110,113 @@ void ScrapeConfigUnittest::TestAuth() {
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     APSARA_TEST_FALSE(scrapeConfig.Init(config));
+}
 
+void ScrapeConfigUnittest::TestBasicAuth() {
+    Json::Value config;
+    ScrapeConfig scrapeConfig;
+    string errorMsg;
+    string configStr;
+
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "basic_auth": {
+                "username": "test_user",
+                "password": "test_password"
+            }
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Basic dGVzdF91c2VyOnRlc3RfcGFzc3dvcmQ=");
+
+    scrapeConfig.mAuthHeaders.clear();
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "basic_auth": {
+                "username": "test_user",
+                "password_file": "test_password.file"
+            }
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Basic dGVzdF91c2VyOnRlc3RfcGFzc3dvcmQuZmlsZQ==");
+
+    // error
+    scrapeConfig.mAuthHeaders.clear();
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "basic_auth": {
+                "username": "test_user",
+                "password": "test_password",
+                "password_file": "test_password.file"
+            }
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    APSARA_TEST_FALSE(scrapeConfig.Init(config));
+}
+
+void ScrapeConfigUnittest::TestAuthorization() {
+    Json::Value config;
+    ScrapeConfig scrapeConfig;
+    string errorMsg;
+    string configStr;
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "authorization": {
+                "type": "Bearer",
+                "credentials": "test_token"
+            }
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mAuthHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    // bearer auth
+    APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Bearer test_token");
+
+    scrapeConfig.mAuthHeaders.clear();
+
+    // default Bearer auth
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "authorization": {
+                "credentials_file": "test_token.file"
+            }
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mAuthHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Bearer test_token.file");
 }
 
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestInit);
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestAuth);
+UNIT_TEST_CASE(ScrapeConfigUnittest, TestBasicAuth);
+UNIT_TEST_CASE(ScrapeConfigUnittest, TestAuthorization);
 
 } // namespace logtail
 
