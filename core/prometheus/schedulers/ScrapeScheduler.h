@@ -60,7 +60,7 @@ private:
     void PushEventGroup(PipelineEventGroup&&);
     void SetAutoMetricMeta(PipelineEventGroup& eGroup);
 
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, uint64_t timestampNanoSec);
+    PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;

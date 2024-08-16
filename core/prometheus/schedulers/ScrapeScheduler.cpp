@@ -70,6 +70,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
     mUpState = response.mStatusCode == 200;
 
     if (response.mStatusCode != 200) {
+        mScrapeResponseSizeBytes = 0;
         string headerStr;
         for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
             headerStr.append(k).append(":").append(v).append(";");
@@ -77,7 +78,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
         LOG_WARNING(sLogger,
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
     }
-    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestampNanoSec);
+    auto eventGroup = BuildPipelineEventGroup(response.mBody);
 
     SetAutoMetricMeta(eventGroup);
     PushEventGroup(std::move(eventGroup));
@@ -91,7 +92,7 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
     eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
 }
 
-PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content, uint64_t) {
+PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     for (const auto& line : SplitString(content, "\r\n")) {
