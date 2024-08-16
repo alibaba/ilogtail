@@ -2,6 +2,7 @@ package kubernetesmetav2
 
 import (
 	"context"
+	// #nosec G501
 	"crypto/md5"
 	"fmt"
 	"strings"
@@ -182,6 +183,7 @@ func genKeyByPod(pod *v1.Pod) string {
 
 func genKey(namespace, kind, name string) string {
 	key := namespace + kind + name
+	// #nosec G401
 	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
 }
 
