@@ -213,6 +213,7 @@ func (m *DeferredDeletionMetaStore) handleDeleteEvent(event *K8sMetaEvent) {
 	m.lock.Lock()
 	if obj, ok := m.Items[key]; ok {
 		obj.Deleted = true
+		event.Object.FirstObservedTime = obj.FirstObservedTime
 	}
 	m.lock.Unlock()
 	m.sendFuncs.Range(func(key, value interface{}) bool {
@@ -280,11 +281,13 @@ func (m *DeferredDeletionMetaStore) handleTimerEvent(event *K8sMetaEvent) {
 		m.lock.RLock()
 		defer m.lock.RUnlock()
 		for _, obj := range m.Items {
-			obj.LastObservedTime = time.Now().Unix()
-			sendFuncWithStopCh.SendFunc(&K8sMetaEvent{
-				EventType: EventTypeUpdate,
-				Object:    obj,
-			})
+			if !obj.Deleted {
+				obj.LastObservedTime = time.Now().Unix()
+				sendFuncWithStopCh.SendFunc(&K8sMetaEvent{
+					EventType: EventTypeUpdate,
+					Object:    obj,
+				})
+			}
 		}
 	}
 

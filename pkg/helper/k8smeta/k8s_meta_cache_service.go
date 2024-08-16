@@ -89,8 +89,9 @@ func (m *serviceCache) watch(stopCh <-chan struct{}) {
 			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeDelete,
 				Object: &ObjectWrapper{
-					ResourceType: SERVICE,
-					Raw:          obj,
+					ResourceType:     SERVICE,
+					Raw:              obj,
+					LastObservedTime: time.Now().Unix(),
 				},
 			}
 		},

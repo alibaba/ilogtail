@@ -126,8 +126,9 @@ func (m *podCache) watch(stopCh <-chan struct{}) {
 			m.saveWithTimeout(&K8sMetaEvent{
 				EventType: EventTypeDelete,
 				Object: &ObjectWrapper{
-					ResourceType: POD,
-					Raw:          obj,
+					ResourceType:     POD,
+					Raw:              obj,
+					LastObservedTime: time.Now().Unix(),
 				},
 			})
 		},
