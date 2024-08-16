@@ -172,11 +172,11 @@ bool ScrapeConfig::InitBasicAuth(const Json::Value& basicAuth) {
         LOG_ERROR(sLogger, ("basic auth config error", ""));
         return false;
     }
-    if (!usernameFile.empty() && !ReadFromFileOrHTTP(usernameFile, username)) {
+    if (!usernameFile.empty() && !ReadFile(usernameFile, username)) {
         LOG_ERROR(sLogger, ("read username_file failed, username_file", usernameFile));
         return false;
     }
-    if (!passwordFile.empty() && !ReadFromFileOrHTTP(passwordFile, password)) {
+    if (!passwordFile.empty() && !ReadFile(passwordFile, password)) {
         LOG_ERROR(sLogger, ("read password_file failed, password_file", passwordFile));
         return false;
     }
@@ -214,24 +214,13 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         return false;
     }
 
-    if (!credentialsFile.empty() && !ReadFromFileOrHTTP(credentialsFile, credentials)) {
+    if (!credentialsFile.empty() && !ReadFile(credentialsFile, credentials)) {
         LOG_ERROR(sLogger, ("authorization read file error", ""));
         return false;
     }
 
     mAuthHeaders[prometheus::A_UTHORIZATION] = type + " " + credentials;
     return true;
-}
-
-bool ScrapeConfig::ReadFromFileOrHTTP(const string& path, string& content) {
-    if (IsHTTPUrl(path)) {
-        LOG_ERROR(sLogger, ("not support http", path));
-    }
-    return ReadFile(path, content);
-}
-
-bool ScrapeConfig::IsHTTPUrl(const string& url) {
-    return StartWith(url, "https://") || StartWith(url, "http://");
 }
 
 } // namespace logtail
