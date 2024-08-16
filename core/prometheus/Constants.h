@@ -59,6 +59,7 @@ const char* const SERIES_LIMIT = "series_limit";
 const char* const MAX_SCRAPE_SIZE = "max_scrape_size";
 const char* const METRIC_RELABEL_CONFIGS = "metric_relabel_configs";
 const char* const AUTHORIZATION = "authorization";
+const char* const AUTHORIZATION_DEFAULT_TYEP = "Bearer";
 const char* const A_UTHORIZATION = "Authorization";
 const char* const TYPE = "type";
 const char* const CREDENTIALS = "credentials";
@@ -69,7 +70,6 @@ const char* const USERNAME_FILE = "username_file";
 const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
-const char* const OAUTH2 = "oauth2";
 
 
 // metric labels

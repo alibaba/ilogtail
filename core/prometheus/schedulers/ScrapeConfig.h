@@ -38,7 +38,6 @@ public:
 private:
     bool InitBasicAuth(const Json::Value& basicAuth);
     bool InitAuthorization(const Json::Value& authorization);
-    bool InitOAuth2(const Json::Value& oauth2);
 
     bool ReadFromFileOrHTTP(const std::string& path, std::string& content);
     bool IsHTTPUrl(const std::string& url);

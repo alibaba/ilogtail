@@ -51,14 +51,21 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     }
 
     // basic auth, authorization, oauth2
+    // basic auth, authorization, oauth2 cannot be used at the same time
     if (scrapeConfig.isMember(prometheus::BASIC_AUTH) && scrapeConfig[prometheus::BASIC_AUTH].isObject()) {
-        InitBasicAuth(scrapeConfig[prometheus::BASIC_AUTH]);
+        if (!InitBasicAuth(scrapeConfig[prometheus::BASIC_AUTH])) {
+            LOG_ERROR(sLogger, ("basic auth config error", ""));
+            return false;
+        }
     }
     if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
-        InitAuthorization(scrapeConfig[prometheus::AUTHORIZATION]);
-    }
-    if (scrapeConfig.isMember(prometheus::OAUTH2) && scrapeConfig[prometheus::OAUTH2].isObject()) {
-        InitOAuth2(scrapeConfig[prometheus::OAUTH2]);
+        if (!mAuthHeaders.empty()) {
+            LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
+        }
+        if (!InitAuthorization(scrapeConfig[prometheus::AUTHORIZATION])) {
+            LOG_ERROR(sLogger, ("authorization config error", ""));
+            return false;
+        }
     }
 
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
@@ -158,7 +165,7 @@ bool ScrapeConfig::InitBasicAuth(const Json::Value& basicAuth) {
     }
 
     if ((username.empty() && usernameFile.empty()) || (password.empty() && passwordFile.empty())) {
-        LOG_ERROR(sLogger, ("username or password is empty", ""));
+        LOG_ERROR(sLogger, ("basic auth username or password is empty", ""));
         return false;
     }
     if ((!username.empty() && !usernameFile.empty()) || (!password.empty() && !passwordFile.empty())) {
@@ -191,6 +198,9 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         LOG_ERROR(sLogger, ("authorization config error", ""));
         return false;
     }
+    if (type.empty()) {
+        type = prometheus::AUTHORIZATION_DEFAULT_TYEP;
+    }
 
     if (authorization.isMember(prometheus::CREDENTIALS) && authorization[prometheus::CREDENTIALS].isString()) {
         credentials = authorization[prometheus::CREDENTIALS].asString();
@@ -199,23 +209,18 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         && authorization[prometheus::CREDENTIALS_FILE].isString()) {
         credentialsFile = authorization[prometheus::CREDENTIALS_FILE].asString();
     }
-    if ((int)credentials.empty() + credentialsFile.empty() != 1) {
+    if (!credentials.empty() && !credentialsFile.empty()) {
         LOG_ERROR(sLogger, ("authorization config error", ""));
         return false;
     }
 
     if (!credentialsFile.empty() && !ReadFromFileOrHTTP(credentialsFile, credentials)) {
-        LOG_ERROR(sLogger, ("authorization config error", ""));
+        LOG_ERROR(sLogger, ("authorization read file error", ""));
         return false;
     }
 
     mAuthHeaders[prometheus::A_UTHORIZATION] = type + " " + credentials;
     return true;
-}
-
-bool ScrapeConfig::InitOAuth2(const Json::Value& oauth2) {
-    LOG_ERROR(sLogger, ("not support oauth2", ""));
-    return false;
 }
 
 bool ScrapeConfig::ReadFromFileOrHTTP(const string& path, string& content) {
