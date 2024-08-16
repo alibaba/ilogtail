@@ -75,7 +75,6 @@ bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent&
     mState = TextState::Start;
     mLabelName.clear();
     mTokenLength = 0;
-    mNoEscapes = line.find('\\') == StringView::npos;
     if (defaultNanoTs > 0) {
         mTimestamp = defaultNanoTs / 1000000000;
         mNanoTimestamp = defaultNanoTs % 1000000000;
@@ -161,64 +160,53 @@ void TextParser::HandleEqualSign(MetricEvent& metricEvent) {
 
 void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
     // left quote has been consumed
-    if (mNoEscapes) {
-        // Fast path - the line has no escape chars
-        while (mPos < mLine.size() && mLine[mPos] != '"') {
+    bool escaped = false;
+    auto lPos = mPos;
+    while (mPos < mLine.size() && mLine[mPos] != '"') {
+        if (mLine[mPos] != '\\') {
+            if (escaped) {
+                mEscapedLabelValue.push_back(mLine[mPos]);
+            }
             ++mPos;
             ++mTokenLength;
-        }
-        if (mPos == mLine.size()) {
-            HandleError("unexpected end of input in label value");
-        }
-        metricEvent.SetTagNoCopy(mLabelName, mLine.substr(mPos - mTokenLength, mTokenLength));
-
-    } else {
-        // Slow path - the line contains escape chars
-        auto lPos = mPos;
-        while (mPos < mLine.size()) {
-            if (mLine[mPos] == '"') {
-                int leftMovePos = mPos - 1;
-                while (leftMovePos >= 0 && mLine[leftMovePos] == '\\') {
-                    --leftMovePos;
-                }
-                if ((mPos - leftMovePos) % 2 == 1) {
-                    break;
-                }
-            }
-            ++mPos;
-        }
-        if (mPos == mLine.size()) {
-            HandleError("unexpected end of input in label value");
         } else {
-            string labelValue;
-            while (lPos < mPos) {
-                if (mLine[lPos] == '\\') {
-                    if (lPos + 1 < mPos) {
-                        switch (mLine[lPos + 1]) {
-                            case '\\':
-                            case '\"':
-                                labelValue.push_back(mLine[lPos + 1]);
-                                break;
-                            case 'n':
-                                labelValue.push_back('\n');
-                                break;
-                            default:
-                                labelValue.push_back('\\');
-                                labelValue.push_back(mLine[lPos + 1]);
-                                break;
-                        }
-                        lPos += 2;
-                    } else {
-                        labelValue.push_back('\\');
-                        lPos += 1;
-                    }
-                } else {
-                    labelValue.push_back(mLine[lPos]);
-                    lPos += 1;
-                }
+            if (escaped == false) {
+                // first meet escape char
+                escaped = true;
+                mEscapedLabelValue = mLine.substr(lPos, mPos - lPos).to_string();
             }
-            metricEvent.SetTag(mLabelName.to_string(), labelValue);
+            if (mPos + 1 < mLine.size()) {
+                switch (mLine[lPos + 1]) {
+                    case '\\':
+                    case '\"':
+                        mEscapedLabelValue.push_back(mLine[mPos + 1]);
+                        break;
+                    case 'n':
+                        mEscapedLabelValue.push_back('\n');
+                        break;
+                    default:
+                        mEscapedLabelValue.push_back('\\');
+                        mEscapedLabelValue.push_back(mLine[mPos + 1]);
+                        break;
+                }
+                mPos += 2;
+            } else {
+                mEscapedLabelValue.push_back(mLine[mPos + 1]);
+                ++mPos;
+            }
         }
+    }
+
+    if (mPos == mLine.size()) {
+        HandleError("unexpected end of input in label value");
+        return;
+    }
+
+    if (!escaped) {
+        metricEvent.SetTagNoCopy(mLabelName, mLine.substr(mPos - mTokenLength, mTokenLength));
+    } else {
+        metricEvent.SetTag(mLabelName.to_string(), mEscapedLabelValue);
+        mEscapedLabelValue.clear();
     }
     mTokenLength = 0;
     ++mPos;

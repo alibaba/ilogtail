@@ -55,13 +55,11 @@ private:
     std::size_t mPos{0};
 
     StringView mLabelName;
+    std::string mEscapedLabelValue;
     double mSampleValue{0.0};
     time_t mTimestamp{0};
     uint32_t mNanoTimestamp{0};
     std::size_t mTokenLength{0};
-
-    bool mNoEscapes = true;
-
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TextParserUnittest;

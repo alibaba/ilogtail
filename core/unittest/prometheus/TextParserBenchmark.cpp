@@ -65,12 +65,12 @@ void TextParserBenchmark::TestParse100M() const {
     auto start = std::chrono::high_resolution_clock::now();
 
     TextParser parser;
-    parser.Parse(m100MData, 0);
+    auto res = parser.Parse(m100MData, 0);
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "elapsed: " << elapsed.count() << " seconds" << endl;
-    // elapsed: 1.71s in release mode
+    // elapsed: 1.53s in release mode
     // elapsed: 551MB in release mode
 }
 
@@ -78,12 +78,12 @@ void TextParserBenchmark::TestParse1000M() const {
     auto start = std::chrono::high_resolution_clock::now();
 
     TextParser parser;
-    parser.Parse(m1000MData, 0);
+    auto res = parser.Parse(m1000MData, 0);
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "elapsed: " << elapsed.count() << " seconds" << endl;
-    // elapsed: 17.1s in release mode
+    // elapsed: 15.4s in release mode
     // elapsed: 4960MB in release mode
 }
 
