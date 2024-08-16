@@ -23,17 +23,19 @@
 #include "common/Lock.h"
 #include "common/timer/Timer.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
+#include "runner/InputRunner.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
 
 namespace logtail {
 
-class PrometheusInputRunner {
+class PrometheusInputRunner : public InputRunner {
 public:
     PrometheusInputRunner(const PrometheusInputRunner&) = delete;
     PrometheusInputRunner(PrometheusInputRunner&&) = delete;
     PrometheusInputRunner& operator=(const PrometheusInputRunner&) = delete;
     PrometheusInputRunner& operator=(PrometheusInputRunner&&) = delete;
+    ~PrometheusInputRunner() override = default;
     static PrometheusInputRunner* GetInstance() {
         static PrometheusInputRunner sInstance;
         return &sInstance;
@@ -44,19 +46,17 @@ public:
     void RemoveScrapeInput(const std::string& jobName);
 
     // target discover and scrape
-    void Start();
-    void Stop();
-    bool HasRegisteredPlugin();
+    void Init() override;
+    void Stop() override;
+    void StopIfNotInUse() override;
 
 private:
     PrometheusInputRunner();
-    ~PrometheusInputRunner() = default;
-
     sdk::HttpMessage SendRegisterMessage(const std::string& url) const;
 
     void CancelAllTargetSubscriber();
 
-    std::atomic<bool> mIsStarted;
+    std::atomic<bool> mIsStarted = false;
 
     std::future<void> mThreadRes;
     std::atomic<bool> mIsThreadRunning = true;

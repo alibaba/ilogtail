@@ -113,6 +113,7 @@ void InputRunnerMockHttpClient::Send(const std::string&,
 class PrometheusInputRunnerUnittest : public testing::Test {
 public:
     void OnSuccessfulStartAndStop();
+    void TestStopIfNotInUse();
 
 protected:
     void SetUp() override {
@@ -151,7 +152,7 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     // update scrapeJob
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
 
-    PrometheusInputRunner::GetInstance()->Start();
+    PrometheusInputRunner::GetInstance()->Init();
     APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.find("test_job")
                      != PrometheusInputRunner::GetInstance()->mTargetSubscriberSchedulerMap.end());
 
@@ -165,7 +166,40 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
+void PrometheusInputRunnerUnittest::TestStopIfNotInUse() {
+    PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();
+    PrometheusInputRunner::GetInstance()->Init();
+    PrometheusInputRunner::GetInstance()->StopIfNotInUse();
+
+    // not in use
+    APSARA_TEST_FALSE(PrometheusInputRunner::GetInstance()->mIsStarted.load());
+
+    // in use
+    PrometheusInputRunner::GetInstance()->Init();
+    string errorMsg;
+    string configStr;
+    Json::Value config;
+    configStr = R"JSON(
+    {
+        "job_name": "test_job",
+        "scheme": "http",
+        "metrics_path": "/metrics",
+        "scrape_interval": "30s",
+        "scrape_timeout": "30s"
+    }
+    )JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+
+    std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
+    APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
+    PrometheusInputRunner::GetInstance()->StopIfNotInUse();
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mIsStarted.load());
+    PrometheusInputRunner::GetInstance()->Stop();
+}
+
 UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnSuccessfulStartAndStop)
+UNIT_TEST_CASE(PrometheusInputRunnerUnittest, TestStopIfNotInUse)
 
 } // namespace logtail
 

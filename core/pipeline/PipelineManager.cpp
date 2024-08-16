@@ -94,7 +94,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
     if (isInputPrometheusChanged) {
-        PrometheusInputRunner::GetInstance()->Start();
+        PrometheusInputRunner::GetInstance()->Init();
     }
 #if defined(__linux__) && !defined(__ANDROID__)
     // 和其它插件不同，ebpf需要init之后才能配置加载，最终状态这个init函数是在插件自己的start函数里面，目前暂时在此过渡。

@@ -38,7 +38,6 @@ DECLARE_FLAG_STRING(_pod_name_);
 namespace logtail {
 
 PrometheusInputRunner::PrometheusInputRunner() : mUnRegisterMs(0) {
-    mIsStarted.store(false);
     mClient = std::make_unique<sdk::CurlClient>();
 
     mServiceHost = STRING_FLAG(loong_collector_operator_service);
@@ -76,17 +75,18 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
 }
 
 /// @brief targets discovery and start scrape work
-void PrometheusInputRunner::Start() {
-    LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
+void PrometheusInputRunner::Init() {
     if (mIsStarted.load()) {
         return;
     }
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
     mIsStarted.store(true);
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();
 
     mThreadRes = std::async(launch::async, [this]() {
         // only register when operator exist
+        mIsThreadRunning.store(true);
         if (!mServiceHost.empty()) {
             int retry = 0;
             while (mIsThreadRunning.load()) {
@@ -123,6 +123,9 @@ void PrometheusInputRunner::Start() {
 
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
+    if (!mIsStarted.load()) {
+        return;
+    }
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
 
     mIsStarted.store(false);
@@ -154,6 +157,14 @@ void PrometheusInputRunner::Stop() {
     }
 }
 
+void PrometheusInputRunner::StopIfNotInUse() {
+    ReadLock lock(mSubscriberMapRWLock);
+    if (mTargetSubscriberSchedulerMap.empty()) {
+        lock.unlock();
+        Stop();
+    }
+}
+
 sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) const {
     map<string, string> httpHeader;
     httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
@@ -177,10 +188,6 @@ sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) c
     return httpResponse;
 }
 
-bool PrometheusInputRunner::HasRegisteredPlugin() {
-    ReadLock lock(mSubscriberMapRWLock);
-    return !mTargetSubscriberSchedulerMap.empty();
-}
 
 void PrometheusInputRunner::CancelAllTargetSubscriber() {
     ReadLock lock(mSubscriberMapRWLock);
