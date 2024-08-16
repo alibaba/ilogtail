@@ -29,8 +29,8 @@
 #include "queue/BoundedSenderQueueInterface.h"
 #include "queue/ProcessQueueInterface.h"
 #include "queue/ProcessQueueItem.h"
-#include "queue/QueueParam.h"
 #include "queue/QueueKey.h"
+#include "queue/QueueParam.h"
 
 namespace logtail {
 
@@ -52,7 +52,8 @@ public:
 
     void Feedback(QueueKey key) override { Trigger(); }
 
-    bool CreateOrUpdateQueue(QueueKey key, uint32_t priority, QueueType type, size_t capacity = 100);
+    bool CreateOrUpdateBoundedQueue(QueueKey key, uint32_t priority);
+    bool CreateOrUpdateCircularQueue(QueueKey key, uint32_t priority, size_t capacity);
     bool DeleteQueue(QueueKey key);
     bool IsValidToPush(QueueKey key) const;
     // 0: success, 1: queue is full, 2: queue not found
@@ -75,7 +76,9 @@ private:
     ProcessQueueManager();
     ~ProcessQueueManager() = default;
 
-    void CreateQueue(QueueKey key, uint32_t priority, QueueType type, size_t capacity);
+    void CreateBoundedQueue(QueueKey key, uint32_t priority);
+    void CreateCircularQueue(QueueKey key, uint32_t priority, size_t capacity);
+    void AdjustQueuePriority(const ProcessQueueIterator& iter, uint32_t priority);
     void DeleteQueueEntity(const ProcessQueueIterator& iter);
     void ResetCurrentQueueIndex();
 

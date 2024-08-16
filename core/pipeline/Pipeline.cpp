@@ -254,10 +254,13 @@ bool Pipeline::Init(PipelineConfig&& config) {
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(
-            mContext.GetProcessQueueKey(),
-            priority,
-            isInputSupportAck ? ProcessQueueManager::QueueType::BOUNDED : ProcessQueueManager::QueueType::CIRCULAR);
+        if (isInputSupportAck) {
+            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(mContext.GetProcessQueueKey(), priority);
+        } else {
+            ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
+                mContext.GetProcessQueueKey(), priority, 100);
+        }
+
 
         unordered_set<FeedbackInterface*> feedbackSet;
         for (const auto& input : mInputs) {
