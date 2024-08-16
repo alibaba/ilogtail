@@ -766,7 +766,10 @@ void ModifyHandler::Handle(const Event& event) {
                         PROCESS_QUEUE_BUSY_ALARM,
                         string("logprocess queue is full, put modify event to event queue again, file:")
                             + reader->GetHostLogPath() + " ,project:" + reader->GetProject()
-                            + " ,logstore:" + reader->GetLogstore());
+                            + " ,logstore:" + reader->GetLogstore(),
+                        reader->GetProject(),
+                        reader->GetLogstore(),
+                        reader->GetRegion());
                 }
 
                 BlockedEventManager::GetInstance()->UpdateBlockEvent(
