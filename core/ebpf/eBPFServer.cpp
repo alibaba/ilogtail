@@ -57,7 +57,10 @@ void eBPFServer::Stop() {
     LOG_INFO(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
     // destroy source manager 
-    mSourceManager.release();
+    mSourceManager.reset();
+    for (std::size_t i = 0; i < mLoadedPipeline.size(); i ++) {
+        UpdatePipelineName(static_cast<nami::PluginType>(i), "");
+    }
     // UpdateContext must after than StopPlugin
     if (mMeterCB) mMeterCB->UpdateContext(nullptr, -1, -1);
     if (mSpanCB) mSpanCB->UpdateContext(nullptr,-1, -1);
