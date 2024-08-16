@@ -46,6 +46,8 @@ bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
 }
 
 void CircularProcessQueue::Reset(size_t cap) {
+    // it seems more reasonable to retain extra items and process them immediately, however this contray to current framework design
+    // so we simply discard extra items, considering that it is a rare case to change capacity
     uint32_t cnt = 0;
     while (!mQueue.empty() && mEventCnt > cap) {
         mEventCnt -= mQueue.front()->mEventGroup.GetEvents().size();

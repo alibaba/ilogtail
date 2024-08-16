@@ -333,7 +333,7 @@ void ProcessQueueManagerUnittest::TestIsAllQueueEmpty() {
 void ProcessQueueManagerUnittest::OnPipelineUpdate() {
     QueueKey key = QueueKeyManager::GetInstance()->GetKey("test_config_1");
     sProcessQueueManager->CreateOrUpdateBoundedQueue(key, 0);
-        ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(1, 0, "test_config_2", vector<RangeCheckpointPtr>(5));
+    ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(1, 0, "test_config_2", vector<RangeCheckpointPtr>(5));
     ExactlyOnceQueueManager::GetInstance()->CreateOrUpdateQueue(2, 0, "test_config_2", vector<RangeCheckpointPtr>(5));
 
     sProcessQueueManager->InvalidatePop("test_config_1");
