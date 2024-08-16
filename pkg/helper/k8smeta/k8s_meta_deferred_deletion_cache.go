@@ -278,10 +278,17 @@ func (m *DeferredDeletionMetaStore) handleTimerEvent(event *K8sMetaEvent) {
 	timerEvent := event.Object.Raw.(*TimerEvent)
 	if f, ok := m.sendFuncs.Load(timerEvent.ConfigName); ok {
 		sendFuncWithStopCh := f.(*SendFuncWithStopCh)
+		snapshotOfKeys := make([]string, 0)
 		m.lock.RLock()
-		defer m.lock.RUnlock()
-		for _, obj := range m.Items {
-			if !obj.Deleted {
+		for k := range m.Items {
+			snapshotOfKeys = append(snapshotOfKeys, k)
+		}
+		m.lock.RUnlock()
+		for _, k := range snapshotOfKeys {
+			m.lock.RLock()
+			obj, ok := m.Items[k]
+			m.lock.RUnlock()
+			if ok && !obj.Deleted {
 				obj.LastObservedTime = time.Now().Unix()
 				sendFuncWithStopCh.SendFunc(&K8sMetaEvent{
 					EventType: EventTypeUpdate,

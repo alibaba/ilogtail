@@ -66,6 +66,7 @@ func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 		entityTypes:      []string{},
 		entityBuffer:     make(chan models.PipelineEvent, 100),
 		entityLinkBuffer: make(chan models.PipelineEvent, 100),
+		stopCh:           make(chan struct{}),
 	}
 	return s.metaCollector.Start()
 }

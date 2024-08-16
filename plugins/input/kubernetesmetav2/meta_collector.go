@@ -59,7 +59,7 @@ func (m *metaCollector) Stop() error {
 	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.Service && m.serviceK8sMeta.PodServiceLink {
 		m.serviceK8sMeta.metaManager.UnRegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_SERVICE)
 	}
-
+	close(m.stopCh)
 	return nil
 }
 

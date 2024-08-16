@@ -86,7 +86,11 @@ func TestProcessPodReplicasetLink(t *testing.T) {
 	objWrapper := &k8smeta.ObjectWrapper{
 		Raw: obj,
 	}
-	collector := &metaCollector{}
+	collector := &metaCollector{
+		serviceK8sMeta: &ServiceK8sMeta{
+			Interval: 10,
+		},
+	}
 	log := collector.processPodReplicasetLink(objWrapper, "create")
 	assert.NotNilf(t, log, "log should not be nil")
 }
@@ -102,7 +106,11 @@ func TestProcessPodReplicasetLinkNoOwner(t *testing.T) {
 	objWrapper := &k8smeta.ObjectWrapper{
 		Raw: obj,
 	}
-	collector := &metaCollector{}
+	collector := &metaCollector{
+		serviceK8sMeta: &ServiceK8sMeta{
+			Interval: 10,
+		},
+	}
 	log := collector.processPodReplicasetLink(objWrapper, "create")
 	assert.Nilf(t, log, "log should not be nil")
 }
@@ -148,7 +156,11 @@ func TestProcessPodServiceLink(t *testing.T) {
 			Service: obj2,
 		},
 	}
-	collector := &metaCollector{}
+	collector := &metaCollector{
+		serviceK8sMeta: &ServiceK8sMeta{
+			Interval: 10,
+		},
+	}
 	log := collector.processPodServiceLink(objWrapper, "create")
 	assert.NotNilf(t, log, "log should not be nil")
 }
