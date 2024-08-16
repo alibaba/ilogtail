@@ -52,8 +52,12 @@ void eBPFServer::Init() {
 }
 
 void eBPFServer::Stop() {
+    if (!mInited) return;
+    mInited = false;
     LOG_INFO(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
+    // destroy source manager 
+    mSourceManager.release();
     // UpdateContext must after than StopPlugin
     if (mMeterCB) mMeterCB->UpdateContext(nullptr, -1, -1);
     if (mSpanCB) mSpanCB->UpdateContext(nullptr,-1, -1);
@@ -133,6 +137,21 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     }
 
     return ret;
+}
+
+bool eBPFServer::CheckIfInUsed() {
+    std::lock_guard<std::mutex> lk(mMtx);
+    for (auto& pipeline : mLoadedPipeline) {
+        if (!pipeline.empty()) return true;
+    }
+    return false;
+}
+
+void eBPFServer::StopIfNotInUse() {
+    if (CheckIfInUsed()) return;
+    LOG_INFO(sLogger, ("no regitered pipeline, begin to destroy eBPF Server", ""));
+    Stop();
+    return;
 }
 
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,

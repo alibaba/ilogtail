@@ -179,6 +179,7 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
 #endif
   void* f = mFuncs[(int)ebpf_func::EBPF_INIT];
   if (!f) {
+    delete conf;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, init func ptr is null", int(plugin_type)));
     return false;
   }
@@ -206,6 +207,7 @@ bool SourceManager::UpdatePlugin(nami::PluginType plugin_type,
 #endif
   void* f = mFuncs[(int)ebpf_func::EBPF_UPDATE];
   if (!f) {
+    delete conf;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, update func ptr is null", int(plugin_type)));
     return false;
   }
@@ -254,6 +256,7 @@ bool SourceManager::SuspendPlugin(nami::PluginType plugin_type) {
   // ensure that sysak would not call handle()
   void* f = mFuncs[(int)ebpf_func::EBPF_SUSPEND];
   if (!f) {
+    delete config;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, suspend func ptr is null", int(plugin_type)));
     return false;
   }
@@ -282,6 +285,7 @@ bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
 
   void* f = mFuncs[(int)ebpf_func::EBPF_REMOVE];
   if (!f) {
+    delete config;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, remove func ptr is null", int(plugin_type)));
     return false;
   }

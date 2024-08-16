@@ -20,11 +20,12 @@ enum class SecureEventType {
 
 class AbstractSecurityEvent {
 public:
-  AbstractSecurityEvent(std::vector<std::pair<std::string, std::string>>&& tags,SecureEventType type, uint64_t ts)
+  AbstractSecurityEvent(std::vector<std::pair<std::string, std::string>>&& tags, SecureEventType type, uint64_t ts)
     : tags_(tags), type_(type), timestamp_(ts) {}
   SecureEventType GetEventType() {return type_;}
   std::vector<std::pair<std::string, std::string>> GetAllTags() { return tags_; }
   uint64_t GetTimestamp() { return timestamp_; }
+  void SetEventType(SecureEventType type) { type_ = type; }
   void SetTimestamp(uint64_t ts) { timestamp_ = ts; }
   void AppendTags(std::pair<std::string, std::string>&& tag) {
     tags_.emplace_back(std::move(tag));
@@ -47,6 +48,9 @@ private:
   std::vector<std::unique_ptr<AbstractSecurityEvent>> events;
 };
 
+using HandleSingleDataEventFn = std::function<void(std::unique_ptr<AbstractSecurityEvent>&& event)>;
+using HandleBatchDataEventFn = std::function<void(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events)>;
+
 enum class UpdataType {
   SECURE_UPDATE_TYPE_ENABLE_PROBE,
   SECURE_UPDATE_TYPE_CONFIG_CHAGE,
@@ -63,7 +67,7 @@ enum class UpdataType {
 enum MeasureType {MEASURE_TYPE_APP, MEASURE_TYPE_NET, MEASURE_TYPE_PROCESS, MEASURE_TYPE_MAX};
 
 struct AbstractSingleMeasure {
-
+  virtual ~AbstractSingleMeasure() = default;
 };
 
 struct NetSingleMeasure : public AbstractSingleMeasure {
