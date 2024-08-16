@@ -1,8 +1,8 @@
-# iuput_ebpf_process_security 插件
+# input_ebpf_process_security 插件
 
 ## 简介
 
-`iuput_ebpf_process_security`插件可以实现利用ebpf探针采集进程安全相关动作。
+`input_ebpf_process_security`插件可以实现利用ebpf探针采集进程安全相关动作。
 
 ## 版本
 
@@ -12,7 +12,7 @@
 
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
-|  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_process\_security  |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_process\_security  |
 |  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
 |  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
 

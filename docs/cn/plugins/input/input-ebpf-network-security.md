@@ -12,7 +12,7 @@
 
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
-|  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_network\_security  |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_network\_security  |
 |  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
 |  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
 |  ProbeConfig.AddrFilter  |  object  |  否  |  /  |  过滤参数  |
