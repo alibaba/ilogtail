@@ -282,7 +282,9 @@ bool DelimiterModeFsmParser::ParseDelimiterLine(
             return false;
         }
     }
-
+    if (fsm.currentState == STATE_DOUBLE_QUOTE) {
+        doubleQuoteNum--;
+    }
     result = HandleEOF(ch, quote, fieldStart, fieldEnd, fsm, columnValues, doubleQuoteNum, event);
     // clear all columns if failed to parse
     if (!result) {
