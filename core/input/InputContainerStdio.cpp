@@ -68,7 +68,7 @@ bool InputContainerStdio::Init(const Json::Value& config, Json::Value& optionalG
     if (!mContainerDiscovery.Init(config, *mContext, sName)) {
         return false;
     }
-    mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
+    mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline, nullptr, mContext->GetPipeline().GenNextPluginID());
 
     if (!mFileReader.Init(config, *mContext, sName)) {
         return false;

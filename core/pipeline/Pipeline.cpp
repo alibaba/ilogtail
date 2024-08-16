@@ -59,14 +59,14 @@ bool Pipeline::Init(PipelineConfig&& config) {
     const InputContainerStdio* inputContainerStdio = nullptr;
     bool hasFlusherSLS = false;
 
-#ifdef __ENTERPRISE__
-    // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
+    // to send alarm and init MetricsRecord before flusherSLS is built, a temporary object is made, which will be
     unique_ptr<FlusherSLS> SLSTmp = make_unique<FlusherSLS>();
-    SLSTmp->mProject = config.mProject;
-    SLSTmp->mLogstore = config.mLogstore;
-    SLSTmp->mRegion = config.mRegion;
-    mContext.SetSLSInfo(SLSTmp.get());
-#endif
+    if (config.mProject != "") {
+        SLSTmp->mProject = config.mProject;
+        SLSTmp->mLogstore = config.mLogstore;
+        SLSTmp->mRegion = config.mRegion;
+        mContext.SetSLSInfo(SLSTmp.get());
+    }
 
     mPluginID.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
@@ -118,12 +118,25 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     for (auto detail : config.mAggregators) {
+        GenNextPluginMeta(false);
         if (ShouldAddPluginToGoPipelineWithInput()) {
             AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithInput);
         } else {
             AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithoutInput);
         }
         ++mPluginCntMap["aggregators"][(*detail)["Type"].asString()];
+    }
+    if (config.mAggregators.size() == 0 && config.ShouldNativeFlusherConnectedByGoPipeline()) {
+        // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
+        // to cpp flusher. gen aggregator_default's plugin_id here
+        GenNextPluginMeta(false);
+        Json::Value aggregatorDefault;
+        aggregatorDefault["Type"] = "aggregator_default";
+        if (ShouldAddPluginToGoPipelineWithInput()) {
+            AddPluginToGoPipeline(aggregatorDefault, "aggregators", mGoPipelineWithInput);
+        } else {
+            AddPluginToGoPipeline(aggregatorDefault, "aggregators", mGoPipelineWithoutInput);
+        }
     }
 
     for (auto detail : config.mFlushers) {
@@ -163,6 +176,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     for (auto detail : config.mExtensions) {
+        GenNextPluginMeta(false);
         if (!mGoPipelineWithInput.isNull()) {
             AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithInput);
         }
@@ -373,10 +387,20 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
     }
 }
 
+// Rule: pluginName=pluginType/pluginID#pluginPriority.
 void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    res["type"] = plugin["Type"];
+    if (plugin.isObject() && plugin.isMember("Type")) {
+        if (plugin["Type"].isString()) {
+            // Do not add mPluginID, GenNextPluginMeta is called before AddPluginToGoPipeline
+            res["type"] = plugin["Type"].asString() + "/" + std::to_string(mPluginID.load());
+        } else {
+            res["type"] = plugin["Type"];
+        }
+    } else {
+        res["type"] = "";
+    }
     res["detail"] = detail;
     dst[module].append(res);
 }
