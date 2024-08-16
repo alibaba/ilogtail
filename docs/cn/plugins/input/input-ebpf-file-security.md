@@ -12,7 +12,7 @@
 
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
-|  Type  |  string  |  是  |  /  |  插件类型。固定为iuput\_ebpf\_file\_security  |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_file\_security  |
 |  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
 |  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
 |  ProbeConfig.FilePathFilter  |  \[string\]  |  否  |  空  |  使用文件路径以及文件名作为过滤参数，例如 "/etc/passwd"，遵循前缀匹配的原则  |

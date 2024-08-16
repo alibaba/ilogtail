@@ -130,7 +130,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
             "ProbeConfig": [
                 {
                     "CallNameeee": [
-                        "1sys_enter_execve"
+                        "sys_enter_execve"
                     ]
                 }
             ]
@@ -139,7 +139,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
     // no probeconfig
     configStr = R"(
@@ -150,7 +150,25 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+
+    // invalid callname
+    configStr = R"(
+        {
+            "Type": "input_ebpf_processprobe_security",
+            "ProbeConfig": [
+                {
+                    "CallName": [
+                        "sys_enter_execve_error"
+                    ]
+                }
+            ]
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    input.reset(new InputEBPFProcessSecurity());
+    input->SetContext(ctx);
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 }
 
 void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {

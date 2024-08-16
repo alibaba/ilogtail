@@ -197,6 +197,22 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     nami::SecurityNetworkFilter thisFilter4 = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
     APSARA_TEST_EQUAL(2, thisFilter4.mDestAddrList.size());
     APSARA_TEST_EQUAL(1, thisFilter4.mDestPortList.size());
+
+    // invalid callname
+    configStr = R"(
+        {
+            "Type": "input_ebpf_sockettraceprobe_security",
+            "ProbeConfig": [
+                {
+                    "CallName": ["udp"],
+                }
+            ]
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    input.reset(new InputEBPFNetworkSecurity());
+    input->SetContext(ctx);
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 }
 
 void InputEBPFNetworkSecurityUnittest::OnSuccessfulStart() {

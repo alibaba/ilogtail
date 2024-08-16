@@ -275,7 +275,7 @@ bool IsSecurityProbeCallNameValid(SecurityProbeType type,
                                   const std::vector<std::string>& callNames,
                                   std::string& errorMsg) {
     const std::unordered_set<std::string> processCallName
-        = {"sys_enter_execve", "disassociate_ctty", "acct_process", "wake_up_new_task"};
+        = {"sys_enter_execve", "sys_enter_clone", "disassociate_ctty", "acct_process", "wake_up_new_task"};
     const std::unordered_set<std::string> fileCallName
         = {"security_file_permission", "security_file_mmap", "security_path_truncate"};
     const std::unordered_set<std::string> networkCallName = {"tcp_connect", "tcp_close", "tcp_sendmsg"};

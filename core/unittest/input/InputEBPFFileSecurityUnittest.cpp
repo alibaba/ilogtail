@@ -175,7 +175,23 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, pluginIdx, optionalGoPipeline));
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+
+    // invalid callname
+    configStr = R"(
+        {
+            "Type": "input_ebpf_fileprobe_security",
+            "ProbeConfig": [
+                {
+                    "CallName": ["security_file_permission_error"],
+                }
+            ]
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    input.reset(new InputEBPFFileSecurity());
+    input->SetContext(ctx);
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 }
 
 void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
@@ -183,7 +199,6 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
-    // only mandatory param
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",
@@ -213,7 +228,6 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStop() {
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
-    // only mandatory param
     configStr = R"(
         {
             "Type": "input_ebpf_fileprobe_security",

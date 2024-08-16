@@ -35,6 +35,7 @@ inputs:
     ProbeConfig:
       - CallName: 
         - "sys_enter_execve"
+        - "sys_enter_clone"
         - "disassociate_ctty"
         - "acct_process"
         - "wake_up_new_task"
