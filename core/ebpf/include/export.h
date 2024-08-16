@@ -183,6 +183,7 @@ struct SecurityNetworkFilter {
 struct SecurityOption {
   std::vector<std::string> call_names_;
   std::variant<SecurityFileFilter, SecurityNetworkFilter> filter_;
+  bool null_filter_ = false;
   bool operator==(const SecurityOption& other) const {
     return call_names_ == other.call_names_ &&
             filter_ == other.filter_;

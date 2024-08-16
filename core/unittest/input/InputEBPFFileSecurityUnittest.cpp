@@ -61,7 +61,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [
                         "/etc",
                         "/bin"
@@ -87,7 +87,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [
                         "/etc/passwd",
                         "/etc/shadow",
@@ -121,7 +121,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [1]
                 }
             ]
@@ -142,7 +142,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [
                         "/etc",
                         1
@@ -175,7 +175,10 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
+    APSARA_TEST_EQUAL(1, input->mSecurityOptions.mOptionList.size());
+    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList[0].call_names_.size());// default callname
 
     // invalid callname
     configStr = R"(
@@ -183,7 +186,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission_error"],
+                    "CallNameFilter": ["security_file_permission_error"],
                 }
             ]
         }
@@ -204,7 +207,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [
                         "/etc",
                         "/bin"
@@ -233,7 +236,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStop() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [
                         "/etc",
                         "/bin"

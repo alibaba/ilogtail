@@ -574,7 +574,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
             "Type": "input_ebpf_processprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": [
+                    "CallNameFilter": [
                         "sys_enter_execve",
                         "disassociate_ctty",
                         "acct_process",
@@ -634,7 +634,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
             "Type": "input_ebpf_sockettraceprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["tcp_connect", "tcp_close"],
+                    "CallNameFilter": ["tcp_connect", "tcp_close"],
                     "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80],
@@ -643,7 +643,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
                     }
                 },
                 {
-                    "CallName": ["tcp_sendmsg"],
+                    "CallNameFilter": ["tcp_sendmsg"],
                     "AddrFilter": {
                         "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
                         "DestPortList": [80]
@@ -706,7 +706,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
             "Type": "input_ebpf_fileprobe_security",
             "ProbeConfig": [
                 {
-                    "CallName": ["security_file_permission"],
+                    "CallNameFilter": ["security_file_permission"],
                     "FilePathFilter": [
                         "/etc/passwd",
                         "/etc/shadow",

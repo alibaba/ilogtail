@@ -13,15 +13,15 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_network\_security  |
-|  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
-|  ProbeConfig.AddrFilter  |  object  |  否  |  /  |  过滤参数  |
-|  ProbeConfig.AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址  |
-|  ProbeConfig.AddrFilter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口  |
+|  ProbeConfig  |  \[object\]  |  否  |  /  |  插件配置参数列表  |
+|  ProbeConfig.CallNameFilter  |  \[string\]  |  否  |  空  |  内核挂载点过滤器，按照白名单模式运行，不填表示配置该插件所支持的所有挂载点  |
+|  ProbeConfig.AddrFilter  |  object  |  否  |  /  |  网络地址过滤器  |
+|  ProbeConfig.AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址白名单  |
+|  ProbeConfig.AddrFilter.DestPortList  |  \[string\]  |  否  |  空  |  目的端口白名单  |
 |  ProbeConfig.AddrFilter.DestAddrBlackList  |  \[string\]  |  否  |  空  |  目的IP地址黑名单  |
 |  ProbeConfig.AddrFilter.DestPortBlackList  |  \[string\]  |  否  |  空  |  目的端口黑名单  |
-|  ProbeConfig.AddrFilter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址  |
-|  ProbeConfig.AddrFilter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口  |
+|  ProbeConfig.AddrFilter.SourceAddrList  |  \[string\]  |  否  |  空  |  源IP地址白名单  |
+|  ProbeConfig.AddrFilter.SourcePortList  |  \[string\]  |  否  |  空  |  源端口白名单  |
 |  ProbeConfig.AddrFilter.SourceAddrBlackList  |  \[string\]  |  否  |  空  |  源IP地址黑名单  |
 |  ProbeConfig.AddrFilter.SourcePortBlackList  |  \[string\]  |  否  |  空  |  源端口黑名单  |
 
@@ -42,7 +42,7 @@ enable: true
 inputs:
   - Type: input_ebpf_sockettraceprobe_security
     ProbeConfig:
-      - CallName: 
+      - CallNameFilter: 
         - "tcp_connect"
         - "tcp_close"
         AddrFilter: 
@@ -55,7 +55,7 @@ inputs:
             - "127.0.0.1/8"
           SourcePortBlackList: 
             - 9300
-      - CallName: 
+      - CallNameFilter: 
         - "tcp_sendmsg"
         AddrFilter: 
           DestAddrList: 

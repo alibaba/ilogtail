@@ -39,6 +39,12 @@ DEFINE_FLAG_BOOL(ebpf_process_probe_config_enable_oom_detect, "if ebpf process p
 namespace logtail {
 namespace ebpf {
 
+static const std::unordered_map<SecurityProbeType, std::unordered_set<std::string>> callNameDict
+    = {{SecurityProbeType::PROCESS,
+        {"sys_enter_execve", "sys_enter_clone", "disassociate_ctty", "acct_process", "wake_up_new_task"}},
+       {SecurityProbeType::FILE, {"security_file_permission", "security_file_mmap", "security_path_truncate"}},
+       {SecurityProbeType::NETWORK, {"tcp_connect", "tcp_close", "tcp_sendmsg"}}};
+
 bool InitObserverNetworkOptionInner(const Json::Value& probeConfig,
                                nami::ObserverNetworkOption& thisObserverNetworkOption,
                                const PipelineContext* mContext,
@@ -271,49 +277,27 @@ bool IsProcessNamespaceFilterTypeValid(const std::string& type) {
     return dic.find(type) != dic.end();
 }
 
-bool IsSecurityProbeCallNameValid(SecurityProbeType type,
-                                  const std::vector<std::string>& callNames,
-                                  std::string& errorMsg) {
-    const std::unordered_set<std::string> processCallName
-        = {"sys_enter_execve", "sys_enter_clone", "disassociate_ctty", "acct_process", "wake_up_new_task"};
-    const std::unordered_set<std::string> fileCallName
-        = {"security_file_permission", "security_file_mmap", "security_path_truncate"};
-    const std::unordered_set<std::string> networkCallName = {"tcp_connect", "tcp_close", "tcp_sendmsg"};
-
-    switch (type) {
-        case SecurityProbeType::PROCESS: {
-            for (auto& callName : callNames) {
-                if (processCallName.find(callName) == processCallName.end()) {
-                    errorMsg = "Invalid call name for process security eBPF probe";
-                    return false;
-                }
+bool getValidSecurityProbeCallName(SecurityProbeType type, std::vector<std::string>& callNames, std::string& errorMsg) {
+    std::vector<std::string> survivedCallNames;
+    bool res = true;
+    for (auto& callName : callNames) {
+        if (callNameDict.at(type).find(callName) == callNameDict.at(type).end()) {
+            if (!res) {
+                errorMsg += ", " + callName;
+            } else {
+                errorMsg = "Invalid callnames for security eBPF probe: " + callName;
+                res = false;
             }
-            break;
-        }
-        case SecurityProbeType::FILE: {
-            for (auto& callName : callNames) {
-                if (fileCallName.find(callName) == fileCallName.end()) {
-                    errorMsg = "Invalid call name for file security eBPF probe";
-                    return false;
-                }
-            }
-            break;
-        }
-        case SecurityProbeType::NETWORK: {
-            for (auto& callName : callNames) {
-                if (networkCallName.find(callName) == networkCallName.end()) {
-                    errorMsg = "Invalid call name for network security eBPF probe";
-                    return false;
-                }
-            }
-            break;
-        }
-        default: {
-            errorMsg = "Unknown security eBPF probe type";
-            return false;
+        } else {
+            survivedCallNames.emplace_back(callName);
         }
     }
-    return true;
+    callNames.swap(survivedCallNames);
+    return res;
+}
+
+void SetSecurityProbeDefaultCallName(SecurityProbeType type, std::vector<std::string>& callNames) {
+    callNames.assign(callNameDict.at(type).begin(), callNameDict.at(type).end());
 }
 
 bool SecurityOptions::Init(SecurityProbeType probeType,
@@ -321,32 +305,88 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                            const PipelineContext* mContext,
                            const std::string& sName) {
     std::string errorMsg;
-    // ProbeConfig (Mandatory)
-    if (!IsValidList(config, "ProbeConfig", errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                           mContext->GetAlarm(),
-                           errorMsg,
-                           sName,
-                           mContext->GetConfigName(),
-                           mContext->GetProjectName(),
-                           mContext->GetLogstoreName(),
-                           mContext->GetRegion());
+
+    // ProbeConfig (Optional)
+    // no KEY:ProbeConfig only KEY:Type or ProbeConfig typo error, treat the plugin as having no filter, NO WARNING!
+    if (!config.isMember("ProbeConfig")) {
+        nami::SecurityOption thisSecurityOption;
+        SetSecurityProbeDefaultCallName(probeType, thisSecurityOption.call_names_);
+        thisSecurityOption.null_filter_ = true;
+        mOptionList.emplace_back(thisSecurityOption);
+        return true;
     }
+    // incorrect ProbeConfig type, treat the plugin as having no filter, THERE IS A WARNING!
+    if (!config["ProbeConfig"].isArray()) {
+        nami::SecurityOption thisSecurityOption;
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+        SetSecurityProbeDefaultCallName(probeType, thisSecurityOption.call_names_);
+        thisSecurityOption.null_filter_ = true;
+        mOptionList.emplace_back(thisSecurityOption);
+        return true;
+    }
+    // correct key ProbeConfig
     for (auto& innerConfig : config["ProbeConfig"]) {
         nami::SecurityOption thisSecurityOption;
-
-        std::string errorMsg;
-        // CallName (Mandatory)
-        if (!GetMandatoryListParam<std::string>(innerConfig, "CallName", thisSecurityOption.call_names_, errorMsg)
-            || !IsSecurityProbeCallNameValid(probeType, thisSecurityOption.call_names_, errorMsg)) {
-            PARAM_ERROR_RETURN(mContext->GetLogger(),
-                               mContext->GetAlarm(),
-                               errorMsg,
-                               sName,
-                               mContext->GetConfigName(),
-                               mContext->GetProjectName(),
-                               mContext->GetLogstoreName(),
-                               mContext->GetRegion());
+        // CallNameFilter (Optional)
+        if (!innerConfig.isMember("CallNameFilter")) {
+            // no CallNameFilter or CallNameFilter typo error, NO WARNING!
+            SetSecurityProbeDefaultCallName(probeType, thisSecurityOption.call_names_);
+        } else if (!innerConfig["CallNameFilter"].isArray()) {
+            // incorrect CallNameFilter type, THERE IS A WARNING!
+            errorMsg = "CallNameFilter is not of type array";
+            PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                 mContext->GetAlarm(),
+                                 errorMsg,
+                                 sName,
+                                 mContext->GetConfigName(),
+                                 mContext->GetProjectName(),
+                                 mContext->GetLogstoreName(),
+                                 mContext->GetRegion());
+            SetSecurityProbeDefaultCallName(probeType, thisSecurityOption.call_names_);
+        } else {
+            // correct CallNameFilter
+            if (!GetOptionalListParam<std::string>(
+                    innerConfig, "CallNameFilter", thisSecurityOption.call_names_, errorMsg)) {
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     errorMsg,
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
+            }
+            // get valid call names
+            if (!getValidSecurityProbeCallName(probeType, thisSecurityOption.call_names_, errorMsg)) {
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     errorMsg,
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
+            }
+            // if no valid call names, discard this option
+            if (thisSecurityOption.call_names_.empty()) {
+                errorMsg = "No valid call names, discard this option";
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     errorMsg,
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
+                continue;
+            }
         }
         // Filter (Optional)
         switch (probeType) {
@@ -361,6 +401,7 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                                         mContext->GetProjectName(),
                                         mContext->GetLogstoreName(),
                                         mContext->GetRegion());
+                    thisSecurityOption.null_filter_ = true;
                 } else {
                     if (!InitSecurityFileFilter(innerConfig, thisFileFilter, mContext, sName)) {
                         return false;
@@ -380,6 +421,7 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                                         mContext->GetProjectName(),
                                         mContext->GetLogstoreName(),
                                         mContext->GetRegion());
+                    thisSecurityOption.null_filter_ = true;
                 } else {
                     const Json::Value& filterConfig = innerConfig["AddrFilter"];
                     if (!InitSecurityNetworkFilter(filterConfig, thisNetworkFilter, mContext, sName)) {
@@ -390,14 +432,7 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                 break;
             }
             case SecurityProbeType::PROCESS: {
-                PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                     mContext->GetAlarm(),
-                                     "Process security eBPF probe does not support filter",
-                                     sName,
-                                     mContext->GetConfigName(),
-                                     mContext->GetProjectName(),
-                                     mContext->GetLogstoreName(),
-                                     mContext->GetRegion());
+                thisSecurityOption.null_filter_ = true;
                 break;
             }
             default:
@@ -411,6 +446,17 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                                      mContext->GetRegion());
         }
         mOptionList.emplace_back(thisSecurityOption);
+    }
+    if (mOptionList.empty()) {
+        errorMsg = "No valid security eBPF probe option";
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
     mProbeType = probeType;
     return true;

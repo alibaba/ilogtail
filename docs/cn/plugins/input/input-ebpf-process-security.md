@@ -13,8 +13,8 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_process\_security  |
-|  ProbeConfig  |  \[object\]  |  是  |  /  |  插件配置参数列表  |
-|  ProbeConfig.CallName  |  \[string\]  |  是  |  空  |  内核挂载点  |
+|  ProbeConfig  |  \[object\]  |  否  |  /  |  插件配置参数列表  |
+|  ProbeConfig.CallNameFilter  |  \[string\]  |  否  |  空  |  内核挂载点过滤器，按照白名单模式运行，不填表示配置该插件所支持的所有挂载点  |
 
 ## 样例
 
@@ -33,7 +33,7 @@ enable: true
 inputs:
   - Type: input_ebpf_processprobe_security
     ProbeConfig:
-      - CallName: 
+      - CallNameFilter: 
         - "sys_enter_execve"
         - "sys_enter_clone"
         - "disassociate_ctty"
