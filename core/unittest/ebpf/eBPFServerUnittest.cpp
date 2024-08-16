@@ -44,6 +44,8 @@ public:
 
     void TestEbpfParameters();
 
+    void TestInitAndStop();
+
 protected:
     void SetUp() override {
         config_ = new eBPFAdminConfig;
@@ -729,6 +731,8 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mNetworkSecureCB->mProcessTotalCnt, 1000);
 }
 
+
+
 void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     std::string configStr = R"(
         {
@@ -794,6 +798,20 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
     EXPECT_EQ(ebpf::eBPFServer::GetInstance()->mFileSecureCB->mProcessTotalCnt, 1000);
 }
 
+void eBPFServerUnittest::TestInitAndStop() {
+    EXPECT_EQ(true, eBPFServer::GetInstance()->mInited);
+    eBPFServer::GetInstance()->Init();
+    EXPECT_EQ(true, eBPFServer::GetInstance()->mInited);
+    eBPFServer::GetInstance()->Stop();
+    EXPECT_EQ(false, eBPFServer::GetInstance()->mInited);
+    eBPFServer::GetInstance()->Stop();
+    EXPECT_EQ(false, eBPFServer::GetInstance()->mInited);
+    EXPECT_EQ(nullptr, eBPFServer::GetInstance()->mSourceManager);
+    auto ret = eBPFServer::GetInstance()->CheckIfInUsed();
+    EXPECT_EQ(false, ret);
+    
+}
+
 UNIT_TEST_CASE(eBPFServerUnittest, TestDefaultEbpfParameters);
 UNIT_TEST_CASE(eBPFServerUnittest, TestDefaultAndLoadEbpfParameters);
 UNIT_TEST_CASE(eBPFServerUnittest, TestLoadEbpfParametersV1);
@@ -803,6 +821,7 @@ UNIT_TEST_CASE(eBPFServerUnittest, TestEnableNetworkPlugin)
 UNIT_TEST_CASE(eBPFServerUnittest, TestEnableProcessPlugin)
 UNIT_TEST_CASE(eBPFServerUnittest, TestEnableNetworkSecurePlugin)
 UNIT_TEST_CASE(eBPFServerUnittest, TestEnableFileSecurePlugin)
+UNIT_TEST_CASE(eBPFServerUnittest, TestInitAndStop)
 }
 }
 
