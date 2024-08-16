@@ -128,6 +128,7 @@ func (m *DeferredDeletionMetaStore) UnRegisterSendFunc(key string) {
 	}
 }
 
+// realtime events (add, update, delete) and timer events are handled sequentially
 func (m *DeferredDeletionMetaStore) handleEvent() {
 	defer panicRecover()
 	for {
@@ -278,17 +279,8 @@ func (m *DeferredDeletionMetaStore) handleTimerEvent(event *K8sMetaEvent) {
 	timerEvent := event.Object.Raw.(*TimerEvent)
 	if f, ok := m.sendFuncs.Load(timerEvent.ConfigName); ok {
 		sendFuncWithStopCh := f.(*SendFuncWithStopCh)
-		snapshotOfKeys := make([]string, 0)
-		m.lock.RLock()
-		for k := range m.Items {
-			snapshotOfKeys = append(snapshotOfKeys, k)
-		}
-		m.lock.RUnlock()
-		for _, k := range snapshotOfKeys {
-			m.lock.RLock()
-			obj, ok := m.Items[k]
-			m.lock.RUnlock()
-			if ok && !obj.Deleted {
+		for _, obj := range m.Items {
+			if !obj.Deleted {
 				obj.LastObservedTime = time.Now().Unix()
 				sendFuncWithStopCh.SendFunc(&K8sMetaEvent{
 					EventType: EventTypeUpdate,

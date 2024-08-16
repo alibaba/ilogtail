@@ -33,7 +33,11 @@ func TestProcessServiceEntity(t *testing.T) {
 	objWrapper := &k8smeta.ObjectWrapper{
 		Raw: obj,
 	}
-	collector := &metaCollector{}
+	collector := &metaCollector{
+		serviceK8sMeta: &ServiceK8sMeta{
+			Interval: 10,
+		},
+	}
 	log := collector.processServiceEntity(objWrapper, "create")
 	assert.NotNilf(t, log, "log should not be nil")
 }
