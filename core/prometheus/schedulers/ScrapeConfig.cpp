@@ -61,6 +61,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
         if (!mAuthHeaders.empty()) {
             LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
+            return false;
         }
         if (!InitAuthorization(scrapeConfig[prometheus::AUTHORIZATION])) {
             LOG_ERROR(sLogger, ("authorization config error", ""));
@@ -198,6 +199,7 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         LOG_ERROR(sLogger, ("authorization config error", ""));
         return false;
     }
+    // if not set, use default type Bearer
     if (type.empty()) {
         type = prometheus::AUTHORIZATION_DEFAULT_TYEP;
     }

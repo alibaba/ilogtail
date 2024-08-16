@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "common/Lock.h"
 #include "prometheus/labels/Relabel.h"
 
 
