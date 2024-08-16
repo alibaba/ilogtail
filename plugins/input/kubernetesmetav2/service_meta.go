@@ -64,8 +64,8 @@ func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 		processors:       make(map[string][]ProcessFunc),
 		collector:        collector,
 		entityTypes:      []string{},
-		entityBuffer:     &models.PipelineGroupEvents{},
-		entityLinkBuffer: &models.PipelineGroupEvents{},
+		entityBuffer:     make(chan models.PipelineEvent, 100),
+		entityLinkBuffer: make(chan models.PipelineEvent, 100),
 	}
 	return s.metaCollector.Start()
 }

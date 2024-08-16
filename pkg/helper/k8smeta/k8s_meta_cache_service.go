@@ -13,7 +13,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
-type serviceProcessor struct {
+type serviceCache struct {
 	metaStore *DeferredDeletionMetaStore
 	clientset *kubernetes.Clientset
 
@@ -21,31 +21,31 @@ type serviceProcessor struct {
 	stopCh  chan struct{}
 }
 
-func NewServiceProcessor(stopCh chan struct{}) *serviceProcessor {
+func newServiceCache(stopCh chan struct{}) *serviceCache {
 	idxRules := []IdxFunc{
 		generateServiceNameKey,
 	}
-	m := &serviceProcessor{}
+	m := &serviceCache{}
 	m.eventCh = make(chan *K8sMetaEvent, 100)
 	m.stopCh = stopCh
 	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
 	return m
 }
 
-func (m *serviceProcessor) init() {
+func (m *serviceCache) init() {
 	m.metaStore.Start()
 	m.watch(m.stopCh)
 }
 
-func (m *serviceProcessor) Get(key []string) map[string][]*ObjectWrapper {
+func (m *serviceCache) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
 }
 
-func (m *serviceProcessor) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
+func (m *serviceCache) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
 	m.metaStore.RegisterSendFunc(key, sendFunc, interval)
 }
 
-func (m *serviceProcessor) UnRegisterSendFunc(key string) {
+func (m *serviceCache) UnRegisterSendFunc(key string) {
 	m.metaStore.UnRegisterSendFunc(key)
 }
 
@@ -57,7 +57,7 @@ func generateServiceNameKey(obj interface{}) ([]string, error) {
 	return []string{service.Name}, nil
 }
 
-func (m *serviceProcessor) watch(stopCh <-chan struct{}) {
+func (m *serviceCache) watch(stopCh <-chan struct{}) {
 	factory := informers.NewSharedInformerFactory(m.clientset, time.Hour*1)
 	informer := factory.Core().V1().Services().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{

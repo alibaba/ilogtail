@@ -22,9 +22,8 @@ type metaCollector struct {
 	collector      pipeline.Collector
 
 	entityTypes      []string
-	entityBuffer     *models.PipelineGroupEvents
-	entityLinkBuffer *models.PipelineGroupEvents
-	lastSendTime     int64
+	entityBuffer     chan models.PipelineEvent
+	entityLinkBuffer chan models.PipelineEvent
 
 	stopCh chan struct{}
 }
@@ -46,7 +45,7 @@ func (m *metaCollector) Start() error {
 		m.processors[k8smeta.POD_SERVICE] = append(m.processors[k8smeta.POD_SERVICE], m.processPodServiceLink)
 		m.entityTypes = append(m.entityTypes, k8smeta.POD_SERVICE)
 	}
-	m.lastSendTime = time.Now().Unix()
+	go m.sendInBackground()
 	return nil
 }
 
@@ -82,7 +81,7 @@ func (m *metaCollector) handleAdd(event *k8smeta.K8sMetaEvent) {
 		for _, processor := range processors {
 			log := processor(event.Object, "create")
 			if log != nil {
-				m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+				m.send(log, isLink(event.Object.ResourceType))
 			}
 		}
 	}
@@ -93,7 +92,7 @@ func (m *metaCollector) handleUpdate(event *k8smeta.K8sMetaEvent) {
 		for _, processor := range processors {
 			log := processor(event.Object, "update")
 			if log != nil {
-				m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+				m.send(log, isLink(event.Object.ResourceType))
 			}
 		}
 	}
@@ -104,30 +103,59 @@ func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 		for _, processor := range processors {
 			log := processor(event.Object, "delete")
 			if log != nil {
-				m.sendWithBuffer(log, isLink(event.Object.ResourceType))
+				m.send(log, isLink(event.Object.ResourceType))
 			}
 		}
 	}
 }
 
-func (m *metaCollector) sendWithBuffer(event models.PipelineEvent, entity bool) {
-	var buffer *models.PipelineGroupEvents
+func (m *metaCollector) send(event models.PipelineEvent, entity bool) {
+	var buffer chan models.PipelineEvent
 	if entity {
 		buffer = m.entityBuffer
 	} else {
 		buffer = m.entityLinkBuffer
 	}
-	if event != nil {
-		buffer.Events = append(buffer.Events, event)
+	select {
+	case buffer <- event:
+	case <-time.After(3 * time.Second):
+		logger.Warning(context.Background(), "SEND_EVENT_TIMEOUT", "send event timeout", event)
 	}
-	if event == nil || len(buffer.Events) >= 16 || m.lastSendTime+3 < time.Now().Unix() {
-		// TODO: temporary convert from event group back to log, will fix after pipeline support Go input to C++ processor
-		for _, e := range buffer.Events {
+}
+
+func (m *metaCollector) sendInBackground() {
+	entityGroup := &models.PipelineGroupEvents{}
+	entityLinkGroup := &models.PipelineGroupEvents{}
+	sendFunc := func(group *models.PipelineGroupEvents) {
+		for _, e := range group.Events {
+			// TODO: temporary convert from event group back to log, will fix after pipeline support Go input to C++ processor
 			log := convertPipelineEvent2Log(e)
 			m.collector.AddRawLog(log)
 		}
-		buffer.Events = buffer.Events[:0]
-		m.lastSendTime = time.Now().Unix()
+		group.Events = group.Events[:0]
+	}
+	for {
+		select {
+		case e := <-m.entityBuffer:
+			entityGroup.Events = append(entityGroup.Events, e)
+			if len(entityGroup.Events) >= 100 {
+				sendFunc(entityGroup)
+			}
+		case e := <-m.entityLinkBuffer:
+			entityLinkGroup.Events = append(entityLinkGroup.Events, e)
+			if len(entityLinkGroup.Events) >= 100 {
+				sendFunc(entityLinkGroup)
+			}
+		case <-time.After(3 * time.Second):
+			if len(entityGroup.Events) > 0 {
+				sendFunc(entityGroup)
+			}
+			if len(entityLinkGroup.Events) > 0 {
+				sendFunc(entityLinkGroup)
+			}
+		case <-m.stopCh:
+			return
+		}
 	}
 }
 

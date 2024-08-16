@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"runtime"
 	"runtime/debug"
 	"sync"
@@ -276,7 +275,7 @@ func initPluginBase(cfgStr string) int {
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
 		LoadGlobalConfig(cfgStr)
-		if *flags.DeployMode == flags.DeploySingleton && len(os.Getenv("ENABLE_KUBERNETES_META")) != 0 {
+		if *flags.DeployMode == flags.DeploySingleton && *flags.EnableKubernetesMeta {
 			instance := k8smeta.GetMetaManagerInstance()
 			err := instance.Init("")
 			if err != nil {

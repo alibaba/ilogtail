@@ -77,7 +77,7 @@ func (m *metadataHandler) handlePodMetaByUniqueID(w http.ResponseWriter, r *http
 
 	// Get the metadata
 	metadata := make(map[string]*PodMetadata)
-	objs := m.metaManager.PodProcessor.Get(rBody.Keys)
+	objs := m.metaManager.PodCache.Get(rBody.Keys)
 	for key, obj := range objs {
 		podMetadata := convertObj2PodMetadata(obj)
 		if len(podMetadata) > 1 {
@@ -115,7 +115,7 @@ func (m *metadataHandler) handlePodMetaByHostIP(w http.ResponseWriter, r *http.R
 
 	// Get the metadata
 	metadata := make(map[string]*PodMetadata)
-	objs := m.metaManager.PodProcessor.Get(rBody.Keys)
+	objs := m.metaManager.PodCache.Get(rBody.Keys)
 	for _, obj := range objs {
 		podMetadata := convertObj2PodMetadata(obj)
 		for i, meta := range podMetadata {

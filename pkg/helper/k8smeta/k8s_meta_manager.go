@@ -17,7 +17,7 @@ var metaManager *MetaManager
 
 var onceManager sync.Once
 
-type MetaProcessor interface {
+type MetaCache interface {
 	Get(key []string) map[string][]*ObjectWrapper
 	RegisterSendFunc(key string, sendFunc SendFunc, interval int)
 	UnRegisterSendFunc(key string)
@@ -37,8 +37,8 @@ type MetaManager struct {
 	eventCh chan *K8sMetaEvent
 	ready   atomic.Bool
 
-	PodProcessor     *podProcessor
-	ServiceProcessor *serviceProcessor
+	PodCache     *podCache
+	ServiceCache *serviceCache
 }
 
 func GetMetaManagerInstance() *MetaManager {
@@ -47,8 +47,8 @@ func GetMetaManagerInstance() *MetaManager {
 			stopCh:  make(chan struct{}),
 			eventCh: make(chan *K8sMetaEvent, 1000),
 		}
-		metaManager.PodProcessor = NewPodProcessor(metaManager.stopCh)
-		metaManager.ServiceProcessor = NewServiceProcessor(metaManager.stopCh)
+		metaManager.PodCache = newPodCache(metaManager.stopCh)
+		metaManager.ServiceCache = newServiceCache(metaManager.stopCh)
 	})
 	return metaManager
 }
@@ -72,11 +72,11 @@ func (m *MetaManager) Init(configPath string) (err error) {
 	m.clientset = clientset
 
 	go func() {
-		m.ServiceProcessor.clientset = m.clientset
-		m.ServiceProcessor.init()
-		m.PodProcessor.clientset = m.clientset
-		m.PodProcessor.serviceMetaStore = m.ServiceProcessor.metaStore
-		m.PodProcessor.init()
+		m.ServiceCache.clientset = m.clientset
+		m.ServiceCache.init()
+		m.PodCache.clientset = m.clientset
+		m.PodCache.serviceMetaStore = m.ServiceCache.metaStore
+		m.PodCache.init()
 		m.ready.Store(true)
 		logger.Info(context.Background(), "init k8s meta manager", "success")
 	}()
@@ -95,9 +95,9 @@ func (m *MetaManager) IsReady() bool {
 func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, sendFunc SendFunc, interval int) {
 	switch resourceType {
 	case POD:
-		m.PodProcessor.RegisterSendFunc(configName, sendFunc, interval)
+		m.PodCache.RegisterSendFunc(configName, sendFunc, interval)
 	case SERVICE:
-		m.ServiceProcessor.RegisterSendFunc(configName, sendFunc, interval)
+		m.ServiceCache.RegisterSendFunc(configName, sendFunc, interval)
 	default:
 		logger.Error(context.Background(), "ENTITY_PIPELINE_REGISTER_ERROR", "resourceType not support", resourceType)
 	}
@@ -106,9 +106,9 @@ func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, s
 func (m *MetaManager) UnRegisterSendFunc(configName string, resourceType string) {
 	switch resourceType {
 	case POD:
-		m.PodProcessor.UnRegisterSendFunc(configName)
+		m.PodCache.UnRegisterSendFunc(configName)
 	case SERVICE:
-		m.ServiceProcessor.UnRegisterSendFunc(configName)
+		m.ServiceCache.UnRegisterSendFunc(configName)
 	default:
 		logger.Error(context.Background(), "ENTITY_PIPELINE_UNREGISTER_ERROR", "resourceType not support", resourceType)
 	}

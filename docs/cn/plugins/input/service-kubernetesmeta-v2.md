@@ -10,7 +10,7 @@
 
 ## 配置参数
 
-**注意：** 本插件需要在Kubernetes集群中运行，且需要有访问Kubernetes API的权限。并且部署模式为单例模式，且配置环境变量`DEPLOY_MODE`为`singleton`。
+**注意：** 本插件需要在Kubernetes集群中运行，且需要有访问Kubernetes API的权限。并且部署模式为单例模式，且配置环境变量`DEPLOY_MODE`为`singleton`，`ENABLE_KUBERNETES_META`为`true`。
 
 | 参数 | 类型，默认值 | 说明 |
 | - | - | - |

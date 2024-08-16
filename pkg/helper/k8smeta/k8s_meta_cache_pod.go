@@ -14,22 +14,25 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
-type podProcessor struct {
+type podCache struct {
 	metaStore        *DeferredDeletionMetaStore
 	serviceMetaStore *DeferredDeletionMetaStore
 	clientset        *kubernetes.Clientset
 
 	eventCh chan *K8sMetaEvent
 	stopCh  chan struct{}
+
+	discardEventCount int
+	discardStartTime  time.Time
 }
 
-func NewPodProcessor(stopCh chan struct{}) *podProcessor {
+func newPodCache(stopCh chan struct{}) *podCache {
 	idxRules := []IdxFunc{
 		generatePodIPKey,
 		generateContainerIDKey,
 		generateHostIPKey,
 	}
-	m := &podProcessor{}
+	m := &podCache{}
 	m.stopCh = stopCh
 	m.eventCh = make(chan *K8sMetaEvent, 100)
 	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
@@ -37,19 +40,19 @@ func NewPodProcessor(stopCh chan struct{}) *podProcessor {
 	return m
 }
 
-func (m *podProcessor) init() {
+func (m *podCache) init() {
 	m.metaStore.Start()
 	m.watch(m.stopCh)
 }
 
-func (m *podProcessor) Get(key []string) map[string][]*ObjectWrapper {
+func (m *podCache) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
 }
 
-func (m *podProcessor) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
+func (m *podCache) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
 	m.metaStore.RegisterSendFunc(key, func(kme *K8sMetaEvent) {
 		sendFunc(kme)
-		services := m.podServiceProcess([]*ObjectWrapper{kme.Object})
+		services := m.getPodServiceLink([]*ObjectWrapper{kme.Object})
 		for _, service := range services {
 			sendFunc(&K8sMetaEvent{
 				EventType: kme.EventType,
@@ -59,7 +62,7 @@ func (m *podProcessor) RegisterSendFunc(key string, sendFunc SendFunc, interval 
 	}, interval)
 }
 
-func (m *podProcessor) UnRegisterSendFunc(key string) {
+func (m *podCache) UnRegisterSendFunc(key string) {
 	m.metaStore.UnRegisterSendFunc(key)
 }
 
@@ -91,13 +94,13 @@ func generateHostIPKey(obj interface{}) ([]string, error) {
 	return []string{pod.Status.HostIP}, nil
 }
 
-func (m *podProcessor) watch(stopCh <-chan struct{}) {
+func (m *podCache) watch(stopCh <-chan struct{}) {
 	factory := informers.NewSharedInformerFactory(m.clientset, time.Hour*24)
 	informer := factory.Core().V1().Pods().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			nowTime := time.Now().Unix()
-			m.eventCh <- &K8sMetaEvent{
+			m.saveWithTimeout(&K8sMetaEvent{
 				EventType: EventTypeAdd,
 				Object: &ObjectWrapper{
 					ResourceType:      POD,
@@ -105,11 +108,11 @@ func (m *podProcessor) watch(stopCh <-chan struct{}) {
 					FirstObservedTime: nowTime,
 					LastObservedTime:  nowTime,
 				},
-			}
+			})
 		},
 		UpdateFunc: func(oldObj interface{}, obj interface{}) {
 			nowTime := time.Now().Unix()
-			m.eventCh <- &K8sMetaEvent{
+			m.saveWithTimeout(&K8sMetaEvent{
 				EventType: EventTypeUpdate,
 				Object: &ObjectWrapper{
 					ResourceType:      POD,
@@ -117,16 +120,16 @@ func (m *podProcessor) watch(stopCh <-chan struct{}) {
 					FirstObservedTime: nowTime,
 					LastObservedTime:  nowTime,
 				},
-			}
+			})
 		},
 		DeleteFunc: func(obj interface{}) {
-			m.eventCh <- &K8sMetaEvent{
+			m.saveWithTimeout(&K8sMetaEvent{
 				EventType: EventTypeDelete,
 				Object: &ObjectWrapper{
 					ResourceType: POD,
 					Raw:          obj,
 				},
-			}
+			})
 		},
 	})
 	go factory.Start(stopCh)
@@ -141,7 +144,20 @@ func (m *podProcessor) watch(stopCh <-chan struct{}) {
 	}
 }
 
-func (m *podProcessor) podServiceProcess(podList []*ObjectWrapper) []*ObjectWrapper {
+func (m *podCache) saveWithTimeout(event *K8sMetaEvent) {
+	select {
+	case m.eventCh <- event:
+	case <-time.After(1 * time.Second):
+		m.discardEventCount++
+		if m.discardEventCount == 10 {
+			logger.Warning(context.Background(), "K8S_META_CACHE_DISCARD_EVENT", "discard event count", m.discardEventCount, "from", m.discardStartTime.String(), "to", time.Now().String())
+			m.discardEventCount = 0
+			m.discardStartTime = time.Now()
+		}
+	}
+}
+
+func (m *podCache) getPodServiceLink(podList []*ObjectWrapper) []*ObjectWrapper {
 	serviceList := m.serviceMetaStore.List()
 	results := make([]*ObjectWrapper, 0)
 	matchers := make(map[string]labelMatchers)

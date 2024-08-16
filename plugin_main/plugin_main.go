@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 	"runtime"
 
 	"github.com/alibaba/ilogtail/pkg/doc"
@@ -55,7 +54,7 @@ func main() {
 	} else if InitPluginBaseV2(globalCfg) != 0 {
 		return
 	}
-	if *flags.DeployMode == flags.DeploySingleton && len(os.Getenv("ENABLE_KUBERNETES_META")) != 0 {
+	if *flags.DeployMode == flags.DeploySingleton && *flags.EnableKubernetesMeta {
 		instance := k8smeta.GetMetaManagerInstance()
 		err := instance.Init("")
 		if err != nil {
