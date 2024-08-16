@@ -2,7 +2,7 @@ package kubernetesmetav2
 
 import (
 	"context"
-	"crypto/sha256"
+	"crypto/md5"
 	"fmt"
 	"strings"
 	"time"
@@ -182,7 +182,7 @@ func genKeyByPod(pod *v1.Pod) string {
 
 func genKey(namespace, kind, name string) string {
 	key := namespace + kind + name
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
+	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
 }
 
 func genKeyByService(service *v1.Service) string {

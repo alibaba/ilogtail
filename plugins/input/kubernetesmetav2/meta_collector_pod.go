@@ -27,6 +27,22 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 		log.Contents.Add(entityNameFieldName, obj.Name)
 		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
+
+		// custom fields
+		log.Contents.Add("apiVersion", obj.APIVersion)
+		log.Contents.Add("kind", "pod")
+		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("namespace", obj.Namespace)
+		for k, v := range obj.Labels {
+			log.Contents.Add("_label_"+k, v)
+		}
+		for k, v := range obj.Annotations {
+			log.Contents.Add("_annotations_"+k, v)
+		}
+		for i, container := range obj.Spec.Containers {
+			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
+			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
+		}
 		return log
 	}
 	return nil
