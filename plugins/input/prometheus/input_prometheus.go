@@ -33,8 +33,15 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/protoparser/common"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
+)
+
+var _ pipeline.ServiceInputV2 = (*ServiceStaticPrometheus)(nil)
+
+const (
+	prometheusKeyName = "__name__"
 )
 
 var libLoggerOnce sync.Once
@@ -46,14 +53,15 @@ type ServiceStaticPrometheus struct {
 	ExtraFlags        map[string]string `comment:"the prometheus extra configuration flags, like promscrape.maxScrapeSize, for more flags please see [here](https://docs.victoriametrics.com/vmagent.html#advanced-usage)"`
 	NoStaleMarkers    bool              `comment:"Whether to disable sending Prometheus stale markers for metrics when scrape target disappears. This option may reduce memory usage if stale markers aren't needed for your setup. This option also disables populating the scrape_series_added metric. See https://prometheus.io/docs/concepts/jobs_instances/#automatically-generated-labels-and-time-series"`
 
-	scraper   *promscrape.Scraper //nolint:typecheck
-	shutdown  chan struct{}
-	waitGroup sync.WaitGroup
-	context   pipeline.Context
-	lock      sync.Mutex
-	running   bool
-	collector pipeline.Collector
-	kubeMeta  *KubernetesMeta
+	scraper     *promscrape.Scraper //nolint:typecheck
+	shutdown    chan struct{}
+	waitGroup   sync.WaitGroup
+	context     pipeline.Context
+	pipelineCtx pipeline.PipelineContext
+	lock        sync.Mutex
+	running     bool
+	collector   pipeline.Collector
+	kubeMeta    *KubernetesMeta
 }
 
 func (p *ServiceStaticPrometheus) Init(context pipeline.Context) (int, error) {
@@ -131,7 +139,22 @@ func (p *ServiceStaticPrometheus) Start(c pipeline.Collector) error {
 	p.scraper.Init(p.slsPushData)
 	p.running = true
 	if p.kubeMeta.isWorkingOnClusterMode() {
-		p.StartKubeReloadScraper()
+		p.StartKubeReloadScraper(p.slsPushData)
+	}
+	<-p.shutdown
+	p.scraper.Stop()
+	return nil
+}
+
+func (p *ServiceStaticPrometheus) StartService(ctx pipeline.PipelineContext) error {
+	p.pipelineCtx = ctx
+	p.shutdown = make(chan struct{})
+	p.waitGroup.Add(1)
+	defer p.waitGroup.Done()
+	p.scraper.Init(p.groupEventPushData)
+	p.running = true
+	if p.kubeMeta.isWorkingOnClusterMode() {
+		p.StartKubeReloadScraper(p.groupEventPushData)
 	}
 	<-p.shutdown
 	p.scraper.Stop()
@@ -148,7 +171,7 @@ func (p *ServiceStaticPrometheus) Stop() error {
 	return nil
 }
 
-func (p *ServiceStaticPrometheus) StartKubeReloadScraper() {
+func (p *ServiceStaticPrometheus) StartKubeReloadScraper(pushData func(at *auth.Token, wr *prompbmarshal.WriteRequest)) {
 	go func() {
 		ticker := time.NewTicker(time.Second * 10)
 		for {
@@ -167,7 +190,7 @@ func (p *ServiceStaticPrometheus) StartKubeReloadScraper() {
 				}
 				promscrape.ConfigMemberInfo(int(p.kubeMeta.replicas), strconv.Itoa(p.kubeMeta.currentNum))
 				p.scraper.Stop()
-				p.scraper.Init(p.slsPushData)
+				p.scraper.Init(pushData)
 				p.lock.Unlock()
 				logger.Info(p.context.GetRuntimeContext(), "reload prometheus scraper done")
 			}
@@ -187,4 +210,42 @@ func (p *ServiceStaticPrometheus) slsPushData(_ *auth.Token, wr *prompbmarshal.W
 	logger.Debug(p.context.GetRuntimeContext(), "append new metrics", wr.Size())
 	appendTSDataToSlsLog(p.collector, wr)
 	logger.Debug(p.context.GetRuntimeContext(), "append done", wr.Size())
+}
+
+func (p *ServiceStaticPrometheus) groupEventPushData(_ *auth.Token, wr *prompbmarshal.WriteRequest) {
+	logger.Debug(p.context.GetRuntimeContext(), "append new metrics", wr.Size())
+	convertWriteRequestAndAppend(p.context, p.pipelineCtx, wr)
+	logger.Debug(p.context.GetRuntimeContext(), "append done", wr.Size())
+}
+
+func convertWriteRequestAndAppend(context pipeline.Context, ctx pipeline.PipelineContext, wr *prompbmarshal.WriteRequest) {
+	metricList := make([]models.PipelineEvent, 0, len(wr.Timeseries))
+	for _, ts := range wr.Timeseries {
+		for _, sample := range ts.Samples {
+			metricName, tags := parseMetricNameAndLabels(ts.Labels)
+			metric := models.NewSingleValueMetric(
+				metricName,
+				models.MetricTypeGauge,
+				tags,
+				time.Unix(0, sample.Timestamp*1_000_000).UnixNano(),
+				sample.Value)
+			metricList = append(metricList, metric)
+			logger.Debugf(context.GetRuntimeContext(), "append a metric: %v", metric.String())
+		}
+	}
+	ctx.Collector().Collect(nil, metricList...)
+}
+
+func parseMetricNameAndLabels(labels []prompbmarshal.Label) (string, models.Tags) {
+	tags := make(map[string]string, len(labels)-1)
+	metricName := ""
+	for _, label := range labels {
+		if label.Name == prometheusKeyName {
+			metricName = strings.Clone(label.Value)
+			continue
+		}
+		// deep copy these strings since they are unsafe to use after the function returns.
+		tags[strings.Clone(label.Name)] = strings.Clone(label.Value)
+	}
+	return metricName, models.NewMetadataWithMap(tags)
 }

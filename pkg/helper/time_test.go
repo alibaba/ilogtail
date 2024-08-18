@@ -1,4 +1,4 @@
-// Copyright 2022 iLogtail Authors
+// Copyright 2024 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,27 @@
 package helper
 
 import (
-	"errors"
-	"io"
-	"net"
+	"testing"
+	"time"
 
-	knet "k8s.io/apimachinery/pkg/util/net"
+	"github.com/stretchr/testify/assert"
 )
 
-func GetFreePort() (port int, err error) {
-	listener, err := net.Listen("tcp", ":0") //nolint:gosec
-	if err != nil {
-		return 0, err
-	}
-	defer listener.Close()
-	return listener.Addr().(*net.TCPAddr).Port, nil
-}
+func TestJitter(t *testing.T) {
+	jitter := GetJitter(100)
+	assert.Greater(t, jitter, time.Duration(0))
+	assert.LessOrEqual(t, jitter, time.Duration(100))
 
-func IsErrorEOF(err error) bool {
-	return errors.Is(err, io.EOF) || knet.IsProbableEOF(err)
+	start := time.Now()
+	RandomSleep(5*time.Second, nil)
+	assert.LessOrEqual(t, time.Since(start), time.Second*5)
+
+	stopCh := make(chan any)
+	go func() {
+		start = time.Now()
+		time.Sleep(time.Second)
+		close(stopCh)
+	}()
+	RandomSleep(time.Second*2, stopCh)
+	assert.LessOrEqual(t, time.Since(start), time.Second*2)
 }
