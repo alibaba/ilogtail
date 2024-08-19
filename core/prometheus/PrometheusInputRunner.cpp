@@ -90,6 +90,7 @@ void PrometheusInputRunner::Init() {
         mIsThreadRunning.store(true);
         if (!mServiceHost.empty()) {
             int retry = 0;
+            std::lock_guard<mutex> lock(mRegisterMutex);
             while (mIsThreadRunning.load()) {
                 ++retry;
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
@@ -146,6 +147,7 @@ void PrometheusInputRunner::Stop() {
     // only unregister when operator exist
     if (!mServiceHost.empty()) {
         LOG_INFO(sLogger, ("PrometheusInputRunner", "unregister"));
+        std::lock_guard<mutex> lock(mRegisterMutex);
         auto res = std::async(launch::async, [this]() {
             for (int retry = 0; retry < 3; ++retry) {
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::UNREGISTER_COLLECTOR_PATH);
@@ -172,6 +174,10 @@ sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) c
     httpHeader[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = prometheus::PROMETHEUS_PREFIX + mPodName;
+#ifdef APSARA_UNIT_TEST_MAIN
+    httpResponse.statusCode = 200;
+    return httpResponse;
+#endif
     try {
         mClient->Send(sdk::HTTP_GET,
                       mServiceHost,

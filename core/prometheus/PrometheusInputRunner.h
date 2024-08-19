@@ -59,6 +59,7 @@ private:
     bool mIsStarted = false;
     std::mutex mStartMutex;
 
+    std::mutex mRegisterMutex;
     std::future<void> mThreadRes;
     std::atomic<bool> mIsThreadRunning = true;
 
