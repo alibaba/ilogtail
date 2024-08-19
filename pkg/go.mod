@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/Microsoft/go-winio v0.5.2
+	github.com/VictoriaMetrics/VictoriaMetrics v1.83.4
 	github.com/cespare/xxhash v1.1.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
@@ -23,7 +24,7 @@ require (
 	github.com/prometheus/common v0.42.0
 	github.com/prometheus/prometheus v1.8.2-0.20210430082741-2a4b8e12bbf2
 	github.com/pyroscope-io/jfr-parser v0.6.0
-	github.com/pyroscope-io/pyroscope v0.0.0-00010101000000-000000000000
+	github.com/pyroscope-io/pyroscope v1.5.0
 	github.com/richardartoul/molecule v1.0.0
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/stretchr/testify v1.8.2
