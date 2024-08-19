@@ -206,6 +206,9 @@ bool DelimiterModeFsmParser::HandleEOF(const char* ch,
                                        std::vector<StringView>& columnValues,
                                        int& doubleQuoteNum,
                                        LogEvent& event) {
+    if (fsm.currentState == STATE_DOUBLE_QUOTE) {
+        doubleQuoteNum--;
+    }
     switch (fsm.currentState) {
         case STATE_INITIAL:
         case STATE_DATA:
@@ -281,9 +284,6 @@ bool DelimiterModeFsmParser::ParseDelimiterLine(
             columnValues.clear();
             return false;
         }
-    }
-    if (fsm.currentState == STATE_DOUBLE_QUOTE) {
-        doubleQuoteNum--;
     }
     result = HandleEOF(ch, quote, fieldStart, fieldEnd, fsm, columnValues, doubleQuoteNum, event);
     // clear all columns if failed to parse
