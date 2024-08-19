@@ -807,9 +807,8 @@ void eBPFServerUnittest::TestInitAndStop() {
     eBPFServer::GetInstance()->Stop();
     EXPECT_EQ(false, eBPFServer::GetInstance()->mInited);
     EXPECT_EQ(nullptr, eBPFServer::GetInstance()->mSourceManager);
-    auto ret = eBPFServer::GetInstance()->CheckIfInUsed();
+    auto ret = eBPFServer::GetInstance()->HasRegisteredPlugins();
     EXPECT_EQ(false, ret);
-    
 }
 
 UNIT_TEST_CASE(eBPFServerUnittest, TestDefaultEbpfParameters);

@@ -71,8 +71,6 @@ private:
 
     void UpdateCBContext(nami::PluginType type, const logtail::PipelineContext* ctx, logtail::QueueKey key, int idx);
 
-    bool CheckIfInUsed() const;
-
     std::unique_ptr<SourceManager> mSourceManager;
     // source manager
     std::unique_ptr<EventHandler> mEventCB;

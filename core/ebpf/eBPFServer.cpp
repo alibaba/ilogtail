@@ -154,16 +154,12 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     return ret;
 }
 
-bool eBPFServer::CheckIfInUsed() const {
+bool eBPFServer::HasRegisteredPlugins() const {
     std::lock_guard<std::mutex> lk(mMtx);
     for (auto& pipeline : mLoadedPipeline) {
         if (!pipeline.empty()) return true;
     }
     return false;
-}
-
-bool eBPFServer::HasRegisteredPlugins() const {
-    return CheckIfInUsed();
 }
 
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
