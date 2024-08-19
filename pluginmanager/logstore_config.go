@@ -654,9 +654,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			return nil, fmt.Errorf("invalid aggregator type : %s, not json array", "aggregators")
 		}
 	}
-	if err = logstoreC.PluginRunner.AddDefaultAggregatorIfEmpty(); err != nil {
-		return nil, err
-	}
 
 	pluginConfig, flushersFound := plugins["flushers"]
 	if flushersFound {

@@ -199,7 +199,7 @@ bool ContainerDiscoveryOptions::Init(const Json::Value& config, const PipelineCo
 
 void ContainerDiscoveryOptions::GenerateContainerMetaFetchingGoPipeline(Json::Value& res,
                                                                         const FileDiscoveryOptions* fileDiscovery,
-                                                                        const std::string pluginID) const {
+                                                                        const PluginInstance::PluginMeta pluginMeta) const {
     Json::Value plugin(Json::objectValue);
     Json::Value detail(Json::objectValue);
     Json::Value object(Json::objectValue);
@@ -249,7 +249,7 @@ void ContainerDiscoveryOptions::GenerateContainerMetaFetchingGoPipeline(Json::Va
     if (mCollectingContainersMeta) {
         detail["CollectingContainersMeta"] = Json::Value(true);
     }
-    plugin["type"] = Json::Value("metric_container_info/" + pluginID);
+    plugin["type"] = Json::Value("metric_container_info/" + pluginMeta.mPluginID);
     plugin["detail"] = detail;
 
     res["inputs"].append(plugin);

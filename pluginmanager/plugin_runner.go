@@ -40,8 +40,6 @@ const (
 type PluginRunner interface {
 	Init(inputQueueSize int, aggrQueueSize int) error
 
-	AddDefaultAggregatorIfEmpty() error
-
 	AddDefaultFlusherIfEmpty() error
 
 	ReceiveRawLog(log *pipeline.LogWithContext)
