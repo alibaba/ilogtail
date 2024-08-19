@@ -132,7 +132,7 @@ bool SourceManager::DynamicLibSuccess() {
   return true;
 }
 
-void SourceManager::FillCommonConf(nami::eBPFConfig* conf) {
+void SourceManager::FillCommonConf(std::unique_ptr<nami::eBPFConfig>& conf) {
   conf->host_ip_ = mHostIp;
   conf->host_name_ = mHostName;
   conf->host_path_prefix_ = mHostPathPrefix;
@@ -167,24 +167,23 @@ bool SourceManager::StartPlugin(nami::PluginType plugin_type,
 
   // plugin not started ... 
   LOG_INFO(sLogger, ("begin to start plugin, type", int(plugin_type)));
-  auto conf = new nami::eBPFConfig;
+  auto conf = std::make_unique<nami::eBPFConfig>();
   conf->plugin_type_ = plugin_type;
   conf->type = UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE;
   conf->config_ = config;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
-    mConfig = conf;
+    mConfig = std::move(conf);
     mRunning[int(plugin_type)] = true;
     return true;
 #endif
   void* f = mFuncs[(int)ebpf_func::EBPF_INIT];
   if (!f) {
-    delete conf;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, init func ptr is null", int(plugin_type)));
     return false;
   }
   auto init_f = (init_func)f;
-  int res = init_f(conf);
+  int res = init_f(conf.release());
   if (!res) mRunning[int(plugin_type)] = true;
   return !res;
 }
@@ -196,24 +195,23 @@ bool SourceManager::UpdatePlugin(nami::PluginType plugin_type,
     return false;
   }
 
-  auto conf = new nami::eBPFConfig;
+  auto conf = std::make_unique<nami::eBPFConfig>();
   conf->plugin_type_ = plugin_type;
   conf->type = UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE;
   conf->config_ = config;
   FillCommonConf(conf);
 #ifdef APSARA_UNIT_TEST_MAIN
-  mConfig = conf;
+  mConfig = std::move(conf);
   return true;
 #endif
   void* f = mFuncs[(int)ebpf_func::EBPF_UPDATE];
   if (!f) {
-    delete conf;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, update func ptr is null", int(plugin_type)));
     return false;
   }
 
   auto update_f = (update_func)f;
-  int res = update_f(conf);
+  int res = update_f(conf.release());
   if (!res) mRunning[int(plugin_type)] = true;
   return !res;
 }
@@ -246,23 +244,22 @@ bool SourceManager::SuspendPlugin(nami::PluginType plugin_type) {
     LOG_WARNING(sLogger, ("plugin not started, cannot suspend. type",  int(plugin_type)));
     return false;
   }
-  auto config = new nami::eBPFConfig;
+  auto config = std::make_unique<nami::eBPFConfig>();
   config->plugin_type_ = plugin_type;
   config->type = UpdataType::SECURE_UPDATE_TYPE_SUSPEND_PROBE;
 #ifdef APSARA_UNIT_TEST_MAIN
-  mConfig = config;
+  mConfig = std::move(config);
   return true;
 #endif
   // ensure that sysak would not call handle()
   void* f = mFuncs[(int)ebpf_func::EBPF_SUSPEND];
   if (!f) {
-    delete config;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, suspend func ptr is null", int(plugin_type)));
     return false;
   }
 
   auto suspend_f = (suspend_func)f;
-  int res = suspend_f(config);
+  int res = suspend_f(config.release());
 
   return !res;
 }
@@ -273,25 +270,24 @@ bool SourceManager::StopPlugin(nami::PluginType plugin_type) {
     return true;
   }
 
-  auto config = new nami::eBPFConfig;
+  auto config = std::make_unique<nami::eBPFConfig>();
   config->plugin_type_ = plugin_type;
   config->type = UpdataType::SECURE_UPDATE_TYPE_DISABLE_PROBE;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-  mConfig = config;
+  mConfig = std::move(config);
   mRunning[int(plugin_type)] = false;
   return true;
 #endif
 
   void* f = mFuncs[(int)ebpf_func::EBPF_REMOVE];
   if (!f) {
-    delete config;
     LOG_ERROR(sLogger, ("failed to load dynamic lib, remove func ptr is null", int(plugin_type)));
     return false;
   }
 
   auto remove_f = (remove_func)f;
-  int res = remove_f(config);
+  int res = remove_f(config.release());
   if (!res) mRunning[int(plugin_type)] = false;
   return !res;
 }

@@ -154,7 +154,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     return ret;
 }
 
-bool eBPFServer::CheckIfInUsed() {
+bool eBPFServer::CheckIfInUsed() const {
     std::lock_guard<std::mutex> lk(mMtx);
     for (auto& pipeline : mLoadedPipeline) {
         if (!pipeline.empty()) return true;
@@ -162,11 +162,8 @@ bool eBPFServer::CheckIfInUsed() {
     return false;
 }
 
-void eBPFServer::StopIfNotInUse() {
-    if (CheckIfInUsed()) return;
-    LOG_INFO(sLogger, ("no regitered pipeline, begin to destroy eBPF Server", ""));
-    Stop();
-    return;
+bool eBPFServer::HasRegisteredPlugins() const {
+    return CheckIfInUsed();
 }
 
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,

@@ -544,7 +544,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
         &network_option);
     
     EXPECT_TRUE(res);
-    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     auto network_conf = std::get<nami::NetworkObserveConfig>(conf->config_);
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
@@ -575,7 +575,7 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
         &ctx,
         &network_option);
     EXPECT_TRUE(res);
-    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_OBSERVE);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 
@@ -628,7 +628,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto process_conf = std::get<nami::ProcessConfig>(conf->config_);
@@ -649,7 +649,7 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::PROCESS_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
     auto after_conf = std::get<nami::ProcessConfig>(conf->config_);
@@ -695,7 +695,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto inner_conf = std::get<nami::NetworkSecurityConfig>(conf->config_);
@@ -720,7 +720,7 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::NETWORK_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 
@@ -763,7 +763,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
         &security_options);
     EXPECT_EQ(std::get<nami::SecurityFileFilter>(security_options.mOptionList[0].filter_).mFilePathList.size(), 3);
     EXPECT_TRUE(res);
-    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    auto conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::FILE_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto inner_conf = std::get<nami::FileSecurityConfig>(conf->config_);
@@ -787,7 +787,7 @@ void eBPFServerUnittest::TestEnableFileSecurePlugin() {
         &ctx,
         &security_options);
     EXPECT_TRUE(res);
-    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig;
+    conf = ebpf::eBPFServer::GetInstance()->mSourceManager->mConfig.get();
     EXPECT_EQ(conf->plugin_type_, nami::PluginType::FILE_SECURITY);
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_CONFIG_CHAGE);
 

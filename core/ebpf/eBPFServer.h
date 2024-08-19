@@ -59,7 +59,7 @@ public:
 
     bool SuspendPlugin(const std::string& pipeline_name, nami::PluginType type);
 
-    void StopIfNotInUse() override;
+    bool HasRegisteredPlugins() const override;
 
 private:
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
@@ -71,7 +71,7 @@ private:
 
     void UpdateCBContext(nami::PluginType type, const logtail::PipelineContext* ctx, logtail::QueueKey key, int idx);
 
-    bool CheckIfInUsed();
+    bool CheckIfInUsed() const;
 
     std::unique_ptr<SourceManager> mSourceManager;
     // source manager
@@ -82,7 +82,7 @@ private:
     std::unique_ptr<SecurityHandler> mProcessSecureCB;
     std::unique_ptr<SecurityHandler> mFileSecureCB;
 
-    std::mutex mMtx;
+    mutable std::mutex mMtx;
     std::array<std::string, (int)nami::PluginType::MAX> mLoadedPipeline = {};
 
     eBPFAdminConfig mAdminConfig;
