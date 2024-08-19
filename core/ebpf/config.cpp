@@ -278,6 +278,10 @@ bool IsProcessNamespaceFilterTypeValid(const std::string& type) {
 }
 
 bool getValidSecurityProbeCallName(SecurityProbeType type, std::vector<std::string>& callNames, std::string& errorMsg) {
+    if (type >= SecurityProbeType::MAX) {
+        errorMsg = "Invalid security eBPF probe type";
+        return false;
+    }
     std::vector<std::string> survivedCallNames;
     bool res = true;
     for (auto& callName : callNames) {

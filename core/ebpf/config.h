@@ -36,7 +36,7 @@ bool InitObserverNetworkOption(const Json::Value& config,
 
 /////////////////////  /////////////////////
 
-enum class SecurityProbeType { PROCESS, FILE, NETWORK };
+enum class SecurityProbeType { PROCESS, FILE, NETWORK, MAX };
 
 class SecurityOptions {
 public:

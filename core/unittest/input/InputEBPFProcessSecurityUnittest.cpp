@@ -257,6 +257,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 1);
+    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_[0], "disassociate_ctty");
 }
 
 void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {
