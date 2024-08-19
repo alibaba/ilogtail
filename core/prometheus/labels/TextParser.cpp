@@ -36,7 +36,7 @@ namespace logtail {
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     vector<StringView> lines;
-    lines.reserve(content.size() / 100);
+    lines.reserve(content.size() / 1024);
     SplitStringView(content, '\n', lines);
     for (const auto& line : lines) {
         if (!IsValidMetric(line)) {

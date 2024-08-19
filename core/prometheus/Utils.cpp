@@ -45,10 +45,13 @@ bool StringViewToDouble(const StringView& sv, double& value) {
     char* end = nullptr;
     errno = 0;
     value = std::strtod(str, &end);
+    if (errno != 0) {
+        return false;
+    }
     if (end == str) {
         return false;
     }
-    if (errno == ERANGE) {
+    if (end != sv.end()) {
         return false;
     }
     return true;
