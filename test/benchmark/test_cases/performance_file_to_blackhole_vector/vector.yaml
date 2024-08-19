@@ -17,7 +17,7 @@ transforms:
       - transform_json
     condition: 
       type: "vrl"
-      source: ."usr-agent" == "no-agent"
+      source: ."user-agent" == "no-agent"
 
 sinks:
   output_std:
