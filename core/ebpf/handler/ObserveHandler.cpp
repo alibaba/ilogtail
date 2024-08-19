@@ -119,6 +119,32 @@ void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
     return;
 }
 
+void EventHandler::handle(std::vector<std::unique_ptr<ApplicationBatchEvent>>&& events) {
+    if (events.empty()) return;
+
+    for (auto& appEvents : events) {
+        std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        for (auto& event : appEvents->events_) {
+            auto logEvent = eventGroup.AddLogEvent();
+            for (auto& tag : event->GetAllTags()) {
+                logEvent->SetContent(tag.first, tag.second);
+                auto seconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::nanoseconds(event->GetTimestamp()));
+                logEvent->SetTimestamp(seconds.count(), event->GetTimestamp());
+            }
+            mProcessTotalCnt ++;
+        }
+        for (auto& tag : appEvents->tags_) eventGroup.SetTag(tag.first, tag.second);
+#ifdef APSARA_UNIT_TEST_MAIN
+        continue;
+#endif
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(eventGroup), mPluginIdx);
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
+            LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Event] push queue failed!", ""));
+        }
+    }
+}
+
 #ifdef __ENTERPRISE__
 
 const static std::string app_id_key = "arms.appId";
