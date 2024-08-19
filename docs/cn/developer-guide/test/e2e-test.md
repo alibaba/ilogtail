@@ -31,7 +31,7 @@ iLogtail提供了一个完整的E2E测试引擎，方便您快速开展各类插
 
 ### 配置文件
 
-Yaml配置文件的基本框架如下所示，其中`boot`模块规定了测试环境的创建方式，现阶段只支持Docker compose：
+对于每一个新的功能，您都需要在./test/e2e/test_cases目录下创建一个新的feature配置文件。每个配置文件中可以包含多个测试场景，每个测试场景由一个或多个步骤组成。
 
 ```yaml
 boot:
@@ -102,19 +102,11 @@ retry:
 
 在所有测试内容准备完毕后，您可以直接在iLogtail的根目录下运行`TEST_SCOPE=<your_test_case_name> make e2e`。如果需要引擎输出测试的详细过程，可以在前述命令中额外增加`TEST_DEBUG=true`。
 
-测试结束后，会在根目录下新建一个名为behavior_test的目录，其中涵盖了与测试过程有关的文件，目录组织结构如下：
-
-```plain
-./behavior_test/
-├── report
-│   ├── <your_test_case_name>_log
-│       ├── ilogtail.LOG
-│       └── logtail_plugin.LOG 
-│   ├── <your_test_case_name>_coverage.out  (代码覆盖率结果)
-│   ├── <your_test_case_name>_engine.log    (测试引擎日志)
-│   └── <your_test_case_name>_report.json   (测试报告)
-├── ilogtail-test-tool
-└── plugin_logger.xml
+```shell
+# 运行所有测试
+go test -v -timeout 30m -run ^TestE2EOnDockerCompose$ github.com/alibaba/ilogtail/test/e2e
+# 运行指定测试，以input_canal为例
+TEST_CASE=input_canal go test -v -timeout 30m -run ^TestE2EOnDockerCompose$ github.com/alibaba/ilogtail/test/e2e
 ```
 
 ## 测试模式
