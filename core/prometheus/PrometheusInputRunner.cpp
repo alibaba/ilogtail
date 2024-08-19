@@ -76,11 +76,12 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
 
 /// @brief targets discovery and start scrape work
 void PrometheusInputRunner::Init() {
-    if (mIsStarted.load()) {
+    std::lock_guard<mutex> lock(mStartMutex);
+    if (mIsStarted) {
         return;
     }
     LOG_INFO(sLogger, ("PrometheusInputRunner", "Start"));
-    mIsStarted.store(true);
+    mIsStarted = true;
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();
 
@@ -123,17 +124,19 @@ void PrometheusInputRunner::Init() {
 
 /// @brief stop scrape work and clear all scrape jobs
 void PrometheusInputRunner::Stop() {
-    if (!mIsStarted.load()) {
+    std::lock_guard<mutex> lock(mStartMutex);
+    if (!mIsStarted) {
         return;
     }
-    LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
 
-    mIsStarted.store(false);
+    mIsStarted = false;
     mIsThreadRunning.store(false);
     mTimer->Stop();
 
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "stop asyn curl runner"));
     AsynCurlRunner::GetInstance()->Stop();
 
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "cancel all target subscribers"));
     CancelAllTargetSubscriber();
     {
         WriteLock lock(mSubscriberMapRWLock);
@@ -142,6 +145,7 @@ void PrometheusInputRunner::Stop() {
 
     // only unregister when operator exist
     if (!mServiceHost.empty()) {
+        LOG_INFO(sLogger, ("PrometheusInputRunner", "unregister"));
         auto res = std::async(launch::async, [this]() {
             for (int retry = 0; retry < 3; ++retry) {
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::UNREGISTER_COLLECTOR_PATH);
@@ -155,16 +159,12 @@ void PrometheusInputRunner::Stop() {
             }
         });
     }
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "Stop"));
 }
 
-void PrometheusInputRunner::StopIfNotInUse() {
+bool PrometheusInputRunner::HasRegisteredPlugins() const {
     ReadLock lock(mSubscriberMapRWLock);
-    if (mTargetSubscriberSchedulerMap.empty()) {
-        lock.unlock();
-        Stop();
-    } else {
-        lock.unlock();
-    }
+    return !mTargetSubscriberSchedulerMap.empty();
 }
 
 sdk::HttpMessage PrometheusInputRunner::SendRegisterMessage(const string& url) const {

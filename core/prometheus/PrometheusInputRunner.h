@@ -48,7 +48,7 @@ public:
     // target discover and scrape
     void Init() override;
     void Stop() override;
-    void StopIfNotInUse() override;
+    bool HasRegisteredPlugins() const override;
 
 private:
     PrometheusInputRunner();
@@ -56,7 +56,8 @@ private:
 
     void CancelAllTargetSubscriber();
 
-    std::atomic<bool> mIsStarted = false;
+    bool mIsStarted = false;
+    std::mutex mStartMutex;
 
     std::future<void> mThreadRes;
     std::atomic<bool> mIsThreadRunning = true;
@@ -69,7 +70,7 @@ private:
 
     std::shared_ptr<Timer> mTimer;
 
-    ReadWriteLock mSubscriberMapRWLock;
+    mutable ReadWriteLock mSubscriberMapRWLock;
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
 
     uint64_t mUnRegisterMs;

@@ -113,7 +113,8 @@ void InputRunnerMockHttpClient::Send(const std::string&,
 class PrometheusInputRunnerUnittest : public testing::Test {
 public:
     void OnSuccessfulStartAndStop();
-    void TestStopIfNotInUse();
+    void TestHasRegisteredPlugins();
+    void TestMulitStartAndStop();
 
 protected:
     void SetUp() override {
@@ -166,13 +167,12 @@ void PrometheusInputRunnerUnittest::OnSuccessfulStartAndStop() {
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
-void PrometheusInputRunnerUnittest::TestStopIfNotInUse() {
+void PrometheusInputRunnerUnittest::TestHasRegisteredPlugins() {
     PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();
     PrometheusInputRunner::GetInstance()->Init();
-    PrometheusInputRunner::GetInstance()->StopIfNotInUse();
 
     // not in use
-    APSARA_TEST_FALSE(PrometheusInputRunner::GetInstance()->mIsStarted.load());
+    APSARA_TEST_FALSE(PrometheusInputRunner::GetInstance()->HasRegisteredPlugins());
 
     // in use
     PrometheusInputRunner::GetInstance()->Init();
@@ -193,13 +193,42 @@ void PrometheusInputRunnerUnittest::TestStopIfNotInUse() {
     std::unique_ptr<TargetSubscriberScheduler> scrapeJobPtr = make_unique<TargetSubscriberScheduler>();
     APSARA_TEST_TRUE(scrapeJobPtr->Init(config));
     PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(scrapeJobPtr));
-    PrometheusInputRunner::GetInstance()->StopIfNotInUse();
-    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mIsStarted.load());
+    APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->HasRegisteredPlugins());
     PrometheusInputRunner::GetInstance()->Stop();
 }
 
+void PrometheusInputRunnerUnittest::TestMulitStartAndStop() {
+    PrometheusInputRunner::GetInstance()->mClient = make_unique<InputRunnerMockHttpClient>();
+    PrometheusInputRunner::GetInstance()->Init();
+    {
+        std::lock_guard<mutex> lock(PrometheusInputRunner::GetInstance()->mStartMutex);
+        APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mIsStarted);
+    }
+    PrometheusInputRunner::GetInstance()->Init();
+    {
+        std::lock_guard<mutex> lock(PrometheusInputRunner::GetInstance()->mStartMutex);
+        APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mIsStarted);
+    }
+    PrometheusInputRunner::GetInstance()->Stop();
+    {
+        std::lock_guard<mutex> lock(PrometheusInputRunner::GetInstance()->mStartMutex);
+        APSARA_TEST_FALSE(PrometheusInputRunner::GetInstance()->mIsStarted);
+    }
+    PrometheusInputRunner::GetInstance()->Init();
+    {
+        std::lock_guard<mutex> lock(PrometheusInputRunner::GetInstance()->mStartMutex);
+        APSARA_TEST_TRUE(PrometheusInputRunner::GetInstance()->mIsStarted);
+    }
+    PrometheusInputRunner::GetInstance()->Stop();
+    {
+        std::lock_guard<mutex> lock(PrometheusInputRunner::GetInstance()->mStartMutex);
+        APSARA_TEST_FALSE(PrometheusInputRunner::GetInstance()->mIsStarted);
+    }
+}
+
 UNIT_TEST_CASE(PrometheusInputRunnerUnittest, OnSuccessfulStartAndStop)
-UNIT_TEST_CASE(PrometheusInputRunnerUnittest, TestStopIfNotInUse)
+UNIT_TEST_CASE(PrometheusInputRunnerUnittest, TestHasRegisteredPlugins)
+UNIT_TEST_CASE(PrometheusInputRunnerUnittest, TestMulitStartAndStop)
 
 } // namespace logtail
 
