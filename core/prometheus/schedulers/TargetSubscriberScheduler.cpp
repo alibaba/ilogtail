@@ -58,7 +58,7 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
     return mJobName < other.mJobName;
 }
 
-void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
+void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uint64_t) {
     if (response.mStatusCode == 304) {
         // not modified
         return;
@@ -232,8 +232,8 @@ string TargetSubscriberScheduler::GetId() const {
 
 void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response) {
-        this->OnSubscription(response);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
+        this->OnSubscription(response, timestampNanoSec);
         this->ExecDone();
         this->ScheduleNext();
     });

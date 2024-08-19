@@ -2,6 +2,7 @@
 
 #include <json/json.h>
 
+#include "common/StringTools.h"
 #include "models/LogEvent.h"
 #include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
@@ -30,6 +31,7 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
         ProcessEvent(e, newEvents, eGroup);
     }
     events.swap(newEvents);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(events.size()));
 }
 
 bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
@@ -37,8 +39,8 @@ bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e)
 }
 
 bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
-                                              EventsContainer& newEvents,
-                                              PipelineEventGroup& eGroup) {
+                                                  EventsContainer& newEvents,
+                                                  PipelineEventGroup& eGroup) {
     if (!IsSupportedEvent(e)) {
         return false;
     }
