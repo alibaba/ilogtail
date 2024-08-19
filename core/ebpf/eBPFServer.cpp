@@ -170,6 +170,7 @@ bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_
                         nami::PluginType type, 
                         const PipelineContext* ctx, 
                         const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
+    Init();
     return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options);
 }
 

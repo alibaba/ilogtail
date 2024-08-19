@@ -22,6 +22,7 @@
 #include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "observer/ObserverManager.h"
+#include "ebpf/eBPFServer.h"
 #endif
 #include "processor/daemon/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
