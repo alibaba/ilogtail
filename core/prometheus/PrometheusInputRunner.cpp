@@ -162,6 +162,8 @@ void PrometheusInputRunner::StopIfNotInUse() {
     if (mTargetSubscriberSchedulerMap.empty()) {
         lock.unlock();
         Stop();
+    } else {
+        lock.unlock();
     }
 }
 
