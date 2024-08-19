@@ -56,8 +56,8 @@ LogProcess::~LogProcess() {
 void LogProcess::Start() {
     if (mInitialized)
         return;
-    mGlobalProcessQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
-    mGlobalProcessQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
+    mGlobalProcessQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL);
+    mGlobalProcessQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_PROCESS_QUEUE_TOTAL);
 
     mInitialized = true;
     mThreadCount = AppConfig::GetInstance()->GetProcessThreadCount();
@@ -233,6 +233,9 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 s_processLines += profile.splitLines;
             }
 
+            if (eventGroupList.empty()) {
+                continue;
+            }
             if (pipeline->IsFlushingThroughGoPipeline()) {
                 if (isLog) {
                     for (auto& group : eventGroupList) {
@@ -297,7 +300,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     return NULL;
 }
 
-bool LogProcess::Serialize(const PipelineEventGroup& group, bool enableNanosecond, const string& logstore, string& res, string& errorMsg) {
+bool LogProcess::Serialize(
+    const PipelineEventGroup& group, bool enableNanosecond, const string& logstore, string& res, string& errorMsg) {
     sls_logs::LogGroup logGroup;
     for (const auto& e : group.GetEvents()) {
         if (e.Is<LogEvent>()) {
