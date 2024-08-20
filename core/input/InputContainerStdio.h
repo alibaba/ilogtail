@@ -21,6 +21,7 @@
 #include "container_manager/ContainerDiscoveryOptions.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
+#include "monitor/PluginMetricManager.h"
 #include "plugin/interface/Input.h"
 #include "reader/FileReaderOptions.h"
 
@@ -38,6 +39,7 @@ public:
     bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
+    bool SupportAck() const override { return true; }
 
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
@@ -49,6 +51,9 @@ public:
 
 private:
     FileDiscoveryOptions mFileDiscovery;
+
+    PluginMetricManagerPtr mPluginMetricManager;
+    IntGaugePtr mInputFileMonitorTotal;
 
     bool CreateInnerProcessors();
 
