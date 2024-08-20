@@ -61,7 +61,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     // to send alarm and init MetricsRecord before flusherSLS is built, a temporary object is made, which will be
     unique_ptr<FlusherSLS> SLSTmp = make_unique<FlusherSLS>();
-    if (config.mProject != "") {
+    if (!config.mProject.empty()) {
         SLSTmp->mProject = config.mProject;
         SLSTmp->mLogstore = config.mLogstore;
         SLSTmp->mRegion = config.mRegion;
@@ -71,9 +71,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
     mPluginID.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
-        if (!detail.isObject() || !detail.isMember("Type") || !detail["Type"].isString()) {
-            continue;
-        }
         string name = detail["Type"].asString();
         unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, GenNextPluginMeta(false));
         if (input) {
@@ -99,9 +96,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
         const Json::Value& detail = *config.mProcessors[i];
-        if (!detail.isObject() || !detail.isMember("Type") || !detail["Type"].isString()) {
-            continue;
-        }
         string name = detail["Type"].asString();
         unique_ptr<ProcessorInstance> processor
             = PluginRegistry::GetInstance()->CreateProcessor(name, GenNextPluginMeta(false));
@@ -124,7 +118,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ++mPluginCntMap["processors"][name];
     }
 
-    if (config.mAggregators.size() == 0 && config.ShouldNativeFlusherConnectedByGoPipeline()) {
+    if (config.mAggregators.empty() && config.IsFlushingThroughGoPipelineExisted()) {
         // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
         // to cpp flusher.
         static Json::Value aggregatorDefault;
@@ -133,9 +127,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
     for (size_t i = 0; i < config.mAggregators.size(); ++i) {
         const Json::Value& detail = *config.mAggregators[i];
-        if (!detail.isObject() || !detail.isMember("Type") || !detail["Type"].isString()) {
-            continue;
-        }
         string name = detail["Type"].asString();
         GenNextPluginMeta(false);
         if (ShouldAddPluginToGoPipelineWithInput()) {
@@ -148,9 +139,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     for (size_t i = 0; i < config.mFlushers.size(); ++i) {
         const Json::Value& detail = *config.mFlushers[i];
-        if (!detail.isObject() || !detail.isMember("Type") || !detail["Type"].isString()) {
-            continue;
-        }
         string name = detail["Type"].asString();
         unique_ptr<FlusherInstance> flusher
             = PluginRegistry::GetInstance()->CreateFlusher(name, GenNextPluginMeta(false));
@@ -188,9 +176,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     for (size_t i = 0; i < config.mExtensions.size(); ++i) {
         const Json::Value& detail = *config.mExtensions[i];
-        if (!detail.isObject() || !detail.isMember("Type") || !detail["Type"].isString()) {
-            continue;
-        }
         string name = detail["Type"].asString();
         GenNextPluginMeta(false);
         if (!mGoPipelineWithInput.isNull()) {
@@ -424,10 +409,10 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
 }
 
 // Rule: pluginName=pluginType/pluginID#pluginPriority.
-void Pipeline::AddPluginToGoPipeline(const string& name, const Json::Value& plugin, const string& module, Json::Value& dst) {
+void Pipeline::AddPluginToGoPipeline(const string& type, const Json::Value& plugin, const string& module, Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    res["type"] = name + "/" + std::to_string(mPluginID.load());
+    res["type"] = type + "/" + std::to_string(mPluginID.load());
     res["detail"] = detail;
     dst[module].append(res);
 }
