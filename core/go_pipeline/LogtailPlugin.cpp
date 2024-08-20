@@ -51,6 +51,8 @@ LogtailPlugin::LogtailPlugin() {
     mLoadGlobalConfigFun = NULL;
     mProcessRawLogFun = NULL;
     mPluginValid = false;
+    mPluginAlarmConfig.mLogstore = "logtail_alarm";
+    mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
     mPluginAlarmConfig.mCompressor
         = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::LZ4);
     mPluginProfileConfig.mLogstore = "shennong_log_profile";
