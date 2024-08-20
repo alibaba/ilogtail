@@ -46,9 +46,9 @@ bool Flusher::PushToQueue(unique_ptr<SenderQueueItem>&& item, uint32_t retryTime
     }
 #endif
 
-    const string& str = QueueKeyManager::GetInstance()->GetName(mQueueKey);
+    const string& str = QueueKeyManager::GetInstance()->GetName(item->mQueueKey);
     for (size_t i = 0; i < retryTimes; ++i) {
-        int rst = SenderQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
+        int rst = SenderQueueManager::GetInstance()->PushQueue(item->mQueueKey, std::move(item));
         if (rst == 0) {
             return true;
         }
