@@ -14,7 +14,7 @@
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_process\_security  |
 |  ProbeConfig  |  \[object\]  |  否  |  /  |  插件配置参数列表  |
-|  ProbeConfig.CallNameFilter  |  \[string\]  |  否  |  空  |  内核挂载点过滤器，按照白名单模式运行，不填表示配置该插件所支持的所有挂载点  |
+|  ProbeConfig.CallNameFilter  |  \[string\]  |  否  |  该插件支持的所有 callname  |  内核挂载点过滤器，按照白名单模式运行，不填表示配置该插件所支持的所有挂载点  |
 
 ## 样例
 

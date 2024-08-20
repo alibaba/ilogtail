@@ -603,8 +603,8 @@ void eBPFServerUnittest::TestEnableProcessPlugin() {
     auto process_conf = std::get<nami::ProcessConfig>(conf->config_);
     EXPECT_TRUE(process_conf.process_security_cb_ != nullptr);
     LOG_WARNING(sLogger, ("process_conf.options_ size", process_conf.options_.size()));
-    EXPECT_EQ(process_conf.options_.size(), 1);
-    EXPECT_EQ(process_conf.options_[0].call_names_.size(), 4);
+    EXPECT_EQ(process_conf.options_.size(), 4);
+    EXPECT_EQ(process_conf.options_[0].call_names_.size(), 1);
 
     // do suspend
     ebpf::eBPFServer::GetInstance()->SuspendPlugin("test", nami::PluginType::PROCESS_SECURITY);
@@ -669,8 +669,8 @@ void eBPFServerUnittest::TestEnableNetworkSecurePlugin() {
     EXPECT_EQ(conf->type, UpdataType::SECURE_UPDATE_TYPE_ENABLE_PROBE);
     auto inner_conf = std::get<nami::NetworkSecurityConfig>(conf->config_);
     EXPECT_TRUE(inner_conf.network_security_cb_ != nullptr);
-    EXPECT_EQ(inner_conf.options_.size(), 2);
-    EXPECT_EQ(inner_conf.options_[0].call_names_.size(), 2);
+    EXPECT_EQ(inner_conf.options_.size(), 3);
+    EXPECT_EQ(inner_conf.options_[0].call_names_.size(), 1);
     auto filter = std::get<nami::SecurityNetworkFilter>(inner_conf.options_[0].filter_);
     EXPECT_EQ(filter.mDestAddrList.size(), 2);
     EXPECT_EQ(filter.mDestPortList.size(), 1);

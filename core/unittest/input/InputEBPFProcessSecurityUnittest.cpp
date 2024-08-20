@@ -74,11 +74,13 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_processprobe_security");
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 4);
+    // four callnames
     APSARA_TEST_EQUAL("sys_enter_execve", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("disassociate_ctty", input->mSecurityOptions.mOptionList[0].call_names_[1]);
-    APSARA_TEST_EQUAL("acct_process", input->mSecurityOptions.mOptionList[0].call_names_[2]);
-    APSARA_TEST_EQUAL("wake_up_new_task", input->mSecurityOptions.mOptionList[0].call_names_[3]);
+    APSARA_TEST_EQUAL("disassociate_ctty", input->mSecurityOptions.mOptionList[1].call_names_[0]);
+    APSARA_TEST_EQUAL("acct_process", input->mSecurityOptions.mOptionList[2].call_names_[0]);
+    APSARA_TEST_EQUAL("wake_up_new_task", input->mSecurityOptions.mOptionList[3].call_names_[0]);
+    // no general filter, default is monostate
+    APSARA_TEST_EQUAL(std::holds_alternative<std::monostate>(input->mSecurityOptions.mOptionList[0].filter_), true);
 }
 
 void InputEBPFProcessSecurityUnittest::OnFailedInit() {
@@ -95,8 +97,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 5); // default callname
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
     // probeconfig typo error
     configStr = R"(
@@ -117,8 +118,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 5); // default CallNameFilter
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
     // probeconfig type error
     configStr = R"(
@@ -137,8 +137,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 5); // default callname
+    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 
     // no callname
     configStr = R"(
@@ -154,8 +153,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 5); // default callname
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].null_filter_, true);
+    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList.size(), 5); // default callname
 
     // callname typo error
     configStr = R"(
@@ -177,7 +175,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 5); // default callname
+    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList.size(), 5); // default callname
 
     // null callname
     configStr = R"(
@@ -194,31 +192,8 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
-
-    // null callname of 2
-    configStr = R"(
-        {
-            "Type": "input_ebpf_processprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": [
-                    ]
-                },
-                {
-                    "CallNameFilter": [
-                        "sys_enter_execve"
-                    ]
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFProcessSecurity());
-    input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList.size(), 1); // the first option is discarded
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 1);
+    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList.size(), 5); // default callname
 
     // invalid callname
     configStr = R"(
@@ -236,9 +211,10 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList.size(), 5);
 
-    // invalid callname of 2
+    // invalid callname of two
     configStr = R"(
         {
             "Type": "input_ebpf_processprobe_security",
@@ -256,7 +232,7 @@ void InputEBPFProcessSecurityUnittest::OnFailedInit() {
     input.reset(new InputEBPFProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_.size(), 1);
+    APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList.size(), 1);
     APSARA_TEST_EQUAL(input->mSecurityOptions.mOptionList[0].call_names_[0], "disassociate_ctty");
 }
 

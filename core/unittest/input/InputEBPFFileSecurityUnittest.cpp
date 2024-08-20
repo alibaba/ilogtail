@@ -177,8 +177,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    APSARA_TEST_EQUAL(1, input->mSecurityOptions.mOptionList.size());
-    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList[0].call_names_.size());// default callname
+    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList.size()); // default callname
 
     // invalid callname
     configStr = R"(
@@ -194,7 +193,9 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFFileSecurity());
     input->SetContext(ctx);
-    APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
+    APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
+    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList.size()); // default callname
 }
 
 void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
