@@ -18,7 +18,7 @@ project(provider)
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 
 set(PROVIDER_SUB_DIRECTORIES_LIST    
-    profile_sender config/provider config/common_provider config_server_pb/v1 config_server_pb/v2
+    profile_sender config/feedbacker config/provider config/common_provider config_server_pb/v1 config_server_pb/v2
 )
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
@@ -32,13 +32,7 @@ endforeach()
 
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 
-if (BUILD_LOGTAIL_UT)
-    add_definitions(-DVIRTUAL=virtual)
-else()
-    add_definitions(-DVIRTUAL= )
-endif ()
-
-# message(STATUS "PROVIDER SOURCE FILES: ${LIB_SOURCE_FILES} ${FRAMEWORK_SOURCE_FILES}")
+# message(STATUS "PROVIDER SOURCE FILES: ${LIB_SOURCE_FILES}")
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
     target_include_directories(provider PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../${DIR_NAME})
