@@ -68,6 +68,7 @@ macro(ut_link ut_link_withspl)
     flusher_link(${UT_BASE_TARGET})
     all_link(${UT_BASE_TARGET})
     common_link(${UT_BASE_TARGET})
+    target_link_libraries(${UT_BASE_TARGET} provider)
 endmacro()
 
 set(SOURCE_FILES_CORE ${FRAMEWORK_SOURCE_FILES} ${PLUGIN_SOURCE_FILES_CORE})

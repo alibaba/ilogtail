@@ -30,7 +30,7 @@
 #include "flusher/sls/SLSResponse.h"
 #include "flusher/sls/SendResult.h"
 #include "pipeline/Pipeline.h"
-#include "profile_sender/ProfileSender.h"
+#include "provider/provider.h"
 #include "queue/QueueKeyManager.h"
 #include "queue/SLSSenderQueueItem.h"
 #include "queue/SenderQueueManager.h"
@@ -606,7 +606,7 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
 
     auto data = static_cast<SLSSenderQueueItem*>(item);
     string configName = HasContext() ? GetContext().GetConfigName() : "";
-    bool isProfileData = ProfileSender::GetInstance()->IsProfileData(mRegion, mProject, data->mLogstore);
+    bool isProfileData = GetProfileSender()->IsProfileData(mRegion, mProject, data->mLogstore);
     int32_t curTime = time(NULL);
     if (slsResponse.mStatusCode == 200) {
         auto& cpt = data->mExactlyOnceCheckpoint;

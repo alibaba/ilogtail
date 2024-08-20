@@ -17,7 +17,7 @@
 #pragma once
 
 #include "Monitor.h"
-#include "profile_sender/ProfileSender.h"
+#include "provider/provider.h"
 
 
 namespace logtail {
