@@ -60,7 +60,6 @@ private:
     std::mutex mStartMutex;
 
     std::mutex mRegisterMutex;
-    std::future<void> mThreadRes;
     std::atomic<bool> mIsThreadRunning = true;
 
     std::unique_ptr<sdk::CurlClient> mClient;
@@ -74,7 +73,7 @@ private:
     mutable ReadWriteLock mSubscriberMapRWLock;
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
 
-    uint64_t mUnRegisterMs;
+    std::atomic<uint64_t> mUnRegisterMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;

@@ -54,7 +54,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->mServicePort = mServicePort;
     targetSubscriber->mPodName = mPodName;
 
-    targetSubscriber->mUnRegisterMs = mUnRegisterMs;
+    targetSubscriber->mUnRegisterMs = mUnRegisterMs.load();
     targetSubscriber->SetTimer(mTimer);
     targetSubscriber->SetFirstExecTime(std::chrono::steady_clock::now());
     // 1. add subscriber to mTargetSubscriberSchedulerMap
@@ -85,12 +85,13 @@ void PrometheusInputRunner::Init() {
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();
 
-    mThreadRes = std::async(launch::async, [this]() {
-        // only register when operator exist
+    LOG_INFO(sLogger, ("PrometheusInputRunner", "register"));
+    // only register when operator exist
+    if (!mServiceHost.empty()) {
         mIsThreadRunning.store(true);
-        if (!mServiceHost.empty()) {
-            int retry = 0;
+        auto res = std::async(launch::async, [this]() {
             std::lock_guard<mutex> lock(mRegisterMutex);
+            int retry = 0;
             while (mIsThreadRunning.load()) {
                 ++retry;
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
@@ -111,7 +112,7 @@ void PrometheusInputRunner::Init() {
                         }
                         if (responseJson.isMember(prometheus::UNREGISTER_MS)
                             && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
-                            mUnRegisterMs = responseJson[prometheus::UNREGISTER_MS].asUInt64();
+                            mUnRegisterMs.store(responseJson[prometheus::UNREGISTER_MS].asUInt64());
                         }
                     }
                     LOG_INFO(sLogger, ("Register Success", mPodName));
@@ -119,8 +120,8 @@ void PrometheusInputRunner::Init() {
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-        }
-    });
+        });
+    }
 }
 
 /// @brief stop scrape work and clear all scrape jobs
@@ -147,8 +148,8 @@ void PrometheusInputRunner::Stop() {
     // only unregister when operator exist
     if (!mServiceHost.empty()) {
         LOG_INFO(sLogger, ("PrometheusInputRunner", "unregister"));
-        std::lock_guard<mutex> lock(mRegisterMutex);
         auto res = std::async(launch::async, [this]() {
+            std::lock_guard<mutex> lock(mRegisterMutex);
             for (int retry = 0; retry < 3; ++retry) {
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::UNREGISTER_COLLECTOR_PATH);
                 if (httpResponse.statusCode != 200) {
