@@ -12,17 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package encoder
+package common
 
 const (
-	protocolSLS          = "sls"
-	protocolPrometheus   = "prometheus"
-	protocolInflux       = "influx"
-	protocolInfluxdb     = "influxdb"
-	protocolStatsd       = "statsd"
-	protocolOTLPLogV1    = "otlp_logv1"
-	protocolOTLPMetricV1 = "otlp_metricv1"
-	protocolOTLPTraceV1  = "otlp_tracev1"
-	protocolRaw          = "raw"
-	protocolPyroscope    = "pyroscope"
+	ProtocolPrometheus = "prometheus"
 )

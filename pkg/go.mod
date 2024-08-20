@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/Microsoft/go-winio v0.5.2
-	github.com/VictoriaMetrics/VictoriaMetrics v1.83.4
+	github.com/VictoriaMetrics/VictoriaMetrics v1.83.0
 	github.com/cespare/xxhash v1.1.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575

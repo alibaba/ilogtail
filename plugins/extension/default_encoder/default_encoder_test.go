@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package encoder
+package defaultencoder
 
 import (
 	"encoding/json"
@@ -39,13 +39,13 @@ func TestEncoder_ShouldPassConfigToRealEncoder_GivenCorrectConfigInput(t *testin
 
 		encodeProtocol := "prometheus"
 		optField, optValue := "SeriesLimit", 1024
-		configJsonStr := fmt.Sprintf(`{"Format":"%s","%s":%d}`, encodeProtocol, optField, optValue)
+		configJSONStr := fmt.Sprintf(`{"Format":"%s","%s":%d}`, encodeProtocol, optField, optValue)
 		// must using float64(optValue), not optValue
 		// https://github.com/smartystreets/goconvey/issues/437
 		wantOpts := map[string]any{optField: float64(optValue)}
 
 		Convey("Then should json unmarshal success", func() {
-			err := json.Unmarshal([]byte(configJsonStr), e)
+			err := json.Unmarshal([]byte(configJSONStr), e)
 			So(err, ShouldBeNil)
 			So(e.Encoder, ShouldBeNil)
 			So(e.options, ShouldResemble, wantOpts)
@@ -85,10 +85,10 @@ func TestEncoder_ShouldNotPassConfigToRealEncoder_GivenIncorrectConfigInput(t *t
 		So(e.options, ShouldBeNil)
 
 		encodeProtocol := "unknown"
-		configJsonStr := fmt.Sprintf(`{"Format":"%s"}`, encodeProtocol)
+		configJSONStr := fmt.Sprintf(`{"Format":"%s"}`, encodeProtocol)
 
 		Convey("Then should json unmarshal success", func() {
-			err := json.Unmarshal([]byte(configJsonStr), e)
+			err := json.Unmarshal([]byte(configJSONStr), e)
 			So(err, ShouldBeNil)
 			So(e.Encoder, ShouldBeNil)
 			So(e.Format, ShouldEqual, encodeProtocol)
@@ -118,10 +118,10 @@ func TestEncoder_ShouldUnmarshalFailed_GivenConfigWithoutFormat(t *testing.T) {
 		So(e.Format, ShouldBeEmpty)
 		So(e.options, ShouldBeNil)
 
-		configJsonStr := `{"Unknown":"unknown"}`
+		configJSONStr := `{"Unknown":"unknown"}`
 
 		Convey("Then should json unmarshal failed", func() {
-			err := json.Unmarshal([]byte(configJsonStr), e)
+			err := json.Unmarshal([]byte(configJSONStr), e)
 			So(err, ShouldNotBeNil)
 			So(e.Encoder, ShouldBeNil)
 			So(e.Format, ShouldBeEmpty)

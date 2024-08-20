@@ -26,7 +26,7 @@ import (
 
 func NewEncoder(format string, options map[string]any) (extensions.Encoder, error) {
 	switch strings.TrimSpace(strings.ToLower(format)) {
-	case protocolPrometheus:
+	case ProtocolPrometheus:
 		var opt prometheus.Option
 		if err := mapstructure.Decode(options, &opt); err != nil {
 			return nil, err
