@@ -32,6 +32,12 @@ endforeach()
 
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 
+if (BUILD_LOGTAIL_UT)
+    add_definitions(-DVIRTUAL=virtual)
+else()
+    add_definitions(-DVIRTUAL= )
+endif ()
+
 # message(STATUS "PROVIDER SOURCE FILES: ${LIB_SOURCE_FILES} ${FRAMEWORK_SOURCE_FILES}")
 
 foreach(DIR_NAME IN LISTS PROVIDER_SUB_DIRECTORIES_LIST)
