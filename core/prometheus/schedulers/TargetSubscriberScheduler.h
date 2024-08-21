@@ -46,6 +46,7 @@ public:
     std::string GetId() const;
 
     void ScheduleNext() override;
+    void SubscribeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
 
     // from pipeline context

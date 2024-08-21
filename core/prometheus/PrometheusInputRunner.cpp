@@ -113,6 +113,8 @@ void PrometheusInputRunner::Start() {
                         }
                     }
                     LOG_INFO(sLogger, ("Register Success", mPodName));
+                    // start subscribe immediately
+                    SubscribeOnce();
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -188,4 +190,12 @@ void PrometheusInputRunner::CancelAllTargetSubscriber() {
         it.second->Cancel();
     }
 }
+
+void PrometheusInputRunner::SubscribeOnce() {
+    ReadLock lock(mSubscriberMapRWLock);
+    for (auto& [k, v] : mTargetSubscriberSchedulerMap) {
+        v->SubscribeOnce(std::chrono::steady_clock::now());
+    }
+}
+
 }; // namespace logtail

@@ -55,6 +55,7 @@ private:
     sdk::HttpMessage SendRegisterMessage(const std::string& url) const;
 
     void CancelAllTargetSubscriber();
+    void SubscribeOnce();
 
     std::atomic<bool> mIsStarted;
 

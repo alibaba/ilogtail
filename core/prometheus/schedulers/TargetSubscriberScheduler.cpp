@@ -251,6 +251,18 @@ void TargetSubscriberScheduler::ScheduleNext() {
     mTimer->PushEvent(std::move(event));
 }
 
+void TargetSubscriberScheduler::SubscribeOnce(std::chrono::steady_clock::time_point execTime) {
+    auto future = std::make_shared<PromFuture>();
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
+        this->OnSubscription(response, timestampNanoSec);
+    });
+    mFuture = future;
+    auto event = BuildSubscriberTimerEvent(execTime);
+    if (mTimer) {
+        mTimer->PushEvent(std::move(event));
+    }
+}
+
 void TargetSubscriberScheduler::Cancel() {
     mFuture->Cancel();
     {
