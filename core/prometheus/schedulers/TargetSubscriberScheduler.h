@@ -49,6 +49,8 @@ public:
     void SubscribeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
 
+    uint64_t GetRandSleepNanoSec() const;
+
     // from pipeline context
     QueueKey mQueueKey;
     size_t mInputIndex;

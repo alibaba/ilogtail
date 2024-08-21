@@ -104,10 +104,10 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
                 if (mTimer) {
                     // zero-cost upgrade
                     if (mUnRegisterMs > 0
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
+                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleepNanoSec()
                                 - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000
                             > mUnRegisterMs * 1000000)
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
+                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleepNanoSec()
                                 - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000 * 2
                             < mUnRegisterMs * 1000000)) {
                         // scrape once just now
@@ -214,14 +214,14 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
 
         scrapeScheduler->SetTimer(mTimer);
         auto firstExecTime
-            = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep());
+            = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleepNanoSec());
 
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
         LOG_WARNING(sLogger,
-                    ("new scrape scheduler", scrapeScheduler->GetId())("first exec time",
-                                                                       ToString(firstExecTime.time_since_epoch().count())));
+                    ("new scrape scheduler",
+                     scrapeScheduler->GetId())("first exec time", ToString(firstExecTime.time_since_epoch().count())));
     }
     return scrapeSchedulerMap;
 }
@@ -274,6 +274,14 @@ void TargetSubscriberScheduler::Cancel() {
         mValidState = false;
     }
     CancelAllScrapeScheduler();
+}
+
+uint64_t TargetSubscriberScheduler::GetRandSleepNanoSec() const {
+    const string& key = mJobName;
+    uint64_t h = XXH64(key.c_str(), key.length(), 0);
+    uint64_t randSleep = ((double)1.0) * prometheus::RefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL
+        * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    return randSleep;
 }
 
 std::unique_ptr<TimerEvent>
