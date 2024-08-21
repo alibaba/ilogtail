@@ -1,0 +1,18 @@
+syntax = "proto3";
+package config_server.proto.v2;
+option go_package = "/;protov2";
+
+message TestProtoRequest {
+  string request_id = 1;
+  repeated string group_name = 2;
+}
+
+message TestProtoResponse {
+  string request_id = 1;
+  string group_name = 2;
+}
+
+
+service Test {
+  rpc testProto (TestProtoRequest) returns (TestProtoResponse);
+}
