@@ -801,6 +801,12 @@ func loadProcessor(pluginMeta *pipeline.PluginMeta, priority int, logstoreConfig
 
 func loadAggregator(pluginMeta *pipeline.PluginMeta, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
 	creator, existFlag := pipeline.Aggregators[pluginMeta.PluginType]
+	logger.Info(logstoreConfig.Context.GetRuntimeContext(), "all MetricInputs", pipeline.MetricInputs)
+	logger.Info(logstoreConfig.Context.GetRuntimeContext(), "all ServiceInputs", pipeline.ServiceInputs)
+	logger.Info(logstoreConfig.Context.GetRuntimeContext(), "all Processors", pipeline.Processors)
+	logger.Info(logstoreConfig.Context.GetRuntimeContext(), "all Aggregators", pipeline.Aggregators)
+	logger.Info(logstoreConfig.Context.GetRuntimeContext(), "all Flushers", pipeline.Flushers)
+	logger.Info(logstoreConfig.Context.GetRuntimeContext(), "all Extensions", pipeline.Extensions)
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_AGGREGATOR_TYPE", "invalid aggregator type, maybe type is wrong or logtail version is too old", pluginMeta.PluginType)
 		return nil
