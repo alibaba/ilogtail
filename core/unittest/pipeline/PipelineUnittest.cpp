@@ -199,7 +199,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ],
             "extensions": [
                 {
-                    "type": "ext_basicauth/6",
+                    "type": "ext_basicauth/7",
                     "detail": {}
                 }
             ]
@@ -213,15 +213,21 @@ void PipelineUnittest::OnSuccessfulInit() const {
                 "DefaultLogQueueSize" : 10,
                 "DefaultLogGroupQueueSize": 3
             },
+            "aggregators": [
+                {
+                    "type": "aggregator_default/5",
+                    "detail": {}
+                }
+            ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2/5",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ],
             "extensions": [
                 {
-                    "type": "ext_basicauth/6",
+                    "type": "ext_basicauth/7",
                     "detail": {}
                 }
             ]

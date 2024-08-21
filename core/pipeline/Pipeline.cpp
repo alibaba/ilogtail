@@ -118,11 +118,11 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ++mPluginCntMap["processors"][name];
     }
 
+    Json::Value aggregatorDefault;
+    aggregatorDefault["Type"] = "aggregator_default";
     if (config.mAggregators.empty() && config.IsFlushingThroughGoPipelineExisted()) {
         // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
         // to cpp flusher.
-        static Json::Value aggregatorDefault;
-        aggregatorDefault["Type"] = "aggregator_default";
         config.mAggregators.push_back(&aggregatorDefault);
     }
     for (size_t i = 0; i < config.mAggregators.size(); ++i) {
