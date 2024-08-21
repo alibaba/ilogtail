@@ -20,9 +20,14 @@
 #include "profile_sender/ProfileSender.h"
 
 namespace logtail {
+/*
+    providers modules are used to replace the default implementation of ilogtail.
+*/
 
+// GetRemoteConfigProviders returns a list of remote config providers.
+// It currently returns a list of two providers: LegacyCommonConfigProvider and CommonConfigProvider.
 std::vector<ConfigProvider*> GetRemoteConfigProviders();
 
+// GetProfileSender returns the ProfileSender instance.
 ProfileSender* GetProfileSender();
-
 } // namespace logtail
