@@ -78,4 +78,14 @@ bool Flusher::PushToQueue(unique_ptr<SenderQueueItem>&& item, uint32_t retryTime
     return false;
 }
 
+void Flusher::DealSenderQueueItemAfterSend(SenderQueueItem* item, bool keep) {
+    if (keep) {
+        item->mStatus = SendingStatus::IDLE;
+        ++item->mTryCnt;
+    } else {
+        // TODO: because current profile has a dummy flusher, we have to use item->mQueueKey here
+        SenderQueueManager::GetInstance()->RemoveItem(item->mQueueKey, item);
+    }
+}
+
 } // namespace logtail

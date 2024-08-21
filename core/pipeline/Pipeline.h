@@ -31,6 +31,7 @@
 #include "plugin/instance/FlusherInstance.h"
 #include "plugin/instance/InputInstance.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "route/Router.h"
 
 namespace logtail {
 
@@ -58,6 +59,10 @@ public:
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
+    std::string GetNowPluginID();
+    std::string GenNextPluginID();
+    PluginInstance::PluginMeta GenNextPluginMeta(bool lastOne);
+
 private:
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst);
@@ -68,17 +73,26 @@ private:
     std::vector<std::unique_ptr<InputInstance>> mInputs;
     std::vector<std::unique_ptr<ProcessorInstance>> mProcessorLine;
     std::vector<std::unique_ptr<FlusherInstance>> mFlushers;
+    Router mRouter;
     Json::Value mGoPipelineWithInput;
     Json::Value mGoPipelineWithoutInput;
     mutable PipelineContext mContext;
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     std::unique_ptr<Json::Value> mConfig;
+    std::atomic_uint16_t mPluginID;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;
     friend class PipelineUnittest;
+    friend class InputContainerStdioUnittest;
     friend class InputFileUnittest;
+    friend class InputPrometheusUnittest;
     friend class ProcessorTagNativeUnittest;
+    friend class FlusherSLSUnittest;
+    friend class InputEBPFFileSecurityUnittest;
+    friend class InputEBPFProcessSecurityUnittest;
+    friend class InputEBPFNetworkSecurityUnittest;
+    friend class InputEBPFNetworkObserverUnittest;
 #endif
 };
 

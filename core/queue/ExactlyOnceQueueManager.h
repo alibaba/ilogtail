@@ -27,11 +27,12 @@
 
 #include "checkpoint/RangeCheckpoint.h"
 #include "common/FeedbackInterface.h"
+#include "queue/BoundedProcessQueue.h"
 #include "queue/ExactlyOnceSenderQueue.h"
-#include "queue/FeedbackQueueKey.h"
-#include "queue/ProcessQueue.h"
 #include "queue/ProcessQueueItem.h"
 #include "queue/ProcessQueueManager.h"
+#include "queue/QueueKey.h"
+#include "queue/QueueParam.h"
 #include "queue/SenderQueueItem.h"
 
 namespace logtail {
@@ -78,12 +79,14 @@ public:
 #endif
 
 private:
-    ExactlyOnceQueueManager() = default;
+    ExactlyOnceQueueManager();
     ~ExactlyOnceQueueManager() = default;
 
+    BoundedQueueParam mProcessQueueParam;
+
     mutable std::mutex mProcessQueueMux;
-    std::unordered_map<QueueKey, std::list<ProcessQueue>::iterator> mProcessQueues;
-    std::list<ProcessQueue> mProcessPriorityQueue[ProcessQueueManager::sMaxPriority + 1];
+    std::unordered_map<QueueKey, std::list<BoundedProcessQueue>::iterator> mProcessQueues;
+    std::list<BoundedProcessQueue> mProcessPriorityQueue[ProcessQueueManager::sMaxPriority + 1];
 
     mutable std::mutex mSenderQueueMux;
     std::unordered_map<QueueKey, ExactlyOnceSenderQueue> mSenderQueues;

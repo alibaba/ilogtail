@@ -56,8 +56,8 @@ LogProcess::~LogProcess() {
 void LogProcess::Start() {
     if (mInitialized)
         return;
-    mGlobalProcessQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
-    mGlobalProcessQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
+    mGlobalProcessQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL);
+    mGlobalProcessQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_PROCESS_QUEUE_TOTAL);
 
     mInitialized = true;
     mThreadCount = AppConfig::GetInstance()->GetProcessThreadCount();
@@ -233,12 +233,16 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 s_processLines += profile.splitLines;
             }
 
+            if (eventGroupList.empty()) {
+                continue;
+            }
             if (pipeline->IsFlushingThroughGoPipeline()) {
                 if (isLog) {
                     for (auto& group : eventGroupList) {
                         string res, errorMsg;
                         if (!Serialize(group,
                                        pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond,
+                                       pipeline->GetContext().GetLogstoreName(),
                                        res,
                                        errorMsg)) {
                             LOG_WARNING(pipeline->GetContext().GetLogger(),
@@ -296,7 +300,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     return NULL;
 }
 
-bool LogProcess::Serialize(const PipelineEventGroup& group, bool enableNanosecond, string& res, string& errorMsg) {
+bool LogProcess::Serialize(
+    const PipelineEventGroup& group, bool enableNanosecond, const string& logstore, string& res, string& errorMsg) {
     sls_logs::LogGroup logGroup;
     for (const auto& e : group.GetEvents()) {
         if (e.Is<LogEvent>()) {
@@ -325,6 +330,7 @@ bool LogProcess::Serialize(const PipelineEventGroup& group, bool enableNanosecon
             logTag->set_value(tag.second.to_string());
         }
     }
+    logGroup.set_category(logstore);
     size_t size = logGroup.ByteSizeLong();
     if (static_cast<int32_t>(size) > INT32_FLAG(max_send_log_group_size)) {
         errorMsg = "log group exceeds size limit\tgroup size: " + ToString(size)

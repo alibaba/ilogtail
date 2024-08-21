@@ -2,7 +2,7 @@
 Feature: input canal
   Test input canal
 
-  @e2e @docker-compose
+  @e2e @docker-compose @input-canal
   Scenario: TestInputCanal
     Given {docker-compose} environment
     Given subcribe data from {grpc} with config

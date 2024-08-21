@@ -26,6 +26,7 @@
 #include "plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "queue/BoundedProcessQueue.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
 #include "unittest/Unittest.h"
@@ -238,6 +239,49 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithInput.clear();
     goPipelineWithoutInput.clear();
+
+    // router
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_file",
+                    "FilePaths": [
+                        "/home/test.log"
+                    ]
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint"
+                },
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_2",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": {
+                        "Type": "event_type",
+                        "Value": "log"
+                    }
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
+    APSARA_TEST_EQUAL(1U, pipeline->mRouter.mConditions.size());
+    APSARA_TEST_EQUAL(1U, pipeline->mRouter.mAlwaysMatchedFlusherIdx.size());
 }
 
 void PipelineUnittest::OnFailedInit() const {
@@ -322,6 +366,69 @@ void PipelineUnittest::OnFailedInit() const {
             "flushers": [
                 {
                     "Type": "flusher_sls"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
+
+    // invalid router
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_file",
+                    "FilePaths": [
+                        "/home/test.log"
+                    ]
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": "unknown"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
+
+    // invalid inputs ack support
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_mock"
+                },
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": "unknown"
                 }
             ]
         }
@@ -2326,7 +2433,7 @@ void PipelineUnittest::TestProcessQueue() const {
     unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
     QueueKey key;
-    list<ProcessQueue>::iterator que;
+    ProcessQueueManager::ProcessQueueIterator que;
 
     // new pipeline
     configStr = R"(
@@ -2361,32 +2468,30 @@ void PipelineUnittest::TestProcessQueue() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
-    que = ProcessQueueManager::GetInstance()->mQueues[key];
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::BOUNDED, ProcessQueueManager::GetInstance()->mQueues[key].second);
     // queue level
-    APSARA_TEST_EQUAL(configName, que->GetConfigName());
-    APSARA_TEST_EQUAL(key, que->GetKey());
-    APSARA_TEST_EQUAL(0U, que->GetPriority());
-    APSARA_TEST_EQUAL(1U, que->mUpStreamFeedbacks.size());
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(0U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks.size());
     APSARA_TEST_EQUAL(InputFeedbackInterfaceRegistry::GetInstance()->GetFeedbackInterface("input_file"),
-                      que->mUpStreamFeedbacks[0]);
-    APSARA_TEST_EQUAL(1U, que->mDownStreamQueues.size());
+                      static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks[0]);
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
     // pipeline level
     APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
     // manager level
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[0].size());
     APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[0].begin()
-                     == ProcessQueueManager::GetInstance()->mQueues[key]);
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
 
     // update pipeline with different priority
     configStr = R"(
         {
             "inputs": [
                 {
-                    "Type": "input_file",
-                    "FilePaths": [
-                        "/home/test.log"
-                    ]
+                    "Type": "input_mock"
                 }
             ],
             "flushers": [
@@ -2408,22 +2513,68 @@ void PipelineUnittest::TestProcessQueue() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
-    que = ProcessQueueManager::GetInstance()->mQueues[key];
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::BOUNDED, ProcessQueueManager::GetInstance()->mQueues[key].second);
     // queue level
-    APSARA_TEST_EQUAL(configName, que->GetConfigName());
-    APSARA_TEST_EQUAL(key, que->GetKey());
-    APSARA_TEST_EQUAL(3U, que->GetPriority());
-    APSARA_TEST_EQUAL(1U, que->mUpStreamFeedbacks.size());
-    APSARA_TEST_EQUAL(InputFeedbackInterfaceRegistry::GetInstance()->GetFeedbackInterface("input_file"),
-                      que->mUpStreamFeedbacks[0]);
-    APSARA_TEST_EQUAL(1U, que->mDownStreamQueues.size());
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(3U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
     // pipeline level
     APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
     // manager level
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[3].size());
     APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[3].begin()
-                     == ProcessQueueManager::GetInstance()->mQueues[key]);
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
+
+    // update pipeline with different type
+    configStr = R"(
+        {
+            "inputs": [
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                },
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
+
+    key = QueueKeyManager::GetInstance()->GetKey(configName);
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::CIRCULAR,
+                      ProcessQueueManager::GetInstance()->mQueues[key].second);
+    // queue level
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(3U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
+    // pipeline level
+    APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
+    // manager level
+    APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
+    APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[3].size());
+    APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[3].begin()
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
 
     // delete pipeline
     pipeline->RemoveProcessQueue();
@@ -2668,13 +2819,16 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
 
 void PipelineUnittest::TestProcess() const {
     Pipeline pipeline;
-    uint32_t pluginIdx = 0;
+    pipeline.mPluginID.store(0);
     PipelineContext ctx;
+    ctx.SetPipeline(pipeline);
     Json::Value tmp;
-    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, to_string(++pluginIdx));
-    input->Init(Json::Value(), ctx, pluginIdx, 0, tmp);
+
+    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, pipeline.GenNextPluginMeta(false));
+    input->Init(Json::Value(), ctx, 0, tmp);
     pipeline.mInputs.emplace_back(std::move(input));
-    auto processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, to_string(++pluginIdx));
+    auto processor
+        = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, pipeline.GenNextPluginMeta(false));
     processor->Init(Json::Value(), ctx);
     pipeline.mProcessorLine.emplace_back(std::move(processor));
 
@@ -2688,21 +2842,28 @@ void PipelineUnittest::TestProcess() const {
 
 void PipelineUnittest::TestSend() const {
     {
-        // flush to all native flushers
+        // no route
         Pipeline pipeline;
+        pipeline.mPluginID.store(0);
         PipelineContext ctx;
-        uint32_t pluginIdx = 0;
+        ctx.SetPipeline(pipeline);
         Json::Value tmp;
         {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
         {
-            auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
             flusher->Init(Json::Value(), ctx, tmp);
             pipeline.mFlushers.emplace_back(std::move(flusher));
         }
+        vector<pair<size_t, const Json::Value*>> configs;
+        configs.emplace_back(0, nullptr);
+        configs.emplace_back(1, nullptr);
+        pipeline.mRouter.Init(configs, ctx);
         {
             // all valid
             vector<PipelineEventGroup> group;
@@ -2716,6 +2877,63 @@ void PipelineUnittest::TestSend() const {
             vector<PipelineEventGroup> group;
             group.emplace_back(make_shared<SourceBuffer>());
             APSARA_TEST_FALSE(pipeline.Send(std::move(group)));
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = true;
+        }
+    }
+    {
+        // with route
+        Pipeline pipeline;
+        pipeline.mPluginID.store(0);
+        PipelineContext ctx;
+        ctx.SetPipeline(pipeline);
+        Json::Value tmp;
+        {
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+            flusher->Init(Json::Value(), ctx, tmp);
+            pipeline.mFlushers.emplace_back(std::move(flusher));
+        }
+        {
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+            flusher->Init(Json::Value(), ctx, tmp);
+            pipeline.mFlushers.emplace_back(std::move(flusher));
+        }
+
+        Json::Value configJson;
+        string errorMsg;
+        string configStr = R"(
+            [
+                {
+                    "Type": "event_type",
+                    "Value": "log"
+                }
+            ]
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        vector<pair<size_t, const Json::Value*>> configs;
+        for (Json::Value::ArrayIndex i = 0; i < configJson.size(); ++i) {
+            configs.emplace_back(i, &configJson[i]);
+        }
+        configs.emplace_back(configJson.size(), nullptr);
+        pipeline.mRouter.Init(configs, ctx);
+
+        {
+            vector<PipelineEventGroup> group;
+            group.emplace_back(make_shared<SourceBuffer>());
+            group[0].AddLogEvent();
+            APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
+        }
+        {
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = false;
+            vector<PipelineEventGroup> group;
+            group.emplace_back(make_shared<SourceBuffer>());
+            group[0].AddMetricEvent();
+            APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = true;
         }
     }
 }
@@ -2723,16 +2941,19 @@ void PipelineUnittest::TestSend() const {
 void PipelineUnittest::TestFlushBatch() const {
     Pipeline pipeline;
     pipeline.mName = configName;
+    pipeline.mPluginID.store(0);
     PipelineContext ctx;
-    uint32_t pluginIdx = 0;
+    ctx.SetPipeline(pipeline);
     Json::Value tmp;
     {
-        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+        auto flusher
+            = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
         flusher->Init(Json::Value(), ctx, tmp);
         pipeline.mFlushers.emplace_back(std::move(flusher));
     }
     {
-        auto flusher = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, to_string(++pluginIdx));
+        auto flusher
+            = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
         flusher->Init(Json::Value(), ctx, tmp);
         pipeline.mFlushers.emplace_back(std::move(flusher));
     }

@@ -26,15 +26,20 @@
 #include <vector>
 
 #include "common/FeedbackInterface.h"
-#include "queue/FeedbackQueueKey.h"
-#include "queue/ProcessQueue.h"
+#include "queue/BoundedSenderQueueInterface.h"
+#include "queue/ProcessQueueInterface.h"
 #include "queue/ProcessQueueItem.h"
-#include "queue/SenderQueueInterface.h"
+#include "queue/QueueKey.h"
+#include "queue/QueueParam.h"
 
 namespace logtail {
 
 class ProcessQueueManager : public FeedbackInterface {
 public:
+    using ProcessQueueIterator = std::list<std::unique_ptr<ProcessQueueInterface>>::iterator;
+
+    enum class QueueType { BOUNDED, CIRCULAR };
+
     static constexpr uint32_t sMaxPriority = 3;
 
     ProcessQueueManager(const ProcessQueueManager&) = delete;
@@ -47,14 +52,15 @@ public:
 
     void Feedback(QueueKey key) override { Trigger(); }
 
-    bool CreateOrUpdateQueue(QueueKey key, uint32_t priority);
+    bool CreateOrUpdateBoundedQueue(QueueKey key, uint32_t priority);
+    bool CreateOrUpdateCircularQueue(QueueKey key, uint32_t priority, size_t capacity);
     bool DeleteQueue(QueueKey key);
     bool IsValidToPush(QueueKey key) const;
     // 0: success, 1: queue is full, 2: queue not found
     int PushQueue(QueueKey key, std::unique_ptr<ProcessQueueItem>&& item);
     bool PopItem(int64_t threadNo, std::unique_ptr<ProcessQueueItem>& item, std::string& configName);
     bool IsAllQueueEmpty() const;
-    bool SetDownStreamQueues(QueueKey key, std::vector<SenderQueueInterface*>&& ques);
+    bool SetDownStreamQueues(QueueKey key, std::vector<BoundedSenderQueueInterface*>&& ques);
     bool SetFeedbackInterface(QueueKey key, std::vector<FeedbackInterface*>&& feedback);
     void InvalidatePop(const std::string& configName);
     void ValidatePop(const std::string& configName);
@@ -70,12 +76,18 @@ private:
     ProcessQueueManager();
     ~ProcessQueueManager() = default;
 
+    void CreateBoundedQueue(QueueKey key, uint32_t priority);
+    void CreateCircularQueue(QueueKey key, uint32_t priority, size_t capacity);
+    void AdjustQueuePriority(const ProcessQueueIterator& iter, uint32_t priority);
+    void DeleteQueueEntity(const ProcessQueueIterator& iter);
     void ResetCurrentQueueIndex();
 
+    BoundedQueueParam mBoundedQueueParam;
+
     mutable std::mutex mQueueMux;
-    std::unordered_map<QueueKey, std::list<ProcessQueue>::iterator> mQueues;
-    std::list<ProcessQueue> mPriorityQueue[sMaxPriority + 1];
-    std::pair<uint32_t, std::list<ProcessQueue>::iterator> mCurrentQueueIndex;
+    std::unordered_map<QueueKey, std::pair<ProcessQueueIterator, QueueType>> mQueues;
+    std::list<std::unique_ptr<ProcessQueueInterface>> mPriorityQueue[sMaxPriority + 1];
+    std::pair<uint32_t, ProcessQueueIterator> mCurrentQueueIndex;
 
     mutable std::mutex mStateMux;
     mutable std::condition_variable mCond;

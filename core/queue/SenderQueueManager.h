@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "common/FeedbackInterface.h"
+#include "queue/QueueParam.h"
 #include "queue/SenderQueue.h"
 #include "queue/SenderQueueItem.h"
 #include "sender/ConcurrencyLimiter.h"
@@ -46,7 +47,8 @@ public:
     void Feedback(QueueKey key) override { Trigger(); }
 
     bool CreateQueue(QueueKey key,
-                     std::vector<std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimiters,
+                     std::vector<std::shared_ptr<ConcurrencyLimiter>>&& concurrencyLimiters
+                     = std::vector<std::shared_ptr<ConcurrencyLimiter>>(),
                      uint32_t maxRate = 0);
     SenderQueue* GetQueue(QueueKey key);
     bool DeleteQueue(QueueKey key);
@@ -68,8 +70,10 @@ public:
 #endif
 
 private:
-    SenderQueueManager() = default;
+    SenderQueueManager();
     ~SenderQueueManager() = default;
+
+    BoundedQueueParam mQueueParam;
 
     mutable std::mutex mQueueMux;
     std::unordered_map<QueueKey, SenderQueue> mQueues;
@@ -85,6 +89,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueManagerUnittest;
+    friend class FlusherRunnerUnittest;
 #endif
 };
 

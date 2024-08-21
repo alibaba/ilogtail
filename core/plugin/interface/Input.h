@@ -30,9 +30,10 @@ class Input : public Plugin {
 public:
     virtual ~Input() = default;
 
-    virtual bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) = 0;
+    virtual bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) = 0;
     virtual bool Start() = 0;
     virtual bool Stop(bool isPipelineRemoving) = 0;
+    virtual bool SupportAck() const = 0;
 
     void SetInputIndex(size_t idx) { mIndex = idx; }
     std::vector<std::unique_ptr<ProcessorInstance>>& GetInnerProcessors() { return mInnerProcessors; }

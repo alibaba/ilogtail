@@ -19,8 +19,10 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "observer/ObserverManager.h"
+#include "ebpf/eBPFServer.h"
 #endif
 #include "processor/daemon/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -44,27 +46,33 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     static bool isInputStreamStarted = false;
 #endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
-         isInputContainerStdioChanged = false;
+         isInputContainerStdioChanged = false, isInputPrometheusChanged = false, inputEbpfChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged,
+                            inputEbpfChanged);
     }
     for (const auto& config : diff.mModified) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged,
+                            inputEbpfChanged);
     }
     for (const auto& config : diff.mAdded) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged,
+                            inputEbpfChanged);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -85,6 +93,16 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     }
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
+    if (isInputPrometheusChanged) {
+        PrometheusInputRunner::GetInstance()->Start();
+    }
+#if defined(__linux__) && !defined(__ANDROID__)
+    // 和其它插件不同，ebpf需要init之后才能配置加载，最终状态这个init函数是在插件自己的start函数里面，目前暂时在此过渡。
+    if (inputEbpfChanged) {
+        logtail::ebpf::eBPFServer::GetInstance()->Init();
+    }
+
+#endif
 #endif
 
     for (const auto& name : diff.mRemoved) {
@@ -108,7 +126,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mLogstore,
                 config.mRegion);
             diff.mUnchanged.push_back(config.mName);
-            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::FAILED);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
         ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
@@ -134,7 +153,8 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
-            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::FAILED);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
@@ -164,6 +184,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
             isFileServerStarted = true;
         }
     }
+
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {
@@ -230,8 +251,10 @@ void PipelineManager::StopAllPipelines() {
 #endif
 #if defined(__linux__) && !defined(__ANDROID__)
     ObserverManager::GetInstance()->HoldOn(true);
+    ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
+    PrometheusInputRunner::GetInstance()->Stop();
 
     bool logProcessFlushFlag = false;
     for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
@@ -247,6 +270,9 @@ void PipelineManager::StopAllPipelines() {
     FlushAllBatch();
 
     LogtailPlugin::GetInstance()->HoldOn(true);
+
+    // TODO: make it common
+    FlusherSLS::RecycleResourceIfNotUsed();
 
     // Sender should be stopped after profiling threads are stopped.
     LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
@@ -287,7 +313,9 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
                                           bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged) {
+                                          bool& isInputContainerStdioChanged,
+                                          bool& isInputPrometheusChanged,
+                                          bool& isInputEbpfChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -297,6 +325,15 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
+    } else if (inputType == "input_prometheus") {
+        isInputPrometheusChanged = true;
+    } else if (inputType == "input_ebpf_processprobe_security" || 
+        inputType == "input_ebpf_processprobe_observer" ||
+        inputType == "input_ebpf_sockettraceprobe_security" ||
+        inputType == "input_ebpf_sockettraceprobe_observer" ||
+        inputType == "input_ebpf_fileprobe_security" ||
+        inputType == "input_ebpf_profilingprobe_observer") {
+        isInputEbpfChanged = true;
     }
 }
 

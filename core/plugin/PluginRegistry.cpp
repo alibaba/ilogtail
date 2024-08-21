@@ -24,10 +24,17 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
-#include "flusher/FlusherSLS.h"
+#include "common/Flags.h"
+#include "flusher/blackhole/FlusherBlackHole.h"
+#include "flusher/sls/FlusherSLS.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
+#include "input/InputPrometheus.h"
 #if defined(__linux__) && !defined(__ANDROID__)
+#include "input/InputEBPFFileSecurity.h"
+#include "input/InputEBPFNetworkObserver.h"
+#include "input/InputEBPFNetworkSecurity.h"
+#include "input/InputEBPFProcessSecurity.h"
 #include "input/InputObserverNetwork.h"
 #ifdef __ENTERPRISE__
 #include "input/InputStream.h"
@@ -46,15 +53,16 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
+#include "processor/inner/ProcessorPromParseMetricNative.h"
 #include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
+#include "processor/inner/ProcessorPromRelabelMetricNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
 #if defined(__linux__) && !defined(__ANDROID__) && !defined(__EXCLUDE_SPL__)
 #include "processor/ProcessorSPL.h"
 #endif
-#include "common/Flags.h"
 
 
 DEFINE_FLAG_BOOL(enable_processor_spl, "", true);
@@ -83,17 +91,21 @@ void PluginRegistry::UnloadPlugins() {
     mPluginDict.clear();
 }
 
-unique_ptr<InputInstance> PluginRegistry::CreateInput(const string& name, const string& pluginId) {
-    return unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
+unique_ptr<InputInstance> PluginRegistry::CreateInput(const string& name,
+                                                      const PluginInstance::PluginMeta& pluginMeta) {
+    return unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginMeta).release()));
 }
 
-unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const string& name, const string& pluginId) {
+unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const string& name,
+                                                              const PluginInstance::PluginMeta& pluginMeta) {
     return unique_ptr<ProcessorInstance>(
-        static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId).release()));
+        static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginMeta).release()));
 }
 
-unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const string& name, const string& pluginId) {
-    return unique_ptr<FlusherInstance>(static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
+unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const string& name,
+                                                          const PluginInstance::PluginMeta& pluginMeta) {
+    return unique_ptr<FlusherInstance>(
+        static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginMeta).release()));
 }
 
 bool PluginRegistry::IsValidGoPlugin(const string& name) const {
@@ -116,8 +128,13 @@ bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
 
 void PluginRegistry::LoadStaticPlugins() {
     RegisterInputCreator(new StaticInputCreator<InputFile>());
+    RegisterInputCreator(new StaticInputCreator<InputPrometheus>());
 #if defined(__linux__) && !defined(__ANDROID__)
     RegisterInputCreator(new StaticInputCreator<InputContainerStdio>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFFileSecurity>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFNetworkObserver>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFNetworkSecurity>());
+    RegisterInputCreator(new StaticInputCreator<InputEBPFProcessSecurity>());
     RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
 #ifdef __ENTERPRISE__
     RegisterInputCreator(new StaticInputCreator<InputStream>());
@@ -137,6 +154,8 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseRegexNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorPromParseMetricNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorPromRelabelMetricNative>());
 #if defined(__linux__) && !defined(__ANDROID__) && !defined(__EXCLUDE_SPL__)
     if (BOOL_FLAG(enable_processor_spl)) {
         RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSPL>());
@@ -144,6 +163,7 @@ void PluginRegistry::LoadStaticPlugins() {
 #endif
 
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
+    RegisterFlusherCreator(new StaticFlusherCreator<FlusherBlackHole>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
@@ -207,11 +227,11 @@ void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
     mPluginDict.emplace(PluginKey(cat, creator->Name()), shared_ptr<PluginCreator>(creator));
 }
 
-unique_ptr<PluginInstance> PluginRegistry::Create(PluginCat cat, const string& name, const string& pluginId) {
+unique_ptr<PluginInstance> PluginRegistry::Create(PluginCat cat, const string& name, const PluginInstance::PluginMeta& pluginMeta) {
     unique_ptr<PluginInstance> ins;
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {
-        ins = creatorEntry->second->Create(pluginId);
+        ins = creatorEntry->second->Create(pluginMeta);
     }
     return ins;
 }

@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/config"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type CommonContext struct {
@@ -30,6 +29,10 @@ type CommonContext struct {
 
 type LabelPair = Label
 
+const SelfMetricNameKey = "__name__"
+const MetricLabelPrefix = "label."
+const MetricValuePrefix = "value."
+
 type MetricsRecord struct {
 	Context Context
 	Labels  []LabelPair
@@ -38,15 +41,9 @@ type MetricsRecord struct {
 	MetricCollectors []MetricCollector
 }
 
-func (m *MetricsRecord) appendLabels(log *protocol.Log) {
-	for _, label := range m.Labels {
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: label.Key, Value: label.Value})
-	}
-}
-
 func (m *MetricsRecord) insertLabels(record map[string]string) {
 	for _, label := range m.Labels {
-		record[label.Key] = label.Value
+		record[MetricLabelPrefix+label.Key] = label.Value
 	}
 }
 
@@ -56,43 +53,28 @@ func (m *MetricsRecord) RegisterMetricCollector(collector MetricCollector) {
 	m.MetricCollectors = append(m.MetricCollectors, collector)
 }
 
-func (m *MetricsRecord) Serialize(logGroup *protocol.LogGroup) {
-	m.RLock()
-	defer m.RUnlock()
-	for _, metricCollector := range m.MetricCollectors {
-		metrics := metricCollector.Collect()
-		for _, metric := range metrics {
-			log := &protocol.Log{}
-			metric.Serialize(log)
-			if len(log.Contents) == 0 {
-				continue
-			}
-			m.appendLabels(log) // append metrics record labels
-			logGroup.Logs = append(logGroup.Logs, log)
-		}
-	}
-}
-
 // ExportMetricRecords is used for exporting metrics records.
 // It will replace Serialize in the future.
-func (m *MetricsRecord) ExportMetricRecords() []map[string]string {
+func (m *MetricsRecord) ExportMetricRecords() map[string]string {
 	m.RLock()
 	defer m.RUnlock()
 
-	records := make([]map[string]string, 0)
+	record := map[string]string{}
+	m.insertLabels(record)
 	for _, metricCollector := range m.MetricCollectors {
 		metrics := metricCollector.Collect()
+
 		for _, metric := range metrics {
-			record := metric.Export()
-			if len(record) == 0 {
+			singleMetricRecord := metric.Export()
+			if len(singleMetricRecord) == 0 {
 				continue
 			}
-
-			m.insertLabels(record)
-			records = append(records, record)
+			valueName := singleMetricRecord[SelfMetricNameKey]
+			valueValue := singleMetricRecord[valueName]
+			record[MetricValuePrefix+valueName] = valueValue
 		}
 	}
-	return records
+	return record
 }
 
 func GetCommonLabels(context Context, pluginMeta *PluginMeta) []LabelPair {
@@ -136,8 +118,9 @@ type Context interface {
 	GetCheckPointObject(key string, obj interface{}) (exist bool)
 
 	// APIs for self monitor
-	RegisterMetricRecord(labels []LabelPair) *MetricsRecord // for v1.8.8 compatible
-	GetMetricRecord() *MetricsRecord                        // for v1.8.8 compatible
-	ExportMetricRecords() []map[string]string               // for v1.8.8 compatible
-	MetricSerializeToPB(logGroup *protocol.LogGroup)
+	RegisterMetricRecord(labels []LabelPair) *MetricsRecord
+	GetMetricRecord() *MetricsRecord
+	ExportMetricRecords() []map[string]string
+	RegisterLogstoreConfigMetricRecord(labels []LabelPair) *MetricsRecord
+	GetLogstoreConfigMetricRecord() *MetricsRecord
 }

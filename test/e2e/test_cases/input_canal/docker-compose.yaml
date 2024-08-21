@@ -29,10 +29,10 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
     healthcheck:
-      test: MYSQL_PWD=root /usr/bin/mysql --host=127.0.0.1 --user=root  --silent --execute "SELECT 1;"
+      test: MYSQL_PWD=root /usr/bin/mysql --host=127.0.0.1 --user=root  --silent --execute "SELECT @@gtid_mode;"
       interval: 3s
       timeout: 5s
-      retries: 5
+      retries: 20
   client:
     build:
       context: .

@@ -38,7 +38,7 @@
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "models/StringView.h"
-#include "queue/FeedbackQueueKey.h"
+#include "queue/QueueKey.h"
 #include "rapidjson/allocators.h"
 #include "reader/FileReaderOptions.h"
 
@@ -451,15 +451,6 @@ protected:
 
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
-    int32_t ParseTimeInBuffer(LogFileOperator& logFileOp,
-                              int64_t begin,
-                              int64_t end,
-                              int32_t bootTime,
-                              const std::string& timeFormat,
-                              int64_t& filePos,
-                              bool& found);
-    static int ParseAllLines(
-        char* buffer, size_t size, int32_t bootTime, const std::string& timeFormat, int32_t& parsedTime, int& pos);
     static int32_t ParseTime(const char* buffer, const std::string& timeFormat);
     void SetFilePosBackwardToFixedPos(LogFileOperator& logFileOp);
 
@@ -544,7 +535,7 @@ protected:
     std::string mRegion;
 
     MetricLabels mMetricLabels;
-    bool mMetricsEnabled;
+    bool mMetricInited;
     ReentrantMetricsRecordRef mMetricsRecordRef;
     CounterPtr mInputRecordsSizeBytesCounter;
     CounterPtr mInputReadTotalCounter;
