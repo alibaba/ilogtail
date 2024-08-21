@@ -19,6 +19,7 @@ require (
 	github.com/influxdata/telegraf v1.20.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mailru/easyjson v0.7.7
+	github.com/mitchellh/mapstructure v1.4.2
 	github.com/narqo/go-dogstatsd-parser v0.2.0
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/prometheus/common v0.42.0
