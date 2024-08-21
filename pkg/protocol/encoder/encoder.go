@@ -21,12 +21,13 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
+	"github.com/alibaba/ilogtail/pkg/protocol/encoder/common"
 	"github.com/alibaba/ilogtail/pkg/protocol/encoder/prometheus"
 )
 
 func NewEncoder(format string, options map[string]any) (extensions.Encoder, error) {
 	switch strings.TrimSpace(strings.ToLower(format)) {
-	case ProtocolPrometheus:
+	case common.ProtocolPrometheus:
 		var opt prometheus.Option
 		if err := mapstructure.Decode(options, &opt); err != nil {
 			return nil, err
