@@ -194,6 +194,7 @@ void PrometheusInputRunner::CancelAllTargetSubscriber() {
 void PrometheusInputRunner::SubscribeOnce() {
     ReadLock lock(mSubscriberMapRWLock);
     for (auto& [k, v] : mTargetSubscriberSchedulerMap) {
+        LOG_WARNING(sLogger, ("subscribe once", "k"));
         v->SubscribeOnce(std::chrono::steady_clock::now());
     }
 }

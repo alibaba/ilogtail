@@ -111,6 +111,7 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
                                 - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000 * 2
                             < mUnRegisterMs * 1000000)) {
                         // scrape once just now
+                        LOG_WARNING(sLogger, ("scrape once just now", k));
                         v->ScrapeOnce(std::chrono::steady_clock::now());
                     }
                     v->ScheduleNext();
@@ -218,6 +219,9 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
+        LOG_WARNING(sLogger,
+                    ("new scrape scheduler", scrapeScheduler->GetId())("first exec time",
+                                                                       ToString(firstExecTime.time_since_epoch().count())));
     }
     return scrapeSchedulerMap;
 }
