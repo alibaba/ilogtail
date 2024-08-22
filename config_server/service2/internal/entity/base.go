@@ -9,8 +9,6 @@ const (
 	agentPipelineConfigTable = "agent_pipeline_config"
 	agentInstanceConfigTable = "agent_instance_config"
 	//agentAndCommandTable     = "agent_command"
-	//agentAndAgentGroupTable  = "agent_and_agent_group"
-	//agentGroupAndConfigTable = "agent_group_and_config"
 )
 
 const (

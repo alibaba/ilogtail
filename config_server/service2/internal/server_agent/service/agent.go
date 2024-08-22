@@ -4,8 +4,8 @@ import (
 	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/entity"
-	"config-server2/internal/manager"
-	"config-server2/internal/manager/flag"
+	manager2 "config-server2/internal/server_agent/manager"
+	flag "config-server2/internal/server_agent/manager/flag"
 	"config-server2/internal/store"
 	"config-server2/internal/utils"
 	"log"
@@ -27,18 +27,12 @@ func CheckAgentExist(timeLimit int64) {
 	for {
 		select {
 		case <-ticker.C:
-			for _, agentInfo := range s.GetAllAgentsBasicInfo() {
-				nowTime := time.Now().UnixNano()
-				if nowTime-agentInfo.LastHeartBeatTime >= timeLimitNano {
-					err := s.RemoveAgentById(agentInfo.InstanceId)
-					if err != nil {
-						log.Println(err)
-					}
-				}
-			}
+			utils.ParallelProcessSlice[entity.Agent](manager2.GetAllAgentsBasicInfo(),
+				func(_ int, agentInfo entity.Agent) {
+					manager2.RemoveAgentNow(&agentInfo, timeLimitNano)
+				})
 		}
 	}
-
 }
 
 func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
@@ -52,7 +46,7 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 	}
 	res.RequestId = req.RequestId
 
-	rationality := manager.JudgeSequenceNumRationality(instanceId, sequenceNum)
+	rationality := manager2.JudgeSequenceNumRationality(instanceId, sequenceNum)
 
 	//假设数据库保存的sequenceNum=3,agent给的是10，
 	//如果在判断rationality=false立即return,数据库中保存的一直是3，agent一直重传全部状态
@@ -62,8 +56,9 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 
 	currentHeatBeatTime := time.Now().UnixNano()
 	agent := entity.HeartBeatRequestParse2BasicAgent(req, currentHeatBeatTime)
-	//Regardless of whether sequenceN is legal or not, we should keep the basic information of the agent (seNum, instanceId, capabilities, flags, etc.)
-	err = manager.CreateOrUpdateBasicAgent(agent)
+	//Regardless of whether sequenceN is legal or not, we should keep the basic information of the agent (sequenceNum, instanceId, capabilities, flags, etc.)
+
+	err = manager2.CreateOrUpdateAgentBasicInfo(agent)
 	if err != nil {
 		return err
 	}
@@ -73,11 +68,12 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 	if err != nil {
 		return err
 	}
+
 	err = flag.HandleResponseFlags(req, res)
 	if err != nil {
 		return err
 	}
-	//fmt.Printf("%+v\n", res)
+
 	return nil
 }
 
@@ -92,12 +88,15 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	res.RequestId = req.RequestId
 	strInstanceId := string(instanceId)
 
+	//创建或更新pipelineConfig的status and message
 	agentPipelineConfigs := entity.ProtoConfigInfoParse2AgentPipelineConfig(strInstanceId, req.ReqConfigs)
-	err = manager.CreateOrUpdateAgentPipelineConfig(agentPipelineConfigs)
+	err = manager2.CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs)
 	if err != nil {
 		return err
 	}
-	pipelineConfigUpdates, err := manager.GetPipelineConfig(strInstanceId, true)
+
+	//返回pipelineConfigDetail
+	pipelineConfigUpdates, err := manager2.GetPipelineConfigs(strInstanceId, true)
 	if err != nil {
 		return err
 	}
@@ -119,13 +118,13 @@ func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 
 	//Store in the agent_instance table
 	agentInstanceConfigs := entity.ProtoConfigInfoParse2AgentInstanceConfig(strInstanceId, req.ReqConfigs)
-	err = manager.CreateOrUpdateAgentInstanceConfig(agentInstanceConfigs)
+	err = manager2.CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs)
 	if err != nil {
 		return err
 	}
 
 	//获取对应的configDetails
-	instanceConfigUpdates, err := manager.GetInstanceConfig(strInstanceId, true)
+	instanceConfigUpdates, err := manager2.GetInstanceConfigs(strInstanceId, true)
 	if err != nil {
 		return err
 	}

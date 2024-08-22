@@ -1,13 +1,15 @@
-package store
+package repository
 
 import (
 	"config-server2/internal/common"
 	"config-server2/internal/entity"
+	"config-server2/internal/store"
 	"gorm.io/gorm"
-	"log"
 )
 
-func (s *GormStore) CreateBasicAgent(agent *entity.Agent) error {
+var s = store.S
+
+func CreateBasicAgent(agent *entity.Agent) error {
 	if agent.InstanceId == "" {
 		return common.ValidateErrorWithMsg("InstanceId can not be null")
 	}
@@ -15,7 +17,7 @@ func (s *GormStore) CreateBasicAgent(agent *entity.Agent) error {
 	return err
 }
 
-func (s *GormStore) GetAgentByiId(instanceId string) *entity.Agent {
+func GetAgentByiId(instanceId string) *entity.Agent {
 	var agentInfo = new(entity.Agent)
 	row := s.DB.Where("instance_id=?", instanceId).Find(agentInfo).RowsAffected
 	if row == 1 {
@@ -24,40 +26,46 @@ func (s *GormStore) GetAgentByiId(instanceId string) *entity.Agent {
 	return nil
 }
 
-func (s *GormStore) HasAgentById(instanceId string) (bool, error) {
+func HasAgentById(instanceId string) (bool, error) {
 	var count int64
 	s.DB.Model(&entity.Agent{}).Where("instance_id=?", instanceId).Count(&count)
 	return count == 1, nil
 }
 
-func (s *GormStore) GetAllAgentsBasicInfo() []entity.Agent {
+func GetAllAgentsBasicInfo() []entity.Agent {
 	var agentInfoList []entity.Agent
 	s.DB.Find(&agentInfoList)
 	return agentInfoList
 }
 
-func (s *GormStore) RemoveAgentById(instanceId string) error {
+func RemoveAgentById(instanceId string) error {
 	var tx *gorm.DB
 
 	tx = s.DB.Where("instance_id=?", instanceId).Delete(&entity.Agent{})
-	if tx.Error != nil {
-		log.Print(tx.Error)
-	} else if tx.RowsAffected != 1 {
+	if tx.RowsAffected != 1 {
 		return common.ServerErrorWithMsg("Agent failed to delete record %s", instanceId)
 	}
-
 	s.DB.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentPipelineConfig{})
 	s.DB.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentInstanceConfig{})
 	return nil
 }
 
-func (s *GormStore) UpdateAgentById(agent *entity.Agent) error {
-	err := s.DB.Model(agent).Where("instance_id=?", agent.InstanceId).Updates(*agent).Error
+func UpdateAgentById(agent *entity.Agent, filed ...string) error {
+	var err error
+	if filed == nil {
+		err = s.DB.Model(agent).Updates(*agent).Error
+		return err
+	}
+	err = s.DB.Model(agent).Select(filed).Updates(*agent).Error
 	return err
 }
 
-func (s *GormStore) GetPipelineConfigDetailByName(configName string) error {
+func GetPipelineConfigDetailByName(configName string) error {
 	configDetail := new(entity.PipelineConfig)
 	err := s.DB.Where("name=?", configName).Take(configDetail).Error
 	return err
+}
+
+func CreateOrUpdateAgentBasicInfo(conflictColumnNames []string, agent ...*entity.Agent) error {
+	return createOrUpdateEntities(conflictColumnNames, nil, agent...)
 }

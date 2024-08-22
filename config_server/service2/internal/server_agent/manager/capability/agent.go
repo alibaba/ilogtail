@@ -3,7 +3,7 @@ package capability
 import (
 	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
-	"config-server2/internal/manager"
+	"config-server2/internal/server_agent/manager"
 	"config-server2/internal/store"
 	"log"
 )
@@ -57,7 +57,7 @@ func AcceptsPipelineConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatR
 
 	if isContainDetail, ok := arg[0].(bool); ok {
 		strInstanceId := string(req.InstanceId)
-		pipelineConfigUpdates, err := manager.GetPipelineConfig(strInstanceId, isContainDetail)
+		pipelineConfigUpdates, err := manager.GetPipelineConfigs(strInstanceId, isContainDetail)
 		if err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func AcceptsInstanceConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatR
 
 	if isContainDetail, ok := arg[0].(bool); ok {
 		strInstanceId := string(req.InstanceId)
-		instanceConfigUpdates, err := manager.GetInstanceConfig(strInstanceId, isContainDetail)
+		instanceConfigUpdates, err := manager.GetInstanceConfigs(strInstanceId, isContainDetail)
 		if err != nil {
 			return err
 		}

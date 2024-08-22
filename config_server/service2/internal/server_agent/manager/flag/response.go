@@ -3,7 +3,7 @@ package flag
 import (
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/config"
-	"config-server2/internal/manager/capability"
+	"config-server2/internal/server_agent/manager/capability"
 )
 
 type ResponseAction struct {

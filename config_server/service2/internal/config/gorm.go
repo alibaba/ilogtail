@@ -1,12 +1,12 @@
 package config
 
 import (
+	"config-server2/internal/common"
 	"config-server2/internal/utils"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"path/filepath"
-	"runtime"
 )
 
 type GormConfig struct {
@@ -23,12 +23,17 @@ var gormDialectMap = map[string]func(string) gorm.Dialector{
 	"mysql": mysql.Open,
 }
 
-func GetConnection() (*GormConfig, gorm.Dialector) {
+func GetConnection() (*GormConfig, gorm.Dialector, error) {
 	var config = new(GormConfig)
-	_, currentFilePath, _, _ := runtime.Caller(0)
-	err := utils.ReadJson(filepath.Join(filepath.Dir(currentFilePath), "./databaseConfig.json"), config)
+	var err error
+	dataBaseConfigPath, err := filepath.Abs("cmd/config/dataBaseConfig.json")
 	if err != nil {
-		return nil, nil
+		return nil, nil, err
+	}
+	//log.Print(dataBaseConfigPath)
+	err = utils.ReadJson(dataBaseConfigPath, config)
+	if err != nil {
+		return nil, nil, err
 	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
 		config.UserName,
@@ -38,7 +43,12 @@ func GetConnection() (*GormConfig, gorm.Dialector) {
 		config.DbName)
 
 	if dialect, ok := gormDialectMap[config.Type]; ok {
-		return config, dialect(dsn)
+		gormDialect := dialect(dsn)
+		if gormDialect == nil {
+			return nil, nil, common.ServerErrorWithMsg("connect %s:%s dbName:%s failed",
+				config.Host, config.Port, config.DbName)
+		}
+		return config, dialect(dsn), nil
 	}
 	panic("no this database type")
 }

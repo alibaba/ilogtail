@@ -1,7 +1,7 @@
 package utils
 
 func AllEmpty(objs ...any) bool {
-	if objs == nil {
+	if objs == nil || len(objs) == 0 {
 		return true
 	}
 	for _, obj := range objs {

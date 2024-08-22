@@ -42,7 +42,10 @@ var tableNameList = []string{
 func (s *GormStore) Connect() error {
 	var err error
 	var dialect gorm.Dialector
-	s.config, dialect = config.GetConnection()
+	s.config, dialect, err = config.GetConnection()
+	if err != nil {
+		return err
+	}
 	s.DB, err = gorm.Open(dialect)
 	if err != nil {
 		return err

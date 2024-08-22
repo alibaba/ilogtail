@@ -4,7 +4,7 @@ import (
 	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/config"
-	"config-server2/internal/service"
+	"config-server2/internal/server_agent/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"log"

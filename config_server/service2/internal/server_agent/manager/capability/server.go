@@ -5,7 +5,8 @@ import (
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/config"
 	"config-server2/internal/entity"
-	"config-server2/internal/manager"
+	"config-server2/internal/server_agent/manager"
+	"config-server2/internal/server_agent/repository"
 )
 
 type ServerAction struct {
@@ -74,7 +75,7 @@ func RememberAttributeCapabilityRun(req *proto.HeartbeatRequest, res *proto.Hear
 	}
 	agent := &entity.Agent{}
 	agent.Attributes = entity.ProtoAgentAttributesParse2AgentAttributes(attributes)
-	err := s.UpdateAgentById(agent)
+	err := repository.UpdateAgentById(agent, "attributes")
 	return err
 }
 
@@ -84,7 +85,7 @@ func RememberPipelineConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 		return nil
 	}
 	agentPipelineConfigs := entity.ProtoConfigInfoParse2AgentPipelineConfig(string(req.InstanceId), req.PipelineConfigs)
-	err := manager.CreateOrUpdateAgentPipelineConfig(agentPipelineConfigs)
+	err := manager.CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs)
 	return err
 }
 
@@ -94,7 +95,7 @@ func RememberInstanceConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 		return nil
 	}
 	agentInstanceConfigs := entity.ProtoConfigInfoParse2AgentInstanceConfig(string(req.InstanceId), req.InstanceConfigs)
-	err := manager.CreateOrUpdateAgentInstanceConfig(agentInstanceConfigs)
+	err := manager.CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs)
 	return err
 }
 
