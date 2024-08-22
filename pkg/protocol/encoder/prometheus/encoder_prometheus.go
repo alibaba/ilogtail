@@ -103,7 +103,7 @@ func (p *Encoder) EncodeV2(groupEvents *models.PipelineGroupEvents) ([][]byte, e
 }
 
 func (p *Encoder) EncodeBatchV2(groupEventsSlice []*models.PipelineGroupEvents) ([][]byte, error) {
-	if groupEventsSlice == nil || len(groupEventsSlice) == 0 {
+	if len(groupEventsSlice) == 0 {
 		return nil, errNilOrZeroGroupEvents
 	}
 
