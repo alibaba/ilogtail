@@ -15,7 +15,7 @@
         bytes request_id = 1;
         uint64 sequence_num = 2;                    // Increment every request, for server to check sync status
         uint64 capabilities = 3;                    // Bitmask of flags defined by AgentCapabilities enum
-        bytes instance_id = 4;                      // Required, Agent's unique identification, consistent throughout the instance lifecycle
+        bytes instance_id = 4;                      // Required, Agent's unique identification, consistent throughout the process lifecycle
         string agent_type = 5;                      // Required, Agent's type(ilogtail, ..)
         AgentAttributes attributes = 6;             // Agent's basic attributes
         repeated AgentGroupTag tags =  7;           // Agent's tags
