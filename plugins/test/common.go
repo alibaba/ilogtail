@@ -58,15 +58,22 @@ func LoadMockConfig(project, logstore, configName, jsonStr string) *pluginmanage
 	if err != nil {
 		panic(err)
 	}
-	return pluginmanager.LogtailConfig[configName]
+	object, _ := pluginmanager.LogtailConfig.Load(configName)
+	return object.(*pluginmanager.LogstoreConfig)
 }
 
 func PluginStart() error {
-	return pluginmanager.Resume()
+	return pluginmanager.Start("")
 }
 
 func PluginStop(forceFlushFlag bool) error {
-	return pluginmanager.HoldOn(true)
+	if err := pluginmanager.StopAll(forceFlushFlag, true); err != nil {
+		return err
+	}
+	if err := pluginmanager.StopAll(forceFlushFlag, false); err != nil {
+		return err
+	}
+	return nil
 }
 
 func CreateLogs(kvs ...string) *protocol.Log {

@@ -35,10 +35,11 @@ var CheckPointCleanInterval = flag.Int("CheckPointCleanInterval", 600, "checkpoi
 var MaxCleanItemPerInterval = flag.Int("MaxCleanItemPerInterval", 1000, "max clean items per interval")
 
 type checkPointManager struct {
-	db        *leveldb.DB
-	shutdown  chan struct{}
-	waitgroup sync.WaitGroup
-	initFlag  bool
+	db            *leveldb.DB
+	shutdown      chan struct{}
+	waitgroup     sync.WaitGroup
+	initFlag      bool
+	configCounter map[string]int
 }
 
 var CheckPointManager checkPointManager
@@ -143,13 +144,7 @@ func (p *checkPointManager) keyMatch(key []byte) bool {
 	// configName in checkpoint is real config Name, while configName in LogtailConfig has suffix '/1' or '/2'
 	// since checkpoint is only used in input, so configName can only be 'realConfigName/1', meaning go pipeline with input
 	configName += "/1"
-	_, existFlag := LogtailConfig[configName]
-	if existFlag {
-		return true
-	}
-	DisabledLogtailConfigLock.Lock()
-	defer DisabledLogtailConfigLock.Unlock()
-	_, existFlag = DisabledLogtailConfig[configName]
+	_, existFlag := LogtailConfig.Load(configName)
 	return existFlag
 }
 
@@ -175,7 +170,11 @@ func (p *checkPointManager) check() {
 		logger.Warning(context.Background(), "CHECKPOINT_ALARM", "iterate checkpoint error", err)
 	}
 	for _, key := range cleanItems {
-		_ = p.db.Delete([]byte(key), nil)
-		logger.Info(context.Background(), "no config, delete checkpoint", key)
+		p.configCounter[key]++
+		if p.configCounter[key] > 6 { // one hour
+			_ = p.db.Delete([]byte(key), nil)
+			logger.Info(context.Background(), "no config, delete checkpoint", key)
+			delete(p.configCounter, key)
+		}
 	}
 }

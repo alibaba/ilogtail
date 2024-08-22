@@ -142,6 +142,10 @@ func (p *pluginv2Runner) RunPlugins(category pluginCategory, control *pipeline.A
 	}
 }
 
+func (p *pluginv2Runner) IsWithInputPlugin() bool {
+	return len(p.MetricPlugins) > 0 || len(p.ServicePlugins) > 0
+}
+
 func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input pipeline.MetricInputV2, inputInterval int) error {
 	var wrapper MetricWrapperV2
 	wrapper.Config = p.LogstoreConfig

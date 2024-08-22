@@ -169,16 +169,16 @@ func main() {
 			logger.Warningf(context.Background(), "START_PLUGIN_ALARM", "%s_%s_%s start fail, config is %s", p, l, c, cfg)
 			return
 		}
+		Start(c)
 	}
-
-	Resume()
 
 	// handle the first shutdown signal gracefully, and exit directly if FileIOFlag is true
 	if !*flags.FileIOFlag {
 		<-signals.SetupSignalHandler()
 	}
 	logger.Info(context.Background(), "########################## exit process begin ##########################")
-	HoldOn(1)
+	StopAll(1, 1)
+	StopAll(1, 0)
 	logger.Info(context.Background(), "########################## exit process done ##########################")
 }
 

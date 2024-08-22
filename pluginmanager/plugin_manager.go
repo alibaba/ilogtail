@@ -16,6 +16,7 @@ package pluginmanager
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 	"runtime/debug"
 	"sync"
@@ -29,17 +30,13 @@ import (
 )
 
 // Following variables are exported so that tests of main package can reference them.
-var LogtailConfig map[string]*LogstoreConfig
-var LastLogtailConfig map[string]*LogstoreConfig
+var LogtailConfig sync.Map
+var LastUnsendBuffer map[string]PluginRunner
 var ContainerConfig *LogstoreConfig
 
 // Two built-in logtail configs to report statistics and alarm (from system and other logtail configs).
 var StatisticsConfig *LogstoreConfig
 var AlarmConfig *LogstoreConfig
-
-// Configs that were disabled because of slow or hang config.
-var DisabledLogtailConfigLock sync.Mutex
-var DisabledLogtailConfig = make(map[string]*LogstoreConfig)
 
 var statisticsConfigJSON = `{
     "global": {
@@ -136,30 +133,19 @@ func Init() (err error) {
 
 // timeoutStop wrappers LogstoreConfig.Stop with timeout (5s by default).
 // @return true if Stop returns before timeout, otherwise false.
-func timeoutStop(config *LogstoreConfig, flag bool) bool {
-	if !flag && config.GlobalConfig.AlwaysOnline {
+func timeoutStop(config *LogstoreConfig, exitFlag bool) bool {
+	if !exitFlag {
 		config.pause()
-		GetAlwaysOnlineManager().AddCachedConfig(config, time.Duration(config.GlobalConfig.DelayStopSec)*time.Second)
-		logger.Info(config.Context.GetRuntimeContext(), "Pause config and add into always online manager", "done")
+		logger.Info(config.Context.GetRuntimeContext(), "Pause config", "done")
 		return true
 	}
 
 	done := make(chan int)
 	go func() {
 		logger.Info(config.Context.GetRuntimeContext(), "Stop config in goroutine", "begin")
-		_ = config.Stop(flag)
+		_ = config.Stop(exitFlag)
 		close(done)
 		logger.Info(config.Context.GetRuntimeContext(), "Stop config in goroutine", "end")
-
-		// The config is valid but stop slowly, allow it to load again.
-		DisabledLogtailConfigLock.Lock()
-		if _, exists := DisabledLogtailConfig[config.ConfigNameWithSuffix]; !exists {
-			DisabledLogtailConfigLock.Unlock()
-			return
-		}
-		delete(DisabledLogtailConfig, config.ConfigNameWithSuffix)
-		DisabledLogtailConfigLock.Unlock()
-		logger.Info(config.Context.GetRuntimeContext(), "Valid but slow stop config, enable it again", config.ConfigName)
 	}()
 	select {
 	case <-done:
@@ -169,22 +155,27 @@ func timeoutStop(config *LogstoreConfig, flag bool) bool {
 	}
 }
 
-// HoldOn stops all config instance and checkpoint manager so that it is ready
-// to load new configs or quit.
+// StopAll stops all config instance and checkpoint manager so that it is ready
+// to quit.
 // For user-defined config, timeoutStop is used to avoid hanging.
-func HoldOn(exitFlag bool) error {
+func StopAll(exitFlag, withInput bool) error {
 	defer panicRecover("Run plugin")
 
-	for _, logstoreConfig := range LogtailConfig {
-		if hasStopped := timeoutStop(logstoreConfig, exitFlag); !hasStopped {
-			// TODO: This alarm can not be sent to server in current alarm design.
-			logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
-				"timeout when stop config, goroutine might leak")
-			DisabledLogtailConfigLock.Lock()
-			DisabledLogtailConfig[logstoreConfig.ConfigNameWithSuffix] = logstoreConfig
-			DisabledLogtailConfigLock.Unlock()
+	LogtailConfig.Range(func(key, value interface{}) bool {
+		if logstoreConfig, ok := value.(*LogstoreConfig); ok {
+			if (withInput && logstoreConfig.PluginRunner.IsWithInputPlugin()) || (!withInput && !logstoreConfig.PluginRunner.IsWithInputPlugin()) {
+				if hasStopped := timeoutStop(logstoreConfig, exitFlag); !hasStopped {
+					// TODO: This alarm can not be sent to server in current alarm design.
+					logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
+						"timeout when stop config, goroutine might leak")
+				}
+			} else {
+				// should never happen
+				logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_ALARM", "stop config not match withInput", withInput, "configName", key)
+			}
 		}
-	}
+		return true
+	})
 	if StatisticsConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")
@@ -212,51 +203,39 @@ func HoldOn(exitFlag bool) error {
 		}
 		_ = ContainerConfig.Stop(exitFlag)
 	}
-	// clear all config
-	LastLogtailConfig = LogtailConfig
-	LogtailConfig = make(map[string]*LogstoreConfig)
 	CheckPointManager.HoldOn()
 	return nil
 }
 
-// Resume starts all configs.
-func Resume() error {
+// Stop stop the given config.
+func Stop(configName string, removingFlag bool) error {
 	defer panicRecover("Run plugin")
-	if StatisticsConfig != nil {
-		StatisticsConfig.Start()
-	}
-	if AlarmConfig != nil {
-		AlarmConfig.Start()
-	}
-	if ContainerConfig != nil {
-		ContainerConfig.Start()
-	}
-	// Remove deleted configs from online manager.
-	deletedCachedConfigs := GetAlwaysOnlineManager().GetDeletedConfigs(LogtailConfig)
-	for _, cfg := range deletedCachedConfigs {
-		go func(config *LogstoreConfig) {
-			defer panicRecover(config.ConfigName)
-			logger.Infof(config.Context.GetRuntimeContext(), "always online config %v is deleted, stop it", config.ConfigName)
-			err := config.Stop(true)
-			logger.Infof(config.Context.GetRuntimeContext(), "always online config %v stopped, error: %v", config.ConfigName, err)
-		}(cfg)
-	}
-	for _, logstoreConfig := range LogtailConfig {
-		if logstoreConfig.alreadyStarted {
-			logstoreConfig.resume()
-			continue
+	if object, exists := LogtailConfig.Load(configName); exists {
+		if config, ok := object.(*LogstoreConfig); ok {
+			if hasStopped := timeoutStop(config, true); !hasStopped {
+				logger.Error(config.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
+					"timeout when stop config, goroutine might leak")
+			}
+			if !removingFlag {
+				LastUnsendBuffer[configName] = config.PluginRunner
+			}
+			LogtailConfig.Delete(configName)
+			return nil
 		}
-		logstoreConfig.Start()
 	}
+	return fmt.Errorf("config not found: %s", configName)
+}
 
-	err := CheckPointManager.Init()
-	if err != nil {
-		logger.Error(context.Background(), "CHECKPOINT_INIT_ALARM", "init checkpoint manager error", err)
+// Start starts the given config.
+func Start(configName string) error {
+	defer panicRecover("Run plugin")
+	if object, exists := LogtailConfig.Load(configName); exists {
+		if config, ok := object.(*LogstoreConfig); ok {
+			config.Start()
+			return nil
+		}
 	}
-	CheckPointManager.Resume()
-	// clear last logtail config
-	LastLogtailConfig = make(map[string]*LogstoreConfig)
-	return nil
+	return fmt.Errorf("config not found: %s", configName)
 }
 
 func init() {

@@ -136,8 +136,9 @@ typedef GoInt (*LoadConfigFun)(GoString p, GoString l, GoString c, GoInt64 k, Go
 typedef GoInt (*UnloadConfigFun)(GoString p, GoString l, GoString c);
 typedef GoInt (*ProcessRawLogFun)(GoString c, GoSlice l, GoString p, GoString t);
 typedef GoInt (*ProcessRawLogV2Fun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
-typedef void (*HoldOnFun)(GoInt);
-typedef void (*ResumeFun)();
+typedef void (*StopAllFun)(GoInt, GoInt);
+typedef void (*StopFun)(GoString, GoInt);
+typedef void (*StartFun)(GoString);
 typedef GoInt (*InitPluginBaseFun)();
 typedef GoInt (*InitPluginBaseV2Fun)(GoString cfg);
 typedef GoInt (*ProcessLogsFun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
@@ -214,8 +215,9 @@ public:
                       const std::string& logstore = "",
                       const std::string& region = "",
                       logtail::QueueKey logstoreKey = 0);
-    void HoldOn(bool exitFlag);
-    void Resume();
+    void StopAll(bool exitFlag, bool withInputFlag);
+    void Stop(const std::string& configName, bool removingFlag);
+    void Start(const std::string& configName);
 
     bool IsPluginOpened() { return mPluginValid; }
 
@@ -273,8 +275,9 @@ private:
     LoadGlobalConfigFun mLoadGlobalConfigFun;
     LoadConfigFun mLoadConfigFun;
     UnloadConfigFun mUnloadConfigFun;
-    HoldOnFun mHoldOnFun;
-    ResumeFun mResumeFun;
+    StopAllFun mStopAllFun;
+    StopFun mStopFun;
+    StartFun mStartFun;
     ProcessRawLogFun mProcessRawLogFun;
     ProcessRawLogV2Fun mProcessRawLogV2Fun;
     volatile bool mPluginValid;

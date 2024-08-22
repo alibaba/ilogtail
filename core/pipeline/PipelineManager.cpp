@@ -87,10 +87,25 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     }
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
+    if (isInputPrometheusChanged) {
+        PrometheusInputRunner::GetInstance()->Start();
+    }
+#if defined(__linux__) && !defined(__ANDROID__)
+    // 和其它插件不同，ebpf需要init之后才能配置加载，最终状态这个init函数是在插件自己的start函数里面，目前暂时在此过渡。
+    if (inputEbpfChanged) {
+        logtail::ebpf::eBPFServer::GetInstance()->Init();
+    }
+
 #endif
 
     for (const auto& name : diff.mRemoved) {
         auto iter = mPipelineNameEntityMap.find(name);
+        if (iter->second->HasGoPipelineWithInput()) {
+            LogtailPlugin::GetInstance()->Stop(iter->second->GetConfigNameOfGoPipelineWithInput(), true);
+        }
+        if (iter->second->HasGoPipelineWithoutInput()) {
+            LogtailPlugin::GetInstance()->Stop(iter->second->GetConfigNameOfGoPipelineWithoutInput(), true);
+        }
         iter->second->Stop(true);
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
         iter->second->RemoveProcessQueue();
@@ -98,6 +113,13 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(name, ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
+        auto iter = mPipelineNameEntityMap.find(config.mName);
+        if (iter->second->HasGoPipelineWithInput()) {
+            LogtailPlugin::GetInstance()->Stop(iter->second->GetConfigNameOfGoPipelineWithInput(), false);
+        }
+        if (iter->second->HasGoPipelineWithoutInput()) {
+            LogtailPlugin::GetInstance()->Stop(iter->second->GetConfigNameOfGoPipelineWithoutInput(), false);
+        }
         auto p = BuildPipeline(std::move(config));
         if (!p) {
             LOG_WARNING(sLogger,
@@ -118,13 +140,17 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
                   "stop the old pipeline and start the new one")("config", config.mName));
-
-        auto iter = mPipelineNameEntityMap.find(config.mName);
         iter->second->Stop(false);
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
+        if (p->HasGoPipelineWithoutInput()) {
+            LogtailPlugin::GetInstance()->Start(p->GetConfigNameOfGoPipelineWithoutInput());
+        }
+        if (p->HasGoPipelineWithInput()) {
+            LogtailPlugin::GetInstance()->Start(p->GetConfigNameOfGoPipelineWithInput());
+        }
     }
     for (auto& config : diff.mAdded) {
         auto p = BuildPipeline(std::move(config));
@@ -147,18 +173,19 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
+        if (p->HasGoPipelineWithoutInput()) {
+            LogtailPlugin::GetInstance()->Start(p->GetConfigNameOfGoPipelineWithoutInput());
+        }
+        if (p->HasGoPipelineWithInput()) {
+            LogtailPlugin::GetInstance()->Start(p->GetConfigNameOfGoPipelineWithInput());
+        }
     }
 
 #ifndef APSARA_UNIT_TEST_MAIN
-    // 过渡使用，有变更的流水线的Go流水线加载在BuildPipeline中完成
-    for (auto& name : diff.mUnchanged) {
-        mPipelineNameEntityMap[name]->LoadGoPipelines();
-    }
     // 在Flusher改造完成前，先不执行如下步骤，不会造成太大影响
     // Sender::CleanUnusedAk();
 
     // 过渡使用
-    LogtailPlugin::GetInstance()->Resume();
     LogProcess::GetInstance()->Resume();
     if (isInputFileChanged || isInputContainerStdioChanged) {
         if (isFileServerStarted) {
@@ -253,7 +280,8 @@ void PipelineManager::StopAllPipelines() {
 
     FlushAllBatch();
 
-    LogtailPlugin::GetInstance()->HoldOn(true);
+    LogtailPlugin::GetInstance()->StopAll(true, true);
+    LogtailPlugin::GetInstance()->StopAll(true, false);
 
     // TODO: make it common
     FlusherSLS::RecycleResourceIfNotUsed();
@@ -307,6 +335,15 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
+    } else if (inputType == "input_prometheus") {
+        isInputPrometheusChanged = true;
+    } else if (inputType == "input_ebpf_processprobe_security" || 
+        inputType == "input_ebpf_processprobe_observer" ||
+        inputType == "input_ebpf_sockettraceprobe_security" ||
+        inputType == "input_ebpf_sockettraceprobe_observer" ||
+        inputType == "input_ebpf_fileprobe_security" ||
+        inputType == "input_ebpf_profilingprobe_observer") {
+        isInputEbpfChanged = true;
     }
 }
 

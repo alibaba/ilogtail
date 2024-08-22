@@ -63,6 +63,11 @@ public:
     static std::string GenPluginTypeWithID(std::string pluginType, std::string pluginID);
     PluginInstance::PluginMeta GenNextPluginMeta(bool lastOne);
 
+    bool HasGoPipelineWithInput() const { return !mGoPipelineWithInput.isNull(); }
+    bool HasGoPipelineWithoutInput() const { return !mGoPipelineWithoutInput.isNull(); }
+    std::string GetConfigNameOfGoPipelineWithInput() const { return mName + "/1"; }
+    std::string GetConfigNameOfGoPipelineWithoutInput() const { return mName + "/2"; }
+
 private:
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const std::string& type,

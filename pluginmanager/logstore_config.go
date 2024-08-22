@@ -31,7 +31,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
 )
 
@@ -372,8 +371,6 @@ func hasDockerStdoutInput(plugins map[string]interface{}) bool {
 	return false
 }
 
-var enableAlwaysOnlineForStdout = true
-
 func createLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) (*LogstoreConfig, error) {
 	var err error
 	contextImp := &ContextImp{}
@@ -389,21 +386,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 	contextImp.logstoreC = logstoreC
 
-	// Check if the config has been disabled (keep disabled if config detail is unchanged).
-	DisabledLogtailConfigLock.Lock()
-	if disabledConfig, hasDisabled := DisabledLogtailConfig[configName]; hasDisabled {
-		if disabledConfig.configDetailHash == logstoreC.configDetailHash {
-			DisabledLogtailConfigLock.Unlock()
-			return nil, fmt.Errorf("failed to create config because timeout "+
-				"stop has happened on it: %v", configName)
-		}
-		delete(DisabledLogtailConfig, configName)
-		DisabledLogtailConfigLock.Unlock()
-		logger.Info(contextImp.GetRuntimeContext(), "retry timeout config because config detail has changed")
-	} else {
-		DisabledLogtailConfigLock.Unlock()
-	}
-
 	var plugins = make(map[string]interface{})
 	if err = json.Unmarshal([]byte(jsonStr), &plugins); err != nil {
 		return nil, err
@@ -414,26 +396,11 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		return nil, err
 	}
 
-	// check AlwaysOnlineManager
-	if oldConfig, ok := GetAlwaysOnlineManager().GetCachedConfig(configName); ok {
-		logger.Info(contextImp.GetRuntimeContext(), "find alwaysOnline config", oldConfig.ConfigName, "config compare", oldConfig.configDetailHash == logstoreC.configDetailHash,
-			"new config hash", logstoreC.configDetailHash, "old config hash", oldConfig.configDetailHash)
-		if oldConfig.configDetailHash == logstoreC.configDetailHash {
-			logstoreC = oldConfig
-			logstoreC.alreadyStarted = true
-			logger.Info(contextImp.GetRuntimeContext(), "config is same after reload, use it again", GetFlushStoreLen(logstoreC.PluginRunner))
-			return logstoreC, nil
-		}
-		oldConfig.resume()
-		_ = oldConfig.Stop(false)
-		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner)
-		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload", "stop and create a new one")
-	} else if lastConfig, hasLastConfig := LastLogtailConfig[configName]; hasLastConfig {
+	if lastUnsendBuffer, hasLastConfig := LastUnsendBuffer[configName]; hasLastConfig {
 		// Move unsent LogGroups from last config to new config.
-		logstoreC.PluginRunner.Merge(lastConfig.PluginRunner)
+		logstoreC.PluginRunner.Merge(lastUnsendBuffer)
 	}
 
-	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)
 	logstoreC.ContainerLabelSet = make(map[string]struct{})
 	logstoreC.EnvSet = make(map[string]struct{})
 	logstoreC.K8sLabelSet = make(map[string]struct{})
@@ -508,7 +475,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	logstoreC.GlobalConfig = &config.LogtailGlobalConfig
 	// If plugins config has "global" field, then override the logstoreC.GlobalConfig
-	if pluginConfigInterface, flag := plugins["global"]; flag || enableAlwaysOnline {
+	if pluginConfigInterface, flag := plugins["global"]; flag {
 		pluginConfig := &config.GlobalConfig{}
 		*pluginConfig = config.LogtailGlobalConfig
 		if flag {
@@ -520,9 +487,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			if err != nil {
 				return nil, err
 			}
-		}
-		if enableAlwaysOnline {
-			pluginConfig.AlwaysOnline = true
 		}
 		logstoreC.GlobalConfig = pluginConfig
 		logger.Debug(contextImp.GetRuntimeContext(), "load plugin config", *logstoreC.GlobalConfig)
@@ -730,7 +694,7 @@ func initPluginRunner(lc *LogstoreConfig) (PluginRunner, error) {
 func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) error {
 	if len(jsonStr) == 0 {
 		logger.Info(context.Background(), "delete config", configName, "logstore", logstore)
-		delete(LogtailConfig, configName)
+		LogtailConfig.Delete(configName)
 		return nil
 	}
 	logger.Info(context.Background(), "load config", configName, "logstore", logstore)
@@ -738,7 +702,7 @@ func LoadLogstoreConfig(project string, logstore string, configName string, logs
 	if err != nil {
 		return err
 	}
-	LogtailConfig[configName] = logstoreC
+	LogtailConfig.Store(configName, logstoreC)
 	return nil
 }
 
@@ -931,6 +895,6 @@ func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
 }
 
 func init() {
-	LogtailConfig = make(map[string]*LogstoreConfig)
-	_ = util.InitFromEnvBool("ALIYUN_LOGTAIL_ENABLE_ALWAYS_ONLINE_FOR_STDOUT", &enableAlwaysOnlineForStdout, true)
+	LogtailConfig = sync.Map{}
+	LastUnsendBuffer = make(map[string]PluginRunner)
 }

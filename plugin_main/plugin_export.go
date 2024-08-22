@@ -94,7 +94,6 @@ import "C" //nolint:typecheck
 
 var initOnce sync.Once
 var loadOnce sync.Once
-var started bool
 
 //export InitPluginBase
 func InitPluginBase() int {
@@ -134,10 +133,6 @@ func LoadGlobalConfig(jsonStr string) int {
 //export LoadConfig
 func LoadConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
 	logger.Debug(context.Background(), "load config", configName, logstoreKey, "\n"+jsonStr)
-	if started {
-		logger.Error(context.Background(), "CONFIG_LOAD_ALARM", "cannot load config before hold on the running configs")
-		return 1
-	}
 	defer func() {
 		if err := recover(); err != nil {
 			trace := make([]byte, 2048)
@@ -166,8 +161,12 @@ func UnloadConfig(project string, logstore string, configName string) int {
 
 //export ProcessRawLog
 func ProcessRawLog(configName string, rawLog []byte, packID string, topic string) int {
-	plugin, flag := pluginmanager.LogtailConfig[configName]
+	object, flag := pluginmanager.LogtailConfig.Load(configName)
 	if !flag {
+		return -1
+	}
+	plugin, ok := object.(*pluginmanager.LogstoreConfig)
+	if !ok {
 		return -1
 	}
 
@@ -178,8 +177,12 @@ func ProcessRawLog(configName string, rawLog []byte, packID string, topic string
 
 //export ProcessRawLogV2
 func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic string, tags []byte) int {
-	config, exists := pluginmanager.LogtailConfig[configName]
+	object, exists := pluginmanager.LogtailConfig.Load(configName)
 	if !exists {
+		return -1
+	}
+	config, ok := object.(*pluginmanager.LogstoreConfig)
+	if !ok {
 		return -1
 	}
 	return config.ProcessRawLogV2(rawLog, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
@@ -187,9 +190,13 @@ func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic stri
 
 //export ProcessLog
 func ProcessLog(configName string, logBytes []byte, packID string, topic string, tags []byte) int {
-	config, exists := pluginmanager.LogtailConfig[configName]
+	object, exists := pluginmanager.LogtailConfig.Load(configName)
 	if !exists {
 		logger.Debug(context.Background(), "config not found", configName)
+		return -1
+	}
+	config, ok := object.(*pluginmanager.LogstoreConfig)
+	if !ok {
 		return -1
 	}
 	return config.ProcessLog(logBytes, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
@@ -197,42 +204,47 @@ func ProcessLog(configName string, logBytes []byte, packID string, topic string,
 
 //export ProcessLogGroup
 func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
-	config, exists := pluginmanager.LogtailConfig[configName]
+	object, exists := pluginmanager.LogtailConfig.Load(configName)
 	if !exists {
 		logger.Debug(context.Background(), "config not found", configName)
+		return -1
+	}
+	config, ok := object.(*pluginmanager.LogstoreConfig)
+	if !ok {
 		return -1
 	}
 	return config.ProcessLogGroup(logBytes, util.StringDeepCopy(packID))
 }
 
-//export HoldOn
-func HoldOn(exitFlag int) {
-	logger.Info(context.Background(), "Hold on", "start", "flag", exitFlag)
-	if started {
-		err := pluginmanager.HoldOn(exitFlag != 0)
-		if err != nil {
-			logger.Error(context.Background(), "PLUGIN_ALARM", "hold on error", err)
-		}
+//export StopAll
+func StopAll(exitFlag int, withInputFlag int) {
+	logger.Info(context.Background(), "Stop all", "start")
+	err := pluginmanager.StopAll(exitFlag != 0, withInputFlag != 0)
+	if err != nil {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "stop all error", err)
 	}
-	started = false
-	logger.Info(context.Background(), "Hold on", "success")
-	if exitFlag != 0 {
-		logger.Info(context.Background(), "logger", "close and recover")
-		logger.Close()
+	logger.Info(context.Background(), "Stop all", "success")
+	logger.Info(context.Background(), "logger", "close and recover")
+	logger.Close()
+}
+
+//export Stop
+func Stop(configName string, removingFlag int) {
+	logger.Info(context.Background(), "Stop", "start", "config", configName, "removing", removingFlag)
+	err := pluginmanager.Stop(configName, removingFlag != 0)
+	if err != nil {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "stop error", err)
 	}
 }
 
-//export Resume
-func Resume() {
-	logger.Info(context.Background(), "Resume", "start")
-	if !started {
-		err := pluginmanager.Resume()
-		if err != nil {
-			logger.Error(context.Background(), "PLUGIN_ALARM", "resume error", err)
-		}
+//export Start
+func Start(configName string) {
+	logger.Info(context.Background(), "Start", "start", "config", configName)
+	err := pluginmanager.Start(configName)
+	if err != nil {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "start error", err)
 	}
-	started = true
-	logger.Info(context.Background(), "Resume", "success")
+	logger.Info(context.Background(), "Start", "success", "config", configName)
 }
 
 //export CtlCmd
@@ -333,6 +345,21 @@ func initPluginBase(cfgStr string) int {
 	rst := 0
 	initOnce.Do(func() {
 		logger.Init()
+		flags.OverrideByEnv()
+		if pluginmanager.StatisticsConfig != nil {
+			pluginmanager.StatisticsConfig.Start()
+		}
+		if pluginmanager.AlarmConfig != nil {
+			pluginmanager.AlarmConfig.Start()
+		}
+		if pluginmanager.ContainerConfig != nil {
+			pluginmanager.ContainerConfig.Start()
+		}
+		err := pluginmanager.CheckPointManager.Init()
+		if err != nil {
+			logger.Error(context.Background(), "CHECKPOINT_INIT_ALARM", "init checkpoint manager error", err)
+		}
+		pluginmanager.CheckPointManager.Resume()
 		InitHTTPServer()
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
