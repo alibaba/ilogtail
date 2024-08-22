@@ -28,13 +28,13 @@ func (c PipelineConfig) Parse2ProtoPipelineConfigDetail(isContainDetail bool) *p
 	}
 }
 
-type ProcessConfig struct {
+type InstanceConfig struct {
 	Name    string `gorm:"primarykey"`
 	Version int64
 	Detail  []byte
 }
 
-func (c ProcessConfig) Parse2ProtoProcessConfigDetail(isContainDetail bool) *proto.ConfigDetail {
+func (c InstanceConfig) Parse2ProtoInstanceConfigDetail(isContainDetail bool) *proto.ConfigDetail {
 	if isContainDetail {
 		return &proto.ConfigDetail{
 			Name:    c.Name,
@@ -48,6 +48,6 @@ func (c ProcessConfig) Parse2ProtoProcessConfigDetail(isContainDetail bool) *pro
 	}
 }
 
-func (ProcessConfig) TableName() string {
-	return processConfigTable
+func (InstanceConfig) TableName() string {
+	return instanceConfigTable
 }

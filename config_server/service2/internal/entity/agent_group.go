@@ -10,7 +10,7 @@ type AgentGroup struct {
 	Name            string `gorm:"primarykey;"`
 	Value           string
 	PipelineConfigs []*PipelineConfig `gorm:"many2many:agent_group_pipeline_config;foreignKey:Name;joinForeignKey:AgentGroupName;References:Name;joinReferences:PipelineConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	ProcessConfigs  []*ProcessConfig  `gorm:"many2many:agent_group_process_config;foreignKey:Name;joinForeignKey:AgentGroupName;References:Name;joinReferences:ProcessConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	InstanceConfigs []*InstanceConfig `gorm:"many2many:agent_group_instance_config;foreignKey:Name;joinForeignKey:AgentGroupName;References:Name;joinReferences:InstanceConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (AgentGroup) TableName() string {

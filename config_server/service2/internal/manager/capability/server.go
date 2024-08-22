@@ -45,9 +45,9 @@ var (
 		Base: RememberPipelineConfigStatus,
 		run:  RememberPipelineConfigStatusCapabilityRun,
 	}
-	RememberProcessConfigStatusAction = &ServerAction{
-		Base: RememberProcessConfigStatus,
-		run:  RememberProcessConfigStatusCapabilityRun,
+	RememberInstanceConfigStatusAction = &ServerAction{
+		Base: RememberInstanceConfigStatus,
+		run:  RememberInstanceConfigStatusCapabilityRun,
 	}
 	RememberCustomCommandStatusAction = &ServerAction{
 		Base: RememberCustomCommandStatus,
@@ -59,7 +59,7 @@ var ServerActionList = []*ServerAction{
 	UnspecifiedServerAction,
 	RememberAttributeAction,
 	RememberPipelineConfigStatusAction,
-	RememberProcessConfigStatusAction,
+	RememberInstanceConfigStatusAction,
 	RememberCustomCommandStatusAction,
 }
 
@@ -88,13 +88,13 @@ func RememberPipelineConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 	return err
 }
 
-func RememberProcessConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
-	configs := req.ProcessConfigs
+func RememberInstanceConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
+	configs := req.InstanceConfigs
 	if configs == nil {
 		return nil
 	}
-	agentProcessConfigs := entity.ProtoConfigInfoParse2AgentProcessConfig(string(req.InstanceId), req.ProcessConfigs)
-	err := manager.CreateOrUpdateAgentProcessConfig(agentProcessConfigs)
+	agentInstanceConfigs := entity.ProtoConfigInfoParse2AgentInstanceConfig(string(req.InstanceId), req.InstanceConfigs)
+	err := manager.CreateOrUpdateAgentInstanceConfig(agentInstanceConfigs)
 	return err
 }
 

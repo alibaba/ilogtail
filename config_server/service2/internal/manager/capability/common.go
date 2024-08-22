@@ -10,7 +10,7 @@ var (
 	ServerUnspecified            = Base{0, "unspecified"}
 	RememberAttribute            = Base{1, "rememberAttribute"}
 	RememberPipelineConfigStatus = Base{2, "rememberPipelineConfigStatus"}
-	RememberProcessConfigStatus  = Base{4, "rememberProcessConfigStatus"}
+	RememberInstanceConfigStatus = Base{4, "rememberInstanceConfigStatus"}
 	RememberCustomCommandStatus  = Base{8, "rememberCustomCommandStatus"}
 )
 
@@ -18,6 +18,6 @@ var (
 var (
 	AgentUnSpecified      = Base{0, "unspecified"}
 	AcceptsPipelineConfig = Base{1, "acceptsPipelineConfig"}
-	AcceptsProcessConfig  = Base{2, "acceptsProcessConfig"}
+	AcceptsInstanceConfig = Base{2, "acceptsInstanceConfig"}
 	AcceptsCustomCommand  = Base{4, "acceptsCustomCommand"}
 )

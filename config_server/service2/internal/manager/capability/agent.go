@@ -31,9 +31,9 @@ var (
 		Base: AcceptsPipelineConfig,
 		run:  AcceptsPipelineConfigRun,
 	}
-	AcceptsProcessConfigAction = AgentAction{
-		Base: AcceptsProcessConfig,
-		run:  AcceptsProcessConfigRun,
+	AcceptsInstanceConfigAction = AgentAction{
+		Base: AcceptsInstanceConfig,
+		run:  AcceptsInstanceConfigRun,
 	}
 	AcceptsCustomCommandAction = &AgentAction{
 		Base: AcceptsCustomCommand,
@@ -67,19 +67,19 @@ func AcceptsPipelineConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatR
 	return common.ServerErrorWithMsg("Arg is illegal, what is required is a boolean type parameter")
 }
 
-// AcceptsProcessConfigRun 返回ProcessConfigDetail
-func AcceptsProcessConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse, arg ...any) error {
+// AcceptsInstanceConfigRun 返回InstanceConfigDetail
+func AcceptsInstanceConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse, arg ...any) error {
 	if len(arg) == 0 {
 		return common.ServerErrorWithMsg("The arg parameter cannot be null")
 	}
 
 	if isContainDetail, ok := arg[0].(bool); ok {
 		strInstanceId := string(req.InstanceId)
-		processConfigUpdates, err := manager.GetProcessConfig(strInstanceId, isContainDetail)
+		instanceConfigUpdates, err := manager.GetInstanceConfig(strInstanceId, isContainDetail)
 		if err != nil {
 			return err
 		}
-		res.ProcessConfigUpdates = processConfigUpdates
+		res.InstanceConfigUpdates = instanceConfigUpdates
 		return nil
 	}
 	return common.ServerErrorWithMsg("Arg is illegal, what is required is a boolean type parameter")

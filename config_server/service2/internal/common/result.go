@@ -5,16 +5,16 @@ import (
 	"errors"
 )
 
-func GenerateServerErrorResponse(err error) *proto.ServerErrorResponse {
+func GenerateCommonResponse(err error) *proto.CommonResponse {
 	var apiError = &ApiError{}
 	if errors.As(err, apiError) {
-		return &proto.ServerErrorResponse{
-			ErrorCode:    int32(apiError.Code),
-			ErrorMessage: apiError.Message,
+		return &proto.CommonResponse{
+			Status:       int32(apiError.Code),
+			ErrorMessage: []byte(apiError.Message),
 		}
 	}
-	return &proto.ServerErrorResponse{
-		ErrorCode:    int32(Failed.Code),
-		ErrorMessage: err.Error(),
+	return &proto.CommonResponse{
+		Status:       int32(Failed.Code),
+		ErrorMessage: []byte(err.Error()),
 	}
 }

@@ -2,12 +2,12 @@
   "capabilities": {
     "rememberAttribute": true,
     "rememberPipelineConfigStatus": true,
-    "rememberProcessConfigStatus": true,
+    "rememberInstanceConfigStatus": true,
     "rememberCustomCommandStatus": false
   },
   "responseFlags": {
-    "fetchPipelineConfigDetail": false,
-    "fetchProcessConfigDetail": false
+    "fetchPipelineConfigDetail": true,
+    "fetchInstanceConfigDetail": false
   },
   "timeLimit": 15
 }

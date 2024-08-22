@@ -47,7 +47,7 @@ func (s *GormStore) RemoveAgentById(instanceId string) error {
 	}
 
 	s.DB.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentPipelineConfig{})
-	s.DB.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentProcessConfig{})
+	s.DB.Where("agent_instance_id=?", instanceId).Delete(&entity.AgentInstanceConfig{})
 	return nil
 }
 

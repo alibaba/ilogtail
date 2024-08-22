@@ -16,27 +16,27 @@ type GormStore struct {
 }
 
 var tableList = []any{
-	&entity.ProcessConfig{},
+	&entity.InstanceConfig{},
 	&entity.PipelineConfig{},
 	&entity.AgentGroup{},
 	&entity.Agent{},
 	&entity.AgentPipelineConfig{},
-	&entity.AgentProcessConfig{},
+	&entity.AgentInstanceConfig{},
 }
 
 var tableNameList = []string{
 	entity.AgentGroup{}.TableName(),
 	entity.AgentAndAgentGroupTable,
 
-	entity.AgentGroupAndProcessConfigTable,
+	entity.AgentGroupAndInstanceConfigTable,
 	entity.AgentGroupAndPipelineConfigTable,
 
 	entity.Agent{}.TableName(),
 
-	entity.ProcessConfig{}.TableName(),
+	entity.InstanceConfig{}.TableName(),
 	entity.PipelineConfig{}.TableName(),
 	entity.AgentPipelineConfig{}.TableName(),
-	entity.AgentProcessConfig{}.TableName(),
+	entity.AgentInstanceConfig{}.TableName(),
 }
 
 func (s *GormStore) Connect() error {
@@ -60,7 +60,7 @@ func (s *GormStore) Close() error {
 }
 
 func (s *GormStore) CreateTables() error {
-	//AgentPipeConfig和AgentProcessConfig要额外autoMigrate是因为他们有多余的属性
+	//AgentPipeConfig和AgentInstanceConfig要额外autoMigrate是因为他们有多余的属性
 	err := s.DB.AutoMigrate(tableList...)
 	return err
 }

@@ -27,26 +27,26 @@ func ProtoConfigInfoParse2AgentPipelineConfig(instanceId string, configs []*prot
 	return agentPipelineConfigs
 }
 
-func ProtoConfigInfoParse2AgentProcessConfig(instanceId string, configs []*proto.ConfigInfo) []*AgentProcessConfig {
-	agentProcessConfigs := make([]*AgentProcessConfig, 0)
+func ProtoConfigInfoParse2AgentInstanceConfig(instanceId string, configs []*proto.ConfigInfo) []*AgentInstanceConfig {
+	agentInstanceConfigs := make([]*AgentInstanceConfig, 0)
 	for _, c := range configs {
-		agentProcessConfigs = append(agentProcessConfigs, &AgentProcessConfig{
-			AgentInstanceId:   instanceId,
-			ProcessConfigName: c.Name,
-			Status:            ConfigStatus(c.Status),
-			Message:           c.Message,
+		agentInstanceConfigs = append(agentInstanceConfigs, &AgentInstanceConfig{
+			AgentInstanceId:    instanceId,
+			InstanceConfigName: c.Name,
+			Status:             ConfigStatus(c.Status),
+			Message:            c.Message,
 		})
 	}
-	return agentProcessConfigs
+	return agentInstanceConfigs
 }
 
-type AgentProcessConfig struct {
-	AgentInstanceId   string `gorm:"primarykey"`
-	ProcessConfigName string `gorm:"primarykey"`
-	Status            ConfigStatus
-	Message           string
+type AgentInstanceConfig struct {
+	AgentInstanceId    string `gorm:"primarykey"`
+	InstanceConfigName string `gorm:"primarykey"`
+	Status             ConfigStatus
+	Message            string
 }
 
-func (AgentProcessConfig) TableName() string {
-	return agentProcessConfigTable
+func (AgentInstanceConfig) TableName() string {
+	return agentInstanceConfigTable
 }

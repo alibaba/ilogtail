@@ -47,8 +47,8 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 	sequenceNum := req.SequenceNum
 	//fmt.Println("sequenceNum:", sequenceNum)
 	if utils.AllEmpty(req.RequestId, instanceId) {
-		log.Print("required fields(requestId,instanceId) are nil")
-		return common.ValidateErrorWithMsg("required fields(requestId,instanceId)could not be nil")
+		log.Print("required fields(requestId,instanceId) are null")
+		return common.ValidateErrorWithMsg("required fields(requestId,instanceId)could not be null")
 	}
 	res.RequestId = req.RequestId
 
@@ -85,7 +85,7 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	instanceId := req.InstanceId
 	var err error
 	if utils.AllEmpty(req.RequestId, instanceId) {
-		log.Print("required fields(requestId,instanceId) are nil")
+		log.Print("required fields(requestId,instanceId) are null")
 		return common.ValidateErrorWithMsg("required fields(requestId,instanceId)could not be null")
 	}
 
@@ -106,7 +106,7 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 	return nil
 }
 
-func FetchProcessConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
+func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	instanceId := req.InstanceId
 	var err error
 	if utils.AllEmpty(req.RequestId, instanceId) {
@@ -117,18 +117,18 @@ func FetchProcessConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCon
 	res.RequestId = req.RequestId
 	strInstanceId := string(instanceId)
 
-	//Store in the agent_process table
-	agentProcessConfigs := entity.ProtoConfigInfoParse2AgentProcessConfig(strInstanceId, req.ReqConfigs)
-	err = manager.CreateOrUpdateAgentProcessConfig(agentProcessConfigs)
+	//Store in the agent_instance table
+	agentInstanceConfigs := entity.ProtoConfigInfoParse2AgentInstanceConfig(strInstanceId, req.ReqConfigs)
+	err = manager.CreateOrUpdateAgentInstanceConfig(agentInstanceConfigs)
 	if err != nil {
 		return err
 	}
 
 	//获取对应的configDetails
-	processConfigUpdates, err := manager.GetProcessConfig(strInstanceId, true)
+	instanceConfigUpdates, err := manager.GetInstanceConfig(strInstanceId, true)
 	if err != nil {
 		return err
 	}
-	res.ConfigDetails = processConfigUpdates
+	res.ConfigDetails = instanceConfigUpdates
 	return nil
 }

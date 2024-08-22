@@ -60,7 +60,7 @@ type Agent struct {
 	RunningStatus   string
 	StartupTime     int64
 	PipelineConfigs []*PipelineConfig `gorm:"many2many:agent_pipeline_config;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:PipelineConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	ProcessConfigs  []*ProcessConfig  `gorm:"many2many:agent_process_config;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:ProcessConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	InstanceConfigs []*InstanceConfig `gorm:"many2many:agent_instance_config;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:InstanceConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	//CustomCommands  []*CommandInfo
 	Flags             uint64
 	Opaque            []byte

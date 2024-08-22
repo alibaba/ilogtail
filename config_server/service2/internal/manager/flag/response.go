@@ -16,7 +16,7 @@ const (
 	Unspecified               = "unspecified"
 	ReportFullState           = "reportFullState"
 	FetchPipelineConfigDetail = "fetchPipelineConfigDetail"
-	FetchProcessConfigDetail  = "fetchProcessConfigDetail"
+	FetchInstanceConfigDetail = "fetchInstanceConfigDetail"
 )
 
 var ResponseMap = map[string]*ResponseAction{
@@ -33,18 +33,18 @@ var ResponseMap = map[string]*ResponseAction{
 		Run1: FetchPipelineConfigDetailRun,
 		Run2: FetchPipelineConfigDetailIncludeDetailRun,
 	},
-	FetchProcessConfigDetail: {
+	FetchInstanceConfigDetail: {
 		Code: 4,
-		Run1: FetchProcessConfigDetailRun,
-		Run2: FetchProcessConfigDetailIncludeDetailRun,
+		Run1: FetchInstanceConfigDetailRun,
+		Run2: FetchInstanceConfigDetailIncludeDetailRun,
 	},
 }
 
-func ResponseUnspecifiedRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
+func ResponseUnspecifiedRun(*proto.HeartbeatRequest, *proto.HeartbeatResponse) error {
 	return nil
 }
 
-func ResponseReportFullStateRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
+func ResponseReportFullStateRun(*proto.HeartbeatRequest, *proto.HeartbeatResponse) error {
 	return nil
 }
 
@@ -60,13 +60,13 @@ func FetchPipelineConfigDetailRun(req *proto.HeartbeatRequest, res *proto.Heartb
 	return err
 }
 
-func FetchProcessConfigDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
-	err := capability.AcceptsProcessConfigAction.Action(req, res, false)
+func FetchInstanceConfigDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
+	err := capability.AcceptsInstanceConfigAction.Action(req, res, false)
 	return err
 }
 
-func FetchProcessConfigDetailIncludeDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
-	err := capability.AcceptsProcessConfigAction.Action(req, res, true)
+func FetchInstanceConfigDetailIncludeDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
+	err := capability.AcceptsInstanceConfigAction.Action(req, res, true)
 	return err
 }
 

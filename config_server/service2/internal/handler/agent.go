@@ -19,14 +19,14 @@ func HeartBeat(c *gin.Context) {
 	response := &proto.HeartbeatResponse{}
 	err := c.ShouldBindBodyWith(request, binding.ProtoBuf)
 	if err != nil {
-		response.ErrorResponse = common.GenerateServerErrorResponse(err)
+		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.ErrorResponse)
+		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.HeartBeat(request, response)
 	if err != nil {
-		response.ErrorResponse = common.GenerateServerErrorResponse(err)
+		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
 		return
 	}
@@ -38,36 +38,36 @@ func FetchPipelineConfig(c *gin.Context) {
 	response := &proto.FetchConfigResponse{}
 	err := c.ShouldBindBodyWith(request, binding.ProtoBuf)
 	if err != nil {
-		response.ErrorResponse = common.GenerateServerErrorResponse(err)
+		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.ErrorResponse)
+		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.FetchPipelineConfigDetail(request, response)
 	if err != nil {
-		response.ErrorResponse = common.GenerateServerErrorResponse(err)
+		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.ErrorResponse)
+		log.Print(response.CommonResponse)
 		return
 	}
 	common.SuccessProtobufRes(c, response)
 }
 
-func FetchProcessConfig(c *gin.Context) {
+func FetchInstanceConfig(c *gin.Context) {
 	request := &proto.FetchConfigRequest{}
 	response := &proto.FetchConfigResponse{}
 	err := c.ShouldBindBodyWith(&request, binding.ProtoBuf)
 	if err != nil {
-		response.ErrorResponse = common.GenerateServerErrorResponse(err)
+		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.ErrorResponse)
+		log.Print(response.CommonResponse)
 		return
 	}
-	err = service.FetchProcessConfigDetail(request, response)
+	err = service.FetchInstanceConfigDetail(request, response)
 	if err != nil {
-		response.ErrorResponse = common.GenerateServerErrorResponse(err)
+		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.ErrorResponse)
+		log.Print(response.CommonResponse)
 		return
 	}
 	common.SuccessProtobufRes(c, response)
