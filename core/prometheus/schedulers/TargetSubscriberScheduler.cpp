@@ -232,8 +232,8 @@ string TargetSubscriberScheduler::GetId() const {
 
 void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
-        this->OnSubscription(response, timestampNanoSec);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnSubscription(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
     });

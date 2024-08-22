@@ -27,21 +27,21 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     EventsContainer& events = eGroup.MutableEvents();
     EventsContainer newEvents;
 
-    StringView scrapeTimestampStr = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP);
-    auto timestamp = StringTo<uint64_t>(scrapeTimestampStr.substr(0, scrapeTimestampStr.size() - 9).to_string());
-    auto nanoSec = StringTo<uint32_t>(scrapeTimestampStr.substr(scrapeTimestampStr.size() - 9).to_string());
+    StringView scrapeTimestampStr = eGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP);
+    auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampStr.to_string());
 
     for (auto& e : events) {
-        ProcessEvent(e, newEvents, eGroup, timestamp, nanoSec);
+        ProcessEvent(e, newEvents, eGroup, timestampMilliSec / 1000, timestampMilliSec % 1000 * 1000000);
     }
     events.swap(newEvents);
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(events.size()));
+    eGroup.SetBaggagedata(prometheus::SCRAPE_SAMPLES_SCRAPED, ToString(events.size()));
 }
 
 bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 
+// TODO(liqiang): update Parse metricEvent after TextParser merged
 bool ProcessorPromParseMetricNative::ProcessEvent(
     PipelineEventPtr& e, EventsContainer& newEvents, PipelineEventGroup& eGroup, uint64_t timestamp, uint32_t nanoSec) {
     if (!IsSupportedEvent(e)) {

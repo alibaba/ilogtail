@@ -43,7 +43,7 @@ struct HttpRequest {
     uint32_t mMaxTryCnt = sDefaultMaxTryCnt;
 
     uint32_t mTryCnt = 1;
-    uint64_t mLastSendTimeNanoSec = 0;
+    time_t mLastSendTime = 0;
 
     HttpRequest(const std::string& method,
                 bool httpsFlag,

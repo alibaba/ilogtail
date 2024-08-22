@@ -84,4 +84,6 @@ const char* const SCRAPE_SAMPLES_SCRAPED = "scrape_samples_scraped";
 const char* const SCRAPE_TIMEOUT_SECONDS = "scrape_timeout_seconds";
 const char* const UP = "up";
 
+const char* const SCRAPE_TIMESTAMP = "scrape_timestamp";
+
 } // namespace logtail::prometheus
