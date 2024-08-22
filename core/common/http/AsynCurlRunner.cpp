@@ -16,7 +16,6 @@
 
 #include "app_config/AppConfig.h"
 #include "common/StringTools.h"
-#include "common/TimeUtil.h"
 #include "common/http/Curl.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
