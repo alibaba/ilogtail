@@ -104,12 +104,12 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
                 if (mTimer) {
                     // zero-cost upgrade
                     if (mUnRegisterMs > 0
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
-                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000
-                            > mUnRegisterMs * 1000000)
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
-                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000 * 2
-                            < mUnRegisterMs * 1000000)) {
+                        && (GetCurrentTimeInMilliSeconds() + v->GetRandSleep()
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000
+                            > mUnRegisterMs)
+                        && (GetCurrentTimeInMilliSeconds() + v->GetRandSleep()
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000 * 2
+                            < mUnRegisterMs)) {
                         // scrape once just now
                         v->ScrapeOnce(std::chrono::steady_clock::now());
                     }
@@ -213,7 +213,7 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
 
         scrapeScheduler->SetTimer(mTimer);
         auto firstExecTime
-            = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep());
+            = std::chrono::steady_clock::now() + std::chrono::milliseconds(scrapeScheduler->GetRandSleep());
 
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
