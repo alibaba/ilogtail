@@ -1,6 +1,7 @@
 package router
 
 import (
+	"config-server2/internal/config"
 	"config-server2/internal/handler"
 	"github.com/gin-gonic/gin"
 )
@@ -24,8 +25,8 @@ func InitAllRouter() {
 	handler.CheckAgentExist()
 	initUserRouter(router)
 	initAgentRouter(router)
-	err := router.Run("127.0.0.1:9090")
+	err := router.Run(config.ServerConfigInstance.Address)
 	if err != nil {
-		return
+		panic(err)
 	}
 }

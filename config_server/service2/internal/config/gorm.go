@@ -6,7 +6,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"path/filepath"
-	"runtime"
 )
 
 type GormConfig struct {
@@ -25,8 +24,13 @@ var gormDialectMap = map[string]func(string) gorm.Dialector{
 
 func GetConnection() (*GormConfig, gorm.Dialector) {
 	var config = new(GormConfig)
-	_, currentFilePath, _, _ := runtime.Caller(0)
-	err := utils.ReadJson(filepath.Join(filepath.Dir(currentFilePath), "./databaseConfig.json"), config)
+	var err error
+	dataBaseConfigPath, err := filepath.Abs("cmd/config/dataBaseConfig.json")
+	if err != nil {
+		return nil, nil
+	}
+	//log.Print(dataBaseConfigPath)
+	err = utils.ReadJson(dataBaseConfigPath, config)
 	if err != nil {
 		return nil, nil
 	}

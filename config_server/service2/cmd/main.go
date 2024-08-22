@@ -1,6 +1,8 @@
 package main
 
-import "config-server2/cmd/router"
+import (
+	"config-server2/internal/router"
+)
 
 func main() {
 	router.InitAllRouter()
