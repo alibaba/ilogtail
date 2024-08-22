@@ -310,6 +310,16 @@ cassandra_token_ownership_ratio 78.9)";
     APSARA_TEST_TRUE(
         IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 123.0));
     APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetTimestamp(), 456);
+
+    // float timestamp
+    rawData = "abc 123 456.789";
+    res = parser.Parse(rawData, 0);
+    APSARA_TEST_EQUAL(res.GetEvents().back().Cast<MetricEvent>().GetName().to_string(), "abc");
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetValue<UntypedSingleValue>()->mValue, 123.0));
+    APSARA_TEST_TRUE(IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetTimestamp(), 456));
+    APSARA_TEST_TRUE(
+        IsDoubleEqual(res.GetEvents().back().Cast<MetricEvent>().GetTimestampNanosecond().value(), 789000000));
 }
 
 UNIT_TEST_CASE(TextParserUnittest, TestParseSuccess)
