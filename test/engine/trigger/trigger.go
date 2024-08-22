@@ -46,9 +46,9 @@ func generate(ctx context.Context, totalLog int, path string, interval int, comm
 	command := getRunTriggerCommand(commandName)
 	var triggerRegexCommand strings.Builder
 	template := template.Must(template.New("trigger").Parse(triggerRegexTemplate))
-	splitted_path := strings.Split(path, "/")
-	dir := strings.Join(splitted_path[:len(splitted_path)-1], "/")
-	filename := splitted_path[len(splitted_path)-1]
+	splittedPath := strings.Split(path, "/")
+	dir := strings.Join(splittedPath[:len(splittedPath)-1], "/")
+	filename := splittedPath[len(splittedPath)-1]
 	if err := template.Execute(&triggerRegexCommand, map[string]interface{}{
 		"WorkDir":         config.TestConfig.WorkDir,
 		"TotalLog":        totalLog,

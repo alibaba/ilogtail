@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/cucumber/godog"
+
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/engine/cleanup"
 	"github.com/alibaba/ilogtail/test/engine/control"
@@ -11,7 +13,6 @@ import (
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 	"github.com/alibaba/ilogtail/test/engine/trigger"
 	"github.com/alibaba/ilogtail/test/engine/verify"
-	"github.com/cucumber/godog"
 )
 
 func ScenarioInitializer(ctx *godog.ScenarioContext) {

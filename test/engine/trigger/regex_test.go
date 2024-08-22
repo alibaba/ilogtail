@@ -93,9 +93,9 @@ func TestGenerateRegexLogSingleGBK(t *testing.T) {
 	}
 	testLogConent := make([]string, 0, len(testLogConentUTF8))
 	for _, log := range testLogConentUTF8 {
-		data, err := io.ReadAll(transform.NewReader(bytes.NewBuffer([]byte(log)), encoder))
-		if err != nil {
-			t.Fatalf("encode log failed: %v", err)
+		data, err1 := io.ReadAll(transform.NewReader(bytes.NewBuffer([]byte(log)), encoder))
+		if err1 != nil {
+			t.Fatalf("encode log failed: %v", err1)
 		}
 		testLogConent = append(testLogConent, string(data))
 	}

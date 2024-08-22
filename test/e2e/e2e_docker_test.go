@@ -17,8 +17,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/alibaba/ilogtail/test/engine"
 	"github.com/cucumber/godog"
+
+	"github.com/alibaba/ilogtail/test/engine"
 )
 
 func TestE2EOnDockerCompose(t *testing.T) {
