@@ -55,7 +55,6 @@ enum class EventGroupMetaKey {
 };
 
 using GroupMetadata = std::map<EventGroupMetaKey, StringView>;
-
 using GroupBaggagedata = std::map<StringView, StringView>;
 using GroupTags = std::map<StringView, StringView>;
 
