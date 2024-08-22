@@ -49,6 +49,9 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             LOG_ERROR(sLogger, ("scrape protocol config error", scrapeConfig[prometheus::SCRAPE_PROTOCOLS]));
             return false;
         }
+    } else {
+        Json::Value nullJson;
+        InitScrapeProtocols(nullJson);
     }
 
 
@@ -68,7 +71,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
     if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
-        if (!mRequestHeaders.empty()) {
+        if (!mRequestHeaders[prometheus::A_UTHORIZATION].empty()) {
             LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
             return false;
         }
@@ -240,6 +243,12 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
         {prometheus::OpenMetricsText0_0_1, "application/openmetrics-text;version=0.0.1"},
         {prometheus::OpenMetricsText1_0_0, "application/openmetrics-text;version=1.0.0"},
     };
+    static auto sDefaultScrapeProtocols = vector<string>{
+        prometheus::PrometheusText0_0_4,
+        prometheus::PrometheusProto,
+        prometheus::OpenMetricsText0_0_1,
+        prometheus::OpenMetricsText1_0_0,
+    };
 
     auto join = [](const vector<string>& strs, const string& sep) {
         string result;
@@ -252,19 +261,52 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
         return result;
     };
 
-    vector<string> tmpScrapeProtocols;
-    for (const auto& scrapeProtocol : scrapeProtocols) {
-        if (scrapeProtocol.isString() && sScrapeProtocolsHeaders.count(scrapeProtocol.asString())) {
-            tmpScrapeProtocols.push_back(scrapeProtocol.asString());
-        } else {
-            return false;
+    auto getScrapeProtocols = [](const Json::Value& scrapeProtocols, vector<string>& res) {
+        for (const auto& scrapeProtocol : scrapeProtocols) {
+            if (scrapeProtocol.isString()) {
+                res.push_back(scrapeProtocol.asString());
+            } else {
+                return false;
+            }
         }
+        return true;
+    };
+
+    auto validateScrapeProtocols = [](const vector<string>& scrapeProtocols) {
+        set<string> dups;
+        for (const auto& scrapeProtocol : scrapeProtocols) {
+            if (!sScrapeProtocolsHeaders.count(scrapeProtocol)) {
+                LOG_ERROR(sLogger,
+                          ("unknown scrape protocol prometheusproto", scrapeProtocol)(
+                              "supported",
+                              "[OpenMetricsText0.0.1 OpenMetricsText1.0.0 PrometheusProto PrometheusText0.0.4]"));
+                return false;
+            }
+            if (dups.count(scrapeProtocol)) {
+                LOG_ERROR(sLogger, ("duplicated protocol in scrape_protocols", scrapeProtocol));
+                return false;
+            }
+            dups.insert(scrapeProtocol);
+        }
+        return true;
+    };
+
+    vector<string> tmpScrapeProtocols;
+
+    getScrapeProtocols(scrapeProtocols, tmpScrapeProtocols);
+
+    if (tmpScrapeProtocols.empty()) {
+        tmpScrapeProtocols = sDefaultScrapeProtocols;
+    }
+    if (!validateScrapeProtocols(tmpScrapeProtocols)) {
+        return false;
     }
 
     auto weight = tmpScrapeProtocols.size() + 1;
-    for (const auto& tmpScrapeProtocol : tmpScrapeProtocols) {
+    for (auto& tmpScrapeProtocol : tmpScrapeProtocols) {
         auto val = sScrapeProtocolsHeaders[tmpScrapeProtocol];
         val += ";q=0." + std::to_string(weight--);
+        tmpScrapeProtocol = val;
     }
     tmpScrapeProtocols.push_back("*/*;q=0." + ToString(weight));
     mRequestHeaders[prometheus::ACCEPT] = join(tmpScrapeProtocols, ",");
