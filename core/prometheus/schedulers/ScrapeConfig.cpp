@@ -43,6 +43,15 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         string tmpScrapeTimeoutString = scrapeConfig[prometheus::SCRAPE_TIMEOUT].asString();
         mScrapeTimeoutSeconds = DurationToSecond(tmpScrapeTimeoutString);
     }
+
+    if (scrapeConfig.isMember(prometheus::SCRAPE_PROTOCOLS) && scrapeConfig[prometheus::SCRAPE_PROTOCOLS].isArray()) {
+        if (!InitScrapeProtocols(scrapeConfig[prometheus::SCRAPE_PROTOCOLS])) {
+            LOG_ERROR(sLogger, ("scrape protocol config error", scrapeConfig[prometheus::SCRAPE_PROTOCOLS]));
+            return false;
+        }
+    }
+
+
     if (scrapeConfig.isMember(prometheus::METRICS_PATH) && scrapeConfig[prometheus::METRICS_PATH].isString()) {
         mMetricsPath = scrapeConfig[prometheus::METRICS_PATH].asString();
     }
@@ -59,7 +68,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
     if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
-        if (!mAuthHeaders.empty()) {
+        if (!mRequestHeaders.empty()) {
             LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
             return false;
         }
@@ -185,7 +194,7 @@ bool ScrapeConfig::InitBasicAuth(const Json::Value& basicAuth) {
 
     auto token = username + ":" + password;
     auto token64 = sdk::Base64Enconde(token);
-    mAuthHeaders[prometheus::A_UTHORIZATION] = prometheus::BASIC_PREFIX + token64;
+    mRequestHeaders[prometheus::A_UTHORIZATION] = prometheus::BASIC_PREFIX + token64;
     return true;
 }
 
@@ -219,7 +228,46 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         return false;
     }
 
-    mAuthHeaders[prometheus::A_UTHORIZATION] = type + " " + credentials;
+    mRequestHeaders[prometheus::A_UTHORIZATION] = type + " " + credentials;
+    return true;
+}
+
+bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
+    static auto sScrapeProtocolsHeaders = std::map<string, string>{
+        {prometheus::PrometheusProto,
+         "application/vnd.google.protobuf;proto=io.prometheus.client.MetricFamily;encoding=delimited"},
+        {prometheus::PrometheusText0_0_4, "text/plain;version=0.0.4"},
+        {prometheus::OpenMetricsText0_0_1, "application/openmetrics-text;version=0.0.1"},
+        {prometheus::OpenMetricsText1_0_0, "application/openmetrics-text;version=1.0.0"},
+    };
+
+    auto join = [](const vector<string>& strs, const string& sep) {
+        string result;
+        for (const auto& str : strs) {
+            if (!result.empty()) {
+                result += sep;
+            }
+            result += str;
+        }
+        return result;
+    };
+
+    vector<string> tmpScrapeProtocols;
+    for (const auto& scrapeProtocol : scrapeProtocols) {
+        if (scrapeProtocol.isString() && sScrapeProtocolsHeaders.count(scrapeProtocol.asString())) {
+            tmpScrapeProtocols.push_back(scrapeProtocol.asString());
+        } else {
+            return false;
+        }
+    }
+
+    auto weight = tmpScrapeProtocols.size() + 1;
+    for (const auto& tmpScrapeProtocol : tmpScrapeProtocols) {
+        auto val = sScrapeProtocolsHeaders[tmpScrapeProtocol];
+        val += ";q=0." + std::to_string(weight--);
+    }
+    tmpScrapeProtocols.push_back("*/*;q=0." + ToString(weight));
+    mRequestHeaders[prometheus::ACCEPT] = join(tmpScrapeProtocols, ",");
     return true;
 }
 

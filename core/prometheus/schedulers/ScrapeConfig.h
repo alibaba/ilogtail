@@ -20,7 +20,9 @@ public:
     std::string mMetricsPath;
     std::string mScheme;
 
-    std::map<std::string, std::string> mAuthHeaders;
+    // auth header
+    // scrape_protocols header: PrometheusProto, OpenMetricsText0.0.1, OpenMetricsText1.0.0, PrometheusText0.0.4
+    std::map<std::string, std::string> mRequestHeaders;
 
     int64_t mMaxScrapeSizeBytes;
     int64_t mSampleLimit;
@@ -37,6 +39,7 @@ public:
 private:
     bool InitBasicAuth(const Json::Value& basicAuth);
     bool InitAuthorization(const Json::Value& authorization);
+    bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
 
     bool ReadFromFile(const std::string& filePath, std::string& content);
 

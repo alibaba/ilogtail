@@ -50,6 +50,7 @@ const char* const SCHEME = "scheme";
 const char* const METRICS_PATH = "metrics_path";
 const char* const SCRAPE_INTERVAL = "scrape_interval";
 const char* const SCRAPE_TIMEOUT = "scrape_timeout";
+const char* const SCRAPE_PROTOCOLS = "scrape_protocols";
 const char* const HEADERS = "headers";
 const char* const PARAMS = "params";
 const char* const QUERY_STRING = "query_string";
@@ -71,6 +72,11 @@ const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
 
+// scrape protocols
+const char* const PrometheusProto = "PrometheusProto";
+const char* const PrometheusText0_0_4 = "PrometheusText0.0.4";
+const char* const OpenMetricsText0_0_1 = "OpenMetricsText0.0.1";
+const char* const OpenMetricsText1_0_0 = "OpenMetricsText1.0.0";
 
 // metric labels
 const char* const JOB = "job";

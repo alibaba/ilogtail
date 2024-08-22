@@ -67,7 +67,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
     time_t timestamp = time(nullptr);
     if (response.mStatusCode != 200) {
         string headerStr;
-        for (const auto& [k, v] : mScrapeConfigPtr->mAuthHeaders) {
+        for (const auto& [k, v] : mScrapeConfigPtr->mRequestHeaders) {
             headerStr.append(k).append(":").append(v).append(";");
         }
         LOG_WARNING(sLogger,
@@ -145,7 +145,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                                      mPort,
                                                      mScrapeConfigPtr->mMetricsPath,
                                                      mScrapeConfigPtr->mQueryString,
-                                                     mScrapeConfigPtr->mAuthHeaders,
+                                                     mScrapeConfigPtr->mRequestHeaders,
                                                      "",
                                                      mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                                      mScrapeConfigPtr->mScrapeIntervalSeconds
