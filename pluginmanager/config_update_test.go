@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
-	_ "github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 	"github.com/alibaba/ilogtail/plugins/flusher/checker"
 
 	"github.com/stretchr/testify/suite"
