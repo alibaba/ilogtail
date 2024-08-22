@@ -60,6 +60,7 @@ public:
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
     std::string GetNowPluginID();
+    static std::string GenPluginTypeWithID(std::string pluginType, std::string pluginID);
     PluginInstance::PluginMeta GenNextPluginMeta(bool lastOne);
 
 private:
