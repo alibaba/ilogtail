@@ -17,6 +17,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/alibaba/ilogtail/test/engine"
 	"github.com/cucumber/godog"
 )
 
@@ -28,7 +29,7 @@ func TestE2EOnDockerCompose(t *testing.T) {
 	}
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:    "pretty",
 			Paths:     []string{featurePath},
@@ -45,7 +46,7 @@ func TestE2EOnDockerCompose(t *testing.T) {
 func TestE2EOnDockerComposeCore(t *testing.T) {
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"test_cases"},
@@ -61,7 +62,7 @@ func TestE2EOnDockerComposeCore(t *testing.T) {
 func TestE2EOnDockerComposePerformance(t *testing.T) {
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"test_cases"},
