@@ -34,6 +34,7 @@ option(WITHOUTGDB "Build Logtail without gdb")
 option(WITHSPL "Build Logtail and UT with SPL" ON)
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail")
 set(PROVIDER_PATH "provider" CACHE PATH "Path to the provider module") # external provider path can be set with -DPROVIDER_PATH
+set(UNITTEST_PATH "unittest" CACHE PATH "Path to the unittest module") # external unittest path can be set with -DUNITTEST_PATH
 
 if (BUILD_LOGTAIL_SHARED_LIBRARY AND WITHSPL)
     message(FATEL_ERROR, "Generating logtail shared library is not supported to be linked with SPL. WITHSPL should be set OFF.")
@@ -250,5 +251,5 @@ if (BUILD_LOGTAIL_UT)
     delete_gcda_files(".")
     include(CTest)
     enable_testing()
-    add_subdirectory(unittest)
+    add_subdirectory("${UNITTEST_PATH}" "${CMAKE_BINARY_DIR}/unittest")
 endif ()
