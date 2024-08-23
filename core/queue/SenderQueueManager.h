@@ -68,6 +68,7 @@ public:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void Clear();
+    bool IsQueueMarkedDeleted(QueueKey key);
 #endif
 
 private:

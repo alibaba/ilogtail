@@ -195,6 +195,11 @@ void SenderQueueManager::Clear() {
     mQueues.clear();
     mQueueDeletionTimeMap.clear();
 }
+
+bool SenderQueueManager::IsQueueMarkedDeleted(QueueKey key) {
+    lock_guard<mutex> lock(mGCMux);
+    return mQueueDeletionTimeMap.find(key) != mQueueDeletionTimeMap.end();
+}
 #endif
 
 } // namespace logtail
