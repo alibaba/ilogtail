@@ -56,6 +56,8 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     if (config.isMember(prometheus::SCRAPE_TIMEOUT) && config[prometheus::SCRAPE_TIMEOUT].isString()) {
         string tmpScrapeTimeoutString = config[prometheus::SCRAPE_TIMEOUT].asString();
         mScrapeTimeoutSeconds = DurationToSecond(tmpScrapeTimeoutString);
+    } else {
+        mScrapeTimeoutSeconds = 10;
     }
     if (config.isMember(prometheus::SAMPLE_LIMIT) && config[prometheus::SAMPLE_LIMIT].isInt64()) {
         mSampleLimit = config[prometheus::SAMPLE_LIMIT].asInt64();
@@ -136,9 +138,11 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metric
         return;
     }
 
-    StringView scrapeTimestampStr = metricGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP);
-    auto timestamp = StringTo<uint64_t>(scrapeTimestampStr.substr(0, scrapeTimestampStr.size() - 3).to_string());
-    auto nanoSec = StringTo<uint32_t>(scrapeTimestampStr.substr(scrapeTimestampStr.size() - 3).to_string()) * 1000000;
+    StringView scrapeTimestampMilliSecStr = metricGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC);
+    auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampMilliSecStr.to_string());
+    auto timestamp = timestampMilliSec / 1000;
+    auto nanoSec = timestampMilliSec % 1000 * 1000000;
+
     auto instance = metricGroup.GetBaggagedata(prometheus::INSTANCE);
     uint64_t samplesPostMetricRelabel = metricGroup.GetEvents().size();
 

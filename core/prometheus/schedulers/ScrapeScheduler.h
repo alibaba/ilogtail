@@ -58,7 +58,7 @@ public:
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
-    void SetAutoMetricMeta(PipelineEventGroup& eGroup);
+    void SetAutoMetricBaggage(PipelineEventGroup& eGroup);
 
     PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
 

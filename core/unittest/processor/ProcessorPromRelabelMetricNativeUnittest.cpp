@@ -191,7 +191,7 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
     APSARA_TEST_EQUAL((size_t)8, eventGroup.GetEvents().size());
 
     // with metadata
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP, ToString(1715829785083));
+    eventGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC, ToString(1715829785083));
     eventGroup.SetBaggagedata(prometheus::SCRAPE_SAMPLES_SCRAPED, ToString(8));
     eventGroup.SetBaggagedata(prometheus::SCRAPE_DURATION_SECONDS, ToString(1.5));
     eventGroup.SetBaggagedata(prometheus::SCRAPE_SERIES_ADDED, ToString(8));

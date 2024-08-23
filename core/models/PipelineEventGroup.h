@@ -93,8 +93,15 @@ public:
     void DelMetadata(EventGroupMetaKey key);
     void SetAllMetadata(const GroupMetadata& other) { mMetadata = other; }
 
-    void SetBaggagedata(const std::string& key, const std::string& value);
-    StringView GetBaggagedata(StringView key);
+    void SetBaggagedata(StringView key, StringView val);
+    void SetBaggagedata(const std::string& key, const std::string& val);
+    void SetBaggagedata(const StringBuffer& key, StringView val);
+    void SetBaggagedataNoCopy(const StringBuffer& key, const StringBuffer& val);
+    void SetBaggagedataNoCopy(StringView key, StringView val);
+    StringView GetBaggagedata(StringView key) const;
+    bool HasBaggagedata(StringView key) const;
+    const GroupBaggagedata& GetBaggagedatas() const { return mBaggagedata.mInner; };
+    void DelBaggagedata(StringView key);
 
     void SetTag(StringView key, StringView val);
     void SetTag(const std::string& key, const std::string& val);
@@ -125,7 +132,7 @@ public:
 
 private:
     GroupMetadata mMetadata; // Used to generate tag/log. Will not output.
-    GroupBaggagedata mBaggagedata; // Used to pass value between pipeline.
+    SizedMap mBaggagedata; // Used to pass value between pipeline.
     SizedMap mTags; // custom tags to output
     EventsContainer mEvents;
     std::shared_ptr<SourceBuffer> mSourceBuffer;

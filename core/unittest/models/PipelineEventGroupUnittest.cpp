@@ -97,7 +97,7 @@ void PipelineEventGroupUnittest::TestDelMetadata() {
 }
 
 void PipelineEventGroupUnittest::TestBaggagedata() {
-    mEventGroup->SetBaggagedata("test_int", "test_value");
+    mEventGroup->SetBaggagedata(std::string("test_int"), std::string("test_value"));
     APSARA_TEST_EQUAL_FATAL(StringView("test_value"), mEventGroup->GetBaggagedata(StringView("test_int")));
 }
 

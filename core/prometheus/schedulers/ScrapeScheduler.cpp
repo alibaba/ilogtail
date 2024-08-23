@@ -79,12 +79,12 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
     }
     auto eventGroup = BuildPipelineEventGroup(response.mBody);
 
-    SetAutoMetricMeta(eventGroup);
+    SetAutoMetricBaggage(eventGroup);
     PushEventGroup(std::move(eventGroup));
 }
 
-void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
-    eGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP, ToString(mScrapetimestampMilliSec));
+void ScrapeScheduler::SetAutoMetricBaggage(PipelineEventGroup& eGroup) {
+    eGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapetimestampMilliSec));
     eGroup.SetBaggagedata(prometheus::SCRAPE_DURATION_SECONDS, ToString(mScrapeDurationSeconds));
     eGroup.SetBaggagedata(prometheus::SCRAPE_RESPONSE_SIZE_BYTES, ToString(mScrapeResponseSizeBytes));
     eGroup.SetBaggagedata(prometheus::INSTANCE, mInstance);

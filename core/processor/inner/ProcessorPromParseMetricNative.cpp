@@ -27,11 +27,13 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     EventsContainer& events = eGroup.MutableEvents();
     EventsContainer newEvents;
 
-    StringView scrapeTimestampStr = eGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP);
-    auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampStr.to_string());
+    StringView scrapeTimestampMilliSecStr = eGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC);
+    auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampMilliSecStr.to_string());
+    auto timestamp = timestampMilliSec / 1000;
+    auto nanoSec = timestampMilliSec % 1000 * 1000000;
 
     for (auto& e : events) {
-        ProcessEvent(e, newEvents, eGroup, timestampMilliSec / 1000, timestampMilliSec % 1000 * 1000000);
+        ProcessEvent(e, newEvents, eGroup, timestamp, nanoSec);
     }
     events.swap(newEvents);
     eGroup.SetBaggagedata(prometheus::SCRAPE_SAMPLES_SCRAPED, ToString(events.size()));
