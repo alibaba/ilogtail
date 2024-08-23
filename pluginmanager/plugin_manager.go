@@ -238,6 +238,15 @@ func Start(configName string) error {
 	return fmt.Errorf("config not found: %s", configName)
 }
 
+func GetLogtailConfigSize() int {
+	size := 0
+	LogtailConfig.Range(func(key, value interface{}) bool {
+		size++
+		return true
+	})
+	return size
+}
+
 func init() {
 	go func() {
 		for {

@@ -43,7 +43,7 @@ func TestContainerConfig(t *testing.T) {
 func (s *containerConfigTestSuite) TestRefreshEnvAndLabel() {
 	s.NoError(loadMockConfig(), "got err when logad config")
 	refreshEnvAndLabel()
-	s.Equal(1, len(LogtailConfig))
+	s.Equal(1, GetLogtailConfigSize())
 	s.Equal(1, len(envSet))
 	s.Equal(1, len(containerLabelSet))
 }

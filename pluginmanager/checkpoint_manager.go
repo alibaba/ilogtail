@@ -162,6 +162,8 @@ func (p *checkPointManager) check() {
 			if len(cleanItems) >= *MaxCleanItemPerInterval {
 				break
 			}
+		} else {
+			delete(p.configCounter, string(iter.Key()))
 		}
 	}
 	iter.Release()

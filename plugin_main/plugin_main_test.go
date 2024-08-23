@@ -99,20 +99,19 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Initialize plugin and run config.
 	require.Equal(t, 0, InitPluginBase())
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	config, exists := pluginmanager.LogtailConfig[configName]
+	object, exists := pluginmanager.LogtailConfig.Load(configName)
 	require.True(t, exists)
+	config, ok := object.(*pluginmanager.LogstoreConfig)
+	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	flusher, _ := pluginmanager.GetConfigFlushers(config.PluginRunner)[0].(*BadFlusher)
 	flusher.Shutdown = shutdown
-	Resume()
+	Start(configName)
 	time.Sleep(time.Second * 2)
 
 	// Stop config, it will hang.
-	HoldOn(0)
+	Stop(configName, 0)
 	time.Sleep(time.Second * 2)
-	config, exists = pluginmanager.DisabledLogtailConfig[configName]
-	require.Equal(t, configName, config.ConfigName)
-	require.True(t, exists)
 	// Load again, fail.
 	time.Sleep(time.Second)
 	require.Equal(t, 1, LoadConfig("project", "logstore", configName, 0, badConfigStr))
@@ -120,25 +119,23 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Notify the config to quit so that it can be enabled again.
 	close(shutdown)
 	time.Sleep(time.Second * 2)
-	require.Empty(t, pluginmanager.DisabledLogtailConfig)
 
 	// Load again, succeed.
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	config, exists = pluginmanager.LogtailConfig[configName]
+	object, exists = pluginmanager.LogtailConfig.Load(configName)
 	require.True(t, exists)
+	config, ok = object.(*pluginmanager.LogstoreConfig)
+	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	flusher, _ = pluginmanager.GetConfigFlushers(config.PluginRunner)[0].(*BadFlusher)
 	shutdown = make(chan int)
 	flusher.Shutdown = shutdown
-	Resume()
+	Start(configName)
 	time.Sleep(time.Second)
 
 	// Stop config, hang again.
-	HoldOn(0)
+	Stop(configName, 0)
 	time.Sleep(time.Second * 2)
-	config, exists = pluginmanager.DisabledLogtailConfig[configName]
-	require.True(t, exists)
-	require.Equal(t, configName, config.ConfigName)
 	// Load again, fail.
 	time.Sleep(time.Second)
 	require.Equal(t, 1, LoadConfig("project", "logstore", configName, 0, badConfigStr))
@@ -146,17 +143,18 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Change config detail so that it can be loaded again.
 	validConfigStr := fmt.Sprintf(configTemplateJSONStr, 4)
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, validConfigStr))
-	Resume()
+	Start(configName)
 	time.Sleep(time.Second * 2)
-	config, exists = pluginmanager.LogtailConfig[configName]
+	object, exists = pluginmanager.LogtailConfig.Load(configName)
 	require.True(t, exists)
+	config, ok = object.(*pluginmanager.LogstoreConfig)
 	require.Equal(t, configName, config.ConfigName)
-	require.Empty(t, pluginmanager.DisabledLogtailConfig)
 
 	// Quit.
 	time.Sleep(time.Second)
-	HoldOn(1)
-	require.Empty(t, pluginmanager.DisabledLogtailConfig)
+	StopAll(1, 1)
+	StopAll(1, 0)
+	require.Equal(t, 0, pluginmanager.GetLogtailConfigSize())
 
 	// Close hanged goroutine.
 	close(shutdown)
@@ -170,35 +168,35 @@ func TestSlowConfigWhenStop(t *testing.T) {
 	// Initialize plugin and run config.
 	require.Equal(t, 0, InitPluginBase())
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	config, exists := pluginmanager.LogtailConfig[configName]
+	object, exists := pluginmanager.LogtailConfig.Load(configName)
 	require.True(t, exists)
+	config, ok := object.(*pluginmanager.LogstoreConfig)
+	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
-	Resume()
+	Start(configName)
 	time.Sleep(time.Second * 2)
 
 	// Stop config, it will hang.
-	HoldOn(0)
-	config, exists = pluginmanager.DisabledLogtailConfig[configName]
-	require.True(t, exists)
-	require.Equal(t, configName, config.ConfigName)
+	Stop(configName, 0)
 	// Load again, fail.
 	time.Sleep(time.Second)
 	require.Equal(t, 1, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	require.Empty(t, pluginmanager.LogtailConfig)
+	require.Equal(t, 0, pluginmanager.GetLogtailConfigSize())
 
 	// Wait more time, so that the config can finish stopping.
 	time.Sleep(time.Second * 5)
 	// Load again, succeed.
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	config, exists = pluginmanager.LogtailConfig[configName]
+	object, exists = pluginmanager.LogtailConfig.Load(configName)
 	require.True(t, exists)
+	config, ok = object.(*pluginmanager.LogstoreConfig)
+	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
-	Resume()
+	Start(configName)
 	time.Sleep(time.Second)
 
 	// Quit.
 	time.Sleep(time.Second)
-	HoldOn(1)
-	time.Sleep(time.Second * 6)
-	require.Empty(t, pluginmanager.DisabledLogtailConfig)
+	StopAll(1, 0)
+	StopAll(1, 1)
 }

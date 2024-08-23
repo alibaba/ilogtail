@@ -20,6 +20,7 @@ package pluginmanager
 import (
 	"context"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -33,6 +34,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/pluginmanager"
 	"github.com/alibaba/ilogtail/plugins/extension/basicauth"
 	"github.com/alibaba/ilogtail/plugins/input"
 	"github.com/alibaba/ilogtail/plugins/processor/regex"
@@ -48,7 +50,7 @@ type logstoreConfigTestSuite struct {
 
 func (s *logstoreConfigTestSuite) BeforeTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test start ========================", suiteName, testName)
-	LogtailConfig = make(map[string]*LogstoreConfig)
+	LogtailConfig = sync.Map{}
 }
 
 func (s *logstoreConfigTestSuite) AfterTest(suiteName, testName string) {
@@ -98,9 +100,12 @@ func (s *logstoreConfigTestSuite) TestPluginGlobalConfig() {
 		]
 	}`
 	s.NoError(LoadMockConfig("project", "logstore", "1", str), "load config fail")
-	s.Equal(len(LogtailConfig), 1)
-	s.Equal(LogtailConfig["1"].ConfigName, "1")
-	config := LogtailConfig["1"]
+	s.Equal(GetLogtailConfigSize(), 1)
+	object, exist := LogtailConfig.Load("1")
+	s.True(exist)
+	config, ok := object.(pluginmanager.LogstoreConfig)
+	s.True(ok)
+	s.Equal(config.ConfigName, "1")
 	s.Equal(config.ProjectName, "project")
 	s.Equal(config.LogstoreName, "logstore")
 	s.Equal(config.LogstoreKey, int64(666))
