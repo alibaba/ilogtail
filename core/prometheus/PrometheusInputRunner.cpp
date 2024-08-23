@@ -58,7 +58,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->mUnRegisterMs = mUnRegisterMs;
     targetSubscriber->SetTimer(mTimer);
     auto firstExecTime
-        = std::chrono::steady_clock::now() + std::chrono::nanoseconds(targetSubscriber->GetRandSleepNanoSec());
+        = std::chrono::steady_clock::now() + std::chrono::milliseconds(targetSubscriber->GetRandSleepMilliSec());
     targetSubscriber->SetFirstExecTime(firstExecTime);
     // 1. add subscriber to mTargetSubscriberSchedulerMap
     {
