@@ -133,7 +133,7 @@ void LogtailPlugin::Resume() {
 int LogtailPlugin::IsValidToSend(long long logstoreKey) {
     // TODO: because go profile pipeline is not controlled by C++, we cannot know queue key in advance
     // therefore, we assume true here. This could be a potential problem if network is not available for profile info.
-    // However, since go profile pipeline will be stopped only during process exit, it should be find.
+    // However, since go profile pipeline will be stopped only during process exit, it should be fine.
     if (logstoreKey == -1) {
         return true;
     }
