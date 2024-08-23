@@ -107,7 +107,7 @@ void ProcessorParsePrometheusMetricUnittest::TestProcess() {
                                    0);
     // set timestamp in nanoseconds
     auto timestampMilliSec = GetCurrentTimeInMilliSeconds();
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC, ToString(timestampMilliSec));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(timestampMilliSec));
 
     // run function
     APSARA_TEST_EQUAL((size_t)8, eventGroup.GetEvents().size());

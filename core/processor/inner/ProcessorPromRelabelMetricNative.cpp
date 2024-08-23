@@ -74,7 +74,7 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
 }
 
 void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
-    auto instance = metricGroup.GetBaggagedata(prometheus::INSTANCE);
+    auto instance = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE);
 
     EventsContainer& events = metricGroup.MutableEvents();
 
@@ -134,24 +134,26 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, StringV
 
 void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metricGroup) {
     // if up is set, then add self monitor metrics
-    if (metricGroup.GetBaggagedata(prometheus::UP).empty()) {
+    if (metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
         return;
     }
 
-    StringView scrapeTimestampMilliSecStr = metricGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC);
+    StringView scrapeTimestampMilliSecStr = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC);
     auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampMilliSecStr.to_string());
     auto timestamp = timestampMilliSec / 1000;
     auto nanoSec = timestampMilliSec % 1000 * 1000000;
 
-    auto instance = metricGroup.GetBaggagedata(prometheus::INSTANCE);
+    auto instance = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE);
+
     uint64_t samplesPostMetricRelabel = metricGroup.GetEvents().size();
 
     auto scrapeDurationSeconds
-        = StringTo<double>(metricGroup.GetBaggagedata(prometheus::SCRAPE_DURATION_SECONDS).to_string());
+        = StringTo<double>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION).to_string());
+
     AddMetric(metricGroup, prometheus::SCRAPE_DURATION_SECONDS, scrapeDurationSeconds, timestamp, nanoSec, instance);
 
     auto scrapeResponseSize
-        = StringTo<uint64_t>(metricGroup.GetBaggagedata(prometheus::SCRAPE_RESPONSE_SIZE_BYTES).to_string());
+        = StringTo<uint64_t>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE).to_string());
     AddMetric(metricGroup, prometheus::SCRAPE_RESPONSE_SIZE_BYTES, scrapeResponseSize, timestamp, nanoSec, instance);
 
     if (mSampleLimit > 0) {
@@ -166,16 +168,20 @@ void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metric
               instance);
 
     auto samplesScraped
-        = StringTo<uint64_t>(metricGroup.GetBaggagedata(prometheus::SCRAPE_SAMPLES_SCRAPED).to_string());
+        = StringTo<uint64_t>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED).to_string());
+
     AddMetric(metricGroup, prometheus::SCRAPE_SAMPLES_SCRAPED, samplesScraped, timestamp, nanoSec, instance);
 
-    auto seriesAdded = StringTo<uint64_t>(metricGroup.GetBaggagedata(prometheus::SCRAPE_SERIES_ADDED).to_string());
+    auto seriesAdded
+        = StringTo<uint64_t>(metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SERIES_ADDED).to_string());
+
     AddMetric(metricGroup, prometheus::SCRAPE_SERIES_ADDED, seriesAdded, timestamp, nanoSec, instance);
 
     AddMetric(metricGroup, prometheus::SCRAPE_TIMEOUT_SECONDS, mScrapeTimeoutSeconds, timestamp, nanoSec, instance);
 
     // up metric must be the last one
-    bool upState = metricGroup.GetBaggagedata(prometheus::UP).to_string() == "1";
+    bool upState = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).to_string() == "1";
+
     AddMetric(metricGroup, prometheus::UP, 1.0 * upState, timestamp, nanoSec, instance);
 }
 

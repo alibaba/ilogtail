@@ -58,7 +58,7 @@ public:
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
-    void SetAutoMetricBaggage(PipelineEventGroup& eGroup);
+    void SetAutoMetricMeta(PipelineEventGroup& eGroup);
 
     PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
 
@@ -77,7 +77,7 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     // auto metrics
-    uint64_t mScrapetimestampMilliSec = 0;
+    uint64_t mScrapeTimestampMilliSec = 0;
     double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;
     bool mUpState = true;

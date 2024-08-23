@@ -64,7 +64,7 @@ bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
-    mScrapetimestampMilliSec = timestampMilliSec;
+    mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
     mScrapeResponseSizeBytes = response.mBody.size();
     mUpState = response.mStatusCode == 200;
@@ -79,16 +79,16 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
     }
     auto eventGroup = BuildPipelineEventGroup(response.mBody);
 
-    SetAutoMetricBaggage(eventGroup);
+    SetAutoMetricMeta(eventGroup);
     PushEventGroup(std::move(eventGroup));
 }
 
-void ScrapeScheduler::SetAutoMetricBaggage(PipelineEventGroup& eGroup) {
-    eGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapetimestampMilliSec));
-    eGroup.SetBaggagedata(prometheus::SCRAPE_DURATION_SECONDS, ToString(mScrapeDurationSeconds));
-    eGroup.SetBaggagedata(prometheus::SCRAPE_RESPONSE_SIZE_BYTES, ToString(mScrapeResponseSizeBytes));
-    eGroup.SetBaggagedata(prometheus::INSTANCE, mInstance);
-    eGroup.SetBaggagedata(prometheus::UP, ToString(mUpState));
+void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapeTimestampMilliSec));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, mInstance);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
 }
 
 PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {

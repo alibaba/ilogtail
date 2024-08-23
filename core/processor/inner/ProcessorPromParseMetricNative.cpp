@@ -27,7 +27,7 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     EventsContainer& events = eGroup.MutableEvents();
     EventsContainer newEvents;
 
-    StringView scrapeTimestampMilliSecStr = eGroup.GetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC);
+    StringView scrapeTimestampMilliSecStr = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC);
     auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampMilliSecStr.to_string());
     auto timestamp = timestampMilliSec / 1000;
     auto nanoSec = timestampMilliSec % 1000 * 1000000;
@@ -36,7 +36,7 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
         ProcessEvent(e, newEvents, eGroup, timestamp, nanoSec);
     }
     events.swap(newEvents);
-    eGroup.SetBaggagedata(prometheus::SCRAPE_SAMPLES_SCRAPED, ToString(events.size()));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(events.size()));
 }
 
 bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {

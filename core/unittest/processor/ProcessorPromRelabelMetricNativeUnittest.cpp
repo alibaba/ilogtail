@@ -191,13 +191,13 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
     APSARA_TEST_EQUAL((size_t)8, eventGroup.GetEvents().size());
 
     // with metadata
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP_MILLISEC, ToString(1715829785083));
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_SAMPLES_SCRAPED, ToString(8));
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_DURATION_SECONDS, ToString(1.5));
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_SERIES_ADDED, ToString(8));
-    eventGroup.SetBaggagedata(prometheus::SCRAPE_RESPONSE_SIZE_BYTES, ToString(2325));
-    eventGroup.SetBaggagedata(prometheus::UP, ToString(1));
-    eventGroup.SetBaggagedata(prometheus::INSTANCE, string("localhost:8080"));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(1715829785083));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(8));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(1.5));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SERIES_ADDED, ToString(8));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(2325));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(1));
+    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, string("localhost:8080"));
     processor.AddAutoMetrics(eventGroup);
 
     APSARA_TEST_EQUAL((size_t)16, eventGroup.GetEvents().size());

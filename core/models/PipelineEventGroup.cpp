@@ -28,7 +28,6 @@ namespace logtail {
 
 PipelineEventGroup::PipelineEventGroup(PipelineEventGroup&& rhs) noexcept
     : mMetadata(std::move(rhs.mMetadata)),
-      mBaggagedata(std::move(rhs.mBaggagedata)),
       mTags(std::move(rhs.mTags)),
       mEvents(std::move(rhs.mEvents)),
       mSourceBuffer(std::move(rhs.mSourceBuffer)) {
@@ -124,41 +123,6 @@ StringView PipelineEventGroup::GetMetadata(EventGroupMetaKey key) const {
 
 void PipelineEventGroup::DelMetadata(EventGroupMetaKey key) {
     mMetadata.erase(key);
-}
-
-void PipelineEventGroup::SetBaggagedata(StringView key, StringView val) {
-    SetBaggagedataNoCopy(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
-}
-
-void PipelineEventGroup::SetBaggagedata(const string& key, const string& val) {
-    SetBaggagedataNoCopy(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
-}
-
-void PipelineEventGroup::SetBaggagedata(const StringBuffer& key, StringView val) {
-    SetBaggagedataNoCopy(key, mSourceBuffer->CopyString(val));
-}
-void PipelineEventGroup::SetBaggagedataNoCopy(const StringBuffer& key, const StringBuffer& val) {
-    SetBaggagedataNoCopy(StringView(key.data, key.size), StringView(val.data, val.size));
-}
-
-bool PipelineEventGroup::HasBaggagedata(StringView key) const {
-    return mBaggagedata.mInner.find(key) != mBaggagedata.mInner.end();
-}
-
-void PipelineEventGroup::SetBaggagedataNoCopy(StringView key, StringView val) {
-    mBaggagedata.Insert(key, val);
-}
-
-StringView PipelineEventGroup::GetBaggagedata(StringView key) const {
-    auto it = mBaggagedata.mInner.find(key);
-    if (it != mBaggagedata.mInner.end()) {
-        return it->second;
-    }
-    return gEmptyStringView;
-}
-
-void PipelineEventGroup::DelBaggagedata(StringView key) {
-    mBaggagedata.Erase(key);
 }
 
 void PipelineEventGroup::SetTag(StringView key, StringView val) {

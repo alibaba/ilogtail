@@ -51,11 +51,18 @@ enum class EventGroupMetaKey {
     CONTAINER_IMAGE_NAME,
     CONTAINER_IMAGE_ID,
 
+    PROMETHEUS_SCRAPE_DURATION,
+    PROMETHEUS_SCRAPE_RESPONSE_SIZE,
+    PROMETHEUS_SAMPLES_SCRAPED,
+    PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
+    PROMETHEUS_INSTANCE,
+    PROMETHEUS_SERIES_ADDED,
+    PROMETHEUS_UP_STATE,
+
     SOURCE_ID
 };
 
 using GroupMetadata = std::map<EventGroupMetaKey, StringView>;
-using GroupBaggagedata = std::map<StringView, StringView>;
 using GroupTags = std::map<StringView, StringView>;
 
 // DeepCopy is required if we want to support no-linear topology
@@ -93,16 +100,6 @@ public:
     void DelMetadata(EventGroupMetaKey key);
     void SetAllMetadata(const GroupMetadata& other) { mMetadata = other; }
 
-    void SetBaggagedata(StringView key, StringView val);
-    void SetBaggagedata(const std::string& key, const std::string& val);
-    void SetBaggagedata(const StringBuffer& key, StringView val);
-    void SetBaggagedataNoCopy(const StringBuffer& key, const StringBuffer& val);
-    void SetBaggagedataNoCopy(StringView key, StringView val);
-    StringView GetBaggagedata(StringView key) const;
-    bool HasBaggagedata(StringView key) const;
-    const GroupBaggagedata& GetBaggagedatas() const { return mBaggagedata.mInner; };
-    void DelBaggagedata(StringView key);
-
     void SetTag(StringView key, StringView val);
     void SetTag(const std::string& key, const std::string& val);
     void SetTag(const StringBuffer& key, StringView val);
@@ -132,7 +129,6 @@ public:
 
 private:
     GroupMetadata mMetadata; // Used to generate tag/log. Will not output.
-    SizedMap mBaggagedata; // Used to pass value between pipeline.
     SizedMap mTags; // custom tags to output
     EventsContainer mEvents;
     std::shared_ptr<SourceBuffer> mSourceBuffer;
