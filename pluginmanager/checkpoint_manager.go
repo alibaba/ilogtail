@@ -80,6 +80,7 @@ func (p *checkPointManager) Init() error {
 		return nil
 	}
 	p.shutdown = make(chan struct{}, 1)
+	p.configCounter = make(map[string]int)
 	logtailConfigDir := config.LogtailGlobalConfig.LogtailSysConfDir
 	pathExist, err := util.PathExists(logtailConfigDir)
 	var dbPath string

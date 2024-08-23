@@ -169,6 +169,7 @@ func StopAll(exitFlag, withInput bool) error {
 					logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
 						"timeout when stop config, goroutine might leak")
 				}
+				LogtailConfig.Delete(key)
 			} else {
 				// should never happen
 				logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_ALARM", "stop config not match withInput", withInput, "configName", key)

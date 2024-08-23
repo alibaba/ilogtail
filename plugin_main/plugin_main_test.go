@@ -110,9 +110,9 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Stop config, it will hang.
 	Stop(configName, 0)
 	time.Sleep(time.Second * 2)
-	// Load again, fail.
+	// Load again. It will success since independent reload.
 	time.Sleep(time.Second)
-	require.Equal(t, 1, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
 
 	// Notify the config to quit so that it can be enabled again.
 	close(shutdown)
@@ -132,9 +132,9 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Stop config, hang again.
 	Stop(configName, 0)
 	time.Sleep(time.Second * 2)
-	// Load again, fail.
+	// Load again. It will success since independent reload.
 	time.Sleep(time.Second)
-	require.Equal(t, 1, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
 
 	// Change config detail so that it can be loaded again.
 	validConfigStr := fmt.Sprintf(configTemplateJSONStr, 4)
@@ -146,9 +146,9 @@ func TestHangConfigWhenStop(t *testing.T) {
 	require.Equal(t, configName, config.ConfigName)
 
 	// Quit.
-	time.Sleep(time.Second)
 	StopAll(1, 1)
 	StopAll(1, 0)
+	time.Sleep(time.Second)
 	require.Equal(t, 0, pluginmanager.GetLogtailConfigSize())
 
 	// Close hanged goroutine.
@@ -171,10 +171,10 @@ func TestSlowConfigWhenStop(t *testing.T) {
 
 	// Stop config, it will hang.
 	Stop(configName, 0)
-	// Load again, fail.
+	// Load again. It will success since independent reload.
 	time.Sleep(time.Second)
-	require.Equal(t, 1, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	require.Equal(t, 0, pluginmanager.GetLogtailConfigSize())
+	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	require.Equal(t, 1, pluginmanager.GetLogtailConfigSize())
 
 	// Wait more time, so that the config can finish stopping.
 	time.Sleep(time.Second * 5)
