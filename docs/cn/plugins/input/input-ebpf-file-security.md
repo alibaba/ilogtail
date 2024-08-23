@@ -13,9 +13,9 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_file\_security  |
-|  ProbeConfig  |  \[object\]  |  否  |  /  |  插件配置参数列表  |
-|  ProbeConfig.CallNameFilter  |  \[string\]  |  否  |  该插件支持的所有 callname  |  内核挂载点过滤器，按照白名单模式运行，不填表示配置该插件所支持的所有挂载点  |
-|  ProbeConfig.FilePathFilter  |  \[string\]  |  否  |  空  |  文件路径过滤器，遵循前缀匹配的原则，不填表示不进行过滤  |
+|  ProbeConfig  |  \[object\]  |  是  |  /  |  ProbeConfig 可以包含多个 Option， Option 内部有多个 Filter，Filter 内部是或的关系，Filter 之间是且的关系，Option 之间是或的关系  |
+|  ProbeConfig[xx].CallNameFilter  |  \[string\]  |  否  |  该插件支持的所有 callname: [ security_file_permission security_file_mmap security_path_truncate ]  |  内核挂载点过滤器，按照白名单模式运行，不填表示配置该插件所支持的所有挂载点  |
+|  ProbeConfig[xx].FilePathFilter  |  \[string\]  |  否  |  空  |  文件路径过滤器，按照白名单模式运行，不填表示不进行过滤  |
 
 ## 样例
 

@@ -160,34 +160,38 @@ bool GetOptionalListFilterParam(const Json::Value& config,
             errorMsg = "param " + key + " is not of type list";
             return false;
         }
-        errorMsg = "element in list not of correct type:";
         for (auto it = itr->begin(); it != itr->end(); ++it) {
             if constexpr (std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
-                    errorMsg += " " + key;
-                } else {
-                    param.emplace_back(it->asBool());
+                    errorMsg = "element in list param " + key + " is not of type bool";
+                    param.clear();
+                    return false;
                 }
+                param.emplace_back(it->asBool());
             } else if constexpr (std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
-                    errorMsg += " " + key;
-                } else {
-                    param.emplace_back(it->asUInt());
+                    errorMsg = "element in list param " + key + " is not of type uint";
+                    param.clear();
+                    return false;
                 }
+                param.emplace_back(it->asUInt());
             } else if constexpr (std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
-                    errorMsg += " " + key;
-                } else {
-                    param.emplace_back(it->asInt());
+                    errorMsg = "element in list param " + key + " is not of type int";
+                    param.clear();
+                    return false;
                 }
+                param.emplace_back(it->asInt());
             } else if constexpr (std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
-                    errorMsg += " " + key;
-                } else {
-                    param.emplace_back(it->asString());
+                    errorMsg = "element in list param " + key + " is not of type string";
+                    param.clear();
+                    return false;
                 }
+                param.emplace_back(it->asString());
             } else {
                 errorMsg = "element in list param " + key + " is not supported";
+                param.clear();
                 return false;
             }
         }

@@ -159,8 +159,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     nami::SecurityFileFilter thisFilter1 = std::get<nami::SecurityFileFilter>(input->mSecurityOptions.mOptionList[0].filter_);
     // APSARA_TEST_EQUAL(ebpf::SecurityProbeType::FILE, input->mSecurityOptions.filter_Type);
     APSARA_TEST_EQUAL("security_file_permission", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL(1, thisFilter1.mFilePathList.size());
-    APSARA_TEST_EQUAL("/etc", thisFilter1.mFilePathList[0]);
+    APSARA_TEST_EQUAL(0, thisFilter1.mFilePathList.size());
 
     // lose mandatory param
     configStr = R"(
@@ -177,7 +176,8 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList.size()); // default callname
+    APSARA_TEST_EQUAL(1, input->mSecurityOptions.mOptionList.size()); // default callname
+    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList[0].call_names_.size()); // default callname
 
     // invalid callname
     configStr = R"(
@@ -195,7 +195,8 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_ebpf_fileprobe_security");
-    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList.size()); // default callname
+    APSARA_TEST_EQUAL(1, input->mSecurityOptions.mOptionList.size()); // default callname
+    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList[0].call_names_.size()); // default callname
 }
 
 void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {

@@ -153,16 +153,22 @@ bool InitObserverNetworkOption(const Json::Value& config,
     return InitObserverNetworkOptionInner(probeConfig, thisObserverNetworkOption, mContext, sName);
 }
 
-bool InitSecurityFileFilter(const Json::Value& config,
+void InitSecurityFileFilter(const Json::Value& config,
                             nami::SecurityFileFilter& thisFileFilter,
                             const PipelineContext* mContext,
                             const std::string& sName) {
     std::string errorMsg;
     // FilePathFilter (Optional)
     if (!config.isMember("FilePathFilter")) {
-        return false;
+        // No FilePathFilter, do nothing, no warning
     } else if (!config["FilePathFilter"].isArray()) {
+        // FilePathFilter is not empty but of wrong type
         errorMsg = "FilePathFilter is not of type list";
+    } else if (!GetOptionalListFilterParam<std::string>(
+                   config, "FilePathFilter", thisFileFilter.mFilePathList, errorMsg)) {
+        // FilePathFilter has element of wrong type
+    }
+    if (!errorMsg.empty()) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
                              mContext->GetAlarm(),
                              errorMsg,
@@ -171,31 +177,17 @@ bool InitSecurityFileFilter(const Json::Value& config,
                              mContext->GetProjectName(),
                              mContext->GetLogstoreName(),
                              mContext->GetRegion());
-        return false;
-    } else {
-        if (!GetOptionalListFilterParam<std::string>(
-                config, "FilePathFilter", thisFileFilter.mFilePathList, errorMsg)) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 errorMsg,
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        }
     }
-    return true;
 }
 
-bool InitSecurityNetworkFilter(const Json::Value& config,
+void InitSecurityNetworkFilter(const Json::Value& config,
                                nami::SecurityNetworkFilter& thisNetworkFilter,
                                const PipelineContext* mContext,
                                const std::string& sName) {
     std::string errorMsg;
     // AddrFilter (Optional)
     if (!config.isMember("AddrFilter")) {
-        return false;
+        // No AddrFilter, do nothing
     } else if (!config["AddrFilter"].isObject()) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
                              mContext->GetAlarm(),
@@ -205,7 +197,6 @@ bool InitSecurityNetworkFilter(const Json::Value& config,
                              mContext->GetProjectName(),
                              mContext->GetLogstoreName(),
                              mContext->GetRegion());
-        return false;
     } else {
         auto addrFilterConfig = config["AddrFilter"];
         // DestAddrList (Optional)
@@ -305,16 +296,11 @@ bool InitSecurityNetworkFilter(const Json::Value& config,
                                  mContext->GetRegion());
         }
     }
-    return true;
 }
 
-bool IsProcessNamespaceFilterTypeValid(const std::string& type) {
-    const std::unordered_set<std::string> dic
-        = {"Uts", "Ipc", "Mnt", "Pid", "PidForChildren", "Net", "Cgroup", "User", "Time", "TimeForChildren"};
-    return dic.find(type) != dic.end();
-}
-
-bool GetValidSecurityProbeCallName(SecurityProbeType type, std::vector<std::string>& callNames, std::string& errorMsg) {
+bool CheckAndGetValidSecurityProbeCallName(SecurityProbeType type,
+                                           std::vector<std::string>& callNames,
+                                           std::string& errorMsg) {
     if (type >= SecurityProbeType::MAX) {
         errorMsg = "Invalid security eBPF probe type";
         return false;
@@ -337,11 +323,11 @@ bool GetValidSecurityProbeCallName(SecurityProbeType type, std::vector<std::stri
     return res;
 }
 
-void SetSecurityProbeDefaultCallName(SecurityProbeType type, std::vector<std::string>& callNames) {
+void GetSecurityProbeDefaultCallName(SecurityProbeType type, std::vector<std::string>& callNames) {
     callNames.assign(callNameDict.at(type).begin(), callNameDict.at(type).end());
 }
 
-bool InitCallNameFilter(const Json::Value& config,
+void InitCallNameFilter(const Json::Value& config,
                         std::vector<std::string>& callNames,
                         const PipelineContext* mContext,
                         const std::string& sName,
@@ -349,98 +335,28 @@ bool InitCallNameFilter(const Json::Value& config,
     std::string errorMsg;
     // CallNameFilter (Optional)
     if (!config.isMember("CallNameFilter")) {
-        SetSecurityProbeDefaultCallName(probeType, callNames);
+        // No CallNameFilter, use default callnames, no warning
     } else if (!config["CallNameFilter"].isArray()) {
+        // CallNameFilter is not empty but of wrong type, use default callnames
+        errorMsg = "CallNameFilter is not of type list";
+    } else if (!GetOptionalListFilterParam<std::string>(config, "CallNameFilter", callNames, errorMsg)) {
+        // CallNameFilter has element of wrong type, use default callnames
+    } else if (!CheckAndGetValidSecurityProbeCallName(probeType, callNames, errorMsg)) {
+        // If CallNameFilter contains invalid callnames, use default callnames
+    }
+    if (!errorMsg.empty()) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
                              mContext->GetAlarm(),
-                             "CallNameFilter is not of type list",
+                             errorMsg,
                              sName,
                              mContext->GetConfigName(),
                              mContext->GetProjectName(),
                              mContext->GetLogstoreName(),
                              mContext->GetRegion());
-        SetSecurityProbeDefaultCallName(probeType, callNames);
-    } else {
-        if (!GetOptionalListFilterParam<std::string>(config, "CallNameFilter", callNames, errorMsg)) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 errorMsg,
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        }
-        if (!GetValidSecurityProbeCallName(probeType, callNames, errorMsg)) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(),
-                                 mContext->GetAlarm(),
-                                 errorMsg,
-                                 sName,
-                                 mContext->GetConfigName(),
-                                 mContext->GetProjectName(),
-                                 mContext->GetLogstoreName(),
-                                 mContext->GetRegion());
-        }
-        if (callNames.empty()) {
-            SetSecurityProbeDefaultCallName(probeType, callNames);
-        }
     }
-    return true;
-}
-
-// Merge the same callname in different options of probeconfig
-void Merge(SecurityProbeType type,
-           nami::SecurityOption& option,
-           std::variant<std::monostate, nami::SecurityFileFilter, nami::SecurityNetworkFilter> filter) {
-    if (std::holds_alternative<std::monostate>(filter)) {
-        return;
-    }
-    if (std::holds_alternative<std::monostate>(option.filter_)) {
-        option.filter_.swap(filter);
-        return;
-    }
-    switch (type) {
-        case SecurityProbeType::FILE: {
-            auto thisFileFilter = std::get_if<nami::SecurityFileFilter>(&option.filter_);
-            auto newFileFilter = std::get_if<nami::SecurityFileFilter>(&filter);
-            thisFileFilter->mFilePathList.insert(thisFileFilter->mFilePathList.end(),
-                                                 newFileFilter->mFilePathList.begin(),
-                                                 newFileFilter->mFilePathList.end());
-        }
-        case SecurityProbeType::NETWORK: {
-            auto thisNetworkFilter = std::get_if<nami::SecurityNetworkFilter>(&option.filter_);
-            auto newNetworkFilter = std::get_if<nami::SecurityNetworkFilter>(&filter);
-            thisNetworkFilter->mDestAddrList.insert(thisNetworkFilter->mDestAddrList.end(),
-                                                    newNetworkFilter->mDestAddrList.begin(),
-                                                    newNetworkFilter->mDestAddrList.end());
-            thisNetworkFilter->mDestPortList.insert(thisNetworkFilter->mDestPortList.end(),
-                                                    newNetworkFilter->mDestPortList.begin(),
-                                                    newNetworkFilter->mDestPortList.end());
-            thisNetworkFilter->mDestAddrBlackList.insert(thisNetworkFilter->mDestAddrBlackList.end(),
-                                                         newNetworkFilter->mDestAddrBlackList.begin(),
-                                                         newNetworkFilter->mDestAddrBlackList.end());
-            thisNetworkFilter->mDestPortBlackList.insert(thisNetworkFilter->mDestPortBlackList.end(),
-                                                         newNetworkFilter->mDestPortBlackList.begin(),
-                                                         newNetworkFilter->mDestPortBlackList.end());
-            thisNetworkFilter->mSourceAddrList.insert(thisNetworkFilter->mSourceAddrList.end(),
-                                                      newNetworkFilter->mSourceAddrList.begin(),
-                                                      newNetworkFilter->mSourceAddrList.end());
-            thisNetworkFilter->mSourcePortList.insert(thisNetworkFilter->mSourcePortList.end(),
-                                                      newNetworkFilter->mSourcePortList.begin(),
-                                                      newNetworkFilter->mSourcePortList.end());
-            thisNetworkFilter->mSourceAddrBlackList.insert(thisNetworkFilter->mSourceAddrBlackList.end(),
-                                                           newNetworkFilter->mSourceAddrBlackList.begin(),
-                                                           newNetworkFilter->mSourceAddrBlackList.end());
-            thisNetworkFilter->mSourcePortBlackList.insert(thisNetworkFilter->mSourcePortBlackList.end(),
-                                                           newNetworkFilter->mSourcePortBlackList.begin(),
-                                                           newNetworkFilter->mSourcePortBlackList.end());
-            break;
-        }
-        case SecurityProbeType::PROCESS: {
-            break;
-        }
-        default:
-            break;
+    // Use default callnames
+    if (callNames.empty()) {
+        GetSecurityProbeDefaultCallName(probeType, callNames);
     }
 }
 
@@ -461,23 +377,22 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                            mContext->GetLogstoreName(),
                            mContext->GetRegion());
     }
-    std::unordered_map<std::string, int> thisOptionMap;
+    std::unordered_set<std::string> thisCallNameSet;
     for (auto& innerConfig : config["ProbeConfig"]) {
+        nami::SecurityOption thisSecurityOption;
         // Genral Filter (Optional)
         std::variant<std::monostate, nami::SecurityFileFilter, nami::SecurityNetworkFilter> thisFilter;
         switch (probeType) {
             case SecurityProbeType::FILE: {
                 nami::SecurityFileFilter thisFileFilter;
-                if (InitSecurityFileFilter(innerConfig, thisFileFilter, mContext, sName)) {
-                    thisFilter.emplace<nami::SecurityFileFilter>(thisFileFilter);
-                }
+                InitSecurityFileFilter(innerConfig, thisFileFilter, mContext, sName);
+                thisFilter.emplace<nami::SecurityFileFilter>(thisFileFilter);
                 break;
             }
             case SecurityProbeType::NETWORK: {
                 nami::SecurityNetworkFilter thisNetworkFilter;
-                if (InitSecurityNetworkFilter(innerConfig, thisNetworkFilter, mContext, sName)) {
-                    thisFilter.emplace<nami::SecurityNetworkFilter>(thisNetworkFilter);
-                }
+                InitSecurityNetworkFilter(innerConfig, thisNetworkFilter, mContext, sName);
+                thisFilter.emplace<nami::SecurityNetworkFilter>(thisNetworkFilter);
                 break;
             }
             case SecurityProbeType::PROCESS: {
@@ -494,19 +409,28 @@ bool SecurityOptions::Init(SecurityProbeType probeType,
                                      mContext->GetRegion());
         }
         // CallNameFilter (Optional)
-        std::vector<std::string> callNames;
-        InitCallNameFilter(innerConfig, callNames, mContext, sName, probeType);
-        // Merge the same callname in different options of probeconfig
-        for (auto& callName : callNames) {
-            if (thisOptionMap.find(callName) == thisOptionMap.end()) {
-                nami::SecurityOption thisSecurityOption;
+        std::vector<std::string> thisCallNames;
+        InitCallNameFilter(innerConfig, thisCallNames, mContext, sName, probeType);
+        // Check duplicate callnames and remove them
+        for (auto& callName : thisCallNames) {
+            if (thisCallNameSet.find(callName) == thisCallNameSet.end()) {
+                thisCallNameSet.insert(callName);
                 thisSecurityOption.call_names_.emplace_back(callName);
-                thisSecurityOption.filter_ = thisFilter;
-                mOptionList.emplace_back(thisSecurityOption);
-                thisOptionMap[callName] = mOptionList.size() - 1;
             } else {
-                Merge(probeType, mOptionList[thisOptionMap[callName]], thisFilter);
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     "Duplicate callname " + callName + " is discarded",
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
             }
+        }
+        // If callnames in this option are all duplicated, discard this option
+        if (!thisSecurityOption.call_names_.empty()) {
+            thisSecurityOption.filter_ = thisFilter;
+            mOptionList.emplace_back(thisSecurityOption);
         }
     }
     mProbeType = probeType;
