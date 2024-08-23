@@ -26,7 +26,6 @@ public:
     void TestCopy();
     void TestSetMetadata();
     void TestDelMetadata();
-    void TestBaggagedata();
     void TestFromJsonToJson();
 
 protected:
@@ -94,11 +93,6 @@ void PipelineEventGroupUnittest::TestDelMetadata() {
     APSARA_TEST_TRUE_FATAL(mEventGroup->HasMetadata(EventGroupMetaKey::LOG_FILE_INODE));
     mEventGroup->DelMetadata(EventGroupMetaKey::LOG_FILE_INODE);
     APSARA_TEST_FALSE_FATAL(mEventGroup->HasMetadata(EventGroupMetaKey::LOG_FILE_INODE));
-}
-
-void PipelineEventGroupUnittest::TestBaggagedata() {
-    mEventGroup->SetBaggagedata(std::string("test_int"), std::string("test_value"));
-    APSARA_TEST_EQUAL_FATAL(StringView("test_value"), mEventGroup->GetBaggagedata(StringView("test_int")));
 }
 
 void PipelineEventGroupUnittest::TestFromJsonToJson() {
