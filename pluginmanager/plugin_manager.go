@@ -247,6 +247,15 @@ func GetLogtailConfigSize() int {
 	return size
 }
 
+func GetLogtailConfig(key string) (*LogstoreConfig, bool) {
+	if object, exists := LogtailConfig.Load(key); exists {
+		if config, ok := object.(*LogstoreConfig); ok {
+			return config, true
+		}
+	}
+	return nil, false
+}
+
 func init() {
 	go func() {
 		for {

@@ -301,19 +301,10 @@ func (p *pluginv1Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			if len(p.LogGroupsChan) == 0 {
 				return
 			}
-		case <-p.LogstoreConfig.pauseChan:
-			p.LogstoreConfig.waitForResume()
 
 		case logGroup = <-p.LogGroupsChan:
 			if logGroup == nil {
 				continue
-			}
-
-			// Check pause status if config is still alive, if paused, wait for resume.
-			select {
-			case <-p.LogstoreConfig.pauseChan:
-				p.LogstoreConfig.waitForResume()
-			default:
 			}
 
 			listLen := len(p.LogGroupsChan) + 1

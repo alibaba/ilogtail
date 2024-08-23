@@ -161,11 +161,7 @@ func UnloadConfig(project string, logstore string, configName string) int {
 
 //export ProcessRawLog
 func ProcessRawLog(configName string, rawLog []byte, packID string, topic string) int {
-	object, flag := pluginmanager.LogtailConfig.Load(configName)
-	if !flag {
-		return -1
-	}
-	plugin, ok := object.(*pluginmanager.LogstoreConfig)
+	plugin, ok := pluginmanager.GetLogtailConfig(configName)
 	if !ok {
 		return -1
 	}
@@ -177,11 +173,7 @@ func ProcessRawLog(configName string, rawLog []byte, packID string, topic string
 
 //export ProcessRawLogV2
 func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic string, tags []byte) int {
-	object, exists := pluginmanager.LogtailConfig.Load(configName)
-	if !exists {
-		return -1
-	}
-	config, ok := object.(*pluginmanager.LogstoreConfig)
+	config, ok := pluginmanager.GetLogtailConfig(configName)
 	if !ok {
 		return -1
 	}
@@ -190,12 +182,7 @@ func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic stri
 
 //export ProcessLog
 func ProcessLog(configName string, logBytes []byte, packID string, topic string, tags []byte) int {
-	object, exists := pluginmanager.LogtailConfig.Load(configName)
-	if !exists {
-		logger.Debug(context.Background(), "config not found", configName)
-		return -1
-	}
-	config, ok := object.(*pluginmanager.LogstoreConfig)
+	config, ok := pluginmanager.GetLogtailConfig(configName)
 	if !ok {
 		return -1
 	}
@@ -204,12 +191,7 @@ func ProcessLog(configName string, logBytes []byte, packID string, topic string,
 
 //export ProcessLogGroup
 func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
-	object, exists := pluginmanager.LogtailConfig.Load(configName)
-	if !exists {
-		logger.Debug(context.Background(), "config not found", configName)
-		return -1
-	}
-	config, ok := object.(*pluginmanager.LogstoreConfig)
+	config, ok := pluginmanager.GetLogtailConfig(configName)
 	if !ok {
 		return -1
 	}

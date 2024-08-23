@@ -102,12 +102,10 @@ type LogstoreConfig struct {
 	Statistics   LogstoreStatistics
 	PluginRunner PluginRunner
 	// private fields
-	alreadyStarted   bool // if this flag is true, do not start it when config Resume
 	configDetailHash string
 	// processShutdown  chan struct{}
 	// flushShutdown    chan struct{}
-	pauseChan  chan struct{}
-	resumeChan chan struct{}
+	pauseChan chan struct{}
 	// processWaitSema  sync.WaitGroup
 	// flushWaitSema    sync.WaitGroup
 	pauseOrResumeWg sync.WaitGroup
@@ -145,7 +143,6 @@ func (lc *LogstoreConfig) Start() {
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "begin")
 
 	lc.pauseChan = make(chan struct{}, 1)
-	lc.resumeChan = make(chan struct{}, 1)
 
 	lc.PluginRunner.Run()
 
@@ -168,8 +165,6 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 		return err
 	}
 	logger.Info(lc.Context.GetRuntimeContext(), "Plugin Runner stop", "done")
-	close(lc.pauseChan)
-	close(lc.resumeChan)
 	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "success")
 	return nil
 }
@@ -177,21 +172,6 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 func (lc *LogstoreConfig) pause() {
 	lc.pauseOrResumeWg.Add(1)
 	lc.pauseChan <- struct{}{}
-	lc.pauseOrResumeWg.Wait()
-}
-
-func (lc *LogstoreConfig) waitForResume() {
-	lc.pauseOrResumeWg.Done()
-	select {
-	case <-lc.resumeChan:
-		lc.pauseOrResumeWg.Done()
-	case <-GetFlushCancelToken(lc.PluginRunner):
-	}
-}
-
-func (lc *LogstoreConfig) resume() {
-	lc.pauseOrResumeWg.Add(1)
-	lc.resumeChan <- struct{}{}
 	lc.pauseOrResumeWg.Wait()
 }
 

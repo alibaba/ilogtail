@@ -326,19 +326,10 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			if len(pipeChan) == 0 {
 				return
 			}
-		case <-p.LogstoreConfig.pauseChan:
-			p.LogstoreConfig.waitForResume()
 
 		case event := <-pipeChan:
 			if event == nil {
 				continue
-			}
-
-			// Check pause status if config is still alive, if paused, wait for resume.
-			select {
-			case <-p.LogstoreConfig.pauseChan:
-				p.LogstoreConfig.waitForResume()
-			default:
 			}
 
 			dataSize := len(pipeChan) + 1

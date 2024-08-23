@@ -72,19 +72,19 @@ func (s *managerTestSuite) TestResumeHoldOn() {
 
 func (s *managerTestSuite) TestPluginManager() {
 	s.NoError(LoadMockConfig(), "got err when logad config")
-	s.NoError(Resume(), "got err when resume")
+	s.NoError(Start("test_config"), "got err when resume")
 	time.Sleep(time.Millisecond * time.Duration(10))
-	s.NoError(HoldOn(false), "got err when hold on")
+	s.NoError(Stop("test_config", false), "got err when hold on")
 	for i := 0; i < 5; i++ {
 		s.NoError(LoadMockConfig(), "got err when logad config")
-		s.NoError(Resume(), "got err when resume")
+		s.NoError(Start("test_config"), "got err when resume")
 		time.Sleep(time.Millisecond * time.Duration(1500))
-		config, ok := LogtailConfig["test_config"]
+		config, ok := GetLogtailConfig("test_config")
 		s.True(ok)
 		s.Equal(2, len(GetConfigFlushers(config.PluginRunner)))
 		c, ok := GetConfigFlushers(config.PluginRunner)[1].(*checker.FlusherChecker)
 		s.True(ok)
-		s.NoError(HoldOn(false), "got err when hold on")
+		s.NoError(Stop("test_config", false), "got err when hold on")
 		s.Equal(200, c.GetLogCount())
 	}
 }

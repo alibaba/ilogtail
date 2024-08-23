@@ -23,11 +23,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/syndtr/goleveldb/leveldb"
+
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 var CheckPointFile = flag.String("CheckPointFile", "checkpoint", "checkpoint file name, base dir(binary dir)")

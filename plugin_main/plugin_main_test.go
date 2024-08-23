@@ -99,9 +99,7 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Initialize plugin and run config.
 	require.Equal(t, 0, InitPluginBase())
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	object, exists := pluginmanager.LogtailConfig.Load(configName)
-	require.True(t, exists)
-	config, ok := object.(*pluginmanager.LogstoreConfig)
+	config, ok := pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	flusher, _ := pluginmanager.GetConfigFlushers(config.PluginRunner)[0].(*BadFlusher)
@@ -122,9 +120,7 @@ func TestHangConfigWhenStop(t *testing.T) {
 
 	// Load again, succeed.
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	object, exists = pluginmanager.LogtailConfig.Load(configName)
-	require.True(t, exists)
-	config, ok = object.(*pluginmanager.LogstoreConfig)
+	config, ok = pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	flusher, _ = pluginmanager.GetConfigFlushers(config.PluginRunner)[0].(*BadFlusher)
@@ -145,9 +141,8 @@ func TestHangConfigWhenStop(t *testing.T) {
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, validConfigStr))
 	Start(configName)
 	time.Sleep(time.Second * 2)
-	object, exists = pluginmanager.LogtailConfig.Load(configName)
-	require.True(t, exists)
-	config, ok = object.(*pluginmanager.LogstoreConfig)
+	config, ok = pluginmanager.GetLogtailConfig(configName)
+	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 
 	// Quit.
@@ -168,9 +163,7 @@ func TestSlowConfigWhenStop(t *testing.T) {
 	// Initialize plugin and run config.
 	require.Equal(t, 0, InitPluginBase())
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	object, exists := pluginmanager.LogtailConfig.Load(configName)
-	require.True(t, exists)
-	config, ok := object.(*pluginmanager.LogstoreConfig)
+	config, ok := pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	Start(configName)
@@ -187,9 +180,7 @@ func TestSlowConfigWhenStop(t *testing.T) {
 	time.Sleep(time.Second * 5)
 	// Load again, succeed.
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	object, exists = pluginmanager.LogtailConfig.Load(configName)
-	require.True(t, exists)
-	config, ok = object.(*pluginmanager.LogstoreConfig)
+	config, ok = pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	Start(configName)
