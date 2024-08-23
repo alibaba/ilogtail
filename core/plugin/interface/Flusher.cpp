@@ -23,6 +23,11 @@ using namespace std;
 
 namespace logtail {
 
+bool Flusher::Start() {
+    SenderQueueManager::GetInstance()->ReuseQueue(mQueueKey);
+    return true;
+}
+
 bool Flusher::Stop(bool isPipelineRemoving) {
     SenderQueueManager::GetInstance()->DeleteQueue(mQueueKey);
     return true;

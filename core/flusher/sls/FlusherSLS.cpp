@@ -494,6 +494,8 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 }
 
 bool FlusherSLS::Start() {
+    Flusher::Start();
+
     InitResource();
 
     IncreaseProjectReferenceCnt(mProject);
