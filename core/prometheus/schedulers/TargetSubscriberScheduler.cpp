@@ -104,12 +104,12 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
                 if (mTimer) {
                     // zero-cost upgrade
                     if (mUnRegisterMs > 0
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleepNanoSec()
-                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000
-                            > mUnRegisterMs * 1000000)
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleepNanoSec()
-                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000 * 2
-                            < mUnRegisterMs * 1000000)) {
+                        && (GetCurrentTimeInMilliSeconds() + v->GetRandSleepMilliSec()
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000
+                            > mUnRegisterMs)
+                        && (GetCurrentTimeInMilliSeconds() + v->GetRandSleepMilliSec()
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000 * 2
+                            < mUnRegisterMs)) {
                         // scrape once just now
                         LOG_WARNING(sLogger, ("scrape once just now", k));
                         v->ScrapeOnce(std::chrono::steady_clock::now());
@@ -214,7 +214,7 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
 
         scrapeScheduler->SetTimer(mTimer);
         auto firstExecTime
-            = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleepNanoSec());
+            = std::chrono::steady_clock::now() + std::chrono::milliseconds(scrapeScheduler->GetRandSleepMilliSec());
 
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
@@ -236,8 +236,8 @@ string TargetSubscriberScheduler::GetId() const {
 
 void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
-        this->OnSubscription(response, timestampNanoSec);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnSubscription(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
     });
@@ -276,7 +276,7 @@ void TargetSubscriberScheduler::Cancel() {
     CancelAllScrapeScheduler();
 }
 
-uint64_t TargetSubscriberScheduler::GetRandSleepNanoSec() const {
+uint64_t TargetSubscriberScheduler::GetRandSleepMilliSec() const {
     const string& key = mJobName;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
     uint64_t randSleep = ((double)1.0) * prometheus::RefeshIntervalSeconds * 1000ULL * 1000ULL * 1000ULL

@@ -26,6 +26,7 @@ public:
     void TestCopy();
     void TestSetMetadata();
     void TestDelMetadata();
+    void TestBaggagedata();
     void TestFromJsonToJson();
 
 protected:
@@ -77,12 +78,11 @@ void PipelineEventGroupUnittest::TestSetMetadata() {
     }
     size_t afterAlloc = mSourceBuffer->mAllocator.TotalAllocated();
     APSARA_TEST_EQUAL_FATAL(beforeAlloc, afterAlloc);
-    std::vector<std::pair<EventGroupMetaKey, std::string>> answers = {
-        {EventGroupMetaKey::LOG_FILE_PATH, "value1"},
-        {EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, "value2"},
-        {EventGroupMetaKey::LOG_FILE_INODE, "value3"},
-        {EventGroupMetaKey::SOURCE_ID, "value4"}
-    };
+    std::vector<std::pair<EventGroupMetaKey, std::string>> answers
+        = {{EventGroupMetaKey::LOG_FILE_PATH, "value1"},
+           {EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, "value2"},
+           {EventGroupMetaKey::LOG_FILE_INODE, "value3"},
+           {EventGroupMetaKey::SOURCE_ID, "value4"}};
     for (const auto kv : answers) {
         APSARA_TEST_TRUE_FATAL(mEventGroup->HasMetadata(kv.first));
         APSARA_TEST_STREQ_FATAL(kv.second.c_str(), mEventGroup->GetMetadata(kv.first).data());
@@ -94,6 +94,11 @@ void PipelineEventGroupUnittest::TestDelMetadata() {
     APSARA_TEST_TRUE_FATAL(mEventGroup->HasMetadata(EventGroupMetaKey::LOG_FILE_INODE));
     mEventGroup->DelMetadata(EventGroupMetaKey::LOG_FILE_INODE);
     APSARA_TEST_FALSE_FATAL(mEventGroup->HasMetadata(EventGroupMetaKey::LOG_FILE_INODE));
+}
+
+void PipelineEventGroupUnittest::TestBaggagedata() {
+    mEventGroup->SetBaggagedata("test_int", "test_value");
+    APSARA_TEST_EQUAL_FATAL(StringView("test_value"), mEventGroup->GetBaggagedata(StringView("test_int")));
 }
 
 void PipelineEventGroupUnittest::TestFromJsonToJson() {

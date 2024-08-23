@@ -28,6 +28,7 @@ namespace logtail {
 
 PipelineEventGroup::PipelineEventGroup(PipelineEventGroup&& rhs) noexcept
     : mMetadata(std::move(rhs.mMetadata)),
+      mBaggagedata(std::move(rhs.mBaggagedata)),
       mTags(std::move(rhs.mTags)),
       mEvents(std::move(rhs.mEvents)),
       mSourceBuffer(std::move(rhs.mSourceBuffer)) {
@@ -123,6 +124,16 @@ StringView PipelineEventGroup::GetMetadata(EventGroupMetaKey key) const {
 
 void PipelineEventGroup::DelMetadata(EventGroupMetaKey key) {
     mMetadata.erase(key);
+}
+
+void PipelineEventGroup::SetBaggagedata(const string& key, const string& value) {
+    auto keyBuffer = mSourceBuffer->CopyString(key);
+    auto valueBuffer = mSourceBuffer->CopyString(value);
+    mBaggagedata[StringView(keyBuffer.data, keyBuffer.size)] = StringView(valueBuffer.data, valueBuffer.size);
+}
+
+StringView PipelineEventGroup::GetBaggagedata(StringView key) {
+    return mBaggagedata[key];
 }
 
 void PipelineEventGroup::SetTag(StringView key, StringView val) {

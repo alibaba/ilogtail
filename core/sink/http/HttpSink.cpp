@@ -16,7 +16,6 @@
 
 #include "app_config/AppConfig.h"
 #include "common/StringTools.h"
-#include "common/TimeUtil.h"
 #include "common/http/Curl.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
@@ -101,7 +100,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
 
     request->mPrivateData = headers;
     curl_easy_setopt(curl, CURLOPT_PRIVATE, request.get());
-    request->mLastSendTimeNanoSec = time(nullptr);
+    request->mLastSendTime = time(nullptr);
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
         request->mItem->mStatus = SendingStatus::IDLE;
@@ -191,12 +190,11 @@ void HttpSink::HandleCompletedRequests() {
             CURL* handler = msg->easy_handle;
             HttpSinkRequest* request = nullptr;
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
-            auto responseTime = ToString(GetCurrentTimeInNanoSeconds() - request->mLastSendTimeNanoSec);
-            responseTime = responseTime.substr(0, responseTime.size() - 9);
             LOG_DEBUG(sLogger,
                       ("send http request completed, item address", request->mItem)(
                           "config-flusher-dst", QueueKeyManager::GetInstance()->GetName(request->mItem->mQueueKey))(
-                          "response time", responseTime)("try cnt", ToString(request->mTryCnt)));
+                          "response time",
+                          ToString(time(nullptr) - request->mLastSendTime))("try cnt", ToString(request->mTryCnt)));
             switch (msg->data.result) {
                 case CURLE_OK: {
                     long statusCode = 0;

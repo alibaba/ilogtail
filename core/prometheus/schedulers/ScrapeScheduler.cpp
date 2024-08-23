@@ -63,9 +63,9 @@ bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
     return mHash < other.mHash;
 }
 
-void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampNanoSec) {
-    mScrapeTimestampNanoSec = timestampNanoSec;
-    mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInNanoSeconds() - timestampNanoSec) / 1000000000;
+void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
+    mScrapetimestampMilliSec = timestampMilliSec;
+    mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
     mScrapeResponseSizeBytes = response.mBody.size();
     mUpState = response.mStatusCode == 200;
     if (response.mStatusCode != 200) {
@@ -82,12 +82,13 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
     SetAutoMetricMeta(eventGroup);
     PushEventGroup(std::move(eventGroup));
 }
+
 void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP, ToString(mScrapeTimestampNanoSec));
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, mInstance);
-    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
+    eGroup.SetBaggagedata(prometheus::SCRAPE_TIMESTAMP, ToString(mScrapetimestampMilliSec));
+    eGroup.SetBaggagedata(prometheus::SCRAPE_DURATION_SECONDS, ToString(mScrapeDurationSeconds));
+    eGroup.SetBaggagedata(prometheus::SCRAPE_RESPONSE_SIZE_BYTES, ToString(mScrapeResponseSizeBytes));
+    eGroup.SetBaggagedata(prometheus::INSTANCE, mInstance);
+    eGroup.SetBaggagedata(prometheus::UP, ToString(mUpState));
 }
 
 PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {
@@ -119,8 +120,8 @@ string ScrapeScheduler::GetId() const {
 
 void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
-        this->OnMetricResult(response, timestampNanoSec);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnMetricResult(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
     });
@@ -141,8 +142,8 @@ void ScrapeScheduler::ScheduleNext() {
 
 void ScrapeScheduler::ScrapeOnce(std::chrono::steady_clock::time_point execTime) {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
-        this->OnMetricResult(response, timestampNanoSec);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnMetricResult(response, timestampMilliSec);
     });
     mFuture = future;
     auto event = BuildScrapeTimerEvent(execTime);
@@ -178,15 +179,14 @@ void ScrapeScheduler::Cancel() {
     }
 }
 
-uint64_t ScrapeScheduler::GetRandSleepNanoSec() const {
+uint64_t ScrapeScheduler::GetRandSleepMilliSec() const {
     const string& key = mHash;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
-    uint64_t randSleep = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL
-        * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
-    uint64_t sleepOffset
-        = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
+    uint64_t randSleep
+        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+    uint64_t sleepOffset = GetCurrentTimeInMilliSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL);
     if (randSleep < sleepOffset) {
-        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
+        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL;
     }
     randSleep -= sleepOffset;
     return randSleep;

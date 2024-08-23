@@ -45,7 +45,7 @@ public:
 
     bool operator<(const ScrapeScheduler& other) const;
 
-    void OnMetricResult(const HttpResponse&, uint64_t timestampNanoSec);
+    void OnMetricResult(const HttpResponse&, uint64_t timestampMilliSec);
     void SetTimer(std::shared_ptr<Timer> timer);
 
     std::string GetId() const;
@@ -54,7 +54,7 @@ public:
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
 
-    uint64_t GetRandSleepNanoSec() const;
+    uint64_t GetRandSleepMilliSec() const;
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
@@ -77,7 +77,7 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     // auto metrics
-    uint64_t mScrapeTimestampNanoSec = 0;
+    uint64_t mScrapetimestampMilliSec = 0;
     double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;
     bool mUpState = true;
