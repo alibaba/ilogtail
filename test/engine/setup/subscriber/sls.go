@@ -39,11 +39,9 @@ func (s *SLSSubscriber) Description() string {
 	return "this a sls subscriber"
 }
 
-func (s *SLSSubscriber) GetData(sql string, startTime int32) ([]*protocol.LogGroup, error) {
-	if sql == "" {
-		sql = "*"
-	}
-	resp, err := s.getLogFromSLS(sql, startTime)
+func (s *SLSSubscriber) GetData(query string, startTime int32) ([]*protocol.LogGroup, error) {
+	query = s.getCompleteQuery(query)
+	resp, err := s.getLogFromSLS(query, startTime)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +78,22 @@ func (s *SLSSubscriber) FlusherConfig() string {
 
 func (s *SLSSubscriber) Stop() error {
 	return nil
+}
+
+func (s *SLSSubscriber) getCompleteQuery(query string) string {
+	if query == "" {
+		return "*"
+	}
+	switch s.TelemetryType {
+	case "logs":
+		return query
+	case "metrics":
+		return fmt.Sprintf("* | select promql_query_range('%s') from metrics limit 10000", query)
+	case "traces":
+		return query
+	default:
+		return query
+	}
 }
 
 func (s *SLSSubscriber) getLogFromSLS(sql string, from int32) (*sls.GetLogsResponse, error) {

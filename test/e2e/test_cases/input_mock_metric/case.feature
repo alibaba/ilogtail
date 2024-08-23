@@ -31,7 +31,7 @@ Feature: input mock metric
     - __value__
     - __name__
     """
-    Then the log labels match
+    Then the log labels match as below
     """
     - content
     - tag1
