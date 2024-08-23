@@ -582,11 +582,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -614,7 +609,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/5",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
@@ -655,11 +650,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -692,7 +682,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/3",
+                    "type": "aggregator_default/3",
                     "detail": {}
                 }
             ],
@@ -739,11 +729,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -783,11 +768,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -815,7 +795,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/6",
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
@@ -862,11 +842,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -907,11 +882,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                 },
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -973,11 +943,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1004,7 +969,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/2",
+                    "type": "aggregator_default/2",
                     "detail": {}
                 }
             ],
@@ -1046,11 +1011,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1087,11 +1047,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1108,7 +1063,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context/5",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
@@ -1150,11 +1105,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1189,11 +1139,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1222,11 +1167,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1249,7 +1189,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/5",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
@@ -1288,11 +1228,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1320,7 +1255,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/3",
+                    "type": "aggregator_default/3",
                     "detail": {}
                 }
             ],
@@ -1365,11 +1300,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1404,11 +1334,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1431,7 +1356,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/6",
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
@@ -1476,11 +1401,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1518,11 +1438,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1546,11 +1461,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     ]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1567,7 +1477,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context/4",
+                    "type": "aggregator_default/4",
                     "detail": {}
                 }
             ],
@@ -1601,11 +1511,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1627,7 +1532,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/2",
+                    "type": "aggregator_default/2",
                     "detail": {}
                 }
             ],
@@ -1667,11 +1572,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1703,11 +1603,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1732,7 +1627,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context/5",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
@@ -1780,11 +1675,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1827,11 +1717,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1868,11 +1753,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1903,7 +1783,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/5",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
@@ -1948,11 +1828,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1988,7 +1863,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/3",
+                    "type": "aggregator_default/3",
                     "detail": {}
                 }
             ],
@@ -2039,11 +1914,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2086,11 +1956,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2121,7 +1986,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/6",
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
@@ -2172,11 +2037,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2222,11 +2082,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2258,11 +2113,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     ]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2287,7 +2137,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context/4",
+                    "type": "aggregator_default/4",
                     "detail": {}
                 }
             ],
@@ -2327,11 +2177,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2361,7 +2206,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context/2",
+                    "type": "aggregator_default/2",
                     "detail": {}
                 }
             ],
@@ -2405,11 +2250,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                 },
                 {
                     "Type": "service_docker_stdout"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
