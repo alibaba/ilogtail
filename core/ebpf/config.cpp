@@ -341,7 +341,7 @@ void InitCallNameFilter(const Json::Value& config,
     } else if (!GetOptionalListFilterParam<std::string>(config, "CallNameFilter", callNames, errorMsg)) {
         // CallNameFilter has element of wrong type, use default callnames
     } else {
-        FilterValidSecurityProbeCallName(probeType, callNames, errorMsg)
+        FilterValidSecurityProbeCallName(probeType, callNames, errorMsg);
         // If CallNameFilter contains valid callnames, use user defined callnames, otherwise use default callnames
     }
     if (!errorMsg.empty()) {
