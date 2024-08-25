@@ -298,29 +298,28 @@ void InitSecurityNetworkFilter(const Json::Value& config,
     }
 }
 
-bool CheckAndGetValidSecurityProbeCallName(SecurityProbeType type,
-                                           std::vector<std::string>& callNames,
-                                           std::string& errorMsg) {
+void FilterValidSecurityProbeCallName(SecurityProbeType type,
+                                      std::vector<std::string>& callNames,
+                                      std::string& errorMsg) {
     if (type >= SecurityProbeType::MAX) {
         errorMsg = "Invalid security eBPF probe type";
-        return false;
+        return;
     }
     std::vector<std::string> survivedCallNames;
-    bool res = true;
+    bool allValid = true;
     for (auto& callName : callNames) {
         if (callNameDict.at(type).find(callName) == callNameDict.at(type).end()) {
-            if (!res) {
+            if (!allValid) {
                 errorMsg += ", " + callName;
             } else {
                 errorMsg = "Invalid callnames for security eBPF probe: " + callName;
-                res = false;
+                allValid = false;
             }
         } else {
             survivedCallNames.emplace_back(callName);
         }
     }
     callNames.swap(survivedCallNames);
-    return res;
 }
 
 void GetSecurityProbeDefaultCallName(SecurityProbeType type, std::vector<std::string>& callNames) {
@@ -341,8 +340,9 @@ void InitCallNameFilter(const Json::Value& config,
         errorMsg = "CallNameFilter is not of type list";
     } else if (!GetOptionalListFilterParam<std::string>(config, "CallNameFilter", callNames, errorMsg)) {
         // CallNameFilter has element of wrong type, use default callnames
-    } else if (!CheckAndGetValidSecurityProbeCallName(probeType, callNames, errorMsg)) {
-        // If CallNameFilter contains invalid callnames, use default callnames
+    } else {
+        FilterValidSecurityProbeCallName(probeType, callNames, errorMsg)
+        // If CallNameFilter contains valid callnames, use user defined callnames, otherwise use default callnames
     }
     if (!errorMsg.empty()) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
