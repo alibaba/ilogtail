@@ -60,6 +60,7 @@ private:
     time_t mTimestamp{0};
     uint32_t mNanoTimestamp{0};
     std::size_t mTokenLength{0};
+    std::string mDoubleStr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TextParserUnittest;

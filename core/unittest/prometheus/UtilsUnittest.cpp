@@ -26,21 +26,21 @@ void PromUtilsUnittest::TestStringViewToDouble() {
     StringView error3("1.18973e+4932");
     double res = 0;
 
-    APSARA_TEST_TRUE(StringViewToDouble(normal, res));
+    APSARA_TEST_TRUE(StringToDouble(normal, res));
     APSARA_TEST_TRUE(IsDoubleEqual(123.456, res));
 
-    APSARA_TEST_TRUE(StringViewToDouble(normal1, res));
+    APSARA_TEST_TRUE(StringToDouble(normal1, res));
     APSARA_TEST_TRUE(IsDoubleEqual(-123.456, res));
 
-    APSARA_TEST_TRUE(StringViewToDouble(normal2, res));
+    APSARA_TEST_TRUE(StringToDouble(normal2, res));
     APSARA_TEST_TRUE(IsDoubleEqual(123.456e-3, res));
 
-    APSARA_TEST_TRUE(StringViewToDouble(normal3, res));
+    APSARA_TEST_TRUE(StringToDouble(normal3, res));
     APSARA_TEST_TRUE(IsDoubleEqual(111.110000, res));
 
-    APSARA_TEST_FALSE(StringViewToDouble(error1, res));
-    APSARA_TEST_FALSE(StringViewToDouble(error2, res));
-    APSARA_TEST_FALSE(StringViewToDouble(error3, res));
+    APSARA_TEST_FALSE(StringToDouble(error1, res));
+    APSARA_TEST_FALSE(StringToDouble(error2, res));
+    APSARA_TEST_FALSE(StringToDouble(error3, res));
 }
 
 

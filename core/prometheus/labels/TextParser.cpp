@@ -33,6 +33,13 @@ using namespace std;
 
 namespace logtail {
 
+bool IsValidNumberChar(char c) {
+    static const unordered_set<char> sValidChars
+        = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', '+', 'e',
+           'E', 'I', 'N', 'F', 'T', 'Y', 'i', 'n', 'f', 't', 'y', 'X', 'x'};
+    return sValidChars.count(c);
+};
+
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     vector<StringView> lines;
@@ -234,18 +241,28 @@ void TextParser::HandleCommaOrCloseBrace(MetricEvent& metricEvent) {
 }
 
 void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
-    while (mPos < mLine.size() && !(mLine[mPos] == ' ' || mLine[mPos] == '\t')) {
+    while (mPos < mLine.size() && IsValidNumberChar(mLine[mPos])) {
         ++mPos;
         ++mTokenLength;
     }
 
-    auto tmpSampleValue = mLine.substr(mPos - mTokenLength, mTokenLength);
+    if (mPos < mLine.size() && mLine[mPos] != ' ' && mLine[mPos] != '\t') {
+        HandleError("unexpected end of input in sample value");
+        return;
+    }
 
-    if (!StringViewToDouble(tmpSampleValue, mSampleValue)) {
+    auto tmpSampleValue = mLine.substr(mPos - mTokenLength, mTokenLength);
+    mDoubleStr = tmpSampleValue.to_string();
+
+    try {
+        mSampleValue = std::stod(mDoubleStr);
+    } catch (...) {
         HandleError("invalid sample value");
         mTokenLength = 0;
         return;
     }
+    mDoubleStr.clear();
+
     metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
     mTokenLength = 0;
     SkipLeadingWhitespace();
@@ -259,21 +276,31 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
 
 void TextParser::HandleTimestamp(MetricEvent& metricEvent) {
     // '#' is for exemplars
-    while (mPos < mLine.size() && mLine[mPos] != ' ' && mLine[mPos] != '\t' && mLine[mPos] != '#') {
+    while (mPos < mLine.size() && IsValidNumberChar(mLine[mPos])) {
         ++mPos;
         ++mTokenLength;
     }
+    if (mPos < mLine.size() && mLine[mPos] != ' ' && mLine[mPos] != '\t' && mLine[mPos] != '#') {
+        HandleError("unexpected end of input in sample timestamp");
+        return;
+    }
+
     auto tmpTimestamp = mLine.substr(mPos - mTokenLength, mTokenLength);
     if (tmpTimestamp.size() == 0) {
         mState = TextState::Done;
         return;
     }
+    mDoubleStr = tmpTimestamp.to_string();
     double milliTimestamp = 0;
-    if (!StringViewToDouble(tmpTimestamp, milliTimestamp)) {
+    try {
+        milliTimestamp = stod(mDoubleStr);
+    } catch (...) {
         HandleError("invalid timestamp");
         mTokenLength = 0;
         return;
     }
+    mDoubleStr.clear();
+
     if (milliTimestamp > 1ULL << 63) {
         HandleError("timestamp overflow");
         mTokenLength = 0;

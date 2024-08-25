@@ -40,23 +40,6 @@ uint64_t DurationToSecond(const std::string& duration) {
     return 60;
 }
 
-bool StringViewToDouble(const StringView& sv, double& value) {
-    const char* str = sv.data();
-    char* end = nullptr;
-    errno = 0;
-    value = std::strtod(str, &end);
-    if (errno != 0) {
-        return false;
-    }
-    if (end == str) {
-        return false;
-    }
-    if (end != sv.end()) {
-        return false;
-    }
-    return true;
-}
-
 bool IsValidMetric(const StringView& line) {
     for (auto c : line) {
         if (c == ' ' || c == '\t') {

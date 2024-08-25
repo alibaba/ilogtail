@@ -12,7 +12,6 @@ std::string URLEncode(const std::string& value);
 std::string SecondToDuration(uint64_t duration);
 uint64_t DurationToSecond(const std::string& duration);
 
-bool StringViewToDouble(const StringView& sv, double& value);
 bool IsValidMetric(const StringView& line);
 
 void SplitStringView(const std::string& s, char delimiter, std::vector<StringView>& result);
