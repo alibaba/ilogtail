@@ -103,12 +103,6 @@ type LogstoreConfig struct {
 	PluginRunner PluginRunner
 	// private fields
 	configDetailHash string
-	// processShutdown  chan struct{}
-	// flushShutdown    chan struct{}
-	pauseChan chan struct{}
-	// processWaitSema  sync.WaitGroup
-	// flushWaitSema    sync.WaitGroup
-	pauseOrResumeWg sync.WaitGroup
 
 	K8sLabelSet              map[string]struct{}
 	ContainerLabelSet        map[string]struct{}
@@ -142,8 +136,6 @@ func (lc *LogstoreConfig) Start() {
 	lc.FlushOutFlag = false
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "begin")
 
-	lc.pauseChan = make(chan struct{}, 1)
-
 	lc.PluginRunner.Run()
 
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "success")
@@ -167,12 +159,6 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 	logger.Info(lc.Context.GetRuntimeContext(), "Plugin Runner stop", "done")
 	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "success")
 	return nil
-}
-
-func (lc *LogstoreConfig) pause() {
-	lc.pauseOrResumeWg.Add(1)
-	lc.pauseChan <- struct{}{}
-	lc.pauseOrResumeWg.Wait()
 }
 
 const (

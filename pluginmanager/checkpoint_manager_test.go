@@ -66,6 +66,7 @@ func Test_checkPointManager_run(t *testing.T) {
 		CheckPointManager.SaveCheckpoint("1", "xx", []byte("xxxxx"))
 		CheckPointManager.SaveCheckpoint("2", "yy", []byte("yyyyyy"))
 		*CheckPointCleanInterval = 1
+		CheckPointManager.cleanThreshold = 3
 		if data, err := CheckPointManager.GetCheckpoint("1", "xx"); err != nil || string(data) != "xxxxx" {
 			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))
 		}
@@ -74,6 +75,14 @@ func Test_checkPointManager_run(t *testing.T) {
 			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))
 		}
 		CheckPointManager.Resume()
+		time.Sleep(time.Second * time.Duration(1))
+		if data, err := CheckPointManager.GetCheckpoint("1", "xx"); err != nil || string(data) != "xxxxx" {
+			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))
+		}
+
+		if data, err := CheckPointManager.GetCheckpoint("2", "yy"); err != nil || string(data) != "yyyyyy" {
+			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))
+		}
 		time.Sleep(time.Second * time.Duration(5))
 		if data, err := CheckPointManager.GetCheckpoint("1", "xx"); err == nil {
 			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))

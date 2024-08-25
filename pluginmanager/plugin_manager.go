@@ -134,12 +134,6 @@ func Init() (err error) {
 // timeoutStop wrappers LogstoreConfig.Stop with timeout (5s by default).
 // @return true if Stop returns before timeout, otherwise false.
 func timeoutStop(config *LogstoreConfig, exitFlag bool) bool {
-	if !exitFlag {
-		config.pause()
-		logger.Info(config.Context.GetRuntimeContext(), "Pause config", "done")
-		return true
-	}
-
 	done := make(chan int)
 	go func() {
 		logger.Info(config.Context.GetRuntimeContext(), "Stop config in goroutine", "begin")
@@ -161,50 +155,66 @@ func timeoutStop(config *LogstoreConfig, exitFlag bool) bool {
 func StopAll(exitFlag, withInput bool) error {
 	defer panicRecover("Run plugin")
 
+	configNames := make([]string, 0)
 	LogtailConfig.Range(func(key, value interface{}) bool {
-		if logstoreConfig, ok := value.(*LogstoreConfig); ok {
-			if (withInput && logstoreConfig.PluginRunner.IsWithInputPlugin()) || (!withInput && !logstoreConfig.PluginRunner.IsWithInputPlugin()) {
+		configNames = append(configNames, key.(string))
+		return true
+	})
+	for _, configName := range configNames {
+		if logstoreConfig, ok := GetLogtailConfig(configName); ok {
+			matchFlag := false
+			if withInput {
+				if logstoreConfig.PluginRunner.IsWithInputPlugin() {
+					matchFlag = true
+				}
+			} else {
+				if !logstoreConfig.PluginRunner.IsWithInputPlugin() {
+					matchFlag = true
+				}
+			}
+			if matchFlag {
 				if hasStopped := timeoutStop(logstoreConfig, exitFlag); !hasStopped {
 					// TODO: This alarm can not be sent to server in current alarm design.
 					logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
 						"timeout when stop config, goroutine might leak")
 				}
-				LogtailConfig.Delete(key)
-			} else {
-				// should never happen
-				logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_ALARM", "stop config not match withInput", withInput, "configName", key)
+				LogtailConfig.Delete(configName)
 			}
 		}
-		return true
-	})
-	if StatisticsConfig != nil {
-		if *flags.ForceSelfCollect {
-			logger.Info(context.Background(), "force collect the static metrics")
-			control := pipeline.NewAsyncControl()
-			StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-			control.WaitCancel()
-		}
-		_ = StatisticsConfig.Stop(exitFlag)
 	}
-	if AlarmConfig != nil {
-		if *flags.ForceSelfCollect {
-			logger.Info(context.Background(), "force collect the alarm metrics")
-			control := pipeline.NewAsyncControl()
-			AlarmConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-			control.WaitCancel()
+	if exitFlag {
+		if StatisticsConfig != nil {
+			if *flags.ForceSelfCollect {
+				logger.Info(context.Background(), "force collect the static metrics")
+				control := pipeline.NewAsyncControl()
+				StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+				control.WaitCancel()
+			}
+			_ = StatisticsConfig.Stop(exitFlag)
+			StatisticsConfig = nil
 		}
-		_ = AlarmConfig.Stop(exitFlag)
-	}
-	if ContainerConfig != nil {
-		if *flags.ForceSelfCollect {
-			logger.Info(context.Background(), "force collect the container metrics")
-			control := pipeline.NewAsyncControl()
-			ContainerConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-			control.WaitCancel()
+		if AlarmConfig != nil {
+			if *flags.ForceSelfCollect {
+				logger.Info(context.Background(), "force collect the alarm metrics")
+				control := pipeline.NewAsyncControl()
+				AlarmConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+				control.WaitCancel()
+			}
+			_ = AlarmConfig.Stop(exitFlag)
+			AlarmConfig = nil
 		}
-		_ = ContainerConfig.Stop(exitFlag)
+		if ContainerConfig != nil {
+			if *flags.ForceSelfCollect {
+				logger.Info(context.Background(), "force collect the container metrics")
+				control := pipeline.NewAsyncControl()
+				ContainerConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+				control.WaitCancel()
+			}
+			_ = ContainerConfig.Stop(exitFlag)
+			ContainerConfig = nil
+		}
+		CheckPointManager.HoldOn()
 	}
-	CheckPointManager.HoldOn()
 	return nil
 }
 

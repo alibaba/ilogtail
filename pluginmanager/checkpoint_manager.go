@@ -34,12 +34,16 @@ var CheckPointFile = flag.String("CheckPointFile", "checkpoint", "checkpoint fil
 var CheckPointCleanInterval = flag.Int("CheckPointCleanInterval", 600, "checkpoint clean interval, second")
 var MaxCleanItemPerInterval = flag.Int("MaxCleanItemPerInterval", 1000, "max clean items per interval")
 
+const DefaultCleanThreshold = 6 // one hour
+
 type checkPointManager struct {
-	db            *leveldb.DB
-	shutdown      chan struct{}
-	waitgroup     sync.WaitGroup
-	initFlag      bool
-	configCounter map[string]int
+	db             *leveldb.DB
+	shutdown       chan struct{}
+	waitgroup      sync.WaitGroup
+	initFlag       bool
+	runningFlag    bool
+	configCounter  map[string]int
+	cleanThreshold int
 }
 
 var CheckPointManager checkPointManager
@@ -81,6 +85,7 @@ func (p *checkPointManager) Init() error {
 	}
 	p.shutdown = make(chan struct{}, 1)
 	p.configCounter = make(map[string]int)
+	p.cleanThreshold = DefaultCleanThreshold
 	logtailConfigDir := config.LogtailGlobalConfig.LogtailSysConfDir
 	pathExist, err := util.PathExists(logtailConfigDir)
 	var dbPath string
@@ -106,7 +111,11 @@ func (p *checkPointManager) Init() error {
 }
 
 func (p *checkPointManager) HoldOn() {
+	if !p.runningFlag {
+		return
+	}
 	logger.Info(context.Background(), "checkpoint", "HoldOn")
+	p.runningFlag = false
 	if p.db == nil {
 		return
 	}
@@ -115,7 +124,11 @@ func (p *checkPointManager) HoldOn() {
 }
 
 func (p *checkPointManager) Resume() {
+	if p.runningFlag {
+		return
+	}
 	logger.Info(context.Background(), "checkpoint", "Resume")
+	p.runningFlag = true
 	if p.db == nil {
 		return
 	}
@@ -174,7 +187,7 @@ func (p *checkPointManager) check() {
 	}
 	for _, key := range cleanItems {
 		p.configCounter[key]++
-		if p.configCounter[key] > 6 { // one hour
+		if p.configCounter[key] > p.cleanThreshold {
 			_ = p.db.Delete([]byte(key), nil)
 			logger.Info(context.Background(), "no config, delete checkpoint", key)
 			delete(p.configCounter, key)
