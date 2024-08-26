@@ -114,6 +114,7 @@ void PrometheusInputRunner::Start() {
                         if (responseJson.isMember(prometheus::UNREGISTER_MS)
                             && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
                             mUnRegisterMs = responseJson[prometheus::UNREGISTER_MS].asUInt64();
+                            LOG_INFO(sLogger, ("unregister_ms", ToString(mUnRegisterMs)));
                         }
                     }
                     LOG_INFO(sLogger, ("Register Success", mPodName));
