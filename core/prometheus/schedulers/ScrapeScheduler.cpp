@@ -179,11 +179,11 @@ void ScrapeScheduler::Cancel() {
     }
 }
 
-uint64_t ScrapeScheduler::GetRandSleep() const {
+uint64_t ScrapeScheduler::GetRandSleepMilliSec() const {
     const string& key = mHash;
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
     uint64_t randSleep
-        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
+        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * 1000 * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
     uint64_t sleepOffset = GetCurrentTimeInMilliSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL);
     if (randSleep < sleepOffset) {
         randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL;
