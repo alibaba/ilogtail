@@ -4,7 +4,6 @@ import (
 	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/server_agent/manager"
-	"config-server2/internal/store"
 	"log"
 )
 
@@ -40,8 +39,6 @@ var (
 		run:  AcceptsCustomCommandRun,
 	}
 )
-
-var s = store.S
 
 //agent有接收某种配置的能力，则响应中设置对应的配置
 
