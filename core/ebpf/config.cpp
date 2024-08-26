@@ -360,22 +360,41 @@ void InitCallNameFilter(const Json::Value& config,
     }
 }
 
+bool CheckProbeConfigValid(const Json::Value& config, std::string& errorMsg) {
+    errorMsg.clear();
+    if (!config.isMember("ProbeConfig")) {
+        // No ProbeConfig, use default, no warning
+        return false;
+    } else if (!config["ProbeConfig"].isArray()) {
+        // ProbeConfig is not empty but of wrong type, use default
+        errorMsg = "ProbeConfig is not of type list, use probe config with default filter";
+        return false;
+    }
+    return true;
+}
+
 bool SecurityOptions::Init(SecurityProbeType probeType,
                            const Json::Value& config,
                            const PipelineContext* mContext,
                            const std::string& sName) {
     std::string errorMsg;
 
-    // ProbeConfig (Mandatory)
-    if (!IsValidList(config, "ProbeConfig", errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(),
-                           mContext->GetAlarm(),
-                           errorMsg,
-                           sName,
-                           mContext->GetConfigName(),
-                           mContext->GetProjectName(),
-                           mContext->GetLogstoreName(),
-                           mContext->GetRegion());
+    // ProbeConfig (Optional)
+    if (!CheckProbeConfigValid(config, errorMsg)) {
+        if (!errorMsg.empty()) {
+            PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                 mContext->GetAlarm(),
+                                 errorMsg,
+                                 sName,
+                                 mContext->GetConfigName(),
+                                 mContext->GetProjectName(),
+                                 mContext->GetLogstoreName(),
+                                 mContext->GetRegion());
+        }
+        nami::SecurityOption thisSecurityOption;
+        GetSecurityProbeDefaultCallName(probeType, thisSecurityOption.call_names_);
+        mOptionList.emplace_back(thisSecurityOption);
+        return true;
     }
     std::unordered_set<std::string> thisCallNameSet;
     for (auto& innerConfig : config["ProbeConfig"]) {
