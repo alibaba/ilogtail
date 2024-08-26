@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "models/PipelineEventGroup.h"
+#include "monitor/PluginMetricManager.h"
 #include "pipeline/PipelineContext.h"
 #include "plugin/instance/PluginInstance.h"
 #include "plugin/interface/Flusher.h"
@@ -30,7 +31,7 @@ namespace logtail {
 
 class FlusherInstance : public PluginInstance {
 public:
-    FlusherInstance(Flusher* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
+    FlusherInstance(Flusher* plugin, const PluginInstance::PluginMeta& pluginMeta) : PluginInstance(pluginMeta), mPlugin(plugin) {}
 
     const std::string& Name() const override { return mPlugin->Name(); };
     const Flusher* GetPlugin() const { return mPlugin.get(); }
@@ -38,12 +39,15 @@ public:
     bool Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline);
     bool Start() { return mPlugin->Start(); }
     bool Stop(bool isPipelineRemoving) { return mPlugin->Stop(isPipelineRemoving); }
-    bool Send(PipelineEventGroup&& g) { return mPlugin->Send(std::move(g)); }
+    bool Send(PipelineEventGroup&& g);
     bool FlushAll() { return mPlugin->FlushAll(); }
     QueueKey GetQueueKey() const { return mPlugin->GetQueueKey(); }
 
 private:
     std::unique_ptr<Flusher> mPlugin;
+
+    CounterPtr mFlusherInRecordsTotal;
+    CounterPtr mFlusherInRecordsSizeBytes;
 };
 
 } // namespace logtail

@@ -2,6 +2,7 @@
 
 #include <json/json.h>
 
+#include "common/StringTools.h"
 #include "models/LogEvent.h"
 #include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
@@ -26,29 +27,31 @@ void ProcessorPromParseMetricNative::Process(PipelineEventGroup& eGroup) {
     EventsContainer& events = eGroup.MutableEvents();
     EventsContainer newEvents;
 
+    StringView scrapeTimestampMilliSecStr = eGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC);
+    auto timestampMilliSec = StringTo<uint64_t>(scrapeTimestampMilliSecStr.to_string());
+    auto timestamp = timestampMilliSec / 1000;
+    auto nanoSec = timestampMilliSec % 1000 * 1000000;
+
     for (auto& e : events) {
-        ProcessEvent(e, newEvents, eGroup);
+        ProcessEvent(e, newEvents, eGroup, timestamp, nanoSec);
     }
     events.swap(newEvents);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SAMPLES_SCRAPED, ToString(events.size()));
 }
 
 bool ProcessorPromParseMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 
-bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
-                                                  EventsContainer& newEvents,
-                                                  PipelineEventGroup& eGroup) {
+bool ProcessorPromParseMetricNative::ProcessEvent(
+    PipelineEventPtr& e, EventsContainer& newEvents, PipelineEventGroup& eGroup, uint64_t timestamp, uint32_t nanoSec) {
     if (!IsSupportedEvent(e)) {
         return false;
     }
     auto& sourceEvent = e.Cast<LogEvent>();
     std::unique_ptr<MetricEvent> metricEvent = eGroup.CreateMetricEvent();
-    auto nanoTimestamp = (uint64_t)sourceEvent.GetTimestamp() * 1000000000;
-    if (sourceEvent.GetTimestampNanosecond().has_value()) {
-        nanoTimestamp += (uint64_t)sourceEvent.GetTimestampNanosecond().value();
-    }
-    if (mParser.ParseLine(sourceEvent.GetContent(prometheus::PROMETHEUS), nanoTimestamp, *metricEvent)) {
+    if (mParser.ParseLine(
+            sourceEvent.GetContent(prometheus::PROMETHEUS).to_string(), timestamp, nanoSec, *metricEvent)) {
         newEvents.emplace_back(std::move(metricEvent));
     }
     return true;

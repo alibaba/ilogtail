@@ -19,6 +19,7 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "file_server/FileServer.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorMergeMultilineLogNative.h"
@@ -32,7 +33,7 @@ namespace logtail {
 
 const string InputContainerStdio::sName = "input_container_stdio";
 
-bool InputContainerStdio::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputContainerStdio::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
     if (!AppConfig::GetInstance()->IsPurageContainerMode()) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
@@ -158,7 +159,20 @@ bool InputContainerStdio::Init(const Json::Value& config, uint32_t& pluginIdx, J
                                        GetContext().GetRegion());
     }
 
-    return CreateInnerProcessors(pluginIdx);
+    // init PluginMetricManager
+    static const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
+        {METRIC_INPUT_RECORDS_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_READ_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_FILE_SIZE_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
+        {METRIC_INPUT_FILE_OFFSET_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
+    };
+    mPluginMetricManager
+        = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
+    // Register a Gauge metric to record PluginMetricManager‘s map size
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateIntGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
+    mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
+
+    return CreateInnerProcessors();
 }
 
 std::string InputContainerStdio::TryGetRealPath(const std::string& path) {
@@ -251,6 +265,7 @@ bool InputContainerStdio::DeduceAndSetContainerBaseDir(ContainerInfo& containerI
 }
 
 bool InputContainerStdio::Start() {
+    FileServer::GetInstance()->AddPluginMetricManager(mContext->GetConfigName(), mPluginMetricManager);
     mFileDiscovery.SetContainerInfo(
         FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
@@ -266,16 +281,17 @@ bool InputContainerStdio::Stop(bool isPipelineRemoving) {
     FileServer::GetInstance()->RemoveFileDiscoveryConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveFileReaderConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
+    FileServer::GetInstance()->RemovePluginMetricManager(mContext->GetConfigName());
     return true;
 }
 
-bool InputContainerStdio::CreateInnerProcessors(uint32_t& pluginIdx) {
+bool InputContainerStdio::CreateInnerProcessors() {
     unique_ptr<ProcessorInstance> processor;
     // ProcessorSplitLogStringNative
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIdx));
+                                                                   mContext->GetPipeline().GenNextPluginMeta(false));
         detail["SplitChar"] = Json::Value('\n');
         if (!processor->Init(detail, *mContext)) {
             return false;
@@ -286,7 +302,7 @@ bool InputContainerStdio::CreateInnerProcessors(uint32_t& pluginIdx) {
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseContainerLogNative::sName,
-                                                                   to_string(++pluginIdx));
+                                                                   mContext->GetPipeline().GenNextPluginMeta(false));
         detail["IgnoringStdout"] = Json::Value(mIgnoringStdout);
         detail["IgnoringStderr"] = Json::Value(mIgnoringStderr);
         detail["KeepingSourceWhenParseFail"] = Json::Value(mKeepingSourceWhenParseFail);
@@ -300,7 +316,7 @@ bool InputContainerStdio::CreateInnerProcessors(uint32_t& pluginIdx) {
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                   to_string(++pluginIdx));
+                                                                   mContext->GetPipeline().GenNextPluginMeta(false));
         detail["MergeType"] = Json::Value("flag");
         if (!processor->Init(detail, *mContext)) {
             return false;
@@ -311,12 +327,12 @@ bool InputContainerStdio::CreateInnerProcessors(uint32_t& pluginIdx) {
         Json::Value detail;
         if (mContext->IsFirstProcessorJson() || mMultiline.mMode == MultilineOptions::Mode::JSON) {
             mContext->SetRequiringJsonReaderFlag(true);
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["SplitChar"] = Json::Value('\0');
         } else {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorMergeMultilineLogNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["Mode"] = Json::Value("custom");
             detail["MergeType"] = Json::Value("regex");
             detail["StartPattern"] = Json::Value(mMultiline.mStartPattern);
@@ -337,7 +353,8 @@ bool InputContainerStdio::CreateInnerProcessors(uint32_t& pluginIdx) {
     }
     {
         Json::Value detail;
-        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIdx));
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName,
+                                                                   mContext->GetPipeline().GenNextPluginMeta(false));
         if (!processor->Init(detail, *mContext)) {
             // should not happen
             return false;

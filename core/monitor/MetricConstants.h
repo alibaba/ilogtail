@@ -42,23 +42,26 @@ extern const std::string METRIC_LABEL_VERSION;
 
 // global metrics values
 
-extern const std::string METRIC_GLOBAL_CPU;
-extern const std::string METRIC_GLOBAL_MEMORY;
-extern const std::string METRIC_GLOBAL_OPEN_FD_TOTAL;
-extern const std::string METRIC_GLOBAL_POLLING_DIR_CACHE_SIZE_TOTAL;
-extern const std::string METRIC_GLOBAL_POLLING_FILE_CACHE_SIZE_TOTAL;
-extern const std::string METRIC_GLOBAL_POLLING_MODIFY_SIZE_TOTAL;
-extern const std::string METRIC_GLOBAL_REGISTER_HANDLER_TOTAL;
-extern const std::string METRIC_GLOBAL_CONFIG_TOTAL;
-extern const std::string METRIC_GLOBAL_ENV_CONFIG_TOTAL;
-extern const std::string METRIC_GLOBAL_CRD_CONFIG_TOTAL;
-extern const std::string METRIC_GLOBAL_CONSOLE_CONFIG_TOTAL;
-extern const std::string METRIC_GLOBAL_PLUGIN_TOTAL;
-extern const std::string METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL;
-extern const std::string METRIC_GLOBAL_PROCESS_QUEUE_TOTAL;
-extern const std::string METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL;
-extern const std::string METRIC_GLOBAL_SEND_QUEUE_TOTAL;
-extern const std::string METRIC_GLOBAL_USED_SENDING_CONCURRENCY;
+extern const std::string METRIC_AGENT_CPU;
+extern const std::string METRIC_AGENT_CPU_GO;
+extern const std::string METRIC_AGENT_MEMORY;
+extern const std::string METRIC_AGENT_MEMORY_GO;
+extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
+extern const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL;
+extern const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL;
+extern const std::string METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL;
+extern const std::string METRIC_AGENT_REGISTER_HANDLER_TOTAL;
+extern const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL;
+extern const std::string METRIC_AGENT_PLUGIN_TOTAL;
+extern const std::string METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL;
+extern const std::string METRIC_AGENT_PROCESS_QUEUE_TOTAL;
+extern const std::string METRIC_AGENT_SEND_QUEUE_FULL_TOTAL;
+extern const std::string METRIC_AGENT_SEND_QUEUE_TOTAL;
+extern const std::string METRIC_AGENT_USED_SENDING_CONCURRENCY;
 
 // common plugin labels
 extern const std::string METRIC_LABEL_PROJECT;
@@ -67,6 +70,8 @@ extern const std::string METRIC_LABEL_REGION;
 extern const std::string METRIC_LABEL_CONFIG_NAME;
 extern const std::string METRIC_LABEL_PLUGIN_NAME;
 extern const std::string METRIC_LABEL_PLUGIN_ID;
+extern const std::string METRIC_LABEL_NODE_ID;
+extern const std::string METRIC_LABEL_CHILD_NODE_ID;
 
 // input file plugin labels
 extern const std::string METRIC_LABEL_FILE_DEV;
@@ -115,9 +120,23 @@ extern const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL;
 
-
 // processor parse container log native metrics
 extern const std::string METRIC_PROC_PARSE_STDOUT_TOTAL;
 extern const std::string METRIC_PROC_PARSE_STDERR_TOTAL;
+
+// flusher common metrics
+extern const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES;
+extern const std::string METRIC_FLUSHER_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_TIME_MS;
+extern const std::string METRIC_FLUSHER_ERROR_TIME_MS;
+
+// flusher sls metrics
+extern const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
 
 } // namespace logtail

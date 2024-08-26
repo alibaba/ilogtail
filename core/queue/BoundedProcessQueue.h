@@ -40,7 +40,6 @@ public:
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
 
     void SetUpStreamFeedbacks(std::vector<FeedbackInterface*>&& feedbacks);
-    void Reset(size_t cap, size_t low, size_t high);
 
 private:
     size_t Size() const override { return mQueue.size(); }

@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "pipeline/Pipeline.h"
 #include "plugin/PluginRegistry.h"
 #include "plugin/creator/StaticFlusherCreator.h"
 #include "plugin/creator/StaticInputCreator.h"
@@ -51,15 +52,21 @@ public:
     static const std::string sName;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) override {
-        auto processor
-            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorInnerMock::sName, std::to_string(++pluginIdx));
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override {
+        if (config.isMember("SupportAck")) {
+            mSupportAck = config["SupportAck"].asBool();
+        }
+        auto processor = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorInnerMock::sName, mContext->GetPipeline().GenNextPluginMeta(false));
         processor->Init(Json::Value(), *mContext);
         mInnerProcessors.emplace_back(std::move(processor));
         return true;
     }
     bool Start() override { return true; }
     bool Stop(bool isPipelineRemoving) override { return true; }
+    bool SupportAck() const override { return mSupportAck; }
+
+    bool mSupportAck = true;
 };
 
 const std::string InputMock::sName = "input_mock";

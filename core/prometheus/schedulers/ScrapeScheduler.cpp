@@ -55,26 +55,38 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
         + mScrapeConfigPtr->mMetricsPath
         + (mScrapeConfigPtr->mQueryString.empty() ? "" : "?" + mScrapeConfigPtr->mQueryString);
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabels.Hash());
+    mInstance = mHost + ":" + ToString(mPort);
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
 
     mParser = make_unique<TextParser>();
 }
 
-void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
-    // TODO(liqiang): get scrape timestamp
-    time_t timestampInNs = GetCurrentTimeInNanoSeconds();
+void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
+    mScrapeTimestampMilliSec = timestampMilliSec;
+    mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
+    mScrapeResponseSizeBytes = response.mBody.size();
+    mUpState = response.mStatusCode == 200;
     if (response.mStatusCode != 200) {
+        mScrapeResponseSizeBytes = 0;
         string headerStr;
-        for (const auto& [k, v] : mScrapeConfigPtr->mHeaders) {
+        for (const auto& [k, v] : mScrapeConfigPtr->mAuthHeaders) {
             headerStr.append(k).append(":").append(v).append(";");
         }
         LOG_WARNING(sLogger,
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
-        return;
     }
     auto eventGroup = BuildPipelineEventGroup(response.mBody);
 
+    SetAutoMetricMeta(eventGroup);
     PushEventGroup(std::move(eventGroup));
+}
+
+void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(mScrapeTimestampMilliSec));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(mScrapeDurationSeconds));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(mScrapeResponseSizeBytes));
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, mInstance);
+    eGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(mUpState));
 }
 
 PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {
@@ -95,8 +107,8 @@ string ScrapeScheduler::GetId() const {
 
 void ScrapeScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response) {
-        this->OnMetricResult(response);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnMetricResult(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
     });
@@ -117,7 +129,9 @@ void ScrapeScheduler::ScheduleNext() {
 
 void ScrapeScheduler::ScrapeOnce(std::chrono::steady_clock::time_point execTime) {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response) { this->OnMetricResult(response); });
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnMetricResult(response, timestampMilliSec);
+    });
     mFuture = future;
     auto event = BuildScrapeTimerEvent(execTime);
     if (mTimer) {
@@ -132,7 +146,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                                      mPort,
                                                      mScrapeConfigPtr->mMetricsPath,
                                                      mScrapeConfigPtr->mQueryString,
-                                                     mScrapeConfigPtr->mHeaders,
+                                                     mScrapeConfigPtr->mAuthHeaders,
                                                      "",
                                                      mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                                      mScrapeConfigPtr->mScrapeIntervalSeconds
@@ -157,10 +171,9 @@ uint64_t ScrapeScheduler::GetRandSleep() const {
     uint64_t h = XXH64(key.c_str(), key.length(), 0);
     uint64_t randSleep
         = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
-    uint64_t sleepOffset
-        = GetCurrentTimeInNanoSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL);
+    uint64_t sleepOffset = GetCurrentTimeInMilliSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL);
     if (randSleep < sleepOffset) {
-        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL * 1000ULL * 1000ULL;
+        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL;
     }
     randSleep -= sleepOffset;
     return randSleep;

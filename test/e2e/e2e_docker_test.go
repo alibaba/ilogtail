@@ -14,18 +14,26 @@
 package e2e
 
 import (
+	"os"
 	"testing"
 
 	"github.com/cucumber/godog"
+
+	"github.com/alibaba/ilogtail/test/engine"
 )
 
 func TestE2EOnDockerCompose(t *testing.T) {
+	caseName := os.Getenv("TEST_CASE")
+	featurePath := "test_cases"
+	if caseName != "" {
+		featurePath += "/" + caseName
+	}
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:    "pretty",
-			Paths:     []string{"test_cases"},
+			Paths:     []string{featurePath},
 			Tags:      "@e2e && @docker-compose && ~@ebpf",
 			TestingT:  t,
 			Randomize: -1,
@@ -39,7 +47,7 @@ func TestE2EOnDockerCompose(t *testing.T) {
 func TestE2EOnDockerComposeCore(t *testing.T) {
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"test_cases"},
@@ -55,7 +63,7 @@ func TestE2EOnDockerComposeCore(t *testing.T) {
 func TestE2EOnDockerComposePerformance(t *testing.T) {
 	suite := godog.TestSuite{
 		Name:                "E2EOnDockerCompose",
-		ScenarioInitializer: scenarioInitializer,
+		ScenarioInitializer: engine.ScenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"test_cases"},
