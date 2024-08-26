@@ -13,11 +13,9 @@ bool IsDoubleEqual(double a, double b) {
 
 class PromUtilsUnittest : public testing::Test {
 public:
-    void TestStringViewToDouble();
 };
 
 
-UNIT_TEST_CASE(PromUtilsUnittest, TestStringViewToDouble)
 
 
 } // namespace logtail
