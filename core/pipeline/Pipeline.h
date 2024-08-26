@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "aggregator/AggregatorDefault.h"
 #include "config/PipelineConfig.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
@@ -65,7 +66,10 @@ public:
 
 private:
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
-    void AddPluginToGoPipeline(const std::string& type, const Json::Value& plugin, const std::string& module, Json::Value& dst);
+    void AddPluginToGoPipeline(const std::string& type,
+                               const Json::Value& plugin,
+                               const std::string& module,
+                               Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
     bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
 

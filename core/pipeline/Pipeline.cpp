@@ -72,7 +72,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string pluginType = detail["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(pluginType, GenNextPluginMeta(false));
+        unique_ptr<InputInstance> input
+            = PluginRegistry::GetInstance()->CreateInput(pluginType, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
             if (!input->Init(detail, mContext, i, optionalGoPipeline)) {
@@ -121,9 +122,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     if (config.mAggregators.empty() && config.IsFlushingThroughGoPipelineExisted()) {
         // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
         // to cpp flusher.
-        static Json::Value aggregatorDefault;
-        aggregatorDefault["Type"] = "aggregator_default";
-        config.mAggregators.push_back(&aggregatorDefault);
+        config.mAggregators.push_back(AggregatorDefault::Instance().GetJsonConfig());
     }
     for (size_t i = 0; i < config.mAggregators.size(); ++i) {
         const Json::Value& detail = *config.mAggregators[i];
@@ -413,10 +412,13 @@ std::string Pipeline::GenPluginTypeWithID(std::string pluginType, std::string pl
 }
 
 // Rule: pluginTypeWithID=pluginType/pluginID#pluginPriority.
-void Pipeline::AddPluginToGoPipeline(const string& pluginType, const Json::Value& plugin, const string& module, Json::Value& dst) {
+void Pipeline::AddPluginToGoPipeline(const string& pluginType,
+                                     const Json::Value& plugin,
+                                     const string& module,
+                                     Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    res["type"] = GenPluginTypeWithID(pluginType, std::to_string(mPluginID.load()));
+    res["type"] = GenPluginTypeWithID(pluginType, GetNowPluginID());
     res["detail"] = detail;
     dst[module].append(res);
 }
