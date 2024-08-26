@@ -15,9 +15,12 @@
 #include "queue/ProcessQueueManager.h"
 
 #include "common/Flags.h"
+#include "queue/BoundedProcessQueue.h"
+#include "queue/CircularProcessQueue.h"
 #include "queue/ExactlyOnceQueueManager.h"
 #include "queue/QueueKeyManager.h"
-#include "queue/QueueParam.h"
+
+DEFINE_FLAG_INT32(bounded_process_queue_capacity, "", 15);
 
 DECLARE_FLAG_INT32(process_thread_count);
 
@@ -25,37 +28,52 @@ using namespace std;
 
 namespace logtail {
 
-ProcessQueueManager::ProcessQueueManager() {
+ProcessQueueManager::ProcessQueueManager() : mBoundedQueueParam(INT32_FLAG(bounded_process_queue_capacity)) {
     ResetCurrentQueueIndex();
 }
 
-bool ProcessQueueManager::CreateOrUpdateQueue(QueueKey key, uint32_t priority) {
+bool ProcessQueueManager::CreateOrUpdateBoundedQueue(QueueKey key, uint32_t priority) {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter != mQueues.end()) {
-        if (iter->second->GetPriority() == priority) {
-            return false;
-        }
-        uint32_t oldPriority = iter->second->GetPriority();
-        auto queIter = iter->second;
-        auto nextQueIter = next(queIter);
-        mPriorityQueue[priority].splice(mPriorityQueue[priority].end(), mPriorityQueue[oldPriority], queIter);
-        iter->second->SetPriority(priority);
-        if (mCurrentQueueIndex.first == oldPriority && mCurrentQueueIndex.second == queIter) {
-            if (nextQueIter == mPriorityQueue[oldPriority].end()) {
-                mCurrentQueueIndex.second = mPriorityQueue[oldPriority].begin();
-            } else {
-                mCurrentQueueIndex.second = nextQueIter;
+        if (iter->second.second != QueueType::BOUNDED) {
+            // queue type change only happen when all input plugin types are changed. in such case, old input data not
+            // been processed can be discarded since whole pipeline is actually changed.
+            DeleteQueueEntity(iter->second.first);
+            CreateBoundedQueue(key, priority);
+        } else {
+            if ((*iter->second.first)->GetPriority() == priority) {
+                return false;
             }
+            AdjustQueuePriority(iter->second.first, priority);
         }
     } else {
-        mPriorityQueue[priority].emplace_back(ProcessQueueParam::GetInstance()->mCapacity,
-                                              ProcessQueueParam::GetInstance()->mLowWatermark,
-                                              ProcessQueueParam::GetInstance()->mHighWatermark,
-                                              key,
-                                              priority,
-                                              QueueKeyManager::GetInstance()->GetName(key));
-        mQueues[key] = prev(mPriorityQueue[priority].end());
+        CreateBoundedQueue(key, priority);
+    }
+    if (mCurrentQueueIndex.second == mPriorityQueue[mCurrentQueueIndex.first].end()) {
+        mCurrentQueueIndex.second = mPriorityQueue[mCurrentQueueIndex.first].begin();
+    }
+    return true;
+}
+
+bool ProcessQueueManager::CreateOrUpdateCircularQueue(QueueKey key, uint32_t priority, size_t capacity) {
+    lock_guard<mutex> lock(mQueueMux);
+    auto iter = mQueues.find(key);
+    if (iter != mQueues.end()) {
+        if (iter->second.second != QueueType::CIRCULAR) {
+            // queue type change only happen when all input plugin types are changed. in such case, old input data not
+            // been processed can be discarded since whole pipeline is actually changed.
+            DeleteQueueEntity(iter->second.first);
+            CreateCircularQueue(key, priority, capacity);
+        } else {
+            static_cast<CircularProcessQueue*>(iter->second.first->get())->Reset(capacity);
+            if ((*iter->second.first)->GetPriority() == priority) {
+                return false;
+            }
+            AdjustQueuePriority(iter->second.first, priority);
+        }
+    } else {
+        CreateCircularQueue(key, priority, capacity);
     }
     if (mCurrentQueueIndex.second == mPriorityQueue[mCurrentQueueIndex.first].end()) {
         mCurrentQueueIndex.second = mPriorityQueue[mCurrentQueueIndex.first].begin();
@@ -69,16 +87,8 @@ bool ProcessQueueManager::DeleteQueue(QueueKey key) {
     if (iter == mQueues.end()) {
         return false;
     }
-    uint32_t priority = iter->second->GetPriority();
-    auto queIter = iter->second;
-    auto nextQueIter = mPriorityQueue[priority].erase(iter->second);
-    if (mCurrentQueueIndex.first == priority && mCurrentQueueIndex.second == queIter) {
-        if (nextQueIter == mPriorityQueue[priority].end()) {
-            mCurrentQueueIndex.second = mPriorityQueue[priority].begin();
-        } else {
-            mCurrentQueueIndex.second = nextQueIter;
-        }
-    }
+    DeleteQueueEntity(iter->second.first);
+    QueueKeyManager::GetInstance()->RemoveKey(iter->first);
     mQueues.erase(iter);
     return true;
 }
@@ -87,7 +97,11 @@ bool ProcessQueueManager::IsValidToPush(QueueKey key) const {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter != mQueues.end()) {
-        return iter->second->IsValidToPush();
+        if (iter->second.second == QueueType::BOUNDED) {
+            return static_cast<BoundedProcessQueue*>(iter->second.first->get())->IsValidToPush();
+        } else {
+            return true;
+        }
     }
     return ExactlyOnceQueueManager::GetInstance()->IsValidToPushProcessQueue(key);
 }
@@ -97,7 +111,7 @@ int ProcessQueueManager::PushQueue(QueueKey key, unique_ptr<ProcessQueueItem>&& 
         lock_guard<mutex> lock(mQueueMux);
         auto iter = mQueues.find(key);
         if (iter != mQueues.end()) {
-            if (!iter->second->Push(std::move(item))) {
+            if (!(*iter->second.first)->Push(std::move(item))) {
                 return 1;
             }
         } else {
@@ -115,30 +129,30 @@ bool ProcessQueueManager::PopItem(int64_t threadNo, unique_ptr<ProcessQueueItem>
     configName.clear();
     lock_guard<mutex> lock(mQueueMux);
     for (size_t i = 0; i <= sMaxPriority; ++i) {
-        list<ProcessQueue>::iterator iter;
+        ProcessQueueIterator iter;
         if (mCurrentQueueIndex.first == i) {
             for (iter = mCurrentQueueIndex.second; iter != mPriorityQueue[i].end(); ++iter) {
-                if (!iter->Pop(item)) {
+                if (!(*iter)->Pop(item)) {
                     continue;
                 }
-                configName = iter->GetConfigName();
+                configName = (*iter)->GetConfigName();
                 break;
             }
             if (configName.empty()) {
                 for (iter = mPriorityQueue[i].begin(); iter != mCurrentQueueIndex.second; ++iter) {
-                    if (!iter->Pop(item)) {
+                    if (!(*iter)->Pop(item)) {
                         continue;
                     }
-                    configName = iter->GetConfigName();
+                    configName = (*iter)->GetConfigName();
                     break;
                 }
             }
         } else {
             for (iter = mPriorityQueue[i].begin(); iter != mPriorityQueue[i].end(); ++iter) {
-                if (!iter->Pop(item)) {
+                if (!(*iter)->Pop(item)) {
                     continue;
                 }
-                configName = iter->GetConfigName();
+                configName = (*iter)->GetConfigName();
                 break;
             }
         }
@@ -170,6 +184,10 @@ bool ProcessQueueManager::PopItem(int64_t threadNo, unique_ptr<ProcessQueueItem>
         }
     }
     ResetCurrentQueueIndex();
+    {
+        unique_lock<mutex> lock(mStateMux);
+        mValidToPop = false;
+    }
     return false;
 }
 
@@ -177,7 +195,7 @@ bool ProcessQueueManager::IsAllQueueEmpty() const {
     {
         lock_guard<mutex> lock(mQueueMux);
         for (const auto& q : mQueues) {
-            if (!q.second->Empty()) {
+            if (!(*q.second.first)->Empty()) {
                 return false;
             }
         }
@@ -185,24 +203,26 @@ bool ProcessQueueManager::IsAllQueueEmpty() const {
     return ExactlyOnceQueueManager::GetInstance()->IsAllProcessQueueEmpty();
 }
 
-bool ProcessQueueManager::SetDownStreamQueues(QueueKey key,
-                                              vector<SingleLogstoreSenderManager<SenderQueueParam>*>& ques) {
+bool ProcessQueueManager::SetDownStreamQueues(QueueKey key, vector<BoundedSenderQueueInterface*>&& ques) {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter == mQueues.end()) {
         return false;
     }
-    iter->second->SetDownStreamQueues(ques);
+    (*iter->second.first)->SetDownStreamQueues(std::move(ques));
     return true;
 }
 
-bool ProcessQueueManager::SetFeedbackInterface(QueueKey key, vector<FeedbackInterface*>& feedback) {
+bool ProcessQueueManager::SetFeedbackInterface(QueueKey key, vector<FeedbackInterface*>&& feedback) {
     lock_guard<mutex> lock(mQueueMux);
     auto iter = mQueues.find(key);
     if (iter == mQueues.end()) {
         return false;
     }
-    iter->second->SetUpStreamFeedbacks(feedback);
+    if (iter->second.second == QueueType::CIRCULAR) {
+        return false;
+    }
+    static_cast<BoundedProcessQueue*>(iter->second.first->get())->SetUpStreamFeedbacks(std::move(feedback));
     return true;
 }
 
@@ -212,10 +232,10 @@ void ProcessQueueManager::InvalidatePop(const string& configName) {
         lock_guard<mutex> lock(mQueueMux);
         auto iter = mQueues.find(key);
         if (iter != mQueues.end()) {
-            iter->second->InvalidatePop();
+            (*iter->second.first)->InvalidatePop();
         }
     } else {
-        ExactlyOnceQueueManager::GetInstance()->InvalidatePop(configName);
+        ExactlyOnceQueueManager::GetInstance()->InvalidatePopProcessQueue(configName);
     }
 }
 
@@ -225,18 +245,22 @@ void ProcessQueueManager::ValidatePop(const string& configName) {
         lock_guard<mutex> lock(mQueueMux);
         auto iter = mQueues.find(key);
         if (iter != mQueues.end()) {
-            iter->second->ValidatePop();
+            (*iter->second.first)->ValidatePop();
         }
     } else {
-        ExactlyOnceQueueManager::GetInstance()->ValidatePop(configName);
+        ExactlyOnceQueueManager::GetInstance()->ValidatePopProcessQueue(configName);
     }
 }
 
 bool ProcessQueueManager::Wait(uint64_t ms) {
+    // TODO: use semaphore instead
     unique_lock<mutex> lock(mStateMux);
     mCond.wait_for(lock, chrono::milliseconds(ms), [this] { return mValidToPop; });
-    mValidToPop = false;
-    return true;
+    if (mValidToPop) {
+        mValidToPop = false;
+        return true;
+    }
+    return false;
 }
 
 void ProcessQueueManager::Trigger() {
@@ -245,6 +269,49 @@ void ProcessQueueManager::Trigger() {
         mValidToPop = true;
     }
     mCond.notify_one();
+}
+
+void ProcessQueueManager::CreateBoundedQueue(QueueKey key, uint32_t priority) {
+    mPriorityQueue[priority].emplace_back(
+        make_unique<BoundedProcessQueue>(mBoundedQueueParam.GetCapacity(),
+                                         mBoundedQueueParam.GetLowWatermark(),
+                                         mBoundedQueueParam.GetHighWatermark(),
+                                         key,
+                                         priority,
+                                         QueueKeyManager::GetInstance()->GetName(key)));
+    mQueues[key] = make_pair(prev(mPriorityQueue[priority].end()), QueueType::BOUNDED);
+}
+
+void ProcessQueueManager::CreateCircularQueue(QueueKey key, uint32_t priority, size_t capacity) {
+    mPriorityQueue[priority].emplace_back(
+        make_unique<CircularProcessQueue>(capacity, key, priority, QueueKeyManager::GetInstance()->GetName(key)));
+    mQueues[key] = make_pair(prev(mPriorityQueue[priority].end()), QueueType::CIRCULAR);
+}
+
+void ProcessQueueManager::AdjustQueuePriority(const ProcessQueueIterator& iter, uint32_t priority) {
+    uint32_t oldPriority = (*iter)->GetPriority();
+    auto nextQueIter = next(iter);
+    mPriorityQueue[priority].splice(mPriorityQueue[priority].end(), mPriorityQueue[oldPriority], iter);
+    (*iter)->SetPriority(priority);
+    if (mCurrentQueueIndex.first == oldPriority && mCurrentQueueIndex.second == iter) {
+        if (nextQueIter == mPriorityQueue[oldPriority].end()) {
+            mCurrentQueueIndex.second = mPriorityQueue[oldPriority].begin();
+        } else {
+            mCurrentQueueIndex.second = nextQueIter;
+        }
+    }
+}
+
+void ProcessQueueManager::DeleteQueueEntity(const ProcessQueueIterator& iter) {
+    uint32_t priority = (*iter)->GetPriority();
+    auto nextQueIter = mPriorityQueue[priority].erase(iter);
+    if (mCurrentQueueIndex.first == priority && mCurrentQueueIndex.second == iter) {
+        if (nextQueIter == mPriorityQueue[priority].end()) {
+            mCurrentQueueIndex.second = mPriorityQueue[priority].begin();
+        } else {
+            mCurrentQueueIndex.second = nextQueIter;
+        }
+    }
 }
 
 void ProcessQueueManager::ResetCurrentQueueIndex() {
@@ -256,7 +323,8 @@ uint32_t ProcessQueueManager::GetInvalidCnt() const {
     uint32_t res = 0;
     lock_guard<mutex> lock(mQueueMux);
     for (const auto& q : mQueues) {
-        if (q.second->IsValidToPush()) {
+        if (q.second.second == QueueType::BOUNDED
+            && static_cast<BoundedProcessQueue*>(q.second.first->get())->IsValidToPush()) {
             ++res;
         }
     }

@@ -23,6 +23,7 @@
 #include "common/ParamExtractor.h"
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
 #include "plugin/PluginRegistry.h"
@@ -50,7 +51,7 @@ InputFile::InputFile()
     : mMaxCheckpointDirSearchDepth(static_cast<uint32_t>(INT32_FLAG(search_checkpoint_default_dir_depth))) {
 }
 
-bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) {
+bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
 
     if (!mFileDiscovery.Init(config, *mContext, sName)) {
@@ -155,10 +156,25 @@ bool InputFile::Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value
         mContext->SetExactlyOnceFlag(true);
     }
 
-    return CreateInnerProcessors(pluginIdx);
+    mInputFileMonitorTotal = GetMetricsRecordRef().CreateIntGauge(METRIC_INPUT_FILE_MONITOR_TOTAL);
+    static const std::unordered_map<std::string, MetricType> inputFileMetricKeys = {
+        // {METRIC_INPUT_RECORDS_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_RECORDS_SIZE_BYTES, MetricType::METRIC_TYPE_COUNTER},
+        // {METRIC_INPUT_BATCH_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_READ_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {METRIC_INPUT_FILE_SIZE_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
+        // {METRIC_INPUT_FILE_READ_DELAY_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
+        {METRIC_INPUT_FILE_OFFSET_BYTES, MetricType::METRIC_TYPE_INT_GAUGE},
+    };
+    mPluginMetricManager
+        = std::make_shared<PluginMetricManager>(GetMetricsRecordRef()->GetLabels(), inputFileMetricKeys);
+    mPluginMetricManager->RegisterSizeGauge(mInputFileMonitorTotal);
+
+    return CreateInnerProcessors();
 }
 
 bool InputFile::Start() {
+    FileServer::GetInstance()->AddPluginMetricManager(mContext->GetConfigName(), mPluginMetricManager);
     if (mEnableContainerDiscovery) {
         mFileDiscovery.SetContainerInfo(
             FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
@@ -178,22 +194,23 @@ bool InputFile::Stop(bool isPipelineRemoving) {
     FileServer::GetInstance()->RemoveFileReaderConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
     FileServer::GetInstance()->RemoveExactlyOnceConcurrency(mContext->GetConfigName());
+    FileServer::GetInstance()->RemovePluginMetricManager(mContext->GetConfigName());
     return true;
 }
 
-bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
+bool InputFile::CreateInnerProcessors() {
     unique_ptr<ProcessorInstance> processor;
     {
         Json::Value detail;
         if (mContext->IsFirstProcessorJson() || mMultiline.mMode == MultilineOptions::Mode::JSON) {
             mContext->SetRequiringJsonReaderFlag(true);
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["SplitChar"] = Json::Value('\0');
             detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
         } else if (mMultiline.IsMultiline()) {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitMultilineLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(mMultiline.mContinuePattern);
@@ -207,8 +224,8 @@ bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
                 detail["UnmatchedContentTreatment"] = Json::Value("single_line");
             }
         } else {
-            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIdx));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSplitLogStringNative::sName, mContext->GetPipeline().GenNextPluginMeta(false));
             detail["AppendingLogPositionMeta"] = Json::Value(mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, *mContext)) {
@@ -219,7 +236,8 @@ bool InputFile::CreateInnerProcessors(uint32_t& pluginIdx) {
     }
     {
         Json::Value detail;
-        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIdx));
+        processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName,
+                                                                   mContext->GetPipeline().GenNextPluginMeta(false));
         if (!processor->Init(detail, *mContext)) {
             // should not happen
             return false;

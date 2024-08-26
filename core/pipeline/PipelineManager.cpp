@@ -19,16 +19,18 @@
 #include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "observer/ObserverManager.h"
+#include "ebpf/eBPFServer.h"
 #endif
 #include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 #include "app_config/AppConfig.h"
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
+#include "config/feedbacker/ConfigFeedbackReceiver.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
 
@@ -36,7 +38,7 @@ using namespace std;
 
 namespace logtail {
 
-void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
+void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
@@ -44,27 +46,33 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     static bool isInputStreamStarted = false;
 #endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
-         isInputContainerStdioChanged = false;
+         isInputContainerStdioChanged = false, isInputPrometheusChanged = false, inputEbpfChanged = false;
     for (const auto& name : diff.mRemoved) {
         CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged,
+                            inputEbpfChanged);
     }
     for (const auto& config : diff.mModified) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged,
+                            inputEbpfChanged);
     }
     for (const auto& config : diff.mAdded) {
         CheckIfInputUpdated(*config.mInputs[0],
                             isInputObserverChanged,
                             isInputFileChanged,
                             isInputStreamChanged,
-                            isInputContainerStdioChanged);
+                            isInputContainerStdioChanged,
+                            isInputPrometheusChanged,
+                            inputEbpfChanged);
     }
 
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
@@ -85,6 +93,16 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     }
     LogProcess::GetInstance()->HoldOn();
     LogtailPlugin::GetInstance()->HoldOn(false);
+    if (isInputPrometheusChanged) {
+        PrometheusInputRunner::GetInstance()->Start();
+    }
+#if defined(__linux__) && !defined(__ANDROID__)
+    // 和其它插件不同，ebpf需要init之后才能配置加载，最终状态这个init函数是在插件自己的start函数里面，目前暂时在此过渡。
+    if (inputEbpfChanged) {
+        logtail::ebpf::eBPFServer::GetInstance()->Init();
+    }
+
+#endif
 #endif
 
     for (const auto& name : diff.mRemoved) {
@@ -93,6 +111,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
         iter->second->RemoveProcessQueue();
         mPipelineNameEntityMap.erase(iter);
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(name, ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config));
@@ -107,8 +126,11 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
                 config.mLogstore,
                 config.mRegion);
             diff.mUnchanged.push_back(config.mName);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
                   "stop the old pipeline and start the new one")("config", config.mName));
@@ -131,10 +153,13 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
                  ("pipeline building for new config succeeded", "begin to start pipeline")("config", config.mName));
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
@@ -159,6 +184,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
             isFileServerStarted = true;
         }
     }
+
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {
@@ -189,7 +215,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #endif
 }
 
-shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configName) const {
+shared_ptr<Pipeline> PipelineManager::FindConfigByName(const string& configName) const {
     auto it = mPipelineNameEntityMap.find(configName);
     if (it != mPipelineNameEntityMap.end()) {
         return it->second;
@@ -197,7 +223,7 @@ shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configNam
     return nullptr;
 }
 
-vector<string> PipelineManager::GetAllPipelineNames() const {
+vector<string> PipelineManager::GetAllConfigNames() const {
     vector<string> res;
     for (const auto& item : mPipelineNameEntityMap) {
         res.push_back(item.first);
@@ -225,10 +251,11 @@ void PipelineManager::StopAllPipelines() {
 #endif
 #if defined(__linux__) && !defined(__ANDROID__)
     ObserverManager::GetInstance()->HoldOn(true);
+    ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
+    PrometheusInputRunner::GetInstance()->Stop();
 
-    Sender::Instance()->SetQueueUrgent();
     bool logProcessFlushFlag = false;
     for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
         logProcessFlushFlag = LogProcess::GetInstance()->FlushOut(10);
@@ -244,11 +271,14 @@ void PipelineManager::StopAllPipelines() {
 
     LogtailPlugin::GetInstance()->HoldOn(true);
 
+    // TODO: make it common
+    FlusherSLS::RecycleResourceIfNotUsed();
+
     // Sender should be stopped after profiling threads are stopped.
     LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
 }
 
-shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
+shared_ptr<Pipeline> PipelineManager::BuildPipeline(PipelineConfig&& config) {
     shared_ptr<Pipeline> p = make_shared<Pipeline>();
     // only config.mDetail is removed, other members can be safely used later
     if (!p->Init(std::move(config))) {
@@ -283,7 +313,9 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
                                           bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged) {
+                                          bool& isInputContainerStdioChanged,
+                                          bool& isInputPrometheusChanged,
+                                          bool& isInputEbpfChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -293,6 +325,15 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
+    } else if (inputType == "input_prometheus") {
+        isInputPrometheusChanged = true;
+    } else if (inputType == "input_ebpf_processprobe_security" || 
+        inputType == "input_ebpf_processprobe_observer" ||
+        inputType == "input_ebpf_sockettraceprobe_security" ||
+        inputType == "input_ebpf_sockettraceprobe_observer" ||
+        inputType == "input_ebpf_fileprobe_security" ||
+        inputType == "input_ebpf_profilingprobe_observer") {
+        isInputEbpfChanged = true;
     }
 }
 

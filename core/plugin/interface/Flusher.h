@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2024 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +18,43 @@
 
 #include <json/json.h>
 
+#include <cstdint>
+#include <memory>
+
+#include "models/PipelineEventGroup.h"
 #include "plugin/interface/Plugin.h"
-#include "common/LogstoreSenderQueue.h"
+#include "queue/QueueKey.h"
+#include "queue/SenderQueueItem.h"
+#include "sink/SinkType.h"
 
 namespace logtail {
+
 class Flusher : public Plugin {
 public:
     virtual ~Flusher() = default;
 
     virtual bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) = 0;
-    virtual bool Register() = 0;
-    virtual bool Unregister(bool isPipelineRemoving) = 0;
-    virtual void Send(PipelineEventGroup&& g) = 0;
-    virtual void Flush(size_t key) = 0;
-    virtual void FlushAll() = 0;
+    virtual bool Start() { return true; }
+    virtual bool Stop(bool isPipelineRemoving);
+    virtual bool Send(PipelineEventGroup&& g) = 0;
+    virtual bool Flush(size_t key) = 0;
+    virtual bool FlushAll() = 0;
 
-    SingleLogstoreSenderManager<SenderQueueParam>* GetSenderQueue() const { return mSenderQueue; }
+    virtual SinkType GetSinkType() { return SinkType::NONE; }
+
+    QueueKey GetQueueKey() const { return mQueueKey; }
 
 protected:
-    // TODO: replace queue type
-    SingleLogstoreSenderManager<SenderQueueParam>* mSenderQueue;
-    // SenderQueue* mSenderQueue;
+    void GenerateQueueKey(const std::string& target);
+    bool PushToQueue(std::unique_ptr<SenderQueueItem>&& item, uint32_t retryTimes = 500);
+    void DealSenderQueueItemAfterSend(SenderQueueItem* item, bool keep);
+
+    QueueKey mQueueKey;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class FlusherInstanceUnittest;
+    friend class FlusherRunnerUnittest;
+#endif
 };
 
 } // namespace logtail

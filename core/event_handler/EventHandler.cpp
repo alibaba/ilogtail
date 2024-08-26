@@ -289,7 +289,8 @@ ModifyHandler::ModifyHandler(const std::string& configName, const FileDiscoveryC
     : mConfigName(configName) {
     if (pConfig.first && pConfig.second->GetGlobalConfig().mProcessPriority > 0
         && pConfig.second->GetGlobalConfig().mProcessPriority <= ProcessQueueManager::sMaxPriority) {
-        mReadFileTimeSlice = (1 << (ProcessQueueManager::sMaxPriority - pConfig.second->GetGlobalConfig().mProcessPriority + 1))
+        mReadFileTimeSlice
+            = (1 << (ProcessQueueManager::sMaxPriority - pConfig.second->GetGlobalConfig().mProcessPriority + 1))
             * INT64_FLAG(read_file_time_slice);
     } else {
         mReadFileTimeSlice = INT64_FLAG(read_file_time_slice);
@@ -362,7 +363,20 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
                      "new log reader queue count", mNameReaderMap.size() + 1));
     }
     LogFileReaderPtrArray& readerArray = mNameReaderMap[name];
-    if (readerArray.size() >= readerConfig.first->mRotatorQueueSize) {
+
+    LogFileReaderPtr readerPtr(LogFileReader::CreateLogFileReader(path,
+                                                                  name,
+                                                                  devInode,
+                                                                  readerConfig,
+                                                                  multilineConfig,
+                                                                  discoveryConfig,
+                                                                  exactlyonceConcurrency,
+                                                                  forceBeginingFlag));
+    if (readerPtr.get() == NULL)
+        return LogFileReaderPtr();
+
+    if (readerArray.size() >= readerConfig.first->mRotatorQueueSize
+        && readerPtr->GetIdxInReaderArrayFromLastCpt() == LogFileReader::CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY) {
         int32_t nowTime = time(NULL);
         if (nowTime - mLastOverflowErrorTime > INT32_FLAG(rotate_overflow_error_interval)) {
             mLastOverflowErrorTime = nowTime;
@@ -390,17 +404,6 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
               readerConfig.second->GetProjectName())("logstore", readerConfig.second->GetLogstoreName())(
                  "config", readerConfig.second->GetConfigName())("log reader queue name", PathJoin(path, name))(
                  "file device", ToString(devInode.dev))("file inode", ToString(devInode.inode)));
-
-    LogFileReaderPtr readerPtr(LogFileReader::CreateLogFileReader(path,
-                                                                  name,
-                                                                  devInode,
-                                                                  readerConfig,
-                                                                  multilineConfig,
-                                                                  discoveryConfig,
-                                                                  exactlyonceConcurrency,
-                                                                  forceBeginingFlag));
-    if (readerPtr.get() == NULL)
-        return LogFileReaderPtr();
 
     // new log
     bool backFlag = false;
@@ -448,9 +451,23 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         }
     }
 
-    backFlag ? readerArray.push_back(readerPtr) : readerArray.push_front(readerPtr);
+    int32_t idx = readerPtr->GetIdxInReaderArrayFromLastCpt();
+    if (backFlag) { // new reader
+        readerArray.push_back(readerPtr);
+        mDevInodeReaderMap[devInode] = readerPtr;
+    } else if (idx == LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY) { // reader not in reader array
+        mRotatorReaderMap[devInode] = readerPtr;
+    } else if (idx >= 0) { // reader in reader array
+        readerArray.push_back(readerPtr);
+        mDevInodeReaderMap[devInode] = readerPtr;
+        std::stable_sort(readerArray.begin(), readerArray.end(), ModifyHandler::CompareReaderByIdxFromCpt);
+    } else {
+        LOG_WARNING(sLogger,
+                    ("unexpected idx (perhaps because first checkpoint load after upgrade)",
+                     idx)("real log path", readerPtr->GetRealLogPath())("host log path", readerPtr->GetHostLogPath()));
+        return LogFileReaderPtr();
+    }
     readerPtr->SetReaderArray(&readerArray);
-    mDevInodeReaderMap[devInode] = readerPtr;
 
     LOG_INFO(sLogger,
              ("log reader creation succeed",
@@ -748,8 +765,10 @@ void ModifyHandler::Handle(const Event& event) {
                     LogtailAlarm::GetInstance()->SendAlarm(
                         PROCESS_QUEUE_BUSY_ALARM,
                         string("logprocess queue is full, put modify event to event queue again, file:")
-                            + reader->GetHostLogPath() + " ,project:" + reader->GetProject()
-                            + " ,logstore:" + reader->GetLogstore());
+                            + reader->GetHostLogPath(),
+                        reader->GetProject(),
+                        reader->GetLogstore(),
+                        reader->GetRegion());
                 }
 
                 BlockedEventManager::GetInstance()->UpdateBlockEvent(
@@ -947,11 +966,18 @@ void ModifyHandler::HandleTimeOut() {
 bool ModifyHandler::DumpReaderMeta(bool isRotatorReader, bool checkConfigFlag) {
     if (!isRotatorReader) {
         for (DevInodeLogFileReaderMap::iterator it = mDevInodeReaderMap.begin(); it != mDevInodeReaderMap.end(); ++it) {
-            it->second->DumpMetaToMem(checkConfigFlag);
+            int32_t idxInReaderArray = LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY;
+            for (size_t i = 0; i < it->second->GetReaderArray()->size(); ++i) {
+                if (it->second->GetReaderArray()->at(i) == it->second) {
+                    idxInReaderArray = i;
+                    break;
+                }
+            }
+            it->second->DumpMetaToMem(checkConfigFlag, idxInReaderArray);
         }
     } else {
         for (DevInodeLogFileReaderMap::iterator it = mRotatorReaderMap.begin(); it != mRotatorReaderMap.end(); ++it) {
-            it->second->DumpMetaToMem(checkConfigFlag);
+            it->second->DumpMetaToMem(checkConfigFlag, LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY);
         }
     }
     return true;
@@ -1050,6 +1076,7 @@ void ModifyHandler::ForceReadLogAndPush(LogFileReaderPtr reader) {
 int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* logBuffer) {
     int32_t pushRetry = 0;
     if (!logBuffer->rawBuffer.empty()) {
+        reader->ReportMetrics(logBuffer->readLength);
         LogFileProfiler::GetInstance()->AddProfilingReadBytes(reader->GetConfigName(),
                                                               reader->GetRegion(),
                                                               reader->GetProject(),

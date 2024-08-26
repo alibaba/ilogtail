@@ -16,12 +16,11 @@
 
 #pragma once
 
-#include <cstdint>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
-#include "queue/FeedbackQueue.h"
+#include "queue/QueueKey.h"
 
 namespace logtail {
 

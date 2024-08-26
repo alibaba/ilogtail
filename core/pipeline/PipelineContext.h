@@ -21,13 +21,12 @@
 #include <cstdint>
 #include <string>
 
-#include "common/LogstoreFeedbackKey.h"
 #include "logger/Logger.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/GlobalConfig.h"
-#include "queue/FeedbackQueueKey.h"
+#include "queue/QueueKey.h"
 
 namespace logtail {
 
@@ -74,7 +73,7 @@ public:
     const std::string& GetProjectName() const;
     const std::string& GetLogstoreName() const;
     const std::string& GetRegion() const;
-    LogstoreFeedBackKey GetLogstoreKey() const;
+    QueueKey GetLogstoreKey() const;
     const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
     bool RequiringJsonReader() const { return mRequiringJsonReader; }

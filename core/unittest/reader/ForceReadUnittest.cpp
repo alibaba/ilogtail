@@ -23,12 +23,14 @@
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
+#include "config/PipelineConfig.h"
 #include "config_manager/ConfigManager.h"
 #include "event/BlockEventManager.h"
 #include "event/Event.h"
 #include "event_handler/EventHandler.h"
 #include "file_server/FileServer.h"
 #include "logger/Logger.h"
+#include "pipeline/Pipeline.h"
 #include "queue/ProcessQueueManager.h"
 #include "unittest/Unittest.h"
 
@@ -67,9 +69,8 @@ protected:
         // init pipeline and config
         unique_ptr<Json::Value> configJson;
         string configStr, errorMsg;
-        unique_ptr<Config> config;
+        unique_ptr<PipelineConfig> config;
         unique_ptr<Pipeline> pipeline;
-        list<ProcessQueue>::iterator que;
 
         // new pipeline
         configStr = R"(
@@ -101,7 +102,7 @@ protected:
         APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
         Json::Value inputConfigJson = (*configJson)["inputs"][0];
 
-        config.reset(new Config(mConfigName, std::move(configJson)));
+        config.reset(new PipelineConfig(mConfigName, std::move(configJson)));
         APSARA_TEST_TRUE(config->Parse());
         pipeline.reset(new Pipeline());
         APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -117,7 +118,7 @@ protected:
         FileServer::GetInstance()->AddFileDiscoveryConfig(mConfigName, &discoveryOpts, &ctx);
         FileServer::GetInstance()->AddFileReaderConfig(mConfigName, &readerOpts, &ctx);
         FileServer::GetInstance()->AddMultilineConfig(mConfigName, &multilineOpts, &ctx);
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(0, 0);
+        ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(0, 0);
     }
 
     void TearDown() override { remove(utf8File.c_str()); }
@@ -347,7 +348,7 @@ void ForceReadUnittest::TestAddTimeoutEvent() {
         reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = 10;
         BlockedEventManager::GetInstance()->mBlockEventMap.clear();
-        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 0);
+        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 0U);
 
         ModifyHandler* pHanlder = new ModifyHandler(mConfigName, mConfig);
         pHanlder->mReadFileTimeSlice = 0; // force one read for one event
@@ -360,7 +361,7 @@ void ForceReadUnittest::TestAddTimeoutEvent() {
                          reader.mDevInode.dev,
                          reader.mDevInode.inode);
         pHanlder->Handle(e1);
-        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 0);
+        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 0U);
     }
     {
         // read all -> add timeout event
@@ -372,7 +373,7 @@ void ForceReadUnittest::TestAddTimeoutEvent() {
         reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = 1024 * 512;
         BlockedEventManager::GetInstance()->mBlockEventMap.clear();
-        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 0);
+        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 0U);
 
         ModifyHandler* pHanlder = new ModifyHandler(mConfigName, mConfig);
         pHanlder->mReadFileTimeSlice = 0; // force one read for one event
@@ -385,7 +386,7 @@ void ForceReadUnittest::TestAddTimeoutEvent() {
                          reader.mDevInode.dev,
                          reader.mDevInode.inode);
         pHanlder->Handle(e1);
-        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 1);
+        APSARA_TEST_EQUAL_FATAL(BlockedEventManager::GetInstance()->mBlockEventMap.size(), 1U);
     }
 }
 

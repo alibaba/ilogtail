@@ -51,6 +51,14 @@ enum class EventGroupMetaKey {
     CONTAINER_IMAGE_NAME,
     CONTAINER_IMAGE_ID,
 
+    PROMETHEUS_SCRAPE_DURATION,
+    PROMETHEUS_SCRAPE_RESPONSE_SIZE,
+    PROMETHEUS_SAMPLES_SCRAPED,
+    PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC,
+    PROMETHEUS_INSTANCE,
+    PROMETHEUS_SERIES_ADDED,
+    PROMETHEUS_UP_STATE,
+
     SOURCE_ID
 };
 
@@ -106,7 +114,7 @@ public:
     size_t GetTagsHash() const;
 
     void SetExactlyOnceCheckpoint(const RangeCheckpointPtr& checkpoint) { mExactlyOnceCheckpoint = checkpoint; }
-    RangeCheckpointPtr GetExactlyOnceCheckpoint() const { return mExactlyOnceCheckpoint; }
+    RangeCheckpointPtr& GetExactlyOnceCheckpoint() { return mExactlyOnceCheckpoint; }
     bool IsReplay() const;
 
     size_t DataSize() const;

@@ -23,7 +23,8 @@
 #include "common/LogRunnable.h"
 #include "common/Thread.h"
 #include "models/PipelineEventGroup.h"
-#include "queue/FeedbackQueueKey.h"
+#include "monitor/Monitor.h"
+#include "queue/QueueKey.h"
 
 namespace logtail {
 
@@ -47,13 +48,20 @@ private:
     LogProcess();
     ~LogProcess();
 
-    bool Serialize(const PipelineEventGroup& group, bool enableNanosecond, std::string& res, std::string& errorMsg);
+    bool Serialize(const PipelineEventGroup& group,
+                   bool enableNanosecond,
+                   const std::string& logstore,
+                   std::string& res,
+                   std::string& errorMsg);
 
     bool mInitialized = false;
     ThreadPtr* mProcessThreads;
     int32_t mThreadCount = 1;
     std::atomic_bool* mThreadFlags;
     ReadWriteLock mAccessProcessThreadRWL;
+
+    IntGaugePtr mGlobalProcessQueueFullTotal;
+    IntGaugePtr mGlobalProcessQueueTotal;
 };
 
 } // namespace logtail

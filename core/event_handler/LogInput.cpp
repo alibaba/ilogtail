@@ -40,7 +40,6 @@
 #include "processor/daemon/LogProcess.h"
 #include "reader/GloablFileDescriptorManager.h"
 #include "reader/LogFileReader.h"
-#include "sender/Sender.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -89,6 +88,10 @@ void LogInput::Start() {
         initialized = true;
 
     mInteruptFlag = false;
+
+    mGlobalOpenFdTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
+    mGlobalRegisterHandlerTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
+
     new Thread([this]() { ProcessLoop(); });
 }
 
@@ -342,9 +345,12 @@ void LogInput::UpdateCriticalMetric(int32_t curTime) {
 
     LogtailMonitor::GetInstance()->UpdateMetric("event_tps",
                                                 1.0 * mEventProcessCount / (curTime - mLastUpdateMetricTime));
-    LogtailMonitor::GetInstance()->UpdateMetric("open_fd",
-                                                GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize());
-    LogtailMonitor::GetInstance()->UpdateMetric("register_handler", EventDispatcher::GetInstance()->GetHandlerCount());
+    int32_t openFdTotal = GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize();
+    LogtailMonitor::GetInstance()->UpdateMetric("open_fd", openFdTotal);
+    mGlobalOpenFdTotal->Set(openFdTotal);
+    size_t handlerCount = EventDispatcher::GetInstance()->GetHandlerCount();
+    LogtailMonitor::GetInstance()->UpdateMetric("register_handler", handlerCount);
+    mGlobalRegisterHandlerTotal->Set(handlerCount);
     LogtailMonitor::GetInstance()->UpdateMetric("reader_count", CheckPointManager::Instance()->GetReaderCount());
     LogtailMonitor::GetInstance()->UpdateMetric("multi_config", AppConfig::GetInstance()->IsAcceptMultiConfig());
     mEventProcessCount = 0;

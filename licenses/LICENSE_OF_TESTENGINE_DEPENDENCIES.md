@@ -31,7 +31,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/alibabacloud-go/tea-xml](https://pkg.go.dev/github.com/alibabacloud-go/tea-xml?tab=licenses)
 - [github.com/aliyun/credentials-go](https://pkg.go.dev/github.com/aliyun/credentials-go?tab=licenses)
 - [github.com/go-logr/logr](https://pkg.go.dev/github.com/go-logr/logr?tab=licenses)
-- [github.com/googleapis/gnostic](https://pkg.go.dev/github.com/googleapis/gnostic?tab=licenses)
 - [github.com/google/gofuzz](https://pkg.go.dev/github.com/google/gofuzz?tab=licenses)
 - [github.com/modern-go/concurrent](https://pkg.go.dev/github.com/modern-go/concurrent?tab=licenses)
 - [github.com/modern-go/reflect2](https://pkg.go.dev/github.com/modern-go/reflect2?tab=licenses)
@@ -46,6 +45,10 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [sigs.k8s.io/structured-merge-diff](https://pkg.go.dev/sigs.k8s.io/structured-merge-diff?tab=licenses)
 - [sigs.k8s.io/yaml](https://pkg.go.dev/sigs.k8s.io/yaml?tab=licenses)
 - [github.com/google/cadvisor](https://pkg.go.dev/github.com/google/cadvisor?tab=licenses)
+- [github.com/go-openapi/jsonpointer](https://pkg.go.dev/github.com/go-openapi/jsonpointer?tab=licenses)
+- [github.com/go-openapi/jsonreference](https://pkg.go.dev/github.com/go-openapi/jsonreference?tab=licenses)
+- [github.com/go-openapi/swag](github.com/go-openapi/swag)
+- [github.com/google/gnostic](https://pkg.go.dev/github.com/google/gnostic?tab=licenses)
 - [google.golang.org/genproto/googleapis/rpc](https://pkg.go.dev/google.golang.org/genproto/googleapis/rpc?tab=licenses)
 
 ## BSD licenses
@@ -65,7 +68,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/pierrec/lz4](https://pkg.go.dev/github.com/pierrec/lz4?tab=licenses)
 - [github.com/elastic/elastic-transport-go](https://pkg.go.dev/github.com/elastic/elastic-transport-go?tab=licenses)
 - [github.com/elastic/go-elasticsearch](https://pkg.go.dev/github.com/elastic/go-elasticsearch?tab=licenses)
-- [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp?tab=licenses)
 - [github.com/imdario/mergo](https://pkg.go.dev/github.com/imdario/mergo?tab=licenses)
 - [github.com/kr/fs](https://pkg.go.dev/github.com/kr/fs?tab=licenses)
 - [github.com/moby/spdystream](https://pkg.go.dev/github.com/moby/spdystream?tab=licenses)
@@ -75,6 +77,9 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [golang.org/x/term](https://pkg.go.dev/golang.org/x/term?tab=licenses)
 - [golang.org/x/time](https://pkg.go.dev/golang.org/x/time?tab=licenses)
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
+- [github.com/PuerkitoBio/purell](https://pkg.go.dev/github.com/PuerkitoBio/purell?tab=licenses)
+- [github.com/PuerkitoBio/urlesc](https://pkg.go.dev/github.com/PuerkitoBio/urlesc?tab=licenses)
+- [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
 
 ## MIT licenses
 
@@ -97,8 +102,19 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/clbanning/mxj](https://pkg.go.dev/github.com/clbanning/mxj?tab=licenses)
 - [github.com/json-iterator/go](https://pkg.go.dev/github.com/json-iterator/go?tab=licenses)
 - [github.com/melbahja/goph](https://pkg.go.dev/github.com/melbahja/goph?tab=licenses)
+- [github.com/emicklei/go-restful](https://pkg.go.dev/github.com/emicklei/go-restful?tab=licenses)
+- [github.com/josharian/intern](https://pkg.go.dev/github.com/josharian/intern?tab=licenses)
+- [github.com/mailru/easyjson](https://pkg.go.dev/github.com/mailru/easyjson?tab=licenses)
+- [github.com/cucumber/gherkin/go](https://pkg.go.dev/github.com/cucumber/gherkin/go?tab=licenses)
+- [github.com/cucumber/godog](https://pkg.go.dev/github.com/cucumber/godog?tab=licenses)
+- [github.com/cucumber/messages/go](https://pkg.go.dev/github.com/cucumber/messages/go?tab=licenses)
+- [github.com/gofrs/uuid](https://pkg.go.dev/github.com/gofrs/uuid?tab=licenses)
 
 ## Mozilla Public License 2.0 licenses
+
+- [github.com/hashicorp/go-immutable-radix](https://pkg.go.dev/github.com/hashicorp/go-immutable-radix?tab=licenses)
+- [github.com/hashicorp/go-memdb](https://pkg.go.dev/github.com/hashicorp/go-memdb?tab=licenses)
+- [github.com/hashicorp/golang-lru](https://pkg.go.dev/github.com/hashicorp/golang-lru?tab=licenses)
 
 ## LGPL v3 licenses
 

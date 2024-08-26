@@ -19,16 +19,26 @@
 #include <string>
 #include <vector>
 
-#include "config/Config.h"
+#include "config/PipelineConfig.h"
+#include "config/InstanceConfig.h"
 
 namespace logtail {
 
-struct ConfigDiff {
-    std::vector<Config> mAdded;
-    std::vector<Config> mModified;
+class PipelineConfigDiff {
+public:
+    std::vector<PipelineConfig> mAdded;
+    std::vector<PipelineConfig> mModified;
     std::vector<std::string> mRemoved;
     std::vector<std::string> mUnchanged; // 过渡使用，仅供插件系统用
+    bool IsEmpty() { return mRemoved.empty() && mAdded.empty() && mModified.empty(); }
+};
 
+class InstanceConfigDiff {
+public:
+    std::vector<InstanceConfig> mAdded;
+    std::vector<InstanceConfig> mModified;
+    std::vector<std::string> mRemoved;
+    std::vector<std::string> mUnchanged; // 过渡使用，仅供插件系统用
     bool IsEmpty() { return mRemoved.empty() && mAdded.empty() && mModified.empty(); }
 };
 

@@ -21,6 +21,7 @@
 #include "container_manager/ContainerDiscoveryOptions.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
+#include "monitor/PluginMetricManager.h"
 #include "plugin/interface/Input.h"
 #include "reader/FileReaderOptions.h"
 
@@ -36,21 +37,24 @@ public:
     InputFile();
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) override;
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
+    bool SupportAck() const override { return true; }
 
     FileDiscoveryOptions mFileDiscovery;
     bool mEnableContainerDiscovery = false;
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
     MultilineOptions mMultiline;
+    PluginMetricManagerPtr mPluginMetricManager;
+    IntGaugePtr mInputFileMonitorTotal;
     // others
     uint32_t mMaxCheckpointDirSearchDepth = 0;
     uint32_t mExactlyOnceConcurrency = 0;
 
 private:
-    bool CreateInnerProcessors(uint32_t& pluginIdx);
+    bool CreateInnerProcessors();
     static bool SetContainerBaseDir(ContainerInfo& containerInfo, const std::string& logPath);
     static std::string GetLogPath(const FileDiscoveryOptions* fileDiscovery);
 

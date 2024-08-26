@@ -44,6 +44,7 @@ set(DEP_NAME_LIST
         spdlog                  # header-only
         rapidjson               # header-only
         gtest
+        gmock
         protobuf
         re2
         cityhash
@@ -99,13 +100,15 @@ endif ()
 # gtest
 macro(link_gtest target_name)
     if (gtest_${LINK_OPTION_SUFFIX})
-        target_link_libraries(${target_name} "${gtest_${LINK_OPTION_SUFFIX}}")
+        target_link_libraries(${target_name} "${gtest_${LINK_OPTION_SUFFIX}}" "${gmock_${LINK_OPTION_SUFFIX}}")
     elseif (UNIX)
-        target_link_libraries(${target_name} "${gtest_${LIBRARY_DIR_SUFFIX}}/libgtest.a")
+        target_link_libraries(${target_name} "${gtest_${LIBRARY_DIR_SUFFIX}}/libgtest.a" "${gmock_${LIBRARY_DIR_SUFFIX}}/libgmock.a")
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "gtestd"
-                optimized "gtest")
+                optimized "gtest"
+                debug "gmockd"
+                optimized "gmock")
     endif ()
 endmacro()
 
@@ -242,11 +245,7 @@ macro(link_lz4 target_name)
     if (lz4_${LINK_OPTION_SUFFIX})
         target_link_libraries(${target_name} "${lz4_${LINK_OPTION_SUFFIX}}")
     elseif (UNIX)
-        if (WITHOUTSPL)
-            target_link_libraries(${target_name} "${lz4_${LIBRARY_DIR_SUFFIX}}/liblz4.so")
-        else ()
-            target_link_libraries(${target_name} "${lz4_${LIBRARY_DIR_SUFFIX}}/liblz4.a")
-        endif ()
+        target_link_libraries(${target_name} "${lz4_${LIBRARY_DIR_SUFFIX}}/liblz4.a")
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "liblz4_staticd"
@@ -258,6 +257,8 @@ endmacro()
 macro(link_zlib target_name)
     if (zlib_${LINK_OPTION_SUFFIX})
         target_link_libraries(${target_name} "${zlib_${LINK_OPTION_SUFFIX}}")
+    elseif(ANDROID)
+        target_link_libraries(${target_name} z)
     elseif (UNIX)
         target_link_libraries(${target_name} "${zlib_${LIBRARY_DIR_SUFFIX}}/libz.a")
     elseif (MSVC)
@@ -310,11 +311,7 @@ macro(link_unwind target_name)
     elseif (ANDROID)
         # target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwindstack.a")
     elseif (UNIX)
-        if (WITHOUTSPL)
-            target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwind.so")
-        else ()
-            target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwind.a")
-        endif ()
+        target_link_libraries(${target_name} "${unwind_${LIBRARY_DIR_SUFFIX}}/libunwind.a")
     elseif (MSVC)
         target_link_libraries(${target_name}
                 debug "breakpad_commond.lib"

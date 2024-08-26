@@ -45,14 +45,11 @@
 #include "log_pb/metric.pb.h"
 #include "log_pb/sls_logs.pb.h"
 #include "monitor/LogFileProfiler.h"
-#include "monitor/LogIntegrity.h"
-#include "monitor/LogLineCount.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/MetricExportor.h"
 #include "polling/PollingDirFile.h"
 #include "polling/PollingModify.h"
 #include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "polling/PollingEventQueue.h"
 #endif
@@ -402,7 +399,7 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
 
 EventDispatcher::ValidateCheckpointResult EventDispatcher::validateCheckpoint(
     CheckPointPtr& checkpoint, map<DevInode, SplitedFilePath>& cachePathDevInodeMap, vector<Event*>& eventVec) {
-    shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
+    shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindConfigByName(checkpoint->mConfigName);
     if (config == NULL) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "the corresponding config is deleted")("config", checkpoint->mConfigName)(

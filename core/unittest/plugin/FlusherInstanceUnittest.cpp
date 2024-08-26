@@ -14,9 +14,10 @@
 
 #include <memory>
 
-#include "unittest/plugin/PluginMock.h"
 #include "plugin/instance/FlusherInstance.h"
+#include "queue/QueueKeyManager.h"
 #include "unittest/Unittest.h"
+#include "unittest/plugin/PluginMock.h"
 
 using namespace std;
 
@@ -28,15 +29,21 @@ public:
     void TestInit() const;
     void TestStart() const;
     void TestStop() const;
+    void TestGetQueueKey() const;
+
+protected:
+    void TearDown() override { QueueKeyManager::GetInstance()->Clear(); }
 };
 
 void FlusherInstanceUnittest::TestName() const {
-    unique_ptr<FlusherInstance> flusher = unique_ptr<FlusherInstance>(new FlusherInstance(new FlusherMock(), "0"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_EQUAL(FlusherMock::sName, flusher->Name());
 }
 
 void FlusherInstanceUnittest::TestInit() const {
-    unique_ptr<FlusherInstance> flusher = unique_ptr<FlusherInstance>(new FlusherInstance(new FlusherMock(), "0"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     Json::Value config, opt;
     PipelineContext context;
     APSARA_TEST_TRUE(flusher->Init(config, context, opt));
@@ -44,19 +51,29 @@ void FlusherInstanceUnittest::TestInit() const {
 }
 
 void FlusherInstanceUnittest::TestStart() const {
-    unique_ptr<FlusherInstance> flusher = unique_ptr<FlusherInstance>(new FlusherInstance(new FlusherMock(), "0"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_TRUE(flusher->Start());
 }
 
 void FlusherInstanceUnittest::TestStop() const {
-    unique_ptr<FlusherInstance> flusher = unique_ptr<FlusherInstance>(new FlusherInstance(new FlusherMock(), "0"));
+    unique_ptr<FlusherInstance> flusher
+        = make_unique<FlusherInstance>(new FlusherMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_TRUE(flusher->Stop(true));
+}
+
+void FlusherInstanceUnittest::TestGetQueueKey() const {
+    FlusherMock* mock = new FlusherMock();
+    mock->GenerateQueueKey("target");
+    unique_ptr<FlusherInstance> flusher = make_unique<FlusherInstance>(mock, PluginInstance::PluginMeta("0", "0", "1"));
+    APSARA_TEST_EQUAL(QueueKeyManager::GetInstance()->GetKey("-flusher_mock-target"), flusher->GetQueueKey());
 }
 
 UNIT_TEST_CASE(FlusherInstanceUnittest, TestName)
 UNIT_TEST_CASE(FlusherInstanceUnittest, TestInit)
 UNIT_TEST_CASE(FlusherInstanceUnittest, TestStart)
 UNIT_TEST_CASE(FlusherInstanceUnittest, TestStop)
+UNIT_TEST_CASE(FlusherInstanceUnittest, TestGetQueueKey)
 
 } // namespace logtail
 

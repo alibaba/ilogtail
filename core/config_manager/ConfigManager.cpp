@@ -50,13 +50,10 @@
 #include "event_handler/EventHandler.h"
 #include "file_server/FileServer.h"
 #include "monitor/LogFileProfiler.h"
-#include "monitor/LogIntegrity.h"
-#include "monitor/LogLineCount.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
 #include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
 
 using namespace std;
 
@@ -337,6 +334,13 @@ void ConfigManager::RegisterWildcardPath(const FileDiscoveryConfig& config, cons
             LOG_WARNING(sLogger,
                         ("too many sub directoried for path", path)("dirCount", dirCount)("basePath",
                                                                                           config.first->GetBasePath()));
+            LogtailAlarm::GetInstance()->SendAlarm(STAT_LIMIT_ALARM,
+                                                   string("too many sub directoried for path:" + path
+                                                          + " dirCount: " + ToString(dirCount) + " basePath"
+                                                          + config.first->GetBasePath()),
+                                                   config.second->GetProjectName(),
+                                                   config.second->GetLogstoreName(),
+                                                   config.second->GetRegion());
             break;
         }
         if (!ent.IsDir())

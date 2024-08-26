@@ -34,7 +34,6 @@
 #include "file_server/FileServer.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "monitor/Monitor.h"
 
 // Control the check frequency to call ClearUnavailableFileAndDir.
 DEFINE_FLAG_INT32(check_not_exist_file_dir_round, "clear not exist file dir cache, round", 20);
@@ -69,6 +68,11 @@ static const int64_t NANO_CONVERTING = 1000000000;
 
 void PollingDirFile::Start() {
     ClearCache();
+    mGlobalConfigTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
+    mGlobalPollingDirCacheSizeTotal
+        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL);
+    mGlobalPollingFileCacheSizeTotal
+        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL);
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
 }
@@ -146,11 +150,17 @@ void PollingDirFile::Polling() {
             }
             sort(sortedConfigs.begin(), sortedConfigs.end(), FileDiscoveryOptions::CompareByPathLength);
 
-            LogtailMonitor::GetInstance()->UpdateMetric("config_count", nameConfigMap.size());
+            size_t configTotal = nameConfigMap.size();
+            LogtailMonitor::GetInstance()->UpdateMetric("config_count", configTotal);
+            mGlobalConfigTotal->Set(configTotal);
             {
                 ScopedSpinLock lock(mCacheLock);
-                LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", mDirCacheMap.size());
-                LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", mFileCacheMap.size());
+                size_t pollingDirCacheSize = mDirCacheMap.size();
+                LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", pollingDirCacheSize);
+                mGlobalPollingDirCacheSizeTotal->Set(pollingDirCacheSize);
+                size_t pollingFileCacheSize = mFileCacheMap.size();
+                LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", pollingFileCacheSize);
+                mGlobalPollingFileCacheSizeTotal->Set(pollingFileCacheSize);
             }
 
             // Iterate all normal configs, make sure stat count will not exceed limit.
@@ -556,6 +566,13 @@ bool PollingDirFile::PollingWildcardConfigPath(const FileDiscoveryConfig& pConfi
             LOG_WARNING(sLogger,
                         ("too many sub directoried for path",
                          dirPath)("dirCount", dirCount)("basePath", pConfig.first->GetBasePath()));
+            LogtailAlarm::GetInstance()->SendAlarm(STAT_LIMIT_ALARM,
+                                                   string("too many sub directoried for path:" + dirPath
+                                                          + " dirCount: " + ToString(dirCount) + " basePath"
+                                                          + pConfig.first->GetBasePath()),
+                                                   pConfig.second->GetProjectName(),
+                                                   pConfig.second->GetLogstoreName(),
+                                                   pConfig.second->GetRegion());
             break;
         }
 

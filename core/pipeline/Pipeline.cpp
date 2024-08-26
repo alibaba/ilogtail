@@ -22,13 +22,14 @@
 #include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
-#include "flusher/FlusherSLS.h"
+#include "flusher/sls/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "queue/ProcessQueueManager.h"
 #include "queue/QueueKeyManager.h"
+#include "queue/SenderQueueManager.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
@@ -45,7 +46,7 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
     }
 }
 
-bool Pipeline::Init(Config&& config) {
+bool Pipeline::Init(PipelineConfig&& config) {
     mName = config.mName;
     mConfig = std::move(config.mDetail);
     mContext.SetConfigName(mName);
@@ -60,21 +61,21 @@ bool Pipeline::Init(Config&& config) {
 
 #ifdef __ENTERPRISE__
     // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
-    unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
+    unique_ptr<FlusherSLS> SLSTmp = make_unique<FlusherSLS>();
     SLSTmp->mProject = config.mProject;
     SLSTmp->mLogstore = config.mLogstore;
     SLSTmp->mRegion = config.mRegion;
     mContext.SetSLSInfo(SLSTmp.get());
 #endif
 
-    uint32_t pluginIndex = 0;
+    mPluginID.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string name = detail["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
+        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
-            if (!input->Init(detail, mContext, pluginIndex, i, optionalGoPipeline)) {
+            if (!input->Init(detail, mContext, i, optionalGoPipeline)) {
                 return false;
             }
             mInputs.emplace_back(std::move(input));
@@ -96,7 +97,7 @@ bool Pipeline::Init(Config&& config) {
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
         string name = (*config.mProcessors[i])["Type"].asString();
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(name, GenNextPluginMeta(false));
         if (processor) {
             if (!processor->Init(*config.mProcessors[i], mContext)) {
                 return false;
@@ -128,7 +129,7 @@ bool Pipeline::Init(Config&& config) {
     for (auto detail : config.mFlushers) {
         string name = (*detail)["Type"].asString();
         unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateFlusher(name, GenNextPluginMeta(false));
         if (flusher) {
             Json::Value optionalGoPipeline;
             if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {
@@ -154,6 +155,11 @@ bool Pipeline::Init(Config&& config) {
             }
         }
         ++mPluginCntMap["flushers"][name];
+    }
+
+    // route is only enabled in native flushing mode, thus the index in config is the same as that in mFlushers
+    if (!mRouter.Init(config.mRouter, mContext)) {
+        return false;
     }
 
     for (auto detail : config.mExtensions) {
@@ -230,10 +236,31 @@ bool Pipeline::Init(Config&& config) {
         if (mContext.GetProcessQueueKey() == -1) {
             mContext.SetProcessQueueKey(QueueKeyManager::GetInstance()->GetKey(mName));
         }
+
+        // TODO: for go input, we currently assume bounded process queue
+        bool isInputSupportAck = mInputs.empty() ? true : mInputs[0]->SupportAck();
+        for (auto& input : mInputs) {
+            if (input->SupportAck() != isInputSupportAck) {
+                PARAM_ERROR_RETURN(mContext.GetLogger(),
+                                   mContext.GetAlarm(),
+                                   "not all inputs' ack support are the same",
+                                   noModule,
+                                   mName,
+                                   mContext.GetProjectName(),
+                                   mContext.GetLogstoreName(),
+                                   mContext.GetRegion());
+            }
+        }
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(mContext.GetProcessQueueKey(), priority);
+        if (isInputSupportAck) {
+            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(mContext.GetProcessQueueKey(), priority);
+        } else {
+            ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
+                mContext.GetProcessQueueKey(), priority, 100);
+        }
+
 
         unordered_set<FeedbackInterface*> feedbackSet;
         for (const auto& input : mInputs) {
@@ -243,14 +270,14 @@ bool Pipeline::Init(Config&& config) {
                 feedbackSet.insert(feedback);
             }
         }
-        vector<FeedbackInterface*> feedbacks(feedbackSet.begin(), feedbackSet.end());
-        ProcessQueueManager::GetInstance()->SetFeedbackInterface(mContext.GetProcessQueueKey(), feedbacks);
+        ProcessQueueManager::GetInstance()->SetFeedbackInterface(
+            mContext.GetProcessQueueKey(), vector<FeedbackInterface*>(feedbackSet.begin(), feedbackSet.end()));
 
-        vector<SingleLogstoreSenderManager<SenderQueueParam>*> senderQueues;
+        vector<BoundedSenderQueueInterface*> senderQueues;
         for (const auto& flusher : mFlushers) {
-            senderQueues.push_back(flusher->GetSenderQueue());
+            senderQueues.push_back(SenderQueueManager::GetInstance()->GetQueue(flusher->GetQueueKey()));
         }
-        ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), senderQueues);
+        ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), std::move(senderQueues));
     }
 
     return true;
@@ -288,24 +315,35 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputInd
     }
 }
 
-void Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
+bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
+    bool allSucceeded = true;
     for (auto& group : groupList) {
-        // TODO: support route
-        for (size_t i = 0; i < mFlushers.size(); ++i) {
-            if (i + 1 != mFlushers.size()) {
-                mFlushers[i]->Send(group.Copy());
+        auto flusherIdx = mRouter.Route(group);
+        for (size_t i = 0; i < flusherIdx.size(); ++i) {
+            if (flusherIdx[i] >= mFlushers.size()) {
+                LOG_ERROR(
+                    sLogger,
+                    ("unexpected error", "invalid flusher index")("flusher index", flusherIdx[i])("config", mName));
+                allSucceeded = false;
+                continue;
+            }
+            if (i + 1 != flusherIdx.size()) {
+                allSucceeded = mFlushers[flusherIdx[i]]->Send(group.Copy()) && allSucceeded;
             } else {
-                mFlushers[i]->Send(std::move(group));
+                allSucceeded = mFlushers[flusherIdx[i]]->Send(std::move(group)) && allSucceeded;
             }
         }
     }
+    return allSucceeded;
 }
 
-void Pipeline::FlushBatch() {
+bool Pipeline::FlushBatch() {
+    bool allSucceeded = true;
     for (auto& flusher : mFlushers) {
-        flusher->FlushAll();
+        allSucceeded = flusher->FlushAll() && allSucceeded;
     }
     TimeoutFlushManager::GetInstance()->ClearRecords(mName);
+    return allSucceeded;
 }
 
 void Pipeline::Stop(bool isRemoving) {
@@ -337,7 +375,6 @@ void Pipeline::Stop(bool isRemoving) {
 
 void Pipeline::RemoveProcessQueue() const {
     ProcessQueueManager::GetInstance()->DeleteQueue(mContext.GetProcessQueueKey());
-    QueueKeyManager::GetInstance()->RemoveKey(mContext.GetProcessQueueKey());
 }
 
 void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
@@ -415,6 +452,27 @@ bool Pipeline::LoadGoPipelines() const {
         }
     }
     return true;
+}
+
+std::string Pipeline::GetNowPluginID() {
+    return std::to_string(mPluginID.load());
+}
+
+std::string Pipeline::GenNextPluginID() {
+    mPluginID.fetch_add(1);
+    return std::to_string(mPluginID.load());
+}
+
+PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
+    mPluginID.fetch_add(1);
+    int32_t childNodeID = mPluginID.load();
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
+        childNodeID += 1;
+    }
+    return PluginInstance::PluginMeta(
+        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
 }
 
 } // namespace logtail
