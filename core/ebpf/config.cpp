@@ -48,7 +48,7 @@ bool InitObserverNetworkOptionInner(const Json::Value& probeConfig,
                                const std::string& sName) {
     std::string errorMsg;
     // EnableEvent (Optional)
-    if (!GetOptionalBoolParam(probeConfig, "EnableEvent", thisObserverNetworkOption.mEnableEvent, errorMsg)) {
+    if (!GetOptionalBoolParam(probeConfig, "EnableLog", thisObserverNetworkOption.mEnableLog, errorMsg)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
                              mContext->GetAlarm(),
                              errorMsg,

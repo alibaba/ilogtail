@@ -130,11 +130,13 @@ void EventHandler::handle(std::vector<std::unique_ptr<ApplicationBatchEvent>>&& 
             for (auto& tag : event->GetAllTags()) {
                 logEvent->SetContent(tag.first, tag.second);
                 auto seconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::nanoseconds(event->GetTimestamp()));
-                logEvent->SetTimestamp(seconds.count(), event->GetTimestamp());
+                logEvent->SetTimestamp(seconds.count(), event->GetTimestamp() - seconds.count() * 1e9);
             }
             mProcessTotalCnt ++;
         }
-        for (auto& tag : appEvents->tags_) eventGroup.SetTag(tag.first, tag.second);
+        for (auto& tag : appEvents->tags_) {
+            eventGroup.SetTag(tag.first, tag.second);
+        }
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif

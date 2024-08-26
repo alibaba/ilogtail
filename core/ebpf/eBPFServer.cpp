@@ -106,7 +106,7 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
             nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
             mSpanCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
-        if (opts->mEnableEvent) {
+        if (opts->mEnableLog) {
             nconfig.event_cb_ = [this](auto events) { return mEventCB->handle(std::move(events)); };
             mEventCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
