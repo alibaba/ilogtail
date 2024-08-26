@@ -50,8 +50,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(
     }
     auto& sourceEvent = e.Cast<LogEvent>();
     std::unique_ptr<MetricEvent> metricEvent = eGroup.CreateMetricEvent();
-    if (mParser.ParseLine(
-            sourceEvent.GetContent(prometheus::PROMETHEUS).to_string(), timestamp, nanoSec, *metricEvent)) {
+    if (mParser.ParseLine(sourceEvent.GetContent(prometheus::PROMETHEUS), timestamp, nanoSec, *metricEvent)) {
         newEvents.emplace_back(std::move(metricEvent));
     }
     return true;
