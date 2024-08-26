@@ -358,6 +358,15 @@ protected:
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
     static int32_t ParseTime(const char* buffer, const std::string& timeFormat);
+    int32_t ParseTimeInBuffer(LogFileOperator& logFileOp,
+                              int64_t begin,
+                              int64_t end,
+                              int32_t bootTime,
+                              const std::string& timeFormat,
+                              int64_t& filePos,
+                              bool& found);
+    static int ParseAllLines(
+        char* buffer, size_t size, int32_t bootTime, const std::string& timeFormat, int32_t& parsedTime, int& pos);
     void SetFilePosBackwardToFixedPos(LogFileOperator& logFileOp);
 
     bool CheckForFirstOpen(FileReadPolicy policy = BACKWARD_TO_FIXED_POS);

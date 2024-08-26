@@ -40,6 +40,7 @@ public:
     void TestProcessWholeLine();
     void TestProcessQuote();
     void TestProcessDoubleQuote();
+    void TestEmpty();
     void TestProcessKeyOverwritten();
     void TestUploadRawLog();
     void TestAddLog();
@@ -56,6 +57,7 @@ UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestMultipleLines);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessWholeLine);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessQuote);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessDoubleQuote);
+UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestEmpty);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessKeyOverwritten);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestUploadRawLog);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAddLog);
@@ -64,7 +66,7 @@ UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessEventDiscardUnm
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAutoExtend);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAcceptNoEnoughKeys);
 
-PluginInstance::PluginMeta getPluginMeta(){
+PluginInstance::PluginMeta getPluginMeta() {
     PluginInstance::PluginMeta pluginMeta{"testID", "testChildID"};
     return pluginMeta;
 }
@@ -537,7 +539,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAutoExtend() {
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
-    //case < field
+    // case < field
     {
         std::string inJson = R"({
         "events" :
@@ -642,7 +644,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         }
     }
-    
+
     // case > field
     {
         std::string inJson = R"({
@@ -948,94 +950,166 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
 void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
     {
         std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "'-' 'file0' '947113' '192.168.0.3' '2024-08-15T15:25:24.195264681' 'PUT
+/dir/resource.txt
+HTTP/2.0' '200' '154' 'go-sdk'"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond": 0,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "1": "-",
+                        "2": "file0",
+                        "3": "947113",
+                        "4": "192.168.0.3",
+                        "5": "2024-08-15T15:25:24.195264681",
+                        "6": "PUT\n/dir/resource.txt\nHTTP/2.0",
+                        "7": "200",
+                        "8": "154",
+                        "9": "go-sdk"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+        // ProcessorSplitMultilineLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Config config;
+            config.mSeparator = " ";
+            config.mQuote = '\'';
+            config.mColumnKeys = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+            config.mDiscardUnmatch = false;
+            config.mUploadRawLog = false;
+            config.mAdvancedConfig.mRawLogTag = "__raw__";
+            config.mAcceptNoEnoughKeys = true;
+
+            std::string pluginId = "testID";
+            ComponentConfig componentConfig(pluginId, config);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, getPluginMeta());
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
+    {
+        std::string inJson = R"({
             "events" :
             [
                 {
                     "contents" :
                     {
-                        "content" : " 2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
- 2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
-      2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
-           2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb",
-                        "log.file.offset": "0"
+                        "content" : " 2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv
+                        zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
+    2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv
+    zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
+        2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv
+        zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb
+            2023-12-25 1|zdfvzdfv zfdv|zfdvzdfv zfd|fzdvzdfvzdfvz|zfvzfdzv
+            zfdb|zfdvzdfbvzb|zdfvzdfbvzdb|'advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb '|zdfbvzbszfbsfb"
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
                     "type" : 1
                 }
             ]
-        })";
+            })";
         std::string expectJson = R"({
-            "events": [
-                {
-                    "contents": {
-                        "1": "2023-12-25 1",
-                        "2": "zdfvzdfv zfdv",
-                        "3": "zfdvzdfv zfd",
-                        "4": "fzdvzdfvzdfvz",
-                        "5": "zfvzfdzv zfdb",
-                        "6": "zfdvzdfbvzb",
-                        "7": "zdfvzdfbvzdb",
-                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
-                        "9": "zdfbvzbszfbsfb",
-                        "log.file.offset": "0"
+                "events": [
+                    {
+                        "contents": {
+                            "1": "2023-12-25 1",
+                            "2": "zdfvzdfv zfdv",
+                            "3": "zfdvzdfv zfd",
+                            "4": "fzdvzdfvzdfvz",
+                            "5": "zfvzfdzv zfdb",
+                            "6": "zfdvzdfbvzb",
+                            "7": "zdfvzdfbvzdb",
+                            "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                            "9": "zdfbvzbszfbsfb",
+                            "log.file.offset": "0"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                },
-                {
-                    "contents": {
-                        "1": "2023-12-25 1",
-                        "2": "zdfvzdfv zfdv",
-                        "3": "zfdvzdfv zfd",
-                        "4": "fzdvzdfvzdfvz",
-                        "5": "zfvzfdzv zfdb",
-                        "6": "zfdvzdfbvzb",
-                        "7": "zdfvzdfbvzdb",
-                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
-                        "9": "zdfbvzbszfbsfb",
-                        "log.file.offset": "0"
+                    {
+                        "contents": {
+                            "1": "2023-12-25 1",
+                            "2": "zdfvzdfv zfdv",
+                            "3": "zfdvzdfv zfd",
+                            "4": "fzdvzdfvzdfvz",
+                            "5": "zfvzfdzv zfdb",
+                            "6": "zfdvzdfbvzb",
+                            "7": "zdfvzdfbvzdb",
+                            "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                            "9": "zdfbvzbszfbsfb",
+                            "log.file.offset": "0"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                },
-                {
-                    "contents": {
-                        "1": "2023-12-25 1",
-                        "2": "zdfvzdfv zfdv",
-                        "3": "zfdvzdfv zfd",
-                        "4": "fzdvzdfvzdfvz",
-                        "5": "zfvzfdzv zfdb",
-                        "6": "zfdvzdfbvzb",
-                        "7": "zdfvzdfbvzdb",
-                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
-                        "9": "zdfbvzbszfbsfb",
-                        "log.file.offset": "0"
+                    {
+                        "contents": {
+                            "1": "2023-12-25 1",
+                            "2": "zdfvzdfv zfdv",
+                            "3": "zfdvzdfv zfd",
+                            "4": "fzdvzdfvzdfvz",
+                            "5": "zfvzfdzv zfdb",
+                            "6": "zfdvzdfbvzb",
+                            "7": "zdfvzdfbvzdb",
+                            "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                            "9": "zdfbvzbszfbsfb",
+                            "log.file.offset": "0"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
                     },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                },
-                {
-                    "contents": {
-                        "1": "2023-12-25 1",
-                        "2": "zdfvzdfv zfdv",
-                        "3": "zfdvzdfv zfd",
-                        "4": "fzdvzdfvzdfvz",
-                        "5": "zfvzfdzv zfdb",
-                        "6": "zfdvzdfbvzb",
-                        "7": "zdfvzdfbvzdb",
-                        "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
-                        "9": "zdfbvzbszfbsfb",
-                        "log.file.offset": "0"
-                    },
-                    "timestamp": 12345678901,
-                    "timestampNanosecond": 0,
-                    "type": 1
-                }
-            ]
-        })";
+                    {
+                        "contents": {
+                            "1": "2023-12-25 1",
+                            "2": "zdfvzdfv zfdv",
+                            "3": "zfdvzdfv zfd",
+                            "4": "fzdvzdfvzdfvz",
+                            "5": "zfvzfdzv zfdb",
+                            "6": "zfdvzdfbvzb",
+                            "7": "zdfvzdfbvzdb",
+                            "8": "advfawevaevb|dvzdfvzdbfazdb|zdfvbzdfb ",
+                            "9": "zdfbvzbszfbsfb",
+                            "log.file.offset": "0"
+                        },
+                        "timestamp": 12345678901,
+                        "timestampNanosecond": 0,
+                        "type": 1
+                    }
+                ]
+            })";
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1045,7 +1119,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
         Config config;
         config.mSeparator = "|";
         config.mQuote = '\'';
-        config.mColumnKeys = {"1","2","3","4","5","6","7","8","9","10","11", "12", "13", "14", "15", "16"};
+        config.mColumnKeys = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
         config.mDiscardUnmatch = false;
         config.mUploadRawLog = false;
         config.mAdvancedConfig.mRawLogTag = "__raw__";
@@ -1080,37 +1154,37 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
         std::string inJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
+            "events" :
+            [
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
-                    "log.file.offset": "0"
+                    "contents" :
+                    {
+                        "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "type" : 1
                 },
-                "timestamp" : 12345678901,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
-                    "log.file.offset": "0"
+                    "contents" :
+                    {
+                        "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "type" : 1
                 },
-                "timestamp" : 12345678901,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
-                    "log.file.offset": "0"
-                },
-                "timestamp" : 12345678901,
-                "type" : 1
-            }
-        ]
-    })";
+                    "contents" :
+                    {
+                        "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                }
+            ]
+        })";
         eventGroup.FromJsonString(inJson);
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
@@ -1120,43 +1194,43 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         processor.Process(eventGroup);
         std::string expectJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
+            "events" :
+            [
                 {
-                    "log.file.offset": "0",
-                    "method": "POST",
-                    "request_time": "0.024",
-                    "time": "2013-10-31 21:03:49",
-                    "url": "PutData?Category=YunOsAccountOpLog"
+                    "contents" :
+                    {
+                        "log.file.offset": "0",
+                        "method": "POST",
+                        "request_time": "0.024",
+                        "time": "2013-10-31 21:03:49",
+                        "url": "PutData?Category=YunOsAccountOpLog"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
-                    "log.file.offset": "0"
+                    "contents" :
+                    {
+                        "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
-                    "log.file.offset": "0"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
-                "type" : 1
-            }
-        ]
-    })";
+                    "contents" :
+                    {
+                        "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
+                }
+            ]
+        })";
         // judge result
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
@@ -1166,19 +1240,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
 void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
     {
         // make config
-        Json::Value config;
-        config["SourceKey"] = "content";
-        config["Separator"] = ",";
-        config["Quote"] = "'";
-        config["Keys"] = Json::arrayValue;
-        config["Keys"].append("time");
-        config["Keys"].append("method");
-        config["Keys"].append("url");
-        config["Keys"].append("request_time");
-        config["KeepingSourceWhenParseFail"] = true;
-        config["KeepingSourceWhenParseSucceed"] = false;
-        config["RenamedSourceKey"] = "rawLog";
-        config["AllowingShortenedFields"] = false;
+        Config config;
+        config.mSeparator = ",";
+        config.mQuote = '\'';
+        config.mColumnKeys = {"time", "method", "url", "request_time"};
+        config.mDiscardUnmatch = false;
+        config.mUploadRawLog = false;
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1263,8 +1330,9 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
-        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
+        ComponentConfig componetConfig(pluginId, config);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componetConfig, mContext));
         processor.Process(eventGroup);
         std::string expectJson = R"({
             "events" :
@@ -1272,7 +1340,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,''PutData?Category=YunOsAccountOpLog,0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,''PutData?Category=YunOsAccountOpLog,0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1281,7 +1349,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,PutData?Category=YunOs''AccountOpLog,0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,PutData?Category=YunOs''AccountOpLog,0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1290,7 +1358,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,PutData?Category=YunOsAccountOpLog'',0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,PutData?Category=YunOsAccountOpLog'',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1299,7 +1367,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,''PutData?Category=YunOsAccountOpLog',0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,''PutData?Category=YunOsAccountOpLog',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1308,7 +1376,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,'PutData?Category=Yun'Os'AccountOpLog',0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=Yun'Os'AccountOpLog',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1329,7 +1397,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessDoubleQuote() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog'',0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog'',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1524,7 +1592,8 @@ void ProcessorParseDelimiterNativeUnittest::TestAddLog() {
     char value[] = "value";
     processor.AddLog(key, value, *logEvent);
     // check observability
-    APSARA_TEST_EQUAL_FATAL(int(strlen(key) + strlen(value) + 5), processor.GetContext().GetProcessProfile().logGroupSize);
+    APSARA_TEST_EQUAL_FATAL(int(strlen(key) + strlen(value) + 5),
+                            processor.GetContext().GetProcessProfile().logGroupSize);
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
@@ -1759,19 +1828,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
 void ProcessorParseDelimiterNativeUnittest::TestEmpty() {
     {
         // make config
-        Json::Value config;
-        config["SourceKey"] = "content";
-        config["Separator"] = ",";
-        config["Quote"] = "'";
-        config["Keys"] = Json::arrayValue;
-        config["Keys"].append("time");
-        config["Keys"].append("method");
-        config["Keys"].append("url");
-        config["Keys"].append("request_time");
-        config["KeepingSourceWhenParseFail"] = true;
-        config["KeepingSourceWhenParseSucceed"] = false;
-        config["RenamedSourceKey"] = "rawLog";
-        config["AllowingShortenedFields"] = false;
+        Config config;
+        config.mSeparator = ",";
+        config.mQuote = '\'';
+        config.mColumnKeys = {"time", "method", "url", "request_time"};
+        config.mDiscardUnmatch = false;
+        config.mUploadRawLog = false;
         // make events
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -1838,8 +1900,9 @@ void ProcessorParseDelimiterNativeUnittest::TestEmpty() {
         // run function
         ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
         std::string pluginId = "testID";
-        ProcessorInstance processorInstance(&processor, pluginId);
-        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        ComponentConfig componentConfig(pluginId, config);
+        ProcessorInstance processorInstance(&processor, getPluginMeta());
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
         processor.Process(eventGroup);
         std::string expectJson = R"({
             "events" :
@@ -1880,7 +1943,7 @@ void ProcessorParseDelimiterNativeUnittest::TestEmpty() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,''',0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,''',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1901,7 +1964,7 @@ void ProcessorParseDelimiterNativeUnittest::TestEmpty() {
                 {
                     "contents" :
                     {
-                        "rawLog": "2013-10-31 21:03:49,POST,',0.024"
+                        "__raw_log__": "2013-10-31 21:03:49,POST,',0.024"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
