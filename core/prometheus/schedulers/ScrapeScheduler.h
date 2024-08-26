@@ -58,7 +58,7 @@ public:
 private:
     void PushEventGroup(PipelineEventGroup&&);
 
-    PipelineEventGroup BuildPipelineEventGroup(const std::string& content, uint64_t timestampNs);
+    PipelineEventGroup BuildPipelineEventGroup(const std::string& content);
 
     std::unique_ptr<TimerEvent> BuildScrapeTimerEvent(std::chrono::steady_clock::time_point execTime);
 

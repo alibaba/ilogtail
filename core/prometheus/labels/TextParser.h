@@ -29,10 +29,10 @@ class TextParser {
 public:
     TextParser() = default;
 
-    PipelineEventGroup Parse(const std::string& content, uint64_t defaultNanoTs);
-    PipelineEventGroup BuildLogGroup(const std::string& content, uint64_t defaultNanoTs);
+    PipelineEventGroup Parse(const std::string& content, uint64_t defaultTimestamp, uint32_t defaultNanoTs);
+    PipelineEventGroup BuildLogGroup(const std::string& content);
 
-    bool ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent);
+    bool ParseLine(StringView line, uint64_t defaultTimestamp, uint32_t defaultNanoTs, MetricEvent& metricEvent);
 
 private:
     void HandleError(const std::string& errMsg);

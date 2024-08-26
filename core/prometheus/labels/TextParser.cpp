@@ -40,7 +40,7 @@ bool IsValidNumberChar(char c) {
     return sValidChars.count(c);
 };
 
-PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNanoTs) {
+PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultTimestamp, uint32_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     vector<StringView> lines;
     lines.reserve(content.size() / 1024);
@@ -50,7 +50,7 @@ PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNano
             continue;
         }
         auto metricEvent = eGroup.CreateMetricEvent();
-        if (ParseLine(line, defaultNanoTs, *metricEvent)) {
+        if (ParseLine(line, defaultTimestamp, defaultNanoTs, *metricEvent)) {
             eGroup.MutableEvents().emplace_back(std::move(metricEvent));
         }
     }
@@ -58,7 +58,7 @@ PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultNano
     return eGroup;
 }
 
-PipelineEventGroup TextParser::BuildLogGroup(const string& content, uint64_t defaultNanoTs) {
+PipelineEventGroup TextParser::BuildLogGroup(const string& content) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     vector<StringView> lines;
@@ -70,21 +70,23 @@ PipelineEventGroup TextParser::BuildLogGroup(const string& content, uint64_t def
         }
         auto* logEvent = eGroup.AddLogEvent();
         logEvent->SetContent(prometheus::PROMETHEUS, line);
-        logEvent->SetTimestamp(defaultNanoTs / 1000000000, defaultNanoTs % 1000000000);
     }
 
     return eGroup;
 }
 
-bool TextParser::ParseLine(StringView line, uint64_t defaultNanoTs, MetricEvent& metricEvent) {
+bool TextParser::ParseLine(StringView line,
+                           uint64_t defaultTimestamp,
+                           uint32_t defaultNanoTs,
+                           MetricEvent& metricEvent) {
     mLine = line;
     mPos = 0;
     mState = TextState::Start;
     mLabelName.clear();
     mTokenLength = 0;
-    if (defaultNanoTs > 0) {
-        mTimestamp = defaultNanoTs / 1000000000;
-        mNanoTimestamp = defaultNanoTs % 1000000000;
+    if (defaultTimestamp > 0) {
+        mTimestamp = defaultTimestamp;
+        mNanoTimestamp = defaultNanoTs;
     }
 
     HandleStart(metricEvent);

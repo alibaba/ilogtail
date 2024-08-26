@@ -72,13 +72,13 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response) {
                     ("scrape failed, status code", response.mStatusCode)("target", mHash)("http header", headerStr));
         return;
     }
-    auto eventGroup = BuildPipelineEventGroup(response.mBody, timestampInNs);
+    auto eventGroup = BuildPipelineEventGroup(response.mBody);
 
     PushEventGroup(std::move(eventGroup));
 }
 
-PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content, uint64_t timestampNs) {
-    return mParser->BuildLogGroup(content, timestampNs);
+PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {
+    return mParser->BuildLogGroup(content);
 }
 
 void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
