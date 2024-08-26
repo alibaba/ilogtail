@@ -128,7 +128,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
     if (mColumnKeys.size() > 0) {
         if (useQuote) {
             columnValues.reserve(reserveSize);
-            parseSuccess = mDelimiterModeFsmParserPtr->ParseDelimiterLine(buffer, begIdx, endIdx, columnValues);
+            parseSuccess
+                = mDelimiterModeFsmParserPtr->ParseDelimiterLine(buffer, begIdx, endIdx, columnValues, sourceEvent);
             // handle auto extend
             if (!mAutoExtend && columnValues.size() > mColumnKeys.size()) {
                 int requiredLen = 0;
