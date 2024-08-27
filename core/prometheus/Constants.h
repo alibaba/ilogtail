@@ -101,4 +101,10 @@ const char* const UP = "up";
 
 const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
+// scrape config compression
+const char* const ENABLE_COMPRESSION = "enable_compression";
+const char* const ACCEPT_ENCODING = "Accept-Encoding";
+const char* const GZIP = "gzip";
+const char* const IDENTITY = "identity";
+
 } // namespace logtail::prometheus

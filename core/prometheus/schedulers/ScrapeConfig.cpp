@@ -54,6 +54,13 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         InitScrapeProtocols(nullJson);
     }
 
+    if (scrapeConfig.isMember(prometheus::ENABLE_COMPRESSION)
+        && scrapeConfig[prometheus::ENABLE_COMPRESSION].isBool()) {
+        InitEnableCompression(scrapeConfig[prometheus::ENABLE_COMPRESSION].asBool());
+    } else {
+        InitEnableCompression(true);
+    }
+
     if (scrapeConfig.isMember(prometheus::METRICS_PATH) && scrapeConfig[prometheus::METRICS_PATH].isString()) {
         mMetricsPath = scrapeConfig[prometheus::METRICS_PATH].asString();
     }
@@ -314,6 +321,14 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
     tmpScrapeProtocols.push_back("*/*;q=0." + ToString(weight));
     mRequestHeaders[prometheus::ACCEPT] = join(tmpScrapeProtocols, ",");
     return true;
+}
+
+void ScrapeConfig::InitEnableCompression(bool enableCompression) {
+    if (enableCompression) {
+        mRequestHeaders[prometheus::ACCEPT_ENCODING] = prometheus::GZIP;
+    } else {
+        mRequestHeaders[prometheus::ACCEPT_ENCODING] = prometheus::IDENTITY;
+    }
 }
 
 } // namespace logtail

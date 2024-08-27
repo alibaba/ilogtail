@@ -22,7 +22,8 @@ public:
     std::string mScheme;
 
     // auth header
-    // scrape_protocols header: PrometheusProto, OpenMetricsText0.0.1, OpenMetricsText1.0.0, PrometheusText0.0.4
+    // scrape_protocols Accept header: PrometheusProto, OpenMetricsText0.0.1, OpenMetricsText1.0.0, PrometheusText0.0.4
+    // enable_compression Accept-Encoding header: gzip, identity
     std::map<std::string, std::string> mRequestHeaders;
 
     int64_t mMaxScrapeSizeBytes;
@@ -41,6 +42,7 @@ private:
     bool InitBasicAuth(const Json::Value& basicAuth);
     bool InitAuthorization(const Json::Value& authorization);
     bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
+    void InitEnableCompression(bool enableCompression);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;

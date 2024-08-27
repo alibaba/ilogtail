@@ -18,6 +18,7 @@ public:
     void TestBasicAuth();
     void TestAuthorization();
     void TestScrapeProtocols();
+    void TestEnableCompression();
 
 private:
     void SetUp() override;
@@ -61,6 +62,7 @@ void ScrapeConfigUnittest::TestInit() {
                 "PrometheusProto",
                 "OpenMetricsText0.0.1"
             ],
+            "enable_compression": false,
             "scheme": "http",
             "basic_auth": {
                 "username": "test_user",
@@ -103,6 +105,9 @@ void ScrapeConfigUnittest::TestInit() {
                       "text/plain;version=0.0.4;q=0.4,application/"
                       "vnd.google.protobuf;proto=io.prometheus.client.MetricFamily;encoding=delimited;q=0.3,"
                       "application/openmetrics-text;version=0.0.1;q=0.2,*/*;q=0.1");
+
+    // disable compression
+    APSARA_TEST_EQUAL(scrapeConfig.mRequestHeaders["Accept-Encoding"], "identity");
 
     // basic auth
     APSARA_TEST_EQUAL(scrapeConfig.mRequestHeaders["Authorization"], "Basic dGVzdF91c2VyOnRlc3RfcGFzc3dvcmQ=");
@@ -295,11 +300,60 @@ void ScrapeConfigUnittest::TestScrapeProtocols() {
     APSARA_TEST_FALSE(scrapeConfig.Init(config));
 }
 
+void ScrapeConfigUnittest::TestEnableCompression() {
+    Json::Value config;
+    ScrapeConfig scrapeConfig;
+    string errorMsg;
+    string configStr;
+
+    // default
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http"
+        })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL("gzip", scrapeConfig.mRequestHeaders["Accept-Encoding"]);
+
+    // disable
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "enable_compression": false
+        })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL("identity", scrapeConfig.mRequestHeaders["Accept-Encoding"]);
+
+    // enable
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "enable_compression": true
+        })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL("gzip", scrapeConfig.mRequestHeaders["Accept-Encoding"]);
+}
+
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestInit);
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestAuth);
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestBasicAuth);
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestAuthorization);
 UNIT_TEST_CASE(ScrapeConfigUnittest, TestScrapeProtocols);
+UNIT_TEST_CASE(ScrapeConfigUnittest, TestEnableCompression);
 
 } // namespace logtail
 
