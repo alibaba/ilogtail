@@ -153,6 +153,7 @@ namespace sdk {
         CURLcode res = curl_easy_perform(curl);
         if (headers != NULL) {
             curl_slist_free_all(headers);
+            headers = NULL;
         }
 
         switch (res) {

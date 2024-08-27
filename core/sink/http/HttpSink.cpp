@@ -225,6 +225,7 @@ void HttpSink::HandleCompletedRequests() {
 
             if (request->mPrivateData) {
                 curl_slist_free_all((curl_slist*)request->mPrivateData);
+                request->mPrivateData = nullptr;
             }
             curl_multi_remove_handle(mClient, handler);
             curl_easy_cleanup(handler);
