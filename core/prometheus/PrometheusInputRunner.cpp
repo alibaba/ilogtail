@@ -112,9 +112,14 @@ void PrometheusInputRunner::Start() {
                             LOG_ERROR(sLogger, ("register failed, parse response failed", responseStr));
                         }
                         if (responseJson.isMember(prometheus::UNREGISTER_MS)
-                            && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
-                            mUnRegisterMs = responseJson[prometheus::UNREGISTER_MS].asUInt64();
-                            LOG_INFO(sLogger, ("unRegisterMs", ToString(mUnRegisterMs)));
+                            && responseJson[prometheus::UNREGISTER_MS].isString()) {
+                            auto tmpStr = responseJson[prometheus::UNREGISTER_MS].asString();
+                            if (tmpStr.empty()) {
+                                mUnRegisterMs = 0;
+                            } else {
+                                mUnRegisterMs = StringTo<uint64_t>(tmpStr);
+                                LOG_INFO(sLogger, ("unRegisterMs", ToString(mUnRegisterMs)));
+                            }
                         }
                     }
                     LOG_INFO(sLogger, ("Register Success", mPodName));
