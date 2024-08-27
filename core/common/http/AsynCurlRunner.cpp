@@ -211,9 +211,6 @@ void AsynCurlRunner::HandleCompletedRequests() {
                     break;
             }
 
-            if (request->mPrivateData) {
-                curl_slist_free_all((curl_slist*)request->mPrivateData);
-            }
             curl_multi_remove_handle(mClient, handler);
             curl_easy_cleanup(handler);
             if (!requestReused) {
