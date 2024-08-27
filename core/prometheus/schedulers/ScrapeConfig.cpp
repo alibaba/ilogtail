@@ -18,10 +18,7 @@ using namespace std;
 namespace logtail {
 ScrapeConfig::ScrapeConfig()
     : mScrapeIntervalSeconds(60),
-    : mScrapeIntervalSeconds(60),
       mScrapeTimeoutSeconds(10),
-      mMetricsPath("/metrics"),
-      mScheme("http"),
       mMetricsPath("/metrics"),
       mScheme("http"),
       mMaxScrapeSizeBytes(-1),
@@ -188,12 +185,12 @@ bool ScrapeConfig::InitBasicAuth(const Json::Value& basicAuth) {
         LOG_ERROR(sLogger, ("basic auth config error", ""));
         return false;
     }
-    if (!usernameFile.empty() && !ReadFromFile(usernameFile, username)) {
+    if (!usernameFile.empty() && !ReadFile(usernameFile, username)) {
         LOG_ERROR(sLogger, ("read username_file failed, username_file", usernameFile));
         return false;
     }
 
-    if (!passwordFile.empty() && !ReadFromFile(passwordFile, password)) {
+    if (!passwordFile.empty() && !ReadFile(passwordFile, password)) {
         LOG_ERROR(sLogger, ("read password_file failed, password_file", passwordFile));
         return false;
     }
@@ -229,7 +226,7 @@ bool ScrapeConfig::InitAuthorization(const Json::Value& authorization) {
         return false;
     }
 
-    if (!credentialsFile.empty() && !ReadFromFile(credentialsFile, credentials)) {
+    if (!credentialsFile.empty() && !ReadFile(credentialsFile, credentials)) {
         LOG_ERROR(sLogger, ("authorization read file error", ""));
         return false;
     }
@@ -314,15 +311,6 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
     tmpScrapeProtocols.push_back("*/*;q=0." + ToString(weight));
     mRequestHeaders[prometheus::ACCEPT] = join(tmpScrapeProtocols, ",");
     return true;
-}
-
-bool ScrapeConfig::ReadFromFile(const std::string& filePath, std::string& content) {
-#ifdef APSARA_UNIT_TEST_MAIN
-    content = filePath;
-    return true;
-#else
-    return ReadFile(filePath, content);
-#endif
 }
 
 } // namespace logtail
