@@ -369,18 +369,11 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(
     }
     LogFileReaderPtrArray& readerArray = mNameReaderMap[name];
 
-    LogFileReaderPtr readerPtr(LogFileReader::CreateLogFileReader(path,
-                                                                  name,
-                                                                  devInode,
-                                                                  readerConfig,
-                                                                  multilineConfig,
-                                                                  discoveryConfig,
-                                                                  exactlyonceConcurrency,
-                                                                  forceBeginingFlag));
+    LogFileReaderPtr readerPtr(pConfig->CreateLogFileReader(path, name, devInode, forceBeginingFlag));
     if (readerPtr.get() == NULL)
         return LogFileReaderPtr();
 
-    if (readerArray.size() >= readerConfig.first->mRotatorQueueSize
+    if (readerArray.size() >= pConfig->mAdvancedConfig.mMaxRotateQueueSize
         && readerPtr->GetIdxInReaderArrayFromLastCpt() == LogFileReader::CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY) {
         int32_t nowTime = time(NULL);
         if (nowTime - mLastOverflowErrorTime > INT32_FLAG(rotate_overflow_error_interval)) {
@@ -451,22 +444,19 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(
     }
 
     int32_t idx = readerPtr->GetIdxInReaderArrayFromLastCpt();
-    // new reader
-    if (backFlag) {
+    if (backFlag) { // new reader
         readerArray.push_back(readerPtr);
         mDevInodeReaderMap[devInode] = readerPtr;
-        // reader not in reader array
-    } else if (idx == LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY) {
+    } else if (idx == LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY) { // reader not in reader array
         mRotatorReaderMap[devInode] = readerPtr;
-        // reader in reader array
-    } else if (idx >= 0) {
+    } else if (idx >= 0) { // reader in reader array
         readerArray.push_back(readerPtr);
         mDevInodeReaderMap[devInode] = readerPtr;
         std::stable_sort(readerArray.begin(), readerArray.end(), ModifyHandler::CompareReaderByIdxFromCpt);
     } else {
-        LOG_ERROR(sLogger,
-                  ("unexpected idx", idx)("real log path", readerPtr->GetRealLogPath())("host log path",
-                                                                                        readerPtr->GetHostLogPath()));
+        LOG_WARNING(sLogger,
+                    ("unexpected idx (perhaps because first checkpoint load after upgrade)",
+                     idx)("real log path", readerPtr->GetRealLogPath())("host log path", readerPtr->GetHostLogPath()));
         return LogFileReaderPtr();
     }
     readerPtr->SetReaderArray(&readerArray);
@@ -958,7 +948,7 @@ void ModifyHandler::HandleTimeOut() {
 bool ModifyHandler::DumpReaderMeta(bool isRotatorReader, bool checkConfigFlag) {
     if (!isRotatorReader) {
         for (DevInodeLogFileReaderMap::iterator it = mDevInodeReaderMap.begin(); it != mDevInodeReaderMap.end(); ++it) {
-            int32_t idxInReaderArray = -2;
+            int32_t idxInReaderArray = LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY;
             for (size_t i = 0; i < it->second->GetReaderArray()->size(); ++i) {
                 if (it->second->GetReaderArray()->at(i) == it->second) {
                     idxInReaderArray = i;
@@ -969,7 +959,7 @@ bool ModifyHandler::DumpReaderMeta(bool isRotatorReader, bool checkConfigFlag) {
         }
     } else {
         for (DevInodeLogFileReaderMap::iterator it = mRotatorReaderMap.begin(); it != mRotatorReaderMap.end(); ++it) {
-            it->second->DumpMetaToMem(checkConfigFlag, -2);
+            it->second->DumpMetaToMem(checkConfigFlag, LogFileReader::CHECKPOINT_IDX_OF_NOT_IN_READER_ARRAY);
         }
     }
     return true;

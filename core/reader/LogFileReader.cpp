@@ -85,114 +85,6 @@ namespace logtail {
 
 size_t LogFileReader::BUFFER_SIZE = 1024 * 512; // 512KB
 
-LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
-                                                  const string& hostLogPathFile,
-                                                  const DevInode& devInode,
-                                                  const FileReaderConfig& readerConfig,
-                                                  const MultilineConfig& multilineConfig,
-                                                  const FileDiscoveryConfig& discoveryConfig,
-                                                  uint32_t exactlyonceConcurrency,
-                                                  bool forceFromBeginning) {
-    LogFileReader* reader = nullptr;
-    if (readerConfig.second->RequiringJsonReader()) {
-        reader = new JsonLogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
-    } else {
-        reader = new LogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
-    }
-
-    if (reader) {
-        if (forceFromBeginning) {
-            reader->SetReadFromBeginning();
-        }
-        if (discoveryConfig.first->IsContainerDiscoveryEnabled()) {
-            DockerContainerPath* containerPath = discoveryConfig.first->GetContainerPathByLogPath(hostLogPathDir);
-            if (containerPath == NULL) {
-                LOG_ERROR(sLogger,
-                          ("can not get container path by log path, base path",
-                           discoveryConfig.first->GetBasePath())("host path", hostLogPathDir + "/" + hostLogPathFile));
-            } else {
-                // if config have wildcard path, use mWildcardPaths[0] as base path
-                reader->SetDockerPath(!discoveryConfig.first->GetWildcardPaths().empty()
-                                          ? discoveryConfig.first->GetWildcardPaths()[0]
-                                          : discoveryConfig.first->GetBasePath(),
-                                      containerPath->mContainerPath.size());
-                reader->AddExtraTags(containerPath->mContainerTags);
-            }
-        }
-        if (readerConfig.first->mAppendingLogPositionMeta) {
-            sls_logs::LogTag inodeTag;
-            inodeTag.set_key(LOG_RESERVED_KEY_INODE);
-            inodeTag.set_value(std::to_string(devInode.inode));
-            reader->AddExtraTags(std::vector<sls_logs::LogTag>{inodeTag});
-        }
-
-        GlobalConfig::TopicType topicType = readerConfig.second->GetGlobalConfig().mTopicType;
-        const string& topicFormat = readerConfig.second->GetGlobalConfig().mTopicFormat;
-        string topicName;
-        if (topicType == GlobalConfig::TopicType::CUSTOM || topicType == GlobalConfig::TopicType::MACHINE_GROUP_TOPIC) {
-            topicName = topicFormat;
-        } else if (topicType == GlobalConfig::TopicType::FILEPATH) {
-            topicName = reader->GetTopicName(topicFormat, reader->GetHostLogPath());
-        } else if (topicType == GlobalConfig::TopicType::DEFAULT && readerConfig.second->IsFirstProcessorApsara()) {
-            size_t pos_dot = reader->GetHostLogPath().rfind("."); // the "." must be founded
-            size_t pos = reader->GetHostLogPath().find("@");
-            if (pos != std::string::npos) {
-                size_t pos_slash = reader->GetHostLogPath().find(PATH_SEPARATOR, pos);
-                if (pos_slash != std::string::npos) {
-                    topicName = reader->GetHostLogPath().substr(0, pos)
-                        + reader->GetHostLogPath().substr(pos_slash, pos_dot - pos_slash);
-                }
-            }
-            if (topicName.empty()) {
-                topicName = reader->GetHostLogPath().substr(0, pos_dot);
-            }
-            std::string lowTopic = ToLowerCaseString(topicName);
-            std::string logSuffix = ".log";
-
-            size_t suffixPos = lowTopic.rfind(logSuffix);
-            if (suffixPos == lowTopic.size() - logSuffix.size()) {
-                topicName = topicName.substr(0, suffixPos);
-            }
-        }
-        reader->SetTopicName(topicName);
-
-#ifndef _MSC_VER // Unnecessary on platforms without symbolic.
-        fsutil::PathStat buf;
-        if (!fsutil::PathStat::lstat(reader->GetHostLogPath(), buf)) {
-            // should not happen
-            reader->SetSymbolicLinkFlag(false);
-            LOG_ERROR(sLogger,
-                      ("failed to stat file", reader->GetHostLogPath())("set symbolic link flag to false", ""));
-        } else {
-            reader->SetSymbolicLinkFlag(buf.IsLink());
-        }
-#endif
-
-        reader->InitReader(
-            readerConfig.first->mTailingAllMatchedFiles, LogFileReader::BACKWARD_TO_FIXED_POS, exactlyonceConcurrency);
-    }
-    return reader;
-}
-
-LogFileReader::LogFileReader(const std::string& hostLogPathDir,
-                             const std::string& hostLogPathFile,
-                             const DevInode& devInode,
-                             const FileReaderConfig& readerConfig,
-                             const MultilineConfig& multilineConfig)
-    : mHostLogPathDir(hostLogPathDir),
-      mHostLogPathFile(hostLogPathFile),
-      mDevInode(devInode),
-      mReaderConfig(readerConfig),
-      mMultilineConfig(multilineConfig) {
-    mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
-    mLastUpdateTime = time(NULL);
-    mLastEventTime = mLastUpdateTime;
-    mProject = readerConfig.second->GetProjectName();
-    mLogstore = readerConfig.second->GetLogstoreName();
-    mConfigName = readerConfig.second->GetConfigName();
-    mRegion = readerConfig.second->GetRegion();
-}
-
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray) {
     if (checkConfigFlag) {
         size_t index = mHostLogPath.rfind(PATH_SEPARATOR);
@@ -235,7 +127,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
-    checkPointPtr->mPositionInReaderArray = idxInReaderArray;
+    checkPointPtr->mIdxInReaderArray = idxInReaderArray;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -281,11 +173,11 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mLastEventTime = checkPointPtr->mLastUpdateTime;
             mContainerStopped = checkPointPtr->mContainerStopped;
             // new property to recover reader exactly from checkpoint
-            mIdxInReaderArrayFromLastCpt = checkPointPtr->mPositionInReaderArray;
+            mIdxInReaderArrayFromLastCpt = checkPointPtr->mIdxInReaderArray;
             LOG_INFO(sLogger,
-                     ("recover log reader status from checkpoint, project", GetProject())("logstore", GetLogstore())(
-                         "config", GetConfigName())("log reader queue name", mHostLogPath)("file device",
-                                                                                           ToString(mDevInode.dev))(
+                     ("recover log reader status from checkpoint, project", mProjectName)("logstore", mCategory)(
+                         "config", mConfigName)("log reader queue name", mHostLogPath)("file device",
+                                                                                       ToString(mDevInode.dev))(
                          "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
                          "file signature size", mLastFileSignatureSize)("real file path", mRealLogPath)(
                          "last file position", mLastFilePos)("index in reader array", mIdxInReaderArrayFromLastCpt));
