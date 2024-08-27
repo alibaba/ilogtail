@@ -11,7 +11,6 @@
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
 #include "sdk/Common.h"
-#include "sdk/Common.h"
 
 using namespace std;
 
@@ -266,6 +265,7 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
             if (scrapeProtocol.isString()) {
                 res.push_back(scrapeProtocol.asString());
             } else {
+                LOG_ERROR(sLogger, ("scrape_protocols config error", ""));
                 return false;
             }
         }
@@ -293,8 +293,11 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
 
     vector<string> tmpScrapeProtocols;
 
-    getScrapeProtocols(scrapeProtocols, tmpScrapeProtocols);
+    if (!getScrapeProtocols(scrapeProtocols, tmpScrapeProtocols)) {
+        return false;
+    }
 
+    // if scrape_protocols is empty, use default protocols
     if (tmpScrapeProtocols.empty()) {
         tmpScrapeProtocols = sDefaultScrapeProtocols;
     }

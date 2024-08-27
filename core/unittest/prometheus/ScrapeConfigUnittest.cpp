@@ -240,7 +240,7 @@ void ScrapeConfigUnittest::TestAuthorization() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     scrapeConfig.mRequestHeaders.clear();
     APSARA_TEST_TRUE(scrapeConfig.Init(config));
-    APSARA_TEST_EQUAL(scrapeConfig.mRequestHeaders["Authorization"], "Bearer "+mKey);
+    APSARA_TEST_EQUAL(scrapeConfig.mRequestHeaders["Authorization"], "Bearer " + mKey);
 }
 
 void ScrapeConfigUnittest::TestScrapeProtocols() {
@@ -248,6 +248,23 @@ void ScrapeConfigUnittest::TestScrapeProtocols() {
     ScrapeConfig scrapeConfig;
     string errorMsg;
     string configStr;
+
+    // default
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http"
+        })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL(
+        "text/plain;version=0.0.4;q=0.5,application/"
+        "vnd.google.protobuf;proto=io.prometheus.client.MetricFamily;encoding=delimited;q=0.4,application/"
+        "openmetrics-text;version=0.0.1;q=0.3,application/openmetrics-text;version=1.0.0;q=0.2,*/*;q=0.1",
+        scrapeConfig.mRequestHeaders["Accept"]);
 
     // error1
     configStr = R"JSON({
