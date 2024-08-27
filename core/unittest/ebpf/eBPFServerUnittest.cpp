@@ -514,6 +514,9 @@ void eBPFServerUnittest::TestEnableNetworkPlugin() {
             "Type": "input_ebpf_sockettraceprobe_observer",
             "ProbeConfig": 
             {
+                "EnableLog": true,
+                "EnableMetric": true,
+                "EnableSpan": true,
                 "EnableProtocols": [
                     "http"
                 ],

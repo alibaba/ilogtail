@@ -183,8 +183,8 @@ struct ObserverNetworkOption {
     bool mDisableProtocolParse = false;
     bool mDisableConnStats = false;
     bool mEnableConnTrackerDump = false;
-    bool mEnableSpan = true;
-    bool mEnableMetric = true;
+    bool mEnableSpan = false;
+    bool mEnableMetric = false;
     bool mEnableLog = true;
     std::string mMeterHandlerType;
     std::string mSpanHandlerType;

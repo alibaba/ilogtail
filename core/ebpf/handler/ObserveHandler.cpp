@@ -58,13 +58,13 @@ void FUNC_NAME(PipelineEventGroup& group, std::unique_ptr<Measure>& measure, uin
 void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) {
     if (measures.empty()) return;
 
-    for (auto& app_batch_measures : measures) {
-        PipelineEventGroup event_group(std::make_shared<SourceBuffer>());
-        for (auto& measure : app_batch_measures->measures_) {
+    for (auto& appBatchMeasures : measures) {
+        PipelineEventGroup eventGroup(std::make_shared<SourceBuffer>());
+        for (auto& measure : appBatchMeasures->measures_) {
             auto type = measure->type_;
             if (type == MeasureType::MEASURE_TYPE_APP) {
                 auto inner = static_cast<AppSingleMeasure*>(measure->inner_measure_.get());
-                auto event = event_group.AddMetricEvent();
+                auto event = eventGroup.AddMetricEvent();
                 for (auto& tag : measure->tags_) {
                     event->SetTag(tag.first, tag.second);
                 }
@@ -77,7 +77,7 @@ void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(eventGroup), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
             LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Otel Metrics] push queue failed!", ""));
         }
@@ -89,12 +89,12 @@ void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
     if (spans.empty()) return;
 
-    std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup event_group(source_buffer);
+    std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
 
     for (auto& span : spans) {
         for (auto& x : span->single_spans_) {
-            auto spanEvent = event_group.AddSpanEvent();
+            auto spanEvent = eventGroup.AddSpanEvent();
             for (auto& tag : x->tags_) {
                 spanEvent->SetTag(tag.first, tag.second);
             }
@@ -109,7 +109,7 @@ void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(eventGroup), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
             LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Span] push queue failed!", ""));
         }
@@ -198,11 +198,11 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
     if (spans.empty()) return;
 
     for (auto& span : spans) {
-        std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();
-        PipelineEventGroup event_group(source_buffer);
-        event_group.SetTag(app_id_key, span->app_id_);
+        std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.SetTag(app_id_key, span->app_id_);
         for (auto& x : span->single_spans_) {
-            auto spanEvent = event_group.AddSpanEvent();
+            auto spanEvent = eventGroup.AddSpanEvent();
             for (auto& tag : x->tags_) {
                 spanEvent->SetTag(tag.first, tag.second);
             }
@@ -217,7 +217,7 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(eventGroup), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
             LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Span] push queue failed!", ""));
         }
@@ -229,30 +229,30 @@ void ArmsSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&
 void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp) {
     if (measures.empty()) return;
 
-    for (auto& app_batch_measures : measures) {
-        std::shared_ptr<SourceBuffer> source_buffer = std::make_shared<SourceBuffer>();;
-        PipelineEventGroup event_group(source_buffer);
+    for (auto& appBatchMeasures : measures) {
+        std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();;
+        PipelineEventGroup eventGroup(sourceBuffer);
         
         // source_ip
-        event_group.SetTag(std::string(app_id_key), app_batch_measures->app_id_);
-        event_group.SetTag(std::string(ip_key), app_batch_measures->ip_);
-        for (auto& measure : app_batch_measures->measures_) {
+        eventGroup.SetTag(std::string(app_id_key), appBatchMeasures->app_id_);
+        eventGroup.SetTag(std::string(ip_key), appBatchMeasures->ip_);
+        for (auto& measure : appBatchMeasures->measures_) {
             auto type = measure->type_;
             if (type == MeasureType::MEASURE_TYPE_APP) {
-                GenerateRequestsTotalMetrics(event_group, measure, timestamp);
-                GenerateRequestsSlowMetrics(event_group, measure, timestamp);
-                GenerateRequestsErrorMetrics(event_group, measure, timestamp);
-                GenerateRequestsDurationSumMetrics(event_group, measure, timestamp);
-                GenerateRequestsStatusMetrics(event_group, measure, timestamp);
+                GenerateRequestsTotalMetrics(eventGroup, measure, timestamp);
+                GenerateRequestsSlowMetrics(eventGroup, measure, timestamp);
+                GenerateRequestsErrorMetrics(eventGroup, measure, timestamp);
+                GenerateRequestsDurationSumMetrics(eventGroup, measure, timestamp);
+                GenerateRequestsStatusMetrics(eventGroup, measure, timestamp);
                 
             } else if (type == MeasureType::MEASURE_TYPE_NET) {
-                GenerateTcpDropTotalMetrics(event_group, measure, timestamp);
-                GenerateTcpRetransTotalMetrics(event_group, measure, timestamp);
-                GenerateTcpConnectionTotalMetrics(event_group, measure, timestamp);
-                GenerateTcpRecvPktsTotalMetrics(event_group, measure, timestamp);
-                GenerateTcpRecvBytesTotalMetrics(event_group, measure, timestamp);
-                GenerateTcpSendPktsTotalMetrics(event_group, measure, timestamp);
-                GenerateTcpSendBytesTotalMetrics(event_group, measure, timestamp);
+                GenerateTcpDropTotalMetrics(eventGroup, measure, timestamp);
+                GenerateTcpRetransTotalMetrics(eventGroup, measure, timestamp);
+                GenerateTcpConnectionTotalMetrics(eventGroup, measure, timestamp);
+                GenerateTcpRecvPktsTotalMetrics(eventGroup, measure, timestamp);
+                GenerateTcpRecvBytesTotalMetrics(eventGroup, measure, timestamp);
+                GenerateTcpSendPktsTotalMetrics(eventGroup, measure, timestamp);
+                GenerateTcpSendBytesTotalMetrics(eventGroup, measure, timestamp);
             }
             mProcessTotalCnt++;
         }
@@ -260,7 +260,7 @@ void ArmsMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 #ifdef APSARA_UNIT_TEST_MAIN
         continue;
 #endif
-        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(event_group), mPluginIdx);
+        std::unique_ptr<ProcessQueueItem> item = std::make_unique<ProcessQueueItem>(std::move(eventGroup), mPluginIdx);
         if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
             LOG_WARNING(sLogger, ("configName", mCtx->GetConfigName())("pluginIdx",mPluginIdx)("[Metrics] push queue failed!", ""));
         }
