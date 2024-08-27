@@ -41,7 +41,7 @@ const char* const HTTP = "HTTP";
 const char* const APPLICATION_JSON = "application/json";
 const char* const HTTPS = "HTTPS";
 const char* const TARGETS = "targets";
-const char* const UNREGISTER_MS = "unregister_ms";
+const char* const UNREGISTER_MS = "unRegisterMs";
 
 // scrape config
 const char* const SCRAPE_CONFIG = "ScrapeConfig";
