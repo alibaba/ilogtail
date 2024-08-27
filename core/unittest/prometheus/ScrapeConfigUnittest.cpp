@@ -1,6 +1,8 @@
 
+#include <cstdio>
 #include <string>
 
+#include "FileSystemUtil.h"
 #include "JsonUtil.h"
 #include "json/value.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
@@ -16,7 +18,23 @@ public:
     void TestBasicAuth();
     void TestAuthorization();
     void TestScrapeProtocols();
+
+private:
+    void SetUp() override;
+    void TearDown() override;
+
+    string mFilePath = "prom_password.file";
+    string mKey = "test_password.file";
 };
+
+void ScrapeConfigUnittest::SetUp() {
+    // create test_password.file
+    OverwriteFile(mFilePath, mKey);
+}
+
+void ScrapeConfigUnittest::TearDown() {
+    remove(mFilePath.c_str());
+}
 
 void ScrapeConfigUnittest::TestInit() {
     Json::Value config;
@@ -155,7 +173,7 @@ void ScrapeConfigUnittest::TestBasicAuth() {
             "scheme": "http",
             "basic_auth": {
                 "username": "test_user",
-                "password_file": "test_password.file"
+                "password_file": "prom_password.file"
             }
         })JSON";
 
@@ -174,7 +192,7 @@ void ScrapeConfigUnittest::TestBasicAuth() {
             "basic_auth": {
                 "username": "test_user",
                 "password": "test_password",
-                "password_file": "test_password.file"
+                "password_file": "prom_password.file"
             }
         })JSON";
 
@@ -215,14 +233,14 @@ void ScrapeConfigUnittest::TestAuthorization() {
             "metrics_path": "/metrics",
             "scheme": "http",
             "authorization": {
-                "credentials_file": "test_token.file"
+                "credentials_file": "prom_password.file"
             }
         })JSON";
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
     scrapeConfig.mRequestHeaders.clear();
     APSARA_TEST_TRUE(scrapeConfig.Init(config));
-    APSARA_TEST_EQUAL(scrapeConfig.mRequestHeaders["Authorization"], "Bearer test_token.file");
+    APSARA_TEST_EQUAL(scrapeConfig.mRequestHeaders["Authorization"], "Bearer "+mKey);
 }
 
 void ScrapeConfigUnittest::TestScrapeProtocols() {

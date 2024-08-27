@@ -11,13 +11,17 @@
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
 #include "sdk/Common.h"
+#include "sdk/Common.h"
 
 using namespace std;
 
 namespace logtail {
 ScrapeConfig::ScrapeConfig()
     : mScrapeIntervalSeconds(60),
+    : mScrapeIntervalSeconds(60),
       mScrapeTimeoutSeconds(10),
+      mMetricsPath("/metrics"),
+      mScheme("http"),
       mMetricsPath("/metrics"),
       mScheme("http"),
       mMaxScrapeSizeBytes(-1),
@@ -35,6 +39,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         return false;
     }
 
+
     if (scrapeConfig.isMember(prometheus::SCRAPE_INTERVAL) && scrapeConfig[prometheus::SCRAPE_INTERVAL].isString()) {
         string tmpScrapeIntervalString = scrapeConfig[prometheus::SCRAPE_INTERVAL].asString();
         mScrapeIntervalSeconds = DurationToSecond(tmpScrapeIntervalString);
@@ -43,7 +48,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         string tmpScrapeTimeoutString = scrapeConfig[prometheus::SCRAPE_TIMEOUT].asString();
         mScrapeTimeoutSeconds = DurationToSecond(tmpScrapeTimeoutString);
     }
-
     if (scrapeConfig.isMember(prometheus::SCRAPE_PROTOCOLS) && scrapeConfig[prometheus::SCRAPE_PROTOCOLS].isArray()) {
         if (!InitScrapeProtocols(scrapeConfig[prometheus::SCRAPE_PROTOCOLS])) {
             LOG_ERROR(sLogger, ("scrape protocol config error", scrapeConfig[prometheus::SCRAPE_PROTOCOLS]));
@@ -54,7 +58,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         InitScrapeProtocols(nullJson);
     }
 
-
     if (scrapeConfig.isMember(prometheus::METRICS_PATH) && scrapeConfig[prometheus::METRICS_PATH].isString()) {
         mMetricsPath = scrapeConfig[prometheus::METRICS_PATH].asString();
     }
@@ -64,6 +67,10 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
 
     // basic auth, authorization, oauth2
     // basic auth, authorization, oauth2 cannot be used at the same time
+    if ((int)scrapeConfig.isMember(prometheus::BASIC_AUTH) + scrapeConfig.isMember(prometheus::AUTHORIZATION) > 1) {
+        LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
+        return false;
+    }
     if (scrapeConfig.isMember(prometheus::BASIC_AUTH) && scrapeConfig[prometheus::BASIC_AUTH].isObject()) {
         if (!InitBasicAuth(scrapeConfig[prometheus::BASIC_AUTH])) {
             LOG_ERROR(sLogger, ("basic auth config error", ""));
@@ -71,10 +78,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
     if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
-        if (!mRequestHeaders[prometheus::A_UTHORIZATION].empty()) {
-            LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
-            return false;
-        }
         if (!InitAuthorization(scrapeConfig[prometheus::AUTHORIZATION])) {
             LOG_ERROR(sLogger, ("authorization config error", ""));
             return false;

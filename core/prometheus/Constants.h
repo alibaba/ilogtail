@@ -61,8 +61,10 @@ const char* const MAX_SCRAPE_SIZE = "max_scrape_size";
 const char* const METRIC_RELABEL_CONFIGS = "metric_relabel_configs";
 const char* const AUTHORIZATION = "authorization";
 const char* const AUTHORIZATION_DEFAULT_TYEP = "Bearer";
+const char* const AUTHORIZATION_DEFAULT_TYEP = "Bearer";
 const char* const A_UTHORIZATION = "Authorization";
 const char* const TYPE = "type";
+const char* const CREDENTIALS = "credentials";
 const char* const CREDENTIALS = "credentials";
 const char* const CREDENTIALS_FILE = "credentials_file";
 const char* const BASIC_AUTH = "basic_auth";
@@ -88,5 +90,17 @@ const char* const SCHEME_LABEL_NAME = "__scheme__";
 const char* const METRICS_PATH_LABEL_NAME = "__metrics_path__";
 const char* const PARAM_LABEL_NAME = "__param_";
 const char* const LABELS = "labels";
+
+// auto metrics
+const char* const SCRAPE_DURATION_SECONDS = "scrape_duration_seconds";
+const char* const SCRAPE_RESPONSE_SIZE_BYTES = "scrape_response_size_bytes";
+const char* const SCRAPE_SAMPLES_LIMIT = "scrape_samples_limit";
+const char* const SCRAPE_SAMPLES_POST_METRIC_RELABELING = "scrape_samples_post_metric_relabeling";
+const char* const SCRAPE_SERIES_ADDED = "scrape_series_added";
+const char* const SCRAPE_SAMPLES_SCRAPED = "scrape_samples_scraped";
+const char* const SCRAPE_TIMEOUT_SECONDS = "scrape_timeout_seconds";
+const char* const UP = "up";
+
+const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
 } // namespace logtail::prometheus

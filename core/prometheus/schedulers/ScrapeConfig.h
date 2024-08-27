@@ -12,6 +12,7 @@
 
 namespace logtail {
 
+
 class ScrapeConfig {
 public:
     std::string mJobName;
@@ -41,11 +42,10 @@ private:
     bool InitAuthorization(const Json::Value& authorization);
     bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
 
-    bool ReadFromFile(const std::string& filePath, std::string& content);
-
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;
 #endif
 };
+
 
 } // namespace logtail
