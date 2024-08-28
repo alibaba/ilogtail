@@ -85,7 +85,7 @@ namespace logtail {
 
 size_t LogFileReader::BUFFER_SIZE = 1024 * 512; // 512KB
 
-void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
+void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray) {
     if (checkConfigFlag) {
         size_t index = mHostLogPath.rfind(PATH_SEPARATOR);
         if (index == string::npos || index == mHostLogPath.size() - 1) {
@@ -127,6 +127,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
+    checkPointPtr->mIdxInReaderArray = idxInReaderArray;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -171,12 +172,15 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
             mContainerStopped = checkPointPtr->mContainerStopped;
+            // new property to recover reader exactly from checkpoint
+            mIdxInReaderArrayFromLastCpt = checkPointPtr->mIdxInReaderArray;
             LOG_INFO(sLogger,
                      ("recover log reader status from checkpoint, project", mProjectName)("logstore", mCategory)(
-                         "config", mConfigName)("log reader queue name", mHostLogPath)(
-                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
-                         "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
-                         "real file path", mRealLogPath)("last file position", mLastFilePos));
+                         "config", mConfigName)("log reader queue name", mHostLogPath)("file device",
+                                                                                       ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file signature size", mLastFileSignatureSize)("real file path", mRealLogPath)(
+                         "last file position", mLastFilePos)("index in reader array", mIdxInReaderArrayFromLastCpt));
             // if file is open or
             // last update time is new and the file's container is not stopped we
             // we should use first modify
@@ -1357,7 +1361,8 @@ bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
     mLogFileOp.Stat(ps);
     time_t lastMTime = mLastMTime;
     mLastMTime = ps.GetMtime();
-    if (!isOpenOnUpdate || mLastFileSignatureSize == 0 || endSize < mLastFilePos || (endSize == mLastFilePos && lastMTime != mLastMTime)) {
+    if (!isOpenOnUpdate || mLastFileSignatureSize == 0 || endSize < mLastFilePos
+        || (endSize == mLastFilePos && lastMTime != mLastMTime)) {
         char firstLine[1025];
         int nbytes = mLogFileOp.Pread(firstLine, 1, 1024, 0);
         if (nbytes < 0) {
