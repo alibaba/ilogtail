@@ -60,10 +60,6 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->SetTimer(mTimer);
     auto firstExecTime
         = std::chrono::steady_clock::now() + std::chrono::milliseconds(targetSubscriber->GetRandSleepMilliSec());
-    LOG_INFO(sLogger,
-             ("subscribe first time",
-              ToString(std::chrono::duration_cast<std::chrono::seconds>(firstExecTime.time_since_epoch()).count())));
-
     targetSubscriber->SetFirstExecTime(firstExecTime);
     // 1. add subscriber to mTargetSubscriberSchedulerMap
     {
