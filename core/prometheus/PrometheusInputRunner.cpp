@@ -16,6 +16,7 @@
 
 #include "PrometheusInputRunner.h"
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -59,7 +60,9 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     targetSubscriber->SetTimer(mTimer);
     auto firstExecTime
         = std::chrono::steady_clock::now() + std::chrono::milliseconds(targetSubscriber->GetRandSleepMilliSec());
-    LOG_WARNING(sLogger, ("subscribe first time", ToString(firstExecTime.time_since_epoch().count())));
+    LOG_INFO(sLogger,
+             ("subscribe first time",
+              ToString(std::chrono::duration_cast<std::chrono::seconds>(firstExecTime.time_since_epoch()).count())));
 
     targetSubscriber->SetFirstExecTime(firstExecTime);
     // 1. add subscriber to mTargetSubscriberSchedulerMap
@@ -204,7 +207,6 @@ void PrometheusInputRunner::CancelAllTargetSubscriber() {
 void PrometheusInputRunner::SubscribeOnce() {
     ReadLock lock(mSubscriberMapRWLock);
     for (auto& [k, v] : mTargetSubscriberSchedulerMap) {
-        LOG_WARNING(sLogger, ("subscribe once", k));
         v->SubscribeOnce(std::chrono::steady_clock::now());
     }
 }

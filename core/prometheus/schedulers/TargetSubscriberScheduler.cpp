@@ -60,7 +60,6 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
 
 void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uint64_t) {
     if (response.mStatusCode == 304) {
-        LOG_WARNING(sLogger, ("status code", "304"));
         // not modified
         return;
     }
@@ -103,16 +102,18 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
             if (mScrapeSchedulerMap.find(k) == mScrapeSchedulerMap.end()) {
                 mScrapeSchedulerMap[k] = v;
                 if (mTimer) {
+                    auto tmpCurrentMilliSeconds = GetCurrentTimeInMilliSeconds();
+                    auto tmpRandSleepMilliSec = v->GetRandSleepMilliSec();
                     // zero-cost upgrade
                     if (mUnRegisterMs > 0
-                        && (GetCurrentTimeInMilliSeconds() + v->GetRandSleepMilliSec()
+                        && (tmpCurrentMilliSeconds + tmpRandSleepMilliSec
                                 - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000
                             > mUnRegisterMs)
-                        && (GetCurrentTimeInMilliSeconds() + v->GetRandSleepMilliSec()
+                        && (tmpCurrentMilliSeconds + tmpRandSleepMilliSec
                                 - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000 * 2
                             < mUnRegisterMs)) {
                         // scrape once just now
-                        LOG_WARNING(sLogger, ("zero cost", ToString(GetCurrentTimeInMilliSeconds())));
+                        LOG_INFO(sLogger, ("scrape zero cost", ToString(tmpCurrentMilliSeconds)));
                         v->ScrapeOnce(std::chrono::steady_clock::now());
                     }
                     v->ScheduleNext();
@@ -216,7 +217,6 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
         scrapeScheduler->SetTimer(mTimer);
         auto firstExecTime
             = std::chrono::steady_clock::now() + std::chrono::milliseconds(scrapeScheduler->GetRandSleepMilliSec());
-        LOG_WARNING(sLogger, ("scrape first time", ToString(firstExecTime.time_since_epoch().count())));
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;

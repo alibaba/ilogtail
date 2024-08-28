@@ -64,7 +64,6 @@ bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
-    LOG_WARNING(sLogger, ("scrape", GetId()));
     mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
     mScrapeResponseSizeBytes = response.mBody.size();
