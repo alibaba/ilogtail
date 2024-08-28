@@ -89,10 +89,9 @@ void OtelMeterHandler::handle(std::vector<std::unique_ptr<ApplicationBatchMeasur
 void OtelSpanHandler::handle(std::vector<std::unique_ptr<ApplicationBatchSpan>>&& spans) {
     if (spans.empty()) return;
 
-    std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
-
     for (auto& span : spans) {
+        std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
         for (auto& x : span->single_spans_) {
             auto spanEvent = eventGroup.AddSpanEvent();
             for (auto& tag : x->tags_) {
@@ -123,9 +122,11 @@ void EventHandler::handle(std::vector<std::unique_ptr<ApplicationBatchEvent>>&& 
     if (events.empty()) return;
 
     for (auto& appEvents : events) {
+        if (!appEvents || appEvents->events_.empty()) continue;
         std::shared_ptr<SourceBuffer> sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
         for (auto& event : appEvents->events_) {
+            if (!event || event->GetAllTags().empty()) continue;
             auto logEvent = eventGroup.AddLogEvent();
             for (auto& tag : event->GetAllTags()) {
                 logEvent->SetContent(tag.first, tag.second);
