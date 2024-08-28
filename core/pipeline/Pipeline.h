@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "aggregator/AggregatorDefault.h"
 #include "config/PipelineConfig.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"

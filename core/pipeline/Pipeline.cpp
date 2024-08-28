@@ -35,6 +35,25 @@ DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 using namespace std;
 
+namespace {
+class AggregatorDefaultConfig {
+public:
+    static AggregatorDefaultConfig& Instance() {
+        static AggregatorDefaultConfig instance;
+        return instance;
+    }
+
+    Json::Value* GetJsonConfig() { return &aggregatorDefault; }
+
+private:
+    Json::Value aggregatorDefault;
+    AggregatorDefaultConfig() { aggregatorDefault["Type"] = "aggregator_default"; }
+
+    AggregatorDefaultConfig(AggregatorDefaultConfig const&) = delete;
+    void operator=(AggregatorDefaultConfig const&) = delete;
+};
+} // namespace
+
 namespace logtail {
 
 void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json::Value& pipeline) {
@@ -122,7 +141,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     if (config.mAggregators.empty() && config.IsFlushingThroughGoPipelineExisted()) {
         // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
         // to cpp flusher.
-        config.mAggregators.push_back(AggregatorDefault::Instance().GetJsonConfig());
+        config.mAggregators.push_back(AggregatorDefaultConfig::Instance().GetJsonConfig());
     }
     for (size_t i = 0; i < config.mAggregators.size(); ++i) {
         const Json::Value& detail = *config.mAggregators[i];
