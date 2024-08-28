@@ -13,15 +13,34 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
+var COMMON_RESOURCE = []string{
+	SERVICE,
+	DEPLOYMENT,
+	REPLICASET,
+	STATEFULSET,
+	DAEMONSET,
+	CRONJOB,
+	JOB,
+	NODE,
+	NAMESPACE,
+	CONFIGMAP,
+	SECRET,
+	PERSISTENTVOLUME,
+	PERSISTENTVOLUMECLAIM,
+	STORAGECLASS,
+	INGRESS,
+}
+
 var metaManager *MetaManager
 
 var onceManager sync.Once
 
 type MetaCache interface {
 	Get(key []string) map[string][]*ObjectWrapper
+	List() []*ObjectWrapper
 	RegisterSendFunc(key string, sendFunc SendFunc, interval int)
 	UnRegisterSendFunc(key string)
-	init()
+	init(*kubernetes.Clientset)
 	watch(stopCh <-chan struct{})
 }
 
@@ -37,8 +56,8 @@ type MetaManager struct {
 	eventCh chan *K8sMetaEvent
 	ready   atomic.Bool
 
-	PodCache     *podCache
-	ServiceCache *serviceCache
+	cacheMap      map[string]MetaCache
+	linkGenerator *K8sMetaLinkGenerator
 }
 
 func GetMetaManagerInstance() *MetaManager {
@@ -47,8 +66,12 @@ func GetMetaManagerInstance() *MetaManager {
 			stopCh:  make(chan struct{}),
 			eventCh: make(chan *K8sMetaEvent, 1000),
 		}
-		metaManager.PodCache = newPodCache(metaManager.stopCh)
-		metaManager.ServiceCache = newServiceCache(metaManager.stopCh)
+		metaManager.cacheMap = make(map[string]MetaCache)
+		metaManager.cacheMap[POD] = newPodCache(metaManager.stopCh)
+		for _, resource := range COMMON_RESOURCE {
+			metaManager.cacheMap[resource] = newCommonCache(metaManager.stopCh, resource)
+		}
+		metaManager.linkGenerator = NewK8sMetaLinkGenerator(metaManager.cacheMap)
 	})
 	return metaManager
 }
@@ -72,11 +95,9 @@ func (m *MetaManager) Init(configPath string) (err error) {
 	m.clientset = clientset
 
 	go func() {
-		m.ServiceCache.clientset = m.clientset
-		m.ServiceCache.init()
-		m.PodCache.clientset = m.clientset
-		m.PodCache.serviceMetaStore = m.ServiceCache.metaStore
-		m.PodCache.init()
+		for _, cache := range m.cacheMap {
+			cache.init(clientset)
+		}
 		m.ready.Store(true)
 		logger.Info(context.Background(), "init k8s meta manager", "success")
 	}()
@@ -93,23 +114,23 @@ func (m *MetaManager) IsReady() bool {
 }
 
 func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, sendFunc SendFunc, interval int) {
-	switch resourceType {
-	case POD:
-		m.PodCache.RegisterSendFunc(configName, sendFunc, interval)
-	case SERVICE:
-		m.ServiceCache.RegisterSendFunc(configName, sendFunc, interval)
-	default:
+	if cache, ok := m.cacheMap[resourceType]; ok {
+		cache.RegisterSendFunc(configName, func(events []*K8sMetaEvent) {
+			sendFunc(events)
+			linkEvents := m.linkGenerator.GenerateLinks(events)
+			if linkEvents != nil {
+				sendFunc(linkEvents)
+			}
+		}, interval)
+	} else {
 		logger.Error(context.Background(), "ENTITY_PIPELINE_REGISTER_ERROR", "resourceType not support", resourceType)
 	}
 }
 
 func (m *MetaManager) UnRegisterSendFunc(configName string, resourceType string) {
-	switch resourceType {
-	case POD:
-		m.PodCache.UnRegisterSendFunc(configName)
-	case SERVICE:
-		m.ServiceCache.UnRegisterSendFunc(configName)
-	default:
+	if cache, ok := m.cacheMap[resourceType]; ok {
+		cache.UnRegisterSendFunc(configName)
+	} else {
 		logger.Error(context.Background(), "ENTITY_PIPELINE_UNREGISTER_ERROR", "resourceType not support", resourceType)
 	}
 }

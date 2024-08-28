@@ -6,10 +6,11 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
@@ -21,9 +22,7 @@ type podCache struct {
 
 	eventCh chan *K8sMetaEvent
 	stopCh  chan struct{}
-
-	discardEventCount int
-	discardStartTime  time.Time
+	schema  *runtime.Scheme
 }
 
 func newPodCache(stopCh chan struct{}) *podCache {
@@ -37,10 +36,13 @@ func newPodCache(stopCh chan struct{}) *podCache {
 	m.eventCh = make(chan *K8sMetaEvent, 100)
 	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
 	m.serviceMetaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc)
+	m.schema = runtime.NewScheme()
+	v1.AddToScheme(m.schema)
 	return m
 }
 
-func (m *podCache) init() {
+func (m *podCache) init(clientset *kubernetes.Clientset) {
+	m.clientset = clientset
 	m.metaStore.Start()
 	m.watch(m.stopCh)
 }
@@ -49,17 +51,12 @@ func (m *podCache) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
 }
 
+func (m *podCache) List() []*ObjectWrapper {
+	return m.metaStore.List()
+}
+
 func (m *podCache) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
-	m.metaStore.RegisterSendFunc(key, func(kme *K8sMetaEvent) {
-		sendFunc(kme)
-		services := m.getPodServiceLink([]*ObjectWrapper{kme.Object})
-		for _, service := range services {
-			sendFunc(&K8sMetaEvent{
-				EventType: kme.EventType,
-				Object:    service,
-			})
-		}
-	}, interval)
+	m.metaStore.RegisterSendFunc(key, sendFunc, interval)
 }
 
 func (m *podCache) UnRegisterSendFunc(key string) {
@@ -100,37 +97,37 @@ func (m *podCache) watch(stopCh <-chan struct{}) {
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			nowTime := time.Now().Unix()
-			m.saveWithTimeout(&K8sMetaEvent{
+			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeAdd,
 				Object: &ObjectWrapper{
 					ResourceType:      POD,
-					Raw:               obj,
+					Raw:               m.preProcess(obj),
 					FirstObservedTime: nowTime,
 					LastObservedTime:  nowTime,
 				},
-			})
+			}
 		},
 		UpdateFunc: func(oldObj interface{}, obj interface{}) {
 			nowTime := time.Now().Unix()
-			m.saveWithTimeout(&K8sMetaEvent{
+			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeUpdate,
 				Object: &ObjectWrapper{
 					ResourceType:      POD,
-					Raw:               obj,
+					Raw:               m.preProcess(obj),
 					FirstObservedTime: nowTime,
 					LastObservedTime:  nowTime,
 				},
-			})
+			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			m.saveWithTimeout(&K8sMetaEvent{
+			m.eventCh <- &K8sMetaEvent{
 				EventType: EventTypeDelete,
 				Object: &ObjectWrapper{
 					ResourceType:     POD,
-					Raw:              obj,
+					Raw:              m.preProcess(obj),
 					LastObservedTime: time.Now().Unix(),
 				},
-			})
+			}
 		},
 	})
 	go factory.Start(stopCh)
@@ -145,59 +142,23 @@ func (m *podCache) watch(stopCh <-chan struct{}) {
 	}
 }
 
-func (m *podCache) saveWithTimeout(event *K8sMetaEvent) {
-	select {
-	case m.eventCh <- event:
-	case <-time.After(1 * time.Second):
-		m.discardEventCount++
-		if m.discardEventCount == 10 {
-			logger.Warning(context.Background(), "K8S_META_CACHE_DISCARD_EVENT", "discard event count", m.discardEventCount, "from", m.discardStartTime.String(), "to", time.Now().String())
-			m.discardEventCount = 0
-			m.discardStartTime = time.Now()
-		}
+func (m *podCache) preProcess(obj interface{}) interface{} {
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return obj
 	}
-}
-
-func (m *podCache) getPodServiceLink(podList []*ObjectWrapper) []*ObjectWrapper {
-	serviceList := m.serviceMetaStore.List()
-	results := make([]*ObjectWrapper, 0)
-	matchers := make(map[string]labelMatchers)
-	for _, data := range serviceList {
-		service, ok := data.Raw.(*v1.Service)
-		if !ok {
-			continue
+	pod.ManagedFields = nil
+	pod.Status.Conditions = nil
+	pod.Spec.Tolerations = nil
+	if len(pod.Kind) == 0 {
+		// Kind and API version may be empty becasue https://github.com/kubernetes/client-go/issues/541
+		gvk, err := apiutil.GVKForObject(pod, m.schema)
+		if err != nil {
+			logger.Error(context.Background(), "K8S_META_CACHE_ALARM", "get GVK for object error", err)
+			return pod
 		}
-
-		_, ok = matchers[service.Namespace]
-		lm := newLabelMatcher(data.Raw, labels.SelectorFromSet(service.Spec.Selector))
-		if !ok {
-			matchers[service.Namespace] = []*labelMatcher{lm}
-		} else {
-			matchers[service.Namespace] = append(matchers[service.Namespace], lm)
-		}
+		pod.APIVersion = gvk.GroupVersion().String()
+		pod.Kind = gvk.Kind
 	}
-
-	for _, data := range podList {
-		pod, ok := data.Raw.(*v1.Pod)
-		if !ok {
-			continue
-		}
-		nsSelectors, ok := matchers[pod.Namespace]
-		if !ok {
-			continue
-		}
-		set := labels.Set(pod.Labels)
-		for _, s := range nsSelectors {
-			if !s.selector.Empty() && s.selector.Matches(set) {
-				results = append(results, &ObjectWrapper{
-					ResourceType: POD_SERVICE,
-					Raw: &PodService{
-						Pod:     pod,
-						Service: s.obj.(*v1.Service),
-					},
-				})
-			}
-		}
-	}
-	return results
+	return pod
 }

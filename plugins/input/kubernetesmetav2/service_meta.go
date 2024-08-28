@@ -17,6 +17,7 @@ type ServiceK8sMeta struct {
 	Node                  bool
 	Service               bool
 	Deployment            bool
+	ReplicaSet            bool
 	DaemonSet             bool
 	StatefulSet           bool
 	Configmap             bool
@@ -29,8 +30,18 @@ type ServiceK8sMeta struct {
 	StorageClass          bool
 	Ingress               bool
 	// entity link switch
-	PodReplicasetLink bool
-	PodServiceLink    bool
+	NodePodLink              bool
+	DeploymentReplicasetLink bool
+	ReplicaSetPodLink        bool
+	StatefulSetPodLink       bool
+	DaemonSetPodLink         bool
+	CronjobJobLink           bool
+	JobPodLink               bool
+	PodPvcLink               bool
+	PodConfigMapLink         bool
+	PodSecretLink            bool
+	ServicePodLink           bool
+	PodContainerLink         bool
 	// other
 	metaManager   *k8smeta.MetaManager
 	collector     pipeline.Collector
@@ -63,7 +74,6 @@ func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 		serviceK8sMeta:   s,
 		processors:       make(map[string][]ProcessFunc),
 		collector:        collector,
-		entityTypes:      []string{},
 		entityBuffer:     make(chan models.PipelineEvent, 100),
 		entityLinkBuffer: make(chan models.PipelineEvent, 100),
 		stopCh:           make(chan struct{}),

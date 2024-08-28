@@ -9,8 +9,6 @@ const (
 	entityFirstObservedTimeFieldName = "__first_observed_time__"
 	entityLastObservedTimeFieldName  = "__last_observed_time__"
 	entityKeepAliveSecondsFieldName  = "__keep_alive_seconds__"
-	entityNamespaceFieldName         = "namespace"
-	entityNameFieldName              = "name"
 
 	entityCategoryFieldName   = "__category__"
 	defaultEntityCategory     = "entity"
