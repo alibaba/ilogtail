@@ -251,7 +251,7 @@ void PipelineManager::StopAllPipelines() {
 #endif
 #if defined(__linux__) && !defined(__ANDROID__)
     ObserverManager::GetInstance()->HoldOn(true);
-    ebpf::eBPFServer::GetInstance()->Stop();
+    // ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
     PrometheusInputRunner::GetInstance()->Stop();
