@@ -42,7 +42,6 @@ public:
 
     void OnSubscription(const HttpResponse&, uint64_t);
     void SetTimer(std::shared_ptr<Timer> timer);
-    uint64_t GetRandSleepMilliSec() const;
     void SubscribeOnce(std::chrono::steady_clock::time_point execTime);
 
     std::string GetId() const;

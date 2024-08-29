@@ -54,8 +54,6 @@ public:
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
 
-    uint64_t GetRandSleepMilliSec() const;
-
 private:
     void PushEventGroup(PipelineEventGroup&&);
     void SetAutoMetricMeta(PipelineEventGroup& eGroup);

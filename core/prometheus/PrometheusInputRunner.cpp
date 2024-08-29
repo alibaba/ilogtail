@@ -23,10 +23,12 @@
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "common/http/AsynCurlRunner.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Utils.h"
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
 
@@ -58,8 +60,9 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
 
     targetSubscriber->mUnRegisterMs = mUnRegisterMs;
     targetSubscriber->SetTimer(mTimer);
-    auto firstExecTime
-        = std::chrono::steady_clock::now() + std::chrono::milliseconds(targetSubscriber->GetRandSleepMilliSec());
+    auto randSleepMilliSec = GetRandSleepMilliSec(
+        targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
+    auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
     targetSubscriber->SetFirstExecTime(firstExecTime);
     // 1. add subscriber to mTargetSubscriberSchedulerMap
     {
