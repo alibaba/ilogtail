@@ -2,6 +2,7 @@ package kubernetesmetav2
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	storage "k8s.io/api/storage/v1"
@@ -14,16 +15,16 @@ func (m *metaCollector) processStorageClassEntity(data *k8smeta.ObjectWrapper, m
 	if obj, ok := data.Raw.(*storage.StorageClass); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, "k8s")
-		log.Contents.Add(entityTypeFieldName, obj.Kind)
-		log.Contents.Add(entityIDFieldName, genKey(obj.Namespace, obj.Name))
+		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
+		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
 		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
-
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 
 		// custom fields

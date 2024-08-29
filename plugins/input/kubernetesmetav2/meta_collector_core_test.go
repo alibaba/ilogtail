@@ -183,7 +183,7 @@ func TestProcessPodServiceLink(t *testing.T) {
 		},
 	}
 	objWrapper := &k8smeta.ObjectWrapper{
-		Raw: &k8smeta.ServicePod{
+		Raw: &k8smeta.PodService{
 			Pod:     obj1,
 			Service: obj2,
 		},

@@ -1,8 +1,6 @@
 package k8smeta
 
 import (
-	"fmt"
-
 	"github.com/alitto/pond"
 	app "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
@@ -65,7 +63,7 @@ func (m *K8sMetaLinkGenerator) getLinkFromPod(events []*K8sMetaEvent) []*K8sMeta
 	})
 	// Pod -> Service
 	group.Submit(func() {
-		m.getServicePodLink(events, resultCh)
+		m.getPodServiceLink(events, resultCh)
 	})
 	// Pod -> Container
 	group.Submit(func() {
@@ -79,7 +77,6 @@ func (m *K8sMetaLinkGenerator) getLinkFromPod(events []*K8sMetaEvent) []*K8sMeta
 	for r := range resultCh {
 		result = append(result, r...)
 	}
-	fmt.Println("Pod links: ", len(result))
 	return result
 }
 
@@ -88,7 +85,7 @@ func (m *K8sMetaLinkGenerator) getLinkFromReplicaSet(events []*K8sMetaEvent) []*
 	resultCh := make(chan []*K8sMetaEvent, 100)
 	// Deployment -> ReplicaSet
 	group.Submit(func() {
-		m.getDeploymentReplicaSetLink(events, resultCh)
+		m.getReplicaSetDeploymentLink(events, resultCh)
 	})
 
 	// return all results
@@ -98,7 +95,6 @@ func (m *K8sMetaLinkGenerator) getLinkFromReplicaSet(events []*K8sMetaEvent) []*
 	for r := range resultCh {
 		result = append(result, r...)
 	}
-	fmt.Println("ReplicaSet links: ", len(result))
 	return result
 }
 
@@ -107,7 +103,7 @@ func (m *K8sMetaLinkGenerator) getLinkFromJob(events []*K8sMetaEvent) []*K8sMeta
 	resultCh := make(chan []*K8sMetaEvent, 100)
 	// CronJob -> Job
 	group.Submit(func() {
-		m.getCronJobJobLink(events, resultCh)
+		m.getJobCronJobLink(events, resultCh)
 	})
 
 	// return all results
@@ -134,21 +130,22 @@ func (m *K8sMetaLinkGenerator) getNodePodLink(events []*K8sMetaEvent, resultCh c
 				result = append(result, &K8sMetaEvent{
 					EventType: event.EventType,
 					Object: &ObjectWrapper{
-						ResourceType: NODE_POD,
+						ResourceType: POD_NODE,
 						Raw: &NodePod{
 							Node: n.Raw.(*v1.Node),
 							Pod:  pod,
 						},
+						FirstObservedTime: event.Object.FirstObservedTime,
+						LastObservedTime:  event.Object.LastObservedTime,
 					},
 				})
 			}
 		}
 	}
-	fmt.Println("Node links: ", len(result))
 	resultCh <- result
 }
 
-func (m *K8sMetaLinkGenerator) getDeploymentReplicaSetLink(events []*K8sMetaEvent, resultCh chan []*K8sMetaEvent) {
+func (m *K8sMetaLinkGenerator) getReplicaSetDeploymentLink(events []*K8sMetaEvent, resultCh chan []*K8sMetaEvent) {
 	result := make([]*K8sMetaEvent, 0)
 	for _, event := range events {
 		replicaset, ok := event.Object.Raw.(*app.ReplicaSet)
@@ -162,11 +159,13 @@ func (m *K8sMetaLinkGenerator) getDeploymentReplicaSetLink(events []*K8sMetaEven
 				result = append(result, &K8sMetaEvent{
 					EventType: event.EventType,
 					Object: &ObjectWrapper{
-						ResourceType: DEPLOYMENT_REPLICASET,
-						Raw: &DeploymentReplicaSet{
+						ResourceType: REPLICASET_DEPLOYMENT,
+						Raw: &ReplicaSetDeployment{
 							Deployment: d.Raw.(*app.Deployment),
 							ReplicaSet: replicaset,
 						},
+						FirstObservedTime: event.Object.FirstObservedTime,
+						LastObservedTime:  event.Object.LastObservedTime,
 					},
 				})
 			}
@@ -191,11 +190,13 @@ func (m *K8sMetaLinkGenerator) getParentPodLink(podList []*K8sMetaEvent, resultC
 					result = append(result, &K8sMetaEvent{
 						EventType: data.EventType,
 						Object: &ObjectWrapper{
-							ResourceType: REPLICASET_POD,
-							Raw: &ReplicaSetPod{
+							ResourceType: POD_REPLICASET,
+							Raw: &PodReplicaSet{
 								ReplicaSet: r.Raw.(*app.ReplicaSet),
 								Pod:        pod,
 							},
+							FirstObservedTime: data.Object.FirstObservedTime,
+							LastObservedTime:  data.Object.LastObservedTime,
 						},
 					})
 				}
@@ -207,11 +208,13 @@ func (m *K8sMetaLinkGenerator) getParentPodLink(podList []*K8sMetaEvent, resultC
 					result = append(result, &K8sMetaEvent{
 						EventType: data.EventType,
 						Object: &ObjectWrapper{
-							ResourceType: STATEFULSET_POD,
-							Raw: &StatefulSetPod{
+							ResourceType: POD_STATEFULSET,
+							Raw: &PodStatefulSet{
 								StatefulSet: s.Raw.(*app.StatefulSet),
 								Pod:         pod,
 							},
+							FirstObservedTime: data.Object.FirstObservedTime,
+							LastObservedTime:  data.Object.LastObservedTime,
 						},
 					})
 				}
@@ -223,11 +226,13 @@ func (m *K8sMetaLinkGenerator) getParentPodLink(podList []*K8sMetaEvent, resultC
 					result = append(result, &K8sMetaEvent{
 						EventType: data.EventType,
 						Object: &ObjectWrapper{
-							ResourceType: DAEMONSET_POD,
-							Raw: &DaemonSetPod{
+							ResourceType: POD_DAEMONSET,
+							Raw: &PodDaemonSet{
 								DaemonSet: d.Raw.(*app.DaemonSet),
 								Pod:       pod,
 							},
+							FirstObservedTime: data.Object.FirstObservedTime,
+							LastObservedTime:  data.Object.LastObservedTime,
 						},
 					})
 				}
@@ -239,11 +244,13 @@ func (m *K8sMetaLinkGenerator) getParentPodLink(podList []*K8sMetaEvent, resultC
 					result = append(result, &K8sMetaEvent{
 						EventType: data.EventType,
 						Object: &ObjectWrapper{
-							ResourceType: JOB_POD,
-							Raw: &JobPod{
+							ResourceType: POD_JOB,
+							Raw: &PodJob{
 								Job: j.Raw.(*batch.Job),
 								Pod: pod,
 							},
+							FirstObservedTime: data.Object.FirstObservedTime,
+							LastObservedTime:  data.Object.LastObservedTime,
 						},
 					})
 				}
@@ -253,7 +260,7 @@ func (m *K8sMetaLinkGenerator) getParentPodLink(podList []*K8sMetaEvent, resultC
 	resultCh <- result
 }
 
-func (m *K8sMetaLinkGenerator) getCronJobJobLink(jobList []*K8sMetaEvent, resultCh chan []*K8sMetaEvent) {
+func (m *K8sMetaLinkGenerator) getJobCronJobLink(jobList []*K8sMetaEvent, resultCh chan []*K8sMetaEvent) {
 	result := make([]*K8sMetaEvent, 0)
 	for _, data := range jobList {
 		job, ok := data.Object.Raw.(*batch.Job)
@@ -267,11 +274,13 @@ func (m *K8sMetaLinkGenerator) getCronJobJobLink(jobList []*K8sMetaEvent, result
 				result = append(result, &K8sMetaEvent{
 					EventType: data.EventType,
 					Object: &ObjectWrapper{
-						ResourceType: CRONJOB_JOB,
-						Raw: &CronJobJob{
+						ResourceType: JOB_CRONJOB,
+						Raw: &JobCronJob{
 							CronJob: c.Raw.(*batch.CronJob),
 							Job:     job,
 						},
+						FirstObservedTime: data.Object.FirstObservedTime,
+						LastObservedTime:  data.Object.LastObservedTime,
 					},
 				})
 			}
@@ -301,6 +310,8 @@ func (m *K8sMetaLinkGenerator) getPodPVCLink(podList []*K8sMetaEvent, resultCh c
 									Pod:                   pod,
 									PersistentVolumeClaim: p.Raw.(*v1.PersistentVolumeClaim),
 								},
+								FirstObservedTime: data.Object.FirstObservedTime,
+								LastObservedTime:  data.Object.LastObservedTime,
 							},
 						})
 					}
@@ -332,6 +343,8 @@ func (m *K8sMetaLinkGenerator) getPodConfigMapLink(podList []*K8sMetaEvent, resu
 									Pod:       pod,
 									ConfigMap: c.Raw.(*v1.ConfigMap),
 								},
+								FirstObservedTime: data.Object.FirstObservedTime,
+								LastObservedTime:  data.Object.LastObservedTime,
 							},
 						})
 					}
@@ -363,6 +376,8 @@ func (m *K8sMetaLinkGenerator) getPodSecretLink(podList []*K8sMetaEvent, resultC
 									Pod:    pod,
 									Secret: s.Raw.(*v1.Secret),
 								},
+								FirstObservedTime: data.Object.FirstObservedTime,
+								LastObservedTime:  data.Object.LastObservedTime,
 							},
 						})
 					}
@@ -373,7 +388,7 @@ func (m *K8sMetaLinkGenerator) getPodSecretLink(podList []*K8sMetaEvent, resultC
 	resultCh <- result
 }
 
-func (m *K8sMetaLinkGenerator) getServicePodLink(podList []*K8sMetaEvent, resultCh chan []*K8sMetaEvent) {
+func (m *K8sMetaLinkGenerator) getPodServiceLink(podList []*K8sMetaEvent, resultCh chan []*K8sMetaEvent) {
 	serviceList := m.metaCache[SERVICE].List()
 	result := make([]*K8sMetaEvent, 0)
 	matchers := make(map[string]labelMatchers)
@@ -407,11 +422,13 @@ func (m *K8sMetaLinkGenerator) getServicePodLink(podList []*K8sMetaEvent, result
 				result = append(result, &K8sMetaEvent{
 					EventType: data.EventType,
 					Object: &ObjectWrapper{
-						ResourceType: SERVICE_POD,
-						Raw: &ServicePod{
+						ResourceType: POD_SERVICE,
+						Raw: &PodService{
 							Pod:     pod,
 							Service: s.obj.(*v1.Service),
 						},
+						FirstObservedTime: data.Object.FirstObservedTime,
+						LastObservedTime:  data.Object.LastObservedTime,
 					},
 				})
 			}
@@ -436,6 +453,8 @@ func (m *K8sMetaLinkGenerator) getPodContainerLink(podList []*K8sMetaEvent, resu
 						Pod:       pod,
 						Container: &container,
 					},
+					FirstObservedTime: data.Object.FirstObservedTime,
+					LastObservedTime:  data.Object.LastObservedTime,
 				},
 			})
 		}

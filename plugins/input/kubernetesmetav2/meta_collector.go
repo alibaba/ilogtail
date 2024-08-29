@@ -6,7 +6,6 @@ import (
 	// #nosec G401
 	"crypto/md5"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -94,25 +93,25 @@ func (m *metaCollector) Start() error {
 		m.processors[k8smeta.INGRESS] = append(m.processors[k8smeta.INGRESS], m.processIngressEntity)
 	}
 	if m.serviceK8sMeta.NodePodLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Node {
-		m.processors[k8smeta.NODE_POD] = append(m.processors[k8smeta.NODE_POD], m.processNodePodLink)
+		m.processors[k8smeta.POD_NODE] = append(m.processors[k8smeta.POD_NODE], m.processPodNodeLink)
 	}
 	if m.serviceK8sMeta.DeploymentReplicasetLink && m.serviceK8sMeta.Deployment && m.serviceK8sMeta.ReplicaSet {
-		m.processors[k8smeta.DEPLOYMENT_REPLICASET] = append(m.processors[k8smeta.DEPLOYMENT_REPLICASET], m.processDeploymentReplicaSetLink)
+		m.processors[k8smeta.REPLICASET_DEPLOYMENT] = append(m.processors[k8smeta.REPLICASET_DEPLOYMENT], m.processReplicaSetDeploymentLink)
 	}
-	if m.serviceK8sMeta.ReplicaSetPodLink && m.serviceK8sMeta.ReplicaSet && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.REPLICASET_POD] = append(m.processors[k8smeta.REPLICASET_POD], m.processReplicaSetPodLink)
+	if m.serviceK8sMeta.PodReplicaSetLink && m.serviceK8sMeta.ReplicaSet && m.serviceK8sMeta.Pod {
+		m.processors[k8smeta.POD_REPLICASET] = append(m.processors[k8smeta.POD_REPLICASET], m.processPodReplicaSetLink)
 	}
-	if m.serviceK8sMeta.StatefulSetPodLink && m.serviceK8sMeta.StatefulSet && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.STATEFULSET_POD] = append(m.processors[k8smeta.STATEFULSET_POD], m.processStatefulSetPodLink)
+	if m.serviceK8sMeta.PodStatefulSetLink && m.serviceK8sMeta.StatefulSet && m.serviceK8sMeta.Pod {
+		m.processors[k8smeta.POD_STATEFULSET] = append(m.processors[k8smeta.POD_STATEFULSET], m.processPodStatefulSetLink)
 	}
-	if m.serviceK8sMeta.DaemonSetPodLink && m.serviceK8sMeta.DaemonSet && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.DAEMONSET_POD] = append(m.processors[k8smeta.DAEMONSET_POD], m.processDaemonSetPodLink)
+	if m.serviceK8sMeta.PodDaemonSetLink && m.serviceK8sMeta.DaemonSet && m.serviceK8sMeta.Pod {
+		m.processors[k8smeta.POD_DAEMONSET] = append(m.processors[k8smeta.POD_DAEMONSET], m.processPodDaemonSetLink)
 	}
 	if m.serviceK8sMeta.CronjobJobLink && m.serviceK8sMeta.CronJob && m.serviceK8sMeta.Job {
-		m.processors[k8smeta.CRONJOB_JOB] = append(m.processors[k8smeta.CRONJOB_JOB], m.processCronJobJobLink)
+		m.processors[k8smeta.JOB_CRONJOB] = append(m.processors[k8smeta.JOB_CRONJOB], m.processJobCronJobLink)
 	}
-	if m.serviceK8sMeta.JobPodLink && m.serviceK8sMeta.Job && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.JOB_POD] = append(m.processors[k8smeta.JOB_POD], m.processJobPodLink)
+	if m.serviceK8sMeta.PodJobLink && m.serviceK8sMeta.Job && m.serviceK8sMeta.Pod {
+		m.processors[k8smeta.POD_JOB] = append(m.processors[k8smeta.POD_JOB], m.processPodJobLink)
 	}
 	if m.serviceK8sMeta.PodPvcLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.PersistentVolumeClaim {
 		m.processors[k8smeta.POD_PERSISENTVOLUMECLAIN] = append(m.processors[k8smeta.POD_PERSISENTVOLUMECLAIN], m.processPodPVCLink)
@@ -123,8 +122,8 @@ func (m *metaCollector) Start() error {
 	if m.serviceK8sMeta.PodSecretLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Secret {
 		m.processors[k8smeta.POD_SECRET] = append(m.processors[k8smeta.POD_SECRET], m.processPodSecretLink)
 	}
-	if m.serviceK8sMeta.ServicePodLink && m.serviceK8sMeta.Service && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.SERVICE_POD] = append(m.processors[k8smeta.SERVICE_POD], m.processServicePodLink)
+	if m.serviceK8sMeta.PodServiceLink && m.serviceK8sMeta.Service && m.serviceK8sMeta.Pod {
+		m.processors[k8smeta.POD_SERVICE] = append(m.processors[k8smeta.POD_SERVICE], m.processPodServiceLink)
 	}
 	if m.serviceK8sMeta.PodContainerLink && m.serviceK8sMeta.Pod {
 		m.processors[k8smeta.POD_CONTAINER] = append(m.processors[k8smeta.POD_CONTAINER], m.processPodContainerLink)
@@ -185,13 +184,9 @@ func (m *metaCollector) handleEvent(event []*k8smeta.K8sMetaEvent) {
 		return
 	}
 	switch event[0].EventType {
-	case k8smeta.EventTypeAdd:
+	case k8smeta.EventTypeAdd, k8smeta.EventTypeUpdate:
 		for _, e := range event {
-			m.handleAdd(e)
-		}
-	case k8smeta.EventTypeUpdate:
-		for _, e := range event {
-			m.handleUpdate(e)
+			m.handleAddOrUpdate(e)
 		}
 	case k8smeta.EventTypeDelete:
 		for _, e := range event {
@@ -213,12 +208,16 @@ func (m *metaCollector) handleAdd(event *k8smeta.K8sMetaEvent) {
 	}
 }
 
-func (m *metaCollector) handleUpdate(event *k8smeta.K8sMetaEvent) {
+func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
 	if processors, ok := m.processors[event.Object.ResourceType]; ok {
 		for _, processor := range processors {
-			log := processor(event.Object, "update")
+			log := processor(event.Object, "Update")
 			if log != nil {
 				m.send(log, isLink(event.Object.ResourceType))
+				if !isLink(event.Object.ResourceType) {
+					link := m.generateEntityClusterLink(log)
+					m.send(link, true)
+				}
 			}
 		}
 	}
@@ -227,9 +226,13 @@ func (m *metaCollector) handleUpdate(event *k8smeta.K8sMetaEvent) {
 func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 	if processors, ok := m.processors[event.Object.ResourceType]; ok {
 		for _, processor := range processors {
-			log := processor(event.Object, "delete")
+			log := processor(event.Object, "Expire")
 			if log != nil {
 				m.send(log, isLink(event.Object.ResourceType))
+				if !isLink(event.Object.ResourceType) {
+					link := m.generateEntityClusterLink(log)
+					m.send(link, true)
+				}
 			}
 		}
 	}
@@ -281,6 +284,36 @@ func (m *metaCollector) sendInBackground() {
 	}
 }
 
+func (m *metaCollector) genKey(namespace, name string) string {
+	key := m.serviceK8sMeta.clusterID + namespace + name
+	// #nosec G401
+	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
+}
+
+func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEvent) models.PipelineEvent {
+	content := entityEvent.(*models.Log).Contents
+	log := &models.Log{}
+	log.Contents = models.NewLogContents()
+	log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
+	log.Contents.Add(entityLinkSrcEntityTypeFieldName, content.Get(entityTypeFieldName))
+	log.Contents.Add(entityLinkSrcEntityIDFieldName, content.Get(entityIDFieldName))
+
+	log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
+	log.Contents.Add(entityLinkDestEntityTypeFieldName, "ack.cluster")
+	log.Contents.Add(entityLinkDestEntityIDFieldName, m.serviceK8sMeta.clusterID)
+
+	log.Contents.Add(entityLinkRelationTypeFieldName, "runs")
+	log.Contents.Add(entityMethodFieldName, content.Get(entityMethodFieldName))
+
+	log.Contents.Add(entityFirstObservedTimeFieldName, content.Get(entityFirstObservedTimeFieldName))
+	log.Contents.Add(entityLastObservedTimeFieldName, content.Get(entityLastObservedTimeFieldName))
+	log.Contents.Add(entityKeepAliveSecondsFieldName, m.serviceK8sMeta.Interval*2)
+	log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+	log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
+	log.Timestamp = uint64(time.Now().Unix())
+	return log
+}
+
 func convertPipelineEvent2Log(event models.PipelineEvent) *protocol.Log {
 	if modelLog, ok := event.(*models.Log); ok {
 		log := &protocol.Log{}
@@ -300,13 +333,6 @@ func convertPipelineEvent2Log(event models.PipelineEvent) *protocol.Log {
 		return log
 	}
 	return nil
-}
-
-func genKey(namespace, name string) string {
-	clusterId := os.Getenv("_cluster_id_")
-	key := clusterId + namespace + name
-	// #nosec G401
-	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
 }
 
 func isLink(resourceType string) bool {

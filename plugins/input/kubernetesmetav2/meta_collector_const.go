@@ -1,10 +1,11 @@
 package kubernetesmetav2
 
 const (
-	entityDomainFieldName = "__domain__"
-	entityTypeFieldName   = "__entity_type__"
-	entityIDFieldName     = "__entity_id__"
-	entityMethodFieldName = "__method__"
+	entityDomainFieldName    = "__domain__"
+	entityTypeFieldName      = "__entity_type__"
+	entityIDFieldName        = "__entity_id__"
+	entityMethodFieldName    = "__method__"
+	entityClusterIDFieldName = "cluster_id"
 
 	entityFirstObservedTimeFieldName = "__first_observed_time__"
 	entityLastObservedTimeFieldName  = "__last_observed_time__"
@@ -21,4 +22,6 @@ const (
 	entityLinkDestEntityTypeFieldName = "__dest_entity_type__"
 	entityLinkDestEntityIDFieldName   = "__dest_entity_id__"
 	entityLinkRelationTypeFieldName   = "__relation_type__"
+
+	k8sEntityTypePrefix = "k8s."
 )

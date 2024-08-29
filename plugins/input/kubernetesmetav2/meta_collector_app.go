@@ -2,6 +2,7 @@ package kubernetesmetav2
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	app "k8s.io/api/apps/v1"
@@ -14,19 +15,20 @@ func (m *metaCollector) processDeploymentEntity(data *k8smeta.ObjectWrapper, met
 	if obj, ok := data.Raw.(*app.Deployment); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, "k8s")
-		log.Contents.Add(entityTypeFieldName, obj.Kind)
-		log.Contents.Add(entityIDFieldName, genKey(obj.Namespace, obj.Name))
+		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
+		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
 		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 
 		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
 
 		// custom fields
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Contents.Add("apiVersion", obj.APIVersion)
 		log.Contents.Add("kind", obj.Kind)
 		log.Contents.Add("name", obj.Name)
@@ -54,19 +56,19 @@ func (m *metaCollector) processDaemonSetEntity(data *k8smeta.ObjectWrapper, meth
 	if obj, ok := data.Raw.(*app.DaemonSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, "k8s")
-		log.Contents.Add(entityTypeFieldName, obj.Kind)
-		log.Contents.Add(entityIDFieldName, genKey(obj.Namespace, obj.Name))
+		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
+		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
 		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
-
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
 
 		// custom fields
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Contents.Add("apiVersion", obj.APIVersion)
 		log.Contents.Add("kind", obj.Kind)
 		log.Contents.Add("name", obj.Name)
@@ -93,19 +95,19 @@ func (m *metaCollector) processStatefulSetEntity(data *k8smeta.ObjectWrapper, me
 	if obj, ok := data.Raw.(*app.StatefulSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, "k8s")
-		log.Contents.Add(entityTypeFieldName, obj.Kind)
-		log.Contents.Add(entityIDFieldName, genKey(obj.Namespace, obj.Name))
+		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
+		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
 		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
-
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
 
 		// custom fields
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Contents.Add("apiVersion", obj.APIVersion)
 		log.Contents.Add("kind", obj.Kind)
 		log.Contents.Add("name", obj.Name)
@@ -133,19 +135,19 @@ func (m *metaCollector) processReplicaSetEntity(data *k8smeta.ObjectWrapper, met
 	if obj, ok := data.Raw.(*app.ReplicaSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, "k8s")
-		log.Contents.Add(entityTypeFieldName, obj.Kind)
-		log.Contents.Add(entityIDFieldName, genKey(obj.Namespace, obj.Name))
+		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
+		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
 		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
-
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
 
 		// custom fields
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Contents.Add("apiVersion", obj.APIVersion)
 		log.Contents.Add("kind", obj.Kind)
 		log.Contents.Add("name", obj.Name)
@@ -169,136 +171,104 @@ func (m *metaCollector) processReplicaSetEntity(data *k8smeta.ObjectWrapper, met
 	return nil
 }
 
-func (m *metaCollector) processDeploymentReplicaSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
-	if obj, ok := data.Raw.(*k8smeta.DeploymentReplicaSet); ok {
+func (m *metaCollector) processReplicaSetDeploymentLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+	if obj, ok := data.Raw.(*k8smeta.ReplicaSetDeployment); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, obj.Deployment.Kind)
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, genKey(obj.Deployment.Namespace, obj.Deployment.Name))
+		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.ReplicaSet.Kind))
+		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.ReplicaSet.Namespace, obj.ReplicaSet.Name))
 
-		log.Contents.Add(entityLinkDestDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, obj.ReplicaSet.Kind)
-		log.Contents.Add(entityLinkDestEntityIDFieldName, genKey(obj.ReplicaSet.Namespace, obj.ReplicaSet.Name))
+		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Deployment.Kind))
+		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Deployment.Namespace, obj.Deployment.Name))
 
-		log.Contents.Add(entityLinkRelationTypeFieldName, "link")
-
-		switch method {
-		case "create", "update":
-			log.Contents.Add(entityMethodFieldName, "update")
-		case "delete":
-			log.Contents.Add(entityMethodFieldName, method)
-		default:
-			// 数据不完整就没有意义
-			return nil
-		}
+		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
+		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return log
 	}
 	return nil
 }
 
-func (m *metaCollector) processReplicaSetPodLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
-	if obj, ok := data.Raw.(*k8smeta.ReplicaSetPod); ok {
+func (m *metaCollector) processPodReplicaSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+	if obj, ok := data.Raw.(*k8smeta.PodReplicaSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, obj.ReplicaSet.Kind)
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, genKey(obj.ReplicaSet.Namespace, obj.ReplicaSet.Name))
+		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
+		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.ReplicaSet.Namespace, obj.ReplicaSet.Name))
 
-		log.Contents.Add(entityLinkDestDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, obj.Pod.Kind)
-		log.Contents.Add(entityLinkDestEntityIDFieldName, genKey(obj.Pod.Namespace, obj.Pod.Name))
+		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.ReplicaSet.Kind))
+		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
 
-		log.Contents.Add(entityLinkRelationTypeFieldName, "link")
-
-		switch method {
-		case "create", "update":
-			log.Contents.Add(entityMethodFieldName, "update")
-		case "delete":
-			log.Contents.Add(entityMethodFieldName, method)
-		default:
-			// 数据不完整就没有意义
-			return nil
-		}
+		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
+		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return log
 	}
 	return nil
 }
 
-func (m *metaCollector) processStatefulSetPodLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
-	if obj, ok := data.Raw.(*k8smeta.StatefulSetPod); ok {
+func (m *metaCollector) processPodStatefulSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+	if obj, ok := data.Raw.(*k8smeta.PodStatefulSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, obj.StatefulSet.Kind)
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, genKey(obj.StatefulSet.Namespace, obj.StatefulSet.Name))
+		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
+		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.StatefulSet.Namespace, obj.StatefulSet.Name))
 
-		log.Contents.Add(entityLinkDestDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, obj.Pod.Kind)
-		log.Contents.Add(entityLinkDestEntityIDFieldName, genKey(obj.Pod.Namespace, obj.Pod.Name))
+		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.StatefulSet.Kind))
+		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
 
-		log.Contents.Add(entityLinkRelationTypeFieldName, "link")
-
-		switch method {
-		case "create", "update":
-			log.Contents.Add(entityMethodFieldName, "update")
-		case "delete":
-			log.Contents.Add(entityMethodFieldName, method)
-		default:
-			// 数据不完整就没有意义
-			return nil
-		}
+		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
+		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return log
 	}
 	return nil
 }
 
-func (m *metaCollector) processDaemonSetPodLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
-	if obj, ok := data.Raw.(*k8smeta.DaemonSetPod); ok {
+func (m *metaCollector) processPodDaemonSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+	if obj, ok := data.Raw.(*k8smeta.PodDaemonSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, obj.DaemonSet.Kind)
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, genKey(obj.DaemonSet.Namespace, obj.DaemonSet.Name))
+		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
+		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.DaemonSet.Namespace, obj.DaemonSet.Name))
 
-		log.Contents.Add(entityLinkDestDomainFieldName, "k8s")
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, obj.Pod.Kind)
-		log.Contents.Add(entityLinkDestEntityIDFieldName, genKey(obj.Pod.Namespace, obj.Pod.Name))
+		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
+		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.DaemonSet.Kind))
+		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
 
-		log.Contents.Add(entityLinkRelationTypeFieldName, "link")
-
-		switch method {
-		case "create", "update":
-			log.Contents.Add(entityMethodFieldName, "update")
-		case "delete":
-			log.Contents.Add(entityMethodFieldName, method)
-		default:
-			// 数据不完整就没有意义
-			return nil
-		}
+		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
+		log.Contents.Add(entityMethodFieldName, method)
 
 		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
 		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval), 10))
+		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return log
 	}

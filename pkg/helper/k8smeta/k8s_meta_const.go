@@ -28,34 +28,34 @@ const (
 	// entity link type
 	//revive:disable:var-naming
 	LINK_SPLIT_CHARACTER     = "->"
-	NODE_POD                 = "node->pod"
-	DEPLOYMENT_REPLICASET    = "deployment->replicaset"
-	REPLICASET_POD           = "replicaset->pod"
-	STATEFULSET_POD          = "statefulset->pod"
-	DAEMONSET_POD            = "daemonset->pod"
-	CRONJOB_JOB              = "cronjob->job"
-	JOB_POD                  = "job->pod"
+	POD_NODE                 = "pod->node"
+	REPLICASET_DEPLOYMENT    = "replicaset->deployment"
+	POD_REPLICASET           = "pod->replicaset"
+	POD_STATEFULSET          = "pod->statefulset"
+	POD_DAEMONSET            = "pod->daemonset"
+	JOB_CRONJOB              = "job->cronjob"
+	POD_JOB                  = "pod->job"
 	POD_PERSISENTVOLUMECLAIN = "pod->persistentvolumeclaim"
 	POD_CONFIGMAP            = "pod->configmap"
 	POD_SECRET               = "pod->secret"
-	SERVICE_POD              = "service->pod"
+	POD_SERVICE              = "pod->service"
 	POD_CONTAINER            = "pod->container"
 	POD_PROCESS              = "pod->process"
 	//revive:enable:var-naming
 )
 
 var ALL_LINK_MAP = map[string]bool{
-	NODE_POD:                 true,
-	DEPLOYMENT_REPLICASET:    true,
-	REPLICASET_POD:           true,
-	STATEFULSET_POD:          true,
-	DAEMONSET_POD:            true,
-	CRONJOB_JOB:              true,
-	JOB_POD:                  true,
+	POD_NODE:                 true,
+	REPLICASET_DEPLOYMENT:    true,
+	POD_REPLICASET:           true,
+	POD_STATEFULSET:          true,
+	POD_DAEMONSET:            true,
+	JOB_CRONJOB:              true,
+	POD_JOB:                  true,
 	POD_PERSISENTVOLUMECLAIN: true,
 	POD_CONFIGMAP:            true,
 	POD_SECRET:               true,
-	SERVICE_POD:              true,
+	POD_SERVICE:              true,
 	POD_CONTAINER:            true,
 	POD_PROCESS:              true,
 }
@@ -65,32 +65,32 @@ type NodePod struct {
 	Pod  *v1.Pod
 }
 
-type DeploymentReplicaSet struct {
+type ReplicaSetDeployment struct {
 	Deployment *app.Deployment
 	ReplicaSet *app.ReplicaSet
 }
 
-type ReplicaSetPod struct {
+type PodReplicaSet struct {
 	ReplicaSet *app.ReplicaSet
 	Pod        *v1.Pod
 }
 
-type StatefulSetPod struct {
+type PodStatefulSet struct {
 	StatefulSet *app.StatefulSet
 	Pod         *v1.Pod
 }
 
-type DaemonSetPod struct {
+type PodDaemonSet struct {
 	DaemonSet *app.DaemonSet
 	Pod       *v1.Pod
 }
 
-type CronJobJob struct {
+type JobCronJob struct {
 	CronJob *batch.CronJob
 	Job     *batch.Job
 }
 
-type JobPod struct {
+type PodJob struct {
 	Job *batch.Job
 	Pod *v1.Pod
 }
@@ -110,7 +110,7 @@ type PodSecret struct {
 	Secret *v1.Secret
 }
 
-type ServicePod struct {
+type PodService struct {
 	Service *v1.Service
 	Pod     *v1.Pod
 }

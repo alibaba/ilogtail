@@ -1,6 +1,8 @@
 package kubernetesmetav2
 
 import (
+	"os"
+
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -12,6 +14,7 @@ type ProcessFunc func(data *k8smeta.ObjectWrapper, method string) models.Pipelin
 type ServiceK8sMeta struct {
 	//revive:enable:exported
 	Interval int
+	Domain   string
 	// entity switch
 	Pod                   bool
 	Node                  bool
@@ -32,21 +35,22 @@ type ServiceK8sMeta struct {
 	// entity link switch
 	NodePodLink              bool
 	DeploymentReplicasetLink bool
-	ReplicaSetPodLink        bool
-	StatefulSetPodLink       bool
-	DaemonSetPodLink         bool
+	PodReplicaSetLink        bool
+	PodStatefulSetLink       bool
+	PodDaemonSetLink         bool
 	CronjobJobLink           bool
-	JobPodLink               bool
+	PodJobLink               bool
 	PodPvcLink               bool
 	PodConfigMapLink         bool
 	PodSecretLink            bool
-	ServicePodLink           bool
+	PodServiceLink           bool
 	PodContainerLink         bool
 	// other
 	metaManager   *k8smeta.MetaManager
 	collector     pipeline.Collector
 	metaCollector *metaCollector
 	configName    string
+	clusterID     string
 }
 
 // Init called for init some system resources, like socket, mutex...
@@ -84,7 +88,8 @@ func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 func init() {
 	pipeline.ServiceInputs["service_kubernetes_meta"] = func() pipeline.ServiceInput {
 		return &ServiceK8sMeta{
-			Interval: 30,
+			Interval:  60,
+			clusterID: os.Getenv("_cluster_id_"),
 		}
 	}
 }
