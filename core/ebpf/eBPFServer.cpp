@@ -59,11 +59,8 @@ void eBPFServer::Stop() {
     mSourceManager->StopAll();
     // destroy source manager 
     mSourceManager.reset();
-    {
-        std::lock_guard<std::mutex> lk(mMtx);
-        for (std::size_t i = 0; i < mLoadedPipeline.size(); i ++) {
-            UpdatePipelineName(static_cast<nami::PluginType>(i), "");
-        }
+    for (std::size_t i = 0; i < mLoadedPipeline.size(); i ++) {
+        UpdatePipelineName(static_cast<nami::PluginType>(i), "");
     }
     
     // UpdateContext must after than StopPlugin

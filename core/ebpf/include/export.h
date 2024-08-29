@@ -1,6 +1,6 @@
-/**
- * used for sysak
- */
+//
+// Created by qianlu on 2024/6/19.
+//
 
 #pragma once
 
@@ -104,9 +104,9 @@ struct Measure {
 // process
 struct ApplicationBatchMeasure {
   std::string app_id_;
+  std::string region_id_;
   std::string ip_;
   std::vector<std::unique_ptr<Measure>> measures_;
-  uint64_t timestamp_;
 };
 
 enum SpanKindInner { Unspecified, Internal, Server, Client, Producer, Consumer };
@@ -128,7 +128,8 @@ struct ApplicationBatchSpan {
 
 class SingleEvent {
 public:
-  SingleEvent(std::vector<std::pair<std::string, std::string>>&& tags, uint64_t ts)
+  explicit __attribute__((visibility("default"))) SingleEvent(){}
+  explicit __attribute__((visibility("default"))) SingleEvent(std::vector<std::pair<std::string, std::string>>&& tags, uint64_t ts)
     : tags_(tags), timestamp_(ts) {}
   std::vector<std::pair<std::string, std::string>> GetAllTags() { return tags_; }
   uint64_t GetTimestamp() { return timestamp_; }
@@ -144,9 +145,10 @@ private:
 
 class ApplicationBatchEvent {
 public:
-  ApplicationBatchEvent(const std::string& app_id, std::vector<std::pair<std::string, std::string>>&& tags) : app_id_(app_id), tags_(tags) {}
-  ApplicationBatchEvent(const std::string& app_id, std::vector<std::pair<std::string, std::string>>&& tags, std::vector<std::unique_ptr<SingleEvent>>&& events) 
-    : app_id_(app_id), tags_(tags), events_(std::move(events)) {}
+  explicit __attribute__((visibility("default"))) ApplicationBatchEvent(){}
+  explicit __attribute__((visibility("default"))) ApplicationBatchEvent(const std::string& app_id, std::vector<std::pair<std::string, std::string>>&& tags) : app_id_(app_id), tags_(tags) {}
+  explicit __attribute__((visibility("default"))) ApplicationBatchEvent(const std::string& app_id, std::vector<std::pair<std::string, std::string>>&& tags, std::vector<std::unique_ptr<SingleEvent>>&& events) 
+    : app_id_(app_id), tags_(std::move(tags)), events_(std::move(events)) {}
   void SetEvents(std::vector<std::unique_ptr<SingleEvent>>&& events) { events_ = std::move(events); }
   void AppendEvent(std::unique_ptr<SingleEvent>&& event) { events_.emplace_back(std::move(event)); }
   void AppendEvents(std::vector<std::unique_ptr<SingleEvent>>&& events) { 
@@ -154,8 +156,8 @@ public:
       events_.emplace_back(std::move(x));
     }
   }
-  std::string app_id_;
-  std::vector<std::pair<std::string, std::string>> tags_;
+  std::string app_id_; // pid
+  std::vector<std::pair<std::string, std::string>> tags_; // container.id
   std::vector<std::unique_ptr<SingleEvent>> events_;
 };
 
@@ -202,24 +204,24 @@ struct SecurityFileFilter {
 
 // network
 struct SecurityNetworkFilter {
-  std::vector<std::string> mDestAddrList;
-  std::vector<uint32_t> mDestPortList;
-  std::vector<std::string> mDestAddrBlackList;
-  std::vector<uint32_t> mDestPortBlackList;
-  std::vector<std::string> mSourceAddrList;
-  std::vector<uint32_t> mSourcePortList;
-  std::vector<std::string> mSourceAddrBlackList;
-  std::vector<uint32_t> mSourcePortBlackList;
-  bool operator==(const SecurityNetworkFilter& other) const {
-    return mDestAddrList == other.mDestAddrList &&
-            mDestPortList == other.mDestPortList &&
-            mDestAddrBlackList == other.mDestAddrBlackList &&
-            mDestPortBlackList == other.mDestPortBlackList &&
-            mSourceAddrList == other.mSourceAddrList &&
-            mSourcePortList == other.mSourcePortList &&
-            mSourceAddrBlackList == other.mSourceAddrBlackList &&
-          mSourcePortBlackList == other.mSourcePortBlackList;
-  }
+    std::vector<std::string> mDestAddrList;
+    std::vector<uint32_t> mDestPortList;
+    std::vector<std::string> mDestAddrBlackList;
+    std::vector<uint32_t> mDestPortBlackList;
+    std::vector<std::string> mSourceAddrList;
+    std::vector<uint32_t> mSourcePortList;
+    std::vector<std::string> mSourceAddrBlackList;
+    std::vector<uint32_t> mSourcePortBlackList;
+    bool operator==(const SecurityNetworkFilter& other) const {
+      return mDestAddrList == other.mDestAddrList &&
+             mDestPortList == other.mDestPortList &&
+             mDestAddrBlackList == other.mDestAddrBlackList &&
+             mDestPortBlackList == other.mDestPortBlackList &&
+             mSourceAddrList == other.mSourceAddrList &&
+             mSourcePortList == other.mSourcePortList &&
+             mSourceAddrBlackList == other.mSourceAddrBlackList &&
+            mSourcePortBlackList == other.mSourcePortBlackList;
+    }
 };
 
 struct SecurityOption {
@@ -242,9 +244,9 @@ struct NetworkObserveConfig {
   long upca_offset_;
   long upps_offset_;
   long upcr_offset_;
-  bool enable_span_;
-  bool enable_metric_;
-  bool enable_event_;
+  bool enable_span_ = false;
+  bool enable_metric_ = false;
+  bool enable_event_ = false;
   NamiHandleBatchMeasureFunc measure_cb_ = nullptr;
   NamiHandleBatchSpanFunc span_cb_ = nullptr;
   NamiHandleBatchEventFunc event_cb_ = nullptr;
