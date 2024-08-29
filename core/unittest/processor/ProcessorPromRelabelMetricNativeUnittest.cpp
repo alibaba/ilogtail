@@ -19,7 +19,6 @@
 #include "common/StringTools.h"
 #include "models/MetricEvent.h"
 #include "processor/inner/ProcessorPromRelabelMetricNative.h"
-#include "prometheus/Constants.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -42,9 +41,11 @@ void ProcessorPromRelabelMetricNativeUnittest::TestInit() {
     processor.SetContext(mContext);
 
     // success config
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     configStr = R"JSON(
         {
+            "job_name": "test_job",
             "metric_relabel_configs": [
                 {
                     "action": "keep",
@@ -80,9 +81,11 @@ void ProcessorPromRelabelMetricNativeUnittest::TestProcess() {
     ProcessorPromRelabelMetricNative processor;
     processor.SetContext(mContext);
 
-    string configStr, errorMsg;
+    string configStr;
+    string errorMsg;
     configStr = configStr + R"(
         {
+            "job_name": "test_job",
             "metric_relabel_configs": [
                 {
                     "action": "drop",
