@@ -72,7 +72,10 @@ const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
 
-// scrape protocols
+// scrape protocols, from https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
+// text/plain, application/openmetrics-text will be used
+// version of openmetrics is 1.0.0 or 0.0.1, from
+// https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#extensions-and-improvements
 const char* const PrometheusProto = "PrometheusProto";
 const char* const PrometheusText0_0_4 = "PrometheusText0.0.4";
 const char* const OpenMetricsText0_0_1 = "OpenMetricsText0.0.1";

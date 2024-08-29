@@ -271,7 +271,41 @@ void ScrapeConfigUnittest::TestScrapeProtocols() {
         "openmetrics-text;version=0.0.1;q=0.3,application/openmetrics-text;version=1.0.0;q=0.2,*/*;q=0.1",
         scrapeConfig.mRequestHeaders["Accept"]);
 
-    // error1
+    // custom quality protocols
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "scrape_protocols": ["PrometheusProto", "OpenMetricsText1.0.0", "PrometheusText0.0.4", "OpenMetricsText0.0.1"]
+        })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL(
+        "application/vnd.google.protobuf;proto=io.prometheus.client.MetricFamily;encoding=delimited;q=0.5,"
+        "application/openmetrics-text;version=1.0.0;q=0.4,"
+        "text/plain;version=0.0.4;q=0.3,application/openmetrics-text;version=0.0.1;q=0.2,*/*;q=0.1",
+        scrapeConfig.mRequestHeaders["Accept"]);
+
+    // only prometheus0.0.4 protocols
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "scrape_protocols": ["PrometheusText0.0.4"]
+        })JSON";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_TRUE(scrapeConfig.Init(config));
+    APSARA_TEST_EQUAL(
+        "text/plain;version=0.0.4;q=0.2,*/*;q=0.1",
+        scrapeConfig.mRequestHeaders["Accept"]);
+
+    // Capital error
     configStr = R"JSON({
             "job_name": "test_job",
             "scrape_interval": "30s",
@@ -285,7 +319,7 @@ void ScrapeConfigUnittest::TestScrapeProtocols() {
     scrapeConfig.mRequestHeaders.clear();
     APSARA_TEST_FALSE(scrapeConfig.Init(config));
 
-    // error2
+    // OpenMetricsText1.0.0 duplication error
     configStr = R"JSON({
             "job_name": "test_job",
             "scrape_interval": "30s",
@@ -293,6 +327,34 @@ void ScrapeConfigUnittest::TestScrapeProtocols() {
             "metrics_path": "/metrics",
             "scheme": "http",
             "scrape_protocols": ["OpenMetricsText1.0.0", "PrometheusProto", "OpenMetricsText1.0.0"]
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_FALSE(scrapeConfig.Init(config));
+
+    // protocols invalid
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "scrape_protocols": ["OpenMetricsText1.0.0", "PrometheusProto", 999]
+        })JSON";
+
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
+    scrapeConfig.mRequestHeaders.clear();
+    APSARA_TEST_FALSE(scrapeConfig.Init(config));
+
+    // unknown protocol
+    configStr = R"JSON({
+            "job_name": "test_job",
+            "scrape_interval": "30s",
+            "scrape_timeout": "30s",
+            "metrics_path": "/metrics",
+            "scheme": "http",
+            "scrape_protocols": ["OpenMetricsText"]
         })JSON";
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, config, errorMsg));
