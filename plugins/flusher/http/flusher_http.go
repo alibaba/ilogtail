@@ -75,6 +75,10 @@ type FlusherHTTP struct {
 	Encoder                *extensions.ExtensionConfig  // Encoder defines which protocol and format to encode to
 	Convert                helper.ConvertConfig         // Convert defines which protocol and format to convert to
 	Concurrency            int                          // How many requests can be performed in concurrent
+	MaxConnsPerHost        int                          // MaxConnsPerHost for http.Transport
+	MaxIdleConnsPerHost    int                          // MaxIdleConnsPerHost for http.Transport
+	IdleConnTimeout        time.Duration                // IdleConnTimeout for http.Transport
+	WriteBufferSize        int                          // WriteBufferSize for http.Transport
 	Authenticator          *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
 	FlushInterceptor       *extensions.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
 	AsyncIntercept         bool                         // intercept the event asynchronously
@@ -267,6 +271,18 @@ func (f *FlusherHTTP) initHTTPClient() error {
 		dt = dt.Clone()
 		if f.Concurrency > dt.MaxIdleConnsPerHost {
 			dt.MaxIdleConnsPerHost = f.Concurrency + 1
+		}
+		if f.MaxConnsPerHost > dt.MaxConnsPerHost {
+			dt.MaxConnsPerHost = f.MaxConnsPerHost
+		}
+		if f.MaxIdleConnsPerHost > dt.MaxIdleConnsPerHost {
+			dt.MaxIdleConnsPerHost = f.MaxIdleConnsPerHost
+		}
+		if f.IdleConnTimeout > 0 {
+			dt.IdleConnTimeout = f.IdleConnTimeout
+		}
+		if f.WriteBufferSize > 0 {
+			dt.WriteBufferSize = f.WriteBufferSize
 		}
 		transport = dt
 	}
