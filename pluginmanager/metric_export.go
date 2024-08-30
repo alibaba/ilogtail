@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	METRIC_EXPORT_TYPE        = "go_metric_export_type"
-	METRIC_EXPORT_TYPE_GO     = "go_direct"
-	METRIC_EXPORT_TYPE_CPP    = "cpp_provided"
-	METRIC_EXPORT_LEVEL       = "metric_level"
-	METRIC_EXPORT_LEVEL_AGENT = "agent"
+	MetricExportType       = "go_metric_export_type"
+	MetricExportTypeGo     = "go_direct"
+	MetricExportTypeCpp    = "cpp_provided"
+	MetricExportLevel      = "metric_level"
+	MetricExportLevelAgent = "agent"
 )
 
 func GetMetrics() []map[string]string {
@@ -38,7 +38,7 @@ func GetGoDirectMetrics() []map[string]string {
 	metrics = append(metrics, GetGoPluginMetrics()...)
 
 	for _, metric := range metrics {
-		metric[METRIC_EXPORT_TYPE] = METRIC_EXPORT_TYPE_GO
+		metric[MetricExportType] = MetricExportTypeGo
 	}
 	return metrics
 }
@@ -50,7 +50,7 @@ func GetCppProvidedMetrics() []map[string]string {
 	metrics = append(metrics, GetAgentStat())
 
 	for _, metric := range metrics {
-		metric[METRIC_EXPORT_TYPE] = METRIC_EXPORT_TYPE_CPP
+		metric[MetricExportType] = MetricExportTypeCpp
 	}
 	return metrics
 }
@@ -67,7 +67,7 @@ func GetGoPluginMetrics() []map[string]string {
 // go 进程级指标，由C++部分注册
 func GetAgentStat() map[string]string {
 	recrods := map[string]string{}
-	recrods[METRIC_EXPORT_LEVEL] = METRIC_EXPORT_LEVEL_AGENT
+	recrods[MetricExportLevel] = MetricExportLevelAgent
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
 		// cpu
