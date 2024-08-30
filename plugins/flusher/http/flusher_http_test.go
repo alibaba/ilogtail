@@ -735,6 +735,44 @@ func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
 	})
 }
 
+func TestHttpFlusherDropEvents(t *testing.T) {
+	Convey("Given a http flusher that drops events when queue is full", t, func() {
+		mockIntercepter := &mockInterceptor{}
+		flusher := &FlusherHTTP{
+			RemoteURL: "http://test.com/write",
+			Convert: helper.ConvertConfig{
+				Protocol: converter.ProtocolInfluxdb,
+				Encoding: converter.EncodingCustom,
+			},
+			interceptor:            mockIntercepter,
+			context:                mock.NewEmptyContext("p", "l", "c"),
+			AsyncIntercept:         true,
+			Timeout:                defaultTimeout,
+			Concurrency:            1,
+			queue:                  make(chan interface{}, 1),
+			DropEventWhenQueueFull: true,
+		}
+
+		Convey("should discard events when queue is full", func() {
+			groupEvents := models.PipelineGroupEvents{
+				Events: []models.PipelineEvent{&models.Metric{
+					Name:      "cpu.load.short",
+					Timestamp: 1672321328000000000,
+					Tags:      models.NewTagsWithKeyValues("host", "server01", "region", "cn"),
+					Value:     &models.MetricSingleValue{Value: 0.64},
+				}},
+			}
+			err := flusher.Export([]*models.PipelineGroupEvents{&groupEvents}, nil)
+			So(err, ShouldBeNil)
+			err = flusher.Export([]*models.PipelineGroupEvents{&groupEvents}, nil)
+			So(err, ShouldBeNil)
+			So(len(flusher.queue), ShouldEqual, 1)
+			err = flusher.convertAndFlush(<-flusher.queue)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
 type mockContext struct {
 	pipeline.Context
 	basicAuth   *basicAuth

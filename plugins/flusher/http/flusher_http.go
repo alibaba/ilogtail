@@ -58,18 +58,19 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL           string                       // RemoteURL to request
-	Headers             map[string]string            // Headers to append to the http request
-	Query               map[string]string            // Query parameters to append to the http request
-	Timeout             time.Duration                // Request timeout, default is 60s
-	Retry               retryConfig                  // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
-	Convert             helper.ConvertConfig         // Convert defines which protocol and format to convert to
-	Concurrency         int                          // How many requests can be performed in concurrent
-	Authenticator       *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
-	FlushInterceptor    *extensions.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
-	AsyncIntercept      bool                         // intercept the event asynchronously
-	RequestInterceptors []extensions.ExtensionConfig // custom request interceptor settings
-	QueueCapacity       int                          // capacity of channel
+	RemoteURL              string                       // RemoteURL to request
+	Headers                map[string]string            // Headers to append to the http request
+	Query                  map[string]string            // Query parameters to append to the http request
+	Timeout                time.Duration                // Request timeout, default is 60s
+	Retry                  retryConfig                  // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Convert                helper.ConvertConfig         // Convert defines which protocol and format to convert to
+	Concurrency            int                          // How many requests can be performed in concurrent
+	Authenticator          *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
+	FlushInterceptor       *extensions.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
+	AsyncIntercept         bool                         // intercept the event asynchronously
+	RequestInterceptors    []extensions.ExtensionConfig // custom request interceptor settings
+	QueueCapacity          int                          // capacity of channel
+	DropEventWhenQueueFull bool                         // If true, pipeline events will be dropped when the queue is full
 
 	varKeys []string
 
@@ -80,6 +81,26 @@ type FlusherHTTP struct {
 
 	queue   chan interface{}
 	counter sync.WaitGroup
+}
+
+func NewHttpFlusher() *FlusherHTTP {
+	return &FlusherHTTP{
+		QueueCapacity: 1024,
+		Timeout:       defaultTimeout,
+		Concurrency:   1,
+		Convert: helper.ConvertConfig{
+			Protocol:             converter.ProtocolCustomSingle,
+			Encoding:             converter.EncodingJSON,
+			IgnoreUnExpectedData: true,
+		},
+		Retry: retryConfig{
+			Enable:        true,
+			MaxRetryTimes: 3,
+			InitialDelay:  time.Second,
+			MaxDelay:      30 * time.Second,
+		},
+		DropEventWhenQueueFull: true,
+	}
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -251,7 +272,17 @@ func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
 
 func (f *FlusherHTTP) addTask(log interface{}) {
 	f.counter.Add(1)
-	f.queue <- log
+
+	if f.DropEventWhenQueueFull {
+		select {
+		case f.queue <- log:
+		default:
+			f.counter.Done()
+			logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a group event since the queue is full")
+		}
+	} else {
+		f.queue <- log
+	}
 }
 
 func (f *FlusherHTTP) countDownTask() {
@@ -464,21 +495,6 @@ func (f *FlusherHTTP) fillRequestContentType() {
 
 func init() {
 	pipeline.Flushers["flusher_http"] = func() pipeline.Flusher {
-		return &FlusherHTTP{
-			QueueCapacity: 1024,
-			Timeout:       defaultTimeout,
-			Concurrency:   1,
-			Convert: helper.ConvertConfig{
-				Protocol:             converter.ProtocolCustomSingle,
-				Encoding:             converter.EncodingJSON,
-				IgnoreUnExpectedData: true,
-			},
-			Retry: retryConfig{
-				Enable:        true,
-				MaxRetryTimes: 3,
-				InitialDelay:  time.Second,
-				MaxDelay:      30 * time.Second,
-			},
-		}
+		return NewHttpFlusher()
 	}
 }
