@@ -68,33 +68,6 @@ void SplitStringView(const std::string& s, char delimiter, std::vector<StringVie
     }
 }
 
-
-bool IsValidMetric(const StringView& line) {
-    for (auto c : line) {
-        if (c == ' ' || c == '\t') {
-            continue;
-        }
-        if (c == '#') {
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-void SplitStringView(const std::string& s, char delimiter, std::vector<StringView>& result) {
-    size_t start = 0;
-    size_t end = 0;
-
-    while ((end = s.find(delimiter, start)) != std::string::npos) {
-        result.emplace_back(s.data() + start, end - start);
-        start = end + 1;
-    }
-    if (start < s.size()) {
-        result.emplace_back(s.data() + start, s.size() - start);
-    }
-}
-
 uint64_t GetRandSleepMilliSec(const std::string& key, uint64_t intervalSeconds, uint64_t currentMilliSeconds) {
     // Pre-compute the inverse of the maximum value of uint64_t
     static constexpr double sInverseMaxUint64 = 1.0 / static_cast<double>(std::numeric_limits<uint64_t>::max());
