@@ -19,18 +19,55 @@ import (
 	"strings"
 )
 
+const (
+	METRIC_EXPORT_TYPE        = "go_metric_export_type"
+	METRIC_EXPORT_TYPE_GO     = "go_direct"
+	METRIC_EXPORT_TYPE_CPP    = "cpp_provided"
+	METRIC_EXPORT_LEVEL       = "metric_level"
+	METRIC_EXPORT_LEVEL_AGENT = "agent"
+)
+
 func GetMetrics() []map[string]string {
+	return append(GetGoDirectMetrics(), GetCppProvidedMetrics()...)
+}
+
+// 直接输出的go指标，例如go插件指标
+func GetGoDirectMetrics() []map[string]string {
+	metrics := make([]map[string]string, 0)
+	// go plugin metrics
+	metrics = append(metrics, GetGoPluginMetrics()...)
+
+	for _, metric := range metrics {
+		metric[METRIC_EXPORT_TYPE] = METRIC_EXPORT_TYPE_GO
+	}
+	return metrics
+}
+
+// 由C++定义的指标，go把值传过去，例如go的进程级指标
+func GetCppProvidedMetrics() []map[string]string {
+	metrics := make([]map[string]string, 0)
+	// agent-level metrics
+	metrics = append(metrics, GetAgentStat())
+
+	for _, metric := range metrics {
+		metric[METRIC_EXPORT_TYPE] = METRIC_EXPORT_TYPE_CPP
+	}
+	return metrics
+}
+
+// go 插件指标，直接输出
+func GetGoPluginMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	for _, config := range LogtailConfig {
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
 	}
-	metrics = append(metrics, GetAgentStat())
 	return metrics
 }
 
+// go 进程级指标，由C++部分注册
 func GetAgentStat() map[string]string {
 	recrods := map[string]string{}
-	recrods["metric-level"] = "agent"
+	recrods[METRIC_EXPORT_LEVEL] = METRIC_EXPORT_LEVEL_AGENT
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
 		// cpu
