@@ -226,7 +226,7 @@ func (f *FlusherHTTP) Stop() error {
 	return nil
 }
 
-func (f *FlusherHTTP) SetHttpClient(client Client) {
+func (f *FlusherHTTP) SetHTTPClient(client Client) {
 	f.client = client
 }
 
