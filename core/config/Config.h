@@ -246,7 +246,7 @@ public:
            bool uploadRawLog = false,
            const std::string& StreamLogTag = "",
            bool discardUnmatch = true,
-           int readerFlushTimeout = 5,
+           int readerFlushTimeout = 60,
            std::list<std::string>* regs = NULL,
            std::list<std::string>* keys = NULL,
            std::string timeFormat = "");

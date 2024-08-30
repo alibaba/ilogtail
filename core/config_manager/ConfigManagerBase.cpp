@@ -107,7 +107,7 @@ DECLARE_FLAG_BOOL(enable_collection_mark);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
 DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
-DEFINE_FLAG_INT32(default_reader_flush_timeout, "Timeout before incomplete log is flushed", 5);
+DEFINE_FLAG_INT32(default_reader_flush_timeout, "Timeout before incomplete log is flushed", 60);
 
 namespace logtail {
 
