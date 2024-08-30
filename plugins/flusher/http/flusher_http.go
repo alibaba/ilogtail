@@ -99,7 +99,7 @@ type FlusherHTTP struct {
 	counter sync.WaitGroup
 }
 
-func NewHttpFlusher() *FlusherHTTP {
+func NewHTTPFlusher() *FlusherHTTP {
 	return &FlusherHTTP{
 		QueueCapacity: 1024,
 		Timeout:       defaultTimeout,
@@ -638,6 +638,6 @@ func (f *FlusherHTTP) fillRequestContentType() {
 
 func init() {
 	pipeline.Flushers["flusher_http"] = func() pipeline.Flusher {
-		return NewHttpFlusher()
+		return NewHTTPFlusher()
 	}
 }
