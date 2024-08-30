@@ -72,6 +72,7 @@ type FlusherHTTP struct {
 	Query                  map[string]string            // Query parameters to append to the http request
 	Timeout                time.Duration                // Request timeout, default is 60s
 	Retry                  retryConfig                  // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Encoder                *extensions.ExtensionConfig  // Encoder defines which protocol and format to encode to
 	Convert                helper.ConvertConfig         // Convert defines which protocol and format to convert to
 	Concurrency            int                          // How many requests can be performed in concurrent
 	Authenticator          *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
@@ -85,6 +86,7 @@ type FlusherHTTP struct {
 	varKeys []string
 
 	context     pipeline.Context
+	encoder     extensions.Encoder
 	converter   *converter.Converter
 	client      *http.Client
 	interceptor extensions.FlushInterceptor
@@ -132,12 +134,16 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 		return err
 	}
 
-	converter, err := f.getConverter()
-	if err != nil {
+	var err error
+	if err = f.initEncoder(); err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init encoder fail, error", err)
+		return err
+	}
+
+	if err = f.initConverter(); err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init converter fail, error", err)
 		return err
 	}
-	f.converter = converter
 
 	if f.FlushInterceptor != nil {
 		var ext pipeline.Extension
@@ -212,6 +218,49 @@ func (f *FlusherHTTP) Stop() error {
 	return nil
 }
 
+func (f *FlusherHTTP) initEncoder() error {
+	if f.Encoder == nil {
+		return nil
+	}
+
+	ext, err := f.context.GetExtension(f.Encoder.Type, f.Encoder.Options)
+	if err != nil {
+		return fmt.Errorf("get extension failed, error: %w", err)
+	}
+
+	enc, ok := ext.(extensions.Encoder)
+	if !ok {
+		return fmt.Errorf("filter(%s) not implement interface extensions.Encoder", f.Encoder)
+	}
+
+	f.encoder = enc
+
+	return nil
+}
+
+func (f *FlusherHTTP) initConverter() error {
+	conv, err := f.getConverter()
+	if err == nil {
+		f.converter = conv
+		return nil
+	}
+
+	if f.encoder == nil {
+		// e.g.
+		// Prometheus http flusher does not config helper.ConvertConfig,
+		// but must config encoder config (i.e. prometheus encoder config).
+		// If err != nil, meanwhile http flusher has no encoder,
+		// flusher cannot work, so should return error.
+		return err
+	}
+
+	return nil
+}
+
+func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
+	return converter.NewConverterWithSep(f.Convert.Protocol, f.Convert.Encoding, f.Convert.Separator, f.Convert.IgnoreUnExpectedData, f.Convert.TagFieldsRename, f.Convert.ProtocolFieldsRename, f.context.GetPipelineScopeConfig())
+}
+
 func (f *FlusherHTTP) initHTTPClient() error {
 	transport := http.DefaultTransport
 	if dt, ok := transport.(*http.Transport); ok {
@@ -278,10 +327,6 @@ func (f *FlusherHTTP) initRequestInterceptors(transport http.RoundTripper) (http
 	return transport, nil
 }
 
-func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
-	return converter.NewConverterWithSep(f.Convert.Protocol, f.Convert.Encoding, f.Convert.Separator, f.Convert.IgnoreUnExpectedData, f.Convert.TagFieldsRename, f.Convert.ProtocolFieldsRename, f.context.GetPipelineScopeConfig())
-}
-
 func (f *FlusherHTTP) addTask(log interface{}) {
 	f.counter.Add(1)
 
@@ -302,12 +347,47 @@ func (f *FlusherHTTP) countDownTask() {
 }
 
 func (f *FlusherHTTP) runFlushTask() {
+	flushTaskFn, action := f.convertAndFlush, "convert"
+	if f.encoder != nil {
+		flushTaskFn, action = f.encodeAndFlush, "encode"
+	}
+
 	for data := range f.queue {
-		err := f.convertAndFlush(data)
+		err := flushTaskFn(data)
 		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed convert or flush data, data dropped, error", err)
+			logger.Errorf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM",
+				"http flusher failed %s or flush data, data dropped, error: %s", action, err.Error())
 		}
 	}
+}
+
+func (f *FlusherHTTP) encodeAndFlush(event any) error {
+	defer f.countDownTask()
+
+	var data [][]byte
+	var err error
+
+	switch v := event.(type) {
+	case *models.PipelineGroupEvents:
+		data, err = f.encoder.EncodeV2(v)
+
+	default:
+		return errors.New("unsupported event type")
+	}
+
+	if err != nil {
+		return fmt.Errorf("http flusher encode event data fail, error: %w", err)
+	}
+
+	for _, shard := range data {
+		if err = f.flushWithRetry(shard, nil); err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM",
+				"http flusher failed flush data after retry, data dropped, error", err,
+				"remote url", f.RemoteURL)
+		}
+	}
+
+	return nil
 }
 
 func (f *FlusherHTTP) convertAndFlush(data interface{}) error {

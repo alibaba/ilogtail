@@ -36,6 +36,8 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
+	"github.com/alibaba/ilogtail/pkg/protocol/encoder/prometheus"
+	defaultencoder "github.com/alibaba/ilogtail/plugins/extension/default_encoder"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 
@@ -58,6 +60,34 @@ func TestHttpFlusherInit(t *testing.T) {
 		Convey("Then Init() should return error", func() {
 			err := flusher.Init(mockContext{})
 			So(err, ShouldNotBeNil)
+		})
+	})
+
+	Convey("Given a http flusher with prometheus encoder", t, func() {
+		flusher := &FlusherHTTP{
+			RemoteURL: "http://localhost:9090/write",
+			Encoder: &extensions.ExtensionConfig{
+				Type:    "ext_default_encoder",
+				Options: map[string]any{"Format": "prometheus", "SeriesLimit": 1024},
+			},
+			Concurrency: 1,
+		}
+		Convey("Then Init() should implement prometheus encoder success", func() {
+			err := flusher.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+
+			ext, err := flusher.context.GetExtension(flusher.Encoder.Type, flusher.Encoder.Options)
+			So(err, ShouldBeNil)
+
+			enc, ok := ext.(extensions.Encoder)
+			So(ok, ShouldBeTrue)
+
+			defEnc, ok := enc.(*defaultencoder.ExtensionDefaultEncoder)
+			So(ok, ShouldBeTrue)
+
+			promEnc, ok := defEnc.Encoder.(*prometheus.Encoder)
+			So(ok, ShouldBeTrue)
+			So(promEnc.SeriesLimit, ShouldEqual, 1024)
 		})
 	})
 
