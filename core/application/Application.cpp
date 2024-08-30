@@ -44,7 +44,7 @@
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
-#include "pipeline/ProcessConfigManager.h"
+#include "pipeline/InstanceConfigManager.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/daemon/LogProcess.h"
 #include "queue/ExactlyOnceQueueManager.h"
@@ -216,15 +216,15 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "processconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
             LOG_WARNING(sLogger,
-                        ("failed to create dir for local processconfig",
+                        ("failed to create dir for local instanceconfig",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddProcessSource(localConfigPath.string());
+        ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__
@@ -279,9 +279,9 @@ void Application::Start() { // GCOVR_EXCL_START
             if (!pipelineConfigDiff.IsEmpty()) {
                 PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
             }
-            ProcessConfigDiff processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
-            if (!processConfigDiff.IsEmpty()) {
-                ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
+            InstanceConfigDiff instanceConfigDiff = ConfigWatcher::GetInstance()->CheckInstanceConfigDiff();
+            if (!instanceConfigDiff.IsEmpty()) {
+                InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }
             lastConfigCheckTime = curTime;
         }
@@ -298,6 +298,7 @@ void Application::Start() { // GCOVR_EXCL_START
 #endif
         if (curTime - lastQueueGCTime >= INT32_FLAG(queue_check_gc_interval_sec)) {
             ExactlyOnceQueueManager::GetInstance()->ClearTimeoutQueues();
+            // this should be called in the same thread as config update
             SenderQueueManager::GetInstance()->ClearUnusedQueues();
             lastQueueGCTime = curTime;
         }

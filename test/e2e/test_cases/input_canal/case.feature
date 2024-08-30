@@ -2,7 +2,7 @@
 Feature: input canal
   Test input canal
 
-  @e2e @docker-compose
+  @e2e @docker-compose @input-canal
   Scenario: TestInputCanal
     Given {docker-compose} environment
     Given subcribe data from {grpc} with config
@@ -28,7 +28,7 @@ Feature: input canal
     """
     """
     Then there is at least {10} logs
-    Then the log fields match
+    Then the log fields match as below
     """
     - _db_
     - _gtid_

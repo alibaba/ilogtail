@@ -37,6 +37,7 @@ void eBPFServer::Init() {
     // ebpf config
     auto configJson = AppConfig::GetInstance()->GetConfig();
     mAdminConfig.LoadEbpfConfig(configJson);
+    mEventCB = std::make_unique<EventHandler>(nullptr, -1, 0);
 #ifdef __ENTERPRISE__
     mMeterCB = std::make_unique<ArmsMeterHandler>(nullptr, -1, 0);
     mSpanCB = std::make_unique<ArmsSpanHandler>(nullptr, -1, 0);
@@ -52,9 +53,18 @@ void eBPFServer::Init() {
 }
 
 void eBPFServer::Stop() {
+    if (!mInited) return;
+    mInited = false;
     LOG_INFO(sLogger, ("begin to stop all plugins", ""));
     mSourceManager->StopAll();
+    // destroy source manager 
+    mSourceManager.reset();
+    for (std::size_t i = 0; i < mLoadedPipeline.size(); i ++) {
+        UpdatePipelineName(static_cast<nami::PluginType>(i), "");
+    }
+    
     // UpdateContext must after than StopPlugin
+    if (mEventCB) mEventCB->UpdateContext(nullptr, -1, -1);
     if (mMeterCB) mMeterCB->UpdateContext(nullptr, -1, -1);
     if (mSpanCB) mSpanCB->UpdateContext(nullptr,-1, -1);
     if (mNetworkSecureCB) mNetworkSecureCB->UpdateContext(nullptr,-1, -1);
@@ -95,11 +105,21 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     case nami::PluginType::NETWORK_OBSERVE:{
         nami::NetworkObserveConfig nconfig;
-        nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
-        nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
+        nami::ObserverNetworkOption* opts = std::get<nami::ObserverNetworkOption*>(options);
+        if (opts->mEnableMetric) {
+            nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
+            mMeterCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
+        }
+        if (opts->mEnableSpan) {
+            nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
+            mSpanCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
+        }
+        if (opts->mEnableLog) {
+            nconfig.event_cb_ = [this](auto events) { return mEventCB->handle(std::move(events)); };
+            mEventCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
+        }
+
         config = std::move(nconfig);
-        mMeterCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
-        mSpanCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         ret = mSourceManager->StartPlugin(type, config);
         break;
     }
@@ -135,10 +155,19 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
     return ret;
 }
 
+bool eBPFServer::HasRegisteredPlugins() const {
+    std::lock_guard<std::mutex> lk(mMtx);
+    for (auto& pipeline : mLoadedPipeline) {
+        if (!pipeline.empty()) return true;
+    }
+    return false;
+}
+
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const PipelineContext* ctx, 
                         const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
+    Init();
     return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options);
 }
 
@@ -184,6 +213,7 @@ void eBPFServer::UpdateCBContext(nami::PluginType type, const logtail::PipelineC
     case nami::PluginType::NETWORK_OBSERVE:{
         if (mMeterCB) mMeterCB->UpdateContext(ctx, key, idx);
         if (mSpanCB) mSpanCB->UpdateContext(ctx, key, idx);
+        if (mEventCB) mEventCB->UpdateContext(ctx, key, idx);
         return;
     }
     case nami::PluginType::NETWORK_SECURITY:{

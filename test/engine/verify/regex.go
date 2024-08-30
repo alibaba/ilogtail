@@ -22,6 +22,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/engine/control"
 	"github.com/alibaba/ilogtail/test/engine/setup/subscriber"
 )
 
@@ -33,14 +34,14 @@ func RegexSingle(ctx context.Context) (context.Context, error) {
 	} else {
 		return ctx, fmt.Errorf("no start time")
 	}
-	fields := []string{"mark", "file", "logno", "ip", "time", "method", "url", "http", "status", "size", "useragent", "msg"}
+	fields := []string{"mark", "file", "logNo", "ip", "time", "method", "url", "http", "status", "size", "userAgent", "msg"}
 	timeoutCtx, cancel := context.WithTimeout(context.TODO(), config.TestConfig.RetryTimeout)
 	defer cancel()
 	var groups []*protocol.LogGroup
 	var err error
 	err = retry.Do(
 		func() error {
-			groups, err = subscriber.TestSubscriber.GetData(from)
+			groups, err = subscriber.TestSubscriber.GetData(control.GetQuery(ctx), from)
 			if err != nil {
 				return err
 			}
