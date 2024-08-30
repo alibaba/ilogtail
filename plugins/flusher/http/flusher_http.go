@@ -16,6 +16,7 @@ package http
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/rand"
 	"errors"
 	"fmt"
@@ -25,6 +26,8 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/golang/snappy"
 
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -39,8 +42,9 @@ import (
 const (
 	defaultTimeout = time.Minute
 
-	contentTypeHeader  = "Content-Type"
-	defaultContentType = "application/octet-stream"
+	contentTypeHeader     = "Content-Type"
+	defaultContentType    = "application/octet-stream"
+	contentEncodingHeader = "Content-Encoding"
 )
 
 var contentTypeMaps = map[string]string{
@@ -48,6 +52,11 @@ var contentTypeMaps = map[string]string{
 	converter.EncodingProtobuf: defaultContentType,
 	converter.EncodingNone:     defaultContentType,
 	converter.EncodingCustom:   defaultContentType,
+}
+
+var supportedCompressionType = map[string]any{
+	"gzip":   nil,
+	"snappy": nil,
 }
 
 type retryConfig struct {
@@ -71,6 +80,7 @@ type FlusherHTTP struct {
 	RequestInterceptors    []extensions.ExtensionConfig // custom request interceptor settings
 	QueueCapacity          int                          // capacity of channel
 	DropEventWhenQueueFull bool                         // If true, pipeline events will be dropped when the queue is full
+	Compression            string                       // Compression type, support gzip and snappy at this moment.
 
 	varKeys []string
 
@@ -161,7 +171,9 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.buildVarKeys()
 	f.fillRequestContentType()
 
-	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
+	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized",
+		"timeout", f.Timeout,
+		"compression", f.Compression)
 	return nil
 }
 
@@ -376,8 +388,37 @@ func (f *FlusherHTTP) getNextRetryDelay(retryTime int) time.Duration {
 	return time.Duration(harf + jitter.Int64())
 }
 
+func (f *FlusherHTTP) compressData(data []byte) (io.Reader, error) {
+	var reader io.Reader = bytes.NewReader(data)
+	if compressionType, ok := f.Headers[contentEncodingHeader]; ok {
+		switch compressionType {
+		case "gzip":
+			var buf bytes.Buffer
+			gw := gzip.NewWriter(&buf)
+			if _, err := gw.Write(data); err != nil {
+				return nil, err
+			}
+			if err := gw.Close(); err != nil {
+				return nil, err
+			}
+			reader = &buf
+		case "snappy":
+			compressedData := snappy.Encode(nil, data)
+			reader = bytes.NewReader(compressedData)
+		default:
+		}
+	}
+	return reader, nil
+}
+
 func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retryable bool, err error) {
-	req, err := http.NewRequest(http.MethodPost, f.RemoteURL, bytes.NewReader(data))
+	reader, err := f.compressData(data)
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "create reader error", err)
+		return false, false, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, f.RemoteURL, reader)
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher create request fail, error", err)
 		return false, false, err
@@ -479,6 +520,12 @@ func (f *FlusherHTTP) buildVarKeys() {
 func (f *FlusherHTTP) fillRequestContentType() {
 	if f.Headers == nil {
 		f.Headers = make(map[string]string, 4)
+	}
+
+	if f.Compression != "" {
+		if _, ok := supportedCompressionType[f.Compression]; ok {
+			f.Headers[contentEncodingHeader] = f.Compression
+		}
 	}
 
 	_, ok := f.Headers[contentTypeHeader]
