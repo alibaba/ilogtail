@@ -349,6 +349,11 @@ func InterfaceToJSONString(val interface{}) (string, error) {
 	return string(b), err
 }
 
+func InterfaceToJSONStringIgnoreErr(val interface{}) string {
+	b, _ := json.Marshal(val)
+	return string(b)
+}
+
 func NewPackIDPrefix(text string) string {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(text + GetIPAddress() + time.Now().String()))

@@ -19,6 +19,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/elastic/beats/v7 v7.7.1
 	github.com/elastic/go-elasticsearch/v8 v8.6.0
+	github.com/elastic/go-libaudit/v2 v2.5.0
 	github.com/elastic/go-lumber v0.1.0
 	github.com/go-mysql-org/go-mysql v1.8.0
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
@@ -31,6 +32,7 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/jarcoal/httpmock v1.2.0
 	github.com/jeromer/syslogparser v0.0.0-20190429161531-5fbaaf06d9e7
+	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901
 	github.com/json-iterator/go v1.1.12
 	github.com/knz/strtime v0.0.0-20181018220328-af2256ee352c
 	github.com/mailru/easyjson v0.7.7
@@ -119,6 +121,7 @@ require (
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
+	github.com/elastic/go-licenser v0.4.1 // indirect
 	github.com/emicklei/go-restful v2.16.0+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/frankban/quicktest v1.14.5 // indirect
@@ -173,10 +176,10 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/linkedin/goavro/v2 v2.9.8 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
