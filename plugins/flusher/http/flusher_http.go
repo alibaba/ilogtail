@@ -66,6 +66,10 @@ type retryConfig struct {
 	MaxDelay      time.Duration // max delay time when retry, default is 30s
 }
 
+type Client interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type FlusherHTTP struct {
 	RemoteURL              string                       // RemoteURL to request
 	Headers                map[string]string            // Headers to append to the http request
@@ -92,7 +96,7 @@ type FlusherHTTP struct {
 	context     pipeline.Context
 	encoder     extensions.Encoder
 	converter   *converter.Converter
-	client      *http.Client
+	client      Client
 	interceptor extensions.FlushInterceptor
 
 	queue   chan interface{}
@@ -220,6 +224,10 @@ func (f *FlusherHTTP) Stop() error {
 	f.counter.Wait()
 	close(f.queue)
 	return nil
+}
+
+func (f *FlusherHTTP) SetHttpClient(client Client) {
+	f.client = client
 }
 
 func (f *FlusherHTTP) initEncoder() error {
