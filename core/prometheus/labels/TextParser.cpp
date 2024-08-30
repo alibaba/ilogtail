@@ -43,6 +43,7 @@ bool IsValidNumberChar(char c) {
 PipelineEventGroup TextParser::Parse(const string& content, uint64_t defaultTimestamp, uint32_t defaultNanoTs) {
     auto eGroup = PipelineEventGroup(make_shared<SourceBuffer>());
     vector<StringView> lines;
+    // pre-reserve vector size by 1024 which is experience value per line
     lines.reserve(content.size() / 1024);
     SplitStringView(content, '\n', lines);
     for (const auto& line : lines) {
@@ -62,7 +63,8 @@ PipelineEventGroup TextParser::BuildLogGroup(const string& content) {
     PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
     vector<StringView> lines;
-    lines.reserve(content.size() / 100);
+    // pre-reserve vector size by 1024 which is experience value per line
+    lines.reserve(content.size() / 1024);
     SplitStringView(content, '\n', lines);
     for (const auto& line : lines) {
         if (!IsValidMetric(line)) {
@@ -98,6 +100,7 @@ bool TextParser::ParseLine(StringView line,
     return false;
 }
 
+// start to parse metric sample:test_metric{k1="v1", k2="v2" } 9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleStart(MetricEvent& metricEvent) {
     SkipLeadingWhitespace();
     auto c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
@@ -108,6 +111,7 @@ void TextParser::HandleStart(MetricEvent& metricEvent) {
     }
 }
 
+// parse:test_metric{k1="v1", k2="v2" } 9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleMetricName(MetricEvent& metricEvent) {
     char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     while (std::isalpha(c) || c == '_' || c == ':' || std::isdigit(c)) {
@@ -131,6 +135,7 @@ void TextParser::HandleMetricName(MetricEvent& metricEvent) {
     }
 }
 
+// parse:k1="v1", k2="v2" } 9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleLabelName(MetricEvent& metricEvent) {
     char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     if (std::isalpha(c) || c == '_') {
@@ -158,6 +163,7 @@ void TextParser::HandleLabelName(MetricEvent& metricEvent) {
     }
 }
 
+// parse:"v1", k2="v2" } 9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleEqualSign(MetricEvent& metricEvent) {
     if (mPos < mLine.size() && mLine[mPos] == '"') {
         ++mPos;
@@ -167,8 +173,10 @@ void TextParser::HandleEqualSign(MetricEvent& metricEvent) {
     }
 }
 
+// parse:v1", k2="v2" } 9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
     // left quote has been consumed
+    // LableValue supports escape char
     bool escaped = false;
     auto lPos = mPos;
     while (mPos < mLine.size() && mLine[mPos] != '"') {
@@ -185,6 +193,9 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
                 mEscapedLabelValue = mLine.substr(lPos, mPos - lPos).to_string();
             }
             if (mPos + 1 < mLine.size()) {
+                // check next char, if it is valid escape char, we can consume two chars and push one escaped char
+                // if not, we neet to push the two chars
+                // valid escape char: \", \\, \n
                 switch (mLine[lPos + 1]) {
                     case '\\':
                     case '\"':
@@ -227,6 +238,8 @@ void TextParser::HandleLabelValue(MetricEvent& metricEvent) {
     }
 }
 
+// parse:, k2="v2" } 9.9410452992e+10 1715829785083 # exemplarsxxx
+// or parse:} 9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleCommaOrCloseBrace(MetricEvent& metricEvent) {
     char c = (mPos < mLine.size()) ? mLine[mPos] : '\0';
     if (c == ',') {
@@ -242,6 +255,7 @@ void TextParser::HandleCommaOrCloseBrace(MetricEvent& metricEvent) {
     }
 }
 
+// parse:9.9410452992e+10 1715829785083 # exemplarsxxx
 void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     while (mPos < mLine.size() && IsValidNumberChar(mLine[mPos])) {
         ++mPos;
@@ -276,8 +290,10 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     }
 }
 
+// parse:1715829785083 # exemplarsxxx
+// timestamp will be 1715829785.083 in OpenMetrics
 void TextParser::HandleTimestamp(MetricEvent& metricEvent) {
-    // '#' is for exemplars
+    // '#' is for exemplars, and we don't need it
     while (mPos < mLine.size() && IsValidNumberChar(mLine[mPos])) {
         ++mPos;
         ++mTokenLength;
