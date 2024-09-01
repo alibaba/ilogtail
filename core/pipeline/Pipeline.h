@@ -32,6 +32,7 @@
 #include "plugin/instance/InputInstance.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "route/Router.h"
+#include "go_pipeline/LogtailPlugin.h"
 
 namespace logtail {
 
@@ -54,7 +55,7 @@ public:
     const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
         return mPluginCntMap;
     }
-    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
+    LoadGoPipelineResp LoadGoPipelines() const; // 应当放在private，过渡期间放在public
 
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }

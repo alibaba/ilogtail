@@ -39,6 +39,9 @@ type GlobalConfig struct {
 	UsingOldContentTag             bool
 	EnableContainerdUpperDirDetect bool
 	EnableSlsMetricsFormat         bool
+
+	// Go Input to Native Processor
+	GoInputToNativeProcessor bool
 }
 
 // LogtailGlobalConfig is the singleton instance of GlobalConfig.

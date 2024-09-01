@@ -510,3 +510,7 @@ func init() {
 		}
 	}
 }
+
+func (idf *InputDockerFile) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

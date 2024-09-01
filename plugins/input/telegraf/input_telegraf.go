@@ -64,3 +64,7 @@ func init() {
 		return &ServiceTelegraf{}
 	}
 }
+
+func (s *ServiceTelegraf) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

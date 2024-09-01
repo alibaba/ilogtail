@@ -407,3 +407,7 @@ func init() {
 		}
 	}
 }
+
+func (r *InputSystem) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

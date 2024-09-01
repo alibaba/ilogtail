@@ -123,3 +123,7 @@ func init() {
 		}
 	}
 }
+
+func (m *Pgsql) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

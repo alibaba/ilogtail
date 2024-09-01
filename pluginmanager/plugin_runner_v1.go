@@ -15,6 +15,7 @@
 package pluginmanager
 
 import (
+	"errors"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -145,6 +146,13 @@ func (p *pluginv1Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+		// TODO : give config for MaxCachedSize and PushNativeInterval
+		wrapper.MaxCachedSize = 10
+		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
+		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
+		wrapper.ShutdownCachedChan = make(chan struct{})
+	}
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	return wrapper.Init(pluginMeta, inputInterval)
 }
@@ -154,6 +162,13 @@ func (p *pluginv1Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input
 	wrapper.LogsChan = p.LogsChan
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+		// TODO : give config for MaxCachedSize and PushNativeInterval
+		wrapper.MaxCachedSize = 10
+		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
+		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
+		wrapper.ShutdownCachedChan = make(chan struct{})
+	}
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
 	return wrapper.Init(pluginMeta)
 }
@@ -464,4 +479,27 @@ func (p *pluginv1Runner) Merge(r PluginRunner) {
 	if other, ok := r.(*pluginv1Runner); ok {
 		p.FlushOutStore.Merge(other.FlushOutStore)
 	}
+}
+
+func (p *pluginv1Runner) GetInputMode() (pipeline.InputModeType, error) {
+	inputMode := pipeline.UNKNOWN
+	if len(p.MetricPlugins) > 0 {
+		inputMode = p.MetricPlugins[0].Input.InputMode()
+	}
+	if len(p.ServicePlugins) > 0 {
+		inputMode = p.ServicePlugins[0].Input.InputMode()
+	}
+	for _, metric := range p.MetricPlugins {
+		if metric.Input.InputMode() != inputMode {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
+			return inputMode, errors.New("input plugins inputMode not equal")
+		}
+	}
+	for _, service := range p.ServicePlugins {
+		if service.Input.InputMode() != inputMode {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
+			return inputMode, errors.New("input plugins inputMode not equal")
+		}
+	}
+	return inputMode, nil
 }

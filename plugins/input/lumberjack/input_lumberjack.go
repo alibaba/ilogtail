@@ -188,3 +188,7 @@ func init() {
 	}
 	lumberlog.Logger = defaultLogger{}
 }
+
+func (p *ServiceLumber) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

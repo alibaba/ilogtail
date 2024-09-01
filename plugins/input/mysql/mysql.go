@@ -463,3 +463,7 @@ func init() {
 		}
 	}
 }
+
+func (m *Mysql) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

@@ -15,6 +15,7 @@
 package pluginmanager
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -152,8 +153,8 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	}
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	p.TimerRunner = append(p.TimerRunner, &timerRunner{
-		state:         input,
-		interval:      wrapper.Interval * time.Millisecond,
+		state:         &wrapper,
+		interval:      wrapper.Interval,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
@@ -218,7 +219,11 @@ func (p *pluginv2Runner) runInput() {
 		p.InputControl.Run(func(c *pipeline.AsyncControl) {
 			logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "start run service", service)
 			defer panicRecover(service.Input.Description())
-			if err := service.StartService(p.InputPipeContext); err != nil {
+			ctx := p.InputPipeContext
+			if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+				ctx = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, service.Input.InputMode())
+			}
+			if err := service.StartService(ctx); err != nil {
 				logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 			}
 			logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "service done", service.Input.Description())
@@ -228,12 +233,17 @@ func (p *pluginv2Runner) runInput() {
 
 func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 	for _, t := range p.TimerRunner {
-		if plugin, ok := t.state.(*MetricWrapperV2); ok {
+		plugin, ok := t.state.(*MetricWrapperV2)
+		if ok {
 			metric := plugin
 			timer := t
+			ctx := p.InputPipeContext
+			if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
+				ctx = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, metric.Input.InputMode())
+			}
 			control.Run(func(cc *pipeline.AsyncControl) {
 				timer.Run(func(state interface{}) error {
-					return metric.Read(p.InputPipeContext)
+					return metric.Read(ctx)
 				}, cc)
 			})
 		}
@@ -534,4 +544,27 @@ func (p *pluginv2Runner) convertToPipelineEvent(in *protocol.Log) models.Pipelin
 		log.Timestamp = uint64(time.Now().UnixNano())
 	}
 	return log
+}
+
+func (p *pluginv2Runner) GetInputMode() (pipeline.InputModeType, error) {
+	inputMode := pipeline.UNKNOWN
+	if len(p.MetricPlugins) > 0 {
+		inputMode = p.MetricPlugins[0].Input.InputMode()
+	}
+	if len(p.ServicePlugins) > 0 {
+		inputMode = p.ServicePlugins[0].Input.InputMode()
+	}
+	for _, metric := range p.MetricPlugins {
+		if metric.Input.InputMode() != inputMode {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
+			return inputMode, errors.New("input plugins inputMode not equal")
+		}
+	}
+	for _, service := range p.ServicePlugins {
+		if service.Input.InputMode() != inputMode {
+			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
+			return inputMode, errors.New("input plugins inputMode not equal")
+		}
+	}
+	return inputMode, nil
 }

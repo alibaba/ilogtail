@@ -132,3 +132,7 @@ func init() {
 		}
 	}
 }
+
+func (r *InputGpuMetric) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

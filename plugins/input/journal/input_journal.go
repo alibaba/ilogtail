@@ -376,3 +376,7 @@ func init() {
 		}
 	}
 }
+
+func (sj *ServiceJournal) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

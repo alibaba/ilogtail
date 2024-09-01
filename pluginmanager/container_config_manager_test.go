@@ -155,7 +155,8 @@ func loadMockConfig() error {
 			"type": "dockerStdout"
 		}
 	}`
-	return LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	_, err := LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	return err
 }
 
 func (s *containerConfigTestSuite) TestLargeCountLog() {

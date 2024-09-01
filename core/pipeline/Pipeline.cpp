@@ -23,7 +23,6 @@
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "flusher/sls/FlusherSLS.h"
-#include "go_pipeline/LogtailPlugin.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/ProcessorParseApsaraNative.h"
@@ -218,6 +217,11 @@ bool Pipeline::Init(PipelineConfig&& config) {
     CopyNativeGlobalParamToGoPipeline(mGoPipelineWithInput);
     CopyNativeGlobalParamToGoPipeline(mGoPipelineWithoutInput);
 
+    // go input to native processor
+    if (config.mHasGoInput && config.mHasNativeProcessor) {
+        mGoPipelineWithInput["global"]["GoInputToNativeProcessor"] = true;
+    }
+
     // mandatory override global.DefaultLogQueueSize in Go pipeline when input_file and Go processing coexist.
     if ((inputFile != nullptr || inputContainerStdio != nullptr) && IsFlushingThroughGoPipeline()) {
         mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"]
@@ -259,7 +263,8 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
 #ifndef APSARA_UNIT_TEST_MAIN
-    if (!LoadGoPipelines()) {
+    LoadGoPipelineResp resp = LoadGoPipelines();
+    if (resp.Code != 0) {
         return false;
     }
 #endif
@@ -270,23 +275,42 @@ bool Pipeline::Init(PipelineConfig&& config) {
             mContext.SetProcessQueueKey(QueueKeyManager::GetInstance()->GetKey(mName));
         }
 
-        // TODO: for go input, we currently assume bounded process queue
-        bool isInputSupportAck = mInputs.empty() ? true : mInputs[0]->SupportAck();
+        // check if all inputs support ack
+        bool isInputSupportAck = true;
+#ifndef APSARA_UNIT_TEST_MAIN
+        if (mInputs.empty()) {
+            if (resp.InputMode == LoadGoPipelineResp::InputModeType::UNKNOWN) {
+                PARAM_ERROR_RETURN(mContext.GetLogger(),
+                                mContext.GetAlarm(),
+                                "go input mode is unknown",
+                                noModule,
+                                mName,
+                                mContext.GetProjectName(),
+                                mContext.GetLogstoreName(),
+                                mContext.GetRegion());
+            }
+            isInputSupportAck = resp.InputMode == LoadGoPipelineResp::InputModeType::PUSH;
+        }
+#endif
+        if (!mInputs.empty()) {
+            isInputSupportAck = mInputs[0]->SupportAck();
+        }
         for (auto& input : mInputs) {
             if (input->SupportAck() != isInputSupportAck) {
                 PARAM_ERROR_RETURN(mContext.GetLogger(),
-                                   mContext.GetAlarm(),
-                                   "not all inputs' ack support are the same",
-                                   noModule,
-                                   mName,
-                                   mContext.GetProjectName(),
-                                   mContext.GetLogstoreName(),
-                                   mContext.GetRegion());
+                                mContext.GetAlarm(),
+                                "not all inputs' ack support are the same",
+                                noModule,
+                                mName,
+                                mContext.GetProjectName(),
+                                mContext.GetLogstoreName(),
+                                mContext.GetRegion());
             }
         }
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
+
         if (isInputSupportAck) {
             ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(mContext.GetProcessQueueKey(), priority);
         } else {
@@ -340,8 +364,11 @@ void Pipeline::Start() {
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
-    for (auto& p : mInputs[inputIndex]->GetInnerProcessors()) {
-        p->Process(logGroupList);
+    // inputIndex == 0xFFFFFFFF means the input is Go input
+    if (inputIndex != 0xFFFFFFFF && inputIndex < mInputs.size()) {
+        for (auto& p : mInputs[inputIndex]->GetInnerProcessors()) {
+            p->Process(logGroupList);
+        }
     }
     for (auto& p : mProcessorLine) {
         p->Process(logGroupList);
@@ -450,18 +477,20 @@ void Pipeline::CopyNativeGlobalParamToGoPipeline(Json::Value& pipeline) {
     }
 }
 
-bool Pipeline::LoadGoPipelines() const {
+LoadGoPipelineResp Pipeline::LoadGoPipelines() const {
     // TODO：将下面的代码替换成批量原子Load。
     // note:
     // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
+    LoadGoPipelineResp resp;
     if (!mGoPipelineWithoutInput.isNull()) {
         string content = mGoPipelineWithoutInput.toStyledString();
-        if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/2",
+        resp = LogtailPlugin::GetInstance()->LoadPipeline(mName + "/2",
                                                         content,
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),
-                                                        mContext.GetLogstoreKey())) {
+                                                        mContext.GetLogstoreKey());
+        if (resp.Code != 0) {
             LOG_ERROR(mContext.GetLogger(),
                       ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")(
                           "Go pipeline num", "2")("Go pipeline content", content)("config", mName));
@@ -470,17 +499,19 @@ bool Pipeline::LoadGoPipelines() const {
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
                                                    mContext.GetRegion());
-            return false;
+            return resp;
         }
     }
     if (!mGoPipelineWithInput.isNull()) {
         string content = mGoPipelineWithInput.toStyledString();
-        if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/1",
+        LOG_INFO(mContext.GetLogger(), ("go pipeline content", content));
+        resp = LogtailPlugin::GetInstance()->LoadPipeline(mName + "/1",
                                                         content,
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),
-                                                        mContext.GetLogstoreKey())) {
+                                                        mContext.GetLogstoreKey());
+        if (resp.Code != 0) {
             LOG_ERROR(mContext.GetLogger(),
                       ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")(
                           "Go pipeline num", "1")("Go pipeline content", content)("config", mName));
@@ -489,10 +520,10 @@ bool Pipeline::LoadGoPipelines() const {
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
                                                    mContext.GetRegion());
-            return false;
+            return resp;
         }
     }
-    return true;
+    return resp;
 }
 
 std::string Pipeline::GetNowPluginID() {

@@ -79,3 +79,7 @@ func init() {
 		}
 	}
 }
+
+func (s *ServiceExample) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

@@ -688,3 +688,7 @@ func init() {
 		}
 	}
 }
+
+func (m *NetPing) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

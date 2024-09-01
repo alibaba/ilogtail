@@ -233,3 +233,7 @@ func init() {
 		}
 	}
 }
+
+func (in *InputCommand) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

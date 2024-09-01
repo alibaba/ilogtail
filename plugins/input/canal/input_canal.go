@@ -884,3 +884,7 @@ func init() {
 
 	canalLog.AddHook(&LogCanal{})
 }
+
+func (sc *ServiceCanal) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

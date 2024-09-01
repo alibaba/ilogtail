@@ -258,3 +258,7 @@ func init() {
 		}
 	}
 }
+
+func (s *SkywalkingHTTPServerInput) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

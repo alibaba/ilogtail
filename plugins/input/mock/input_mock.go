@@ -101,3 +101,7 @@ func init() {
 		}
 	}
 }
+
+func (r *InputMock) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

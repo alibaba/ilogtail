@@ -267,3 +267,7 @@ func init() {
 		}
 	}
 }
+
+func (in *InputKubernetesMeta) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

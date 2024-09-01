@@ -194,3 +194,7 @@ func init() {
 		return &Nginx{}
 	}
 }
+
+func (n *Nginx) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

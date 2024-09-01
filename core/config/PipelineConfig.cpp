@@ -332,101 +332,77 @@ bool PipelineConfig::Parse() {
                                    mRegion);
             }
             const string pluginType = it->asString();
-            if (mHasGoInput) {
+            if (isCurrentPluginNative) {
+                if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
+                    // TODO: remove these special restrictions
+                    if (mHasNativeInput && !hasObserverInput && !hasFileInput) {
+                        PARAM_ERROR_RETURN(sLogger,
+                                            alarm,
+                                            "extended processor plugins coexist with native input plugins other "
+                                            "than input_file or input_container_stdio",
+                                            noModule,
+                                            mName,
+                                            mProject,
+                                            mLogstore,
+                                            mRegion);
+                    }
+                    isCurrentPluginNative = false;
+                    mHasGoProcessor = true;
+                } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginType)) {
+                    PARAM_ERROR_RETURN(sLogger,
+                                        alarm,
+                                        "unsupported processor plugin",
+                                        pluginType,
+                                        mName,
+                                        mProject,
+                                        mLogstore,
+                                        mRegion);
+                } else if (pluginType == "processor_spl") {
+                    if (i != 0 || itr->size() != 1) {
+                        PARAM_ERROR_RETURN(sLogger,
+                                            alarm,
+                                            "native processor plugins coexist with spl processor",
+                                            noModule,
+                                            mName,
+                                            mProject,
+                                            mLogstore,
+                                            mRegion);
+                    }
+                } else {
+                    // TODO: remove these special restrictions
+                    if (hasObserverInput) {
+                        PARAM_ERROR_RETURN(sLogger,
+                                            alarm,
+                                            "native processor plugins coexist with input_observer_network",
+                                            noModule,
+                                            mName,
+                                            mProject,
+                                            mLogstore,
+                                            mRegion);
+                    }
+                    mHasNativeProcessor = true;
+                }
+            } else {
                 if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginType)) {
                     PARAM_ERROR_RETURN(sLogger,
-                                       alarm,
-                                       "native processor plugins coexist with extended input plugins",
-                                       noModule,
-                                       mName,
-                                       mProject,
-                                       mLogstore,
-                                       mRegion);
+                                        alarm,
+                                        "native processor plugin comes after extended processor plugin",
+                                        pluginType,
+                                        mName,
+                                        mProject,
+                                        mLogstore,
+                                        mRegion);
                 } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
                     mHasGoProcessor = true;
                 } else {
                     PARAM_ERROR_RETURN(sLogger,
-                                       alarm,
-                                       "unsupported processor plugin",
-                                       pluginType,
-                                       mName,
-                                       mProject,
-                                       mLogstore,
-                                       mRegion);
-                }
-            } else {
-                if (isCurrentPluginNative) {
-                    if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
-                        // TODO: remove these special restrictions
-                        if (!hasObserverInput && !hasFileInput) {
-                            PARAM_ERROR_RETURN(sLogger,
-                                               alarm,
-                                               "extended processor plugins coexist with native input plugins other "
-                                               "than input_file or input_container_stdio",
-                                               noModule,
-                                               mName,
-                                               mProject,
-                                               mLogstore,
-                                               mRegion);
-                        }
-                        isCurrentPluginNative = false;
-                        mHasGoProcessor = true;
-                    } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginType)) {
-                        PARAM_ERROR_RETURN(sLogger,
-                                           alarm,
-                                           "unsupported processor plugin",
-                                           pluginType,
-                                           mName,
-                                           mProject,
-                                           mLogstore,
-                                           mRegion);
-                    } else if (pluginType == "processor_spl") {
-                        if (i != 0 || itr->size() != 1) {
-                            PARAM_ERROR_RETURN(sLogger,
-                                               alarm,
-                                               "native processor plugins coexist with spl processor",
-                                               noModule,
-                                               mName,
-                                               mProject,
-                                               mLogstore,
-                                               mRegion);
-                        }
-                    } else {
-                        // TODO: remove these special restrictions
-                        if (hasObserverInput) {
-                            PARAM_ERROR_RETURN(sLogger,
-                                               alarm,
-                                               "native processor plugins coexist with input_observer_network",
-                                               noModule,
-                                               mName,
-                                               mProject,
-                                               mLogstore,
-                                               mRegion);
-                        }
-                        mHasNativeProcessor = true;
-                    }
-                } else {
-                    if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginType)) {
-                        PARAM_ERROR_RETURN(sLogger,
-                                           alarm,
-                                           "native processor plugin comes after extended processor plugin",
-                                           pluginType,
-                                           mName,
-                                           mProject,
-                                           mLogstore,
-                                           mRegion);
-                    } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginType)) {
-                        mHasGoProcessor = true;
-                    } else {
-                        PARAM_ERROR_RETURN(sLogger,
-                                           alarm,
-                                           "unsupported processor plugin",
-                                           pluginType,
-                                           mName,
-                                           mProject,
-                                           mLogstore,
-                                           mRegion);
-                    }
+                                        alarm,
+                                        "unsupported processor plugin",
+                                        pluginType,
+                                        mName,
+                                        mProject,
+                                        mLogstore,
+                                        mRegion);
                 }
             }
             mProcessors.push_back(&plugin);

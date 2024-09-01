@@ -30,6 +30,7 @@
 
 #include "flusher/sls/FlusherSLS.h"
 #include "log_pb/sls_logs.pb.h"
+#include "log_pb/pipeline_event.pb.h"
 
 extern "C" {
 // The definition of Golang type is copied from PluginAdaptor.h that
@@ -130,9 +131,19 @@ struct K8sContainerMeta {
     }
 };
 
+struct LoadGoPipelineResp {
+    int Code;   // 0: success, 1: fail
+    enum InputModeType {
+        UNKNOWN,
+        PUSH,
+        PULL,
+    };
+    InputModeType InputMode;
+};
+
 // Methods export by plugin.
 typedef GoInt (*LoadGlobalConfigFun)(GoString);
-typedef GoInt (*LoadConfigFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
+typedef struct LoadGoPipelineResp* (*LoadConfigFun)(GoString p, GoString l, GoString c, GoInt64 k, GoString p2);
 typedef GoInt (*UnloadConfigFun)(GoString p, GoString l, GoString c);
 typedef GoInt (*ProcessRawLogFun)(GoString c, GoSlice l, GoString p, GoString t);
 typedef GoInt (*ProcessRawLogV2Fun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
@@ -175,6 +186,11 @@ typedef void (*RegisterLogtailCallBackV2)(IsValidToSendFun checkFun,
                                           PluginCtlCmdFun cmdFun);
 
 typedef int (*PluginAdapterVersion)();
+
+typedef int (*IsValidToProcessFun)(const char *configName, int configNameSize);
+typedef int (*PushQueueFun)(const char *configName, int configNameSize, const char *pbBuffer, int pbSize);
+typedef void (*RegisterLogtailProcessCallBack)(IsValidToProcessFun checkFun, PushQueueFun pushFun);
+
 }
 
 // Create by david zhang. 2017/09/02 22:22:12
@@ -208,7 +224,7 @@ public:
 
     bool LoadPluginBase();
     // void LoadConfig();
-    bool LoadPipeline(const std::string& pipelineName,
+    LoadGoPipelineResp LoadPipeline(const std::string& pipelineName,
                       const std::string& pipeline,
                       const std::string& project = "",
                       const std::string& logstore = "",
@@ -265,6 +281,10 @@ public:
     K8sContainerMeta GetContainerMeta(const std::string& containerID);
 
     void GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList);
+
+    static int IsValidToProcess(const char* configName, int configNameSize);
+
+    static int PushQueue(const char* configName, int configNameSize, const char* pbBuffer, int pbSize);
 
 private:
     void* mPluginBasePtr;

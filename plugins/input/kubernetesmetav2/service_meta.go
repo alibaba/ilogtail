@@ -78,3 +78,7 @@ func init() {
 		}
 	}
 }
+
+func (s *ServiceK8sMeta) InputMode() pipeline.InputModeType {
+	return pipeline.PUSH
+}

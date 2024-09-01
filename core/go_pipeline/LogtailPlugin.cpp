@@ -31,6 +31,7 @@
 #include "pipeline/PipelineManager.h"
 #include "profile_sender/ProfileSender.h"
 #include "queue/SenderQueueManager.h"
+#include "queue/ProcessQueueManager.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -76,7 +77,7 @@ LogtailPlugin::~LogtailPlugin() {
     DynamicLibLoader::CloseLib(mPluginAdapterPtr);
 }
 
-bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
+LoadGoPipelineResp LogtailPlugin::LoadPipeline(const std::string& pipelineName,
                                  const std::string& pipeline,
                                  const std::string& project,
                                  const std::string& logstore,
@@ -102,10 +103,10 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
         goLogstore.p = logstore.c_str();
         long long goLogStoreKey = static_cast<long long>(logstoreKey);
 
-        return mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig) == 0;
+        return *mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig);
     }
 
-    return false;
+    return LoadGoPipelineResp{false, LoadGoPipelineResp::InputModeType::UNKNOWN}; 
 }
 
 void LogtailPlugin::HoldOn(bool exitFlag) {
@@ -253,6 +254,100 @@ int LogtailPlugin::ExecPluginCmd(
     return 0;
 }
 
+int LogtailPlugin::IsValidToProcess(const char* configName, int configNameSize) {
+    string configNameStr(configName, configNameSize);
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
+    if (!pipeline) {
+        LOG_ERROR(sLogger,
+                    ("pipeline not found during IsValidToProcess, perhaps due to config deletion",
+                    "return invalid")("config", configName));
+        return -1;
+    }
+    auto processQueueKey = pipeline->GetContext().GetProcessQueueKey();
+    return ProcessQueueManager::GetInstance()->IsValidToPush(processQueueKey) ? 0 : -1;
+}
+
+int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const char* pbBuffer, int pbSize) {
+    string configNameStr(configName, configNameSize);
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
+    if (!pipeline) {
+        LOG_ERROR(sLogger,
+                    ("pipeline not found during PushQueue, perhaps due to config deletion",
+                    "return invalid")("config", configName));
+        return -1;
+    }
+
+    string pbStr(pbBuffer, pbSize);
+    sls_logs::PipelineEventGroup eventGroupSrc;
+    if (!eventGroupSrc.ParseFromString(pbStr)) {
+        LOG_ERROR(sLogger, ("parse pb failed in PushQueue", "invalid pb"));
+        return -1;
+    }
+    logtail::PipelineEventGroup eventGroupDst(std::make_shared<SourceBuffer>());
+    for (auto& tag : eventGroupSrc.tags()) {
+        eventGroupDst.SetTag(tag.first, tag.second);
+    }
+    for (auto& metaData : eventGroupSrc.metadata()) {
+        if (metaData.first == "source") {
+            eventGroupDst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
+        }
+    }
+    switch (eventGroupSrc.type())
+    {
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_LOG:
+        if (eventGroupSrc.logs_size() == 0) {
+            LOG_ERROR(sLogger, ("invalid event group, no logs", ""));
+            return -1;
+        }
+        for (auto& logSrc : eventGroupSrc.logs()) {
+            auto logDst = eventGroupDst.AddLogEvent();
+            std::optional<uint32_t> ns;
+            time_t t = time_t(logSrc.time());
+            if (logSrc.has_time_ns()) {
+                ns = logSrc.time_ns();
+            }
+            logDst->SetTimestamp(t, ns);
+            for (auto& content_pair : logSrc.contents()) {
+                logDst->SetContent(content_pair.key(), content_pair.value());
+            }
+        }
+        break;
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_METRIC:
+        if (eventGroupSrc.metrics_size() == 0) {
+            LOG_ERROR(sLogger, ("invalid event group, no metrics", ""));
+            return -1;
+        }
+        for (auto& metricSrc : eventGroupSrc.metrics()) {
+            auto metricDst = eventGroupDst.AddMetricEvent();
+            uint32_t t = metricSrc.time();
+            std::optional<uint32_t> ns;
+            if (metricSrc.has_time_ns()) {
+                ns = metricSrc.time_ns();
+            }
+            metricDst->SetTimestamp(t, ns);
+            metricDst->SetName(metricSrc.name());
+            switch (metricSrc.type()) {
+            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_SINGLE:
+                metricDst->SetValue(UntypedSingleValue{metricSrc.singlevalue()});
+                break;
+            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_MULTI:
+                LOG_ERROR(sLogger, ("metric value type mutivalue unsported", ""));
+            }
+            for (auto& tag_pair : metricSrc.tags()) {
+                metricDst->SetTag(tag_pair.first, tag_pair.second);
+            }
+        }
+        break;
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_SPAN:
+        break;
+    default:
+        LOG_ERROR(sLogger, ("invalid event type", eventGroupSrc.type()));
+    }
+
+    auto processQueueKey = pipeline->GetContext().GetProcessQueueKey();
+    return ProcessQueueManager::GetInstance()->PushQueue(processQueueKey, std::make_unique<ProcessQueueItem>(std::move(eventGroupDst), 0xFFFFFFFF));
+}
+
 
 bool LogtailPlugin::LoadPluginBase() {
     if (mPluginValid) {
@@ -296,6 +391,14 @@ bool LogtailPlugin::LoadPluginBase() {
                 return mPluginValid;
             }
             registerFun(LogtailPlugin::IsValidToSend, LogtailPlugin::SendPb, LogtailPlugin::ExecPluginCmd);
+        }
+
+        auto registerProcessFun = (RegisterLogtailProcessCallBack)loader.LoadMethod("RegisterLogtailProcessCallBack", error);
+        if (error.empty()) {
+            registerProcessFun(LogtailPlugin::IsValidToProcess, LogtailPlugin::PushQueue);
+        } else {
+            LOG_WARNING(sLogger, ("load RegisterLogtailProcessCallBack failed", error));
+            return mPluginValid;
         }
 
         mPluginAdapterPtr = loader.Release();
