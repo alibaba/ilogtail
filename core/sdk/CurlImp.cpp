@@ -13,10 +13,12 @@
 // limitations under the License.
 
 #include "CurlImp.h"
-#include "Exception.h"
-#include "DNSCache.h"
-#include "app_config/AppConfig.h"
+
 #include <curl/curl.h>
+
+#include "DNSCache.h"
+#include "Exception.h"
+#include "app_config/AppConfig.h"
 #include "common/http/Curl.h"
 
 using namespace std;
@@ -182,6 +184,9 @@ namespace sdk {
         httpMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!httpMessage.IsLogServiceResponse()) {
+            if (url.find(METRICSTORES) != std::string::npos) {
+                throw LOGException(LOGE_REQUEST_ERROR, httpMessage.content);
+            }
             throw LOGException(LOGE_REQUEST_ERROR, "Get invalid response");
         }
     }

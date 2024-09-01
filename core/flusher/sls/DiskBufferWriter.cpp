@@ -727,7 +727,14 @@ SendResult DiskBufferWriter::SendToNetSync(sdk::Client* sendClient,
         ++retryTimes;
         try {
             if (bufferMeta.datatype() == int(RawDataType::EVENT_GROUP)) {
-                if (bufferMeta.has_shardhashkey() && !bufferMeta.shardhashkey().empty())
+                if (bufferMeta.has_telemetrytype()
+                    && bufferMeta.telemetrytype() == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+                    sendClient->PostMetricStoreLogs(bufferMeta.project(),
+                                                    bufferMeta.logstore(),
+                                                    bufferMeta.compresstype(),
+                                                    logData,
+                                                    bufferMeta.rawsize());
+                } else if (bufferMeta.has_shardhashkey() && !bufferMeta.shardhashkey().empty())
                     sendClient->PostLogStoreLogs(bufferMeta.project(),
                                                  bufferMeta.logstore(),
                                                  bufferMeta.compresstype(),
