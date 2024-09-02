@@ -50,6 +50,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "pipeline/PipelineManager.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace std;
 using namespace sls_logs;
