@@ -330,6 +330,6 @@ func init() {
 	}
 }
 
-func (h *Response) InputMode() pipeline.InputModeType {
+func (h *Response) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

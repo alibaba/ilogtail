@@ -409,6 +409,6 @@ func init() {
 	}
 }
 
-func (s *Server) InputMode() pipeline.InputModeType {
+func (s *Server) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

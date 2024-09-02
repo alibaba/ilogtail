@@ -110,6 +110,6 @@ func init() {
 	}
 }
 
-func (p *ServiceMock) InputMode() pipeline.InputModeType {
+func (p *ServiceMock) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

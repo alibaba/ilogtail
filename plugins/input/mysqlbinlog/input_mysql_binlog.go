@@ -238,6 +238,6 @@ func init() {
 	}
 }
 
-func (b *InputMysqlBinlog) InputMode() pipeline.InputModeType {
+func (b *InputMysqlBinlog) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

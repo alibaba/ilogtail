@@ -234,6 +234,6 @@ func init() {
 	}
 }
 
-func (in *InputCommand) InputMode() pipeline.InputModeType {
+func (in *InputCommand) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

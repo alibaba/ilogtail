@@ -65,6 +65,6 @@ func init() {
 	}
 }
 
-func (s *ServiceTelegraf) InputMode() pipeline.InputModeType {
+func (s *ServiceTelegraf) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

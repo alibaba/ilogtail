@@ -689,6 +689,6 @@ func init() {
 	}
 }
 
-func (m *NetPing) InputMode() pipeline.InputModeType {
+func (m *NetPing) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

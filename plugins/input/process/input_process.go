@@ -282,6 +282,6 @@ func init() {
 	}
 }
 
-func (ip *InputProcess) InputMode() pipeline.InputModeType {
+func (ip *InputProcess) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

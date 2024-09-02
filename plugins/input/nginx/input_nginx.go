@@ -195,6 +195,6 @@ func init() {
 	}
 }
 
-func (n *Nginx) InputMode() pipeline.InputModeType {
+func (n *Nginx) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

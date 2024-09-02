@@ -78,6 +78,6 @@ func init() {
 	}
 }
 
-func (m *MetricsCheckpointExample) InputMode() pipeline.InputModeType {
+func (m *MetricsCheckpointExample) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

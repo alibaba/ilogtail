@@ -189,6 +189,6 @@ func (p *ServiceStaticPrometheus) slsPushData(_ *auth.Token, wr *prompbmarshal.W
 	logger.Debug(p.context.GetRuntimeContext(), "append done", wr.Size())
 }
 
-func (p *ServiceStaticPrometheus) InputMode() pipeline.InputModeType {
+func (p *ServiceStaticPrometheus) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

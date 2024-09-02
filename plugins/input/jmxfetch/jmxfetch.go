@@ -254,6 +254,6 @@ func init() {
 	}
 }
 
-func (m *Jmx) InputMode() pipeline.InputModeType {
+func (m *Jmx) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

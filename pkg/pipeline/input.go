@@ -32,7 +32,7 @@ type MetricInput interface {
 	Description() string
 
 	// Input mode (push or pull)
-	InputMode() InputModeType
+	GetMode() InputModeType
 }
 
 type MetricInputV1 interface {
@@ -62,7 +62,7 @@ type ServiceInput interface {
 	Stop() error
 
 	// Input mode (push or pull)
-	InputMode() InputModeType
+	GetMode() InputModeType
 }
 
 type ServiceInputV1 interface {

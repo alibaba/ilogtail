@@ -236,6 +236,6 @@ func init() {
 	}
 }
 
-func (w *WinEventLog) InputMode() pipeline.InputModeType {
+func (w *WinEventLog) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

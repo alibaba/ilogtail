@@ -464,6 +464,6 @@ func init() {
 	}
 }
 
-func (m *Mysql) InputMode() pipeline.InputModeType {
+func (m *Mysql) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

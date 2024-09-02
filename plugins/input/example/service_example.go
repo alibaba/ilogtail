@@ -80,6 +80,6 @@ func init() {
 	}
 }
 
-func (s *ServiceExample) InputMode() pipeline.InputModeType {
+func (s *ServiceExample) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

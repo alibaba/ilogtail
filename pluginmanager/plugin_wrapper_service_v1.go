@@ -140,7 +140,7 @@ func (p *ServiceWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[strin
 	p.inputRecordsSizeBytes.Add(int64(log.Size()))
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEventByRawLogV1(log)
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: nil}
+		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		return
 	}
 	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}

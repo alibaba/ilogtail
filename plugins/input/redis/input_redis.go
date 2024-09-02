@@ -274,6 +274,6 @@ func init() {
 	}
 }
 
-func (r *InputRedis) InputMode() pipeline.InputModeType {
+func (r *InputRedis) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

@@ -605,6 +605,6 @@ func init() {
 	}
 }
 
-func (s *Agent) InputMode() pipeline.InputModeType {
+func (s *Agent) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

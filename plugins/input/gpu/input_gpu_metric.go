@@ -133,6 +133,6 @@ func init() {
 	}
 }
 
-func (r *InputGpuMetric) InputMode() pipeline.InputModeType {
+func (r *InputGpuMetric) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

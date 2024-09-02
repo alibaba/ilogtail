@@ -350,6 +350,6 @@ func init() {
 	}
 }
 
-func (s *ServiceHTTP) InputMode() pipeline.InputModeType {
+func (s *ServiceHTTP) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

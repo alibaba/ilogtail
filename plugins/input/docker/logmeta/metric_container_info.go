@@ -511,6 +511,6 @@ func init() {
 	}
 }
 
-func (idf *InputDockerFile) InputMode() pipeline.InputModeType {
+func (idf *InputDockerFile) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }

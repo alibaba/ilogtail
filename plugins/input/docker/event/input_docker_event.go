@@ -118,6 +118,6 @@ func init() {
 	}
 }
 
-func (p *ServiceDockerEvents) InputMode() pipeline.InputModeType {
+func (p *ServiceDockerEvents) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }
