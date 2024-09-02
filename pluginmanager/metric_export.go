@@ -64,8 +64,8 @@ func GetGoPluginMetrics() []map[string]string {
 
 // go 进程级指标，由C++部分注册
 func GetAgentStat() []map[string]string {
-	recrods := []map[string]string{}
-	recrod := map[string]string{}
+	records := []map[string]string{}
+	record := map[string]string{}
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
 		// cpu
@@ -98,9 +98,9 @@ func GetAgentStat() []map[string]string {
 		case goruntimemetrics.KindFloat64:
 			recordValueString = strconv.FormatFloat(recordValue.Float64(), 'g', -1, 64)
 		}
-		recrod[recordName] = recordValueString
+		record[recordName] = recordValueString
 	}
 
-	recrods = append(recrods, recrod)
-	return recrods
+	records = append(records, record)
+	return records
 }
