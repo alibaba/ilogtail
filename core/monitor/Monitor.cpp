@@ -178,11 +178,10 @@ void LogtailMonitor::Monitor() {
                 lastCheckHardLimitTime = monitorTime;
 
                 GetMemStat();
-                CalCpuStat(curCpuStat, mCpuStat);
-                if (CheckHardCpuLimit() || CheckHardMemLimit()) {
+                if (CheckHardMemLimit()) {
                     LOG_ERROR(sLogger,
                               ("Resource used by program exceeds hard limit",
-                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                               "prepare restart Logtail")("mem_rss", mMemStat.mRss));
                     Suicide();
                 }
             }
@@ -471,15 +470,8 @@ bool LogtailMonitor::CheckSoftMemLimit() {
     return false;
 }
 
-bool LogtailMonitor::CheckHardCpuLimit() {
-    float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
-        ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
-        : AppConfig::GetInstance()->GetCpuUsageUpLimit();
-    return mCpuStat.mCpuUsage > 10 * cpuUsageLimit;
-}
-
 bool LogtailMonitor::CheckHardMemLimit() {
-    return mMemStat.mRss > 10 * AppConfig::GetInstance()->GetMemUsageUpLimit();
+    return mMemStat.mRss > 5 * AppConfig::GetInstance()->GetMemUsageUpLimit();
 }
 
 void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {

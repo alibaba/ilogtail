@@ -115,7 +115,6 @@ private:
     // @return true if the memory usage exceeds limit continuously.
     bool CheckSoftMemLimit();
 
-    bool CheckHardCpuLimit();
     bool CheckHardMemLimit();
 
     // SendStatusProfile collects status profile and send them to server.
