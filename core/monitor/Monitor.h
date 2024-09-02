@@ -88,6 +88,8 @@ public:
     bool Init();
     void Stop();
 
+    uint32_t GetCpuCores();
+
     // GetRealtimeCpuLevel return a value to indicates current CPU usage level.
     // LogInput use it to do flow control.
     float GetRealtimeCpuLevel() { return mRealtimeCpuStat.mCpuUsage / mScaledCpuUsageUpLimit; }
@@ -172,7 +174,7 @@ private:
     float mScaledCpuUsageUpLimit;
 #if defined(__linux__)
     const static int32_t CPU_STAT_FOR_SCALE_ARRAY_SIZE = 2;
-    int32_t mCpuCores;
+    int32_t mCpuCores = 0;
     CpuStat mCpuStatForScale;
     OsCpuStat mOsCpuStatForScale;
     // mCpuArrayForScale and mOsCpuArrayForScale store lastest two CPU usage of

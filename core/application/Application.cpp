@@ -43,8 +43,8 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
-#include "pipeline/PipelineManager.h"
 #include "pipeline/InstanceConfigManager.h"
+#include "pipeline/PipelineManager.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/daemon/LogProcess.h"
 #include "queue/ExactlyOnceQueueManager.h"
@@ -156,6 +156,10 @@ void Application::Init() {
 
     GenerateInstanceId();
     TryGetUUID();
+
+#if defined(__ENTERPRISE__) && defined(__linux__)
+    CreateCGroup();
+#endif
 
     int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
     LogFileProfiler::mSystemBootTime = systemBootTime > 0 ? systemBootTime : GetSystemBootTime();
