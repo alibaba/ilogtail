@@ -38,8 +38,6 @@ namespace logtail {
 const std::string METRIC_EXPORT_TYPE = "go_metric_export_type";
 const std::string METRIC_EXPORT_TYPE_GO = "go_direct";
 const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
-const std::string METRIC_EXPORT_LEVEL = "metric-level";
-const std::string METRIC_EXPORT_LEVEL_AGENT = "agent";
 
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
     // mGlobalCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU_GO);
@@ -184,28 +182,18 @@ void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, 
     }
 
     for (auto metrics : metricsList) {
-        if (metrics.find(METRIC_EXPORT_LEVEL) != metrics.end()) {
-            // Go agent-level metrics
-            if (metrics.at(METRIC_EXPORT_LEVEL) == METRIC_EXPORT_LEVEL_AGENT) {
-                SendGoAgentLevelMetrics(metrics);
+        for (auto metric : metrics) {
+            if (metric.first == METRIC_EXPORT_TYPE) {
                 continue;
             }
+            // if (metric.first == METRIC_AGENT_CPU_GO) {
+            //     mGlobalCpuGo->Set(std::stod(metric.second));
+            // }
+            if (metric.first == METRIC_AGENT_MEMORY_GO) {
+                mGlobalMemGo->Set(std::stoi(metric.second));
+            }
+            LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
         }
-    }
-}
-
-void MetricExportor::SendGoAgentLevelMetrics(std::map<std::string, std::string>& metrics) {
-    for (auto metric : metrics) {
-        if (metric.first == METRIC_EXPORT_TYPE || metric.first == METRIC_EXPORT_LEVEL) {
-            continue;
-        }
-        // if (metric.first == METRIC_AGENT_CPU_GO) {
-        //     mGlobalCpuGo->Set(std::stod(metric.second));
-        // }
-        if (metric.first == METRIC_AGENT_MEMORY_GO) {
-            mGlobalMemGo->Set(std::stoi(metric.second));
-        }
-        LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
     }
 }
 

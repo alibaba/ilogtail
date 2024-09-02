@@ -20,11 +20,9 @@ import (
 )
 
 const (
-	MetricExportType       = "go_metric_export_type"
-	MetricExportTypeGo     = "go_direct"
-	MetricExportTypeCpp    = "cpp_provided"
-	MetricExportLevel      = "metric_level"
-	MetricExportLevelAgent = "agent"
+	MetricExportType    = "go_metric_export_type"
+	MetricExportTypeGo  = "go_direct"
+	MetricExportTypeCpp = "cpp_provided"
 )
 
 func GetMetrics() []map[string]string {
@@ -47,7 +45,7 @@ func GetGoDirectMetrics() []map[string]string {
 func GetCppProvidedMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// agent-level metrics
-	metrics = append(metrics, GetAgentStat())
+	metrics = append(metrics, GetAgentStat()...)
 
 	for _, metric := range metrics {
 		metric[MetricExportType] = MetricExportTypeCpp
@@ -65,9 +63,9 @@ func GetGoPluginMetrics() []map[string]string {
 }
 
 // go 进程级指标，由C++部分注册
-func GetAgentStat() map[string]string {
-	recrods := map[string]string{}
-	recrods[MetricExportLevel] = MetricExportLevelAgent
+func GetAgentStat() []map[string]string {
+	recrods := []map[string]string{}
+	recrod := map[string]string{}
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
 		// cpu
@@ -100,7 +98,9 @@ func GetAgentStat() map[string]string {
 		case goruntimemetrics.KindFloat64:
 			recordValueString = strconv.FormatFloat(recordValue.Float64(), 'g', -1, 64)
 		}
-		recrods[recordName] = recordValueString
+		recrod[recordName] = recordValueString
 	}
+
+	recrods = append(recrods, recrod)
 	return recrods
 }

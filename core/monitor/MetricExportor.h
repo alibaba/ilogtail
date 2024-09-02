@@ -43,7 +43,6 @@ private:
     // go metrics
     void PushGoDirectMetrics(std::vector<std::map<std::string, std::string>>& metricsList);
     void PushGoCppProvidedMetrics(std::vector<std::map<std::string, std::string>>& metricsList);
-    void SendGoAgentLevelMetrics(std::map<std::string, std::string>& metrics);
     void SerializeGoDirectMetricsListToLogGroupMap(std::vector<std::map<std::string, std::string>>& metricsList,
                                                    std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
     void SerializeGoDirectMetricsListToString(std::vector<std::map<std::string, std::string>>& metricsList,
