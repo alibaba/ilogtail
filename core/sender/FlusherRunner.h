@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <future>
 
-#include "plugin/interface/Flusher.h"
+#include "pipeline/plugin/interface/Flusher.h"
 #include "queue/SenderQueueItem.h"
 #include "sink/SinkType.h"
 

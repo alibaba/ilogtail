@@ -21,7 +21,7 @@
 #include "file_server/FileServer.h"
 #include "monitor/MetricConstants.h"
 #include "pipeline/Pipeline.h"
-#include "plugin/PluginRegistry.h"
+#include "pipeline/plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"

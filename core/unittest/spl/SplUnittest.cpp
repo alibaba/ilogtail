@@ -18,7 +18,7 @@
 #include "config/PipelineConfig.h"
 #include "processor/ProcessorSPL.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include <iostream>
 #include <sstream>
 

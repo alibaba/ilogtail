@@ -26,7 +26,7 @@
 #include "logger/Logger.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "processor/inner/ProcessorPromParseMetricNative.h"
 #include "processor/inner/ProcessorPromRelabelMetricNative.h"
 #include "prometheus/Constants.h"

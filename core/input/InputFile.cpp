@@ -21,12 +21,12 @@
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "monitor/MetricConstants.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
-#include "plugin/PluginRegistry.h"
+#include "pipeline/plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
@@ -85,7 +85,8 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         }
         mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
         mFileDiscovery.SetDeduceAndSetContainerBaseDirFunc(DeduceAndSetContainerBaseDir);
-        mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline, &mFileDiscovery, mContext->GetPipeline().GenNextPluginMeta(false));
+        mContainerDiscovery.GenerateContainerMetaFetchingGoPipeline(
+            optionalGoPipeline, &mFileDiscovery, mContext->GetPipeline().GenNextPluginMeta(false));
     }
 
     if (!mFileReader.Init(config, *mContext, sName)) {

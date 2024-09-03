@@ -18,7 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "log_pb/checkpoint.pb.h"
+#include "protobuf/sls/checkpoint.pb.h"
 #include "queue/QueueKey.h"
 
 namespace logtail {

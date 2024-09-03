@@ -17,7 +17,7 @@
 #include <string>
 
 #include "monitor/LogtailMetric.h"
-#include "plugin/interface/Processor.h"
+#include "pipeline/plugin/interface/Processor.h"
 
 namespace apsara::sls::spl {
 class SplPipeline;

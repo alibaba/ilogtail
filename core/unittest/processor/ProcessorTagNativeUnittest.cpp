@@ -16,7 +16,7 @@
 
 #include "common/Constants.h"
 #include "config/PipelineConfig.h"
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "pipeline/Pipeline.h"
 #include "processor/inner/ProcessorTagNative.h"
 #include "unittest/Unittest.h"

@@ -18,7 +18,7 @@
 
 #include "app_config/AppConfig.h"
 #include "models/LogEvent.h"
-#include "plugin/interface/Processor.h"
+#include "pipeline/plugin/interface/Processor.h"
 
 #include <boost/regex.hpp>
 

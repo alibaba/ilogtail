@@ -28,9 +28,9 @@
 #include "input/InputFile.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
-#include "plugin/instance/FlusherInstance.h"
-#include "plugin/instance/InputInstance.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/FlusherInstance.h"
+#include "pipeline/plugin/instance/InputInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "route/Router.h"
 
 namespace logtail {

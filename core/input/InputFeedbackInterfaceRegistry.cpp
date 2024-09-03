@@ -14,7 +14,7 @@
 
 #include "input/InputFeedbackInterfaceRegistry.h"
 
-#include "event/BlockEventManager.h"
+#include "file_server/event/BlockEventManager.h"
 #include "input/InputContainerStdio.h"
 #include "input/InputFile.h"
 

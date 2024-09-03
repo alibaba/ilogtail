@@ -24,7 +24,7 @@
 #include "common/StringTools.h"
 #include "flusher/sls/FlusherSLS.h"
 #include "flusher/sls/SLSClientManager.h"
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 #include "profile_sender/ProfileSender.h"

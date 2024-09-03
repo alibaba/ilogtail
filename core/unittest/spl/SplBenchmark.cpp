@@ -21,7 +21,7 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include <iostream>
 #include <sstream>
 #include "common/TimeUtil.h"

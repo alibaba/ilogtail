@@ -21,7 +21,6 @@
 #include "Monitor.h"
 #include "ProcessObserver.h"
 #include "common/LogtailCommonFlags.h"
-#include "config_manager/ConfigManager.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
 #include "metas/ConnectionMetaManager.h"

@@ -18,7 +18,7 @@
 #include "config/PipelineConfig.h"
 #include "models/LogEvent.h"
 #include "models/StringView.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"

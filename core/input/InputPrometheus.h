@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "plugin/interface/Input.h"
+#include "pipeline/plugin/interface/Input.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 
 namespace logtail {

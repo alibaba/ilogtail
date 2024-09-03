@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include "plugin/instance/FlusherInstance.h"
+#include "pipeline/plugin/instance/FlusherInstance.h"
 #include "queue/QueueKeyManager.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"

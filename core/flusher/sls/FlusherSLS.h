@@ -28,7 +28,7 @@
 #include "batch/Batcher.h"
 #include "compression/Compressor.h"
 #include "models/PipelineEventGroup.h"
-#include "plugin/interface/HttpFlusher.h"
+#include "pipeline/plugin/interface/HttpFlusher.h"
 #include "sender/ConcurrencyLimiter.h"
 #include "serializer/SLSSerializer.h"
 

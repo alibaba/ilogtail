@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "plugin/PluginRegistry.h"
+#include "pipeline/plugin/PluginRegistry.h"
 #include "queue/SenderQueueManager.h"
 #include "sender/FlusherRunner.h"
 #include "sink/http/HttpSink.h"

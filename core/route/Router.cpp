@@ -16,7 +16,7 @@
 
 #include "common/ParamExtractor.h"
 #include "pipeline/Pipeline.h"
-#include "plugin/interface/Flusher.h"
+#include "pipeline/plugin/interface/Flusher.h"
 
 using namespace std;
 

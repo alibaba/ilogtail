@@ -19,7 +19,7 @@
 #include "common/ParamExtractor.h"
 #include "models/LogEvent.h"
 #include "monitor/MetricConstants.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "sdk/Common.h"
 
 namespace logtail {

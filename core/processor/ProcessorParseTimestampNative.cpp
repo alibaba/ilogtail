@@ -20,7 +20,7 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "monitor/MetricConstants.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
 

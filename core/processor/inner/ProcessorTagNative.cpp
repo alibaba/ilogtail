@@ -21,7 +21,7 @@
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
 #include "common/Flags.h"
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "pipeline/Pipeline.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"

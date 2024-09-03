@@ -25,7 +25,7 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
 #include "profile_sender/ProfileSender.h"
 #include "queue/QueueKeyManager.h"

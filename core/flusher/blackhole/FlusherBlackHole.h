@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "plugin/interface/Flusher.h"
+#include "pipeline/plugin/interface/Flusher.h"
 
 namespace logtail {
 

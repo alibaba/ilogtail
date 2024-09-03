@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "plugin/interface/Processor.h"
+#include "pipeline/plugin/interface/Processor.h"
 
 namespace logtail {
 

@@ -19,7 +19,7 @@
 #include <string>
 
 #include "ebpf/config.h"
-#include "plugin/interface/Input.h"
+#include "pipeline/plugin/interface/Input.h"
 #include "ebpf/eBPFServer.h"
 
 namespace logtail {

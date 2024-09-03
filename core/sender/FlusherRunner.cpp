@@ -21,7 +21,7 @@
 #include "flusher/sls/DiskBufferWriter.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "plugin/interface/HttpFlusher.h"
+#include "pipeline/plugin/interface/HttpFlusher.h"
 #include "queue/QueueKeyManager.h"
 #include "queue/SenderQueueItem.h"
 #include "queue/SenderQueueManager.h"

@@ -25,7 +25,7 @@
 
 #include "common/SafeQueue.h"
 #include "flusher/sls/SendResult.h"
-#include "log_pb/logtail_buffer_meta.pb.h"
+#include "protobuf/sls/logtail_buffer_meta.pb.h"
 #include "queue/SenderQueueItem.h"
 #include "sdk/Client.h"
 

@@ -16,7 +16,7 @@
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"

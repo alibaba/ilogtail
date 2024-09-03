@@ -111,10 +111,10 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher config_manager config_server_pb/v1 config_server_pb/v2 
-        container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
-        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
-        profile_sender queue reader sdk sender serializer sls_control fuse prometheus prometheus/labels prometheus/schedulers prometheus/async sink/http route ebpf/observer ebpf/security ebpf/handler ebpf runner
+        batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher protobuf/config_server/v1 protobuf/config_server/v2 
+        container_manager file_server/event file_server/event_handler file_server/event_listener file_server go_pipeline protobuf/sls logger 
+        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface file_server/polling
+        profile_sender queue file_server/reader sdk sender serializer sls_control fuse prometheus prometheus/labels prometheus/schedulers prometheus/async sink/http route ebpf/observer ebpf/security ebpf/handler ebpf runner
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)
@@ -158,11 +158,11 @@ list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/go_pipeline/
 
 if(MSVC)
     # remove linux event listener
-    file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Linux.cpp event_listener/*_Linux.h)
+    file(GLOB REMOVE_EVENT_LISTENER_SOURCES file_server/event_listener/*_Linux.cpp file_server/event_listener/*_Linux.h)
     list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
 elseif(UNIX)
     # remove windows event listener
-    file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Windows.cpp event_listener/*_Windows.h)
+    file(GLOB REMOVE_EVENT_LISTENER_SOURCES file_server/event_listener/*_Windows.cpp file_server/event_listener/*_Windows.h)
     list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
     if (LINUX)
         # observer

@@ -16,13 +16,13 @@
 
 #include "pipeline/PipelineManager.h"
 
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
-#include "observer/ObserverManager.h"
 #include "ebpf/eBPFServer.h"
+#include "observer/ObserverManager.h"
 #endif
 #include "processor/daemon/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)

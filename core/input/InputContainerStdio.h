@@ -22,8 +22,8 @@
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
 #include "monitor/PluginMetricManager.h"
-#include "plugin/interface/Input.h"
-#include "reader/FileReaderOptions.h"
+#include "pipeline/plugin/interface/Input.h"
+#include "file_server/reader/FileReaderOptions.h"
 
 namespace logtail {
 

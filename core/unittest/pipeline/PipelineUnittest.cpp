@@ -23,7 +23,7 @@
 #include "config/PipelineConfig.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
 #include "pipeline/Pipeline.h"
-#include "plugin/PluginRegistry.h"
+#include "pipeline/plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "queue/BoundedProcessQueue.h"

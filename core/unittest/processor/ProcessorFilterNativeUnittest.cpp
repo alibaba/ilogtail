@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "common/ExceptionBase.h"
 #include "common/JsonUtil.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorFilterNative.h"
 #include "unittest/Unittest.h"
 

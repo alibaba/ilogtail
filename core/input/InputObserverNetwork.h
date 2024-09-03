@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "plugin/interface/Input.h"
+#include "pipeline/plugin/interface/Input.h"
 
 namespace logtail {
 
