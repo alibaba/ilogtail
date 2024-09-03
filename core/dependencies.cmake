@@ -130,7 +130,7 @@ endmacro()
 logtail_define(protobuf_BIN "Absolute path to protoc" "${DEPS_BINARY_ROOT}/protoc")
 set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf")
 set(PROTO_FILES ${PROTO_FILE_PATH}/sls/sls_logs.proto ${PROTO_FILE_PATH}/sls/logtail_buffer_meta.proto ${PROTO_FILE_PATH}/sls/metric.proto ${PROTO_FILE_PATH}/sls/checkpoint.proto)
-execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH}/sls --cpp_out=${PROTO_FILE_PATH} ${PROTO_FILES})
+execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH}/sls --cpp_out=${PROTO_FILE_PATH}/sls ${PROTO_FILES})
 
 # re2
 macro(link_re2 target_name)
