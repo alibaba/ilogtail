@@ -19,6 +19,7 @@ ScrapeConfig::ScrapeConfig()
     : mScrapeIntervalSeconds(60),
       mScrapeTimeoutSeconds(10),
       mMetricsPath("/metrics"),
+      mHonorLabels(false),
       mScheme("http"),
       mMaxScrapeSizeBytes(-1),
       mSampleLimit(-1),
@@ -46,6 +47,11 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::METRICS_PATH) && scrapeConfig[prometheus::METRICS_PATH].isString()) {
         mMetricsPath = scrapeConfig[prometheus::METRICS_PATH].asString();
     }
+
+    if (scrapeConfig.isMember(prometheus::HONOR_LABELS) && scrapeConfig[prometheus::HONOR_LABELS].isBool()) {
+        mHonorLabels = scrapeConfig[prometheus::HONOR_LABELS].asBool();
+    }
+
     if (scrapeConfig.isMember(prometheus::SCHEME) && scrapeConfig[prometheus::SCHEME].isString()) {
         mScheme = scrapeConfig[prometheus::SCHEME].asString();
     }

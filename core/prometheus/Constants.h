@@ -70,6 +70,7 @@ const char* const USERNAME_FILE = "username_file";
 const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
+const char* const HONOR_LABELS = "honor_labels";
 
 
 // metric labels

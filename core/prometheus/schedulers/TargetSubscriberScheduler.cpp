@@ -160,6 +160,7 @@ bool TargetSubscriberScheduler::ParseScrapeSchedulerGroup(const std::string& con
         // Parse labels
         Labels labels;
         labels.Push(Label{prometheus::JOB, mJobName});
+        labels.Push(Label{prometheus::INSTANCE, targets[0]});
         labels.Push(Label{prometheus::ADDRESS_LABEL_NAME, targets[0]});
         labels.Push(Label{prometheus::SCHEME_LABEL_NAME, mScrapeConfigPtr->mScheme});
         labels.Push(Label{prometheus::METRICS_PATH_LABEL_NAME, mScrapeConfigPtr->mMetricsPath});

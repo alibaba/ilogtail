@@ -52,6 +52,13 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     } else {
         return false;
     }
+
+    if (config.isMember(prometheus::HONOR_LABELS) && config[prometheus::HONOR_LABELS].isBool()) {
+        mHonorLabels = config[prometheus::HONOR_LABELS].asBool();
+    } else {
+        mHonorLabels = false;
+    }
+
     if (config.isMember(prometheus::SCRAPE_TIMEOUT) && config[prometheus::SCRAPE_TIMEOUT].isString()) {
         string tmpScrapeTimeoutString = config[prometheus::SCRAPE_TIMEOUT].asString();
         mScrapeTimeoutSeconds = DurationToSecond(tmpScrapeTimeoutString);
@@ -73,13 +80,11 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
 }
 
 void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
-    auto instance = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE);
-
     EventsContainer& events = metricGroup.MutableEvents();
 
     size_t wIdx = 0;
     for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
-        if (ProcessEvent(events[rIdx], instance)) {
+        if (ProcessEvent(events[rIdx], metricGroup)) {
             if (wIdx != rIdx) {
                 events[wIdx] = std::move(events[rIdx]);
             }
@@ -95,7 +100,7 @@ bool ProcessorPromRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& 
     return e.Is<MetricEvent>();
 }
 
-bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, StringView instance) {
+bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, PipelineEventGroup& metricGroup) {
     if (!IsSupportedEvent(e)) {
         return false;
     }
@@ -123,8 +128,18 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, StringV
             sourceEvent.SetName(result.Get(prometheus::NAME));
         }
 
-        sourceEvent.SetTag(prometheus::JOB, mJobName);
-        sourceEvent.SetTag(prometheus::INSTANCE, instance);
+        // if mHonorLabels is true, then keep sourceEvent labels, and when serializing sourceEvent labels are primary
+        // labels.
+        if (!mHonorLabels) {
+            // metric event labels is secondary
+            // if confiliction, then rename it exported_<label_name>
+            for (const auto& [k, v] : metricGroup.GetTags()) {
+                if (sourceEvent.HasTag(k)) {
+                    sourceEvent.SetTag("exported_" + k.to_string(), sourceEvent.GetTag(k).to_string());
+                    sourceEvent.DelTag(k);
+                }
+            }
+        }
 
         return true;
     }

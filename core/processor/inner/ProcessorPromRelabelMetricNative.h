@@ -36,7 +36,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ProcessEvent(PipelineEventPtr& e, StringView instance);
+    bool ProcessEvent(PipelineEventPtr& e, PipelineEventGroup& metricGroup);
 
     void AddAutoMetrics(PipelineEventGroup& metricGroup);
     void AddMetric(PipelineEventGroup& metricGroup,
@@ -53,6 +53,7 @@ private:
     int64_t mScrapeTimeoutSeconds;
     int64_t mSampleLimit;
     int64_t mSeriesLimit;
+    bool mHonorLabels;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorPromRelabelMetricNativeUnittest;
