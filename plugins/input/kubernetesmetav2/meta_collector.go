@@ -19,114 +19,129 @@ import (
 
 type metaCollector struct {
 	serviceK8sMeta *ServiceK8sMeta
-	processors     map[string][]ProcessFunc
 	collector      pipeline.Collector
 
 	entityBuffer     chan models.PipelineEvent
 	entityLinkBuffer chan models.PipelineEvent
 
-	stopCh chan struct{}
+	stopCh          chan struct{}
+	entityProcessor map[string]ProcessFunc
 }
 
 func (m *metaCollector) Start() error {
+	m.entityProcessor = map[string]ProcessFunc{
+		k8smeta.POD:                      m.processPodEntity,
+		k8smeta.NODE:                     m.processNodeEntity,
+		k8smeta.SERVICE:                  m.processServiceEntity,
+		k8smeta.DEPLOYMENT:               m.processDeploymentEntity,
+		k8smeta.REPLICASET:               m.processReplicaSetEntity,
+		k8smeta.DAEMONSET:                m.processDaemonSetEntity,
+		k8smeta.STATEFULSET:              m.processStatefulSetEntity,
+		k8smeta.CONFIGMAP:                m.processConfigMapEntity,
+		k8smeta.SECRET:                   m.processSecretEntity,
+		k8smeta.JOB:                      m.processJobEntity,
+		k8smeta.CRONJOB:                  m.processCronJobEntity,
+		k8smeta.NAMESPACE:                m.processNamespaceEntity,
+		k8smeta.PERSISTENTVOLUME:         m.processPersistentVolumeEntity,
+		k8smeta.PERSISTENTVOLUMECLAIM:    m.processPersistentVolumeClaimEntity,
+		k8smeta.STORAGECLASS:             m.processStorageClassEntity,
+		k8smeta.INGRESS:                  m.processIngressEntity,
+		k8smeta.POD_NODE:                 m.processPodNodeLink,
+		k8smeta.REPLICASET_DEPLOYMENT:    m.processReplicaSetDeploymentLink,
+		k8smeta.POD_REPLICASET:           m.processPodReplicaSetLink,
+		k8smeta.POD_STATEFULSET:          m.processPodStatefulSetLink,
+		k8smeta.POD_DAEMONSET:            m.processPodDaemonSetLink,
+		k8smeta.JOB_CRONJOB:              m.processJobCronJobLink,
+		k8smeta.POD_JOB:                  m.processPodJobLink,
+		k8smeta.POD_PERSISENTVOLUMECLAIN: m.processPodPVCLink,
+		k8smeta.POD_CONFIGMAP:            m.processPodConfigMapLink,
+		k8smeta.POD_SECRET:               m.processPodSecretLink,
+		k8smeta.POD_SERVICE:              m.processPodServiceLink,
+	}
+
 	if m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.POD] = append(m.processors[k8smeta.POD], m.processPodEntity)
 	}
 	if m.serviceK8sMeta.Node {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.NODE, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.NODE] = append(m.processors[k8smeta.NODE], m.processNodeEntity)
 	}
 	if m.serviceK8sMeta.Service {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.SERVICE, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.SERVICE] = append(m.processors[k8smeta.SERVICE], m.processServiceEntity)
 	}
 	if m.serviceK8sMeta.Deployment {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.DEPLOYMENT, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.DEPLOYMENT] = append(m.processors[k8smeta.DEPLOYMENT], m.processDeploymentEntity)
 	}
 	if m.serviceK8sMeta.ReplicaSet {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.REPLICASET, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.REPLICASET] = append(m.processors[k8smeta.REPLICASET], m.processReplicaSetEntity)
 	}
 	if m.serviceK8sMeta.DaemonSet {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.DAEMONSET, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.DAEMONSET] = append(m.processors[k8smeta.DAEMONSET], m.processDaemonSetEntity)
 	}
 	if m.serviceK8sMeta.StatefulSet {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.STATEFULSET, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.STATEFULSET] = append(m.processors[k8smeta.STATEFULSET], m.processStatefulSetEntity)
 	}
 	if m.serviceK8sMeta.Configmap {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.CONFIGMAP, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.CONFIGMAP] = append(m.processors[k8smeta.CONFIGMAP], m.processConfigMapEntity)
 	}
 	if m.serviceK8sMeta.Secret {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.SECRET, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.SECRET] = append(m.processors[k8smeta.SECRET], m.processSecretEntity)
 	}
 	if m.serviceK8sMeta.Job {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.JOB, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.JOB] = append(m.processors[k8smeta.JOB], m.processJobEntity)
 	}
 	if m.serviceK8sMeta.CronJob {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.CRONJOB, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.CRONJOB] = append(m.processors[k8smeta.CRONJOB], m.processCronJobEntity)
 	}
 	if m.serviceK8sMeta.Namespace {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.NAMESPACE, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.NAMESPACE] = append(m.processors[k8smeta.NAMESPACE], m.processNamespaceEntity)
 	}
 	if m.serviceK8sMeta.PersistentVolume {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.PERSISTENTVOLUME, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.PERSISTENTVOLUME] = append(m.processors[k8smeta.PERSISTENTVOLUME], m.processPersistentVolumeEntity)
 	}
 	if m.serviceK8sMeta.PersistentVolumeClaim {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.PERSISTENTVOLUMECLAIM, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.PERSISTENTVOLUMECLAIM] = append(m.processors[k8smeta.PERSISTENTVOLUMECLAIM], m.processPersistentVolumeClaimEntity)
 	}
 	if m.serviceK8sMeta.StorageClass {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.STORAGECLASS, m.handleEvent, m.serviceK8sMeta.Interval)
-		m.processors[k8smeta.STORAGECLASS] = append(m.processors[k8smeta.STORAGECLASS], m.processStorageClassEntity)
 	}
 	if m.serviceK8sMeta.Ingress {
-		m.processors[k8smeta.INGRESS] = append(m.processors[k8smeta.INGRESS], m.processIngressEntity)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.INGRESS, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.NodePodLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Node {
-		m.processors[k8smeta.POD_NODE] = append(m.processors[k8smeta.POD_NODE], m.processPodNodeLink)
+	if m.serviceK8sMeta.PodNodeLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Node {
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_NODE, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.DeploymentReplicasetLink && m.serviceK8sMeta.Deployment && m.serviceK8sMeta.ReplicaSet {
-		m.processors[k8smeta.REPLICASET_DEPLOYMENT] = append(m.processors[k8smeta.REPLICASET_DEPLOYMENT], m.processReplicaSetDeploymentLink)
+	if m.serviceK8sMeta.ReplicasetDeploymentLink && m.serviceK8sMeta.Deployment && m.serviceK8sMeta.ReplicaSet {
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.REPLICASET_DEPLOYMENT, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodReplicaSetLink && m.serviceK8sMeta.ReplicaSet && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.POD_REPLICASET] = append(m.processors[k8smeta.POD_REPLICASET], m.processPodReplicaSetLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_REPLICASET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodStatefulSetLink && m.serviceK8sMeta.StatefulSet && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.POD_STATEFULSET] = append(m.processors[k8smeta.POD_STATEFULSET], m.processPodStatefulSetLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_STATEFULSET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodDaemonSetLink && m.serviceK8sMeta.DaemonSet && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.POD_DAEMONSET] = append(m.processors[k8smeta.POD_DAEMONSET], m.processPodDaemonSetLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_DAEMONSET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.CronjobJobLink && m.serviceK8sMeta.CronJob && m.serviceK8sMeta.Job {
-		m.processors[k8smeta.JOB_CRONJOB] = append(m.processors[k8smeta.JOB_CRONJOB], m.processJobCronJobLink)
+	if m.serviceK8sMeta.JobCronJobLink && m.serviceK8sMeta.CronJob && m.serviceK8sMeta.Job {
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.JOB_CRONJOB, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodJobLink && m.serviceK8sMeta.Job && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.POD_JOB] = append(m.processors[k8smeta.POD_JOB], m.processPodJobLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_JOB, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodPvcLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.PersistentVolumeClaim {
-		m.processors[k8smeta.POD_PERSISENTVOLUMECLAIN] = append(m.processors[k8smeta.POD_PERSISENTVOLUMECLAIN], m.processPodPVCLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_PERSISENTVOLUMECLAIN, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodConfigMapLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Configmap {
-		m.processors[k8smeta.POD_CONFIGMAP] = append(m.processors[k8smeta.POD_CONFIGMAP], m.processPodConfigMapLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_CONFIGMAP, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodSecretLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Secret {
-		m.processors[k8smeta.POD_SECRET] = append(m.processors[k8smeta.POD_SECRET], m.processPodSecretLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_SECRET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodServiceLink && m.serviceK8sMeta.Service && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.POD_SERVICE] = append(m.processors[k8smeta.POD_SERVICE], m.processPodServiceLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_SERVICE, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	if m.serviceK8sMeta.PodContainerLink && m.serviceK8sMeta.Pod {
-		m.processors[k8smeta.POD_CONTAINER] = append(m.processors[k8smeta.POD_CONTAINER], m.processPodContainerLink)
+		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_CONTAINER, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	go m.sendInBackground()
 	return nil
@@ -197,22 +212,11 @@ func (m *metaCollector) handleEvent(event []*k8smeta.K8sMetaEvent) {
 	}
 }
 
-func (m *metaCollector) handleAdd(event *k8smeta.K8sMetaEvent) {
-	if processors, ok := m.processors[event.Object.ResourceType]; ok {
-		for _, processor := range processors {
-			log := processor(event.Object, "create")
-			if log != nil {
-				m.send(log, isLink(event.Object.ResourceType))
-			}
-		}
-	}
-}
-
 func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
-	if processors, ok := m.processors[event.Object.ResourceType]; ok {
-		for _, processor := range processors {
-			log := processor(event.Object, "Update")
-			if log != nil {
+	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
+		logs := processor(event.Object, "Update")
+		if logs != nil {
+			for _, log := range logs {
 				m.send(log, isLink(event.Object.ResourceType))
 				if !isLink(event.Object.ResourceType) {
 					link := m.generateEntityClusterLink(log)
@@ -224,10 +228,10 @@ func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
 }
 
 func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
-	if processors, ok := m.processors[event.Object.ResourceType]; ok {
-		for _, processor := range processors {
-			log := processor(event.Object, "Expire")
-			if log != nil {
+	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
+		logs := processor(event.Object, "Expire")
+		if logs != nil {
+			for _, log := range logs {
 				m.send(log, isLink(event.Object.ResourceType))
 				if !isLink(event.Object.ResourceType) {
 					link := m.generateEntityClusterLink(log)
@@ -321,7 +325,7 @@ func convertPipelineEvent2Log(event models.PipelineEvent) *protocol.Log {
 		for k, v := range modelLog.Contents.Iterator() {
 			if _, ok := v.(string); !ok {
 				if intValue, ok := v.(int); !ok {
-					logger.Error(context.Background(), "COVERT_EVENT_TO_LOG_FAIL", "convert event to log fail, value is not string", v)
+					logger.Error(context.Background(), "COVERT_EVENT_TO_LOG_FAIL", "convert event to log fail, value is not string", v, "key", k)
 					continue
 				} else {
 					v = strconv.Itoa(intValue)

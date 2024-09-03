@@ -1,8 +1,7 @@
 package kubernetesmetav2
 
 import (
-	"strconv"
-	"strings"
+	"encoding/json"
 	"time"
 
 	networking "k8s.io/api/networking/v1"
@@ -11,28 +10,21 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-func (m *metaCollector) processIngressEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processIngressEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*networking.Ingress); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", "ingress")
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		return log
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }

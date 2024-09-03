@@ -83,7 +83,6 @@ require (
 	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
 	github.com/VictoriaMetrics/metrics v1.23.0 // indirect
 	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
-	github.com/alitto/pond v1.9.1 // indirect
 	github.com/andrewkroh/sys v0.0.0-20151128191922-287798fe3e43 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/ardielle/ardielle-go v1.5.2 // indirect

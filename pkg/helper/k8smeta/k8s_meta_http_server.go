@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	app "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -79,7 +80,7 @@ func (m *metadataHandler) handlePodMetaByUniqueID(w http.ResponseWriter, r *http
 	metadata := make(map[string]*PodMetadata)
 	objs := m.metaManager.cacheMap[POD].Get(rBody.Keys)
 	for key, obj := range objs {
-		podMetadata := convertObj2PodMetadata(obj)
+		podMetadata := m.convertObj2PodMetadata(obj)
 		if len(podMetadata) > 1 {
 			logger.Warning(context.Background(), "Multiple pods found for unique ID", key)
 		}
@@ -117,7 +118,7 @@ func (m *metadataHandler) handlePodMetaByHostIP(w http.ResponseWriter, r *http.R
 	metadata := make(map[string]*PodMetadata)
 	objs := m.metaManager.cacheMap[POD].Get(rBody.Keys)
 	for _, obj := range objs {
-		podMetadata := convertObj2PodMetadata(obj)
+		podMetadata := m.convertObj2PodMetadata(obj)
 		for i, meta := range podMetadata {
 			pod := obj[i].Raw.(*v1.Pod)
 			metadata[pod.Status.PodIP] = meta
@@ -139,7 +140,7 @@ func (m *metadataHandler) handlePodMetaByHostIP(w http.ResponseWriter, r *http.R
 	}
 }
 
-func convertObj2PodMetadata(objs []*ObjectWrapper) []*PodMetadata {
+func (m *metadataHandler) convertObj2PodMetadata(objs []*ObjectWrapper) []*PodMetadata {
 	result := make([]*PodMetadata, 0)
 	for _, obj := range objs {
 		pod := obj.Raw.(*v1.Pod)
@@ -167,6 +168,15 @@ func convertObj2PodMetadata(objs []*ObjectWrapper) []*PodMetadata {
 		} else {
 			podMetadata.WorkloadName = pod.GetOwnerReferences()[0].Name
 			podMetadata.WorkloadKind = strings.ToLower(pod.GetOwnerReferences()[0].Kind)
+			if podMetadata.WorkloadKind == "replicaset" {
+				// replicaset -> deployment
+				replicasets := m.metaManager.cacheMap[REPLICASET].Get([]string{podMetadata.WorkloadName})
+				for _, replicaset := range replicasets[podMetadata.WorkloadName] {
+					podMetadata.WorkloadName = replicaset.Raw.(*app.ReplicaSet).OwnerReferences[0].Name
+					podMetadata.WorkloadKind = strings.ToLower(replicaset.Raw.(*app.ReplicaSet).OwnerReferences[0].Kind)
+					break
+				}
+			}
 		}
 		result = append(result, podMetadata)
 	}

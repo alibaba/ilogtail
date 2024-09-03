@@ -1,6 +1,7 @@
 package kubernetesmetav2
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -11,167 +12,136 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-func (m *metaCollector) processDeploymentEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processDeploymentEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*app.Deployment); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		for k, v := range obj.Labels {
-			log.Contents.Add("labels_"+k, v)
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
+		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
+		log.Contents.Add("ready_replicas", strconv.FormatInt(int64(obj.Status.ReadyReplicas), 10))
+		containerInfos := []map[string]string{}
+		for _, container := range obj.Spec.Template.Spec.Containers {
+			containerInfo := map[string]string{
+				"name":  container.Name,
+				"image": container.Image,
+			}
+			containerInfos = append(containerInfos, containerInfo)
 		}
-		for k, v := range obj.Annotations {
-			log.Contents.Add("annotations_"+k, v)
-		}
-		for k, v := range obj.Spec.Selector.MatchLabels {
-			log.Contents.Add("matchLabels_"+k, v)
-		}
-		log.Contents.Add("spec_replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
-		for i, container := range obj.Spec.Template.Spec.Containers {
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
-		}
-		return log
+		containersStr, _ := json.Marshal(containerInfos)
+		log.Contents.Add("containers", string(containersStr))
+
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processDaemonSetEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processDaemonSetEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*app.DaemonSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		for k, v := range obj.Labels {
-			log.Contents.Add("labels_"+k, v)
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
+		log.Contents.Add("match_labels", string(matchLabelsStr))
+		containerInfos := []map[string]string{}
+		for _, container := range obj.Spec.Template.Spec.Containers {
+			containerInfo := map[string]string{
+				"name":  container.Name,
+				"image": container.Image,
+			}
+			containerInfos = append(containerInfos, containerInfo)
 		}
-		for k, v := range obj.Annotations {
-			log.Contents.Add("annotations_"+k, v)
-		}
-		for k, v := range obj.Spec.Selector.MatchLabels {
-			log.Contents.Add("matchLabels_"+k, v)
-		}
-		for i, container := range obj.Spec.Template.Spec.Containers {
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
-		}
-		return log
+		containersStr, _ := json.Marshal(containerInfos)
+		log.Contents.Add("containers", string(containersStr))
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processStatefulSetEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processStatefulSetEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*app.StatefulSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		for k, v := range obj.Labels {
-			log.Contents.Add("labels_"+k, v)
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
+		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
+		containerInfos := []map[string]string{}
+		for _, container := range obj.Spec.Template.Spec.Containers {
+			containerInfo := map[string]string{
+				"name":  container.Name,
+				"image": container.Image,
+			}
+			containerInfos = append(containerInfos, containerInfo)
 		}
-		for k, v := range obj.Annotations {
-			log.Contents.Add("annotations_"+k, v)
-		}
-		for k, v := range obj.Spec.Selector.MatchLabels {
-			log.Contents.Add("matchLabels_"+k, v)
-		}
-		log.Contents.Add("spec_replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
-		for i, container := range obj.Spec.Template.Spec.Containers {
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
-		}
-		return log
+		containersStr, _ := json.Marshal(containerInfos)
+		log.Contents.Add("containers", string(containersStr))
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processReplicaSetEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processReplicaSetEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*app.ReplicaSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		for k, v := range obj.Labels {
-			log.Contents.Add("labels_"+k, v)
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
+		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
+		containerInfos := []map[string]string{}
+		for _, container := range obj.Spec.Template.Spec.Containers {
+			containerInfo := map[string]string{
+				"name":  container.Name,
+				"image": container.Image,
+			}
+			containerInfos = append(containerInfos, containerInfo)
 		}
-		for k, v := range obj.Annotations {
-			log.Contents.Add("annotations_"+k, v)
-		}
-		for k, v := range obj.Spec.Selector.MatchLabels {
-			log.Contents.Add("matchLabels_"+k, v)
-		}
-		log.Contents.Add("spec_replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
-		for i, container := range obj.Spec.Template.Spec.Containers {
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
-		}
-		return log
+		containersStr, _ := json.Marshal(containerInfos)
+		log.Contents.Add("containers", string(containersStr))
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processReplicaSetDeploymentLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processReplicaSetDeploymentLink(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*k8smeta.ReplicaSetDeployment); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
@@ -192,12 +162,12 @@ func (m *metaCollector) processReplicaSetDeploymentLink(data *k8smeta.ObjectWrap
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
 		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processPodReplicaSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processPodReplicaSetLink(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*k8smeta.PodReplicaSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
@@ -218,12 +188,12 @@ func (m *metaCollector) processPodReplicaSetLink(data *k8smeta.ObjectWrapper, me
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
 		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processPodStatefulSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processPodStatefulSetLink(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*k8smeta.PodStatefulSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
@@ -244,12 +214,12 @@ func (m *metaCollector) processPodStatefulSetLink(data *k8smeta.ObjectWrapper, m
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
 		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processPodDaemonSetLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processPodDaemonSetLink(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*k8smeta.PodDaemonSet); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
@@ -270,7 +240,7 @@ func (m *metaCollector) processPodDaemonSetLink(data *k8smeta.ObjectWrapper, met
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
 		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }

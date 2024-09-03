@@ -1,8 +1,7 @@
 package kubernetesmetav2
 
 import (
-	"strconv"
-	"strings"
+	"encoding/json"
 	"time"
 
 	storage "k8s.io/api/storage/v1"
@@ -11,29 +10,22 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-func (m *metaCollector) processStorageClassEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processStorageClassEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*storage.StorageClass); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
-		log.Contents.Add("reclaimPolicy", string(*obj.ReclaimPolicy))
-		log.Contents.Add("volumeBindingMode", string(*obj.VolumeBindingMode))
-		return log
+		log.Contents.Add("api_version", obj.APIVersion)
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		log.Contents.Add("reclaim_policy", string(*obj.ReclaimPolicy))
+		log.Contents.Add("volume_binding_mode", string(*obj.VolumeBindingMode))
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }

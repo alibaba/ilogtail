@@ -123,7 +123,7 @@ func TestProcessPodReplicasetLink(t *testing.T) {
 			Interval: 10,
 		},
 	}
-	log := collector.processPodReplicasetLink(objWrapper, "create")
+	log := collector.processPodReplicaSetLink(objWrapper, "create")
 	assert.NotNilf(t, log, "log should not be nil")
 }
 
@@ -143,7 +143,7 @@ func TestProcessPodReplicasetLinkNoOwner(t *testing.T) {
 			Interval: 10,
 		},
 	}
-	log := collector.processPodReplicasetLink(objWrapper, "create")
+	log := collector.processPodReplicaSetLink(objWrapper, "create")
 	assert.Nilf(t, log, "log should not be nil")
 }
 

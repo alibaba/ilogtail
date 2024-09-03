@@ -8,7 +8,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-type ProcessFunc func(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent
+type ProcessFunc func(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent
 
 //revive:disable:exported
 type ServiceK8sMeta struct {
@@ -32,13 +32,14 @@ type ServiceK8sMeta struct {
 	PersistentVolumeClaim bool
 	StorageClass          bool
 	Ingress               bool
+	Container             bool
 	// entity link switch
-	NodePodLink              bool
-	DeploymentReplicasetLink bool
+	PodNodeLink              bool
+	ReplicasetDeploymentLink bool
 	PodReplicaSetLink        bool
 	PodStatefulSetLink       bool
 	PodDaemonSetLink         bool
-	CronjobJobLink           bool
+	JobCronJobLink           bool
 	PodJobLink               bool
 	PodPvcLink               bool
 	PodConfigMapLink         bool
@@ -76,11 +77,11 @@ func (s *ServiceK8sMeta) Start(collector pipeline.Collector) error {
 	s.collector = collector
 	s.metaCollector = &metaCollector{
 		serviceK8sMeta:   s,
-		processors:       make(map[string][]ProcessFunc),
 		collector:        collector,
 		entityBuffer:     make(chan models.PipelineEvent, 100),
 		entityLinkBuffer: make(chan models.PipelineEvent, 100),
 		stopCh:           make(chan struct{}),
+		entityProcessor:  make(map[string]ProcessFunc),
 	}
 	return s.metaCollector.Start()
 }

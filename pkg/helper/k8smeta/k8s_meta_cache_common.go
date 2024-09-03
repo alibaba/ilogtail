@@ -32,7 +32,6 @@ type commonCache struct {
 }
 
 func newCommonCache(stopCh chan struct{}, resourceType string) *commonCache {
-	fmt.Println("newCommonCache", resourceType)
 	idxRules := getIdxRules(resourceType)
 	m := &commonCache{}
 	m.eventCh = make(chan *K8sMetaEvent, 100)

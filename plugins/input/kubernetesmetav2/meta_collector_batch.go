@@ -1,6 +1,7 @@
 package kubernetesmetav2
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -11,72 +12,61 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-func (m *metaCollector) processJobEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processJobEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*batch.Job); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		for i, container := range obj.Spec.Template.Spec.Containers {
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
+		log.Contents.Add("status", string(obj.Status.String()))
+		containerInfos := []map[string]string{}
+		for _, container := range obj.Spec.Template.Spec.Containers {
+			containerInfo := map[string]string{
+				"name":  container.Name,
+				"image": container.Image,
+			}
+			containerInfos = append(containerInfos, containerInfo)
 		}
+		containersStr, _ := json.Marshal(containerInfos)
+		log.Contents.Add("containers", string(containersStr))
 		log.Contents.Add("suspend", strconv.FormatBool(*obj.Spec.Suspend))
-		log.Contents.Add("backoffLimit", strconv.FormatInt(int64(*obj.Spec.BackoffLimit), 10))
+		log.Contents.Add("backoff_limit", strconv.FormatInt(int64(*obj.Spec.BackoffLimit), 10))
 		log.Contents.Add("completion", strconv.FormatInt(int64(*obj.Spec.Completions), 10))
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processCronJobEntity(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processCronJobEntity(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*batch.CronJob); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Kind))
-		log.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name))
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
 
 		// custom fields
-		log.Contents.Add("apiVersion", obj.APIVersion)
-		log.Contents.Add("kind", obj.Kind)
-		log.Contents.Add("name", obj.Name)
+		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		for i, container := range obj.Spec.JobTemplate.Spec.Template.Spec.Containers {
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_name", container.Name)
-			log.Contents.Add("container_"+strconv.FormatInt(int64(i), 10)+"_image", container.Image)
-		}
+		labelsStr, _ := json.Marshal(obj.Labels)
+		log.Contents.Add("labels", string(labelsStr))
+		annotationsStr, _ := json.Marshal(obj.Annotations)
+		log.Contents.Add("annotations", string(annotationsStr))
 		log.Contents.Add("schedule", obj.Spec.Schedule)
 		log.Contents.Add("suspend", strconv.FormatBool(*obj.Spec.Suspend))
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processJobCronJobLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processJobCronJobLink(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*k8smeta.JobCronJob); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
@@ -96,12 +86,12 @@ func (m *metaCollector) processJobCronJobLink(data *k8smeta.ObjectWrapper, metho
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
 		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
 
-func (m *metaCollector) processPodJobLink(data *k8smeta.ObjectWrapper, method string) models.PipelineEvent {
+func (m *metaCollector) processPodJobLink(data *k8smeta.ObjectWrapper, method string) []models.PipelineEvent {
 	if obj, ok := data.Raw.(*k8smeta.PodJob); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
@@ -122,7 +112,7 @@ func (m *metaCollector) processPodJobLink(data *k8smeta.ObjectWrapper, method st
 		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
 		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
-		return log
+		return []models.PipelineEvent{log}
 	}
 	return nil
 }
