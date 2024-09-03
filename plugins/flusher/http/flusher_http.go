@@ -119,7 +119,6 @@ func NewHTTPFlusher() *FlusherHTTP {
 			InitialDelay:  time.Second,
 			MaxDelay:      30 * time.Second,
 		},
-		DropEventWhenQueueFull: true,
 	}
 }
 
@@ -286,7 +285,7 @@ func (f *FlusherHTTP) initHTTPClient() error {
 		if f.MaxIdleConnsPerHost > dt.MaxIdleConnsPerHost {
 			dt.MaxIdleConnsPerHost = f.MaxIdleConnsPerHost
 		}
-		if f.IdleConnTimeout > 0 {
+		if f.IdleConnTimeout > dt.IdleConnTimeout {
 			dt.IdleConnTimeout = f.IdleConnTimeout
 		}
 		if f.WriteBufferSize > 0 {
