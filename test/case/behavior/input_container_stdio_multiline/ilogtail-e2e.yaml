@@ -27,6 +27,7 @@ ilogtail:
               IgnoringStdout: false
               Multiline:
                 StartPattern: "today"
+              FlushTimeoutSecs: 5
   close_wait: 5s
 verify:
   tag_rules:
