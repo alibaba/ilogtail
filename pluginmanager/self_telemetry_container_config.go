@@ -48,7 +48,7 @@ func (r *InputContainer) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (r *InputContainer) InputMode() pipeline.InputModeType {
+func (r *InputContainer) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }
 

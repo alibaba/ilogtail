@@ -52,12 +52,18 @@ typedef int (*PluginCtlCmdFun)(
 typedef int (*IsValidToProcessFun)(const char *configName, int configNameSize);
 typedef int (*PushQueueFun)(const char *configName, int configNameSize, const char *pbBuffer, int pbSize);
 
-PLUGIN_ADAPTER_API void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun);
+PLUGIN_ADAPTER_API void RegisterLogtailCallBack(IsValidToSendFun checkFun, 
+                                                SendPbFun sendFun, 
+                                                PluginCtlCmdFun cmdFun, 
+                                                IsValidToProcessFun checkProcessFun, 
+                                                PushQueueFun pushFun);
 
 PLUGIN_ADAPTER_API void RegisterLogtailCallBackV2(IsValidToSendFun checkFun,
                                                   SendPbFun sendV1Fun,
                                                   SendPbV2Fun sendV2Fun,
-                                                  PluginCtlCmdFun cmdFun);
+                                                  PluginCtlCmdFun cmdFun,
+                                                  IsValidToProcessFun checkProcessFun, 
+                                                  PushQueueFun pushFun);
 
 PLUGIN_ADAPTER_API int LogtailIsValidToSend(long long logstoreKey);
 
@@ -84,8 +90,6 @@ LogtailCtlCmd(const char* configName, int configNameSize, int cmdId, const char*
 
 // version for logtail plugin adapter, used for check plugin adapter version
 PLUGIN_ADAPTER_API int PluginAdapterVersion();
-
-PLUGIN_ADAPTER_API void RegisterLogtailProcessCallBack(IsValidToProcessFun checkFun, PushQueueFun pushFun);
 
 PLUGIN_ADAPTER_API int LogtailIsValidToProcess(const char *configName, int configNameSize);
 

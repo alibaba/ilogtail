@@ -179,17 +179,20 @@ typedef int (*SendPbV2Fun)(const char* configName,
 typedef int (*PluginCtlCmdFun)(
     const char* configName, int configNameSize, int optId, const char* params, int paramsLen);
 
-typedef void (*RegisterLogtailCallBack)(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun);
+typedef int (*IsValidToProcessFun)(const char *configName, int configNameSize);
+typedef int (*PushQueueFun)(const char *configName, int configNameSize, const char *pbBuffer, int pbSize);
+
+typedef void (*RegisterLogtailCallBack)(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun, IsValidToProcessFun checkProcessFun, PushQueueFun pushFun);
 typedef void (*RegisterLogtailCallBackV2)(IsValidToSendFun checkFun,
                                           SendPbFun sendFun,
                                           SendPbV2Fun sendV2Fun,
-                                          PluginCtlCmdFun cmdFun);
+                                          PluginCtlCmdFun cmdFun, 
+                                          IsValidToProcessFun checkProcessFun, 
+                                          PushQueueFun pushFun);
 
 typedef int (*PluginAdapterVersion)();
 
-typedef int (*IsValidToProcessFun)(const char *configName, int configNameSize);
-typedef int (*PushQueueFun)(const char *configName, int configNameSize, const char *pbBuffer, int pbSize);
-typedef void (*RegisterLogtailProcessCallBack)(IsValidToProcessFun checkFun, PushQueueFun pushFun);
+typedef void (*RegisterLogtailProcessCallBack)();
 
 }
 

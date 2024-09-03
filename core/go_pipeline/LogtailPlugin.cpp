@@ -381,7 +381,9 @@ bool LogtailPlugin::LoadPluginBase() {
             registerV2Fun(LogtailPlugin::IsValidToSend,
                           LogtailPlugin::SendPb,
                           LogtailPlugin::SendPbV2,
-                          LogtailPlugin::ExecPluginCmd);
+                          LogtailPlugin::ExecPluginCmd,
+                          LogtailPlugin::IsValidToProcess,
+                          LogtailPlugin::PushQueue);
         } else {
             LOG_WARNING(sLogger, ("load RegisterLogtailCallBackV2 failed", error)("try to load V1", ""));
 
@@ -390,15 +392,7 @@ bool LogtailPlugin::LoadPluginBase() {
                 LOG_WARNING(sLogger, ("load RegisterLogtailCallBack failed", error));
                 return mPluginValid;
             }
-            registerFun(LogtailPlugin::IsValidToSend, LogtailPlugin::SendPb, LogtailPlugin::ExecPluginCmd);
-        }
-
-        auto registerProcessFun = (RegisterLogtailProcessCallBack)loader.LoadMethod("RegisterLogtailProcessCallBack", error);
-        if (error.empty()) {
-            registerProcessFun(LogtailPlugin::IsValidToProcess, LogtailPlugin::PushQueue);
-        } else {
-            LOG_WARNING(sLogger, ("load RegisterLogtailProcessCallBack failed", error));
-            return mPluginValid;
+            registerFun(LogtailPlugin::IsValidToSend, LogtailPlugin::SendPb, LogtailPlugin::ExecPluginCmd, LogtailPlugin::IsValidToProcess, LogtailPlugin::PushQueue);
         }
 
         mPluginAdapterPtr = loader.Release();

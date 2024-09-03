@@ -36,14 +36,15 @@ var (
 
 type pluginv2Runner struct {
 	// pipeline v2 fields
-	InputPipeContext     pipeline.PipelineContext
-	ProcessPipeContext   pipeline.PipelineContext
-	AggregatePipeContext pipeline.PipelineContext
-	FlushPipeContext     pipeline.PipelineContext
-	InputControl         *pipeline.AsyncControl
-	ProcessControl       *pipeline.AsyncControl
-	AggregateControl     *pipeline.AsyncControl
-	FlushControl         *pipeline.AsyncControl
+	InputPipeContext       pipeline.PipelineContext
+	ProcessPipeContext     pipeline.PipelineContext
+	AggregatePipeContext   pipeline.PipelineContext
+	FlushPipeContext       pipeline.PipelineContext
+	NativeInputPipeContext pipeline.PipelineContext
+	InputControl           *pipeline.AsyncControl
+	ProcessControl         *pipeline.AsyncControl
+	AggregateControl       *pipeline.AsyncControl
+	FlushControl           *pipeline.AsyncControl
 
 	MetricPlugins     []*MetricWrapperV2
 	ServicePlugins    []*ServiceWrapperV2
@@ -72,6 +73,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.ProcessPipeContext = helper.NewGroupedPipelineConext()
 	p.AggregatePipeContext = helper.NewObservePipelineConext(flushQueueSize)
 	p.FlushPipeContext = helper.NewNoopPipelineConext()
+	p.NativeInputPipeContext = nil
 	p.FlushOutStore.Write(p.AggregatePipeContext.Collector().Observe())
 	return nil
 }
@@ -158,6 +160,9 @@ func (p *pluginv2Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor && p.NativeInputPipeContext == nil {
+		p.NativeInputPipeContext = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, input.GetMode())
+	}
 	return err
 }
 
@@ -167,6 +172,9 @@ func (p *pluginv2Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 	wrapper.Input = input
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
 	err := wrapper.Init(pluginMeta)
+	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor && p.NativeInputPipeContext == nil {
+		p.NativeInputPipeContext = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, input.GetMode())
+	}
 	return err
 }
 
@@ -221,7 +229,7 @@ func (p *pluginv2Runner) runInput() {
 			defer panicRecover(service.Input.Description())
 			ctx := p.InputPipeContext
 			if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
-				ctx = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, service.Input.InputMode())
+				ctx = p.NativeInputPipeContext
 			}
 			if err := service.StartService(ctx); err != nil {
 				logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
@@ -239,7 +247,7 @@ func (p *pluginv2Runner) runMetricInput(control *pipeline.AsyncControl) {
 			timer := t
 			ctx := p.InputPipeContext
 			if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
-				ctx = helper.NewNativeProcessPipelineContext(p.LogstoreConfig.ConfigName, metric.Input.InputMode())
+				ctx = p.NativeInputPipeContext
 			}
 			control.Run(func(cc *pipeline.AsyncControl) {
 				timer.Run(func(state interface{}) error {
@@ -549,19 +557,19 @@ func (p *pluginv2Runner) convertToPipelineEvent(in *protocol.Log) models.Pipelin
 func (p *pluginv2Runner) GetInputMode() (pipeline.InputModeType, error) {
 	inputMode := pipeline.UNKNOWN
 	if len(p.MetricPlugins) > 0 {
-		inputMode = p.MetricPlugins[0].Input.InputMode()
+		inputMode = p.MetricPlugins[0].Input.GetMode()
 	}
 	if len(p.ServicePlugins) > 0 {
-		inputMode = p.ServicePlugins[0].Input.InputMode()
+		inputMode = p.ServicePlugins[0].Input.GetMode()
 	}
 	for _, metric := range p.MetricPlugins {
-		if metric.Input.InputMode() != inputMode {
+		if metric.Input.GetMode() != inputMode {
 			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
 			return inputMode, errors.New("input plugins inputMode not equal")
 		}
 	}
 	for _, service := range p.ServicePlugins {
-		if service.Input.InputMode() != inputMode {
+		if service.Input.GetMode() != inputMode {
 			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
 			return inputMode, errors.New("input plugins inputMode not equal")
 		}

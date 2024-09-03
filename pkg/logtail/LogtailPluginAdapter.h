@@ -37,12 +37,14 @@ extern "C" {
 
     typedef int (*PushQueueFun)(const char *configName, int configNameSize, const char *pbBuffer, int pbSize);
 
-    void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun);
+    void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun, IsValidToProcessFun checkProcessFun, PushQueueFun pushFun);
 
     void RegisterLogtailCallBackV2(IsValidToSendFun checkFun,
         SendPbFun sendV1Fun,
         SendPbV2Fun sendV2Fun,
-        PluginCtlCmdFun cmdFun);
+        PluginCtlCmdFun cmdFun,
+        IsValidToProcessFun checkProcessFun,
+        PushQueueFun pushFun);
 
     int LogtailIsValidToSend(long long logstoreKey);
 
@@ -58,8 +60,6 @@ extern "C" {
 
     // version for logtail plugin adapter, used for check plugin adapter version
     int PluginAdapterVersion();
-
-    void RegisterLogtailProcessCallBack(IsValidToProcessFun checkFun, PushQueueFun pushFun);
 
     int LogtailIsValidToProcess(const char *configName, int configNameSize);
 

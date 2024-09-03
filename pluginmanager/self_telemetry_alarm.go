@@ -54,7 +54,7 @@ func (r *InputAlarm) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (r *InputAlarm) InputMode() pipeline.InputModeType {
+func (r *InputAlarm) GetMode() pipeline.InputModeType {
 	return pipeline.PUSH
 }
 

@@ -22,22 +22,28 @@ PluginCtlCmdFun gPluginCtlCmdFun = NULL;
 IsValidToProcessFun gAdapterIsValidToProcessFun = NULL;
 PushQueueFun gAdapterPushQueueFun = NULL;
 
-void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun) {
-    fprintf(stderr, "[PluginAdapter] register fun %p %p %p\n", checkFun, sendFun, cmdFun);
+void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun, IsValidToProcessFun checkProcessFun, PushQueueFun pushFun) {
+    fprintf(stderr, "[PluginAdapter] register fun %p %p %p %p %p\n", checkFun, sendFun, cmdFun, checkProcessFun, pushFun);
     gAdapterIsValidToSendFun = checkFun;
     gAdapterSendPbFun = sendFun;
     gPluginCtlCmdFun = cmdFun;
+    gAdapterIsValidToProcessFun = checkProcessFun;
+    gAdapterPushQueueFun = pushFun;
 }
 
 void RegisterLogtailCallBackV2(IsValidToSendFun checkFun,
                                SendPbFun sendV1Fun,
                                SendPbV2Fun sendV2Fun,
-                               PluginCtlCmdFun cmdFun) {
+                               PluginCtlCmdFun cmdFun, 
+                               IsValidToProcessFun checkProcessFun, 
+                               PushQueueFun pushFun) {
     fprintf(stderr, "register fun v2 %p %p %p %p\n", checkFun, sendV1Fun, sendV2Fun, cmdFun);
     gAdapterIsValidToSendFun = checkFun;
     gAdapterSendPbFun = sendV1Fun;
     gAdapterSendPbV2Fun = sendV2Fun;
     gPluginCtlCmdFun = cmdFun;
+    gAdapterIsValidToProcessFun = checkProcessFun;
+    gAdapterPushQueueFun = pushFun;
 }
 
 int LogtailIsValidToSend(long long logstoreKey) {
@@ -88,12 +94,6 @@ int LogtailCtlCmd(const char* configName, int configNameSize, int optId, const c
 //   - Update RegisterLogtailCallBack to register LogtailSendPBV2.
 int PluginAdapterVersion() {
     return 300;
-}
-
-void RegisterLogtailProcessCallBack(IsValidToProcessFun checkFun, PushQueueFun pushFun) {
-    fprintf(stderr, "register fun process %p %p\n", checkFun, pushFun);
-    gAdapterIsValidToProcessFun = checkFun;
-    gAdapterPushQueueFun = pushFun;
 }
 
 int LogtailIsValidToProcess(const char* configName, int configNameSize) {

@@ -211,7 +211,7 @@ func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, c
 		return
 	}
 	pushRst := -1
-	switch p.Input.InputMode() {
+	switch p.Input.GetMode() {
 	case pipeline.PUSH:
 		for i := 0; i < 5; i++ {
 			if logtail.IsValidToProcess(p.Config.ConfigName) && logtail.PushQueue(p.Config.ConfigName, buffer) == 0 {

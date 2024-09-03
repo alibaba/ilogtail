@@ -217,7 +217,7 @@ func (p *MetricWrapperV1) pushLogtailProcessQueue(events []*protocol.LogEvent, c
 		logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "marshal log failed", err)
 		return
 	}
-	switch p.Input.InputMode() {
+	switch p.Input.GetMode() {
 	case pipeline.PUSH:
 		for i := 0; i < 5; i++ {
 			if logtail.IsValidToProcess(p.Config.ConfigName) && logtail.PushQueue(p.Config.ConfigName, buffer) == 0 {

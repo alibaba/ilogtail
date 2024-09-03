@@ -484,19 +484,19 @@ func (p *pluginv1Runner) Merge(r PluginRunner) {
 func (p *pluginv1Runner) GetInputMode() (pipeline.InputModeType, error) {
 	inputMode := pipeline.UNKNOWN
 	if len(p.MetricPlugins) > 0 {
-		inputMode = p.MetricPlugins[0].Input.InputMode()
+		inputMode = p.MetricPlugins[0].Input.GetMode()
 	}
 	if len(p.ServicePlugins) > 0 {
-		inputMode = p.ServicePlugins[0].Input.InputMode()
+		inputMode = p.ServicePlugins[0].Input.GetMode()
 	}
 	for _, metric := range p.MetricPlugins {
-		if metric.Input.InputMode() != inputMode {
+		if metric.Input.GetMode() != inputMode {
 			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
 			return inputMode, errors.New("input plugins inputMode not equal")
 		}
 	}
 	for _, service := range p.ServicePlugins {
-		if service.Input.InputMode() != inputMode {
+		if service.Input.GetMode() != inputMode {
 			logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "input plugins inputMode not equal")
 			return inputMode, errors.New("input plugins inputMode not equal")
 		}
