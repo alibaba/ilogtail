@@ -3,7 +3,7 @@ package kubernetesmetav2
 import (
 	"context"
 
-	// #nosec G401
+	// #nosec G501
 	"crypto/md5"
 	"fmt"
 	"strconv"
@@ -57,6 +57,7 @@ func (m *metaCollector) Start() error {
 		k8smeta.POD_CONFIGMAP:            m.processPodConfigMapLink,
 		k8smeta.POD_SECRET:               m.processPodSecretLink,
 		k8smeta.POD_SERVICE:              m.processPodServiceLink,
+		k8smeta.POD_CONTAINER:            m.processPodContainerLink,
 	}
 
 	if m.serviceK8sMeta.Pod {
@@ -215,13 +216,11 @@ func (m *metaCollector) handleEvent(event []*k8smeta.K8sMetaEvent) {
 func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
 	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
 		logs := processor(event.Object, "Update")
-		if logs != nil {
-			for _, log := range logs {
-				m.send(log, isLink(event.Object.ResourceType))
-				if !isLink(event.Object.ResourceType) {
-					link := m.generateEntityClusterLink(log)
-					m.send(link, true)
-				}
+		for _, log := range logs {
+			m.send(log, isLink(event.Object.ResourceType))
+			if !isLink(event.Object.ResourceType) {
+				link := m.generateEntityClusterLink(log)
+				m.send(link, true)
 			}
 		}
 	}
@@ -230,13 +229,11 @@ func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
 func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
 		logs := processor(event.Object, "Expire")
-		if logs != nil {
-			for _, log := range logs {
-				m.send(log, isLink(event.Object.ResourceType))
-				if !isLink(event.Object.ResourceType) {
-					link := m.generateEntityClusterLink(log)
-					m.send(link, true)
-				}
+		for _, log := range logs {
+			m.send(log, isLink(event.Object.ResourceType))
+			if !isLink(event.Object.ResourceType) {
+				link := m.generateEntityClusterLink(log)
+				m.send(link, true)
 			}
 		}
 	}

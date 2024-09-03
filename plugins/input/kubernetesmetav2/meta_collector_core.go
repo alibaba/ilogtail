@@ -92,6 +92,7 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 				result = append(result, containerLog)
 			}
 		}
+		return result
 	}
 	return nil
 }
