@@ -29,7 +29,7 @@
 #include "pipeline/compression/Compressor.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
-#include "sender/ConcurrencyLimiter.h"
+#include "pipeline/limiter/ConcurrencyLimiter.h"
 #include "pipeline/serializer/SLSSerializer.h"
 
 namespace logtail {

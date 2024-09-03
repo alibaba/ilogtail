@@ -31,7 +31,7 @@
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "sdk/Exception.h"
-#include "sender/RateLimiter.h"
+#include "pipeline/limiter/RateLimiter.h"
 #include "sls_control/SLSControl.h"
 
 DEFINE_FLAG_INT32(write_secondary_wait_timeout, "interval of dump seconary buffer from memory to file, seconds", 2);

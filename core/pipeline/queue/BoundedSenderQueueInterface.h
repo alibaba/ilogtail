@@ -25,8 +25,8 @@
 #include "pipeline/queue/BoundedQueueInterface.h"
 #include "pipeline/queue/QueueKey.h"
 #include "pipeline/queue/SenderQueueItem.h"
-#include "sender/ConcurrencyLimiter.h"
-#include "sender/RateLimiter.h"
+#include "pipeline/limiter/ConcurrencyLimiter.h"
+#include "pipeline/limiter/RateLimiter.h"
 
 namespace logtail {
 

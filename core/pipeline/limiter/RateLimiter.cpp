@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sender/RateLimiter.h"
+#include "pipeline/limiter/RateLimiter.h"
 
 #include "logger/Logger.h"
 // TODO: temporarily used
