@@ -18,7 +18,7 @@
 #include "pipeline/plugin/creator/StaticFlusherCreator.h"
 #include "pipeline/plugin/creator/StaticInputCreator.h"
 #include "pipeline/plugin/creator/StaticProcessorCreator.h"
-#include "sender/FlusherRunner.h"
+#include "runner/FlusherRunner.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 

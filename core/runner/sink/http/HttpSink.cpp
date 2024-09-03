@@ -22,7 +22,7 @@
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueItem.h"
-#include "sender/FlusherRunner.h"
+#include "runner/FlusherRunner.h"
 
 using namespace std;
 

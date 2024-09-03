@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sender/FlusherRunner.h"
+#include "runner/FlusherRunner.h"
 
 #include "app_config/AppConfig.h"
 #include "application/Application.h"

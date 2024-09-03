@@ -49,7 +49,7 @@
 #include "processor/daemon/LogProcess.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
-#include "sender/FlusherRunner.h"
+#include "runner/FlusherRunner.h"
 #include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"

@@ -14,7 +14,7 @@
 
 #include "pipeline/plugin/PluginRegistry.h"
 #include "pipeline/queue/SenderQueueManager.h"
-#include "sender/FlusherRunner.h"
+#include "runner/FlusherRunner.h"
 #include "runner/sink/http/HttpSink.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"

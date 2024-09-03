@@ -35,7 +35,7 @@
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"
 #include "sdk/Common.h"
-#include "sender/FlusherRunner.h"
+#include "runner/FlusherRunner.h"
 #include "sls_control/SLSControl.h"
 // TODO: temporarily used here
 #include "flusher/sls/DiskBufferWriter.h"
