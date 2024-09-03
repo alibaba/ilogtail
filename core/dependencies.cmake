@@ -131,11 +131,6 @@ logtail_define(protobuf_BIN "Absolute path to protoc" "${DEPS_BINARY_ROOT}/proto
 set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/sls")
 set(PROTO_FILES ${PROTO_FILE_PATH}/sls_logs.proto ${PROTO_FILE_PATH}/logtail_buffer_meta.proto ${PROTO_FILE_PATH}/metric.proto ${PROTO_FILE_PATH}/checkpoint.proto)
 execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH} --cpp_out=${PROTO_FILE_PATH} ${PROTO_FILES})
-set(PROTO_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../config_server/protocol")
-set(PROTO_FILES ${PROTO_FILE_PATH}/v1/agent.proto)
-execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH}/v1 --cpp_out=${CMAKE_CURRENT_SOURCE_DIR}/protobuf/config_server/v1 ${PROTO_FILES})
-set(PROTO_FILES ${PROTO_FILE_PATH}/v2/agent.proto)
-execute_process(COMMAND ${protobuf_BIN} --proto_path=${PROTO_FILE_PATH}/v2 --cpp_out=${CMAKE_CURRENT_SOURCE_DIR}/protobuf/config_server/v2 ${PROTO_FILES})
 
 # re2
 macro(link_re2 target_name)
