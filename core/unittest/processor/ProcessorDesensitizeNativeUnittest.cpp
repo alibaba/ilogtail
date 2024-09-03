@@ -14,10 +14,10 @@
 #include "common/JsonUtil.h"
 #include "models/LogEvent.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorDesensitizeNative.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
-#include "processor/inner/ProcessorSplitLogStringNative.h"
-#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "plugin/processor/ProcessorDesensitizeNative.h"
+#include "plugin/processor/inner/ProcessorMergeMultilineLogNative.h"
+#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
+#include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {

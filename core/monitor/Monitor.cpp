@@ -33,7 +33,7 @@
 #include "common/TimeUtil.h"
 #include "common/version.h"
 #include "file_server/event_handler/LogInput.h"
-#include "flusher/sls/FlusherSLS.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "logger/Logger.h"

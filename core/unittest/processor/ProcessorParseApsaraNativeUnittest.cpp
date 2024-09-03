@@ -19,10 +19,10 @@
 #include "models/LogEvent.h"
 #include "models/StringView.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
-#include "processor/ProcessorParseApsaraNative.h"
-#include "processor/inner/ProcessorSplitLogStringNative.h"
-#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "plugin/processor/inner/ProcessorMergeMultilineLogNative.h"
+#include "plugin/processor/ProcessorParseApsaraNative.h"
+#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
+#include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {

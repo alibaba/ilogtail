@@ -16,7 +16,7 @@
 
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
-#include "processor/ProcessorSPL.h"
+#include "plugin/processor/ProcessorSPL.h"
 #include "models/LogEvent.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
 #include <iostream>

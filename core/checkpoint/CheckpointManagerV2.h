@@ -23,7 +23,7 @@
 #include <vector>
 #include <leveldb/db.h>
 #include "protobuf/sls/checkpoint.pb.h"
-#include "input/InputFile.h"
+#include "plugin/input/InputFile.h"
 
 namespace logtail {
 

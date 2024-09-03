@@ -32,7 +32,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "common/HashUtil.h"
-#include "flusher/sls/FlusherSLS.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 
 DEFINE_FLAG_INT64(sls_observer_network_ebpf_connection_gc_interval,
                   "SLS Observer NetWork connection gc interval seconds",

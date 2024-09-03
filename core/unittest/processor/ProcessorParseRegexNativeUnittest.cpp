@@ -18,7 +18,7 @@
 #include "config/PipelineConfig.h"
 #include "models/LogEvent.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseRegexNative.h"
+#include "plugin/processor/ProcessorParseRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {

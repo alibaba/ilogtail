@@ -56,8 +56,8 @@
 #include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "input/InputContainerStdio.h"
-#include "input/InputFile.h"
+#include "plugin/input/InputContainerStdio.h"
+#include "plugin/input/InputFile.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
 

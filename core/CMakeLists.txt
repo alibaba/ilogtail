@@ -102,12 +102,12 @@ set(PLUGIN_SOURCE_FILES_CORE "")
 set(PLUGIN_SOURCE_FILES_SPL "")
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/common.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/links.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/input/input.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/input/links.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/processor/processor.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/processor/links.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/flusher.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/input/input.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/input/links.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/processor/processor.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/processor/links.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/flusher/flusher.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST

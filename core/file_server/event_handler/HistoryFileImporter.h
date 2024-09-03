@@ -20,7 +20,7 @@
 #include "common/StringTools.h"
 #include "common/CircularBuffer.h"
 #include "common/Thread.h"
-#include "input/InputFile.h"
+#include "plugin/input/InputFile.h"
 
 namespace logtail {
 

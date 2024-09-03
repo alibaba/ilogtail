@@ -14,8 +14,8 @@
 
 #include <memory>
 
-#include "flusher/sls/FlusherSLS.h"
-#include "input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"

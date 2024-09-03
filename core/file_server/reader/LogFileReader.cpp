@@ -49,7 +49,7 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/MetricConstants.h"
-#include "processor/inner/ProcessorParseContainerLogNative.h"
+#include "plugin/processor/inner/ProcessorParseContainerLogNative.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"

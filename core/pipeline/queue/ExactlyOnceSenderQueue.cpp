@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-#include "flusher/sls/FlusherSLS.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 #include "logger/Logger.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 

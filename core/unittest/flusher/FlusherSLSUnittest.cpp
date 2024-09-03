@@ -23,9 +23,9 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "pipeline/compression/CompressorFactory.h"
-#include "flusher/sls/FlusherSLS.h"
-#include "flusher/sls/PackIdManager.h"
-#include "flusher/sls/SLSClientManager.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/flusher/sls/PackIdManager.h"
+#include "plugin/flusher/sls/SLSClientManager.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"

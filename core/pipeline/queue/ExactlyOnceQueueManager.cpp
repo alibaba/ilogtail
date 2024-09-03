@@ -16,8 +16,8 @@
 
 #include "common/Flags.h"
 #include "common/TimeUtil.h"
-#include "input/InputFeedbackInterfaceRegistry.h"
-#include "input/InputFile.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/input/InputFile.h"
 #include "logger/Logger.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"

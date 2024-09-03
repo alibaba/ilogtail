@@ -18,7 +18,7 @@
 
 #include "common/DynamicLibHelper.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
-#include "processor/DynamicCProcessorProxy.h"
+#include "plugin/processor/DynamicCProcessorProxy.h"
 
 namespace logtail {
 

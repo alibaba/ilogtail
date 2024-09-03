@@ -22,7 +22,7 @@
 
 #include "common/Lock.h"
 #include "protobuf/sls/sls_logs.pb.h"
-#include "flusher/sls/FlusherSLS.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 
 namespace logtail {
 

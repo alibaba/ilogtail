@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "config/PipelineConfig.h"
-#include "input/InputContainerStdio.h"
-#include "input/InputFile.h"
+#include "plugin/input/InputContainerStdio.h"
+#include "plugin/input/InputFile.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/FlusherInstance.h"

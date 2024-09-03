@@ -18,7 +18,7 @@
 #include "application/Application.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
-#include "flusher/sls/DiskBufferWriter.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
@@ -28,8 +28,8 @@
 #include "common/http/HttpRequest.h"
 #include "runner/sink/http/HttpSink.h"
 // TODO: temporarily used here
-#include "flusher/sls/PackIdManager.h"
-#include "flusher/sls/SLSClientManager.h"
+#include "plugin/flusher/sls/PackIdManager.h"
+#include "plugin/flusher/sls/SLSClientManager.h"
 
 using namespace std;
 
