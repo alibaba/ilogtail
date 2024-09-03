@@ -38,7 +38,7 @@
 #include "protobuf/sls/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "models/StringView.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/QueueKey.h"
 #include "rapidjson/allocators.h"
 #include "file_server/reader/FileReaderOptions.h"
 

@@ -13,11 +13,11 @@
 // limitations under the License.
 
 #include "flusher/sls/FlusherSLS.h"
-#include "queue/ExactlyOnceQueueManager.h"
-#include "queue/QueueKeyManager.h"
-#include "queue/QueueParam.h"
-#include "queue/SLSSenderQueueItem.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/ExactlyOnceQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/QueueParam.h"
+#include "pipeline/queue/SLSSenderQueueItem.h"
+#include "pipeline/queue/SenderQueueManager.h"
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(sender_queue_gc_threshold_sec);

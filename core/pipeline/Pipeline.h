@@ -31,7 +31,7 @@
 #include "pipeline/plugin/instance/FlusherInstance.h"
 #include "pipeline/plugin/instance/InputInstance.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
-#include "route/Router.h"
+#include "pipeline/route/Router.h"
 
 namespace logtail {
 

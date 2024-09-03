@@ -24,13 +24,13 @@
 #include <unordered_set>
 #include <vector>
 
-#include "batch/BatchStatus.h"
-#include "batch/Batcher.h"
-#include "compression/Compressor.h"
+#include "pipeline/batch/BatchStatus.h"
+#include "pipeline/batch/Batcher.h"
+#include "pipeline/compression/Compressor.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "sender/ConcurrencyLimiter.h"
-#include "serializer/SLSSerializer.h"
+#include "pipeline/serializer/SLSSerializer.h"
 
 namespace logtail {
 

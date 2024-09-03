@@ -23,9 +23,9 @@
 
 #include "models/PipelineEventGroup.h"
 #include "pipeline/plugin/interface/Plugin.h"
-#include "queue/QueueKey.h"
-#include "queue/SenderQueueItem.h"
-#include "sink/SinkType.h"
+#include "pipeline/queue/QueueKey.h"
+#include "pipeline/queue/SenderQueueItem.h"
+#include "runner/sink/SinkType.h"
 
 namespace logtail {
 

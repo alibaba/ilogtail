@@ -21,8 +21,8 @@
 #include <future>
 
 #include "pipeline/plugin/interface/Flusher.h"
-#include "queue/SenderQueueItem.h"
-#include "sink/SinkType.h"
+#include "pipeline/queue/SenderQueueItem.h"
+#include "runner/sink/SinkType.h"
 
 namespace logtail {
 

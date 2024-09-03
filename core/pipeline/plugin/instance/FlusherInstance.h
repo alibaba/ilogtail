@@ -25,7 +25,7 @@
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/PluginInstance.h"
 #include "pipeline/plugin/interface/Flusher.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/QueueKey.h"
 
 namespace logtail {
 

@@ -32,7 +32,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 #include "processor/daemon/LogProcess.h"
-#include "queue/ProcessQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
 
 using namespace std;
 using namespace sls_logs;

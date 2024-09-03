@@ -18,7 +18,7 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
-#include "batch/TimeoutFlushManager.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
 #include "input/InputFeedbackInterfaceRegistry.h"
@@ -26,9 +26,9 @@
 #include "pipeline/plugin/PluginRegistry.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
-#include "queue/BoundedProcessQueue.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/queue/BoundedProcessQueue.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 

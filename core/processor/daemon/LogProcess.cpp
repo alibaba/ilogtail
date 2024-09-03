@@ -15,15 +15,15 @@
 #include "processor/daemon/LogProcess.h"
 
 #include "app_config/AppConfig.h"
-#include "batch/TimeoutFlushManager.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
-#include "queue/ExactlyOnceQueueManager.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/queue/ExactlyOnceQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 DECLARE_FLAG_INT32(max_send_log_group_size);
 

@@ -26,7 +26,7 @@
 #include "common/SafeQueue.h"
 #include "flusher/sls/SendResult.h"
 #include "protobuf/sls/logtail_buffer_meta.pb.h"
-#include "queue/SenderQueueItem.h"
+#include "pipeline/queue/SenderQueueItem.h"
 #include "sdk/Client.h"
 
 namespace logtail {

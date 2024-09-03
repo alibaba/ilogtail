@@ -18,8 +18,8 @@
 
 #include "common/http/HttpResponse.h"
 #include "pipeline/plugin/interface/Flusher.h"
-#include "queue/SenderQueueItem.h"
-#include "sink/http/HttpSinkRequest.h"
+#include "pipeline/queue/SenderQueueItem.h"
+#include "runner/sink/http/HttpSinkRequest.h"
 
 namespace logtail {
 

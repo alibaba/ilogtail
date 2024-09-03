@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 #include "protobuf/sls/checkpoint.pb.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/QueueKey.h"
 
 namespace logtail {
 

@@ -31,8 +31,8 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 using namespace std;
 

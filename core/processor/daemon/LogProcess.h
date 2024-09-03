@@ -24,7 +24,7 @@
 #include "common/Thread.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/Monitor.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/QueueKey.h"
 
 namespace logtail {
 

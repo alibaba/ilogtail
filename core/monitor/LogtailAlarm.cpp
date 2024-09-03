@@ -24,8 +24,8 @@
 #include "common/version.h"
 #include "protobuf/sls/sls_logs.pb.h"
 #include "profile_sender/ProfileSender.h"
-#include "queue/QueueKeyManager.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
 
 DEFINE_FLAG_INT32(logtail_alarm_interval, "the interval of two same type alarm message", 30);
 DEFINE_FLAG_INT32(logtail_low_level_alarm_speed, "the speed(count/second) which logtail's low level alarm allow", 100);

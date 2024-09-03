@@ -27,7 +27,7 @@
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/plugin/interface/Input.h"
 #include "pipeline/plugin/interface/Processor.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
 
 namespace logtail {
 

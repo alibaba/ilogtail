@@ -31,7 +31,7 @@
 #include "file_server/FileServer.h"
 #include "logger/Logger.h"
 #include "pipeline/Pipeline.h"
-#include "queue/ProcessQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

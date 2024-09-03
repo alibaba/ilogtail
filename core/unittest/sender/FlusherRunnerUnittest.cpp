@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "pipeline/plugin/PluginRegistry.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
 #include "sender/FlusherRunner.h"
-#include "sink/http/HttpSink.h"
+#include "runner/sink/http/HttpSink.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 

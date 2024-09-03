@@ -28,7 +28,7 @@
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
 #include "profile_sender/ProfileSender.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);
 DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");

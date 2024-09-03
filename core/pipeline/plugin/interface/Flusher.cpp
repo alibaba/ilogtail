@@ -14,8 +14,8 @@
 
 #include "pipeline/plugin/interface/Flusher.h"
 
-#include "queue/QueueKeyManager.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
 // TODO: temporarily used here
 #include "pipeline/PipelineManager.h"
 

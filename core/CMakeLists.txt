@@ -111,10 +111,15 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper and spl.
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint compression config config/feedbacker config/provider config/watcher protobuf/config_server/v1 protobuf/config_server/v2 
-        container_manager file_server/event file_server/event_handler file_server/event_listener file_server go_pipeline protobuf/sls logger 
-        models monitor parser pipeline pipeline/plugin pipeline/plugin/creator pipeline/plugin/instance pipeline/plugin/interface file_server/polling
-        profile_sender queue file_server/reader sdk sender serializer sls_control fuse prometheus prometheus/labels prometheus/schedulers prometheus/async sink/http route ebpf/observer ebpf/security ebpf/handler ebpf runner
+        application app_config checkpoint container_manager logger go_pipeline monitor profile_sender models
+        config config/feedbacker config/provider config/watcher
+        pipeline pipeline/batch pipeline/compression pipeline/plugin pipeline/plugin/creator pipeline/plugin/instance pipeline/plugin/interface pipeline/queue pipeline/route pipeline/serializer
+        runner runner/sink/http
+        protobuf/config_server/v1 protobuf/config_server/v2 protobuf/sls
+        file_server file_server/event file_server/event_handler file_server/event_listener file_server/reader file_server/polling
+        prometheus prometheus/labels prometheus/schedulers prometheus/async
+        ebpf ebpf/observer ebpf/security ebpf/handler
+        parser sdk sender sls_control fuse
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)

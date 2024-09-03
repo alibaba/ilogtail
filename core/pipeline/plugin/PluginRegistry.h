@@ -27,7 +27,7 @@
 #include "pipeline/plugin/instance/InputInstance.h"
 #include "pipeline/plugin/instance/PluginInstance.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
-#include "sink/SinkType.h"
+#include "runner/sink/SinkType.h"
 
 struct processor_interface_t;
 
