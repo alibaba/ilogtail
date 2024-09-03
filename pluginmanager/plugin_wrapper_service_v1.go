@@ -97,7 +97,7 @@ func (p *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map
 	// need push to native processor
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEvent(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, fields)
-		ctx["tags"] = tags
+		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		p.inputRecordsTotal.Add(1)
 		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
@@ -123,7 +123,7 @@ func (p *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
 	// need push to native processor
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEventByArray(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, columns, values)
-		ctx["tags"] = tags
+		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		p.inputRecordsTotal.Add(1)
 		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
@@ -151,21 +151,17 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 	var ctxCached map[string]interface{}
 	var event *pipeline.LogEventWithContext
 
-	timer := time.NewTimer(p.PushNativeTimeout)
-	defer timer.Stop()
-
 	for {
 		select {
-		case <-timer.C:
+		case <-time.After(p.PushNativeTimeout):
 			if len(eventCached) != 0 {
 				p.pushNativeProcessQueue(eventCached, ctxCached)
 				eventCached = eventCached[:0]
 				ctxCached = make(map[string]interface{})
 			}
-			timer.Reset(p.PushNativeTimeout)
 		case event = <-p.LogsCachedChan:
-			logTags, okLog := event.Context["tags"].(map[string]string)
-			cachedTags, okCached := ctxCached["tags"].(map[string]string)
+			logTags, okLog := event.Context[ctxKeyTags].(map[string]string)
+			cachedTags, okCached := ctxCached[ctxKeyTags].(map[string]string)
 			if okLog && okCached {
 				if !reflect.DeepEqual(logTags, cachedTags) {
 					p.pushNativeProcessQueue(eventCached, ctxCached)
@@ -182,7 +178,6 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 				eventCached = eventCached[:0]
 				ctxCached = make(map[string]interface{})
 			}
-			timer.Reset(p.PushNativeTimeout)
 		case <-p.ShutdownCachedChan:
 			if len(eventCached) != 0 {
 				p.pushNativeProcessQueue(eventCached, ctxCached)
@@ -198,7 +193,7 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 }
 
 func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, ctx map[string]interface{}) {
-	tags, ok := ctx["tags"].(map[string]string)
+	tags, ok := ctx[ctxKeyTags].(map[string]string)
 	if ok {
 		for k, v := range p.Tags {
 			tags[k] = v

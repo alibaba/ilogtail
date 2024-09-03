@@ -102,7 +102,7 @@ func (p *MetricWrapperV1) AddDataWithContext(tags map[string]string, fields map[
 		if ctx == nil {
 			ctx = make(map[string]interface{})
 		}
-		ctx["tags"] = tags
+		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		p.inputRecordsTotal.Add(1)
 		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
@@ -130,7 +130,7 @@ func (p *MetricWrapperV1) AddDataArrayWithContext(tags map[string]string,
 		if ctx == nil {
 			ctx = make(map[string]interface{})
 		}
-		ctx["tags"] = tags
+		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		p.inputRecordsTotal.Add(1)
 		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
@@ -158,21 +158,17 @@ func (p *MetricWrapperV1) runPushProcessQueueInternal() {
 	var ctxCached map[string]interface{}
 	var event *pipeline.LogEventWithContext
 
-	timer := time.NewTimer(p.PushNativeTimeout)
-	defer timer.Stop()
-
 	for {
 		select {
-		case <-timer.C:
+		case <-time.After(p.PushNativeTimeout):
 			if len(eventCached) != 0 {
 				p.pushLogtailProcessQueue(eventCached, ctxCached)
 				eventCached = eventCached[:0]
 				ctxCached = make(map[string]interface{})
 			}
-			timer.Reset(p.PushNativeTimeout)
 		case event = <-p.LogsCachedChan:
-			logTags, okLog := event.Context["tags"].(map[string]string)
-			cachedTags, okCached := ctxCached["tags"].(map[string]string)
+			logTags, okLog := event.Context[ctxKeyTags].(map[string]string)
+			cachedTags, okCached := ctxCached[ctxKeyTags].(map[string]string)
 			if okLog && okCached {
 				if !reflect.DeepEqual(logTags, cachedTags) {
 					p.pushLogtailProcessQueue(eventCached, ctxCached)
@@ -189,7 +185,6 @@ func (p *MetricWrapperV1) runPushProcessQueueInternal() {
 				eventCached = eventCached[:0]
 				ctxCached = make(map[string]interface{})
 			}
-			timer.Reset(p.PushNativeTimeout)
 		case <-p.ShutdownCachedChan:
 			if len(eventCached) != 0 {
 				p.pushLogtailProcessQueue(eventCached, ctxCached)
@@ -205,7 +200,7 @@ func (p *MetricWrapperV1) runPushProcessQueueInternal() {
 }
 
 func (p *MetricWrapperV1) pushLogtailProcessQueue(events []*protocol.LogEvent, ctx map[string]interface{}) {
-	tags, ok := ctx["tags"].(map[string]string)
+	tags, ok := ctx[ctxKeyTags].(map[string]string)
 	if ok {
 		for k, v := range p.Tags {
 			tags[k] = v
