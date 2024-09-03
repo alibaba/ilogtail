@@ -46,7 +46,7 @@
 #include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "processor/daemon/LogProcess.h"
+#include "runner/LogProcess.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
 #include "runner/FlusherRunner.h"

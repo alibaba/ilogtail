@@ -37,7 +37,6 @@
 #include "file_server/polling/PollingDirFile.h"
 #include "file_server/polling/PollingEventQueue.h"
 #include "file_server/polling/PollingModify.h"
-#include "processor/daemon/LogProcess.h"
 #include "file_server/reader/GloablFileDescriptorManager.h"
 #include "file_server/reader/LogFileReader.h"
 #ifdef __ENTERPRISE__

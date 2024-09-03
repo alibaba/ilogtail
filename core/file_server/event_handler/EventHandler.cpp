@@ -31,7 +31,7 @@
 #include "fuse/FuseFileBlacklist.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "processor/daemon/LogProcess.h"
+#include "runner/LogProcess.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 
 using namespace std;

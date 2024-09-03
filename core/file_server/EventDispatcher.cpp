@@ -49,7 +49,6 @@
 #include "monitor/MetricExportor.h"
 #include "file_server/polling/PollingDirFile.h"
 #include "file_server/polling/PollingModify.h"
-#include "processor/daemon/LogProcess.h"
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "file_server/polling/PollingEventQueue.h"
 #endif

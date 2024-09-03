@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "processor/daemon/LogProcess.h"
+#include "runner/LogProcess.h"
 
 #include "app_config/AppConfig.h"
 #include "pipeline/batch/TimeoutFlushManager.h"
@@ -137,7 +137,7 @@ bool LogProcess::FlushOut(int32_t waitMs) {
 }
 
 void* LogProcess::ProcessLoop(int32_t threadNo) {
-    LOG_DEBUG(sLogger, ("LogProcessThread", "Start")("threadNo", threadNo));
+    LOG_DEBUG(sLogger, ("runner/LogProcess.hread", "Start")("threadNo", threadNo));
     static int32_t lastMergeTime = 0;
     static atomic_int s_processCount{0};
     static atomic_long s_processBytes{0};
@@ -296,7 +296,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             }
         }
     }
-    LOG_WARNING(sLogger, ("LogProcessThread", "Exit")("threadNo", threadNo));
+    LOG_WARNING(sLogger, ("runner/LogProcess.hread", "Exit")("threadNo", threadNo));
     return NULL;
 }
 

@@ -21,7 +21,7 @@
 #include "common/TimeUtil.h"
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
-#include "processor/daemon/LogProcess.h"
+#include "runner/LogProcess.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "file_server/reader/LogFileReader.h"
 

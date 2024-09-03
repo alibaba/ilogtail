@@ -24,7 +24,7 @@
 #include "ebpf/eBPFServer.h"
 #include "observer/ObserverManager.h"
 #endif
-#include "processor/daemon/LogProcess.h"
+#include "runner/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 #include "app_config/AppConfig.h"
 #include "shennong/ShennongManager.h"

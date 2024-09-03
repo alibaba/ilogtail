@@ -17,7 +17,6 @@
 #include "common/HashUtil.h"
 #include "common/StringTools.h"
 #include "file_server/polling/PollingEventQueue.h"
-#include "processor/daemon/LogProcess.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "logger/Logger.h"
 

@@ -19,9 +19,6 @@ include_directories(processor)
 # Add source files
 file(GLOB THIS_SOURCE_FILES ${CMAKE_SOURCE_DIR}/processor/*.c ${CMAKE_SOURCE_DIR}/processor/*.cc ${CMAKE_SOURCE_DIR}/processor/*.cpp ${CMAKE_SOURCE_DIR}/processor/*.h)
 list(APPEND THIS_SOURCE_FILES_LIST ${THIS_SOURCE_FILES})
-# add processor/daemon
-file(GLOB THIS_SOURCE_FILES ${CMAKE_SOURCE_DIR}/processor/daemon/*.c ${CMAKE_SOURCE_DIR}/processor/daemon/*.cc ${CMAKE_SOURCE_DIR}/processor/daemon/*.cpp ${CMAKE_SOURCE_DIR}/processor/daemon/*.h)
-list(APPEND THIS_SOURCE_FILES_LIST ${THIS_SOURCE_FILES})
 # add processor/inner
 file(GLOB THIS_SOURCE_FILES ${CMAKE_SOURCE_DIR}/processor/inner/*.c ${CMAKE_SOURCE_DIR}/processor/inner/*.cc ${CMAKE_SOURCE_DIR}/processor/inner/*.cpp ${CMAKE_SOURCE_DIR}/processor/inner/*.h)
 list(APPEND THIS_SOURCE_FILES_LIST ${THIS_SOURCE_FILES})
