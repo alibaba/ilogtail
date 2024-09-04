@@ -39,11 +39,11 @@ func newCommonCache(stopCh chan struct{}, resourceType string) *commonCache {
 	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
 	m.resourceType = resourceType
 	m.schema = runtime.NewScheme()
-	v1.AddToScheme(m.schema)
-	batch.AddToScheme(m.schema)
-	app.AddToScheme(m.schema)
-	networking.AddToScheme(m.schema)
-	storage.AddToScheme(m.schema)
+	_ = v1.AddToScheme(m.schema)
+	_ = batch.AddToScheme(m.schema)
+	_ = app.AddToScheme(m.schema)
+	_ = networking.AddToScheme(m.schema)
+	_ = storage.AddToScheme(m.schema)
 	return m
 }
 

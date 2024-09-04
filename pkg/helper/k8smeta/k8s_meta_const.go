@@ -44,7 +44,7 @@ const (
 	//revive:enable:var-naming
 )
 
-var ALL_LINK_MAP = map[string]bool{
+var AllLinkMap = map[string]bool{
 	POD_NODE:                 true,
 	REPLICASET_DEPLOYMENT:    true,
 	POD_REPLICASET:           true,

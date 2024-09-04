@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	networking "k8s.io/api/networking/v1"
+	networking "k8s.io/api/networking/v1" //nolint:typecheck
 
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"

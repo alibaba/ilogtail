@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	app "k8s.io/api/apps/v1"
+	app "k8s.io/api/apps/v1" //nolint:typecheck
 
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"

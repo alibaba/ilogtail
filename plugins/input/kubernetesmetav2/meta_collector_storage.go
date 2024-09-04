@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	storage "k8s.io/api/storage/v1"
+	storage "k8s.io/api/storage/v1" //nolint:typecheck
 
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"

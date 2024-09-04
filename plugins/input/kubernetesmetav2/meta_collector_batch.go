@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	batch "k8s.io/api/batch/v1"
+	batch "k8s.io/api/batch/v1" //nolint:typecheck
 
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"

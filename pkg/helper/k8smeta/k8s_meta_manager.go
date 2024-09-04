@@ -18,7 +18,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-var COMMON_RESOURCE = []string{
+var CommonResource = []string{
 	SERVICE,
 	DEPLOYMENT,
 	REPLICASET,
@@ -62,7 +62,7 @@ type MetaManager struct {
 	ready   atomic.Bool
 
 	cacheMap         map[string]MetaCache
-	linkGenerator    *K8sMetaLinkGenerator
+	linkGenerator    *LinkGenerator
 	linkRegisterMap  map[string][]string
 	linkRegisterLock sync.RWMutex
 
@@ -77,7 +77,7 @@ func GetMetaManagerInstance() *MetaManager {
 		}
 		metaManager.cacheMap = make(map[string]MetaCache)
 		metaManager.cacheMap[POD] = newPodCache(metaManager.stopCh)
-		for _, resource := range COMMON_RESOURCE {
+		for _, resource := range CommonResource {
 			metaManager.cacheMap[resource] = newCommonCache(metaManager.stopCh, resource)
 		}
 		metaManager.linkGenerator = NewK8sMetaLinkGenerator(metaManager.cacheMap)
@@ -142,7 +142,8 @@ func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, s
 				}
 			}
 		}, interval)
-	} else if isLink(resourceType) {
+	}
+	if isLink(resourceType) {
 		m.linkRegisterLock.Lock()
 		if _, ok := m.linkRegisterMap[configName]; !ok {
 			m.linkRegisterMap[configName] = make([]string, 0)

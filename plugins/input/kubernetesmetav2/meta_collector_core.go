@@ -82,13 +82,29 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 				containerLog.Contents.Add(entityNameFieldName, container.Name)
 
 				// custom fields
+				containerLog.Contents.Add("pod_name", obj.Name)
+				containerLog.Contents.Add("pod_namespace", obj.Namespace)
 				containerLog.Contents.Add("image", container.Image)
 				containerLog.Contents.Add("cpu_request", container.Resources.Requests.Cpu().String())
 				containerLog.Contents.Add("cpu_limit", container.Resources.Limits.Cpu().String())
 				containerLog.Contents.Add("memory_request", container.Resources.Requests.Memory().String())
 				containerLog.Contents.Add("memory_limit", container.Resources.Limits.Memory().String())
-				containerLog.Contents.Add("container_port", strconv.Itoa(int(container.Ports[0].ContainerPort)))
-				containerLog.Contents.Add("protocol", string(container.Ports[0].Protocol))
+				ports := make([]int32, 0)
+				for _, port := range container.Ports {
+					ports = append(ports, port.ContainerPort)
+				}
+				portsStr, _ := json.Marshal(ports)
+				containerLog.Contents.Add("container_ports", portsStr)
+				volumes := make([]map[string]string, 0)
+				for _, volume := range container.VolumeMounts {
+					volumeInfo := map[string]string{
+						"volumeMountName": volume.Name,
+						"volumeMountPath": volume.MountPath,
+					}
+					volumes = append(volumes, volumeInfo)
+				}
+				volumesStr, _ := json.Marshal(volumes)
+				containerLog.Contents.Add("volumes", string(volumesStr))
 				result = append(result, containerLog)
 			}
 		}

@@ -82,11 +82,11 @@ func TestGetPodServiceLink(t *testing.T) {
 		SERVICE: serviceCache,
 	})
 	podList := []*K8sMetaEvent{
-		&K8sMetaEvent{
+		{
 			EventType: "update",
 			Object:    podCache.metaStore.Items["default/test"],
 		},
-		&K8sMetaEvent{
+		{
 			EventType: "update",
 			Object:    podCache.metaStore.Items["default/test2"],
 		},

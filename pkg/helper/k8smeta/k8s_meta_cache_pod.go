@@ -37,7 +37,7 @@ func newPodCache(stopCh chan struct{}) *podCache {
 	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
 	m.serviceMetaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc)
 	m.schema = runtime.NewScheme()
-	v1.AddToScheme(m.schema)
+	_ = v1.AddToScheme(m.schema)
 	return m
 }
 
@@ -151,7 +151,7 @@ func (m *podCache) preProcess(obj interface{}) interface{} {
 	pod.Status.Conditions = nil
 	pod.Spec.Tolerations = nil
 	if len(pod.Kind) == 0 {
-		// Kind and API version may be empty becasue https://github.com/kubernetes/client-go/issues/541
+		// Kind and API version may be empty because https://github.com/kubernetes/client-go/issues/541
 		gvk, err := apiutil.GVKForObject(pod, m.schema)
 		if err != nil {
 			logger.Error(context.Background(), "K8S_META_CACHE_ALARM", "get GVK for object error", err)
