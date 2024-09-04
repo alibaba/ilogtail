@@ -49,6 +49,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "pipeline/PipelineManager.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -170,11 +171,10 @@ void LogtailMonitor::Monitor() {
                 lastCheckHardLimitTime = monitorTime;
 
                 GetMemStat();
-                CalCpuStat(curCpuStat, mCpuStat);
-                if (CheckHardCpuLimit() || CheckHardMemLimit()) {
+                if (CheckHardMemLimit()) {
                     LOG_ERROR(sLogger,
                               ("Resource used by program exceeds hard limit",
-                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                               "prepare restart Logtail")("mem_rss", mMemStat.mRss));
                     Suicide();
                 }
             }
@@ -459,15 +459,8 @@ bool LogtailMonitor::CheckSoftMemLimit() {
     return false;
 }
 
-bool LogtailMonitor::CheckHardCpuLimit() {
-    float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
-        ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
-        : AppConfig::GetInstance()->GetCpuUsageUpLimit();
-    return mCpuStat.mCpuUsage > 10 * cpuUsageLimit;
-}
-
 bool LogtailMonitor::CheckHardMemLimit() {
-    return mMemStat.mRss > 10 * AppConfig::GetInstance()->GetMemUsageUpLimit();
+    return mMemStat.mRss > 5 * AppConfig::GetInstance()->GetMemUsageUpLimit();
 }
 
 void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
@@ -544,6 +537,13 @@ std::string LogtailMonitor::GetLoadAvg() {
     std::getline(fin, loadStr);
     fin.close();
     return loadStr;
+}
+
+uint32_t LogtailMonitor::GetCpuCores() {
+    if (!CalCpuCores()) {
+        return 0;
+    }
+    return mCpuCores;
 }
 
 // Get the number of cores in CPU.
