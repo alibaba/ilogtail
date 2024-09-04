@@ -26,7 +26,9 @@ public:
     int64_t mMaxScrapeSizeBytes;
     int64_t mSampleLimit;
     int64_t mSeriesLimit;
-    std::vector<RelabelConfig> mRelabelConfigs;
+    // std::vector<RelabelConfig> mRelabelConfigs;
+    RelabelConfigList mRelabelConfigs;
+    RelabelConfigList mMetricRelabelConfigs;
 
     std::map<std::string, std::vector<std::string>> mParams;
 

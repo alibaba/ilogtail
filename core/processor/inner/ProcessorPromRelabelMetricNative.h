@@ -22,6 +22,7 @@
 #include "models/PipelineEventPtr.h"
 #include "plugin/interface/Processor.h"
 #include "prometheus/labels/Relabel.h"
+#include "prometheus/schedulers/ScrapeConfig.h"
 
 namespace logtail {
 class ProcessorPromRelabelMetricNative : public Processor {
@@ -47,6 +48,8 @@ private:
                    StringView instance);
 
     std::vector<RelabelConfig> mRelabelConfigs;
+
+    std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
 
     // from config
     std::string mJobName;

@@ -13,10 +13,15 @@ bool IsDoubleEqual(double a, double b) {
 
 class PromUtilsUnittest : public testing::Test {
 public:
+    void TestDurationToSecond();
 };
 
+void PromUtilsUnittest::TestDurationToSecond() {
+    string rawData = "30s";
+    APSARA_TEST_EQUAL(30ULL, DurationToSecond(rawData));
+}
 
-
+UNIT_TEST_CASE(PromUtilsUnittest, TestDurationToSecond);
 
 } // namespace logtail
 

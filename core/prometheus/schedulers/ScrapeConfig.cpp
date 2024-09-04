@@ -132,8 +132,22 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
 
-    for (const auto& relabelConfig : scrapeConfig[prometheus::RELABEL_CONFIGS]) {
-        mRelabelConfigs.emplace_back(relabelConfig);
+    // for (const auto& relabelConfig : scrapeConfig[prometheus::RELABEL_CONFIGS]) {
+    //     mRelabelConfigs.emplace_back(relabelConfig);
+    // }
+
+    if (scrapeConfig.isMember(prometheus::RELABEL_CONFIGS)) {
+        if (!mRelabelConfigs.Init(scrapeConfig[prometheus::RELABEL_CONFIGS])) {
+            LOG_ERROR(sLogger, ("relabel config error", ""));
+            return false;
+        }
+    }
+
+    if (scrapeConfig.isMember(prometheus::METRIC_RELABEL_CONFIGS)) {
+        if (!mMetricRelabelConfigs.Init(scrapeConfig[prometheus::METRIC_RELABEL_CONFIGS])) {
+            LOG_ERROR(sLogger, ("metric relabel config error", ""));
+            return false;
+        }
     }
 
     // build query string

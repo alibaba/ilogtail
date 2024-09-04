@@ -40,26 +40,14 @@ enum class Action {
 };
 
 const std::string& ActionToString(Action action);
-Action StringToAction(std::string action);
-
-class LabelName {
-public:
-    LabelName();
-    LabelName(std::string);
-
-    bool Validate();
-
-    std::string mLabelName;
-
-private:
-};
+Action StringToAction(const std::string& action);
 
 class RelabelConfig {
 public:
-    RelabelConfig();
-    RelabelConfig(const Json::Value&);
+    explicit RelabelConfig(const Json::Value&);
+    bool Process(Labels&) const;
 
-    bool Validate();
+    bool Validate() const;
 
     // A list of labels from which values are taken and concatenated
     // with the configured separator in order.
@@ -81,12 +69,26 @@ public:
 private:
 };
 
+class RelabelConfigList {
+public:
+    bool Init(const Json::Value& relabelConfigs) {
+        if (!relabelConfigs.isArray()) {
+            return false;
+        }
+        for (const auto& relabelConfig : relabelConfigs) {
+            mRelabelConfigs.emplace_back(relabelConfig);
+            if (!mRelabelConfigs.back().Validate()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool Process(MetricEvent&);
+    bool Process(Labels&);
 
-namespace prometheus {
-    bool Process(const Labels& lbls, const std::vector<RelabelConfig>& cfgs, Labels& ret);
-    bool ProcessBuilder(LabelsBuilder& lb, const std::vector<RelabelConfig>& cfgs);
-    bool Relabel(const RelabelConfig& cfg, LabelsBuilder& lb);
-} // namespace prometheus
+private:
+    std::vector<RelabelConfig> mRelabelConfigs;
+};
 
 
 } // namespace logtail

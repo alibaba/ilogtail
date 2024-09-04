@@ -34,6 +34,9 @@ const string ProcessorPromRelabelMetricNative::sName = "processor_prom_relabel_m
 // only for inner processor
 bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     std::string errorMsg;
+    if (!mScrapeConfigPtr->Init(config)) {
+        return false;
+    }
     if (config.isMember(prometheus::METRIC_RELABEL_CONFIGS) && config[prometheus::METRIC_RELABEL_CONFIGS].isArray()
         && config[prometheus::METRIC_RELABEL_CONFIGS].size() > 0) {
         for (const auto& item : config[prometheus::METRIC_RELABEL_CONFIGS]) {
@@ -106,44 +109,31 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, Pipelin
     }
     auto& sourceEvent = e.Cast<MetricEvent>();
 
-    Labels labels;
-
-    labels.Reset(&sourceEvent);
-    Labels result;
-
-    // if keep this sourceEvent
-    if (prometheus::Process(labels, mRelabelConfigs, result)) {
-        // if k/v in labels by not result, then delete it
-        labels.Range([&result, &sourceEvent](const Label& label) {
-            if (result.Get(label.name).empty()) {
-                sourceEvent.DelTag(StringView(label.name));
-            }
-        });
-
-        // for each k/v in result, set it to sourceEvent
-        result.Range([&sourceEvent](const Label& label) { sourceEvent.SetTag(label.name, label.value); });
-
-        // set metricEvent name
-        if (!result.Get(prometheus::NAME).empty()) {
-            sourceEvent.SetName(result.Get(prometheus::NAME));
-        }
-
-        // if mHonorLabels is true, then keep sourceEvent labels, and when serializing sourceEvent labels are primary
-        // labels.
-        if (!mHonorLabels) {
-            // metric event labels is secondary
-            // if confiliction, then rename it exported_<label_name>
-            for (const auto& [k, v] : metricGroup.GetTags()) {
-                if (sourceEvent.HasTag(k)) {
-                    sourceEvent.SetTag("exported_" + k.to_string(), sourceEvent.GetTag(k).to_string());
-                    sourceEvent.DelTag(k);
-                }
-            }
-        }
-
-        return true;
+    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent)) {
+        return false;
     }
-    return false;
+
+    // set metricEvent name
+    if (!sourceEvent.GetTag(prometheus::NAME).empty()) {
+        sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
+    } else {
+        LOG_ERROR(sLogger, ("metric relabel", "metric event name is empty"));
+        return false;
+    }
+
+    // if mHonorLabels is true, then keep sourceEvent labels, and when serializing sourceEvent labels are primary
+    // labels.
+    if (!mHonorLabels) {
+        // metric event labels is secondary
+        // if confiliction, then rename it exported_<label_name>
+        for (const auto& [k, v] : metricGroup.GetTags()) {
+            if (sourceEvent.HasTag(k)) {
+                sourceEvent.SetTag("exported_" + k.to_string(), sourceEvent.GetTag(k).to_string());
+                sourceEvent.DelTag(k);
+            }
+        }
+    }
+    return true;
 }
 
 void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metricGroup) {
