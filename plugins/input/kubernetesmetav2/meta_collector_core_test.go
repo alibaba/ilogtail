@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	app "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -102,7 +103,7 @@ func TestProcessServiceEntity(t *testing.T) {
 }
 
 func TestProcessPodReplicasetLink(t *testing.T) {
-	obj := &v1.Pod{
+	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "pod2",
 			Namespace: "ns2",
@@ -115,8 +116,17 @@ func TestProcessPodReplicasetLink(t *testing.T) {
 			},
 		},
 	}
+	replicaSet := &app.ReplicaSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "rs1",
+			Namespace: "ns2",
+		},
+	}
 	objWrapper := &k8smeta.ObjectWrapper{
-		Raw: obj,
+		Raw: &k8smeta.PodReplicaSet{
+			Pod:        pod,
+			ReplicaSet: replicaSet,
+		},
 	}
 	collector := &metaCollector{
 		serviceK8sMeta: &ServiceK8sMeta{
