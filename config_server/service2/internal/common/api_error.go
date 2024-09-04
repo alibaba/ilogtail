@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"runtime"
 )
 
@@ -30,18 +31,18 @@ func ErrorWithMsg(code int, msg string) *ApiError {
 }
 
 func ServerErrorWithMsg(msg string, a ...any) *ApiError {
+	_, file, line, _ := runtime.Caller(1)
+	log.Printf("[ERROR]: [%s:%d] Code:%d,Message:%s\n", file, line, Failed.Code, msg)
+
 	if a == nil || len(a) == 0 {
 		return ErrorWithMsg(Failed.Code, msg)
 	}
-	_, file, line, _ := runtime.Caller(1)
-	log.Printf("[ERROR]: [%s:%d] code:%d,msg:%s\n", file, line, Failed.Code, msg)
-
 	return ErrorWithMsg(Failed.Code, fmt.Sprintf(msg, a...))
 }
 
 func ServerError() *ApiError {
 	_, file, line, _ := runtime.Caller(1)
-	log.Printf("[ERROR]: [%s:%d] code:%d,msg:%s\n", file, line, Failed.Code, Failed.Message)
+	log.Printf("[ERROR]: [%s:%d] Code:%d,Message:%s\n", file, line, Failed.Code, Failed.Message)
 	return ErrorWithMsg(Failed.Code, Failed.Message)
 }
 
@@ -49,10 +50,14 @@ func ServerError() *ApiError {
 
 func SystemError(err error) error {
 	if err == nil {
-		return nil
+		return err
 	}
 	_, file, line, _ := runtime.Caller(1)
 	log.Printf("[ERROR]: [%s:%d] %+v\n", file, line, err)
+	//errors.Is work不了
+	if reflect.TypeOf(err) == reflect.TypeOf(&ApiError{}) {
+		return err
+	}
 
 	if err.Error() == "" {
 		return ErrorWithMsg(SystemFailed.Code, SystemFailed.Message)
@@ -62,12 +67,12 @@ func SystemError(err error) error {
 
 func ValidateErrorWithMsg(msg string) *ApiError {
 	_, file, line, _ := runtime.Caller(1)
-	log.Printf("[ERROR]: [%s:%d] code:%d,msg:%s\n", file, line, ValidateFailed.Code, msg)
+	log.Printf("[ERROR]: [%s:%d] Code:%d,Message:%s\n", file, line, ValidateFailed.Code, msg)
 	return ErrorWithMsg(ValidateFailed.Code, msg)
 }
 
 func ValidateError() *ApiError {
 	_, file, line, _ := runtime.Caller(1)
-	log.Printf("[ERROR]: [%s:%d] code:%d,msg:%s\n", file, line, ValidateFailed.Code, ValidateFailed.Message)
+	log.Printf("[ERROR]: [%s:%d] Code:%d,Message:%s\n", file, line, ValidateFailed.Code, ValidateFailed.Message)
 	return ErrorWithMsg(ValidateFailed.Code, ValidateFailed.Message)
 }
