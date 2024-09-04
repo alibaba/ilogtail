@@ -4,7 +4,7 @@ import (
 	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/config"
-	"config-server2/internal/server_agent/service"
+	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"log"
@@ -68,6 +68,25 @@ func FetchInstanceConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
 		log.Print(response.CommonResponse)
+		return
+	}
+	common.SuccessProtobufRes(c, response)
+}
+
+func ListAgentsInGroup(c *gin.Context) {
+	request := &proto.ListAgentsRequest{}
+	response := &proto.ListAgentsResponse{}
+	err := c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	if err != nil {
+		response.CommonResponse = common.GenerateCommonResponse(err)
+		common.ErrorProtobufRes(c, response, err)
+		log.Print(response.CommonResponse)
+		return
+	}
+	err = service.ListAgentsInGroup(request, response)
+	if err != nil {
+		response.CommonResponse = common.GenerateCommonResponse(err)
+		common.ErrorProtobufRes(c, response, err)
 		return
 	}
 	common.SuccessProtobufRes(c, response)

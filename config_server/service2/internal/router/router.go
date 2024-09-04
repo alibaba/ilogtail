@@ -1,13 +1,41 @@
 package router
 
 import (
-	"config-server2/internal/config"
-	"config-server2/internal/server_agent/handler"
+	"config-server2/internal/handler"
 	"github.com/gin-gonic/gin"
 )
 
 func initUserRouter(engine *gin.Engine) {
-	engine.Group("/User")
+	userRouter := engine.Group("/User")
+	{
+		userRouter.POST("/CreateAgentGroup", handler.CreateAgentGroup)
+		userRouter.PUT("/UpdateAgentGroup", handler.UpdateAgentGroup)
+		userRouter.DELETE("/DeleteAgentGroup", handler.DeleteAgentGroup)
+		userRouter.POST("/GetAgentGroup", handler.GetAgentGroup)
+		userRouter.POST("/ListAgentGroups", handler.ListAgentGroups)
+		userRouter.POST("/ListAgents", handler.ListAgentsInGroup)
+		userRouter.POST("/GetAppliedAgentGroupsWithPipelineConfig", handler.GetAppliedAgentGroupsWithPipelineConfig)
+		userRouter.POST("/GetAppliedAgentGroupsWithInstanceConfig", handler.GetAppliedAgentGroupsWithInstanceConfig)
+
+		userRouter.POST("/CreatePipelineConfig", handler.CreatePipelineConfig)
+		userRouter.PUT("/UpdatePipelineConfig", handler.UpdatePipelineConfig)
+		userRouter.DELETE("/DeletePipelineConfig", handler.DeletePipelineConfig)
+		userRouter.POST("/GetPipelineConfig", handler.GetPipelineConfig)
+		userRouter.POST("/ListPipelineConfigs", handler.ListPipelineConfigs)
+		userRouter.PUT("/ApplyPipelineConfigToAgentGroup", handler.ApplyPipelineConfigToAgentGroup)
+		userRouter.DELETE("/RemovePipelineConfigFromAgentGroup", handler.RemovePipelineConfigFromAgentGroup)
+		userRouter.POST("/GetAppliedPipelineConfigsForAgentGroup", handler.GetAppliedPipelineConfigsForAgentGroup)
+
+		userRouter.POST("/CreateInstanceConfig", handler.CreateInstanceConfig)
+		userRouter.PUT("/UpdateInstanceConfig", handler.UpdateInstanceConfig)
+		userRouter.DELETE("/DeleteInstanceConfig", handler.DeleteInstanceConfig)
+		userRouter.POST("/GetInstanceConfig", handler.GetInstanceConfig)
+		userRouter.POST("/ListInstanceConfigs", handler.ListInstanceConfigs)
+		userRouter.PUT("/ApplyInstanceConfigToAgentGroup", handler.ApplyInstanceConfigToAgentGroup)
+		userRouter.DELETE("/RemoveInstanceConfigFromAgentGroup", handler.RemoveInstanceConfigFromAgentGroup)
+		userRouter.POST("/GetAppliedInstanceConfigsForAgentGroup", handler.GetAppliedInstanceConfigsForAgentGroup)
+	}
+
 }
 
 func initAgentRouter(engine *gin.Engine) {
@@ -20,13 +48,8 @@ func initAgentRouter(engine *gin.Engine) {
 	}
 }
 
-func InitAllRouter() {
-	router := gin.Default()
+func InitAllRouter(router *gin.Engine) {
 	handler.CheckAgentExist()
 	initUserRouter(router)
 	initAgentRouter(router)
-	err := router.Run(config.ServerConfigInstance.Address)
-	if err != nil {
-		panic(err)
-	}
 }

@@ -13,8 +13,9 @@ func GenerateCommonResponse(err error) *proto.CommonResponse {
 			ErrorMessage: []byte(apiError.Message),
 		}
 	}
-	return &proto.CommonResponse{
-		Status:       int32(Failed.Code),
-		ErrorMessage: []byte(err.Error()),
-	}
+	panic(err)
+	//return &proto.CommonResponse{
+	//	Status:       int32(Failed.Code),
+	//	ErrorMessage: []byte(err.Error()),
+	//}
 }

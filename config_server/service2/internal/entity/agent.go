@@ -15,10 +15,15 @@ type AgentAttributes struct {
 }
 
 func (a *AgentAttributes) Parse2Proto() *proto.AgentAttributes {
-	return nil
+	protoAgentAttributes := new(proto.AgentAttributes)
+	protoAgentAttributes.Version = a.Version
+	protoAgentAttributes.Ip = a.Ip
+	protoAgentAttributes.Hostname = a.Hostname
+	protoAgentAttributes.Extras = a.Extras
+	return protoAgentAttributes
 }
 
-func ProtoAgentAttributesParse2AgentAttributes(attributes *proto.AgentAttributes) *AgentAttributes {
+func ParseProtoAgentAttributes2AgentAttributes(attributes *proto.AgentAttributes) *AgentAttributes {
 	agentAttributes := new(AgentAttributes)
 	agentAttributes.Version = attributes.Version
 	agentAttributes.Ip = attributes.Ip
@@ -56,7 +61,7 @@ type Agent struct {
 	InstanceId      string `gorm:"primarykey"`
 	AgentType       string
 	Attributes      *AgentAttributes
-	Tags            []*AgentGroup `gorm:"many2many:agent_and_agent_group;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Tags            []*AgentGroup `gorm:"many2many:agent_and_agent_group;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:AgentGroupName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	RunningStatus   string
 	StartupTime     int64
 	PipelineConfigs []*PipelineConfig `gorm:"many2many:agent_pipeline_config;foreignKey:InstanceId;joinForeignKey:AgentInstanceId;References:Name;joinReferences:PipelineConfigName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
@@ -67,14 +72,32 @@ type Agent struct {
 	LastHeartBeatTime int64
 }
 
-// HeartBeatRequestParse2BasicAgent transfer agent's basic info
-func HeartBeatRequestParse2BasicAgent(req *proto.HeartbeatRequest, lastHeartBeatTime int64) *Agent {
+func (a Agent) Parse2Proto() *proto.Agent {
+	protoAgent := new(proto.Agent)
+	protoAgent.Capabilities = a.Capabilities
+	protoAgent.InstanceId = []byte(a.InstanceId)
+	protoAgent.AgentType = a.AgentType
+	protoAgent.Attributes = a.Attributes.Parse2Proto()
+	protoAgent.RunningStatus = a.RunningStatus
+	protoAgent.StartupTime = a.StartupTime
+	protoAgent.Flags = a.Flags
+	protoAgent.Opaque = a.Opaque
+	return protoAgent
+}
+
+// ParseHeartBeatRequest2BasicAgent transfer agent's basic info
+func ParseHeartBeatRequest2BasicAgent(req *proto.HeartbeatRequest, lastHeartBeatTime int64) *Agent {
 	agent := new(Agent)
 	agent.SequenceNum = req.SequenceNum
 	agent.Capabilities = req.Capabilities
 	agent.InstanceId = string(req.InstanceId)
 	agent.AgentType = req.AgentType
-	agent.Tags = ParseProtoAgentGroupTag2AgentGroup(req.Tags)
+
+	if req.Tags != nil {
+		for _, tag := range req.Tags {
+			agent.Tags = append(agent.Tags, ParseProtoAgentGroupTag2AgentGroup(tag))
+		}
+	}
 
 	agent.RunningStatus = req.RunningStatus
 	agent.StartupTime = req.StartupTime

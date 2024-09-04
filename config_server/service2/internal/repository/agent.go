@@ -9,14 +9,6 @@ import (
 
 var s = store.S
 
-func CreateBasicAgent(agent *entity.Agent) error {
-	if agent.InstanceId == "" {
-		return common.ValidateErrorWithMsg("InstanceId can not be null")
-	}
-	err := s.DB.Create(agent).Error
-	return err
-}
-
 func GetAgentByiId(instanceId string) *entity.Agent {
 	var agentInfo = new(entity.Agent)
 	row := s.DB.Where("instance_id=?", instanceId).Find(agentInfo).RowsAffected
@@ -24,12 +16,6 @@ func GetAgentByiId(instanceId string) *entity.Agent {
 		return agentInfo
 	}
 	return nil
-}
-
-func HasAgentById(instanceId string) (bool, error) {
-	var count int64
-	s.DB.Model(&entity.Agent{}).Where("instance_id=?", instanceId).Count(&count)
-	return count == 1, nil
 }
 
 func GetAllAgentsBasicInfo() []entity.Agent {
@@ -60,12 +46,15 @@ func UpdateAgentById(agent *entity.Agent, filed ...string) error {
 	return err
 }
 
-func GetPipelineConfigDetailByName(configName string) error {
-	configDetail := new(entity.PipelineConfig)
-	err := s.DB.Where("name=?", configName).Take(configDetail).Error
-	return err
-}
-
 func CreateOrUpdateAgentBasicInfo(conflictColumnNames []string, agent ...*entity.Agent) error {
 	return createOrUpdateEntities(conflictColumnNames, nil, agent...)
+}
+
+func ListAgentsByGroupName(groupName string) ([]*entity.Agent, error) {
+	agentGroup := entity.AgentGroup{}
+	err := s.DB.Preload("Agents").Where("name=?", groupName).Find(&agentGroup).Error
+	if err != nil {
+		return nil, err
+	}
+	return agentGroup.Agents, nil
 }

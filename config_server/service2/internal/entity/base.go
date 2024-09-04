@@ -12,7 +12,7 @@ const (
 )
 
 const (
-	AgentAndAgentGroupTable          = "agent_and_agent_group"
-	AgentGroupAndPipelineConfigTable = "agent_group_pipeline_config"
-	AgentGroupAndInstanceConfigTable = "agent_group_instance_config"
+	AgentAgentGroupTable          = "agent_and_agent_group"
+	AgentGroupPipelineConfigTable = "agent_group_pipeline_config"
+	AgentGroupInstanceConfigTable = "agent_group_instance_config"
 )

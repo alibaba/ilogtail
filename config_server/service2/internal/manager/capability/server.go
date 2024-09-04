@@ -5,8 +5,8 @@ import (
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/config"
 	"config-server2/internal/entity"
-	"config-server2/internal/server_agent/manager"
-	"config-server2/internal/server_agent/repository"
+	"config-server2/internal/manager"
+	"config-server2/internal/repository"
 )
 
 type ServerAction struct {
@@ -74,7 +74,7 @@ func RememberAttributeCapabilityRun(req *proto.HeartbeatRequest, res *proto.Hear
 		return nil
 	}
 	agent := &entity.Agent{}
-	agent.Attributes = entity.ProtoAgentAttributesParse2AgentAttributes(attributes)
+	agent.Attributes = entity.ParseProtoAgentAttributes2AgentAttributes(attributes)
 	err := repository.UpdateAgentById(agent, "attributes")
 	return err
 }
@@ -84,7 +84,11 @@ func RememberPipelineConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 	if configs == nil {
 		return nil
 	}
-	agentPipelineConfigs := entity.ProtoConfigInfoParse2AgentPipelineConfig(string(req.InstanceId), req.PipelineConfigs)
+	agentPipelineConfigs := make([]*entity.AgentPipelineConfig, 0)
+	for _, reqPipelineConfig := range req.PipelineConfigs {
+		agentPipelineConfig := entity.ParseProtoConfigInfo2AgentPipelineConfig(string(req.InstanceId), reqPipelineConfig)
+		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
+	}
 	err := manager.CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs)
 	return err
 }
@@ -94,7 +98,11 @@ func RememberInstanceConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 	if configs == nil {
 		return nil
 	}
-	agentInstanceConfigs := entity.ProtoConfigInfoParse2AgentInstanceConfig(string(req.InstanceId), req.InstanceConfigs)
+	agentInstanceConfigs := make([]*entity.AgentInstanceConfig, 0)
+	for _, reqInstanceConfig := range req.InstanceConfigs {
+		agentInstanceConfig := entity.ParseProtoConfigInfo2AgentInstanceConfig(string(req.InstanceId), reqInstanceConfig)
+		agentInstanceConfigs = append(agentInstanceConfigs, agentInstanceConfig)
+	}
 	err := manager.CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs)
 	return err
 }

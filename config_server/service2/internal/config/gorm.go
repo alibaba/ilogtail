@@ -5,6 +5,9 @@ import (
 	"config-server2/internal/utils"
 	"fmt"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"path/filepath"
 )
@@ -20,18 +23,21 @@ type GormConfig struct {
 }
 
 var gormDialectMap = map[string]func(string) gorm.Dialector{
-	"mysql": mysql.Open,
+	"mysql":     mysql.Open,
+	"sqlite":    sqlite.Open,
+	"sqlserver": sqlserver.Open,
+	"postgres":  postgres.Open,
 }
 
 func GetConnection() (*GormConfig, gorm.Dialector, error) {
 	var config = new(GormConfig)
 	var err error
-	dataBaseConfigPath, err := filepath.Abs("cmd/config/dataBaseConfig.json")
+	databaseConfigPath, err := filepath.Abs("cmd/config/databaseConfig.json")
 	if err != nil {
 		return nil, nil, err
 	}
-	//log.Print(dataBaseConfigPath)
-	err = utils.ReadJson(dataBaseConfigPath, config)
+	//log.Print(databaseConfigPath)
+	err = utils.ReadJson(databaseConfigPath, config)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,5 +56,11 @@ func GetConnection() (*GormConfig, gorm.Dialector, error) {
 		}
 		return config, dialect(dsn), nil
 	}
-	panic("no this database type")
+	adapterDatabaseStr := ""
+	for adapterDatabase := range gormDialectMap {
+		adapterDatabaseStr += adapterDatabase
+		adapterDatabaseStr += ","
+	}
+
+	panic(fmt.Sprintf("no this database type in (%s)", adapterDatabaseStr[:len(adapterDatabaseStr)-1]))
 }

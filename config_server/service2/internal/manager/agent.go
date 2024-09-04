@@ -2,7 +2,7 @@ package manager
 
 import (
 	"config-server2/internal/entity"
-	"config-server2/internal/server_agent/repository"
+	"config-server2/internal/repository"
 	"log"
 	"time"
 )

@@ -26,10 +26,10 @@ var tableList = []any{
 
 var tableNameList = []string{
 	entity.AgentGroup{}.TableName(),
-	entity.AgentAndAgentGroupTable,
+	entity.AgentAgentGroupTable,
 
-	entity.AgentGroupAndInstanceConfigTable,
-	entity.AgentGroupAndPipelineConfigTable,
+	entity.AgentGroupInstanceConfigTable,
+	entity.AgentGroupPipelineConfigTable,
 
 	entity.Agent{}.TableName(),
 

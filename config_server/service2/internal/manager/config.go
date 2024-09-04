@@ -3,7 +3,7 @@ package manager
 import (
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/entity"
-	"config-server2/internal/server_agent/repository"
+	"config-server2/internal/repository"
 )
 
 func CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs []*entity.AgentInstanceConfig) error {
@@ -23,7 +23,7 @@ func CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs []*entity.AgentPipe
 func GetPipelineConfigs(instanceId string, isContainDetail bool) ([]*proto.ConfigDetail, error) {
 	var err error
 	agent := &entity.Agent{InstanceId: instanceId}
-	err = repository.GetPipelineConfigs(agent)
+	err = repository.GetPipelineConfigsByAgent(agent)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func GetPipelineConfigs(instanceId string, isContainDetail bool) ([]*proto.Confi
 func GetInstanceConfigs(instanceId string, isContainDetail bool) ([]*proto.ConfigDetail, error) {
 	var err error
 	agent := &entity.Agent{InstanceId: instanceId}
-	err = repository.GetInstanceConfigs(agent)
+	err = repository.GetInstanceConfigsByAgent(agent)
 	if err != nil {
 		return nil, err
 	}
