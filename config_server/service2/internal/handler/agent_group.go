@@ -6,7 +6,6 @@ import (
 	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"log"
 )
 
 func CreateAgentGroup(c *gin.Context) {
@@ -16,7 +15,6 @@ func CreateAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.CreateAgentGroup(request, response)
@@ -35,7 +33,6 @@ func UpdateAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.UpdateAgentGroup(request, response)
@@ -54,7 +51,6 @@ func DeleteAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.DeleteAgentGroup(request, response)
@@ -73,7 +69,6 @@ func GetAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetAgentGroup(request, response)
@@ -92,7 +87,6 @@ func ListAgentGroups(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.ListAgentGroups(request, response)
@@ -111,7 +105,6 @@ func GetAppliedAgentGroupsWithPipelineConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetAppliedAgentGroupsForPipelineConfigName(request, response)
@@ -130,7 +123,6 @@ func GetAppliedAgentGroupsWithInstanceConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetAppliedAgentGroupsForInstanceConfigName(request, response)

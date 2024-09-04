@@ -9,7 +9,6 @@ import (
 	"config-server2/internal/repository"
 	"config-server2/internal/store"
 	"config-server2/internal/utils"
-	"log"
 	"time"
 )
 
@@ -39,13 +38,11 @@ func CheckAgentExist(timeLimit int64) {
 func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	requestId := req.RequestId
 	if requestId == nil {
-		log.Print("required fields requestId is null")
 		return common.ValidateErrorWithMsg("required fields requestId could not be null")
 	}
 
 	instanceId := req.InstanceId
 	if instanceId == nil {
-		log.Print("required field instanceId is null")
 		return common.ValidateErrorWithMsg("required field instanceId could not be null")
 	}
 
@@ -68,18 +65,18 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 	//Regardless of whether sequenceN is legal or not, we should keep the basic information of the agent (sequenceNum, instanceId, capabilities, flags, etc.)
 	err = manager.CreateOrUpdateAgentBasicInfo(agent)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 
 	//如果req未设置fullState,agent会不会上传其他的configStatus
 	err = flag.HandleRequestFlags(req, res)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 
 	err = flag.HandleResponseFlags(req, res)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 
 	return nil
@@ -88,13 +85,11 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	requestId := req.RequestId
 	if requestId == nil {
-		log.Print("required fields requestId is null")
 		return common.ValidateErrorWithMsg("required fields requestId could not be null")
 	}
 
 	instanceId := req.InstanceId
 	if instanceId == nil {
-		log.Print("required field instanceId is null")
 		return common.ValidateErrorWithMsg("required field instanceId could not be null")
 	}
 
@@ -111,29 +106,27 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 
 	err = manager.CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 
 	//返回pipelineConfigDetail
 	pipelineConfigUpdates, err := manager.GetPipelineConfigs(strInstanceId, true)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 	res.ConfigDetails = pipelineConfigUpdates
-	//fmt.Printf("%+v", res)
+	//fmt.PrintfRed("%+v", res)
 	return nil
 }
 
 func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	requestId := req.RequestId
 	if requestId == nil {
-		log.Print("required fields requestId is null")
 		return common.ValidateErrorWithMsg("required fields requestId could not be null")
 	}
 
 	instanceId := req.InstanceId
 	if instanceId == nil {
-		log.Print("required field instanceId is null")
 		return common.ValidateErrorWithMsg("required field instanceId could not be null")
 	}
 
@@ -151,13 +144,13 @@ func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 
 	err = manager.CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 
 	//获取对应的configDetails
 	instanceConfigUpdates, err := manager.GetInstanceConfigs(strInstanceId, true)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 	res.ConfigDetails = instanceConfigUpdates
 	return nil
@@ -166,18 +159,16 @@ func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 func ListAgentsInGroup(req *proto.ListAgentsRequest, res *proto.ListAgentsResponse) error {
 	requestId := req.RequestId
 	if requestId == nil {
-		log.Print("required fields requestId is null")
 		return common.ValidateErrorWithMsg("required fields requestId is null")
 	}
 	groupName := req.GroupName
 	if groupName == "" {
-		log.Print("required fields groupName is null")
 		return common.ValidateErrorWithMsg("required fields groupName is null")
 	}
 	res.RequestId = req.RequestId
 	agents, err := repository.ListAgentsByGroupName(groupName)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 	protoAgents := make([]*proto.Agent, 0)
 	for _, agent := range agents {

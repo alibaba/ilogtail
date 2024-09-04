@@ -6,11 +6,13 @@ import (
 )
 
 func CreateOrUpdateAgentPipelineConfigs(conflictColumnNames []string, assignmentColumns []string, configs ...*entity.AgentPipelineConfig) error {
-	return createOrUpdateEntities(conflictColumnNames, assignmentColumns, configs...)
+	err := createOrUpdateEntities(conflictColumnNames, assignmentColumns, configs...)
+	return common.SystemError(err)
 }
 
 func CreateOrUpdateAgentInstanceConfigs(conflictColumnNames []string, assignmentColumns []string, configs ...*entity.AgentInstanceConfig) error {
-	return createOrUpdateEntities(conflictColumnNames, assignmentColumns, configs...)
+	err := createOrUpdateEntities(conflictColumnNames, assignmentColumns, configs...)
+	return common.SystemError(err)
 }
 
 func GetPipelineConfigByName(name string) (*entity.PipelineConfig, error) {
@@ -32,9 +34,11 @@ func GetInstanceConfigByName(name string) (*entity.InstanceConfig, error) {
 }
 
 func GetPipelineConfigsByAgent(agent *entity.Agent) error {
-	return s.DB.Preload("PipelineConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
+	err := s.DB.Preload("PipelineConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
+	return common.SystemError(err)
 }
 
 func GetInstanceConfigsByAgent(agent *entity.Agent) error {
-	return s.DB.Preload("InstanceConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
+	err := s.DB.Preload("InstanceConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
+	return common.SystemError(err)
 }

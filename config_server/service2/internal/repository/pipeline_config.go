@@ -51,7 +51,8 @@ func CreatePipelineConfigForAgentGroup(groupName string, configName string) erro
 	agentGroup := entity.AgentGroup{
 		Name: groupName,
 	}
-	return s.DB.Model(&agentGroup).Association("PipelineConfigs").Append(&removeConfig)
+	err := s.DB.Model(&agentGroup).Association("PipelineConfigs").Append(&removeConfig)
+	return common.SystemError(err)
 }
 
 func CreatePipelineConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
@@ -63,10 +64,13 @@ func CreatePipelineConfigForAgentInGroup(agentInstanceIds []string, configName s
 		}
 		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
 	}
-	if len(agentPipelineConfigs) > 0 {
-		return s.DB.Create(&agentPipelineConfigs).Error
-	}
-	return nil
+	//if len(agentPipelineConfigs) > 0 {
+	//	err := s.DB.Create(&agentPipelineConfigs).Error
+	//	return common.SystemError(err)
+	//}
+	err := s.DB.Create(&agentPipelineConfigs).Error
+	return common.SystemError(err)
+	//return nil
 }
 
 func DeletePipelineConfigForAgentGroup(groupName string, configName string) error {
@@ -76,7 +80,8 @@ func DeletePipelineConfigForAgentGroup(groupName string, configName string) erro
 	agentGroup := entity.AgentGroup{
 		Name: groupName,
 	}
-	return s.DB.Model(&agentGroup).Association("PipelineConfigs").Delete(&removeConfig)
+	err := s.DB.Model(&agentGroup).Association("PipelineConfigs").Delete(&removeConfig)
+	return common.SystemError(err)
 }
 
 func DeletePipelineConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
@@ -89,7 +94,8 @@ func DeletePipelineConfigForAgentInGroup(agentInstanceIds []string, configName s
 		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
 	}
 	if len(agentPipelineConfigs) > 0 {
-		return s.DB.Delete(&agentPipelineConfigs).Error
+		err := s.DB.Delete(&agentPipelineConfigs).Error
+		return common.SystemError(err)
 	}
 	return nil
 }

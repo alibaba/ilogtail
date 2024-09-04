@@ -1,6 +1,7 @@
 package store
 
 import (
+	"config-server2/internal/common"
 	"config-server2/internal/config"
 	"config-server2/internal/entity"
 	"fmt"
@@ -44,11 +45,11 @@ func (s *GormStore) Connect() error {
 	var dialect gorm.Dialector
 	s.config, dialect, err = config.GetConnection()
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 	s.DB, err = gorm.Open(dialect)
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 	log.Printf(" %s (%s:%d) connect success...", s.config.Type, s.config.Host, s.config.Port)
 	return nil
@@ -57,7 +58,7 @@ func (s *GormStore) Connect() error {
 func (s *GormStore) Close() error {
 	db, err := s.DB.DB()
 	if err != nil {
-		return err
+		return common.SystemError(err)
 	}
 	return db.Close()
 }
@@ -65,7 +66,7 @@ func (s *GormStore) Close() error {
 func (s *GormStore) CreateTables() error {
 	//AgentPipeConfig和AgentInstanceConfig要额外autoMigrate是因为他们有多余的属性
 	err := s.DB.AutoMigrate(tableList...)
-	return err
+	return common.SystemError(err)
 }
 
 func (s *GormStore) DeleteTables() error {
@@ -76,7 +77,7 @@ func (s *GormStore) DeleteTables() error {
 
 			err = s.DB.Migrator().DropTable(tableName)
 			if err != nil {
-				return err
+				return common.SystemError(err)
 			}
 		}
 	}
@@ -91,7 +92,7 @@ func (s *GormStore) DeleteTable() error {
 			var clearDataSql = fmt.Sprintf("TRUNCATE TABLE %s", tableName)
 			err = s.DB.Exec(clearDataSql).Error
 			if err != nil {
-				return err
+				return common.SystemError(err)
 			}
 		}
 	}

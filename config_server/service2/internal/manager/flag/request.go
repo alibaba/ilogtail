@@ -1,6 +1,7 @@
 package flag
 
 import (
+	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/manager/capability"
 )
@@ -40,7 +41,7 @@ func RequestReportFullStateRun(req *proto.HeartbeatRequest, res *proto.Heartbeat
 		action.UpdateCapabilities(res)
 		err := action.Action(req, res)
 		if err != nil {
-			return err
+			return common.SystemError(err)
 		}
 	}
 	return nil
@@ -51,7 +52,7 @@ func HandleRequestFlags(req *proto.HeartbeatRequest, res *proto.HeartbeatRespons
 		if int(req.Flags)&key == key {
 			err := value.Run(req, res)
 			if err != nil {
-				return err
+				return common.SystemError(err)
 			}
 		}
 	}

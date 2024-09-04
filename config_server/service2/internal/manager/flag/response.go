@@ -1,6 +1,7 @@
 package flag
 
 import (
+	"config-server2/internal/common"
 	proto "config-server2/internal/common/protov2"
 	"config-server2/internal/config"
 	"config-server2/internal/manager/capability"
@@ -50,24 +51,24 @@ func ResponseReportFullStateRun(*proto.HeartbeatRequest, *proto.HeartbeatRespons
 
 func FetchPipelineConfigDetailIncludeDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	err := capability.AcceptsPipelineConfigAction.Action(req, res, true)
-	return err
+	return common.SystemError(err)
 }
 
 // FetchPipelineConfigDetailRun 要求agent做的事情，比如配置不发送pipelineConfig的Detail,
 // 这里就要求它主动请求FetchPipelineConfig接口(只需改变res.flags并且configUpdate不包含detail）
 func FetchPipelineConfigDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	err := capability.AcceptsPipelineConfigAction.Action(req, res, false)
-	return err
+	return common.SystemError(err)
 }
 
 func FetchInstanceConfigDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	err := capability.AcceptsInstanceConfigAction.Action(req, res, false)
-	return err
+	return common.SystemError(err)
 }
 
 func FetchInstanceConfigDetailIncludeDetailRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	err := capability.AcceptsInstanceConfigAction.Action(req, res, true)
-	return err
+	return common.SystemError(err)
 }
 
 func HandleResponseFlags(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
@@ -83,7 +84,7 @@ func HandleResponseFlags(req *proto.HeartbeatRequest, res *proto.HeartbeatRespon
 			}
 			err := action.Run1(req, res)
 			if err != nil {
-				return err
+				return common.SystemError(err)
 			}
 		} else {
 			if action.Run2 == nil {
@@ -91,7 +92,7 @@ func HandleResponseFlags(req *proto.HeartbeatRequest, res *proto.HeartbeatRespon
 			}
 			err := action.Run2(req, res)
 			if err != nil {
-				return err
+				return common.SystemError(err)
 			}
 		}
 	}

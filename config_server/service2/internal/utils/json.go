@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"config-server2/internal/common"
 	"encoding/json"
 	"log"
 	"os"
@@ -19,9 +20,9 @@ func ReadJson(path string, obj any) error {
 	}()
 
 	decoder := json.NewDecoder(file)
-	decoderErr := decoder.Decode(&obj)
-	if decoderErr != nil {
-		return decoderErr
+	err := decoder.Decode(&obj)
+	if err != nil {
+		return common.SystemError(err)
 	}
 	return nil
 

@@ -23,7 +23,7 @@ func (a ServerAction) Action(req *proto.HeartbeatRequest, res *proto.HeartbeatRe
 
 	if hasServerCapability {
 		err := a.run(req, res)
-		return err
+		return common.SystemError(err)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func RememberAttributeCapabilityRun(req *proto.HeartbeatRequest, res *proto.Hear
 	agent := &entity.Agent{}
 	agent.Attributes = entity.ParseProtoAgentAttributes2AgentAttributes(attributes)
 	err := repository.UpdateAgentById(agent, "attributes")
-	return err
+	return common.SystemError(err)
 }
 
 func RememberPipelineConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
@@ -90,7 +90,7 @@ func RememberPipelineConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
 	}
 	err := manager.CreateOrUpdateAgentPipelineConfigs(agentPipelineConfigs)
-	return err
+	return common.SystemError(err)
 }
 
 func RememberInstanceConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
@@ -104,7 +104,7 @@ func RememberInstanceConfigStatusCapabilityRun(req *proto.HeartbeatRequest, res 
 		agentInstanceConfigs = append(agentInstanceConfigs, agentInstanceConfig)
 	}
 	err := manager.CreateOrUpdateAgentInstanceConfigs(agentInstanceConfigs)
-	return err
+	return common.SystemError(err)
 }
 
 func RememberCustomCommandStatusRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {

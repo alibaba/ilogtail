@@ -6,7 +6,6 @@ import (
 	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"log"
 )
 
 func CreateInstanceConfig(c *gin.Context) {
@@ -16,7 +15,6 @@ func CreateInstanceConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.CreateInstanceConfig(request, response)
@@ -35,7 +33,6 @@ func UpdateInstanceConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.UpdateInstanceConfig(request, response)
@@ -54,7 +51,6 @@ func DeleteInstanceConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.DeleteInstanceConfig(request, response)
@@ -73,7 +69,6 @@ func GetInstanceConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetInstanceConfig(request, response)
@@ -92,7 +87,6 @@ func ListInstanceConfigs(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.ListInstanceConfigs(request, response)
@@ -111,7 +105,6 @@ func ApplyInstanceConfigToAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.ApplyInstanceConfigToAgentGroup(request, response)
@@ -130,7 +123,6 @@ func RemoveInstanceConfigFromAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.RemoveInstanceConfigFromAgentGroup(request, response)
@@ -149,7 +141,6 @@ func GetAppliedInstanceConfigsForAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetAppliedInstanceConfigsForAgentGroup(request, response)

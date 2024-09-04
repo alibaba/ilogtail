@@ -6,7 +6,6 @@ import (
 	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"log"
 )
 
 func CreatePipelineConfig(c *gin.Context) {
@@ -16,7 +15,6 @@ func CreatePipelineConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.CreatePipelineConfig(request, response)
@@ -35,7 +33,6 @@ func UpdatePipelineConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.UpdatePipelineConfig(request, response)
@@ -54,7 +51,6 @@ func DeletePipelineConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.DeletePipelineConfig(request, response)
@@ -73,7 +69,6 @@ func GetPipelineConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetPipelineConfig(request, response)
@@ -92,7 +87,6 @@ func ListPipelineConfigs(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.ListPipelineConfigs(request, response)
@@ -112,7 +106,6 @@ func ApplyPipelineConfigToAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 
@@ -132,7 +125,6 @@ func RemovePipelineConfigFromAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.RemovePipelineConfigFromAgentGroup(request, response)
@@ -151,7 +143,6 @@ func GetAppliedPipelineConfigsForAgentGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.GetAppliedPipelineConfigsForAgentGroup(request, response)

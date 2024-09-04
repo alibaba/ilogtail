@@ -16,7 +16,7 @@ func (a AgentAction) Action(req *proto.HeartbeatRequest, res *proto.HeartbeatRes
 	code := a.Code
 	if int(req.Capabilities)&code == code {
 		err := a.run(req, res, arg...)
-		return err
+		return common.SystemError(err)
 	}
 	return nil
 }
@@ -48,7 +48,7 @@ func UnspecifiedRun(*proto.HeartbeatRequest, *proto.HeartbeatResponse, ...any) e
 
 // AcceptsPipelineConfigRun 返回PipelineConfigDetail
 func AcceptsPipelineConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse, arg ...any) error {
-	if len(arg) == 0 {
+	if arg == nil || len(arg) == 0 {
 		return common.ServerErrorWithMsg("The arg parameter cannot be null")
 	}
 
@@ -56,7 +56,7 @@ func AcceptsPipelineConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatR
 		strInstanceId := string(req.InstanceId)
 		pipelineConfigUpdates, err := manager.GetPipelineConfigs(strInstanceId, isContainDetail)
 		if err != nil {
-			return err
+			return common.SystemError(err)
 		}
 		res.PipelineConfigUpdates = pipelineConfigUpdates
 		return nil
@@ -66,7 +66,7 @@ func AcceptsPipelineConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatR
 
 // AcceptsInstanceConfigRun 返回InstanceConfigDetail
 func AcceptsInstanceConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse, arg ...any) error {
-	if len(arg) == 0 {
+	if arg == nil || len(arg) == 0 {
 		return common.ServerErrorWithMsg("The arg parameter cannot be null")
 	}
 
@@ -74,7 +74,7 @@ func AcceptsInstanceConfigRun(req *proto.HeartbeatRequest, res *proto.HeartbeatR
 		strInstanceId := string(req.InstanceId)
 		instanceConfigUpdates, err := manager.GetInstanceConfigs(strInstanceId, isContainDetail)
 		if err != nil {
-			return err
+			return common.SystemError(err)
 		}
 		res.InstanceConfigUpdates = instanceConfigUpdates
 		return nil

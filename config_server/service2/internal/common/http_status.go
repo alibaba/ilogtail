@@ -13,12 +13,13 @@ type HttpStatus struct {
 var (
 	Success        = HttpStatus{Code: 200, Message: "success"}
 	Failed         = HttpStatus{Code: 500, Message: "failed"}
+	SystemFailed   = HttpStatus{Code: 505, Message: "systemFailed"}
 	ValidateFailed = HttpStatus{Code: 404, Message: "parameter is not"}
 )
 
 func ErrorProtobufRes(c *gin.Context, res any, err error) {
 	var apiError = &ApiError{}
-	if errors.As(err, apiError) {
+	if errors.As(err, &apiError) {
 		c.ProtoBuf(apiError.Code, res)
 		return
 	}

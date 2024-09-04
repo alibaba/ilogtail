@@ -30,12 +30,12 @@ func createOrUpdateEntities[T any](conflictColumnNames []string, assignmentColum
 			Columns:   generateClauseColumn(conflictColumnNames...),
 			UpdateAll: true,
 		}).Create(&entities).Error
-		return err
+		return common.SystemError(err)
 	}
 
 	err := s.DB.Clauses(clause.OnConflict{
 		Columns:   generateClauseColumn(conflictColumnNames...), // 指定冲突的列
 		DoUpdates: clause.AssignmentColumns(assignmentColumns),  // 如果冲突发生，更新的列
 	}).Create(&entities).Error
-	return err
+	return common.SystemError(err)
 }

@@ -51,7 +51,8 @@ func CreateInstanceConfigForAgentGroup(groupName string, configName string) erro
 	agentGroup := entity.AgentGroup{
 		Name: groupName,
 	}
-	return s.DB.Model(&agentGroup).Association("InstanceConfigs").Append(&removeConfig)
+	err := s.DB.Model(&agentGroup).Association("InstanceConfigs").Append(&removeConfig)
+	return common.SystemError(err)
 }
 
 func CreateInstanceConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
@@ -65,7 +66,8 @@ func CreateInstanceConfigForAgentInGroup(agentInstanceIds []string, configName s
 	}
 
 	if len(agentInstanceConfigs) > 0 {
-		return s.DB.Create(agentInstanceConfigs).Error
+		err := s.DB.Create(agentInstanceConfigs).Error
+		return common.SystemError(err)
 	}
 
 	return nil
@@ -78,7 +80,8 @@ func DeleteInstanceConfigForAgentGroup(groupName string, configName string) erro
 	agentGroup := entity.AgentGroup{
 		Name: groupName,
 	}
-	return s.DB.Model(&agentGroup).Association("InstanceConfigs").Delete(&removeConfig)
+	err := s.DB.Model(&agentGroup).Association("InstanceConfigs").Delete(&removeConfig)
+	return common.SystemError(err)
 }
 
 func DeleteInstanceConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
@@ -91,7 +94,8 @@ func DeleteInstanceConfigForAgentInGroup(agentInstanceIds []string, configName s
 		agentInstanceConfigs = append(agentInstanceConfigs, agentInstanceConfig)
 	}
 	if len(agentInstanceConfigs) > 0 {
-		return s.DB.Delete(agentInstanceConfigs).Error
+		err := s.DB.Delete(agentInstanceConfigs).Error
+		return common.SystemError(err)
 	}
 	return nil
 }

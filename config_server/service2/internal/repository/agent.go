@@ -40,10 +40,10 @@ func UpdateAgentById(agent *entity.Agent, filed ...string) error {
 	var err error
 	if filed == nil {
 		err = s.DB.Model(agent).Updates(*agent).Error
-		return err
+		return common.SystemError(err)
 	}
 	err = s.DB.Model(agent).Select(filed).Updates(*agent).Error
-	return err
+	return common.SystemError(err)
 }
 
 func CreateOrUpdateAgentBasicInfo(conflictColumnNames []string, agent ...*entity.Agent) error {

@@ -7,7 +7,6 @@ import (
 	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"log"
 )
 
 func CheckAgentExist() {
@@ -21,7 +20,6 @@ func HeartBeat(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.HeartBeat(request, response)
@@ -40,14 +38,12 @@ func FetchPipelineConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.FetchPipelineConfigDetail(request, response)
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	common.SuccessProtobufRes(c, response)
@@ -60,14 +56,12 @@ func FetchInstanceConfig(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.FetchInstanceConfigDetail(request, response)
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	common.SuccessProtobufRes(c, response)
@@ -80,7 +74,6 @@ func ListAgentsInGroup(c *gin.Context) {
 	if err != nil {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.ErrorProtobufRes(c, response, err)
-		log.Print(response.CommonResponse)
 		return
 	}
 	err = service.ListAgentsInGroup(request, response)
