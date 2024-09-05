@@ -18,12 +18,13 @@
 #include <string>
 #include <vector>
 
+#include "unittest/Unittest.h"
 #include "config/PipelineConfig.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "unittest/Unittest.h"
+
 
 using namespace std;
 

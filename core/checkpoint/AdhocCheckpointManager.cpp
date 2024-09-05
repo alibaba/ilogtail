@@ -22,6 +22,9 @@
 #include "monitor/LogtailAlarm.h"
 #include "common/Thread.h"
 #include "common/HashUtil.h"
+#if defined(_MSC_VER)
+#include "windows.h"
+#endif
 
 DEFINE_FLAG_INT32(adhoc_checkpoint_dump_thread_wait_interval, "microseconds", 5 * 1000);
 
@@ -60,6 +63,7 @@ AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName,
     return jobCheckpoint;
 }
 
+#if !defined(_MSC_VER)
 AdhocFileCheckpointPtr AdhocCheckpointManager::CreateAdhocFileCheckpoint(const std::string& jobName,
                                                                          const std::string& filePath) {
     fsutil::PathStat buf;
@@ -99,6 +103,7 @@ AdhocFileCheckpointPtr AdhocCheckpointManager::CreateAdhocFileCheckpoint(const s
         return nullptr;
     }
 }
+#endif
 
 void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName) {
     auto jobCheckpoint = mAdhocJobCheckpointMap.find(jobName);

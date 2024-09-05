@@ -97,7 +97,7 @@ void LegacyCommonConfigProvider::Stop() {
 
 void LegacyCommonConfigProvider::CheckUpdateThread() {
     LOG_INFO(sLogger, ("legacy common config provider", "started"));
-    usleep((rand() % 10) * 100 * 1000);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     int32_t lastCheckTime = 0;
     unique_lock<mutex> lock(mThreadRunningMux);
     while (mIsThreadRunning) {

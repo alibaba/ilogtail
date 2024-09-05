@@ -34,11 +34,11 @@ void ConfigProvider::Init(const string& dir) {
 
     error_code ec;
     filesystem::create_directories(mPipelineSourceDir, ec);
-    ConfigWatcher::GetInstance()->AddSource(mPipelineSourceDir, &mPipelineMux);
+    ConfigWatcher::GetInstance()->AddSource(mPipelineSourceDir.string(), &mPipelineMux);
 
     ec.clear();
     filesystem::create_directories(mInstanceSourceDir, ec);
-    InstanceConfigWatcher::GetInstance()->AddSource(mInstanceSourceDir, &mInstanceMux);
+    InstanceConfigWatcher::GetInstance()->AddSource(mInstanceSourceDir.string(), &mInstanceMux);
 }
 
 } // namespace logtail
