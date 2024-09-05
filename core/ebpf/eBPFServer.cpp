@@ -24,9 +24,43 @@
 #include "logger/Logger.h"
 #include "ebpf/include/export.h"
 #include "common/LogtailCommonFlags.h"
+#include "common/MachineInfoUtil.h"
+
+DEFINE_FLAG_INT64(kernel_min_version_for_ebpf,
+                  "the minimum kernel version that supported eBPF normal running, 4.19.0.0 -> 4019000000",
+                  4019000000);
 
 namespace logtail {
 namespace ebpf {
+
+static const uint16_t KERNEL_VERSION_310 = 3010; // for centos7
+static const std::string KERNEL_NAME_CENTOS = "CentOS";
+static const uint16_t KERNEL_CENTOS_MIN_VERSION = 7006;
+
+bool eBPFServer::IsSupportedEnv() {
+    std::string release;
+    int64_t version;
+    GetKernelInfo(release, version);
+    LOG_INFO(sLogger, ("ebpf kernel release", release) ("kernel version", version));
+    if (release.empty()) {
+        return false;
+    }
+    if (version >= INT64_FLAG(kernel_min_version_for_ebpf)) {
+        return true;
+    }
+    if (version / 1000000 != KERNEL_VERSION_310) {
+        return false;
+    }
+    std::string os;
+    int64_t osVersion;
+
+    if (GetRedHatReleaseInfo(os, osVersion, STRING_FLAG(default_container_host_path))
+        || GetRedHatReleaseInfo(os, osVersion)) {
+        return os == KERNEL_NAME_CENTOS && osVersion >= KERNEL_CENTOS_MIN_VERSION;
+    }
+    
+    return false;
+}
 
 void eBPFServer::Init() {
     if (mInited) {
@@ -107,14 +141,17 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         nami::NetworkObserveConfig nconfig;
         nami::ObserverNetworkOption* opts = std::get<nami::ObserverNetworkOption*>(options);
         if (opts->mEnableMetric) {
+            nconfig.enable_metric_ = true;
             nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
             mMeterCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
         if (opts->mEnableSpan) {
+            nconfig.enable_span_ = true;
             nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
             mSpanCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
         if (opts->mEnableLog) {
+            nconfig.enable_event_ = true;
             nconfig.event_cb_ = [this](auto events) { return mEventCB->handle(std::move(events)); };
             mEventCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
