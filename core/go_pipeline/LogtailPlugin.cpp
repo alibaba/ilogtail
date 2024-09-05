@@ -31,6 +31,7 @@
 #include "pipeline/PipelineManager.h"
 #include "profile_sender/ProfileSender.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,

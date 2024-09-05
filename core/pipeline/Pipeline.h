@@ -32,6 +32,7 @@
 #include "pipeline/plugin/instance/InputInstance.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "pipeline/route/Router.h"
+#include "go_pipeline/LogtailPlugin.h"
 
 namespace logtail {
 
