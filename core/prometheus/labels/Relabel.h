@@ -83,8 +83,8 @@ public:
         }
         return true;
     }
-    bool Process(MetricEvent&);
-    bool Process(Labels&);
+    bool Process(MetricEvent&) const;
+    bool Process(Labels&) const;
 
 private:
     std::vector<RelabelConfig> mRelabelConfigs;

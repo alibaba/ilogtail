@@ -74,8 +74,8 @@ void Labels::Reset(MetricEvent* metricEvent) {
     // for (auto it = metricEvent->TagsBegin(); it != metricEvent->TagsEnd(); it++) {
     //     Set(it->first.to_string(), it->second.to_string());
     // }
-    Set(prometheus::NAME, metricEvent->GetName().to_string());
     mMetricEventPtr = metricEvent;
+    Set(prometheus::NAME, metricEvent->GetName().to_string());
 }
 
 void Labels::Set(const string& k, const string& v) {

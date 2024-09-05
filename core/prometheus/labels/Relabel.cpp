@@ -218,7 +218,7 @@ bool RelabelConfig::Process(Labels& l) const {
     return true;
 }
 
-bool RelabelConfigList::Process(Labels& l) {
+bool RelabelConfigList::Process(Labels& l) const {
     for (const auto& cfg : mRelabelConfigs) {
         if (!cfg.Process(l)) {
             return false;
@@ -227,7 +227,7 @@ bool RelabelConfigList::Process(Labels& l) {
     return true;
 }
 
-bool RelabelConfigList::Process(MetricEvent& event) {
+bool RelabelConfigList::Process(MetricEvent& event) const {
     Labels labels;
     labels.Reset(&event);
     return Process(labels);
