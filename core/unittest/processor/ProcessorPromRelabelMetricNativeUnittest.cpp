@@ -267,7 +267,7 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
     APSARA_TEST_EQUAL("2", eventGroup.GetEvents().at(6).Cast<MetricEvent>().GetTag(string("k3")).to_string());
 
     // honor_labels is false
-    processor.mHonorLabels = false;
+    processor.mScrapeConfigPtr->mHonorLabels = false;
     processor.ProcessEvent(eventGroup.MutableEvents()[7], eventGroup);
     APSARA_TEST_FALSE(eventGroup.GetEvents().at(7).Cast<MetricEvent>().HasTag(string("k3")));
     APSARA_TEST_EQUAL("v2", eventGroup.GetEvents().at(7).Cast<MetricEvent>().GetTag(string("exported_k3")).to_string());

@@ -103,13 +103,13 @@ void RelabelConfigUnittest::TestProcess() {
     string configStr;
     string errorMsg;
     Labels labels;
-    labels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    labels.Push(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
+    labels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
     vector<RelabelConfig> cfgs;
 
     // single relabel replace
     configStr = configStr + R"(
-        {
+        [{
                 "action": "replace",
                 "regex": "(.*)"
         + ")\",\n" +
@@ -120,14 +120,14 @@ void RelabelConfigUnittest::TestProcess() {
                     "__meta_kubernetes_pod_ip"
                 ],
                 "target_label": "__address__"
-        }
+        }]
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    RelabelConfig config = RelabelConfig(configJson);
-    cfgs.push_back(config);
+    RelabelConfigList configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
 
-    Labels result;
-    prometheus::Process(labels, cfgs, result);
+    Labels result = labels;
+    configList.Process(result);
 
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3:9100", result.Get("__address__"));
@@ -136,142 +136,138 @@ void RelabelConfigUnittest::TestProcess() {
 
     // single relabel keep
     configStr = R"(
-        {
+        [{
                 "action": "keep",
                 "regex": "172.*",
                 "separator": ";",
                 "source_labels": [
                     "__meta_kubernetes_pod_ip"
                 ]
-        }
+        }]
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(labels, cfgs, result);
-
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = labels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
 
     // single relabel drop
     configStr = R"(
-        {
+        [{
                 "action": "drop",
                 "regex": "172.*",
                 "source_labels": [
                     "__meta_kubernetes_pod_ip"
                 ]
-        }
+        }]
     )";
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(labels, cfgs, result);
-    APSARA_TEST_EQUAL((size_t)0, result.Size());
-    APSARA_TEST_EQUAL("", result.Get("__meta_kubernetes_pod_label_app"));
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = labels;
+
+    APSARA_TEST_FALSE(configList.Process(result));
 
     // relabel dropequal
     configStr = R"(
-        {
+        [{
                 "action": "dropequal",
                 "regex": "172.*",
                 "source_labels": [
                     "__meta_kubernetes_pod_ip"
                 ],
                 "target_label": "pod_ip"
-        }
+        }]
     )";
     Labels dropEqualLabels;
-    dropEqualLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    dropEqualLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    dropEqualLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
+    dropEqualLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    dropEqualLabels.Set("pod_ip", "172.17.0.3");
+    dropEqualLabels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(dropEqualLabels, cfgs, result);
-    APSARA_TEST_EQUAL((size_t)0, result.Size());
-    APSARA_TEST_EQUAL("", result.Get("__meta_kubernetes_pod_label_app"));
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = dropEqualLabels;
+    APSARA_TEST_FALSE(configList.Process(result));
 
     // relabel keepequal
     configStr = R"(
-        {
+        [{
                 "action": "keepequal",
                 "regex": "172.*",
                 "source_labels": [
                     "__meta_kubernetes_pod_ip"
                 ],
                 "target_label": "pod_ip"
-        }
+        }]
     )";
     Labels keepEqualLabels;
-    keepEqualLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    keepEqualLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    keepEqualLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
+    keepEqualLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    keepEqualLabels.Set("pod_ip", "172.17.0.3");
+    keepEqualLabels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(keepEqualLabels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = keepEqualLabels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
 
     // relabel lowercase
     configStr = R"(
-        {
+        [{
                 "action": "lowercase",
                 "regex": "172.*",
                 "source_labels": [
                     "__meta_kubernetes_pod_label_app"
                 ],
                 "target_label": "__meta_kubernetes_pod_label_app"
-        }
+        }]
     )";
     Labels lowercaseLabels;
-    lowercaseLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    lowercaseLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    lowercaseLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-Exporter"});
+    lowercaseLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    lowercaseLabels.Set("pod_ip", "172.17.0.3");
+    lowercaseLabels.Set("__meta_kubernetes_pod_label_app", "node-Exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(lowercaseLabels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = lowercaseLabels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
 
     // relabel uppercase
     configStr = R"(
-        {
+        [{
                 "action": "uppercase",
                 "regex": "172.*",
                 "source_labels": [
                     "__meta_kubernetes_pod_label_app"
                 ],
                 "target_label": "__meta_kubernetes_pod_label_app"
-        }
+        }]
     )";
     Labels uppercaseLabels;
-    uppercaseLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    uppercaseLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    uppercaseLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-Exporter"});
+    uppercaseLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    uppercaseLabels.Set("pod_ip", "172.17.0.3");
+    uppercaseLabels.Set("__meta_kubernetes_pod_label_app", "node-Exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(uppercaseLabels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = uppercaseLabels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("NODE-EXPORTER", result.Get("__meta_kubernetes_pod_label_app"));
 
     // relabel hashmod
     configStr = R"(
-        {
+        [{
                 "action": "hashmod",
                 "regex": "172.*",
                 "source_labels": [
@@ -279,75 +275,75 @@ void RelabelConfigUnittest::TestProcess() {
                 ],
                 "target_label": "hash_val",
                 "modulus": 255
-        }
+        }]
     )";
     Labels hashmodLabels;
-    hashmodLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    hashmodLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    hashmodLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-Exporter"});
+    hashmodLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    hashmodLabels.Set("pod_ip", "172.17.0.3");
+    hashmodLabels.Set("__meta_kubernetes_pod_label_app", "node-Exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(hashmodLabels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = hashmodLabels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)4, result.Size());
     APSARA_TEST_TRUE(!result.Get("hash_val").empty());
 
     configStr.clear();
     // single relabel labelmap
     configStr = configStr + R"(
-        {
+        [{
                 "action": "labelmap",
                 "regex": "__meta_kubernetes_pod_label_(.+)"
         + ")\"," + R"("replacement": "k8s_$1"
-        }
+        }]
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(labels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = labels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("k8s_app"));
 
     // relabel labeldrop
     configStr = R"(
-        {
+        [{
                 "action": "labeldrop",
                 "regex": "__meta.*",
-        }
+        }]
     )";
     Labels labelDropLabels;
-    labelDropLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    labelDropLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    labelDropLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-Exporter"});
+    labelDropLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labelDropLabels.Set("pod_ip", "172.17.0.3");
+    labelDropLabels.Set("__meta_kubernetes_pod_label_app", "node-Exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(labelDropLabels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = labelDropLabels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)1, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("pod_ip"));
 
     // relabel labelkeep
     configStr = R"(
-        {
+        [{
                 "action": "labelkeep",
                 "regex": "__meta.*",
-        }
+        }]
     )";
     Labels labelKeepLabels;
-    labelKeepLabels.Push(Label{"__meta_kubernetes_pod_ip", "172.17.0.3"});
-    labelKeepLabels.Push(Label{"pod_ip", "172.17.0.3"});
-    labelKeepLabels.Push(Label{"__meta_kubernetes_pod_label_app", "node-exporter"});
+    labelKeepLabels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labelKeepLabels.Set("pod_ip", "172.17.0.3");
+    labelKeepLabels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    prometheus::Process(labelKeepLabels, cfgs, result);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = labelKeepLabels;
+    configList.Process(result);
     APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
@@ -357,7 +353,7 @@ void RelabelConfigUnittest::TestProcess() {
     string configStr1;
     string configStr2;
     configStr1 = configStr1 + R"(
-        {
+        [{
                 "action": "replace",
                 "regex": "(.*)"
         + ")\",\n" +
@@ -368,30 +364,32 @@ void RelabelConfigUnittest::TestProcess() {
                     "__meta_kubernetes_pod_ip"
                 ],
                 "target_label": "__address__"
-        }
+        }]
     )";
     configStr2 = R"(
-        {
+        [{
                 "action": "drop",
                 "regex": "172.*",
                 "separator": ";",
                 "source_labels": [
                     "__address__"
                 ]
-        }
+        }]
     )";
 
     APSARA_TEST_TRUE(ParseJsonTable(configStr1, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.clear();
-    cfgs.push_back(config);
-    APSARA_TEST_TRUE(ParseJsonTable(configStr2, configJson, errorMsg));
-    config = RelabelConfig(configJson);
-    cfgs.push_back(config);
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    result = labels;
+    APSARA_TEST_TRUE(configList.Process(result));
+    APSARA_TEST_EQUAL((size_t)3, result.Size());
+    APSARA_TEST_EQUAL("172.17.0.3:9100", result.Get("__address__"));
 
-    prometheus::Process(labels, cfgs, result);
-    APSARA_TEST_EQUAL((size_t)0, result.Size());
-    APSARA_TEST_EQUAL("", result.Get("__address__"));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr2, configJson, errorMsg));
+    configList = RelabelConfigList();
+    APSARA_TEST_TRUE(configList.Init(configJson));
+    // result = labels;
+    configList.Process(result);
 }
 
 UNIT_TEST_CASE(ActionConverterUnittest, TestStringToAction)

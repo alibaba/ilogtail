@@ -79,6 +79,12 @@ public:
 
 private:
     std::vector<RelabelConfig> mRelabelConfigs;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class RelabelConfigListTest;
+    friend class InputPrometheusUnittest;
+    friend class ScrapeConfigUnittest;
+#endif
 };
 
 

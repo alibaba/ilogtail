@@ -49,7 +49,7 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
         }
     }
 
-    if (scrapeConfig.isMember(prometheus::PARAMS) && scrapeConfig[prometheus::PARAMS].isArray()) {
+    if (scrapeConfig.isMember(prometheus::PARAMS) && scrapeConfig[prometheus::PARAMS].isObject()) {
         const Json::Value& params = scrapeConfig[prometheus::PARAMS];
         for (const auto& key : params.getMemberNames()) {
             const Json::Value& values = params[key];

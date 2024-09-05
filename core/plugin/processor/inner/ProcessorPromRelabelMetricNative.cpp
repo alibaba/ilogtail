@@ -33,6 +33,7 @@ const string ProcessorPromRelabelMetricNative::sName = "processor_prom_relabel_m
 // only for inner processor
 bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     std::string errorMsg;
+    mScrapeConfigPtr = std::make_unique<ScrapeConfig>();
     if (!mScrapeConfigPtr->InitStaticConfig(config)) {
         return false;
     }
