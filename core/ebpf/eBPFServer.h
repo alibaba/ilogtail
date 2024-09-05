@@ -40,6 +40,8 @@ public:
 
     void Init() override;
 
+    bool IsSupportedEnv();
+
     static eBPFServer* GetInstance() {
         static eBPFServer instance;
         return &instance;
