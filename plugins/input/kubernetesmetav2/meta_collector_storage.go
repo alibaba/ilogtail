@@ -1,7 +1,6 @@
 package kubernetesmetav2
 
 import (
-	"encoding/json"
 	"time"
 
 	storage "k8s.io/api/storage/v1" //nolint:typecheck
@@ -19,10 +18,8 @@ func (m *metaCollector) processStorageClassEntity(data *k8smeta.ObjectWrapper, m
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
 		log.Contents.Add("reclaim_policy", string(*obj.ReclaimPolicy))
 		log.Contents.Add("volume_binding_mode", string(*obj.VolumeBindingMode))
 		return []models.PipelineEvent{log}

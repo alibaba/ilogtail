@@ -1,7 +1,6 @@
 package kubernetesmetav2
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -22,10 +21,8 @@ func (m *metaCollector) processJobEntity(data *k8smeta.ObjectWrapper, method str
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
 		log.Contents.Add("status", obj.Status.String())
 		containerInfos := []map[string]string{}
 		for _, container := range obj.Spec.Template.Spec.Containers {
@@ -35,8 +32,7 @@ func (m *metaCollector) processJobEntity(data *k8smeta.ObjectWrapper, method str
 			}
 			containerInfos = append(containerInfos, containerInfo)
 		}
-		containersStr, _ := json.Marshal(containerInfos)
-		log.Contents.Add("containers", string(containersStr))
+		log.Contents.Add("containers", m.processEntityJsonArray(containerInfos))
 		log.Contents.Add("suspend", strconv.FormatBool(*obj.Spec.Suspend))
 		log.Contents.Add("backoff_limit", strconv.FormatInt(int64(*obj.Spec.BackoffLimit), 10))
 		log.Contents.Add("completion", strconv.FormatInt(int64(*obj.Spec.Completions), 10))
@@ -55,10 +51,8 @@ func (m *metaCollector) processCronJobEntity(data *k8smeta.ObjectWrapper, method
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
 		log.Contents.Add("schedule", obj.Spec.Schedule)
 		log.Contents.Add("suspend", strconv.FormatBool(*obj.Spec.Suspend))
 		return []models.PipelineEvent{log}

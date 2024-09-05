@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/plugin_main/flags"
 )
 
 func TestLogtailPortManager(t *testing.T) {

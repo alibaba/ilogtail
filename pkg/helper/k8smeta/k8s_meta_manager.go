@@ -142,6 +142,7 @@ func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, s
 				}
 			}
 		}, interval)
+		return
 	}
 	if isLink(resourceType) {
 		m.linkRegisterLock.Lock()

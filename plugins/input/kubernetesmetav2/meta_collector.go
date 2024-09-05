@@ -2,6 +2,7 @@ package kubernetesmetav2
 
 import (
 	"context"
+	"encoding/json"
 
 	// #nosec G501
 	"crypto/md5"
@@ -237,6 +238,49 @@ func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 			}
 		}
 	}
+}
+
+func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, kind, namespace, name, method string, firstObservedTime, lastObservedTime, creationTime int64) {
+	// entity reserved fields
+	logContents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+	logContents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(kind))
+	logContents.Add(entityIDFieldName, m.genKey(namespace, name))
+	logContents.Add(entityMethodFieldName, method)
+
+	logContents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(firstObservedTime, 10))
+	logContents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(lastObservedTime, 10))
+	logContents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
+	logContents.Add(entityCategoryFieldName, defaultEntityCategory)
+
+	// common custom fields
+	logContents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
+	logContents.Add(entityKindFieldName, kind)
+	logContents.Add(entityNameFieldName, name)
+	logContents.Add(entityCreationTimeFieldName, strconv.FormatInt(creationTime, 10))
+}
+
+func (m *metaCollector) processEntityJsonObject(obj map[string]string) string {
+	if obj == nil || len(obj) == 0 {
+		return "{}"
+	}
+	objStr, err := json.Marshal(obj)
+	if err != nil {
+		logger.Error(context.Background(), "PROCESS_ENTITY_JSON_OBJECT_FAIL", "process entity json object fail", err)
+		return "{}"
+	}
+	return string(objStr)
+}
+
+func (m *metaCollector) processEntityJsonArray(obj []map[string]string) string {
+	if obj == nil || len(obj) == 0 {
+		return "[]"
+	}
+	objStr, err := json.Marshal(obj)
+	if err != nil {
+		logger.Error(context.Background(), "PROCESS_ENTITY_JSON_ARRAY_FAIL", "process entity json array fail", err)
+		return "[]"
+	}
+	return string(objStr)
 }
 
 func (m *metaCollector) send(event models.PipelineEvent, entity bool) {

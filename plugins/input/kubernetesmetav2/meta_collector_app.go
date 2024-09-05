@@ -1,7 +1,6 @@
 package kubernetesmetav2
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -22,12 +21,9 @@ func (m *metaCollector) processDeploymentEntity(data *k8smeta.ObjectWrapper, met
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
-		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
-		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("match_labels", m.processEntityJsonObject(obj.Spec.Selector.MatchLabels))
 		log.Contents.Add("replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
 		log.Contents.Add("ready_replicas", strconv.FormatInt(int64(obj.Status.ReadyReplicas), 10))
 		containerInfos := []map[string]string{}
@@ -38,8 +34,7 @@ func (m *metaCollector) processDeploymentEntity(data *k8smeta.ObjectWrapper, met
 			}
 			containerInfos = append(containerInfos, containerInfo)
 		}
-		containersStr, _ := json.Marshal(containerInfos)
-		log.Contents.Add("containers", string(containersStr))
+		log.Contents.Add("containers", m.processEntityJsonArray(containerInfos))
 
 		return []models.PipelineEvent{log}
 	}
@@ -56,12 +51,9 @@ func (m *metaCollector) processDaemonSetEntity(data *k8smeta.ObjectWrapper, meth
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
-		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
-		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("match_labels", m.processEntityJsonObject(obj.Spec.Selector.MatchLabels))
 		containerInfos := []map[string]string{}
 		for _, container := range obj.Spec.Template.Spec.Containers {
 			containerInfo := map[string]string{
@@ -70,8 +62,7 @@ func (m *metaCollector) processDaemonSetEntity(data *k8smeta.ObjectWrapper, meth
 			}
 			containerInfos = append(containerInfos, containerInfo)
 		}
-		containersStr, _ := json.Marshal(containerInfos)
-		log.Contents.Add("containers", string(containersStr))
+		log.Contents.Add("containers", m.processEntityJsonArray(containerInfos))
 		return []models.PipelineEvent{log}
 	}
 	return nil
@@ -87,12 +78,9 @@ func (m *metaCollector) processStatefulSetEntity(data *k8smeta.ObjectWrapper, me
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
-		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
-		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("match_labels", m.processEntityJsonObject(obj.Spec.Selector.MatchLabels))
 		log.Contents.Add("replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
 		containerInfos := []map[string]string{}
 		for _, container := range obj.Spec.Template.Spec.Containers {
@@ -102,8 +90,7 @@ func (m *metaCollector) processStatefulSetEntity(data *k8smeta.ObjectWrapper, me
 			}
 			containerInfos = append(containerInfos, containerInfo)
 		}
-		containersStr, _ := json.Marshal(containerInfos)
-		log.Contents.Add("containers", string(containersStr))
+		log.Contents.Add("containers", m.processEntityJsonArray(containerInfos))
 		return []models.PipelineEvent{log}
 	}
 	return nil
@@ -119,12 +106,9 @@ func (m *metaCollector) processReplicaSetEntity(data *k8smeta.ObjectWrapper, met
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		labelsStr, _ := json.Marshal(obj.Labels)
-		log.Contents.Add("labels", string(labelsStr))
-		annotationsStr, _ := json.Marshal(obj.Annotations)
-		log.Contents.Add("annotations", string(annotationsStr))
-		matchLabelsStr, _ := json.Marshal(obj.Spec.Selector.MatchLabels)
-		log.Contents.Add("match_labels", string(matchLabelsStr))
+		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("match_labels", m.processEntityJsonObject(obj.Spec.Selector.MatchLabels))
 		log.Contents.Add("replicas", strconv.FormatInt(int64(*obj.Spec.Replicas), 10))
 		containerInfos := []map[string]string{}
 		for _, container := range obj.Spec.Template.Spec.Containers {
@@ -134,8 +118,7 @@ func (m *metaCollector) processReplicaSetEntity(data *k8smeta.ObjectWrapper, met
 			}
 			containerInfos = append(containerInfos, containerInfo)
 		}
-		containersStr, _ := json.Marshal(containerInfos)
-		log.Contents.Add("containers", string(containersStr))
+		log.Contents.Add("containers", m.processEntityJsonArray(containerInfos))
 		return []models.PipelineEvent{log}
 	}
 	return nil

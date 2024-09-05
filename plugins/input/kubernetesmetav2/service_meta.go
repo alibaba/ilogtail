@@ -1,8 +1,7 @@
 package kubernetesmetav2
 
 import (
-	"os"
-
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -90,7 +89,7 @@ func init() {
 	pipeline.ServiceInputs["service_kubernetes_meta"] = func() pipeline.ServiceInput {
 		return &ServiceK8sMeta{
 			Interval:  60,
-			clusterID: os.Getenv("_cluster_id_"),
+			clusterID: *flags.ClusterID,
 		}
 	}
 }
