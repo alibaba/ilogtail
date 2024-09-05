@@ -110,6 +110,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
             }
         } else {
             AddPluginToGoPipeline(pluginType, detail, "inputs", mGoPipelineWithInput);
+            ++mPluginCntMap["go_inputs"][pluginType];
         }
         ++mPluginCntMap["inputs"][pluginType];
     }
@@ -134,6 +135,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
             } else {
                 AddPluginToGoPipeline(pluginType, detail, "processors", mGoPipelineWithoutInput);
             }
+            ++mPluginCntMap["go_processors"][pluginType];
         }
         ++mPluginCntMap["processors"][pluginType];
     }
@@ -152,6 +154,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
         } else {
             AddPluginToGoPipeline(pluginType, detail, "aggregators", mGoPipelineWithoutInput);
         }
+        ++mPluginCntMap["go_aggregators"][pluginType];
         ++mPluginCntMap["aggregators"][pluginType];
     }
 
@@ -183,6 +186,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
             } else {
                 AddPluginToGoPipeline(pluginType, detail, "flushers", mGoPipelineWithoutInput);
             }
+            ++mPluginCntMap["go_flushers"][pluginType];
         }
         ++mPluginCntMap["flushers"][pluginType];
     }
@@ -476,6 +480,55 @@ void Pipeline::CopyNativeGlobalParamToGoPipeline(Json::Value& pipeline) {
         global["EnableTimestampNanosecond"] = mContext.GetGlobalConfig().mEnableTimestampNanosecond;
         global["UsingOldContentTag"] = mContext.GetGlobalConfig().mUsingOldContentTag;
     }
+}
+
+bool Pipeline::ShouldAddPluginToGoPipelineWithInput() const {
+    auto iter = mPluginCntMap.find("go_inputs");
+    if (iter == mPluginCntMap.end()) {
+        return false;
+    }
+    for (const auto& item : iter->second) {
+        if (item.second > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Pipeline::IsFlushingThroughGoPipeline() const {
+    auto iter = mPluginCntMap.find("go_processors");
+    if (iter != mPluginCntMap.end()) {
+        for (const auto& item : iter->second) {
+            if (item.second > 0) {
+                return true;
+            }
+        }
+    }
+    iter = mPluginCntMap.find("go_aggregators");
+    if (iter != mPluginCntMap.end()) {
+        for (const auto& item : iter->second) {
+            if (item.second > 0) {
+                return true;
+            }
+        }
+    }
+    iter = mPluginCntMap.find("go_flushers");
+    if (iter != mPluginCntMap.end()) {
+        for (const auto& item : iter->second) {
+            if (item.second > 0) {
+                return true;
+            }
+        }
+    }
+    iter = mPluginCntMap.find("extensions");
+    if (iter != mPluginCntMap.end()) {
+        for (const auto& item : iter->second) {
+            if (item.second > 0) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 LoadGoPipelineResp Pipeline::LoadGoPipelines() const {

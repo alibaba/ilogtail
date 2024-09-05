@@ -51,7 +51,7 @@ public:
     PipelineContext& GetContext() const { return mContext; }
     const Json::Value& GetConfig() const { return *mConfig; }
     const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }
-    bool IsFlushingThroughGoPipeline() const { return !mGoPipelineWithoutInput.isNull(); }
+    bool IsFlushingThroughGoPipeline() const;
     const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
         return mPluginCntMap;
     }
@@ -71,7 +71,7 @@ private:
                                const std::string& module,
                                Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
-    bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
+    bool ShouldAddPluginToGoPipelineWithInput() const;
 
     std::string mName;
     std::vector<std::unique_ptr<InputInstance>> mInputs;

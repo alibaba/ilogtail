@@ -551,6 +551,16 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
         return;
     }
     std::string realConfigName = configName + "/2";
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
+    auto go_inputs_iter = pipeline->GetPluginStatistics().find("go_inputs");
+    if (go_inputs_iter != pipeline->GetPluginStatistics().end()) {
+        for (auto& go_input : go_inputs_iter->second) {
+            if (go_input.second > 0) {
+                realConfigName[realConfigName.size() - 1] = '1';
+                break;
+            }
+        }
+    }
     std::string packIdPrefix = ToHexString(HashString(packId));
     GoString goConfigName;
     GoSlice goLog;
