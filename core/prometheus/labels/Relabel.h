@@ -71,20 +71,11 @@ private:
 
 class RelabelConfigList {
 public:
-    bool Init(const Json::Value& relabelConfigs) {
-        if (!relabelConfigs.isArray()) {
-            return false;
-        }
-        for (const auto& relabelConfig : relabelConfigs) {
-            mRelabelConfigs.emplace_back(relabelConfig);
-            if (!mRelabelConfigs.back().Validate()) {
-                return false;
-            }
-        }
-        return true;
-    }
+    bool Init(const Json::Value& relabelConfigs);
     bool Process(MetricEvent&) const;
     bool Process(Labels&) const;
+
+    [[nodiscard]] bool Empty() const;
 
 private:
     std::vector<RelabelConfig> mRelabelConfigs;

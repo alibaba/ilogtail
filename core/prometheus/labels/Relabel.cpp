@@ -218,6 +218,19 @@ bool RelabelConfig::Process(Labels& l) const {
     return true;
 }
 
+bool RelabelConfigList::Init(const Json::Value& relabelConfigs) {
+    if (!relabelConfigs.isArray()) {
+        return false;
+    }
+    for (const auto& relabelConfig : relabelConfigs) {
+        mRelabelConfigs.emplace_back(relabelConfig);
+        if (!mRelabelConfigs.back().Validate()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool RelabelConfigList::Process(Labels& l) const {
     for (const auto& cfg : mRelabelConfigs) {
         if (!cfg.Process(l)) {
@@ -231,6 +244,10 @@ bool RelabelConfigList::Process(MetricEvent& event) const {
     Labels labels;
     labels.Reset(&event);
     return Process(labels);
+}
+
+bool RelabelConfigList::Empty() const {
+    return mRelabelConfigs.empty();
 }
 
 } // namespace logtail

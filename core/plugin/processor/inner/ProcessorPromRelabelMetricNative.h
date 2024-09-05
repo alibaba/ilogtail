@@ -21,7 +21,6 @@
 #include "models/PipelineEventGroup.h"
 #include "models/PipelineEventPtr.h"
 #include "pipeline/plugin/interface/Processor.h"
-#include "prometheus/labels/Relabel.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
 namespace logtail {
@@ -47,16 +46,7 @@ private:
                    uint32_t nanoSec,
                    StringView instance);
 
-    std::vector<RelabelConfig> mRelabelConfigs;
-
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
-
-    // from config
-    std::string mJobName;
-    int64_t mScrapeTimeoutSeconds;
-    int64_t mSampleLimit;
-    int64_t mSeriesLimit;
-    bool mHonorLabels;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorPromRelabelMetricNativeUnittest;

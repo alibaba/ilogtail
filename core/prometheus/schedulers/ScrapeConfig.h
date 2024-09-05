@@ -26,7 +26,6 @@ public:
     int64_t mMaxScrapeSizeBytes;
     int64_t mSampleLimit;
     int64_t mSeriesLimit;
-    // std::vector<RelabelConfig> mRelabelConfigs;
     RelabelConfigList mRelabelConfigs;
     RelabelConfigList mMetricRelabelConfigs;
 
@@ -36,6 +35,7 @@ public:
 
     ScrapeConfig();
     bool Init(const Json::Value& config);
+    bool InitStaticConfig(const Json::Value& config);
 
 private:
     bool InitBasicAuth(const Json::Value& basicAuth);

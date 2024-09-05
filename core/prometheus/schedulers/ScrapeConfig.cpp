@@ -26,6 +26,59 @@ ScrapeConfig::ScrapeConfig()
       mSeriesLimit(-1) {
 }
 bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
+    if (!InitStaticConfig(scrapeConfig)) {
+        return false;
+    }
+
+    // basic auth, authorization, oauth2
+    // basic auth, authorization, oauth2 cannot be used at the same time
+    if ((int)scrapeConfig.isMember(prometheus::BASIC_AUTH) + scrapeConfig.isMember(prometheus::AUTHORIZATION) > 1) {
+        LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
+        return false;
+    }
+    if (scrapeConfig.isMember(prometheus::BASIC_AUTH) && scrapeConfig[prometheus::BASIC_AUTH].isObject()) {
+        if (!InitBasicAuth(scrapeConfig[prometheus::BASIC_AUTH])) {
+            LOG_ERROR(sLogger, ("basic auth config error", ""));
+            return false;
+        }
+    }
+    if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
+        if (!InitAuthorization(scrapeConfig[prometheus::AUTHORIZATION])) {
+            LOG_ERROR(sLogger, ("authorization config error", ""));
+            return false;
+        }
+    }
+
+    if (scrapeConfig.isMember(prometheus::PARAMS) && scrapeConfig[prometheus::PARAMS].isArray()) {
+        const Json::Value& params = scrapeConfig[prometheus::PARAMS];
+        for (const auto& key : params.getMemberNames()) {
+            const Json::Value& values = params[key];
+            if (values.isArray()) {
+                vector<string> valueList;
+                for (const auto& value : values) {
+                    valueList.push_back(value.asString());
+                }
+                mParams[key] = valueList;
+            }
+        }
+    }
+
+    // build query string
+    for (auto& [key, values] : mParams) {
+        for (const auto& value : values) {
+            if (!mQueryString.empty()) {
+                mQueryString += "&";
+            }
+            mQueryString += key;
+            mQueryString += "=";
+            mQueryString += value;
+        }
+    }
+
+    return true;
+}
+
+bool ScrapeConfig::InitStaticConfig(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::JOB_NAME) && scrapeConfig[prometheus::JOB_NAME].isString()) {
         mJobName = scrapeConfig[prometheus::JOB_NAME].asString();
         if (mJobName.empty()) {
@@ -54,25 +107,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
 
     if (scrapeConfig.isMember(prometheus::SCHEME) && scrapeConfig[prometheus::SCHEME].isString()) {
         mScheme = scrapeConfig[prometheus::SCHEME].asString();
-    }
-
-    // basic auth, authorization, oauth2
-    // basic auth, authorization, oauth2 cannot be used at the same time
-    if ((int)scrapeConfig.isMember(prometheus::BASIC_AUTH) + scrapeConfig.isMember(prometheus::AUTHORIZATION) > 1) {
-        LOG_ERROR(sLogger, ("basic auth and authorization cannot be used at the same time", ""));
-        return false;
-    }
-    if (scrapeConfig.isMember(prometheus::BASIC_AUTH) && scrapeConfig[prometheus::BASIC_AUTH].isObject()) {
-        if (!InitBasicAuth(scrapeConfig[prometheus::BASIC_AUTH])) {
-            LOG_ERROR(sLogger, ("basic auth config error", ""));
-            return false;
-        }
-    }
-    if (scrapeConfig.isMember(prometheus::AUTHORIZATION) && scrapeConfig[prometheus::AUTHORIZATION].isObject()) {
-        if (!InitAuthorization(scrapeConfig[prometheus::AUTHORIZATION])) {
-            LOG_ERROR(sLogger, ("authorization config error", ""));
-            return false;
-        }
     }
 
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
@@ -116,25 +150,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (scrapeConfig.isMember(prometheus::SERIES_LIMIT) && scrapeConfig[prometheus::SERIES_LIMIT].isInt64()) {
         mSeriesLimit = scrapeConfig[prometheus::SERIES_LIMIT].asInt64();
     }
-    if (scrapeConfig.isMember(prometheus::PARAMS) && scrapeConfig[prometheus::PARAMS].isObject()) {
-        const Json::Value& params = scrapeConfig[prometheus::PARAMS];
-        if (params.isObject()) {
-            for (const auto& key : params.getMemberNames()) {
-                const Json::Value& values = params[key];
-                if (values.isArray()) {
-                    vector<string> valueList;
-                    for (const auto& value : values) {
-                        valueList.push_back(value.asString());
-                    }
-                    mParams[key] = valueList;
-                }
-            }
-        }
-    }
-
-    // for (const auto& relabelConfig : scrapeConfig[prometheus::RELABEL_CONFIGS]) {
-    //     mRelabelConfigs.emplace_back(relabelConfig);
-    // }
 
     if (scrapeConfig.isMember(prometheus::RELABEL_CONFIGS)) {
         if (!mRelabelConfigs.Init(scrapeConfig[prometheus::RELABEL_CONFIGS])) {
@@ -149,21 +164,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             return false;
         }
     }
-
-    // build query string
-    for (auto it = mParams.begin(); it != mParams.end(); ++it) {
-        const auto& key = it->first;
-        const auto& values = it->second;
-        for (const auto& value : values) {
-            if (!mQueryString.empty()) {
-                mQueryString += "&";
-            }
-            mQueryString += key;
-            mQueryString += "=";
-            mQueryString += value;
-        }
-    }
-
     return true;
 }
 
