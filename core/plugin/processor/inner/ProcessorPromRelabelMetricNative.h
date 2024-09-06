@@ -47,6 +47,7 @@ private:
                    StringView instance);
 
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
+    std::string mCollectorName;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorPromRelabelMetricNativeUnittest;

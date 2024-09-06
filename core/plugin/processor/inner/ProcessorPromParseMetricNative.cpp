@@ -55,6 +55,7 @@ bool ProcessorPromParseMetricNative::ProcessEvent(PipelineEventPtr& e,
     auto& sourceEvent = e.Cast<LogEvent>();
     std::unique_ptr<MetricEvent> metricEvent = eGroup.CreateMetricEvent();
     if (parser.ParseLine(sourceEvent.GetContent(prometheus::PROMETHEUS), *metricEvent)) {
+        metricEvent->SetTag(string(prometheus::NAME), metricEvent->GetName());
         newEvents.emplace_back(std::move(metricEvent));
     }
     return true;

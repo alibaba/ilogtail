@@ -19,6 +19,7 @@
 
 #include <cstddef>
 
+#include "common/Flags.h"
 #include "common/StringTools.h"
 #include "models/MetricEvent.h"
 #include "models/PipelineEventGroup.h"
@@ -26,6 +27,7 @@
 #include "prometheus/Constants.h"
 
 using namespace std;
+DECLARE_FLAG_STRING(_pod_name_);
 namespace logtail {
 
 const string ProcessorPromRelabelMetricNative::sName = "processor_prom_relabel_metric_native";
@@ -37,6 +39,8 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
     if (!mScrapeConfigPtr->InitStaticConfig(config)) {
         return false;
     }
+
+    mCollectorName = STRING_FLAG(_pod_name_);
 
     return true;
 }
@@ -55,6 +59,14 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) 
             }
         }
         events.resize(wIdx);
+    }
+
+    // delete mTags when key starts with __
+    auto sourceTags = metricGroup.GetTags();
+    for (const auto& [k, v] : sourceTags) {
+        if (k.starts_with("__")) {
+            metricGroup.DelTag(k);
+        }
     }
 
     AddAutoMetrics(metricGroup);
@@ -168,6 +180,7 @@ void ProcessorPromRelabelMetricNative::AddMetric(PipelineEventGroup& metricGroup
     metricEvent->SetTimestamp(timestamp, nanoSec);
     metricEvent->SetTag(prometheus::JOB, mScrapeConfigPtr->mJobName);
     metricEvent->SetTag(prometheus::INSTANCE, instance);
+    metricEvent->SetTag(prometheus::COLLECTOR_NAME, mCollectorName);
 }
 
 } // namespace logtail
