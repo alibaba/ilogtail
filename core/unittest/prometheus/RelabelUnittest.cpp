@@ -440,7 +440,7 @@ void RelabelConfigUnittest::TestMultiRelabel() {
     // multi relabel
     string configStr1;
     string configStr2;
-    configStr1 = configStr1 + R"(
+    configStr1 = configStr1 + R"JSON(
         [{
                 "action": "replace",
                 "regex": "(.*)",
@@ -451,7 +451,7 @@ void RelabelConfigUnittest::TestMultiRelabel() {
                 ],
                 "target_label": "__address__"
         }]
-    )";
+    )JSON";
     configStr2 = R"(
         [{
                 "action": "drop",
