@@ -13,7 +13,7 @@
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
 |  Type  |  string  |  是  |  /  |  插件类型。固定为input\_file\_security  |
-|  ProbeConfig  |  object  |  否  |  ProbeConfig 包含默认为空的 Filter  |  ProbeConfig 内部可以有多个 Filter，Filter 内部是或的关系，Filter 之间是且的关系  |
+|  ProbeConfig  |  object  |  否  |  ProbeConfig 包含默认为空的 Filter  |  ProbeConfig 内部包含 Filter，Filter 内部是或的关系  |
 |  ProbeConfig[xx].FilePathFilter  |  \[string\]  |  否  |  空  |  文件路径过滤器，按照白名单模式运行，不填表示不进行过滤  |
 
 ## 样例
