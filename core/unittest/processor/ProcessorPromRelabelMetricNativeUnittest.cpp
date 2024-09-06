@@ -204,7 +204,8 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
     eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_DURATION, ToString(1.5));
     eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_RESPONSE_SIZE, ToString(2325));
     eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE, ToString(true));
-    eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_INSTANCE, string("localhost:8080"));
+    eventGroup.SetTag(string("instance"), "localhost:8080");
+    eventGroup.SetTag(string("job"), "test_job");
     processor.AddAutoMetrics(eventGroup);
 
     APSARA_TEST_EQUAL((size_t)15, eventGroup.GetEvents().size());
@@ -259,16 +260,16 @@ test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
     // set global labels
     eventGroup.SetTag(string("k3"), string("v3"));
     APSARA_TEST_EQUAL((size_t)8, eventGroup.GetEvents().size());
-
+    auto targetTags = eventGroup.GetTags();
     // honor_labels is true
-    processor.ProcessEvent(eventGroup.MutableEvents()[0], eventGroup);
-    APSARA_TEST_FALSE(eventGroup.GetEvents().at(0).Cast<MetricEvent>().HasTag(string("k3")));
-    processor.ProcessEvent(eventGroup.MutableEvents()[6], eventGroup);
+    processor.ProcessEvent(eventGroup.MutableEvents()[0], targetTags);
+    APSARA_TEST_EQUAL("v3", eventGroup.GetEvents().at(0).Cast<MetricEvent>().GetTag(string("k3")));
+    processor.ProcessEvent(eventGroup.MutableEvents()[6], targetTags);
     APSARA_TEST_EQUAL("2", eventGroup.GetEvents().at(6).Cast<MetricEvent>().GetTag(string("k3")).to_string());
 
     // honor_labels is false
     processor.mScrapeConfigPtr->mHonorLabels = false;
-    processor.ProcessEvent(eventGroup.MutableEvents()[7], eventGroup);
+    processor.ProcessEvent(eventGroup.MutableEvents()[7], targetTags);
     APSARA_TEST_FALSE(eventGroup.GetEvents().at(7).Cast<MetricEvent>().HasTag(string("k3")));
     APSARA_TEST_EQUAL("v2", eventGroup.GetEvents().at(7).Cast<MetricEvent>().GetTag(string("exported_k3")).to_string());
 }

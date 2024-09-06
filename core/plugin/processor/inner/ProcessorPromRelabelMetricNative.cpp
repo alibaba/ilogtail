@@ -69,7 +69,7 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) 
         }
     }
 
-    AddAutoMetrics(metricGroup, targetTags);
+    AddAutoMetrics(metricGroup);
 }
 
 bool ProcessorPromRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
@@ -114,11 +114,13 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
     return true;
 }
 
-void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metricGroup, const GroupTags& targetTags) {
+void ProcessorPromRelabelMetricNative::AddAutoMetrics(PipelineEventGroup& metricGroup) {
     // if up is set, then add self monitor metrics
     if (metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_UP_STATE).empty()) {
         return;
     }
+
+    auto targetTags = metricGroup.GetTags();
 
     StringView scrapeTimestampMilliSecStr
         = metricGroup.GetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC);

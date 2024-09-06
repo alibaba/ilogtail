@@ -38,7 +38,7 @@ protected:
 private:
     bool ProcessEvent(PipelineEventPtr& e, const GroupTags& targetTags);
 
-    void AddAutoMetrics(PipelineEventGroup& metricGroup, const GroupTags& targetTags);
+    void AddAutoMetrics(PipelineEventGroup& metricGroup);
     void AddMetric(PipelineEventGroup& metricGroup,
                    const std::string& name,
                    double value,

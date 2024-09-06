@@ -99,9 +99,9 @@ void ScrapeConfigUnittest::TestInit() {
     // basic auth
     APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Basic dGVzdF91c2VyOnRlc3RfcGFzc3dvcmQ=");
 
-    APSARA_TEST_EQUAL(scrapeConfig.mMaxScrapeSizeBytes, 1024 * 1024 * 1024);
-    APSARA_TEST_EQUAL(scrapeConfig.mSampleLimit, 10000);
-    APSARA_TEST_EQUAL(scrapeConfig.mSeriesLimit, 10000);
+    APSARA_TEST_EQUAL(scrapeConfig.mMaxScrapeSizeBytes, 1024 * 1024 * 1024ULL);
+    APSARA_TEST_EQUAL(scrapeConfig.mSampleLimit, 10000ULL);
+    APSARA_TEST_EQUAL(scrapeConfig.mSeriesLimit, 10000ULL);
     APSARA_TEST_EQUAL(scrapeConfig.mRelabelConfigs.mRelabelConfigs.size(), 1UL);
     APSARA_TEST_EQUAL(scrapeConfig.mParams["__param_query"][0], "test_query");
     APSARA_TEST_EQUAL(scrapeConfig.mParams["__param_query_1"][0], "test_query_1");
