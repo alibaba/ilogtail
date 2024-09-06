@@ -101,9 +101,7 @@ void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
 #ifdef APSARA_UNIT_TEST_MAIN
     mItem.push_back(std::move(item));
 #endif
-    while (!ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item))) {
-        sleep(1);
-    }
+    ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
 }
 
 string ScrapeScheduler::GetId() const {
