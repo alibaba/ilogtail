@@ -89,9 +89,7 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
 }
 
 void ScrapeScheduler::SetTargetLabels(PipelineEventGroup& eGroup) {
-    for (auto it = mTargetLabels.Begin(); it != mTargetLabels.End(); ++it) {
-        eGroup.SetTag(it->first, it->second);
-    }
+    mTargetLabels.Range([&eGroup](const std::string& key, const std::string& value) { eGroup.SetTag(key, value); });
 }
 
 PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {

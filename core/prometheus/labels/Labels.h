@@ -37,7 +37,6 @@ public:
     Labels(Labels&&) noexcept;
     Labels& operator=(Labels&&) noexcept;
 
-
     [[nodiscard]] size_t Size() const;
     uint64_t Hash();
     void RemoveMetaLabels();
@@ -50,10 +49,8 @@ public:
 
     void Range(const std::function<void(const std::string&, const std::string&)>&);
 
-    [[nodiscard]] LabelMap::const_iterator Begin() const;
-    [[nodiscard]] LabelMap::const_iterator End() const;
-
 private:
+
     LabelMap mLabels;
 
     MetricEvent* mMetricEventPtr = nullptr;

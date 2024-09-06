@@ -62,7 +62,7 @@ size_t Labels::Size() const {
 
 std::string Labels::Get(const string& name) {
     if (mMetricEventPtr) {
-        return string(mMetricEventPtr->GetTag(name));
+        return mMetricEventPtr->GetTag(name).to_string();
     }
     if (mLabels.count(name)) {
         return mLabels[name];
@@ -95,7 +95,7 @@ void Labels::Del(const string& k) {
 void Labels::Range(const std::function<void(const string& k, const string& v)>& f) {
     if (mMetricEventPtr) {
         for (auto l = mMetricEventPtr->TagsBegin(); l != mMetricEventPtr->TagsEnd(); l++) {
-            f(string(l->first), string(l->second));
+            f(l->first.to_string(), l->second.to_string());
         }
         return;
     }
@@ -103,15 +103,6 @@ void Labels::Range(const std::function<void(const string& k, const string& v)>& 
         f(l.first, l.second);
     }
 }
-
-LabelMap::const_iterator Labels::Begin() const {
-    return mLabels.begin();
-}
-
-LabelMap::const_iterator Labels::End() const {
-    return mLabels.end();
-}
-
 
 uint64_t Labels::Hash() {
     string hash;
@@ -125,6 +116,7 @@ uint64_t Labels::Hash() {
 }
 
 void Labels::RemoveMetaLabels() {
+    // for mLabels only
     for (auto it = mLabels.begin(); it != mLabels.end();) {
         if (it->first.find(prometheus::META) == 0) {
             it = mLabels.erase(it);
