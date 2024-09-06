@@ -383,7 +383,7 @@ void RelabelConfigUnittest::TestLabelDrop() {
     configStr = R"(
         [{
                 "action": "labeldrop",
-                "regex": "__meta.*",
+                "regex": "__meta.*"
         }]
     )";
     Labels labelDropLabels;
