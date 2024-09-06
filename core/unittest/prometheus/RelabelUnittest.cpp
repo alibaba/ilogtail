@@ -95,9 +95,9 @@ void RelabelConfigUnittest::TestRelabelConfig() {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
 
-    RelabelConfig config = RelabelConfig(configJson);
+    RelabelConfig config = RelabelConfig();
 
-    APSARA_TEST_EQUAL(true, config.Validate());
+    APSARA_TEST_EQUAL(true, config.Init(configJson));
 
     APSARA_TEST_EQUAL(Action::KEEP, config.mAction);
     // APSARA_TEST_EQUAL("node-exporter", config.regex.get_data());

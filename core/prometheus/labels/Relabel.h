@@ -44,10 +44,9 @@ Action StringToAction(const std::string& action);
 
 class RelabelConfig {
 public:
-    explicit RelabelConfig(const Json::Value&);
+    RelabelConfig();
+    bool Init(const Json::Value&);
     bool Process(Labels&) const;
-
-    bool Validate() const;
 
     // A list of labels from which values are taken and concatenated
     // with the configured separator in order.

@@ -77,8 +77,10 @@ const std::string& ActionToString(Action action) {
     }
     return sUndefined;
 }
-
-RelabelConfig::RelabelConfig(const Json::Value& config) {
+RelabelConfig::RelabelConfig() : mSeparator(";"), mReplacement("$1"), mAction(Action::REPLACE) {
+    mRegex = boost::regex("().*");
+}
+bool RelabelConfig::Init(const Json::Value& config) {
     string errorMsg;
 
     if (config.isMember(prometheus::SOURCE_LABELS) && config[prometheus::SOURCE_LABELS].isArray()) {
@@ -110,9 +112,6 @@ RelabelConfig::RelabelConfig(const Json::Value& config) {
     if (config.isMember(prometheus::MODULUS) && config[prometheus::MODULUS].isUInt64()) {
         mModulus = config[prometheus::MODULUS].asUInt64();
     }
-}
-
-bool RelabelConfig::Validate() const {
     return true;
 }
 
@@ -223,8 +222,10 @@ bool RelabelConfigList::Init(const Json::Value& relabelConfigs) {
         return false;
     }
     for (const auto& relabelConfig : relabelConfigs) {
-        mRelabelConfigs.emplace_back(relabelConfig);
-        if (!mRelabelConfigs.back().Validate()) {
+        RelabelConfig rc;
+        if (rc.Init(relabelConfig)) {
+            mRelabelConfigs.push_back(rc);
+        } else {
             return false;
         }
     }
