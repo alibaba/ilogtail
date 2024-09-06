@@ -22,6 +22,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/regex.hpp>
 #include <string>
+#include <vector>
 
 #include "common/ParamExtractor.h"
 #include "common/StringTools.h"
@@ -194,11 +195,15 @@ bool RelabelConfig::Process(Labels& l) const {
             break;
         }
         case Action::LABELDROP: {
+            vector<string> toDel;
             l.Range([&](const string& key, const string& value) {
                 if (boost::regex_match(key, mRegex)) {
-                    l.Del(key);
+                    toDel.push_back(key);
                 }
             });
+            for(const auto& item: toDel){
+                l.Del(item);
+            }
             break;
         }
         case Action::LABELKEEP: {
