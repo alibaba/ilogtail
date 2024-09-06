@@ -23,7 +23,7 @@ using namespace std;
 
 namespace logtail {
 
-const std::string InputEBPFNetworkObserver::sName = "input_ebpf_sockettraceprobe_observer";
+const std::string InputEBPFNetworkObserver::sName = "input_network_observer";
 
 bool InputEBPFNetworkObserver::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     std::string prev_pipeline_name = ebpf::eBPFServer::GetInstance()->CheckLoadedPipelineName(nami::PluginType::NETWORK_OBSERVE);

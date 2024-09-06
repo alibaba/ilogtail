@@ -22,7 +22,7 @@ using namespace std;
 
 namespace logtail {
 
-const std::string InputEBPFNetworkSecurity::sName = "input_ebpf_sockettraceprobe_security";
+const std::string InputEBPFNetworkSecurity::sName = "input_network_security";
 
 // enable: init -> start
 // update: init -> stop(false) -> start

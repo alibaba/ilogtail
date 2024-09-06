@@ -56,7 +56,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
     // valid optional param
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_observer",
+            "Type": "input_network_observer",
             "ProbeConfig": 
             {
                 "EnableProtocols": [
@@ -72,7 +72,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
     input.reset(new InputEBPFNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
+    APSARA_TEST_EQUAL(input->sName, "input_network_observer");
     nami::ObserverNetworkOption thisObserver = input->mNetworkOption;
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
@@ -89,7 +89,7 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
     // invalid optional param
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_observer",
+            "Type": "input_network_observer",
             "ProbeConfig": 
             {
                 "EnableProtocols": [
@@ -105,7 +105,7 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
     input.reset(new InputEBPFNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_observer");
+    APSARA_TEST_EQUAL(input->sName, "input_network_observer");
     nami::ObserverNetworkOption thisObserver = input->mNetworkOption;
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols.size(), 1);
     APSARA_TEST_EQUAL(thisObserver.mEnableProtocols[0], "http");
@@ -116,7 +116,7 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
     // lag of mandatory param + error param level
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_observer",
+            "Type": "input_network_observer",
             "EnableProtocols": [
                 "http"
             ],
@@ -139,7 +139,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulStart() {
 
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_observer",
+            "Type": "input_network_observer",
             "ProbeConfig": 
             {
                 "EnableProtocols": [
@@ -168,7 +168,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulStop() {
 
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_observer",
+            "Type": "input_network_observer",
             "ProbeConfig": 
             {
                 "EnableProtocols": [

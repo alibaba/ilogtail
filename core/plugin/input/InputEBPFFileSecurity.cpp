@@ -23,7 +23,7 @@ using namespace std;
 
 namespace logtail {
 
-const std::string InputEBPFFileSecurity::sName = "input_ebpf_fileprobe_security";
+const std::string InputEBPFFileSecurity::sName = "input_file_security";
 
 bool InputEBPFFileSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     std::string prev_pipeline_name = ebpf::eBPFServer::GetInstance()->CheckLoadedPipelineName(nami::PluginType::FILE_SECURITY);

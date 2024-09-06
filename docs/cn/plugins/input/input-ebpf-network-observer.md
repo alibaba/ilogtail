@@ -37,7 +37,7 @@ TODO
 ```yaml
 enable: true
 inputs:
-  - Type: input_ebpf_sockettraceprobe_observer
+  - Type: input_network_observer
     ProbeConfig:
       EnableLog: true
       EnableMetric: false

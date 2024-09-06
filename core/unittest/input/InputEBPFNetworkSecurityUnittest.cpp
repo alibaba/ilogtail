@@ -56,48 +56,30 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
     // valid optional param
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
-                },
-                {
-                    "CallNameFilter": ["tcp_sendmsg"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80]
-                    }
+            "Type": "input_network_security",
+            "ProbeConfig":
+            {
+                "AddrFilter": {
+                    "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                    "DestPortList": [80],
+                    "SourceAddrBlackList": ["127.0.0.1/8"],
+                    "SourcePortBlackList": [9300]
                 }
-            ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
+    APSARA_TEST_EQUAL(input->sName, "input_network_security");
     nami::SecurityNetworkFilter thisFilter1
         = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
     APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1.mDestAddrList[1]);
     APSARA_TEST_EQUAL(1, thisFilter1.mDestPortList.size());
     APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1.mSourceAddrBlackList[0]);
     APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
-    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].call_names_[0]);
-    nami::SecurityNetworkFilter thisFilter2
-        = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[1].filter_);
-    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].call_names_[0]);
-    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2.mDestAddrList[0]);
-    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2.mDestAddrList[1]);
-    APSARA_TEST_EQUAL(80, thisFilter2.mDestPortList[0]);
 }
 
 void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
@@ -108,128 +90,42 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     // invalid optional param
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": ["80"],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
+            "Type": "input_network_security",
+            "ProbeConfig": 
+            {
+                "AddrFilter": {
+                    "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                    "DestPortList": ["80"],
+                    "SourceAddrBlackList": ["127.0.0.1/8"],
+                    "SourcePortBlackList": [9300]
                 }
-            ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputEBPFNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
+    APSARA_TEST_EQUAL(input->sName, "input_network_security");
     nami::SecurityNetworkFilter thisFilter1
         = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
     APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter1.mDestAddrList[0]);
     APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter1.mDestAddrList[1]);
     APSARA_TEST_EQUAL(0, thisFilter1.mDestPortList.size());
     APSARA_TEST_EQUAL("127.0.0.1/8", thisFilter1.mSourceAddrBlackList[0]);
     APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
 
-    // duplicate callname
-    configStr = R"(
-        {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
-                },
-                {
-                    "CallNameFilter": ["tcp_connect"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.1/8"],
-                        "DestPortList": [70]
-                    }
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
-    input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
-    APSARA_TEST_EQUAL(1, input->mSecurityOptions.mOptionList.size());
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
-    nami::SecurityNetworkFilter thisFilter2
-        = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter2.mDestAddrList[0]);
-    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter2.mDestAddrList[1]);
-    APSARA_TEST_EQUAL(80, thisFilter2.mDestPortList[0]);
-
-    // one duplicate callname of two
-    configStr = R"(
-        {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
-                },
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_sendmsg"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.1/8"],
-                        "DestPortList": [70]
-                    }
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
-    input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(input->sName, "input_ebpf_sockettraceprobe_security");
-    APSARA_TEST_EQUAL(2, input->mSecurityOptions.mOptionList.size());
-    APSARA_TEST_EQUAL("tcp_connect", input->mSecurityOptions.mOptionList[0].call_names_[0]);
-    APSARA_TEST_EQUAL("tcp_close", input->mSecurityOptions.mOptionList[0].call_names_[1]);
-    nami::SecurityNetworkFilter thisFilter3
-        = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
-    APSARA_TEST_EQUAL("10.0.0.0/8", thisFilter3.mDestAddrList[0]);
-    APSARA_TEST_EQUAL("92.168.0.0/16", thisFilter3.mDestAddrList[1]);
-    APSARA_TEST_EQUAL(80, thisFilter3.mDestPortList[0]);
-    APSARA_TEST_EQUAL("tcp_sendmsg", input->mSecurityOptions.mOptionList[1].call_names_[0]);
-    nami::SecurityNetworkFilter thisFilter4
-        = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[1].filter_);
-    APSARA_TEST_EQUAL("10.0.0.1/8", thisFilter4.mDestAddrList[0]);
-    APSARA_TEST_EQUAL(70, thisFilter4.mDestPortList[0]);
-
     // error param level
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                    "DestPortList": ["80"],
-                    "SourceAddrBlackList": ["127.0.0.1/8"],
-                    "SourcePortBlackList": [9300]
-                }
-            ]
+            "Type": "input_network_security",
+            "ProbeConfig": 
+            {
+                "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                "DestPortList": ["80"],
+                "SourceAddrBlackList": ["127.0.0.1/8"],
+                "SourcePortBlackList": [9300]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -247,18 +143,16 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     // if the optional param in a list is invalid, the valid param after it will be read
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [40, "80", 160],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
+            "Type": "input_network_security",
+            "ProbeConfig": 
+            {
+                "AddrFilter": {
+                    "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                    "DestPortList": [40, "80", 160],
+                    "SourceAddrBlackList": ["127.0.0.1/8"],
+                    "SourcePortBlackList": [9300]
                 }
-            ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -268,24 +162,6 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     nami::SecurityNetworkFilter thisFilter6
         = std::get<nami::SecurityNetworkFilter>(input->mSecurityOptions.mOptionList[0].filter_);
     APSARA_TEST_EQUAL(2, thisFilter6.mDestAddrList.size());
-
-    // invalid callname
-    configStr = R"(
-        {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["udp"],
-                }
-            ]
-        }
-    )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
-    input->SetContext(ctx);
-    APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
-    APSARA_TEST_EQUAL(1, input->mSecurityOptions.mOptionList.size());
-    APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList[0].call_names_.size());
 }
 
 void InputEBPFNetworkSecurityUnittest::OnSuccessfulStart() {
@@ -295,25 +171,16 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulStart() {
 
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
-                },
-                {
-                    "CallNameFilter": ["tcp_sendmsg"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80]
-                    }
+            "Type": "input_network_security",
+            "ProbeConfig":
+            {
+                "AddrFilter": {
+                    "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                    "DestPortList": [80],
+                    "SourceAddrBlackList": ["127.0.0.1/8"],
+                    "SourcePortBlackList": [9300]
                 }
-            ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -333,25 +200,16 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulStop() {
 
     configStr = R"(
         {
-            "Type": "input_ebpf_sockettraceprobe_security",
-            "ProbeConfig": [
-                {
-                    "CallNameFilter": ["tcp_connect", "tcp_close"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80],
-                        "SourceAddrBlackList": ["127.0.0.1/8"],
-                        "SourcePortBlackList": [9300]
-                    }
-                },
-                {
-                    "CallNameFilter": ["tcp_sendmsg"],
-                    "AddrFilter": {
-                        "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
-                        "DestPortList": [80]
-                    }
+            "Type": "input_network_security",
+            "ProbeConfig":
+            {
+                "AddrFilter": {
+                    "DestAddrList": ["10.0.0.0/8","92.168.0.0/16"],
+                    "DestPortList": [80],
+                    "SourceAddrBlackList": ["127.0.0.1/8"],
+                    "SourcePortBlackList": [9300]
                 }
-            ]
+            }
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
