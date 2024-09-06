@@ -410,7 +410,7 @@ void RelabelConfigUnittest::TestLabelKeep() {
     configStr = R"(
         [{
                 "action": "labelkeep",
-                "regex": "__meta.*",
+                "regex": "__meta.*"
         }]
     )";
     Labels labelKeepLabels;
@@ -443,9 +443,7 @@ void RelabelConfigUnittest::TestMultiRelabel() {
     configStr1 = configStr1 + R"(
         [{
                 "action": "replace",
-                "regex": "(.*)"
-        + ")\",\n" +
-        R"(
+                "regex": "(.*)",
                 "replacement": "${1}:9100",
                 "separator": ";",
                 "source_labels": [
