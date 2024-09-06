@@ -1,8 +1,8 @@
-# input_ebpf_network_observer 插件
+# input_network_observer 插件
 
 ## 简介
 
-`input_ebpf_network_observer`插件可以实现利用ebpf探针采集网络可观测数据。
+`input_network_observer`插件可以实现利用ebpf探针采集网络可观测数据。
 
 ## 版本
 

@@ -1,8 +1,8 @@
-# input_ebpf_file_security 插件
+# input_file_security 插件
 
 ## 简介
 
-`input_ebpf_file_security`插件可以实现利用ebpf探针采集文件安全相关动作。
+`input_file_security`插件可以实现利用ebpf探针采集文件安全相关动作。
 
 ## 版本
 

@@ -1,8 +1,8 @@
-# input_ebpf_network_security 插件
+# input_network_security 插件
 
 ## 简介
 
-`input_ebpf_network_security`插件可以实现利用ebpf探针采集网络安全相关动作。
+`input_network_security`插件可以实现利用ebpf探针采集网络安全相关动作。
 
 ## 版本
 
