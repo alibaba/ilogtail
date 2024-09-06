@@ -72,7 +72,7 @@ func (p *FlusherPrometheus) prepareInit() error {
 	}
 
 	p.trySetDefaultConfig()
-	p.initHttpFlusherConfig()
+	p.initHTTPFlusherConfig()
 
 	return nil
 }
@@ -89,7 +89,7 @@ func (p *FlusherPrometheus) trySetDefaultConfig() {
 	}
 }
 
-func (p *FlusherPrometheus) initHttpFlusherConfig() {
+func (p *FlusherPrometheus) initHTTPFlusherConfig() {
 	hc := p.FlusherHTTP
 
 	// Phase1. init http request config
