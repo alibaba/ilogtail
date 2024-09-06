@@ -201,17 +201,21 @@ bool RelabelConfig::Process(Labels& l) const {
                     toDel.push_back(key);
                 }
             });
-            for(const auto& item: toDel){
+            for (const auto& item : toDel) {
                 l.Del(item);
             }
             break;
         }
         case Action::LABELKEEP: {
+            vector<string> toDel;
             l.Range([&](const string& key, const string& value) {
                 if (!boost::regex_match(key, mRegex)) {
-                    l.Del(key);
+                    toDel.push_back(key);
                 }
             });
+            for (const auto& item : toDel) {
+                l.Del(item);
+            }
             break;
         }
         default:

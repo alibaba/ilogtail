@@ -36,15 +36,15 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ProcessEvent(PipelineEventPtr& e, PipelineEventGroup& metricGroup);
+    bool ProcessEvent(PipelineEventPtr& e, const GroupTags& targetTags);
 
-    void AddAutoMetrics(PipelineEventGroup& metricGroup);
+    void AddAutoMetrics(PipelineEventGroup& metricGroup, const GroupTags& targetTags);
     void AddMetric(PipelineEventGroup& metricGroup,
                    const std::string& name,
                    double value,
                    time_t timestamp,
                    uint32_t nanoSec,
-                   StringView instance);
+                   const GroupTags& targetTags);
 
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
     std::string mCollectorName;
