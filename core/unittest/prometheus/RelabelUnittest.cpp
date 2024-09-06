@@ -36,7 +36,18 @@ public:
 class RelabelConfigUnittest : public testing::Test {
 public:
     void TestRelabelConfig();
-    void TestProcess();
+    void TestReplace();
+    void TestKeep();
+    void TestDrop();
+    void TestDropEqual();
+    void TestHashMod();
+    void TestLabelDrop();
+    void TestLabelKeep();
+    void TestLabelMap();
+    void TestKeepEqual();
+    void TestLowerCase();
+    void TestUpperCase();
+    void TestMultiRelabel();
 };
 
 
@@ -98,22 +109,20 @@ void RelabelConfigUnittest::TestRelabelConfig() {
     APSARA_TEST_EQUAL((uint64_t)222, config.mModulus);
 }
 
-void RelabelConfigUnittest::TestProcess() {
+
+void RelabelConfigUnittest::TestReplace() {
     Json::Value configJson;
     string configStr;
     string errorMsg;
     Labels labels;
     labels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
     labels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
-    vector<RelabelConfig> cfgs;
 
     // single relabel replace
-    configStr = configStr + R"(
+    configStr = configStr + R"JSON(
         [{
                 "action": "replace",
-                "regex": "(.*)"
-        + ")\",\n" +
-        R"(
+                "regex": "(.*)",
                 "replacement": "${1}:9100",
                 "separator": ";",
                 "source_labels": [
@@ -121,7 +130,7 @@ void RelabelConfigUnittest::TestProcess() {
                 ],
                 "target_label": "__address__"
         }]
-    )";
+    )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     RelabelConfigList configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
@@ -133,7 +142,15 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_EQUAL("172.17.0.3:9100", result.Get("__address__"));
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
-
+}
+void RelabelConfigUnittest::TestKeep() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
+    Labels labels;
+    labels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
     // single relabel keep
     configStr = R"(
         [{
@@ -148,11 +165,20 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = labels;
+    auto result = labels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
+}
 
+void RelabelConfigUnittest::TestDrop() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
+    Labels labels;
+    labels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
     // single relabel drop
     configStr = R"(
         [{
@@ -167,10 +193,16 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = labels;
+    auto result = labels;
 
     APSARA_TEST_FALSE(configList.Process(result));
+}
 
+void RelabelConfigUnittest::TestDropEqual() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
     // relabel dropequal
     configStr = R"(
         [{
@@ -190,9 +222,15 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = dropEqualLabels;
+    auto result = dropEqualLabels;
     APSARA_TEST_FALSE(configList.Process(result));
+}
 
+void RelabelConfigUnittest::TestKeepEqual() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
     // relabel keepequal
     configStr = R"(
         [{
@@ -212,11 +250,17 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = keepEqualLabels;
+    auto result = keepEqualLabels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
+}
 
+void RelabelConfigUnittest::TestLowerCase() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
     // relabel lowercase
     configStr = R"(
         [{
@@ -236,11 +280,17 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = lowercaseLabels;
+    auto result = lowercaseLabels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
+}
 
+void RelabelConfigUnittest::TestUpperCase() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
     // relabel uppercase
     configStr = R"(
         [{
@@ -260,10 +310,17 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = uppercaseLabels;
+    auto result = uppercaseLabels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("NODE-EXPORTER", result.Get("__meta_kubernetes_pod_label_app"));
+}
+
+void RelabelConfigUnittest::TestHashMod() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
 
     // relabel hashmod
     configStr = R"(
@@ -285,27 +342,42 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = hashmodLabels;
+    auto result = hashmodLabels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)4, result.Size());
     APSARA_TEST_TRUE(!result.Get("hash_val").empty());
+}
 
-    configStr.clear();
+void RelabelConfigUnittest::TestLabelMap() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
+    Labels labels;
+    labels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
     // single relabel labelmap
-    configStr = configStr + R"(
+    configStr = R"JSON(
         [{
                 "action": "labelmap",
-                "regex": "__meta_kubernetes_pod_label_(.+)"
-        + ")\"," + R"("replacement": "k8s_$1"
+                "regex": "__meta_kubernetes_pod_label_(.+)",
+                "replacement": "k8s_$1"
         }]
-    )";
+    )JSON";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = labels;
+    auto result = labels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("node-exporter", result.Get("k8s_app"));
+}
+
+void RelabelConfigUnittest::TestLabelDrop() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
 
     // relabel labeldrop
     configStr = R"(
@@ -322,10 +394,17 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = labelDropLabels;
+    auto result = labelDropLabels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)1, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("pod_ip"));
+}
+
+void RelabelConfigUnittest::TestLabelKeep() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
 
     // relabel labelkeep
     configStr = R"(
@@ -342,12 +421,21 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = labelKeepLabels;
+    auto result = labelKeepLabels;
     configList.Process(result);
     APSARA_TEST_EQUAL((size_t)2, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3", result.Get("__meta_kubernetes_pod_ip"));
     APSARA_TEST_EQUAL("node-exporter", result.Get("__meta_kubernetes_pod_label_app"));
+}
 
+void RelabelConfigUnittest::TestMultiRelabel() {
+    Json::Value configJson;
+    string configStr;
+    string errorMsg;
+    RelabelConfigList configList;
+    Labels labels;
+    labels.Set("__meta_kubernetes_pod_ip", "172.17.0.3");
+    labels.Set("__meta_kubernetes_pod_label_app", "node-exporter");
 
     // multi relabel
     string configStr1;
@@ -380,7 +468,7 @@ void RelabelConfigUnittest::TestProcess() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr1, configJson, errorMsg));
     configList = RelabelConfigList();
     APSARA_TEST_TRUE(configList.Init(configJson));
-    result = labels;
+    auto result = labels;
     APSARA_TEST_TRUE(configList.Process(result));
     APSARA_TEST_EQUAL((size_t)3, result.Size());
     APSARA_TEST_EQUAL("172.17.0.3:9100", result.Get("__address__"));
@@ -396,7 +484,18 @@ UNIT_TEST_CASE(ActionConverterUnittest, TestStringToAction)
 UNIT_TEST_CASE(ActionConverterUnittest, TestActionToString)
 
 UNIT_TEST_CASE(RelabelConfigUnittest, TestRelabelConfig)
-UNIT_TEST_CASE(RelabelConfigUnittest, TestProcess)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestReplace)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestDrop)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestKeep)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestHashMod)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestLabelMap)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestLabelDrop)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestLabelKeep)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestDropEqual)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestKeepEqual)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestLowerCase)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestUpperCase)
+UNIT_TEST_CASE(RelabelConfigUnittest, TestMultiRelabel)
 
 } // namespace logtail
 
