@@ -268,6 +268,7 @@ int LogtailPlugin::IsValidToProcess(const char* configName, int configNameSize) 
 }
 
 int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const char* pbBuffer, int pbSize) {
+    static sls_logs::PipelineEventGroup eventGroupSrc;
     string configNameStr(configName, configNameSize);
     auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
     if (!pipeline) {
@@ -278,7 +279,7 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
     }
 
     string pbStr(pbBuffer, pbSize);
-    sls_logs::PipelineEventGroup eventGroupSrc;
+    eventGroupSrc.Clear();
     if (!eventGroupSrc.ParseFromString(pbStr)) {
         LOG_ERROR(sLogger, ("parse pb failed in PushQueue", "invalid pb"));
         return -1;
@@ -299,8 +300,9 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
             LOG_ERROR(sLogger, ("invalid event group, no logs", ""));
             return -1;
         }
+        eventGroupDst.MutableEvents().reserve(eventGroupSrc.logs_size());
         for (auto& logSrc : eventGroupSrc.logs()) {
-            auto logDst = eventGroupDst.AddLogEvent();
+            auto logDst = eventGroupDst.CreateLogEvent();
             std::optional<uint32_t> ns;
             time_t t = time_t(logSrc.time());
             if (logSrc.has_time_ns()) {
@@ -310,6 +312,7 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
             for (auto& content_pair : logSrc.contents()) {
                 logDst->SetContent(content_pair.key(), content_pair.value());
             }
+            eventGroupDst.MutableEvents().emplace_back(std::move(logDst));
         }
         break;
     case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_METRIC:
@@ -317,8 +320,9 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
             LOG_ERROR(sLogger, ("invalid event group, no metrics", ""));
             return -1;
         }
+        eventGroupDst.MutableEvents().reserve(eventGroupSrc.metrics_size());
         for (auto& metricSrc : eventGroupSrc.metrics()) {
-            auto metricDst = eventGroupDst.AddMetricEvent();
+            auto metricDst = eventGroupDst.CreateMetricEvent();
             uint32_t t = metricSrc.time();
             std::optional<uint32_t> ns;
             if (metricSrc.has_time_ns()) {
@@ -336,6 +340,7 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
             for (auto& tag_pair : metricSrc.tags()) {
                 metricDst->SetTag(tag_pair.first, tag_pair.second);
             }
+            eventGroupDst.MutableEvents().emplace_back(std::move(metricDst));
         }
         break;
     case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_SPAN:
