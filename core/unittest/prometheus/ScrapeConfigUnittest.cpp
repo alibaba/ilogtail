@@ -56,6 +56,8 @@ void ScrapeConfigUnittest::TestInit() {
             "scrape_timeout": "30s",
             "metrics_path": "/metrics",
             "scheme": "http",
+            "honor_labels": true,
+            "honor_timestamps": false,
             "basic_auth": {
                 "username": "test_user",
                 "password": "test_password"
@@ -91,6 +93,8 @@ void ScrapeConfigUnittest::TestInit() {
     APSARA_TEST_EQUAL(scrapeConfig.mScrapeTimeoutSeconds, 30);
     APSARA_TEST_EQUAL(scrapeConfig.mMetricsPath, "/metrics");
     APSARA_TEST_EQUAL(scrapeConfig.mScheme, "http");
+    APSARA_TEST_EQUAL(scrapeConfig.mHonorLabels, true);
+    APSARA_TEST_EQUAL(scrapeConfig.mHonorTimestamps, false);
 
     // basic auth
     APSARA_TEST_EQUAL(scrapeConfig.mAuthHeaders["Authorization"], "Basic dGVzdF91c2VyOnRlc3RfcGFzc3dvcmQ=");

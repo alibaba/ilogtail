@@ -19,6 +19,7 @@ public:
     int64_t mScrapeTimeoutSeconds;
     std::string mMetricsPath;
     bool mHonorLabels;
+    bool mHonorTimestamps;
     std::string mScheme;
 
     std::map<std::string, std::string> mAuthHeaders;
