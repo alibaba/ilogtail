@@ -95,9 +95,9 @@ void InputPrometheusUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL("/metrics", input->mTargetSubscirber->mScrapeConfigPtr->mMetricsPath);
     APSARA_TEST_EQUAL(15LL, input->mTargetSubscirber->mScrapeConfigPtr->mScrapeIntervalSeconds);
     APSARA_TEST_EQUAL(15LL, input->mTargetSubscirber->mScrapeConfigPtr->mScrapeTimeoutSeconds);
-    APSARA_TEST_EQUAL(-1, input->mTargetSubscirber->mScrapeConfigPtr->mMaxScrapeSizeBytes);
-    APSARA_TEST_EQUAL(-1, input->mTargetSubscirber->mScrapeConfigPtr->mSampleLimit);
-    APSARA_TEST_EQUAL(-1, input->mTargetSubscirber->mScrapeConfigPtr->mSeriesLimit);
+    APSARA_TEST_EQUAL(0, input->mTargetSubscirber->mScrapeConfigPtr->mMaxScrapeSizeBytes);
+    APSARA_TEST_EQUAL(0, input->mTargetSubscirber->mScrapeConfigPtr->mSampleLimit);
+    APSARA_TEST_EQUAL(0, input->mTargetSubscirber->mScrapeConfigPtr->mSeriesLimit);
 
     // all useful config
     configStr = R"(

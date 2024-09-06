@@ -23,9 +23,9 @@ public:
 
     std::map<std::string, std::string> mAuthHeaders;
 
-    int64_t mMaxScrapeSizeBytes;
-    int64_t mSampleLimit;
-    int64_t mSeriesLimit;
+    uint64_t mMaxScrapeSizeBytes;
+    uint64_t mSampleLimit;
+    uint64_t mSeriesLimit;
     RelabelConfigList mRelabelConfigs;
     RelabelConfigList mMetricRelabelConfigs;
 
