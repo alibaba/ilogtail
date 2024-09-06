@@ -69,18 +69,6 @@ bool SLSEventGroupSerializer::Serialize(BatchedEvents&& group, string& res, stri
                 hasPrev = true;
                 oss << it->first << METRIC_LABELS_KEY_VALUE_SEPARATOR << it->second;
             }
-            // set global labels
-            for (auto& it : group.mTags.mInner) {
-                if (metricEvent.HasTag(it.first)) {
-                    // if conflict, ignore
-                    continue;
-                }
-                if (hasPrev) {
-                    oss << METRIC_LABELS_SEPARATOR;
-                }
-                hasPrev = true;
-                oss << it.first << METRIC_LABELS_KEY_VALUE_SEPARATOR << it.second;
-            }
             auto logPtr = log->add_contents();
             logPtr->set_key(METRIC_RESERVED_KEY_LABELS);
             logPtr->set_value(oss.str());
