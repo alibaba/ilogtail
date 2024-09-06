@@ -12,7 +12,7 @@
 
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
-|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_network\_observer  |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_network\_observer  |
 |  ProbeConfig  |  object  |  是  |  /  |  插件配置参数列表  |
 |  ProbeConfig.EnableLog  |  bool  |  否  |  true  |  是否开启日志上报  |
 |  ProbeConfig.EnableSpan  |  bool  |  否  |  false  |  是否开启跨度上报  |

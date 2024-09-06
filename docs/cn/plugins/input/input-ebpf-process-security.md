@@ -12,7 +12,7 @@
 
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
-|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_process\_security  |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_process\_security  |
 
 ## 样例
 

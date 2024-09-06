@@ -12,7 +12,7 @@
 
 |  **参数**  |  **类型**  |  **是否必填**  |  **默认值**  |  **说明**  |
 | --- | --- | --- | --- | --- |
-|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_ebpf\_network\_security  |
+|  Type  |  string  |  是  |  /  |  插件类型。固定为input\_network\_security  |
 |  ProbeConfig  |  object  |  否  |  ProbeConfig 包含默认为空的 Filter  |  ProbeConfig 内部可以有多个 Filter，Filter 内部是或的关系，Filter 之间是且的关系  |
 |  ProbeConfig[xx].AddrFilter  |  object  |  否  |  /  |  网络地址过滤器  |
 |  ProbeConfig[xx].AddrFilter.DestAddrList  |  \[string\]  |  否  |  空  |  目的IP地址白名单，不填表示不进行过滤  |
