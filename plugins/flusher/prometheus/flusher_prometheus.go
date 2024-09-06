@@ -181,7 +181,7 @@ func (p *FlusherPrometheus) Export(events []*models.PipelineGroupEvents, context
 		return p.FlusherHTTP.Export(events, context)
 	}
 
-	return errNoHttpFlusher
+	return errNoHTTPFlusher
 }
 
 func init() {

@@ -44,4 +44,4 @@ const (
 	headerValPromRemoteWriteVersion = "0.1.0"
 )
 
-var errNoHttpFlusher = errors.New("no http flusher instance in prometheus flusher instance")
+var errNoHTTPFlusher = errors.New("no http flusher instance in prometheus flusher instance")
