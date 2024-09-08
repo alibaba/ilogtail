@@ -17,7 +17,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/config.h"
-#include "plugin/input/InputEBPFNetworkObserver.h"
+#include "plugin/input/InputNetworkObserver.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -27,7 +27,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputEBPFNetworkObserverUnittest : public testing::Test {
+class InputNetworkObserverUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnFailedInit();
@@ -48,8 +48,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
-    unique_ptr<InputEBPFNetworkObserver> input;
+void InputNetworkObserverUnittest::OnSuccessfulInit() {
+    unique_ptr<InputNetworkObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -69,7 +69,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkObserver());
+    input.reset(new InputNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_network_observer");
@@ -81,8 +81,8 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL(false, thisObserver.mEnableConnTrackerDump);
 }
 
-void InputEBPFNetworkObserverUnittest::OnFailedInit() {
-    unique_ptr<InputEBPFNetworkObserver> input;
+void InputNetworkObserverUnittest::OnFailedInit() {
+    unique_ptr<InputNetworkObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -102,7 +102,7 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkObserver());
+    input.reset(new InputNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_network_observer");
@@ -126,13 +126,13 @@ void InputEBPFNetworkObserverUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkObserver());
+    input.reset(new InputNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_FALSE(input->Init(configJson, optionalGoPipeline));
 }
 
-void InputEBPFNetworkObserverUnittest::OnSuccessfulStart() {
-    unique_ptr<InputEBPFNetworkObserver> input;
+void InputNetworkObserverUnittest::OnSuccessfulStart() {
+    unique_ptr<InputNetworkObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
     uint32_t pluginIdx = 0;
@@ -152,7 +152,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulStart() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkObserver());
+    input.reset(new InputNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -161,8 +161,8 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulStart() {
     APSARA_TEST_TRUE(serverPipelineName.size() && serverPipelineName == pipelineName);
 }
 
-void InputEBPFNetworkObserverUnittest::OnSuccessfulStop() {
-    unique_ptr<InputEBPFNetworkObserver> input;
+void InputNetworkObserverUnittest::OnSuccessfulStop() {
+    unique_ptr<InputNetworkObserver> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -181,7 +181,7 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulStop() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkObserver());
+    input.reset(new InputNetworkObserver());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -196,11 +196,11 @@ void InputEBPFNetworkObserverUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
-UNIT_TEST_CASE(InputEBPFNetworkObserverUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputEBPFNetworkObserverUnittest, OnFailedInit)
-UNIT_TEST_CASE(InputEBPFNetworkObserverUnittest, OnSuccessfulStart)
-UNIT_TEST_CASE(InputEBPFNetworkObserverUnittest, OnSuccessfulStop)
-// UNIT_TEST_CASE(InputEBPFNetworkObserverUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputNetworkObserverUnittest, OnFailedInit)
+UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulStart)
+UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulStop)
+// UNIT_TEST_CASE(InputNetworkObserverUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 

@@ -17,7 +17,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/config.h"
-#include "plugin/input/InputEBPFProcessSecurity.h"
+#include "plugin/input/InputProcessSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -27,7 +27,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputEBPFProcessSecurityUnittest : public testing::Test {
+class InputProcessSecurityUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnSuccessfulStart();
@@ -47,8 +47,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
-    unique_ptr<InputEBPFProcessSecurity> input;
+void InputProcessSecurityUnittest::OnSuccessfulInit() {
+    unique_ptr<InputProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -59,7 +59,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFProcessSecurity());
+    input.reset(new InputProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_process_security");
@@ -68,8 +68,8 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL(std::holds_alternative<std::monostate>(input->mSecurityOptions.mOptionList[0].filter_), true);
 }
 
-void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {
-    unique_ptr<InputEBPFProcessSecurity> input;
+void InputProcessSecurityUnittest::OnSuccessfulStart() {
+    unique_ptr<InputProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -79,7 +79,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFProcessSecurity());
+    input.reset(new InputProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -88,8 +88,8 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulStart() {
     APSARA_TEST_TRUE(serverPipelineName.size() && serverPipelineName == pipelineName);
 }
 
-void InputEBPFProcessSecurityUnittest::OnSuccessfulStop() {
-    unique_ptr<InputEBPFProcessSecurity> input;
+void InputProcessSecurityUnittest::OnSuccessfulStop() {
+    unique_ptr<InputProcessSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -99,7 +99,7 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulStop() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFProcessSecurity());
+    input.reset(new InputProcessSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -114,10 +114,10 @@ void InputEBPFProcessSecurityUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
-UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnSuccessfulStart)
-UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnSuccessfulStop)
-// UNIT_TEST_CASE(InputEBPFProcessSecurityUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulStart)
+UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulStop)
+// UNIT_TEST_CASE(InputProcessSecurityUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 

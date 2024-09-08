@@ -17,7 +17,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/config.h"
-#include "plugin/input/InputEBPFNetworkSecurity.h"
+#include "plugin/input/InputNetworkSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -27,7 +27,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputEBPFNetworkSecurityUnittest : public testing::Test {
+class InputNetworkSecurityUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnFailedInit();
@@ -48,8 +48,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
-    unique_ptr<InputEBPFNetworkSecurity> input;
+void InputNetworkSecurityUnittest::OnSuccessfulInit() {
+    unique_ptr<InputNetworkSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -69,7 +69,7 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
+    input.reset(new InputNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_network_security");
@@ -82,8 +82,8 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL(9300, thisFilter1.mSourcePortBlackList[0]);
 }
 
-void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
-    unique_ptr<InputEBPFNetworkSecurity> input;
+void InputNetworkSecurityUnittest::OnFailedInit() {
+    unique_ptr<InputNetworkSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -103,7 +103,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
+    input.reset(new InputNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_network_security");
@@ -129,7 +129,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
+    input.reset(new InputNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     nami::SecurityNetworkFilter thisFilter5
@@ -156,7 +156,7 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
+    input.reset(new InputNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     nami::SecurityNetworkFilter thisFilter6
@@ -164,8 +164,8 @@ void InputEBPFNetworkSecurityUnittest::OnFailedInit() {
     APSARA_TEST_EQUAL(2, thisFilter6.mDestAddrList.size());
 }
 
-void InputEBPFNetworkSecurityUnittest::OnSuccessfulStart() {
-    unique_ptr<InputEBPFNetworkSecurity> input;
+void InputNetworkSecurityUnittest::OnSuccessfulStart() {
+    unique_ptr<InputNetworkSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -184,7 +184,7 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulStart() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
+    input.reset(new InputNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -193,8 +193,8 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulStart() {
     APSARA_TEST_TRUE(serverPipelineName.size() && serverPipelineName == pipelineName);
 }
 
-void InputEBPFNetworkSecurityUnittest::OnSuccessfulStop() {
-    unique_ptr<InputEBPFNetworkSecurity> input;
+void InputNetworkSecurityUnittest::OnSuccessfulStop() {
+    unique_ptr<InputNetworkSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -213,7 +213,7 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulStop() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFNetworkSecurity());
+    input.reset(new InputNetworkSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -228,11 +228,11 @@ void InputEBPFNetworkSecurityUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
-UNIT_TEST_CASE(InputEBPFNetworkSecurityUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputEBPFNetworkSecurityUnittest, OnFailedInit)
-UNIT_TEST_CASE(InputEBPFNetworkSecurityUnittest, OnSuccessfulStart)
-UNIT_TEST_CASE(InputEBPFNetworkSecurityUnittest, OnSuccessfulStop)
-// UNIT_TEST_CASE(InputEBPFNetworkSecurityUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputNetworkSecurityUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputNetworkSecurityUnittest, OnFailedInit)
+UNIT_TEST_CASE(InputNetworkSecurityUnittest, OnSuccessfulStart)
+UNIT_TEST_CASE(InputNetworkSecurityUnittest, OnSuccessfulStop)
+// UNIT_TEST_CASE(InputNetworkSecurityUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 

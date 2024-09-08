@@ -19,7 +19,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "ebpf/config.h"
-#include "plugin/input/InputEBPFFileSecurity.h"
+#include "plugin/input/InputFileSecurity.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
@@ -29,7 +29,7 @@ using namespace std;
 
 namespace logtail {
 
-class InputEBPFFileSecurityUnittest : public testing::Test {
+class InputFileSecurityUnittest : public testing::Test {
 public:
     void OnSuccessfulInit();
     void OnFailedInit();
@@ -50,8 +50,8 @@ private:
     PipelineContext ctx;
 };
 
-void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
-    unique_ptr<InputEBPFFileSecurity> input;
+void InputFileSecurityUnittest::OnSuccessfulInit() {
+    unique_ptr<InputFileSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -69,7 +69,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_file_security");
@@ -92,7 +92,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_file_security");
@@ -102,8 +102,8 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulInit() {
     APSARA_TEST_EQUAL("/bin", thisFilter2.mFilePathList[2]);
 }
 
-void InputEBPFFileSecurityUnittest::OnFailedInit() {
-    unique_ptr<InputEBPFFileSecurity> input;
+void InputFileSecurityUnittest::OnFailedInit() {
+    unique_ptr<InputFileSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -118,7 +118,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_file_security");
@@ -139,7 +139,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_file_security");
@@ -156,7 +156,7 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(input->sName, "input_file_security");
@@ -164,8 +164,8 @@ void InputEBPFFileSecurityUnittest::OnFailedInit() {
     APSARA_TEST_EQUAL(3, input->mSecurityOptions.mOptionList[0].call_names_.size()); // default callname
 }
 
-void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
-    unique_ptr<InputEBPFFileSecurity> input;
+void InputFileSecurityUnittest::OnSuccessfulStart() {
+    unique_ptr<InputFileSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -182,7 +182,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -191,8 +191,8 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStart() {
     APSARA_TEST_TRUE(serverPipelineName.size() && serverPipelineName == pipelineName);
 }
 
-void InputEBPFFileSecurityUnittest::OnSuccessfulStop() {
-    unique_ptr<InputEBPFFileSecurity> input;
+void InputFileSecurityUnittest::OnSuccessfulStop() {
+    unique_ptr<InputFileSecurity> input;
     Json::Value configJson, optionalGoPipeline;
     string configStr, errorMsg;
 
@@ -209,7 +209,7 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStop() {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    input.reset(new InputEBPFFileSecurity());
+    input.reset(new InputFileSecurity());
     input->SetContext(ctx);
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->Start());
@@ -224,11 +224,11 @@ void InputEBPFFileSecurityUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
-UNIT_TEST_CASE(InputEBPFFileSecurityUnittest, OnSuccessfulInit)
-UNIT_TEST_CASE(InputEBPFFileSecurityUnittest, OnFailedInit)
-UNIT_TEST_CASE(InputEBPFFileSecurityUnittest, OnSuccessfulStart)
-UNIT_TEST_CASE(InputEBPFFileSecurityUnittest, OnSuccessfulStop)
-// UNIT_TEST_CASE(InputEBPFFileSecurityUnittest, OnPipelineUpdate)
+UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(InputFileSecurityUnittest, OnFailedInit)
+UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulStart)
+UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulStop)
+// UNIT_TEST_CASE(InputFileSecurityUnittest, OnPipelineUpdate)
 
 } // namespace logtail
 
