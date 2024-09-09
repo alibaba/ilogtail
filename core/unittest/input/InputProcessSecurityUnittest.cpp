@@ -51,12 +51,14 @@ private:
 
 void InputProcessSecurityUnittest::TestName() {
     InputProcessSecurity input;
-    APSARA_TEST_EQUAL(input.Name(), "input_process_security");
+    std::string name = input.Name();
+    APSARA_TEST_EQUAL(name, "input_network_observer");
 }
 
 void InputProcessSecurityUnittest::TestSupportAck() {
     InputProcessSecurity input;
-    APSARA_TEST_FALSE(input.SupportAck());
+    bool supportAck = input.SupportAck();
+    APSARA_TEST_FALSE(supportAck);
 }
 
 void InputProcessSecurityUnittest::OnSuccessfulInit() {

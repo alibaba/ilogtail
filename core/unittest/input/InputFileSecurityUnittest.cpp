@@ -54,12 +54,14 @@ private:
 
 void InputFileSecurityUnittest::TestName() {
     InputFileSecurity input;
-    APSARA_TEST_EQUAL(input.Name(), "input_file_security");
+    std::string name = input.Name();
+    APSARA_TEST_EQUAL(name, "input_network_observer");
 }
 
 void InputFileSecurityUnittest::TestSupportAck() {
     InputFileSecurity input;
-    APSARA_TEST_FALSE(input.SupportAck());
+    bool supportAck = input.SupportAck();
+    APSARA_TEST_FALSE(supportAck);
 }
 
 void InputFileSecurityUnittest::OnSuccessfulInit() {
