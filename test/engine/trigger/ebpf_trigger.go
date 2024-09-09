@@ -40,7 +40,7 @@ func TrigerFileSecurityEvents(ctx context.Context, commandCnt int, filenames str
 }
 
 func rwFile(ctx context.Context, commandCnt int, filenames string) error {
-	var files []string = strings.Split(filenames, ",")
+	files := strings.Split(filenames, ",")
 	for _, file := range files {
 		touchFileCommand := "touch " + file + ";"
 		if err := setup.Env.ExecOnSource(ctx, touchFileCommand); err != nil {
@@ -62,7 +62,7 @@ func rwFile(ctx context.Context, commandCnt int, filenames string) error {
 
 func mmapFile(ctx context.Context, commandCnt int, filenames string) error {
 	mmapFileCommand := getRunTriggerCommand("TestGenerateMmapCommand")
-	var files []string = strings.Split(filenames, ",")
+	files := strings.Split(filenames, ",")
 	for _, file := range files {
 		var triggerEBPFCommand strings.Builder
 		template := template.Must(template.New("trigger").Parse(triggerFileSecurityTemplate))
@@ -82,7 +82,7 @@ func mmapFile(ctx context.Context, commandCnt int, filenames string) error {
 }
 
 func truncateFile(ctx context.Context, commandCnt int, filenames string) error {
-	var files []string = strings.Split(filenames, ",")
+	files := strings.Split(filenames, ",")
 	for _, file := range files {
 		truncateFileCommand1 := "truncate -s 10k " + file + ";"
 		truncateFileCommand2 := "truncate -s 0 " + file + ";"
