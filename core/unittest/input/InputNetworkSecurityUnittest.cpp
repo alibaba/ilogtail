@@ -53,7 +53,7 @@ private:
 void InputNetworkSecurityUnittest::TestName() {
     InputNetworkSecurity input;
     std::string name = input.Name();
-    APSARA_TEST_EQUAL(name, "input_network_observer");
+    APSARA_TEST_EQUAL(name, "input_network_security");
 }
 
 void InputNetworkSecurityUnittest::TestSupportAck() {

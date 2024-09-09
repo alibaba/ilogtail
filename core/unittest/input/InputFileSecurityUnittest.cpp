@@ -55,7 +55,7 @@ private:
 void InputFileSecurityUnittest::TestName() {
     InputFileSecurity input;
     std::string name = input.Name();
-    APSARA_TEST_EQUAL(name, "input_network_observer");
+    APSARA_TEST_EQUAL(name, "input_file_security");
 }
 
 void InputFileSecurityUnittest::TestSupportAck() {

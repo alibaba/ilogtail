@@ -52,7 +52,7 @@ private:
 void InputProcessSecurityUnittest::TestName() {
     InputProcessSecurity input;
     std::string name = input.Name();
-    APSARA_TEST_EQUAL(name, "input_network_observer");
+    APSARA_TEST_EQUAL(name, "input_process_security");
 }
 
 void InputProcessSecurityUnittest::TestSupportAck() {
