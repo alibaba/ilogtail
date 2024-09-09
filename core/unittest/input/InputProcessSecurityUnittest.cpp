@@ -29,6 +29,7 @@ namespace logtail {
 
 class InputProcessSecurityUnittest : public testing::Test {
 public:
+    void TestName();
     void OnSuccessfulInit();
     void OnSuccessfulStart();
     void OnSuccessfulStop();
@@ -46,6 +47,11 @@ private:
     Pipeline p;
     PipelineContext ctx;
 };
+
+void InputProcessSecurityUnittest::TestName() {
+    InputProcessSecurity input;
+    APSARA_TEST_EQUAL(input.Name(), "input_process_security");
+}
 
 void InputProcessSecurityUnittest::OnSuccessfulInit() {
     unique_ptr<InputProcessSecurity> input;
@@ -114,6 +120,7 @@ void InputProcessSecurityUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
+UNIT_TEST_CASE(InputProcessSecurityUnittest, TestName)
 UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulStart)
 UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulStop)

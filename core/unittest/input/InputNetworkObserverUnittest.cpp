@@ -29,6 +29,7 @@ namespace logtail {
 
 class InputNetworkObserverUnittest : public testing::Test {
 public:
+    void TestName();
     void OnSuccessfulInit();
     void OnFailedInit();
     void OnSuccessfulStart();
@@ -47,6 +48,11 @@ private:
     Pipeline p;
     PipelineContext ctx;
 };
+
+void InputNetworkObserverUnittest::TestName() {
+    InputNetworkObserver input;
+    APSARA_TEST_EQUAL(input.Name(), "input_network_observer");
+}
 
 void InputNetworkObserverUnittest::OnSuccessfulInit() {
     unique_ptr<InputNetworkObserver> input;
@@ -196,6 +202,7 @@ void InputNetworkObserverUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
+UNIT_TEST_CASE(InputNetworkObserverUnittest, TestName)
 UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputNetworkObserverUnittest, OnFailedInit)
 UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulStart)

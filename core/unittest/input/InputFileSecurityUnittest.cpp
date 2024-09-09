@@ -31,6 +31,7 @@ namespace logtail {
 
 class InputFileSecurityUnittest : public testing::Test {
 public:
+    void TestName();
     void OnSuccessfulInit();
     void OnFailedInit();
     void OnSuccessfulStart();
@@ -49,6 +50,11 @@ private:
     Pipeline p;
     PipelineContext ctx;
 };
+
+void InputFileSecurityUnittest::TestName() {
+    InputFileSecurity input;
+    APSARA_TEST_EQUAL(input.Name(), "input_file_security");
+}
 
 void InputFileSecurityUnittest::OnSuccessfulInit() {
     unique_ptr<InputFileSecurity> input;
@@ -224,6 +230,7 @@ void InputFileSecurityUnittest::OnSuccessfulStop() {
     APSARA_TEST_TRUE(serverPipelineName.empty());
 }
 
+UNIT_TEST_CASE(InputFileSecurityUnittest, TestName)
 UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputFileSecurityUnittest, OnFailedInit)
 UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulStart)
