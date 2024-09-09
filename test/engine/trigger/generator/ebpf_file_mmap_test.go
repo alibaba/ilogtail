@@ -34,13 +34,13 @@ func TestGenerateMmapCommand(t *testing.T) {
 	}
 	fd := int(f.Fd())
 	for i := 0; i < commandCntNum; i++ {
-		b, inner_err := syscall.Mmap(fd, 0, 20, syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
-		if inner_err != nil {
-			panic(inner_err)
+		b, innerErr := syscall.Mmap(fd, 0, 20, syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
+		if innerErr != nil {
+			panic(innerErr)
 		}
-		inner_err = syscall.Munmap(b)
-		if inner_err != nil {
-			panic(inner_err)
+		innerErr = syscall.Munmap(b)
+		if innerErr != nil {
+			panic(innerErr)
 		}
 	}
 	err = os.Remove(filename)
