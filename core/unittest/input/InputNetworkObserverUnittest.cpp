@@ -30,6 +30,7 @@ namespace logtail {
 class InputNetworkObserverUnittest : public testing::Test {
 public:
     void TestName();
+    void TestSupportAck();
     void OnSuccessfulInit();
     void OnFailedInit();
     void OnSuccessfulStart();
@@ -52,6 +53,11 @@ private:
 void InputNetworkObserverUnittest::TestName() {
     InputNetworkObserver input;
     APSARA_TEST_EQUAL(input.Name(), "input_network_observer");
+}
+
+void InputNetworkObserverUnittest::TestSupportAck() {
+    InputNetworkObserver input;
+    APSARA_TEST_FALSE(input.SupportAck());
 }
 
 void InputNetworkObserverUnittest::OnSuccessfulInit() {
@@ -203,6 +209,7 @@ void InputNetworkObserverUnittest::OnSuccessfulStop() {
 }
 
 UNIT_TEST_CASE(InputNetworkObserverUnittest, TestName)
+UNIT_TEST_CASE(InputNetworkObserverUnittest, TestSupportAck)
 UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputNetworkObserverUnittest, OnFailedInit)
 UNIT_TEST_CASE(InputNetworkObserverUnittest, OnSuccessfulStart)

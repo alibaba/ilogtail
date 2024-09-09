@@ -32,6 +32,7 @@ namespace logtail {
 class InputFileSecurityUnittest : public testing::Test {
 public:
     void TestName();
+    void TestSupportAck();
     void OnSuccessfulInit();
     void OnFailedInit();
     void OnSuccessfulStart();
@@ -54,6 +55,11 @@ private:
 void InputFileSecurityUnittest::TestName() {
     InputFileSecurity input;
     APSARA_TEST_EQUAL(input.Name(), "input_file_security");
+}
+
+void InputFileSecurityUnittest::TestSupportAck() {
+    InputFileSecurity input;
+    APSARA_TEST_FALSE(input.SupportAck());
 }
 
 void InputFileSecurityUnittest::OnSuccessfulInit() {
@@ -231,6 +237,7 @@ void InputFileSecurityUnittest::OnSuccessfulStop() {
 }
 
 UNIT_TEST_CASE(InputFileSecurityUnittest, TestName)
+UNIT_TEST_CASE(InputFileSecurityUnittest, TestSupportAck)   
 UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputFileSecurityUnittest, OnFailedInit)
 UNIT_TEST_CASE(InputFileSecurityUnittest, OnSuccessfulStart)

@@ -30,6 +30,7 @@ namespace logtail {
 class InputProcessSecurityUnittest : public testing::Test {
 public:
     void TestName();
+    void TestSupportAck();
     void OnSuccessfulInit();
     void OnSuccessfulStart();
     void OnSuccessfulStop();
@@ -51,6 +52,11 @@ private:
 void InputProcessSecurityUnittest::TestName() {
     InputProcessSecurity input;
     APSARA_TEST_EQUAL(input.Name(), "input_process_security");
+}
+
+void InputProcessSecurityUnittest::TestSupportAck() {
+    InputProcessSecurity input;
+    APSARA_TEST_FALSE(input.SupportAck());
 }
 
 void InputProcessSecurityUnittest::OnSuccessfulInit() {
@@ -121,6 +127,7 @@ void InputProcessSecurityUnittest::OnSuccessfulStop() {
 }
 
 UNIT_TEST_CASE(InputProcessSecurityUnittest, TestName)
+UNIT_TEST_CASE(InputProcessSecurityUnittest, TestSupportAck)
 UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulStart)
 UNIT_TEST_CASE(InputProcessSecurityUnittest, OnSuccessfulStop)
