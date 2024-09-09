@@ -53,7 +53,7 @@ type ruleSet map[string]ruleWithSource
 // Validate validates the rules specified in the config.
 func (s *ServiceLinuxAuditd) ValidateConfig() error {
 	var errs multierror.Errors
-	err := s.loadRules()
+	err := s.LoadRules()
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -77,7 +77,7 @@ func (s *ServiceLinuxAuditd) ValidateConfig() error {
 	return errs.Err()
 }
 
-func (s *ServiceLinuxAuditd) loadRules() error {
+func (s *ServiceLinuxAuditd) LoadRules() error {
 	knownRules := ruleSet{}
 
 	rules, err := readRules(bytes.NewBufferString(s.RulesBlob), "(audit_rules at auditbeat.yml)", knownRules)

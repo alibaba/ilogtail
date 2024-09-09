@@ -165,8 +165,7 @@ func (s *ServiceLinuxAuditd) Start(collector pipeline.Collector) error {
 			case <-s.done:
 				return
 			case msgs := <-out:
-				fmt.Print(msgs)
-				//converterAuditEventToSLSLog
+				converterAuditEventToSLSLog(msgs, s.ResolveIDs)
 			}
 		}
 	}()
@@ -314,6 +313,8 @@ func converterAuditEventToSLSLog(msgs []*auparse.AuditMessage, resolveIDs bool) 
 		Time:     uint32(auditEvent.Timestamp.Unix()),
 		Contents: contents,
 	}
+
+	fmt.Println(contents)
 	return r, err
 }
 

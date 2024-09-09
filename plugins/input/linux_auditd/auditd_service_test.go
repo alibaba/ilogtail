@@ -25,6 +25,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
+	"gotest.tools/assert"
 )
 
 type mockLog struct {
@@ -79,14 +80,35 @@ func TestLinuxAuditInit(t *testing.T) {
 	}
 }
 
-// func TestLinuxAuditRules(t *testing.T) {
-// 	rulesBlob := `
-// 	# Comments and empty lines are ignored.
-// 	-w /etc/passwd -p wa -k auth
-// 	-a always,exit -S execve -k exec`
+func TestLinuxAuditRules(t *testing.T) {
+	service_auditd := &ServiceLinuxAuditd{}
+	service_auditd.RulesBlob = `
+	# Comments and empty lines are ignored.
+	-w /etc/passwd -p wa -k auth
+	-a always,exit -S execve -k exec`
 
-// 	rules, err := loadRules(rulesBlob)
-// 	if err == nil {
-// 		assert.Equal(t, 2, len(rules))
-// 	}
-// }
+	err := service_auditd.LoadRules()
+	if err == nil {
+		assert.Equal(t, 2, len(service_auditd.auditRules))
+	} else {
+		assert.Error(t, err, "")
+	}
+}
+
+func TestLinuxAuditService(t *testing.T) {
+	service_auditd := &ServiceLinuxAuditd{}
+	service_auditd.RulesBlob = `
+	# Comments and empty lines are ignored.
+	-w /etc/passwd -p wa -k auth
+	-a always,exit -S execve -k exec`
+
+	service_auditd.Init(mock.NewEmptyContext("p", "l", "c"))
+	collector := &mockCollector{}
+	err := service_auditd.Start(collector)
+	if err == nil {
+		time.Sleep(3 * time.Second)
+		service_auditd.Stop()
+	} else {
+		assert.Error(t, err, "")
+	}
+}
