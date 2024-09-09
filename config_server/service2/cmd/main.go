@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	r := gin.Default()
+	r := gin.New()
 	router.InitAllRouter(r)
 	err := r.Run(config.ServerConfigInstance.Address)
 	if err != nil {

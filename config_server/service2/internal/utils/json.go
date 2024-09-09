@@ -1,14 +1,13 @@
 package utils
 
 import (
-	"config-server2/internal/common"
 	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
 )
 
-func ReadJson(path string, obj any) error {
+func ReadJson[T any](path string, obj *T) error {
 	file, openErr := os.Open(filepath.Clean(path))
 	if openErr != nil {
 		return openErr
@@ -20,9 +19,9 @@ func ReadJson(path string, obj any) error {
 	}()
 
 	decoder := json.NewDecoder(file)
-	err := decoder.Decode(&obj)
+	err := decoder.Decode(obj)
 	if err != nil {
-		return common.SystemError(err)
+		return err
 	}
 	return nil
 

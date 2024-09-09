@@ -77,8 +77,8 @@ message ListAgentGroupsResponse {
     repeated AgentGroupTag agent_groups = 4;
 }
 
-// API: /User/CreateConfig/
-
+// API: /User/CreatePipelineConfig
+// API: /User/CreateInstanceConfig
 message CreateConfigRequest {
     bytes request_id = 1;
     ConfigDetail config_detail = 2;
@@ -89,8 +89,8 @@ message CreateConfigResponse {
     CommonResponse commonResponse =2;
 }
 
-// API: /User/UpdateConfig/
-
+// API: /User/UpdatePipelineConfig
+// API: /User/UpdateInstanceConfig
 message UpdateConfigRequest {
     bytes request_id = 1;
     ConfigDetail config_detail = 2;
@@ -101,8 +101,8 @@ message UpdateConfigResponse {
     CommonResponse commonResponse=2;
 }
 
-// API: /User/DeleteConfig/
-
+// API: /User/DeletePipelineConfig
+// API: /User/DeleteInstanceConfig
 message DeleteConfigRequest {
     bytes request_id = 1;
     string config_name = 2;
@@ -113,8 +113,8 @@ message DeleteConfigResponse {
     CommonResponse commonResponse=2;
 }
 
-// API: User/GetConfig/
-
+// API: /User/GetPipelineConfig
+// API: /User/GetInstanceConfig
 message GetConfigRequest {
     bytes request_id = 1;
     string config_name = 2;
@@ -127,8 +127,8 @@ message GetConfigResponse {
     ConfigDetail config_detail = 3;
 }
 
-// API: /User/ListConfigs/
-
+// API: /User/ListPipelineConfigs
+// API: /User/ListInstanceConfigs
 message ListConfigsRequest {
     bytes request_id = 1;
 }
@@ -140,8 +140,8 @@ message ListConfigsResponse {
     repeated ConfigDetail config_details = 3;
 }
 
-// API: /User/ApplyConfigToAgentGroup/
-
+// API: /User/ApplyPipelineConfigToAgentGroup
+// API: /User/ApplyInstanceConfigToAgentGroup
 message ApplyConfigToAgentGroupRequest {
     bytes request_id = 1;
     string config_name = 2;
@@ -153,8 +153,8 @@ message ApplyConfigToAgentGroupResponse {
     CommonResponse commonResponse=2;
 }
 
-// API: /User/RemoveConfigFromAgentGroup/
-
+// API: /User/RemovePipelineConfigFromAgentGroup/
+// API: /User/RemoveInstanceConfigFromAgentGroup/
 message RemoveConfigFromAgentGroupRequest {
     bytes request_id = 1;
     string config_name = 2;
@@ -166,8 +166,8 @@ message RemoveConfigFromAgentGroupResponse {
     CommonResponse commonResponse=2;
 }
 
-// API: /User/GetAppliedConfigsForAgentGroup/
-
+// API: /User/GetAppliedInstanceConfigsForAgentGroup/
+// API: /User/GetAppliedPipelineConfigsForAgentGroup/
 message GetAppliedConfigsForAgentGroupRequest {
     bytes request_id = 1;
     string group_name = 2;
@@ -180,8 +180,8 @@ message GetAppliedConfigsForAgentGroupResponse {
     repeated string config_names = 4;
 }
 
-// API: /User/GetAppliedAgentGroups/
-
+// API: /User/GetAppliedAgentGroupsWithPipelineConfig/
+// API: /User/GetAppliedAgentGroupsWithInstanceConfig/
 message GetAppliedAgentGroupsRequest {
     bytes request_id = 1;
     string config_name = 2;

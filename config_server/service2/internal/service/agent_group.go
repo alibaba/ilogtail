@@ -52,6 +52,9 @@ func DeleteAgentGroup(req *proto.DeleteAgentGroupRequest, res *proto.DeleteAgent
 		return common.ValidateErrorWithMsg("required field groupName could not be null")
 	}
 	res.RequestId = requestId
+	if req.GroupName == entity.AgentGroupDefaultValue {
+		return common.ServerErrorWithMsg("%s can not be deleted", entity.AgentGroupDefaultValue)
+	}
 	err := repository.DeleteAgentGroup(agentGroupName)
 	return common.SystemError(err)
 }

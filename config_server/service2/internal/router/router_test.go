@@ -6,7 +6,7 @@ import (
 	"config-server2/internal/config"
 	"fmt"
 	"google.golang.org/protobuf/proto"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"testing"
@@ -47,7 +47,7 @@ func sendProtobufRequest[T, S proto.Message](url string, methodType string, req 
 	defer resp.Body.Close()
 
 	// 读取响应
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}

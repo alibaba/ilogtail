@@ -3,6 +3,7 @@ package config
 import (
 	"config-server2/internal/common"
 	"config-server2/internal/utils"
+	"fmt"
 	"log"
 	"path/filepath"
 )
@@ -18,8 +19,14 @@ var ServerConfigInstance = new(ServerConfig)
 
 func GetServerConfiguration() error {
 	var err error
-	serverConfigPath, err := filepath.Abs("cmd/config/serverConfig.json")
-	log.Println(serverConfigPath)
+	envName, err := utils.GetEnvName()
+	if err != nil {
+		return err
+	}
+	serverConfigPath, err := filepath.Abs(fmt.Sprintf("cmd/config/%s/serverConfig.json", envName))
+	if err != nil {
+		return common.SystemError(err)
+	}
 	err = utils.ReadJson(serverConfigPath, ServerConfigInstance)
 	if err != nil {
 		return common.SystemError(err)

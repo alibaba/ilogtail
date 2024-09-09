@@ -32,11 +32,14 @@ var gormDialectMap = map[string]func(string) gorm.Dialector{
 func GetConnection() (*GormConfig, gorm.Dialector, error) {
 	var config = new(GormConfig)
 	var err error
-	databaseConfigPath, err := filepath.Abs("cmd/config/databaseConfig.json")
+	envName, err := utils.GetEnvName()
 	if err != nil {
 		return nil, nil, err
 	}
-	//log.Print(databaseConfigPath)
+	databaseConfigPath, err := filepath.Abs(fmt.Sprintf("cmd/config/%s/databaseConfig.json", envName))
+	if err != nil {
+		return nil, nil, err
+	}
 	err = utils.ReadJson(databaseConfigPath, config)
 	if err != nil {
 		return nil, nil, err
