@@ -40,7 +40,7 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
         return false;
     }
 
-    mCollectorName = STRING_FLAG(_pod_name_);
+    mLoongCollectorScraper = STRING_FLAG(_pod_name_);
 
     return true;
 }
@@ -48,7 +48,7 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
 void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     // if mMetricRelabelConfigs is empty and honor_labels is true, skip it
     auto targetTags = metricGroup.GetTags();
-    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty()) {
+    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty() && !targetTags.empty()) {
         EventsContainer& events = metricGroup.MutableEvents();
         size_t wIdx = 0;
         for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
@@ -70,6 +70,11 @@ void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) 
     }
 
     AddAutoMetrics(metricGroup);
+
+    // delete all tags
+    for (const auto& [k, v] : targetTags) {
+        metricGroup.DelTag(k);
+    }
 }
 
 bool ProcessorPromRelabelMetricNative::IsSupportedEvent(const PipelineEventPtr& e) const {
@@ -103,13 +108,20 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
         return false;
     }
 
-    // set metricEvent name
-    if (!sourceEvent.GetTag(prometheus::NAME).empty()) {
-        sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
-    } else {
-        LOG_ERROR(sLogger, ("metric relabel", "metric event name is empty"));
-        return false;
+
+    // delete tag __<label_name>
+    vector<StringView> toDelete;
+    for (auto it = sourceEvent.TagsBegin(); it != sourceEvent.TagsEnd(); ++it) {
+        if (it->first.starts_with("__")) {
+            toDelete.push_back(it->first);
+        }
     }
+    for (const auto& k : toDelete) {
+        sourceEvent.DelTag(k);
+    }
+
+    // set metricEvent name
+    sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
 
     return true;
 }
@@ -184,7 +196,7 @@ void ProcessorPromRelabelMetricNative::AddMetric(PipelineEventGroup& metricGroup
     metricEvent->SetValue<UntypedSingleValue>(value);
     metricEvent->SetTimestamp(timestamp, nanoSec);
     metricEvent->SetTag(prometheus::NAME, name);
-    metricEvent->SetTag(prometheus::COLLECTOR_NAME, mCollectorName);
+    metricEvent->SetTag(prometheus::LC_SCRAPER, mLoongCollectorScraper);
     for (const auto& [k, v] : targetTags) {
         metricEvent->SetTag(k, v);
     }

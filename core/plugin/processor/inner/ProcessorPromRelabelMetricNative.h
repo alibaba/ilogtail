@@ -47,7 +47,7 @@ private:
                    const GroupTags& targetTags);
 
     std::unique_ptr<ScrapeConfig> mScrapeConfigPtr;
-    std::string mCollectorName;
+    std::string mLoongCollectorScraper;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorPromRelabelMetricNativeUnittest;
