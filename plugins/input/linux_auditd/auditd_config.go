@@ -17,7 +17,7 @@
 
 //go:build unix
 
-package auditd
+package linux_auditd
 
 import (
 	"bufio"

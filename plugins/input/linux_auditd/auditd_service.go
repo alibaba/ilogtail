@@ -15,7 +15,7 @@
 //go:build !windows
 // +build !windows
 
-package auditd
+package linux_auditd
 
 import (
 	"errors"
@@ -162,8 +162,11 @@ func (s *ServiceLinuxAuditd) Start(collector pipeline.Collector) error {
 	go func() {
 		for {
 			select {
+			case <-s.done:
+				return
 			case msgs := <-out:
 				fmt.Print(msgs)
+				//converterAuditEventToSLSLog
 			}
 		}
 	}()

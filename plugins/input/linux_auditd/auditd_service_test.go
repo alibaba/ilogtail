@@ -15,7 +15,7 @@
 //go:build !windows
 // +build !windows
 
-package auditd
+package linux_auditd
 
 import (
 	"fmt"
