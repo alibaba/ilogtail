@@ -48,7 +48,7 @@ bool ProcessorPromRelabelMetricNative::Init(const Json::Value& config) {
 void ProcessorPromRelabelMetricNative::Process(PipelineEventGroup& metricGroup) {
     // if mMetricRelabelConfigs is empty and honor_labels is true, skip it
     auto targetTags = metricGroup.GetTags();
-    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty() && !targetTags.empty()) {
+    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty() || !targetTags.empty()) {
         EventsContainer& events = metricGroup.MutableEvents();
         size_t wIdx = 0;
         for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
