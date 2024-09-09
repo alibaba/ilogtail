@@ -21,12 +21,12 @@ import (
 
 const (
 	MetricExportType    = "go_metric_export_type"
-	MetricExportTypeGo  = "go_direct"
+	MetricExportTypeGo  = "direct"
 	MetricExportTypeCpp = "cpp_provided"
 )
 
 func GetMetrics() []map[string]string {
-	return append(GetGoDirectMetrics(), GetCppProvidedMetrics()...)
+	return append(GetGoDirectMetrics(), GetGoCppProvidedMetrics()...)
 }
 
 // 直接输出的go指标，例如go插件指标
@@ -42,7 +42,7 @@ func GetGoDirectMetrics() []map[string]string {
 }
 
 // 由C++定义的指标，go把值传过去，例如go的进程级指标
-func GetCppProvidedMetrics() []map[string]string {
+func GetGoCppProvidedMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// agent-level metrics
 	metrics = append(metrics, GetAgentStat()...)

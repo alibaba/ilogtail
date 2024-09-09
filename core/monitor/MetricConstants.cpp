@@ -44,6 +44,7 @@ const std::string METRIC_AGENT_CPU = "agent_cpu_percent";
 const std::string METRIC_AGENT_CPU_GO = "agent_go_cpu_percent";
 const std::string METRIC_AGENT_MEMORY = "agent_memory_used_mb";
 const std::string METRIC_AGENT_MEMORY_GO = "agent_go_memory_used_mb";
+const std::string METRIC_AGENT_GO_ROUTINES_TOTAL = "agent_go_routines_total";
 const std::string METRIC_AGENT_OPEN_FD_TOTAL = "agent_open_fd_total";
 const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL = "agent_polling_dir_cache_size_total";
 const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL = "agent_polling_file_cache_size_total";

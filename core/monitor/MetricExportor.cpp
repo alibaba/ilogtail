@@ -36,12 +36,13 @@ DECLARE_FLAG_STRING(metrics_report_method);
 namespace logtail {
 
 const std::string METRIC_EXPORT_TYPE = "go_metric_export_type";
-const std::string METRIC_EXPORT_TYPE_GO = "go_direct";
+const std::string METRIC_EXPORT_TYPE_GO = "direct";
 const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
 
 MetricExportor::MetricExportor() : mSendInterval(60), mLastSendTime(time(NULL) - (rand() % (mSendInterval / 10)) * 10) {
-    // mGlobalCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU_GO);
-    mGlobalMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY_GO);
+    // mAgentCpuGo = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU_GO);
+    mAgentMemGo = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY_GO);
+    mAgentGoRoutines = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL); 
 }
 
 void MetricExportor::PushMetrics(bool forceSend) {
@@ -160,6 +161,7 @@ void MetricExportor::SendToLocalFile(std::string& metricsContent, const std::str
     }
 }
 
+// metrics from Go that are directly outputted
 void MetricExportor::PushGoDirectMetrics(std::vector<std::map<std::string, std::string>>& metricsList) {
     if (metricsList.size() == 0) {
         return;
@@ -176,6 +178,7 @@ void MetricExportor::PushGoDirectMetrics(std::vector<std::map<std::string, std::
     }
 }
 
+// metrics from Go that are provided by cpp
 void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, std::string>>& metricsList) {
     if (metricsList.size() == 0) {
         return;
@@ -187,10 +190,13 @@ void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, 
                 continue;
             }
             // if (metric.first == METRIC_AGENT_CPU_GO) {
-            //     mGlobalCpuGo->Set(std::stod(metric.second));
+            //     mAgentCpuGo->Set(std::stod(metric.second));
             // }
             if (metric.first == METRIC_AGENT_MEMORY_GO) {
-                mGlobalMemGo->Set(std::stoi(metric.second));
+                mAgentMemGo->Set(std::stoi(metric.second));
+            }
+            if (metric.first == METRIC_AGENT_GO_ROUTINES_TOTAL) {
+                mAgentGoRoutines->Set(std::stoi(metric.second));
             }
             LogtailMonitor::GetInstance()->UpdateMetric(metric.first, metric.second);
         }

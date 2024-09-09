@@ -51,8 +51,9 @@ private:
     int32_t mSendInterval;
     int32_t mLastSendTime;
     // go process-level metrics
-    DoubleGaugePtr mGlobalCpuGo;
-    IntGaugePtr mGlobalMemGo;
+    DoubleGaugePtr mAgentCpuGo;
+    IntGaugePtr mAgentMemGo;
+    IntGaugePtr mAgentGoRoutines;
 };
 
 } // namespace logtail

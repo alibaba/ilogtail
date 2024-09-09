@@ -46,6 +46,7 @@ extern const std::string METRIC_AGENT_CPU;
 extern const std::string METRIC_AGENT_CPU_GO;
 extern const std::string METRIC_AGENT_MEMORY;
 extern const std::string METRIC_AGENT_MEMORY_GO;
+extern const std::string METRIC_AGENT_GO_ROUTINES_TOTAL;
 extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
 extern const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL;
 extern const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL;
