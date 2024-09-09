@@ -93,6 +93,8 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
             if (sourceEvent.HasTag(k)) {
                 sourceEvent.SetTag("exported_" + k.to_string(), sourceEvent.GetTag(k).to_string());
                 sourceEvent.DelTag(k);
+            } else {
+                sourceEvent.SetTag(k, v);
             }
         }
     } else {
@@ -104,9 +106,12 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
         }
     }
 
-    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent)) {
+    if (!mScrapeConfigPtr->mMetricRelabelConfigs.Empty()
+        && !mScrapeConfigPtr->mMetricRelabelConfigs.Process(sourceEvent)) {
         return false;
     }
+    // set metricEvent name
+    sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
 
 
     // delete tag __<label_name>
@@ -121,7 +126,7 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
     }
 
     // set metricEvent name
-    sourceEvent.SetNameNoCopy(sourceEvent.GetTag(prometheus::NAME));
+    sourceEvent.SetTag(prometheus::NAME, sourceEvent.GetName());
 
     return true;
 }
