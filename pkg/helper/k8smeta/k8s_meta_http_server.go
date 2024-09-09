@@ -172,9 +172,11 @@ func (m *metadataHandler) convertObj2PodMetadata(objs []*ObjectWrapper) []*PodMe
 				// replicaset -> deployment
 				replicasets := m.metaManager.cacheMap[REPLICASET].Get([]string{podMetadata.WorkloadName})
 				for _, replicaset := range replicasets[podMetadata.WorkloadName] {
-					podMetadata.WorkloadName = replicaset.Raw.(*app.ReplicaSet).OwnerReferences[0].Name
-					podMetadata.WorkloadKind = strings.ToLower(replicaset.Raw.(*app.ReplicaSet).OwnerReferences[0].Kind)
-					break
+					if len(replicaset.Raw.(*app.ReplicaSet).OwnerReferences) > 0 {
+						podMetadata.WorkloadName = replicaset.Raw.(*app.ReplicaSet).OwnerReferences[0].Name
+						podMetadata.WorkloadKind = strings.ToLower(replicaset.Raw.(*app.ReplicaSet).OwnerReferences[0].Kind)
+						break
+					}
 				}
 			}
 		}

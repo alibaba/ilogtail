@@ -14,13 +14,13 @@ func (m *metaCollector) processIngressEntity(data *k8smeta.ObjectWrapper, method
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		return []models.PipelineEvent{log}
 	}
 	return nil

@@ -3,7 +3,6 @@ package kubernetesmetav2
 import (
 	"encoding/json"
 	"strconv"
-	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -18,13 +17,13 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		log.Contents.Add("status", string(obj.Status.Phase))
 		log.Contents.Add("instance_ip", obj.Status.PodIP)
 		containerInfos := []map[string]string{}
@@ -35,7 +34,7 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 			}
 			containerInfos = append(containerInfos, containerInfo)
 		}
-		log.Contents.Add("containers", m.processEntityJsonArray(containerInfos))
+		log.Contents.Add("containers", m.processEntityJSONArray(containerInfos))
 		result = append(result, log)
 
 		// container
@@ -46,7 +45,7 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 				containerLog.Timestamp = log.Timestamp
 
 				containerLog.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-				containerLog.Contents.Add(entityTypeFieldName, k8sEntityTypePrefix+"container")
+				containerLog.Contents.Add(entityTypeFieldName, m.genEntityTypeKey("container"))
 				containerLog.Contents.Add(entityIDFieldName, m.genKey(obj.Namespace, obj.Name+container.Name))
 				containerLog.Contents.Add(entityMethodFieldName, method)
 
@@ -84,7 +83,7 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 					}
 					volumes = append(volumes, volumeInfo)
 				}
-				containerLog.Contents.Add("volumes", m.processEntityJsonArray(volumes))
+				containerLog.Contents.Add("volumes", m.processEntityJSONArray(volumes))
 				result = append(result, containerLog)
 			}
 		}
@@ -98,12 +97,20 @@ func (m *metaCollector) processNodeEntity(data *k8smeta.ObjectWrapper, method st
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, "", obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, "", obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
-		log.Contents.Add("status", string(obj.Status.Phase))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
+		status := []map[string]string{}
+		for _, condition := range obj.Status.Conditions {
+			conditionInfo := map[string]string{
+				"type":   string(condition.Type),
+				"status": string(condition.Status),
+			}
+			status = append(status, conditionInfo)
+		}
+		log.Contents.Add("status", m.processEntityJSONArray(status))
 		for _, addr := range obj.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
 				log.Contents.Add("internal_ip", addr.Address)
@@ -128,14 +135,14 @@ func (m *metaCollector) processServiceEntity(data *k8smeta.ObjectWrapper, method
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
-		log.Contents.Add("selector", m.processEntityJsonObject(obj.Spec.Selector))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
+		log.Contents.Add("selector", m.processEntityJSONObject(obj.Spec.Selector))
 		log.Contents.Add("type", string(obj.Spec.Type))
 		log.Contents.Add("cluster_ip", obj.Spec.ClusterIP)
 		ports := make([]map[string]string, 0)
@@ -147,7 +154,7 @@ func (m *metaCollector) processServiceEntity(data *k8smeta.ObjectWrapper, method
 			}
 			ports = append(ports, portInfo)
 		}
-		log.Contents.Add("ports", m.processEntityJsonArray(ports))
+		log.Contents.Add("ports", m.processEntityJSONArray(ports))
 		return []models.PipelineEvent{log}
 	}
 	return nil
@@ -158,13 +165,13 @@ func (m *metaCollector) processConfigMapEntity(data *k8smeta.ObjectWrapper, meth
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		return []models.PipelineEvent{log}
 	}
 	return nil
@@ -175,13 +182,13 @@ func (m *metaCollector) processSecretEntity(data *k8smeta.ObjectWrapper, method 
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		log.Contents.Add("type", string(obj.Type))
 
 		return []models.PipelineEvent{log}
@@ -194,7 +201,7 @@ func (m *metaCollector) processNamespaceEntity(data *k8smeta.ObjectWrapper, meth
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, "", obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, "", obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
@@ -213,13 +220,13 @@ func (m *metaCollector) processPersistentVolumeEntity(data *k8smeta.ObjectWrappe
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		log.Contents.Add("status", string(obj.Status.Phase))
 		log.Contents.Add("storage_class_name", obj.Spec.StorageClassName)
 		log.Contents.Add("persistent_volume_reclaim_policy", string(obj.Spec.PersistentVolumeReclaimPolicy))
@@ -236,13 +243,13 @@ func (m *metaCollector) processPersistentVolumeClaimEntity(data *k8smeta.ObjectW
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
 		log.Contents.Add("namespace", obj.Namespace)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		log.Contents.Add("status", string(obj.Status.Phase))
 		log.Contents.Add("storeage_requests", obj.Spec.Resources.Requests.Storage().String())
 		log.Contents.Add("storage_class_name", obj.Spec.StorageClassName)
@@ -256,22 +263,8 @@ func (m *metaCollector) processPodNodeLink(data *k8smeta.ObjectWrapper, method s
 	if obj, ok := data.Raw.(*k8smeta.NodePod); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Node.Kind))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
-
-		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
-		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey("", obj.Node.Name))
-
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, obj.Node.Kind, "", obj.Node.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}
@@ -282,22 +275,8 @@ func (m *metaCollector) processPodPVCLink(data *k8smeta.ObjectWrapper, method st
 	if obj, ok := data.Raw.(*k8smeta.PodPersistentVolumeClaim); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
-
-		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.PersistentVolumeClaim.Kind))
-		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.PersistentVolumeClaim.Namespace, obj.PersistentVolumeClaim.Name))
-
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, obj.PersistentVolumeClaim.Kind, obj.PersistentVolumeClaim.Namespace, obj.PersistentVolumeClaim.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}
@@ -308,22 +287,8 @@ func (m *metaCollector) processPodConfigMapLink(data *k8smeta.ObjectWrapper, met
 	if obj, ok := data.Raw.(*k8smeta.PodConfigMap); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
-
-		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.ConfigMap.Kind))
-		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.ConfigMap.Namespace, obj.ConfigMap.Name))
-
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, obj.ConfigMap.Kind, obj.ConfigMap.Namespace, obj.ConfigMap.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}
@@ -334,22 +299,8 @@ func (m *metaCollector) processPodSecretLink(data *k8smeta.ObjectWrapper, method
 	if obj, ok := data.Raw.(*k8smeta.PodSecret); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
-
-		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Secret.Kind))
-		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Secret.Namespace, obj.Secret.Name))
-
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, obj.Secret.Kind, obj.Secret.Namespace, obj.Secret.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}
@@ -360,22 +311,8 @@ func (m *metaCollector) processPodServiceLink(data *k8smeta.ObjectWrapper, metho
 	if obj, ok := data.Raw.(*k8smeta.PodService); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.Service.Namespace, obj.Service.Name))
-
-		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Service.Kind))
-		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
-
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, obj.Service.Kind, obj.Service.Namespace, obj.Service.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}
@@ -386,22 +323,8 @@ func (m *metaCollector) processPodContainerLink(data *k8smeta.ObjectWrapper, met
 	if obj, ok := data.Raw.(*k8smeta.PodContainer); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		log.Contents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkSrcEntityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(obj.Pod.Kind))
-		log.Contents.Add(entityLinkSrcEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Pod.Name))
-
-		log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-		log.Contents.Add(entityLinkDestEntityTypeFieldName, k8sEntityTypePrefix+"container")
-		log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey(obj.Pod.Namespace, obj.Container.Name))
-
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, "container", obj.Pod.Namespace, obj.Container.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "contains")
-		log.Contents.Add(entityMethodFieldName, method)
-
-		log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(data.FirstObservedTime, 10))
-		log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(data.LastObservedTime, 10))
-		log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
-		log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-		log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}

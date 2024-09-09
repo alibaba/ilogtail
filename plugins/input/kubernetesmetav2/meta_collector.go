@@ -16,6 +16,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type metaCollector struct {
@@ -109,40 +110,40 @@ func (m *metaCollector) Start() error {
 	if m.serviceK8sMeta.Ingress {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.INGRESS, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodNodeLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Node {
+	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.Node {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_NODE, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.ReplicasetDeploymentLink && m.serviceK8sMeta.Deployment && m.serviceK8sMeta.ReplicaSet {
+	if m.serviceK8sMeta.Deployment && m.serviceK8sMeta.ReplicaSet {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.REPLICASET_DEPLOYMENT, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodReplicaSetLink && m.serviceK8sMeta.ReplicaSet && m.serviceK8sMeta.Pod {
+	if m.serviceK8sMeta.ReplicaSet && m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_REPLICASET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodStatefulSetLink && m.serviceK8sMeta.StatefulSet && m.serviceK8sMeta.Pod {
+	if m.serviceK8sMeta.StatefulSet && m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_STATEFULSET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodDaemonSetLink && m.serviceK8sMeta.DaemonSet && m.serviceK8sMeta.Pod {
+	if m.serviceK8sMeta.DaemonSet && m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_DAEMONSET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.JobCronJobLink && m.serviceK8sMeta.CronJob && m.serviceK8sMeta.Job {
+	if m.serviceK8sMeta.CronJob && m.serviceK8sMeta.Job {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.JOB_CRONJOB, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodJobLink && m.serviceK8sMeta.Job && m.serviceK8sMeta.Pod {
+	if m.serviceK8sMeta.Job && m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_JOB, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodPvcLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.PersistentVolumeClaim {
+	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.PersistentVolumeClaim {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_PERSISENTVOLUMECLAIN, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodConfigMapLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Configmap {
+	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.Configmap {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_CONFIGMAP, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodSecretLink && m.serviceK8sMeta.Pod && m.serviceK8sMeta.Secret {
+	if m.serviceK8sMeta.Pod && m.serviceK8sMeta.Secret {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_SECRET, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodServiceLink && m.serviceK8sMeta.Service && m.serviceK8sMeta.Pod {
+	if m.serviceK8sMeta.Service && m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_SERVICE, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
-	if m.serviceK8sMeta.PodContainerLink && m.serviceK8sMeta.Pod {
+	if m.serviceK8sMeta.Pod {
 		m.serviceK8sMeta.metaManager.RegisterSendFunc(m.serviceK8sMeta.configName, k8smeta.POD_CONTAINER, m.handleEvent, m.serviceK8sMeta.Interval)
 	}
 	go m.sendInBackground()
@@ -218,8 +219,8 @@ func (m *metaCollector) handleAddOrUpdate(event *k8smeta.K8sMetaEvent) {
 	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
 		logs := processor(event.Object, "Update")
 		for _, log := range logs {
-			m.send(log, isLink(event.Object.ResourceType))
-			if !isLink(event.Object.ResourceType) {
+			m.send(log, !isEntity(event.Object.ResourceType))
+			if isEntity(event.Object.ResourceType) {
 				link := m.generateEntityClusterLink(log)
 				m.send(link, true)
 			}
@@ -231,8 +232,8 @@ func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 	if processor, ok := m.entityProcessor[event.Object.ResourceType]; ok {
 		logs := processor(event.Object, "Expire")
 		for _, log := range logs {
-			m.send(log, isLink(event.Object.ResourceType))
-			if !isLink(event.Object.ResourceType) {
+			m.send(log, isEntity(event.Object.ResourceType))
+			if !isEntity(event.Object.ResourceType) {
 				link := m.generateEntityClusterLink(log)
 				m.send(link, true)
 			}
@@ -240,10 +241,10 @@ func (m *metaCollector) handleDelete(event *k8smeta.K8sMetaEvent) {
 	}
 }
 
-func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, kind, namespace, name, method string, firstObservedTime, lastObservedTime, creationTime int64) {
+func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, kind, namespace, name, method string, firstObservedTime, lastObservedTime int64, creationTime v1.Time) {
 	// entity reserved fields
 	logContents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-	logContents.Add(entityTypeFieldName, k8sEntityTypePrefix+strings.ToLower(kind))
+	logContents.Add(entityTypeFieldName, m.genEntityTypeKey(kind))
 	logContents.Add(entityIDFieldName, m.genKey(namespace, name))
 	logContents.Add(entityMethodFieldName, method)
 
@@ -256,10 +257,28 @@ func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, 
 	logContents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 	logContents.Add(entityKindFieldName, kind)
 	logContents.Add(entityNameFieldName, name)
-	logContents.Add(entityCreationTimeFieldName, strconv.FormatInt(creationTime, 10))
+	logContents.Add(entityCreationTimeFieldName, creationTime.Format(time.RFC3339))
 }
 
-func (m *metaCollector) processEntityJsonObject(obj map[string]string) string {
+func (m *metaCollector) processEntityLinkCommonPart(logContents models.LogContents, srcKind, srcNamespace, srcName, destKind, destNamespace, destName, method string, firstObservedTime, lastObservedTime int64) {
+	logContents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
+	logContents.Add(entityLinkSrcEntityTypeFieldName, m.genEntityTypeKey(srcKind))
+	logContents.Add(entityLinkSrcEntityIDFieldName, m.genKey(srcNamespace, srcName))
+
+	logContents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
+	logContents.Add(entityLinkDestEntityTypeFieldName, m.genEntityTypeKey(destKind))
+	logContents.Add(entityLinkDestEntityIDFieldName, m.genKey(destNamespace, destName))
+
+	logContents.Add(entityMethodFieldName, method)
+
+	logContents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(firstObservedTime, 10))
+	logContents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(lastObservedTime, 10))
+	logContents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
+	logContents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+	logContents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
+}
+
+func (m *metaCollector) processEntityJSONObject(obj map[string]string) string {
 	if obj == nil || len(obj) == 0 {
 		return "{}"
 	}
@@ -271,7 +290,7 @@ func (m *metaCollector) processEntityJsonObject(obj map[string]string) string {
 	return string(objStr)
 }
 
-func (m *metaCollector) processEntityJsonArray(obj []map[string]string) string {
+func (m *metaCollector) processEntityJSONArray(obj []map[string]string) string {
 	if obj == nil || len(obj) == 0 {
 		return "[]"
 	}
@@ -359,6 +378,14 @@ func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEve
 	return log
 }
 
+func (m *metaCollector) genEntityTypeKey(kind string) string {
+	prefix := ""
+	if p, ok := DomainEntityTypePrefix[m.serviceK8sMeta.Domain]; ok {
+		prefix = p
+	}
+	return fmt.Sprintf("%s%s", prefix, strings.ToLower(kind))
+}
+
 func convertPipelineEvent2Log(event models.PipelineEvent) *protocol.Log {
 	if modelLog, ok := event.(*models.Log); ok {
 		log := &protocol.Log{}
@@ -380,6 +407,6 @@ func convertPipelineEvent2Log(event models.PipelineEvent) *protocol.Log {
 	return nil
 }
 
-func isLink(resourceType string) bool {
-	return strings.Contains(resourceType, k8smeta.LINK_SPLIT_CHARACTER)
+func isEntity(resourceType string) bool {
+	return !strings.Contains(resourceType, k8smeta.LINK_SPLIT_CHARACTER)
 }

@@ -18,24 +18,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-var CommonResource = []string{
-	SERVICE,
-	DEPLOYMENT,
-	REPLICASET,
-	STATEFULSET,
-	DAEMONSET,
-	CRONJOB,
-	JOB,
-	NODE,
-	NAMESPACE,
-	CONFIGMAP,
-	SECRET,
-	PERSISTENTVOLUME,
-	PERSISTENTVOLUMECLAIM,
-	STORAGECLASS,
-	INGRESS,
-}
-
 var metaManager *MetaManager
 
 var onceManager sync.Once
@@ -76,9 +58,8 @@ func GetMetaManagerInstance() *MetaManager {
 			eventCh: make(chan *K8sMetaEvent, 1000),
 		}
 		metaManager.cacheMap = make(map[string]MetaCache)
-		metaManager.cacheMap[POD] = newPodCache(metaManager.stopCh)
-		for _, resource := range CommonResource {
-			metaManager.cacheMap[resource] = newCommonCache(metaManager.stopCh, resource)
+		for _, resource := range AllResources {
+			metaManager.cacheMap[resource] = newK8sMetaCache(metaManager.stopCh, resource)
 		}
 		metaManager.linkGenerator = NewK8sMetaLinkGenerator(metaManager.cacheMap)
 		metaManager.linkRegisterMap = make(map[string][]string)
@@ -144,7 +125,7 @@ func (m *MetaManager) RegisterSendFunc(configName string, resourceType string, s
 		}, interval)
 		return
 	}
-	if isLink(resourceType) {
+	if !isEntity(resourceType) {
 		m.linkRegisterLock.Lock()
 		if _, ok := m.linkRegisterMap[configName]; !ok {
 			m.linkRegisterMap[configName] = make([]string, 0)
@@ -173,6 +154,6 @@ func (m *MetaManager) runServer() {
 	go metadataHandler.K8sServerRun(m.stopCh)
 }
 
-func isLink(resourceType string) bool {
-	return strings.Contains(resourceType, LINK_SPLIT_CHARACTER)
+func isEntity(resourceType string) bool {
+	return !strings.Contains(resourceType, LINK_SPLIT_CHARACTER)
 }

@@ -20,7 +20,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
-type commonCache struct {
+type k8sMetaCache struct {
 	metaStore *DeferredDeletionMetaStore
 	clientset *kubernetes.Clientset
 
@@ -31,9 +31,9 @@ type commonCache struct {
 	schema       *runtime.Scheme
 }
 
-func newCommonCache(stopCh chan struct{}, resourceType string) *commonCache {
+func newK8sMetaCache(stopCh chan struct{}, resourceType string) *k8sMetaCache {
 	idxRules := getIdxRules(resourceType)
-	m := &commonCache{}
+	m := &k8sMetaCache{}
 	m.eventCh = make(chan *K8sMetaEvent, 100)
 	m.stopCh = stopCh
 	m.metaStore = NewDeferredDeletionMetaStore(m.eventCh, m.stopCh, 120, cache.MetaNamespaceKeyFunc, idxRules...)
@@ -47,31 +47,30 @@ func newCommonCache(stopCh chan struct{}, resourceType string) *commonCache {
 	return m
 }
 
-func (m *commonCache) init(clientset *kubernetes.Clientset) {
+func (m *k8sMetaCache) init(clientset *kubernetes.Clientset) {
 	m.clientset = clientset
 	m.metaStore.Start()
 	m.watch(m.stopCh)
 }
 
-func (m *commonCache) Get(key []string) map[string][]*ObjectWrapper {
+func (m *k8sMetaCache) Get(key []string) map[string][]*ObjectWrapper {
 	return m.metaStore.Get(key)
 }
 
-func (m *commonCache) List() []*ObjectWrapper {
+func (m *k8sMetaCache) List() []*ObjectWrapper {
 	return m.metaStore.List()
 }
 
-func (m *commonCache) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
+func (m *k8sMetaCache) RegisterSendFunc(key string, sendFunc SendFunc, interval int) {
 	m.metaStore.RegisterSendFunc(key, sendFunc, interval)
 }
 
-func (m *commonCache) UnRegisterSendFunc(key string) {
+func (m *k8sMetaCache) UnRegisterSendFunc(key string) {
 	m.metaStore.UnRegisterSendFunc(key)
 }
 
-func (m *commonCache) watch(stopCh <-chan struct{}) {
-	factory := informers.NewSharedInformerFactory(m.clientset, time.Hour*1)
-	informer := m.getInfromer(factory)
+func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
+	factory, informer := m.getFactoryInformer()
 	if informer == nil {
 		return
 	}
@@ -123,9 +122,18 @@ func (m *commonCache) watch(stopCh <-chan struct{}) {
 	}
 }
 
-func (m *commonCache) getInfromer(factory informers.SharedInformerFactory) cache.SharedIndexInformer {
+func (m *k8sMetaCache) getFactoryInformer() (informers.SharedInformerFactory, cache.SharedIndexInformer) {
+	var factory informers.SharedInformerFactory
+	switch m.resourceType {
+	case POD:
+		factory = informers.NewSharedInformerFactory(m.clientset, time.Hour*24)
+	default:
+		factory = informers.NewSharedInformerFactory(m.clientset, time.Hour*1)
+	}
 	var informer cache.SharedIndexInformer
 	switch m.resourceType {
+	case POD:
+		informer = factory.Core().V1().Pods().Informer()
 	case SERVICE:
 		informer = factory.Core().V1().Services().Informer()
 	case DEPLOYMENT:
@@ -158,9 +166,9 @@ func (m *commonCache) getInfromer(factory informers.SharedInformerFactory) cache
 		informer = factory.Networking().V1().Ingresses().Informer()
 	default:
 		logger.Error(context.Background(), "ENTITY_PIPELINE_REGISTER_ERROR", "resourceType not support", m.resourceType)
-		return nil
+		return factory, nil
 	}
-	return informer
+	return factory, informer
 }
 
 func getIdxRules(resourceType string) []IdxFunc {
@@ -172,8 +180,25 @@ func getIdxRules(resourceType string) []IdxFunc {
 	}
 }
 
-func (m *commonCache) preProcess(obj interface{}) interface{} {
-	runtimeObj := obj.(runtime.Object)
+func (m *k8sMetaCache) preProcess(obj interface{}) interface{} {
+	switch m.resourceType {
+	case POD:
+		return m.preProcessPod(obj)
+	default:
+		return m.preProcessCommon(obj)
+	}
+}
+
+func (m *k8sMetaCache) preProcessCommon(obj interface{}) interface{} {
+	runtimeObj, ok := obj.(runtime.Object)
+	if !ok {
+		logger.Error(context.Background(), "K8S_META_PRE_PROCESS_ERROR", "object is not runtime object", obj)
+	}
+	metaObj, err := meta.Accessor(runtimeObj)
+	if err != nil {
+		logger.Error(context.Background(), "K8S_META_PRE_PROCESS_ERROR", "object is not meta object", err)
+	}
+	// fill empty kind
 	if runtimeObj.GetObjectKind().GroupVersionKind().Empty() {
 		gvk, err := apiutil.GVKForObject(runtimeObj, m.schema)
 		if err != nil {
@@ -182,7 +207,25 @@ func (m *commonCache) preProcess(obj interface{}) interface{} {
 		}
 		runtimeObj.GetObjectKind().SetGroupVersionKind(gvk)
 	}
+	// remove unnecessary annotations
+	if metaObj.GetAnnotations() != nil {
+		if _, ok := metaObj.GetAnnotations()["kubectl.kubernetes.io/last-applied-configuration"]; ok {
+			metaObj.GetAnnotations()["kubectl.kubernetes.io/last-applied-configuration"] = ""
+		}
+	}
 	return runtimeObj
+}
+
+func (m *k8sMetaCache) preProcessPod(obj interface{}) interface{} {
+	m.preProcessCommon(obj)
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return obj
+	}
+	pod.ManagedFields = nil
+	pod.Status.Conditions = nil
+	pod.Spec.Tolerations = nil
+	return pod
 }
 
 func generateCommonKey(obj interface{}) ([]string, error) {
@@ -203,4 +246,32 @@ func generateNodeKey(obj interface{}) ([]string, error) {
 
 func generateNameWithNamespaceKey(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
+}
+
+func generatePodIPKey(obj interface{}) ([]string, error) {
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return []string{}, fmt.Errorf("object is not a pod")
+	}
+	return []string{pod.Status.PodIP}, nil
+}
+
+func generateContainerIDKey(obj interface{}) ([]string, error) {
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return []string{}, fmt.Errorf("object is not a pod")
+	}
+	result := make([]string, len(pod.Status.ContainerStatuses))
+	for i, containerStatus := range pod.Status.ContainerStatuses {
+		result[i] = containerStatus.ContainerID
+	}
+	return result, nil
+}
+
+func generateHostIPKey(obj interface{}) ([]string, error) {
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return []string{}, fmt.Errorf("object is not a pod")
+	}
+	return []string{pod.Status.HostIP}, nil
 }

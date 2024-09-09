@@ -14,12 +14,12 @@ func (m *metaCollector) processStorageClassEntity(data *k8smeta.ObjectWrapper, m
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		log.Timestamp = uint64(time.Now().Unix())
-		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp.Unix())
+		m.processEntityCommonPart(log.Contents, obj.Kind, obj.Namespace, obj.Name, method, data.FirstObservedTime, data.LastObservedTime, obj.CreationTimestamp)
 
 		// custom fields
 		log.Contents.Add("api_version", obj.APIVersion)
-		log.Contents.Add("labels", m.processEntityJsonObject(obj.Labels))
-		log.Contents.Add("annotations", m.processEntityJsonObject(obj.Annotations))
+		log.Contents.Add("labels", m.processEntityJSONObject(obj.Labels))
+		log.Contents.Add("annotations", m.processEntityJSONObject(obj.Annotations))
 		log.Contents.Add("reclaim_policy", string(*obj.ReclaimPolicy))
 		log.Contents.Add("volume_binding_mode", string(*obj.VolumeBindingMode))
 		return []models.PipelineEvent{log}

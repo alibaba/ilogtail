@@ -32,19 +32,6 @@ type ServiceK8sMeta struct {
 	StorageClass          bool
 	Ingress               bool
 	Container             bool
-	// entity link switch
-	PodNodeLink              bool
-	ReplicasetDeploymentLink bool
-	PodReplicaSetLink        bool
-	PodStatefulSetLink       bool
-	PodDaemonSetLink         bool
-	JobCronJobLink           bool
-	PodJobLink               bool
-	PodPvcLink               bool
-	PodConfigMapLink         bool
-	PodSecretLink            bool
-	PodServiceLink           bool
-	PodContainerLink         bool
 	// other
 	metaManager   *k8smeta.MetaManager
 	collector     pipeline.Collector

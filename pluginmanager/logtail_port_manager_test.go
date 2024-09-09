@@ -26,6 +26,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 

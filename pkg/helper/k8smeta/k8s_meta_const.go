@@ -44,20 +44,23 @@ const (
 	//revive:enable:var-naming
 )
 
-var AllLinkMap = map[string]bool{
-	POD_NODE:                 true,
-	REPLICASET_DEPLOYMENT:    true,
-	POD_REPLICASET:           true,
-	POD_STATEFULSET:          true,
-	POD_DAEMONSET:            true,
-	JOB_CRONJOB:              true,
-	POD_JOB:                  true,
-	POD_PERSISENTVOLUMECLAIN: true,
-	POD_CONFIGMAP:            true,
-	POD_SECRET:               true,
-	POD_SERVICE:              true,
-	POD_CONTAINER:            true,
-	POD_PROCESS:              true,
+var AllResources = []string{
+	POD,
+	SERVICE,
+	DEPLOYMENT,
+	REPLICASET,
+	STATEFULSET,
+	DAEMONSET,
+	CRONJOB,
+	JOB,
+	NODE,
+	NAMESPACE,
+	CONFIGMAP,
+	SECRET,
+	PERSISTENTVOLUME,
+	PERSISTENTVOLUMECLAIM,
+	STORAGECLASS,
+	INGRESS,
 }
 
 type NodePod struct {
