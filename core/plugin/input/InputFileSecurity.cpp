@@ -26,6 +26,9 @@ namespace logtail {
 const std::string InputFileSecurity::sName = "input_file_security";
 
 bool InputFileSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+    if (!ebpf::eBPFServer::GetInstance()->IsSupportedEnv()) {
+        return false;
+    }
     std::string prev_pipeline_name = ebpf::eBPFServer::GetInstance()->CheckLoadedPipelineName(nami::PluginType::FILE_SECURITY);
     std::string pipeline_name = mContext->GetConfigName();
     if (prev_pipeline_name.size() && prev_pipeline_name != pipeline_name) {

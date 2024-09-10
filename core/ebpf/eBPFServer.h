@@ -40,8 +40,6 @@ public:
 
     void Init() override;
 
-    bool IsSupportedEnv();
-
     static eBPFServer* GetInstance() {
         static eBPFServer instance;
         return &instance;
@@ -50,6 +48,7 @@ public:
     void Stop() override;
 
     std::string CheckLoadedPipelineName(nami::PluginType type);
+
     void UpdatePipelineName(nami::PluginType type, const std::string& name);
 
     bool EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
@@ -62,6 +61,8 @@ public:
     bool SuspendPlugin(const std::string& pipeline_name, nami::PluginType type);
 
     bool HasRegisteredPlugins() const override;
+
+    bool IsSupportedEnv();
 
 private:
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
@@ -87,6 +88,10 @@ private:
 
     eBPFAdminConfig mAdminConfig;
     volatile bool mInited = false;
+
+    // TODO @qianlu.kk each plugin has it's own env requirements, so we need to implement an env checker class
+    enum class CheckStatus {UNKNOWN, SUPPORT, NOT_SUPPORT};
+    std::atomic_int mCheckStatus = int(CheckStatus::UNKNOWN);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;
