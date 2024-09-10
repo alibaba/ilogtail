@@ -2534,7 +2534,7 @@ proto.GetAgentGroupResponse.prototype.toObject = function(opt_includeInstance) {
 proto.GetAgentGroupResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     agentGroup: (f = msg.getAgentGroup()) && agent_pb.AgentGroupTag.toObject(includeInstance, f)
   };
 
@@ -2579,7 +2579,7 @@ proto.GetAgentGroupResponse.deserializeBinaryFromReader = function(msg, reader) 
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = new agent_pb.AgentGroupTag;
@@ -2622,7 +2622,7 @@ proto.GetAgentGroupResponse.serializeBinaryToWriter = function(message, writer) 
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -2684,10 +2684,10 @@ proto.GetAgentGroupResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.GetAgentGroupResponse.prototype.getCommonresponse = function() {
+proto.GetAgentGroupResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -2697,7 +2697,7 @@ proto.GetAgentGroupResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.GetAgentGroupResponse} returns this
 */
-proto.GetAgentGroupResponse.prototype.setCommonresponse = function(value) {
+proto.GetAgentGroupResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -2706,8 +2706,8 @@ proto.GetAgentGroupResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.GetAgentGroupResponse} returns this
  */
-proto.GetAgentGroupResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.GetAgentGroupResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -2715,7 +2715,7 @@ proto.GetAgentGroupResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.GetAgentGroupResponse.prototype.hasCommonresponse = function() {
+proto.GetAgentGroupResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -2951,7 +2951,7 @@ proto.ListAgentGroupsResponse.prototype.toObject = function(opt_includeInstance)
 proto.ListAgentGroupsResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     agentGroupsList: jspb.Message.toObjectList(msg.getAgentGroupsList(),
     agent_pb.AgentGroupTag.toObject, includeInstance)
   };
@@ -2997,7 +2997,7 @@ proto.ListAgentGroupsResponse.deserializeBinaryFromReader = function(msg, reader
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 4:
       var value = new agent_pb.AgentGroupTag;
@@ -3040,7 +3040,7 @@ proto.ListAgentGroupsResponse.serializeBinaryToWriter = function(message, writer
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -3102,10 +3102,10 @@ proto.ListAgentGroupsResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.ListAgentGroupsResponse.prototype.getCommonresponse = function() {
+proto.ListAgentGroupsResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -3115,7 +3115,7 @@ proto.ListAgentGroupsResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.ListAgentGroupsResponse} returns this
 */
-proto.ListAgentGroupsResponse.prototype.setCommonresponse = function(value) {
+proto.ListAgentGroupsResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -3124,8 +3124,8 @@ proto.ListAgentGroupsResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.ListAgentGroupsResponse} returns this
  */
-proto.ListAgentGroupsResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.ListAgentGroupsResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -3133,7 +3133,7 @@ proto.ListAgentGroupsResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.ListAgentGroupsResponse.prototype.hasCommonresponse = function() {
+proto.ListAgentGroupsResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -3414,7 +3414,7 @@ proto.CreateConfigResponse.prototype.toObject = function(opt_includeInstance) {
 proto.CreateConfigResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3458,7 +3458,7 @@ proto.CreateConfigResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     default:
       reader.skipField();
@@ -3496,7 +3496,7 @@ proto.CreateConfigResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -3550,10 +3550,10 @@ proto.CreateConfigResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.CreateConfigResponse.prototype.getCommonresponse = function() {
+proto.CreateConfigResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -3563,7 +3563,7 @@ proto.CreateConfigResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.CreateConfigResponse} returns this
 */
-proto.CreateConfigResponse.prototype.setCommonresponse = function(value) {
+proto.CreateConfigResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -3572,8 +3572,8 @@ proto.CreateConfigResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.CreateConfigResponse} returns this
  */
-proto.CreateConfigResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.CreateConfigResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -3581,7 +3581,7 @@ proto.CreateConfigResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.CreateConfigResponse.prototype.hasCommonresponse = function() {
+proto.CreateConfigResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -3824,7 +3824,7 @@ proto.UpdateConfigResponse.prototype.toObject = function(opt_includeInstance) {
 proto.UpdateConfigResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3868,7 +3868,7 @@ proto.UpdateConfigResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     default:
       reader.skipField();
@@ -3906,7 +3906,7 @@ proto.UpdateConfigResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -3960,10 +3960,10 @@ proto.UpdateConfigResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.UpdateConfigResponse.prototype.getCommonresponse = function() {
+proto.UpdateConfigResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -3973,7 +3973,7 @@ proto.UpdateConfigResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.UpdateConfigResponse} returns this
 */
-proto.UpdateConfigResponse.prototype.setCommonresponse = function(value) {
+proto.UpdateConfigResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -3982,8 +3982,8 @@ proto.UpdateConfigResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.UpdateConfigResponse} returns this
  */
-proto.UpdateConfigResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.UpdateConfigResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -3991,7 +3991,7 @@ proto.UpdateConfigResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.UpdateConfigResponse.prototype.hasCommonresponse = function() {
+proto.UpdateConfigResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -4213,7 +4213,7 @@ proto.DeleteConfigResponse.prototype.toObject = function(opt_includeInstance) {
 proto.DeleteConfigResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -4257,7 +4257,7 @@ proto.DeleteConfigResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     default:
       reader.skipField();
@@ -4295,7 +4295,7 @@ proto.DeleteConfigResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -4349,10 +4349,10 @@ proto.DeleteConfigResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.DeleteConfigResponse.prototype.getCommonresponse = function() {
+proto.DeleteConfigResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -4362,7 +4362,7 @@ proto.DeleteConfigResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.DeleteConfigResponse} returns this
 */
-proto.DeleteConfigResponse.prototype.setCommonresponse = function(value) {
+proto.DeleteConfigResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -4371,8 +4371,8 @@ proto.DeleteConfigResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.DeleteConfigResponse} returns this
  */
-proto.DeleteConfigResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.DeleteConfigResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -4380,7 +4380,7 @@ proto.DeleteConfigResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.DeleteConfigResponse.prototype.hasCommonresponse = function() {
+proto.DeleteConfigResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -4602,7 +4602,7 @@ proto.GetConfigResponse.prototype.toObject = function(opt_includeInstance) {
 proto.GetConfigResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     configDetail: (f = msg.getConfigDetail()) && agent_pb.ConfigDetail.toObject(includeInstance, f)
   };
 
@@ -4647,7 +4647,7 @@ proto.GetConfigResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = new agent_pb.ConfigDetail;
@@ -4690,7 +4690,7 @@ proto.GetConfigResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -4752,10 +4752,10 @@ proto.GetConfigResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.GetConfigResponse.prototype.getCommonresponse = function() {
+proto.GetConfigResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -4765,7 +4765,7 @@ proto.GetConfigResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.GetConfigResponse} returns this
 */
-proto.GetConfigResponse.prototype.setCommonresponse = function(value) {
+proto.GetConfigResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -4774,8 +4774,8 @@ proto.GetConfigResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.GetConfigResponse} returns this
  */
-proto.GetConfigResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.GetConfigResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -4783,7 +4783,7 @@ proto.GetConfigResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.GetConfigResponse.prototype.hasCommonresponse = function() {
+proto.GetConfigResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -5019,7 +5019,7 @@ proto.ListConfigsResponse.prototype.toObject = function(opt_includeInstance) {
 proto.ListConfigsResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     configDetailsList: jspb.Message.toObjectList(msg.getConfigDetailsList(),
     agent_pb.ConfigDetail.toObject, includeInstance)
   };
@@ -5065,7 +5065,7 @@ proto.ListConfigsResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = new agent_pb.ConfigDetail;
@@ -5108,7 +5108,7 @@ proto.ListConfigsResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -5170,10 +5170,10 @@ proto.ListConfigsResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.ListConfigsResponse.prototype.getCommonresponse = function() {
+proto.ListConfigsResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -5183,7 +5183,7 @@ proto.ListConfigsResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.ListConfigsResponse} returns this
 */
-proto.ListConfigsResponse.prototype.setCommonresponse = function(value) {
+proto.ListConfigsResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -5192,8 +5192,8 @@ proto.ListConfigsResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.ListConfigsResponse} returns this
  */
-proto.ListConfigsResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.ListConfigsResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -5201,7 +5201,7 @@ proto.ListConfigsResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.ListConfigsResponse.prototype.hasCommonresponse = function() {
+proto.ListConfigsResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -5491,7 +5491,7 @@ proto.ApplyConfigToAgentGroupResponse.prototype.toObject = function(opt_includeI
 proto.ApplyConfigToAgentGroupResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -5535,7 +5535,7 @@ proto.ApplyConfigToAgentGroupResponse.deserializeBinaryFromReader = function(msg
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     default:
       reader.skipField();
@@ -5573,7 +5573,7 @@ proto.ApplyConfigToAgentGroupResponse.serializeBinaryToWriter = function(message
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -5627,10 +5627,10 @@ proto.ApplyConfigToAgentGroupResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.ApplyConfigToAgentGroupResponse.prototype.getCommonresponse = function() {
+proto.ApplyConfigToAgentGroupResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -5640,7 +5640,7 @@ proto.ApplyConfigToAgentGroupResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.ApplyConfigToAgentGroupResponse} returns this
 */
-proto.ApplyConfigToAgentGroupResponse.prototype.setCommonresponse = function(value) {
+proto.ApplyConfigToAgentGroupResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -5649,8 +5649,8 @@ proto.ApplyConfigToAgentGroupResponse.prototype.setCommonresponse = function(val
  * Clears the message field making it undefined.
  * @return {!proto.ApplyConfigToAgentGroupResponse} returns this
  */
-proto.ApplyConfigToAgentGroupResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.ApplyConfigToAgentGroupResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -5658,7 +5658,7 @@ proto.ApplyConfigToAgentGroupResponse.prototype.clearCommonresponse = function()
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.ApplyConfigToAgentGroupResponse.prototype.hasCommonresponse = function() {
+proto.ApplyConfigToAgentGroupResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -5910,7 +5910,7 @@ proto.RemoveConfigFromAgentGroupResponse.prototype.toObject = function(opt_inclu
 proto.RemoveConfigFromAgentGroupResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -5954,7 +5954,7 @@ proto.RemoveConfigFromAgentGroupResponse.deserializeBinaryFromReader = function(
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     default:
       reader.skipField();
@@ -5992,7 +5992,7 @@ proto.RemoveConfigFromAgentGroupResponse.serializeBinaryToWriter = function(mess
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -6046,10 +6046,10 @@ proto.RemoveConfigFromAgentGroupResponse.prototype.setRequestId = function(value
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.RemoveConfigFromAgentGroupResponse.prototype.getCommonresponse = function() {
+proto.RemoveConfigFromAgentGroupResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -6059,7 +6059,7 @@ proto.RemoveConfigFromAgentGroupResponse.prototype.getCommonresponse = function(
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.RemoveConfigFromAgentGroupResponse} returns this
 */
-proto.RemoveConfigFromAgentGroupResponse.prototype.setCommonresponse = function(value) {
+proto.RemoveConfigFromAgentGroupResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -6068,8 +6068,8 @@ proto.RemoveConfigFromAgentGroupResponse.prototype.setCommonresponse = function(
  * Clears the message field making it undefined.
  * @return {!proto.RemoveConfigFromAgentGroupResponse} returns this
  */
-proto.RemoveConfigFromAgentGroupResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.RemoveConfigFromAgentGroupResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -6077,7 +6077,7 @@ proto.RemoveConfigFromAgentGroupResponse.prototype.clearCommonresponse = functio
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.RemoveConfigFromAgentGroupResponse.prototype.hasCommonresponse = function() {
+proto.RemoveConfigFromAgentGroupResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -6306,7 +6306,7 @@ proto.GetAppliedConfigsForAgentGroupResponse.prototype.toObject = function(opt_i
 proto.GetAppliedConfigsForAgentGroupResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     configNamesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
   };
 
@@ -6351,7 +6351,7 @@ proto.GetAppliedConfigsForAgentGroupResponse.deserializeBinaryFromReader = funct
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
@@ -6393,7 +6393,7 @@ proto.GetAppliedConfigsForAgentGroupResponse.serializeBinaryToWriter = function(
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -6454,10 +6454,10 @@ proto.GetAppliedConfigsForAgentGroupResponse.prototype.setRequestId = function(v
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.GetAppliedConfigsForAgentGroupResponse.prototype.getCommonresponse = function() {
+proto.GetAppliedConfigsForAgentGroupResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -6467,7 +6467,7 @@ proto.GetAppliedConfigsForAgentGroupResponse.prototype.getCommonresponse = funct
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.GetAppliedConfigsForAgentGroupResponse} returns this
 */
-proto.GetAppliedConfigsForAgentGroupResponse.prototype.setCommonresponse = function(value) {
+proto.GetAppliedConfigsForAgentGroupResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -6476,8 +6476,8 @@ proto.GetAppliedConfigsForAgentGroupResponse.prototype.setCommonresponse = funct
  * Clears the message field making it undefined.
  * @return {!proto.GetAppliedConfigsForAgentGroupResponse} returns this
  */
-proto.GetAppliedConfigsForAgentGroupResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.GetAppliedConfigsForAgentGroupResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -6485,7 +6485,7 @@ proto.GetAppliedConfigsForAgentGroupResponse.prototype.clearCommonresponse = fun
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.GetAppliedConfigsForAgentGroupResponse.prototype.hasCommonresponse = function() {
+proto.GetAppliedConfigsForAgentGroupResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -6751,7 +6751,7 @@ proto.GetAppliedAgentGroupsResponse.prototype.toObject = function(opt_includeIns
 proto.GetAppliedAgentGroupsResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     agentGroupNamesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
   };
 
@@ -6796,7 +6796,7 @@ proto.GetAppliedAgentGroupsResponse.deserializeBinaryFromReader = function(msg, 
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -6838,7 +6838,7 @@ proto.GetAppliedAgentGroupsResponse.serializeBinaryToWriter = function(message, 
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -6899,10 +6899,10 @@ proto.GetAppliedAgentGroupsResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.GetAppliedAgentGroupsResponse.prototype.getCommonresponse = function() {
+proto.GetAppliedAgentGroupsResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -6912,7 +6912,7 @@ proto.GetAppliedAgentGroupsResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.GetAppliedAgentGroupsResponse} returns this
 */
-proto.GetAppliedAgentGroupsResponse.prototype.setCommonresponse = function(value) {
+proto.GetAppliedAgentGroupsResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -6921,8 +6921,8 @@ proto.GetAppliedAgentGroupsResponse.prototype.setCommonresponse = function(value
  * Clears the message field making it undefined.
  * @return {!proto.GetAppliedAgentGroupsResponse} returns this
  */
-proto.GetAppliedAgentGroupsResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.GetAppliedAgentGroupsResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -6930,7 +6930,7 @@ proto.GetAppliedAgentGroupsResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.GetAppliedAgentGroupsResponse.prototype.hasCommonresponse = function() {
+proto.GetAppliedAgentGroupsResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -7196,7 +7196,7 @@ proto.ListAgentsResponse.prototype.toObject = function(opt_includeInstance) {
 proto.ListAgentsResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && agent_pb.CommonResponse.toObject(includeInstance, f),
     agentsList: jspb.Message.toObjectList(msg.getAgentsList(),
     proto.Agent.toObject, includeInstance)
   };
@@ -7242,7 +7242,7 @@ proto.ListAgentsResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new agent_pb.CommonResponse;
       reader.readMessage(value,agent_pb.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = new proto.Agent;
@@ -7285,7 +7285,7 @@ proto.ListAgentsResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -7347,10 +7347,10 @@ proto.ListAgentsResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.ListAgentsResponse.prototype.getCommonresponse = function() {
+proto.ListAgentsResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, agent_pb.CommonResponse, 2));
 };
@@ -7360,7 +7360,7 @@ proto.ListAgentsResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.ListAgentsResponse} returns this
 */
-proto.ListAgentsResponse.prototype.setCommonresponse = function(value) {
+proto.ListAgentsResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -7369,8 +7369,8 @@ proto.ListAgentsResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.ListAgentsResponse} returns this
  */
-proto.ListAgentsResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.ListAgentsResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -7378,7 +7378,7 @@ proto.ListAgentsResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.ListAgentsResponse.prototype.hasCommonresponse = function() {
+proto.ListAgentsResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 

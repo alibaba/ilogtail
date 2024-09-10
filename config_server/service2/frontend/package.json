@@ -9,10 +9,12 @@
   },
   "dependencies": {
     "axios": "^1.7.7",
+    "bufferhelper": "^0.2.1",
     "core-js": "^3.8.3",
     "element-plus": "^2.8.2",
     "google-protobuf": "^3.21.4",
     "protobufjs": "^7.4.0",
+    "protocol-buffers": "^5.0.0",
     "vue": "^3.2.13"
   },
   "devDependencies": {

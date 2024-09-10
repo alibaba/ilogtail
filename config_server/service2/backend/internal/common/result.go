@@ -7,6 +7,12 @@ import (
 
 func GenerateCommonResponse(err error) *proto.CommonResponse {
 	var apiError *ApiError
+	if err == nil {
+		return &proto.CommonResponse{
+			Status:       0,
+			ErrorMessage: nil,
+		}
+	}
 	if errors.As(err, &apiError) {
 		return &proto.CommonResponse{
 			Status:       int32(apiError.Code),

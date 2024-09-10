@@ -1,8 +1,8 @@
 package common
 
 import (
+	"errors"
 	"fmt"
-	"reflect"
 )
 
 type ApiError struct {
@@ -44,16 +44,21 @@ func ServerError() *ApiError {
 
 func SystemError(err error) error {
 	if err == nil {
-		return err
-	}
-	//errors.Is work不了
-	if reflect.TypeOf(err) == reflect.TypeOf(&ApiError{}) {
-		return err
+		return nil
 	}
 
-	if err.Error() == "" {
-		return ErrorWithMsg(SystemFailed.Code, SystemFailed.Message)
+	var apiError *ApiError
+	if errors.As(err, &apiError) {
+		return ErrorWithMsg(apiError.Code, apiError.Message)
 	}
+	//////errors.Is work不了
+	//if reflect.TypeOf(err) == reflect.TypeOf(&ApiError{}) {
+	//	return err.(*ApiError)
+	//}
+
+	//if err.Error() == "" {
+	//	return ErrorWithMsg(SystemFailed.Code, SystemFailed.Message)
+	//}
 	return ErrorWithMsg(SystemFailed.Code, err.Error())
 }
 

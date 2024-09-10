@@ -73,7 +73,7 @@ func GetAgentGroup(req *protov2.GetAgentGroupRequest, res *protov2.GetAgentGroup
 	res.RequestId = requestId
 	agentGroup, err := repository.GetAgentGroupDetail(agentGroupName, false, false)
 	if err != nil {
-		return nil
+		return common.SystemError(err)
 	}
 	res.AgentGroup = agentGroup.Parse2ProtoAgentGroupTag()
 	return nil

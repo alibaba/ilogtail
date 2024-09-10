@@ -2367,7 +2367,7 @@ proto.HeartbeatResponse.prototype.toObject = function(opt_includeInstance) {
 proto.HeartbeatResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && proto.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && proto.CommonResponse.toObject(includeInstance, f),
     capabilities: jspb.Message.getFieldWithDefault(msg, 3, 0),
     pipelineConfigUpdatesList: jspb.Message.toObjectList(msg.getPipelineConfigUpdatesList(),
     proto.ConfigDetail.toObject, includeInstance),
@@ -2420,7 +2420,7 @@ proto.HeartbeatResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new proto.CommonResponse;
       reader.readMessage(value,proto.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
@@ -2485,7 +2485,7 @@ proto.HeartbeatResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -2584,10 +2584,10 @@ proto.HeartbeatResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.HeartbeatResponse.prototype.getCommonresponse = function() {
+proto.HeartbeatResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, proto.CommonResponse, 2));
 };
@@ -2597,7 +2597,7 @@ proto.HeartbeatResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.HeartbeatResponse} returns this
 */
-proto.HeartbeatResponse.prototype.setCommonresponse = function(value) {
+proto.HeartbeatResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -2606,8 +2606,8 @@ proto.HeartbeatResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.HeartbeatResponse} returns this
  */
-proto.HeartbeatResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.HeartbeatResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -2615,7 +2615,7 @@ proto.HeartbeatResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.HeartbeatResponse.prototype.hasCommonresponse = function() {
+proto.HeartbeatResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -3120,7 +3120,7 @@ proto.FetchConfigResponse.prototype.toObject = function(opt_includeInstance) {
 proto.FetchConfigResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     requestId: msg.getRequestId_asB64(),
-    commonresponse: (f = msg.getCommonresponse()) && proto.CommonResponse.toObject(includeInstance, f),
+    commonResponse: (f = msg.getCommonResponse()) && proto.CommonResponse.toObject(includeInstance, f),
     configDetailsList: jspb.Message.toObjectList(msg.getConfigDetailsList(),
     proto.ConfigDetail.toObject, includeInstance)
   };
@@ -3166,7 +3166,7 @@ proto.FetchConfigResponse.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new proto.CommonResponse;
       reader.readMessage(value,proto.CommonResponse.deserializeBinaryFromReader);
-      msg.setCommonresponse(value);
+      msg.setCommonResponse(value);
       break;
     case 3:
       var value = new proto.ConfigDetail;
@@ -3209,7 +3209,7 @@ proto.FetchConfigResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommonresponse();
+  f = message.getCommonResponse();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -3271,10 +3271,10 @@ proto.FetchConfigResponse.prototype.setRequestId = function(value) {
 
 
 /**
- * optional CommonResponse commonResponse = 2;
+ * optional CommonResponse common_response = 2;
  * @return {?proto.CommonResponse}
  */
-proto.FetchConfigResponse.prototype.getCommonresponse = function() {
+proto.FetchConfigResponse.prototype.getCommonResponse = function() {
   return /** @type{?proto.CommonResponse} */ (
     jspb.Message.getWrapperField(this, proto.CommonResponse, 2));
 };
@@ -3284,7 +3284,7 @@ proto.FetchConfigResponse.prototype.getCommonresponse = function() {
  * @param {?proto.CommonResponse|undefined} value
  * @return {!proto.FetchConfigResponse} returns this
 */
-proto.FetchConfigResponse.prototype.setCommonresponse = function(value) {
+proto.FetchConfigResponse.prototype.setCommonResponse = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
 };
 
@@ -3293,8 +3293,8 @@ proto.FetchConfigResponse.prototype.setCommonresponse = function(value) {
  * Clears the message field making it undefined.
  * @return {!proto.FetchConfigResponse} returns this
  */
-proto.FetchConfigResponse.prototype.clearCommonresponse = function() {
-  return this.setCommonresponse(undefined);
+proto.FetchConfigResponse.prototype.clearCommonResponse = function() {
+  return this.setCommonResponse(undefined);
 };
 
 
@@ -3302,7 +3302,7 @@ proto.FetchConfigResponse.prototype.clearCommonresponse = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.FetchConfigResponse.prototype.hasCommonresponse = function() {
+proto.FetchConfigResponse.prototype.hasCommonResponse = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
@@ -3378,7 +3378,7 @@ proto.CommonResponse.prototype.toObject = function(opt_includeInstance) {
 proto.CommonResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     status: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    errormessage: msg.getErrormessage_asB64()
+    errorMessage: msg.getErrorMessage_asB64()
   };
 
   if (includeInstance) {
@@ -3421,7 +3421,7 @@ proto.CommonResponse.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.setErrormessage(value);
+      msg.setErrorMessage(value);
       break;
     default:
       reader.skipField();
@@ -3459,7 +3459,7 @@ proto.CommonResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getErrormessage_asU8();
+  f = message.getErrorMessage_asU8();
   if (f.length > 0) {
     writer.writeBytes(
       2,
@@ -3488,35 +3488,35 @@ proto.CommonResponse.prototype.setStatus = function(value) {
 
 
 /**
- * optional bytes errorMessage = 2;
+ * optional bytes error_message = 2;
  * @return {!(string|Uint8Array)}
  */
-proto.CommonResponse.prototype.getErrormessage = function() {
+proto.CommonResponse.prototype.getErrorMessage = function() {
   return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /**
- * optional bytes errorMessage = 2;
- * This is a type-conversion wrapper around `getErrormessage()`
+ * optional bytes error_message = 2;
+ * This is a type-conversion wrapper around `getErrorMessage()`
  * @return {string}
  */
-proto.CommonResponse.prototype.getErrormessage_asB64 = function() {
+proto.CommonResponse.prototype.getErrorMessage_asB64 = function() {
   return /** @type {string} */ (jspb.Message.bytesAsB64(
-      this.getErrormessage()));
+      this.getErrorMessage()));
 };
 
 
 /**
- * optional bytes errorMessage = 2;
+ * optional bytes error_message = 2;
  * Note that Uint8Array is not supported on all browsers.
  * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getErrormessage()`
+ * This is a type-conversion wrapper around `getErrorMessage()`
  * @return {!Uint8Array}
  */
-proto.CommonResponse.prototype.getErrormessage_asU8 = function() {
+proto.CommonResponse.prototype.getErrorMessage_asU8 = function() {
   return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
-      this.getErrormessage()));
+      this.getErrorMessage()));
 };
 
 
@@ -3524,7 +3524,7 @@ proto.CommonResponse.prototype.getErrormessage_asU8 = function() {
  * @param {!(string|Uint8Array)} value
  * @return {!proto.CommonResponse} returns this
  */
-proto.CommonResponse.prototype.setErrormessage = function(value) {
+proto.CommonResponse.prototype.setErrorMessage = function(value) {
   return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
