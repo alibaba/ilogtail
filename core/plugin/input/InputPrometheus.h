@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -25,6 +24,9 @@ private:
     std::shared_ptr<TargetSubscriberScheduler> mTargetSubscirber;
 
     std::string mJobName;
+
+    // self monitor
+    IntGaugePtr mInputState;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;

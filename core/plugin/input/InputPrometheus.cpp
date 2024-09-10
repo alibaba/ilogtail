@@ -59,6 +59,10 @@ bool InputPrometheus::Init(const Json::Value& config, Json::Value&) {
 
     mJobName = mTargetSubscirber->GetId();
     mTargetSubscirber->mInputIndex = mIndex;
+
+    // self monitor
+    mInputState = GetMetricsRecordRef().CreateIntGauge("allocated_job");
+
     return CreateInnerProcessors(scrapeConfig);
 }
 

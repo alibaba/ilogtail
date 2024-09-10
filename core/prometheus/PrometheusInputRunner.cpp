@@ -44,6 +44,9 @@ PrometheusInputRunner::PrometheusInputRunner() : mUnRegisterMs(0) {
     mServicePort = INT32_FLAG(loong_collector_operator_service_port);
     mPodName = STRING_FLAG(_pod_name_);
     mTimer = std::make_shared<Timer>();
+
+    // self monitor
+    mRegisterState = GetMetricsRecordRef().Create
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs

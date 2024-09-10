@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 
+#include "LoongCollectorMetricTypes.h"
 #include "common/Lock.h"
 #include "common/timer/Timer.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
@@ -74,6 +75,9 @@ private:
     std::map<std::string, std::shared_ptr<TargetSubscriberScheduler>> mTargetSubscriberSchedulerMap;
 
     std::atomic<uint64_t> mUnRegisterMs;
+
+    // self monitor
+    IntGaugePtr mRegisterState;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;
