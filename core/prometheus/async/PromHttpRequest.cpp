@@ -33,6 +33,8 @@ void PromHttpRequest::SetAdditionalOptions(CURL* curl) const {
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
             curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
         }
+        // gzip
+        // curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
         // tls
         // 设置 CA 证书
         // curl_easy_setopt(curl, CURLOPT_CAINFO, "/path/to/cacert.pem");
