@@ -106,6 +106,7 @@ CURL* CreateCurlHandler(const std::string& method,
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, body.size());
     }
 
+    // 这里生硬的设置跳过校验是否合理？
     if (httpsFlag) {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);

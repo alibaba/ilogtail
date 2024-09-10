@@ -279,6 +279,7 @@ TargetSubscriberScheduler::BuildSubscriberTimerEvent(std::chrono::steady_clock::
                                                      "",
                                                      prometheus::RefeshIntervalSeconds,
                                                      1,
+                                                     false,
                                                      this->mFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
 

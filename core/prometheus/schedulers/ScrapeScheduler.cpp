@@ -29,11 +29,11 @@
 #include "common/timer/HttpRequestTimerEvent.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
-#include "prometheus/Constants.h"
-#include "prometheus/async/PromHttpRequest.h"
 #include "pipeline/queue/ProcessQueueItem.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKey.h"
+#include "prometheus/Constants.h"
+#include "prometheus/async/PromHttpRequest.h"
 
 using namespace std;
 
@@ -151,6 +151,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                                      mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                                      mScrapeConfigPtr->mScrapeIntervalSeconds
                                                          / mScrapeConfigPtr->mScrapeTimeoutSeconds,
+                                                     mScrapeConfigPtr->mFollowRedirects,
                                                      this->mFuture);
     auto timerEvent = std::make_unique<HttpRequestTimerEvent>(execTime, std::move(request));
     return timerEvent;

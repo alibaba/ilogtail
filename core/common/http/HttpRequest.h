@@ -21,6 +21,7 @@
 #include <string>
 
 #include "common/http/HttpResponse.h"
+#include "curl/curl.h"
 
 namespace logtail {
 
@@ -84,6 +85,8 @@ struct AsynHttpRequest : public HttpRequest {
                     uint32_t timeout = sDefaultTimeoutSec,
                     uint32_t maxTryCnt = sDefaultMaxTryCnt)
         : HttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt) {}
+
+    virtual void SetAdditionalOptions(CURL*) const {};
 
     virtual bool IsContextValid() const = 0;
     virtual void OnSendDone(const HttpResponse& response) = 0;

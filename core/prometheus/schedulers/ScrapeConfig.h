@@ -22,6 +22,8 @@ public:
 
     std::map<std::string, std::string> mAuthHeaders;
 
+    bool mFollowRedirects;
+
     int64_t mMaxScrapeSizeBytes;
     int64_t mSampleLimit;
     int64_t mSeriesLimit;

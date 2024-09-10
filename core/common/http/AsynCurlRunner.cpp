@@ -93,6 +93,8 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
         return false;
     }
 
+    request->SetAdditionalOptions(curl);
+
     request->mPrivateData = headers;
     curl_easy_setopt(curl, CURLOPT_PRIVATE, request.get());
     request->mLastSendTime = time(nullptr);

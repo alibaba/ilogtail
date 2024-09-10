@@ -20,6 +20,7 @@ ScrapeConfig::ScrapeConfig()
       mScrapeTimeoutSeconds(10),
       mMetricsPath("/metrics"),
       mScheme("http"),
+      mFollowRedirects(true),
       mMaxScrapeSizeBytes(-1),
       mSampleLimit(-1),
       mSeriesLimit(-1) {
@@ -67,6 +68,10 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             LOG_ERROR(sLogger, ("authorization config error", ""));
             return false;
         }
+    }
+
+    if (scrapeConfig.isMember(prometheus::FOLLOW_REDIRECTS) && scrapeConfig[prometheus::FOLLOW_REDIRECTS].isBool()) {
+        mFollowRedirects = scrapeConfig[prometheus::FOLLOW_REDIRECTS].asBool();
     }
 
     // <size>: a size in bytes, e.g. 512MB. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
