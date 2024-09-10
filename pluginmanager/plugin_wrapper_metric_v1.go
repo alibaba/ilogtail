@@ -100,7 +100,7 @@ func (p *MetricWrapperV1) AddDataWithContext(tags map[string]string, fields map[
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEvent(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, fields)
 		if ctx == nil {
-			ctx = make(map[string]interface{})
+			ctx = make(map[string]interface{}, 1)
 		}
 		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
@@ -147,7 +147,7 @@ func (p *MetricWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string
 	p.inputRecordsSizeBytes.Add(int64(log.Size()))
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEventByRawLogV1(log)
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: nil}
+		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		return
 	}
 	p.LogsChan <- &pipeline.LogWithContext{Log: log, Context: ctx}

@@ -147,8 +147,8 @@ func (p *pluginv1Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
-		// TODO : give config for MaxCachedSize and PushNativeInterval
-		wrapper.MaxCachedSize = 10
+		// TODO : give config for MaxCachedSize and PushNativeTimeout
+		wrapper.MaxCachedSize = 100
 		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
 		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
 		wrapper.ShutdownCachedChan = make(chan struct{})
@@ -163,8 +163,8 @@ func (p *pluginv1Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 	wrapper.Input = input
 	wrapper.LogsChan = p.LogsChan
 	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
-		// TODO : give config for MaxCachedSize and PushNativeInterval
-		wrapper.MaxCachedSize = 10
+		// TODO : give config for MaxCachedSize and PushNativeTimeout
+		wrapper.MaxCachedSize = 100
 		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
 		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
 		wrapper.ShutdownCachedChan = make(chan struct{})

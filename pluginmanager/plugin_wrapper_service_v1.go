@@ -97,6 +97,9 @@ func (p *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map
 	// need push to native processor
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEvent(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, fields)
+		if ctx == nil {
+			ctx = make(map[string]interface{}, 1)
+		}
 		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		p.inputRecordsTotal.Add(1)
@@ -123,6 +126,9 @@ func (p *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
 	// need push to native processor
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEventByArray(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, columns, values)
+		if ctx == nil {
+			ctx = make(map[string]interface{}, 1)
+		}
 		ctx[ctxKeyTags] = tags
 		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
 		p.inputRecordsTotal.Add(1)
@@ -205,7 +211,6 @@ func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, c
 		logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "marshal log failed", err)
 		return
 	}
-	pushRst := -1
 	switch p.Input.GetMode() {
 	case pipeline.PUSH:
 		for i := 0; i < 5; i++ {
@@ -215,10 +220,7 @@ func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, c
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 	case pipeline.PULL:
-		pushRst = logtail.PushQueue(p.Config.ConfigName, buffer)
+		logtail.PushQueue(p.Config.ConfigName, buffer)
 	default:
-	}
-	if pushRst != 0 {
-		logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "push queue failed", nil)
 	}
 }
