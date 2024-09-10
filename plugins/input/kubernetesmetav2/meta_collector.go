@@ -11,12 +11,13 @@ import (
 	"strings"
 	"time"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type metaCollector struct {
@@ -279,7 +280,7 @@ func (m *metaCollector) processEntityLinkCommonPart(logContents models.LogConten
 }
 
 func (m *metaCollector) processEntityJSONObject(obj map[string]string) string {
-	if obj == nil || len(obj) == 0 {
+	if obj == nil {
 		return "{}"
 	}
 	objStr, err := json.Marshal(obj)
@@ -291,7 +292,7 @@ func (m *metaCollector) processEntityJSONObject(obj map[string]string) string {
 }
 
 func (m *metaCollector) processEntityJSONArray(obj []map[string]string) string {
-	if obj == nil || len(obj) == 0 {
+	if obj == nil {
 		return "[]"
 	}
 	objStr, err := json.Marshal(obj)
@@ -323,6 +324,7 @@ func (m *metaCollector) sendInBackground() {
 		}
 		group.Events = group.Events[:0]
 	}
+	lastSendClusterTime := time.Now()
 	for {
 		select {
 		case e := <-m.entityBuffer:
@@ -345,6 +347,14 @@ func (m *metaCollector) sendInBackground() {
 		case <-m.stopCh:
 			return
 		}
+		if time.Since(lastSendClusterTime) > time.Duration(m.serviceK8sMeta.Interval)*time.Second {
+			// send cluster entity if in infra domain
+			if m.serviceK8sMeta.Domain == "infra" {
+				clusterEntity := m.generateClusterEntity()
+				m.collector.AddRawLog(convertPipelineEvent2Log(clusterEntity))
+				lastSendClusterTime = time.Now()
+			}
+		}
 	}
 }
 
@@ -352,6 +362,22 @@ func (m *metaCollector) genKey(namespace, name string) string {
 	key := m.serviceK8sMeta.clusterID + namespace + name
 	// #nosec G401
 	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
+}
+
+func (m *metaCollector) generateClusterEntity() models.PipelineEvent {
+	log := &models.Log{}
+	log.Contents = models.NewLogContents()
+	log.Timestamp = uint64(time.Now().Unix())
+	log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
+	log.Contents.Add(entityTypeFieldName, "infra.k8s.cluster")
+	log.Contents.Add(entityIDFieldName, m.genKey("", ""))
+	log.Contents.Add(entityMethodFieldName, "Update")
+	log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(time.Now().Unix(), 10))
+	log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(time.Now().Unix(), 10))
+	log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
+	log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
+	log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
+	return log
 }
 
 func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEvent) models.PipelineEvent {

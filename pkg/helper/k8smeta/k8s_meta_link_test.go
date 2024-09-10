@@ -9,12 +9,12 @@ import (
 )
 
 func TestGetPodServiceLink(t *testing.T) {
-	podCache := newPodCache(make(chan struct{}))
-	serviceCache := newCommonCache(make(chan struct{}), SERVICE)
-	serviceCache.metaStore.Items["default/test"] = &ObjectWrapper{
+	podCache := newK8sMetaCache(make(chan struct{}), POD)
+	serviceCache := newK8sMetaCache(make(chan struct{}), SERVICE)
+	serviceCache.metaStore.Items["default/service1"] = &ObjectWrapper{
 		Raw: &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
+				Name:      "service1",
 				Namespace: "default",
 			},
 			Spec: corev1.ServiceSpec{
@@ -24,10 +24,10 @@ func TestGetPodServiceLink(t *testing.T) {
 			},
 		},
 	}
-	serviceCache.metaStore.Items["default/test2"] = &ObjectWrapper{
+	serviceCache.metaStore.Items["default/service2"] = &ObjectWrapper{
 		Raw: &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test2",
+				Name:      "service2",
 				Namespace: "default",
 			},
 			Spec: corev1.ServiceSpec{
@@ -37,10 +37,10 @@ func TestGetPodServiceLink(t *testing.T) {
 			},
 		},
 	}
-	podCache.metaStore.Items["default/test"] = &ObjectWrapper{
+	podCache.metaStore.Items["default/pod1"] = &ObjectWrapper{
 		Raw: &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
+				Name:      "pod1",
 				Namespace: "default",
 				Labels: map[string]string{
 					"app": "test",
@@ -57,10 +57,10 @@ func TestGetPodServiceLink(t *testing.T) {
 			},
 		},
 	}
-	podCache.metaStore.Items["default/test2"] = &ObjectWrapper{
+	podCache.metaStore.Items["default/pod2"] = &ObjectWrapper{
 		Raw: &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test2",
+				Name:      "pod2",
 				Namespace: "default",
 				Labels: map[string]string{
 					"app": "test2",
@@ -84,15 +84,15 @@ func TestGetPodServiceLink(t *testing.T) {
 	podList := []*K8sMetaEvent{
 		{
 			EventType: "update",
-			Object:    podCache.metaStore.Items["default/test"],
+			Object:    podCache.metaStore.Items["default/pod1"],
 		},
 		{
 			EventType: "update",
-			Object:    podCache.metaStore.Items["default/test2"],
+			Object:    podCache.metaStore.Items["default/pod2"],
 		},
 	}
 	results := linkGenerator.getPodServiceLink(podList)
 	assert.Equal(t, 2, len(results))
-	assert.Equal(t, "test", results[0].Object.Raw.(*PodService).Service.Name)
-	assert.Equal(t, "test2", results[1].Object.Raw.(*PodService).Service.Name)
+	assert.Equal(t, "service1", results[0].Object.Raw.(*PodService).Service.Name)
+	assert.Equal(t, "service2", results[1].Object.Raw.(*PodService).Service.Name)
 }

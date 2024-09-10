@@ -175,6 +175,8 @@ func getIdxRules(resourceType string) []IdxFunc {
 	switch resourceType {
 	case NODE:
 		return []IdxFunc{generateNodeKey}
+	case POD:
+		return []IdxFunc{generateCommonKey, generatePodIPKey, generateContainerIDKey, generateHostIPKey}
 	default:
 		return []IdxFunc{generateCommonKey}
 	}
