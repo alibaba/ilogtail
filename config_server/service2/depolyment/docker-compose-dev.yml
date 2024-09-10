@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:latest
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+    cap_add:
+      - SYS_NICE
+    networks:
+      - server
+
+  config-server-dev:
+    build:
+      context: ${CONFIG_SERVER}
+      #Dockerfile指定了context后，若不使用全局路径，则为context的相对路径
+      dockerfile: Dockerfile-dev
+    image: config-server-dev:nzh
+    #替换成你代码的位置
+    volumes:
+      - ${CONFIG_SERVER}:/backend
+    ports:
+      - "9090:9090"
+    environment:
+      TZ: Asia/Shanghai
+    networks:
+      - server
+    depends_on:
+      - mysql
+
+  agent-dev:
+    build:
+      #确保目录下有agent
+      context:  ${AGENT}
+      dockerfile: ${AGENT_DEV_DOCKERFILE}
+    image: ilogtail:nzh
+    environment:
+      CONFIG_SERVER_ADDRESSES: '["config-server:9090"]'
+      TZ: Asia/Shanghai
+    deploy:
+      replicas: 2
+    networks:
+      - server
+
+#  config-server-ui:
+#    build:
+#      context: ${CONFIG_SERVER_UI}
+#      dockerfile: Dockerfile
+#    image: config-server-ui:nzh
+#    environment:
+#      CONFIG_SERVER_ADDRESS: http://config-server:10000
+#      TZ: Asia/Shanghai
+#    ports:
+#      - "8080:80"
+#    networks:
+#      - server
+
+networks:
+  server:

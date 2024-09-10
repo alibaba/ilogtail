@@ -1,5 +1,0 @@
-../depolyment
-service2/internal/router/cmd
-service2/ConfigServer
-.idea
-../protocol/b2/agent.proto

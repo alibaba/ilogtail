@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v3.6.1
-// source: user.proto
+// source: user.protov2
 
 package configserver_proto
 
@@ -294,7 +294,7 @@ type CreateAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -412,7 +412,7 @@ type UpdateAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -530,7 +530,7 @@ type DeleteAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -648,7 +648,7 @@ type GetAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string      `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode    `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode    `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string      `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	AgentGroup *AgentGroup `protobuf:"bytes,4,opt,name=agent_group,json=agentGroup,proto3" json:"agent_group,omitempty"`
 }
@@ -766,7 +766,7 @@ type ListAgentGroupsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId  string        `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code        RespCode      `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code        RespCode      `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message     string        `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	AgentGroups []*AgentGroup `protobuf:"bytes,4,rep,name=agent_groups,json=agentGroups,proto3" json:"agent_groups,omitempty"`
 }
@@ -892,7 +892,7 @@ type CreateConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -1010,7 +1010,7 @@ type UpdateConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -1128,7 +1128,7 @@ type DeleteConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -1246,7 +1246,7 @@ type GetConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId   string        `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code         RespCode      `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code         RespCode      `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message      string        `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	ConfigDetail *ConfigDetail `protobuf:"bytes,4,opt,name=config_detail,json=configDetail,proto3" json:"config_detail,omitempty"`
 }
@@ -1364,7 +1364,7 @@ type ListConfigsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId    string          `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"`
 }
@@ -1498,7 +1498,7 @@ type ApplyConfigToAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -1624,7 +1624,7 @@ type RemoveConfigFromAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
@@ -1742,7 +1742,7 @@ type GetAppliedConfigsForAgentGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId  string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code        RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code        RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message     string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	ConfigNames []string `protobuf:"bytes,4,rep,name=config_names,json=configNames,proto3" json:"config_names,omitempty"`
 }
@@ -1868,7 +1868,7 @@ type GetAppliedAgentGroupsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId      string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code            RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code            RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message         string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	AgentGroupNames []string `protobuf:"bytes,4,rep,name=agent_group_names,json=agentGroupNames,proto3" json:"agent_group_names,omitempty"`
 }
@@ -1994,7 +1994,7 @@ type ListAgentsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	ResponseId string   `protobuf:"bytes,1,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
-	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code       RespCode `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message    string   `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	Agents     []*Agent `protobuf:"bytes,4,rep,name=agents,proto3" json:"agents,omitempty"`
 }
@@ -2360,70 +2360,70 @@ func file_user_proto_rawDescGZIP() []byte {
 
 var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_user_proto_goTypes = []interface{}{
-	(*AgentGroupTag)(nil),                          // 0: configserver.proto.AgentGroupTag
-	(*AgentGroup)(nil),                             // 1: configserver.proto.AgentGroup
-	(*Agent)(nil),                                  // 2: configserver.proto.Agent
-	(*CreateAgentGroupRequest)(nil),                // 3: configserver.proto.CreateAgentGroupRequest
-	(*CreateAgentGroupResponse)(nil),               // 4: configserver.proto.CreateAgentGroupResponse
-	(*UpdateAgentGroupRequest)(nil),                // 5: configserver.proto.UpdateAgentGroupRequest
-	(*UpdateAgentGroupResponse)(nil),               // 6: configserver.proto.UpdateAgentGroupResponse
-	(*DeleteAgentGroupRequest)(nil),                // 7: configserver.proto.DeleteAgentGroupRequest
-	(*DeleteAgentGroupResponse)(nil),               // 8: configserver.proto.DeleteAgentGroupResponse
-	(*GetAgentGroupRequest)(nil),                   // 9: configserver.proto.GetAgentGroupRequest
-	(*GetAgentGroupResponse)(nil),                  // 10: configserver.proto.GetAgentGroupResponse
-	(*ListAgentGroupsRequest)(nil),                 // 11: configserver.proto.ListAgentGroupsRequest
-	(*ListAgentGroupsResponse)(nil),                // 12: configserver.proto.ListAgentGroupsResponse
-	(*CreateConfigRequest)(nil),                    // 13: configserver.proto.CreateConfigRequest
-	(*CreateConfigResponse)(nil),                   // 14: configserver.proto.CreateConfigResponse
-	(*UpdateConfigRequest)(nil),                    // 15: configserver.proto.UpdateConfigRequest
-	(*UpdateConfigResponse)(nil),                   // 16: configserver.proto.UpdateConfigResponse
-	(*DeleteConfigRequest)(nil),                    // 17: configserver.proto.DeleteConfigRequest
-	(*DeleteConfigResponse)(nil),                   // 18: configserver.proto.DeleteConfigResponse
-	(*GetConfigRequest)(nil),                       // 19: configserver.proto.GetConfigRequest
-	(*GetConfigResponse)(nil),                      // 20: configserver.proto.GetConfigResponse
-	(*ListConfigsRequest)(nil),                     // 21: configserver.proto.ListConfigsRequest
-	(*ListConfigsResponse)(nil),                    // 22: configserver.proto.ListConfigsResponse
-	(*ApplyConfigToAgentGroupRequest)(nil),         // 23: configserver.proto.ApplyConfigToAgentGroupRequest
-	(*ApplyConfigToAgentGroupResponse)(nil),        // 24: configserver.proto.ApplyConfigToAgentGroupResponse
-	(*RemoveConfigFromAgentGroupRequest)(nil),      // 25: configserver.proto.RemoveConfigFromAgentGroupRequest
-	(*RemoveConfigFromAgentGroupResponse)(nil),     // 26: configserver.proto.RemoveConfigFromAgentGroupResponse
-	(*GetAppliedConfigsForAgentGroupRequest)(nil),  // 27: configserver.proto.GetAppliedConfigsForAgentGroupRequest
-	(*GetAppliedConfigsForAgentGroupResponse)(nil), // 28: configserver.proto.GetAppliedConfigsForAgentGroupResponse
-	(*GetAppliedAgentGroupsRequest)(nil),           // 29: configserver.proto.GetAppliedAgentGroupsRequest
-	(*GetAppliedAgentGroupsResponse)(nil),          // 30: configserver.proto.GetAppliedAgentGroupsResponse
-	(*ListAgentsRequest)(nil),                      // 31: configserver.proto.ListAgentsRequest
-	(*ListAgentsResponse)(nil),                     // 32: configserver.proto.ListAgentsResponse
-	(*AgentAttributes)(nil),                        // 33: configserver.proto.AgentAttributes
-	(RespCode)(0),                                  // 34: configserver.proto.RespCode
-	(*ConfigDetail)(nil),                           // 35: configserver.proto.ConfigDetail
+	(*AgentGroupTag)(nil),                          // 0: configserver.protov2.AgentGroupTag
+	(*AgentGroup)(nil),                             // 1: configserver.protov2.AgentGroup
+	(*Agent)(nil),                                  // 2: configserver.protov2.Agent
+	(*CreateAgentGroupRequest)(nil),                // 3: configserver.protov2.CreateAgentGroupRequest
+	(*CreateAgentGroupResponse)(nil),               // 4: configserver.protov2.CreateAgentGroupResponse
+	(*UpdateAgentGroupRequest)(nil),                // 5: configserver.protov2.UpdateAgentGroupRequest
+	(*UpdateAgentGroupResponse)(nil),               // 6: configserver.protov2.UpdateAgentGroupResponse
+	(*DeleteAgentGroupRequest)(nil),                // 7: configserver.protov2.DeleteAgentGroupRequest
+	(*DeleteAgentGroupResponse)(nil),               // 8: configserver.protov2.DeleteAgentGroupResponse
+	(*GetAgentGroupRequest)(nil),                   // 9: configserver.protov2.GetAgentGroupRequest
+	(*GetAgentGroupResponse)(nil),                  // 10: configserver.protov2.GetAgentGroupResponse
+	(*ListAgentGroupsRequest)(nil),                 // 11: configserver.protov2.ListAgentGroupsRequest
+	(*ListAgentGroupsResponse)(nil),                // 12: configserver.protov2.ListAgentGroupsResponse
+	(*CreateConfigRequest)(nil),                    // 13: configserver.protov2.CreateConfigRequest
+	(*CreateConfigResponse)(nil),                   // 14: configserver.protov2.CreateConfigResponse
+	(*UpdateConfigRequest)(nil),                    // 15: configserver.protov2.UpdateConfigRequest
+	(*UpdateConfigResponse)(nil),                   // 16: configserver.protov2.UpdateConfigResponse
+	(*DeleteConfigRequest)(nil),                    // 17: configserver.protov2.DeleteConfigRequest
+	(*DeleteConfigResponse)(nil),                   // 18: configserver.protov2.DeleteConfigResponse
+	(*GetConfigRequest)(nil),                       // 19: configserver.protov2.GetConfigRequest
+	(*GetConfigResponse)(nil),                      // 20: configserver.protov2.GetConfigResponse
+	(*ListConfigsRequest)(nil),                     // 21: configserver.protov2.ListConfigsRequest
+	(*ListConfigsResponse)(nil),                    // 22: configserver.protov2.ListConfigsResponse
+	(*ApplyConfigToAgentGroupRequest)(nil),         // 23: configserver.protov2.ApplyConfigToAgentGroupRequest
+	(*ApplyConfigToAgentGroupResponse)(nil),        // 24: configserver.protov2.ApplyConfigToAgentGroupResponse
+	(*RemoveConfigFromAgentGroupRequest)(nil),      // 25: configserver.protov2.RemoveConfigFromAgentGroupRequest
+	(*RemoveConfigFromAgentGroupResponse)(nil),     // 26: configserver.protov2.RemoveConfigFromAgentGroupResponse
+	(*GetAppliedConfigsForAgentGroupRequest)(nil),  // 27: configserver.protov2.GetAppliedConfigsForAgentGroupRequest
+	(*GetAppliedConfigsForAgentGroupResponse)(nil), // 28: configserver.protov2.GetAppliedConfigsForAgentGroupResponse
+	(*GetAppliedAgentGroupsRequest)(nil),           // 29: configserver.protov2.GetAppliedAgentGroupsRequest
+	(*GetAppliedAgentGroupsResponse)(nil),          // 30: configserver.protov2.GetAppliedAgentGroupsResponse
+	(*ListAgentsRequest)(nil),                      // 31: configserver.protov2.ListAgentsRequest
+	(*ListAgentsResponse)(nil),                     // 32: configserver.protov2.ListAgentsResponse
+	(*AgentAttributes)(nil),                        // 33: configserver.protov2.AgentAttributes
+	(RespCode)(0),                                  // 34: configserver.protov2.RespCode
+	(*ConfigDetail)(nil),                           // 35: configserver.protov2.ConfigDetail
 }
 var file_user_proto_depIdxs = []int32{
-	0,  // 0: configserver.proto.AgentGroup.tags:type_name -> configserver.proto.AgentGroupTag
-	33, // 1: configserver.proto.Agent.attributes:type_name -> configserver.proto.AgentAttributes
-	1,  // 2: configserver.proto.CreateAgentGroupRequest.agent_group:type_name -> configserver.proto.AgentGroup
-	34, // 3: configserver.proto.CreateAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	1,  // 4: configserver.proto.UpdateAgentGroupRequest.agent_group:type_name -> configserver.proto.AgentGroup
-	34, // 5: configserver.proto.UpdateAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	34, // 6: configserver.proto.DeleteAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	34, // 7: configserver.proto.GetAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	1,  // 8: configserver.proto.GetAgentGroupResponse.agent_group:type_name -> configserver.proto.AgentGroup
-	34, // 9: configserver.proto.ListAgentGroupsResponse.code:type_name -> configserver.proto.RespCode
-	1,  // 10: configserver.proto.ListAgentGroupsResponse.agent_groups:type_name -> configserver.proto.AgentGroup
-	35, // 11: configserver.proto.CreateConfigRequest.config_detail:type_name -> configserver.proto.ConfigDetail
-	34, // 12: configserver.proto.CreateConfigResponse.code:type_name -> configserver.proto.RespCode
-	35, // 13: configserver.proto.UpdateConfigRequest.config_detail:type_name -> configserver.proto.ConfigDetail
-	34, // 14: configserver.proto.UpdateConfigResponse.code:type_name -> configserver.proto.RespCode
-	34, // 15: configserver.proto.DeleteConfigResponse.code:type_name -> configserver.proto.RespCode
-	34, // 16: configserver.proto.GetConfigResponse.code:type_name -> configserver.proto.RespCode
-	35, // 17: configserver.proto.GetConfigResponse.config_detail:type_name -> configserver.proto.ConfigDetail
-	34, // 18: configserver.proto.ListConfigsResponse.code:type_name -> configserver.proto.RespCode
-	35, // 19: configserver.proto.ListConfigsResponse.config_details:type_name -> configserver.proto.ConfigDetail
-	34, // 20: configserver.proto.ApplyConfigToAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	34, // 21: configserver.proto.RemoveConfigFromAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	34, // 22: configserver.proto.GetAppliedConfigsForAgentGroupResponse.code:type_name -> configserver.proto.RespCode
-	34, // 23: configserver.proto.GetAppliedAgentGroupsResponse.code:type_name -> configserver.proto.RespCode
-	34, // 24: configserver.proto.ListAgentsResponse.code:type_name -> configserver.proto.RespCode
-	2,  // 25: configserver.proto.ListAgentsResponse.agents:type_name -> configserver.proto.Agent
+	0,  // 0: configserver.protov2.AgentGroup.tags:type_name -> configserver.protov2.AgentGroupTag
+	33, // 1: configserver.protov2.Agent.attributes:type_name -> configserver.protov2.AgentAttributes
+	1,  // 2: configserver.protov2.CreateAgentGroupRequest.agent_group:type_name -> configserver.protov2.AgentGroup
+	34, // 3: configserver.protov2.CreateAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	1,  // 4: configserver.protov2.UpdateAgentGroupRequest.agent_group:type_name -> configserver.protov2.AgentGroup
+	34, // 5: configserver.protov2.UpdateAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 6: configserver.protov2.DeleteAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 7: configserver.protov2.GetAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	1,  // 8: configserver.protov2.GetAgentGroupResponse.agent_group:type_name -> configserver.protov2.AgentGroup
+	34, // 9: configserver.protov2.ListAgentGroupsResponse.code:type_name -> configserver.protov2.RespCode
+	1,  // 10: configserver.protov2.ListAgentGroupsResponse.agent_groups:type_name -> configserver.protov2.AgentGroup
+	35, // 11: configserver.protov2.CreateConfigRequest.config_detail:type_name -> configserver.protov2.ConfigDetail
+	34, // 12: configserver.protov2.CreateConfigResponse.code:type_name -> configserver.protov2.RespCode
+	35, // 13: configserver.protov2.UpdateConfigRequest.config_detail:type_name -> configserver.protov2.ConfigDetail
+	34, // 14: configserver.protov2.UpdateConfigResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 15: configserver.protov2.DeleteConfigResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 16: configserver.protov2.GetConfigResponse.code:type_name -> configserver.protov2.RespCode
+	35, // 17: configserver.protov2.GetConfigResponse.config_detail:type_name -> configserver.protov2.ConfigDetail
+	34, // 18: configserver.protov2.ListConfigsResponse.code:type_name -> configserver.protov2.RespCode
+	35, // 19: configserver.protov2.ListConfigsResponse.config_details:type_name -> configserver.protov2.ConfigDetail
+	34, // 20: configserver.protov2.ApplyConfigToAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 21: configserver.protov2.RemoveConfigFromAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 22: configserver.protov2.GetAppliedConfigsForAgentGroupResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 23: configserver.protov2.GetAppliedAgentGroupsResponse.code:type_name -> configserver.protov2.RespCode
+	34, // 24: configserver.protov2.ListAgentsResponse.code:type_name -> configserver.protov2.RespCode
+	2,  // 25: configserver.protov2.ListAgentsResponse.agents:type_name -> configserver.protov2.Agent
 	26, // [26:26] is the sub-list for method output_type
 	26, // [26:26] is the sub-list for method input_type
 	26, // [26:26] is the sub-list for extension type_name
