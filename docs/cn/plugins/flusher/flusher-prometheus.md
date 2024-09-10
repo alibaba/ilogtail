@@ -48,7 +48,7 @@ inputs:
   ConfigFilePath: '/etc/prometheus/prometheus.yml'
 flushers:
 - Type: flusher_prometheus
-  RemoteURL: 'http://PROMETHEUS_REMOTEWRITE_ADDRESS/api/v1/write'
+  Endpoint: 'http://PROMETHEUS_REMOTEWRITE_ADDRESS/api/v1/write'
   Concurrency: 10
   QueueCapacity: 4096
   DropEventWhenQueueFull: true
