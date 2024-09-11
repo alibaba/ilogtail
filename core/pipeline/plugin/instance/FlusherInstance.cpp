@@ -16,8 +16,6 @@
 
 #include "monitor/MetricConstants.h"
 
-#include "monitor/MetricConstants.h"
-
 namespace logtail {
 bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline) {
     mPlugin->SetContext(context);
