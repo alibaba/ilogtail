@@ -38,19 +38,21 @@ DECLARE_FLAG_STRING(_pod_name_);
 
 namespace logtail {
 
-PrometheusInputRunner::PrometheusInputRunner() : mUnRegisterMs(0) {
+PrometheusInputRunner::PrometheusInputRunner()
+    : mServiceHost(STRING_FLAG(loong_collector_operator_service)),
+      mServicePort(INT32_FLAG(loong_collector_operator_service_port)),
+      mPodName(STRING_FLAG(_pod_name_)),
+      mUnRegisterMs(0) {
     mClient = std::make_unique<sdk::CurlClient>();
 
-    mServiceHost = STRING_FLAG(loong_collector_operator_service);
-    mServicePort = INT32_FLAG(loong_collector_operator_service_port);
-    mPodName = STRING_FLAG(_pod_name_);
+
     mTimer = std::make_shared<Timer>();
 
     MetricLabels labels;
     // labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
     labels.emplace_back(prometheus::POD_NAME, mPodName);
     labels.emplace_back(prometheus::OPERATOR_HOST, mServiceHost);
-    labels.emplace_back(prometheus::OPERATOR_PORT, mServicePort);
+    labels.emplace_back(prometheus::OPERATOR_PORT, ToString(mServicePort));
 
     DynamicMetricLabels dynamicLabels;
     // dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS, []() -> std::string { return FlusherSLS::GetAllProjects(); });
