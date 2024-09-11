@@ -405,9 +405,11 @@ func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEve
 }
 
 func (m *metaCollector) genEntityTypeKey(kind string) string {
-	prefix := ""
-	if p, ok := DomainEntityTypePrefix[m.serviceK8sMeta.Domain]; ok {
-		prefix = p
+	var prefix string
+	if kind == "" {
+		prefix = "k8s."
+	} else {
+		prefix = m.serviceK8sMeta.Domain + ".k8s."
 	}
 	return fmt.Sprintf("%s%s", prefix, strings.ToLower(kind))
 }

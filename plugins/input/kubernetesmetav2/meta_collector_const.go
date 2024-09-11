@@ -26,8 +26,3 @@ const (
 	entityLinkDestEntityIDFieldName   = "__dest_entity_id__"
 	entityLinkRelationTypeFieldName   = "__relation_type__"
 )
-
-var DomainEntityTypePrefix = map[string]string{
-	"acs":   "acs.ack.cluster.",
-	"infra": "infra.k8s.cluster.",
-}
