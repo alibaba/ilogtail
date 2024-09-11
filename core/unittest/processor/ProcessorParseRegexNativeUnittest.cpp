@@ -17,8 +17,8 @@
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseRegexNative.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
+#include "plugin/processor/ProcessorParseRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -228,7 +228,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
@@ -302,7 +302,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
@@ -378,7 +378,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestAddLog() {

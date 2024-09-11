@@ -1,6 +1,6 @@
-/**
- * used for sysak
- */
+//
+// Created by qianlu on 2024/6/19.
+//
 
 #pragma once
 
@@ -20,11 +20,12 @@ enum class SecureEventType {
 
 class AbstractSecurityEvent {
 public:
-  AbstractSecurityEvent(std::vector<std::pair<std::string, std::string>>&& tags,SecureEventType type, uint64_t ts)
+  AbstractSecurityEvent(std::vector<std::pair<std::string, std::string>>&& tags, SecureEventType type, uint64_t ts)
     : tags_(tags), type_(type), timestamp_(ts) {}
   SecureEventType GetEventType() {return type_;}
   std::vector<std::pair<std::string, std::string>> GetAllTags() { return tags_; }
   uint64_t GetTimestamp() { return timestamp_; }
+  void SetEventType(SecureEventType type) { type_ = type; }
   void SetTimestamp(uint64_t ts) { timestamp_ = ts; }
   void AppendTags(std::pair<std::string, std::string>&& tag) {
     tags_.emplace_back(std::move(tag));
@@ -47,6 +48,9 @@ private:
   std::vector<std::unique_ptr<AbstractSecurityEvent>> events;
 };
 
+using HandleSingleDataEventFn = std::function<void(std::unique_ptr<AbstractSecurityEvent>&& event)>;
+using HandleBatchDataEventFn = std::function<void(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events)>;
+
 enum class UpdataType {
   SECURE_UPDATE_TYPE_ENABLE_PROBE,
   SECURE_UPDATE_TYPE_CONFIG_CHAGE,
@@ -63,7 +67,7 @@ enum class UpdataType {
 enum MeasureType {MEASURE_TYPE_APP, MEASURE_TYPE_NET, MEASURE_TYPE_PROCESS, MEASURE_TYPE_MAX};
 
 struct AbstractSingleMeasure {
-
+  virtual ~AbstractSingleMeasure() = default;
 };
 
 struct NetSingleMeasure : public AbstractSingleMeasure {
@@ -100,9 +104,9 @@ struct Measure {
 // process
 struct ApplicationBatchMeasure {
   std::string app_id_;
+  std::string region_id_;
   std::string ip_;
   std::vector<std::unique_ptr<Measure>> measures_;
-  uint64_t timestamp_;
 };
 
 enum SpanKindInner { Unspecified, Internal, Server, Client, Producer, Consumer };
@@ -122,6 +126,41 @@ struct ApplicationBatchSpan {
   std::vector<std::unique_ptr<SingleSpan>> single_spans_;
 };
 
+class SingleEvent {
+public:
+  explicit __attribute__((visibility("default"))) SingleEvent(){}
+  explicit __attribute__((visibility("default"))) SingleEvent(std::vector<std::pair<std::string, std::string>>&& tags, uint64_t ts)
+    : tags_(tags), timestamp_(ts) {}
+  std::vector<std::pair<std::string, std::string>> GetAllTags() { return tags_; }
+  uint64_t GetTimestamp() { return timestamp_; }
+  void SetTimestamp(uint64_t ts) { timestamp_ = ts; }
+  void AppendTags(std::pair<std::string, std::string>&& tag) {
+    tags_.emplace_back(std::move(tag));
+  }
+
+private:
+  std::vector<std::pair<std::string, std::string>> tags_;
+  uint64_t timestamp_;
+};
+
+class ApplicationBatchEvent {
+public:
+  explicit __attribute__((visibility("default"))) ApplicationBatchEvent(){}
+  explicit __attribute__((visibility("default"))) ApplicationBatchEvent(const std::string& app_id, std::vector<std::pair<std::string, std::string>>&& tags) : app_id_(app_id), tags_(tags) {}
+  explicit __attribute__((visibility("default"))) ApplicationBatchEvent(const std::string& app_id, std::vector<std::pair<std::string, std::string>>&& tags, std::vector<std::unique_ptr<SingleEvent>>&& events) 
+    : app_id_(app_id), tags_(std::move(tags)), events_(std::move(events)) {}
+  void SetEvents(std::vector<std::unique_ptr<SingleEvent>>&& events) { events_ = std::move(events); }
+  void AppendEvent(std::unique_ptr<SingleEvent>&& event) { events_.emplace_back(std::move(event)); }
+  void AppendEvents(std::vector<std::unique_ptr<SingleEvent>>&& events) { 
+    for (auto& x : events) {
+      events_.emplace_back(std::move(x));
+    }
+  }
+  std::string app_id_; // pid
+  std::vector<std::pair<std::string, std::string>> tags_; // container.id
+  std::vector<std::unique_ptr<SingleEvent>> events_;
+};
+
 /////// merged config /////////
 
 namespace nami {
@@ -138,8 +177,10 @@ enum class PluginType {
 
 // observe metrics
 using NamiHandleBatchMeasureFunc = std::function<void(std::vector<std::unique_ptr<ApplicationBatchMeasure>>&& measures, uint64_t timestamp)>;
-// observe span
+// observe spans
 using NamiHandleBatchSpanFunc = std::function<void(std::vector<std::unique_ptr<ApplicationBatchSpan>>&&)>;
+// observe events
+using NamiHandleBatchEventFunc = std::function<void(std::vector<std::unique_ptr<ApplicationBatchEvent>>&&)>;
 // observe security
 using NamiHandleBatchDataEventFn = std::function<void(std::vector<std::unique_ptr<AbstractSecurityEvent>>&& events)>;
 
@@ -148,69 +189,44 @@ struct ObserverNetworkOption {
     bool mDisableProtocolParse = false;
     bool mDisableConnStats = false;
     bool mEnableConnTrackerDump = false;
+    bool mEnableSpan = false;
+    bool mEnableMetric = false;
+    bool mEnableLog = true;
     std::string mMeterHandlerType;
     std::string mSpanHandlerType;
 };
 
 // file
-struct SecurityFileFilterItem {
-    std::string mFilePath = "";
-    std::string mFileName = "";
-    bool operator==(const SecurityFileFilterItem& other) const {
-      return mFilePath == other.mFilePath && mFileName == other.mFileName;
-    }
-};
 struct SecurityFileFilter {
-    std::vector<SecurityFileFilterItem> mFileFilterItem;
-    bool operator==(const SecurityFileFilter& other) const {
-      return mFileFilterItem == other.mFileFilterItem;
-    }
-};
-
-// process
-struct SecurityProcessNamespaceFilter {
-  // type of securityNamespaceFilter
-  std::string mNamespaceType = "";
-  std::vector<std::string> mValueList;
-  bool operator==(const SecurityProcessNamespaceFilter& other) const {
-    return mNamespaceType == other.mNamespaceType &&
-              mValueList == other.mValueList;
-  }
-};
-struct SecurityProcessFilter {
-  std::vector<SecurityProcessNamespaceFilter> mNamespaceFilter;
-  std::vector<SecurityProcessNamespaceFilter> mNamespaceBlackFilter;
-  bool operator==(const SecurityProcessFilter& other) const {
-  return mNamespaceFilter == other.mNamespaceFilter &&
-        mNamespaceBlackFilter == other.mNamespaceBlackFilter;
-  }
+    std::vector<std::string> mFilePathList;
+    bool operator==(const SecurityFileFilter& other) const { return mFilePathList == other.mFilePathList; }
 };
 
 // network
 struct SecurityNetworkFilter {
-  std::vector<std::string> mDestAddrList;
-  std::vector<uint32_t> mDestPortList;
-  std::vector<std::string> mDestAddrBlackList;
-  std::vector<uint32_t> mDestPortBlackList;
-  std::vector<std::string> mSourceAddrList;
-  std::vector<uint32_t> mSourcePortList;
-  std::vector<std::string> mSourceAddrBlackList;
-  std::vector<uint32_t> mSourcePortBlackList;
-  bool operator==(const SecurityNetworkFilter& other) const {
-    return mDestAddrList == other.mDestAddrList &&
-            mDestPortList == other.mDestPortList &&
-            mDestAddrBlackList == other.mDestAddrBlackList &&
-            mDestPortBlackList == other.mDestPortBlackList &&
-            mSourceAddrList == other.mSourceAddrList &&
-            mSourcePortList == other.mSourcePortList &&
-            mSourceAddrBlackList == other.mSourceAddrBlackList &&
-          mSourcePortBlackList == other.mSourcePortBlackList;
-  }
+    std::vector<std::string> mDestAddrList;
+    std::vector<uint32_t> mDestPortList;
+    std::vector<std::string> mDestAddrBlackList;
+    std::vector<uint32_t> mDestPortBlackList;
+    std::vector<std::string> mSourceAddrList;
+    std::vector<uint32_t> mSourcePortList;
+    std::vector<std::string> mSourceAddrBlackList;
+    std::vector<uint32_t> mSourcePortBlackList;
+    bool operator==(const SecurityNetworkFilter& other) const {
+      return mDestAddrList == other.mDestAddrList &&
+             mDestPortList == other.mDestPortList &&
+             mDestAddrBlackList == other.mDestAddrBlackList &&
+             mDestPortBlackList == other.mDestPortBlackList &&
+             mSourceAddrList == other.mSourceAddrList &&
+             mSourcePortList == other.mSourcePortList &&
+             mSourceAddrBlackList == other.mSourceAddrBlackList &&
+            mSourcePortBlackList == other.mSourcePortBlackList;
+    }
 };
 
 struct SecurityOption {
   std::vector<std::string> call_names_;
-  std::variant<SecurityFileFilter, SecurityNetworkFilter, SecurityProcessFilter> filter_;
+  std::variant<std::monostate, SecurityFileFilter, SecurityNetworkFilter> filter_;
   bool operator==(const SecurityOption& other) const {
     return call_names_ == other.call_names_ &&
             filter_ == other.filter_;
@@ -228,8 +244,12 @@ struct NetworkObserveConfig {
   long upca_offset_;
   long upps_offset_;
   long upcr_offset_;
-  NamiHandleBatchMeasureFunc measure_cb_;
-  NamiHandleBatchSpanFunc span_cb_;
+  bool enable_span_ = false;
+  bool enable_metric_ = false;
+  bool enable_event_ = false;
+  NamiHandleBatchMeasureFunc measure_cb_ = nullptr;
+  NamiHandleBatchSpanFunc span_cb_ = nullptr;
+  NamiHandleBatchEventFunc event_cb_ = nullptr;
   bool operator==(const NetworkObserveConfig& other) const {
     return enable_libbpf_debug_ == other.enable_libbpf_debug_ &&
            enable_so_ == other.enable_so_ &&

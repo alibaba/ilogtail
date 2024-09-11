@@ -32,29 +32,30 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
-#include "config_manager/ConfigManager.h"
-#include "controller/EventDispatcher.h"
-#include "event_handler/LogInput.h"
+#include "file_server/EventDispatcher.h"
+#include "file_server/event_handler/LogInput.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
-#include "flusher/sls/DiskBufferWriter.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
+#include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
-#include "pipeline/ProcessConfigManager.h"
-#include "plugin/PluginRegistry.h"
-#include "processor/daemon/LogProcess.h"
-#include "queue/ExactlyOnceQueueManager.h"
-#include "queue/SenderQueueManager.h"
-#include "sender/FlusherRunner.h"
-#include "sink/http/HttpSink.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "runner/LogProcess.h"
+#include "pipeline/queue/ExactlyOnceQueueManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
+#include "runner/FlusherRunner.h"
+#include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #include "config/provider/LegacyConfigProvider.h"
 #if defined(__linux__) && !defined(__ANDROID__)
+#include "common/LinuxDaemonUtil.h"
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
@@ -71,6 +72,10 @@ DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
 DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
 DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
+#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
+DEFINE_FLAG_BOOL(enable_cgroup, "", true);
+#endif
+
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(global_network_success);
@@ -156,6 +161,12 @@ void Application::Init() {
     GenerateInstanceId();
     TryGetUUID();
 
+#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
+    if (BOOL_FLAG(enable_cgroup)) {
+        CreateCGroup();
+    }
+#endif
+
     int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
     LogFileProfiler::mSystemBootTime = systemBootTime > 0 ? systemBootTime : GetSystemBootTime();
 
@@ -215,15 +226,15 @@ void Application::Start() { // GCOVR_EXCL_START
     {
         // add local config dir
         filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "processconfig" / "local";
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
         error_code ec;
         filesystem::create_directories(localConfigPath, ec);
         if (ec) {
             LOG_WARNING(sLogger,
-                        ("failed to create dir for local processconfig",
+                        ("failed to create dir for local instanceconfig",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddProcessSource(localConfigPath.string());
+        ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__
@@ -283,9 +294,9 @@ void Application::Start() { // GCOVR_EXCL_START
             if (!pipelineConfigDiff.IsEmpty()) {
                 PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
             }
-            ProcessConfigDiff processConfigDiff = ConfigWatcher::GetInstance()->CheckProcessConfigDiff();
-            if (!processConfigDiff.IsEmpty()) {
-                ProcessConfigManager::GetInstance()->UpdateProcessConfigs(processConfigDiff);
+            InstanceConfigDiff instanceConfigDiff = ConfigWatcher::GetInstance()->CheckInstanceConfigDiff();
+            if (!instanceConfigDiff.IsEmpty()) {
+                InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }
             lastConfigCheckTime = curTime;
         }
@@ -302,6 +313,7 @@ void Application::Start() { // GCOVR_EXCL_START
 #endif
         if (curTime - lastQueueGCTime >= INT32_FLAG(queue_check_gc_interval_sec)) {
             ExactlyOnceQueueManager::GetInstance()->ClearTimeoutQueues();
+            // this should be called in the same thread as config update
             SenderQueueManager::GetInstance()->ClearUnusedQueues();
             lastQueueGCTime = curTime;
         }

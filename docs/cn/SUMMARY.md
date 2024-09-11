@@ -68,10 +68,10 @@
   * [OTLP数据](plugins/input/service-otlp.md)
   * [PostgreSQL 查询数据](plugins/input/service-pgsql.md)
   * [Syslog数据](plugins/input/service-syslog.md)
-  * [eBPF文件安全数据](plugins/input/input-ebpf-file-security.md)
-  * [eBPF网络可观测数据](plugins/input/input-ebpf-network-observer.md)
-  * [eBPF网络安全数据](plugins/input/input-ebpf-network-security.md)
-  * [eBPF进程安全数据](plugins/input/input-ebpf-process-security.md)
+  * [文件安全数据](plugins/input/input-file-security.md)
+  * [网络可观测数据](plugins/input/input-network-observer.md)
+  * [网络安全数据](plugins/input/input-network-security.md)
+  * [进程安全数据](plugins/input/input-process-security.md)
 * [处理](plugins/processor/README.md)
   * [原生插件](plugins/processor/native/README.md)
     * [正则解析](plugins/processor/native/processor-parse-regex-native.md)
@@ -115,6 +115,12 @@
   * [Pulsar](plugins/flusher/flusher-pulsar.md)
   * [HTTP](plugins/flusher/flusher-http.md)
   * [Loki](plugins/flusher/loki.md)
+* [扩展](plugins/extension/README.md)
+  * [BasicAuth鉴权](plugins/extension/ext-basicauth.md)
+  * [协议解码/反序列化](plugins/extension/ext-default-decoder.md)
+  * [协议编码/序列化](plugins/extension/ext-default-encoder.md)
+  * [数据筛选](plugins/extension/ext-groupinfo-filter.md)
+  * [请求熔断](plugins/extension/ext-request-breaker.md)
 
 ## 工作原理 <a href="#principle" id="principle"></a>
 

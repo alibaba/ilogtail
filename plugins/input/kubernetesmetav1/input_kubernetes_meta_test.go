@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kubernetesmeta
+package kubernetesmetav1
 
 import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -36,7 +36,7 @@ import (
 
 func BenchmarkInputKubernetesMeta_Collect(b *testing.B) {
 	cxt := mock.NewEmptyContext("project", "store", "config")
-	p := pipeline.MetricInputs[pluginName]().(*InputKubernetesMeta)
+	p := pipeline.MetricInputs[pluginType]().(*InputKubernetesMeta)
 	p.KubeConfigPath = "default"
 	if _, err := p.Init(cxt); err != nil {
 		b.Errorf("cannot init the mock process plugin: %v", err)
