@@ -25,6 +25,7 @@
 #include "common/http/AsynCurlRunner.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
+#include "monitor/LogtailMetric.h"
 #include "prometheus/Constants.h"
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
@@ -45,8 +46,19 @@ PrometheusInputRunner::PrometheusInputRunner() : mUnRegisterMs(0) {
     mPodName = STRING_FLAG(_pod_name_);
     mTimer = std::make_shared<Timer>();
 
-    // self monitor
-    mRegisterState = GetMetricsRecordRef().Create
+    MetricLabels labels;
+    // labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
+    labels.emplace_back(prometheus::POD_NAME, mPodName);
+    labels.emplace_back(prometheus::OPERATOR_HOST, mServiceHost);
+    labels.emplace_back(prometheus::OPERATOR_PORT, mServicePort);
+
+    DynamicMetricLabels dynamicLabels;
+    // dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
+
+    mIntGauges[prometheus::PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_REGISTER_STATE);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -118,6 +130,7 @@ void PrometheusInputRunner::Init() {
                             mUnRegisterMs.store(responseJson[prometheus::UNREGISTER_MS].asUInt64());
                         }
                     }
+                    mIntGauges[prometheus::PROM_REGISTER_STATE]->Set(1);
                     LOG_INFO(sLogger, ("Register Success", mPodName));
                     break;
                 }
@@ -159,6 +172,7 @@ void PrometheusInputRunner::Stop() {
                     LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
                 } else {
                     LOG_INFO(sLogger, ("Unregister Success", mPodName));
+                    mIntGauges[prometheus::PROM_REGISTER_STATE]->Set(0);
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));

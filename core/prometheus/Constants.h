@@ -23,11 +23,6 @@ const char* const ACTION = "action";
 const char* const MODULUS = "modulus";
 const char* const NAME = "__name__";
 
-// prometheus env
-const char* const OPERATOR_HOST = "OPERATOR_HOST";
-const char* const OPERATOR_PORT = "OPERATOR_PORT";
-const char* const POD_NAME = "POD_NAME";
-
 // prometheus api
 const char* const PROMETHEUS_PREFIX = "prometheus_";
 const char* const REGISTER_COLLECTOR_PATH = "/register_collector";
@@ -94,4 +89,9 @@ const char* const UP = "up";
 
 const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
+// self monitor
+const char* const PROM_REGISTER_STATE = "prom_register_state";
+const char* const POD_NAME = "pod_name";
+const char* const OPERATOR_HOST = "operator_host";
+const char* const OPERATOR_PORT = "operator_port";
 } // namespace logtail::prometheus
