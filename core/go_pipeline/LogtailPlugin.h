@@ -143,7 +143,7 @@ typedef GoInt (*InitPluginBaseV2Fun)(GoString cfg);
 typedef GoInt (*ProcessLogsFun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
 typedef GoInt (*ProcessLogGroupFun)(GoString c, GoSlice l, GoString p);
 typedef struct innerContainerMeta* (*GetContainerMetaFun)(GoString containerID);
-typedef InnerPluginMetrics* (*GetPipelineMetricsFun)();
+typedef InnerPluginMetrics* (*GetPipelineMetricsFun)(GoString metricType);
 
 // Methods export by adapter.
 typedef int (*IsValidToSendFun)(long long logstoreKey);
@@ -264,7 +264,7 @@ public:
 
     K8sContainerMeta GetContainerMeta(const std::string& containerID);
 
-    void GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList);
+    void GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList, const std::string& metricType);
 
 private:
     void* mPluginBasePtr;

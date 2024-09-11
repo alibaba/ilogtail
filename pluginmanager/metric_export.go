@@ -20,13 +20,18 @@ import (
 )
 
 const (
-	MetricExportType    = "go_metric_export_type"
 	MetricExportTypeGo  = "direct"
 	MetricExportTypeCpp = "cpp_provided"
 )
 
-func GetMetrics() []map[string]string {
-	return append(GetGoDirectMetrics(), GetGoCppProvidedMetrics()...)
+func GetMetrics(metricType string) []map[string]string {
+	if metricType == MetricExportTypeGo {
+		return GetGoDirectMetrics()
+	}
+	if metricType == MetricExportTypeCpp {
+		return GetGoCppProvidedMetrics()
+	}
+	return []map[string]string{}
 }
 
 // 直接输出的go指标，例如go插件指标
@@ -34,10 +39,6 @@ func GetGoDirectMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// go plugin metrics
 	metrics = append(metrics, GetGoPluginMetrics()...)
-
-	for _, metric := range metrics {
-		metric[MetricExportType] = MetricExportTypeGo
-	}
 	return metrics
 }
 
@@ -46,10 +47,6 @@ func GetGoCppProvidedMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// agent-level metrics
 	metrics = append(metrics, GetAgentStat()...)
-
-	for _, metric := range metrics {
-		metric[MetricExportType] = MetricExportTypeCpp
-	}
 	return metrics
 }
 

@@ -33,12 +33,13 @@
 #include "common/TimeUtil.h"
 #include "common/version.h"
 #include "file_server/event_handler/LogInput.h"
-#include "plugin/flusher/sls/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "protobuf/sls/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
+#include "monitor/MetricExportor.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "runner/FlusherRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ObserverManager.h"
@@ -760,6 +761,7 @@ void LoongCollectorMonitor::Init() {
 }
 
 void LoongCollectorMonitor::Stop() {
+    MetricExportor::GetInstance()->PushMetrics(true);
 }
 
 CounterPtr LoongCollectorMonitor::GetCounter(std::string key) {

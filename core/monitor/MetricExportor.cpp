@@ -34,7 +34,6 @@ DECLARE_FLAG_STRING(metrics_report_method);
 
 namespace logtail {
 
-const std::string METRIC_EXPORT_TYPE = "go_metric_export_type";
 const std::string METRIC_EXPORT_TYPE_GO = "direct";
 const std::string METRIC_EXPORT_TYPE_CPP = "cpp_provided";
 
@@ -74,21 +73,10 @@ void MetricExportor::PushCppMetrics() {
 }
 
 void MetricExportor::PushGoMetrics() {
-    std::vector<std::map<std::string, std::string>> goMetircsList;
-    LogtailPlugin::GetInstance()->GetPipelineMetrics(goMetircsList);
-
-    // filter agent or plugin level metrics
     std::vector<std::map<std::string, std::string>> goDirectMetircsList;
+    LogtailPlugin::GetInstance()->GetPipelineMetrics(goDirectMetircsList, METRIC_EXPORT_TYPE_GO);
     std::vector<std::map<std::string, std::string>> goCppProvidedMetircsList;
-    for (auto goMetrics : goMetircsList) {
-        if (goMetrics.find(METRIC_EXPORT_TYPE) != goMetrics.end()) {
-            if (goMetrics.at(METRIC_EXPORT_TYPE) == METRIC_EXPORT_TYPE_CPP) {
-                goCppProvidedMetircsList.push_back(std::move(goMetrics));
-                continue;
-            }
-        }
-        goDirectMetircsList.push_back(std::move(goMetrics));
-    }
+    LogtailPlugin::GetInstance()->GetPipelineMetrics(goCppProvidedMetircsList, METRIC_EXPORT_TYPE_CPP);
 
     PushGoCppProvidedMetrics(goCppProvidedMetircsList);
     PushGoDirectMetrics(goDirectMetircsList);
@@ -185,9 +173,6 @@ void MetricExportor::PushGoCppProvidedMetrics(std::vector<std::map<std::string, 
 
     for (auto metrics : metricsList) {
         for (auto metric : metrics) {
-            if (metric.first == METRIC_EXPORT_TYPE) {
-                continue;
-            }
             // if (metric.first == METRIC_AGENT_CPU_GO) {
             //     mAgentCpuGo->Set(std::stod(metric.second));
             // }
@@ -242,9 +227,6 @@ void MetricExportor::SerializeGoDirectMetricsListToLogGroupMap(
         SetLogTime(logPtr,
                    AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
         for (const auto& metric : metrics) {
-            if (metric.first == METRIC_EXPORT_TYPE) {
-                continue;
-            }
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(metric.first);
             contentPtr->set_value(metric.second);
@@ -262,9 +244,6 @@ void MetricExportor::SerializeGoDirectMetricsListToString(std::vector<std::map<s
         metricsRecordValue["time"]
             = AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec;
         for (const auto& metric : metrics) {
-            if (metric.first == METRIC_EXPORT_TYPE) {
-                continue;
-            }
             metricsRecordValue[metric.first] = metric.second;
         }
         Json::StreamWriterBuilder writer;

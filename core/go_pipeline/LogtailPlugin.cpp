@@ -470,9 +470,12 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     }
 }
 
-void LogtailPlugin::GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList) {
+void LogtailPlugin::GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList, const string& metricType) {
     if (mGetPipelineMetricsFun != nullptr) {
-        auto metrics = mGetPipelineMetricsFun();
+        GoString type;
+        type.n = metricType.size();
+        type.p = metricType.c_str();
+        auto metrics = mGetPipelineMetricsFun(type);
         if (metrics != nullptr) {
             for (int i = 0; i < metrics->count; ++i) {
                 std::map<std::string, std::string> item;
