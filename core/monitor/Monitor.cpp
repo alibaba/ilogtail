@@ -178,6 +178,7 @@ void LogtailMonitor::Monitor() {
                 lastCheckHardLimitTime = monitorTime;
 
                 GetMemStat();
+                CalCpuStat(curCpuStat, mCpuStat);
                 if (CheckHardMemLimit()) {
                     LOG_ERROR(sLogger,
                               ("Resource used by program exceeds hard limit",
@@ -713,7 +714,7 @@ void LoongCollectorMonitor::Init() {
     labels.emplace_back(METRIC_LABEL_UUID, Application::GetInstance()->GetUUID());
     labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
     DynamicMetricLabels dynamicLabels;
-    dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
 #ifdef __ENTERPRISE__
     dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
                                []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });

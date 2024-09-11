@@ -33,7 +33,6 @@ const std::string METRIC_LABEL_INSTANCE_ID = "instance_id";
 const std::string METRIC_LABEL_IP = "ip";
 const std::string METRIC_LABEL_OS = "os";
 const std::string METRIC_LABEL_OS_DETAIL = "os_detail";
-const std::string METRIC_LABEL_PROJECTS = "projects";
 const std::string METRIC_LABEL_USER_DEFINED_ID = "user_defined_id";
 const std::string METRIC_LABEL_UUID = "uuid";
 const std::string METRIC_LABEL_VERSION = "version";

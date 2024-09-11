@@ -35,7 +35,6 @@ extern const std::string METRIC_LABEL_INSTANCE_ID;
 extern const std::string METRIC_LABEL_IP;
 extern const std::string METRIC_LABEL_OS;
 extern const std::string METRIC_LABEL_OS_DETAIL;
-extern const std::string METRIC_LABEL_PROJECTS;
 extern const std::string METRIC_LABEL_USER_DEFINED_ID;
 extern const std::string METRIC_LABEL_UUID;
 extern const std::string METRIC_LABEL_VERSION;
