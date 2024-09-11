@@ -17,7 +17,7 @@
 #pragma once
 
 #include "Monitor.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 
 
 namespace logtail {

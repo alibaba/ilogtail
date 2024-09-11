@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "provider.h"
+#include "Provider.h"
 
 #include "config/common_provider/CommonConfigProvider.h"
 #include "config/common_provider/LegacyCommonConfigProvider.h"

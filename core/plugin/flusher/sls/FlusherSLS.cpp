@@ -30,7 +30,7 @@
 #include "plugin/flusher/sls/SLSResponse.h"
 #include "plugin/flusher/sls/SendResult.h"
 #include "pipeline/Pipeline.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"

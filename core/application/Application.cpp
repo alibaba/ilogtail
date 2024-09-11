@@ -60,7 +60,7 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 #else
-#include "provider/provider.h"
+#include "provider/Provider.h"
 #endif
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);

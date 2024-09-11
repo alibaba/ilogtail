@@ -27,7 +27,7 @@
 #include "common/version.h"
 #include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
 
 DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);

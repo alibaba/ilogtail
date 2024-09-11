@@ -29,7 +29,7 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 #include "pipeline/queue/SenderQueueManager.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);

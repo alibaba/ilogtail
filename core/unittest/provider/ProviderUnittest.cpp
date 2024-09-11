@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "unittest/Unittest.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 
 
 namespace logtail {

@@ -27,7 +27,7 @@
 #include "protobuf/sls/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
 #include "sdk/Exception.h"

@@ -23,7 +23,7 @@
 #include "common/TimeUtil.h"
 #include "common/version.h"
 #include "protobuf/sls/sls_logs.pb.h"
-#include "provider/provider.h"
+#include "provider/Provider.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
 
