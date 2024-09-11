@@ -24,6 +24,7 @@
 #include "common/Lock.h"
 #include "common/timer/Timer.h"
 #include "monitor/LogtailMetric.h"
+#include "prometheus/PromSelfMonitor.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "runner/InputRunner.h"
 #include "sdk/Common.h"
@@ -78,6 +79,7 @@ private:
     std::atomic<uint64_t> mUnRegisterMs;
 
     // self monitor
+    PromSelfMonitor mPromSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
     std::unordered_map<std::string, IntGaugePtr> mIntGauges;

@@ -45,9 +45,9 @@ PrometheusInputRunner::PrometheusInputRunner()
       mUnRegisterMs(0) {
     mClient = std::make_unique<sdk::CurlClient>();
 
-
     mTimer = std::make_shared<Timer>();
 
+    // self monitor
     MetricLabels labels;
     // labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
     labels.emplace_back(prometheus::POD_NAME, mPodName);
@@ -61,6 +61,7 @@ PrometheusInputRunner::PrometheusInputRunner()
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
 
     mIntGauges[prometheus::PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_REGISTER_STATE);
+    mIntGauges[prometheus::PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_JOB_NUM);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -81,6 +82,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     }
     // 2. build Ticker Event and add it to Timer
     targetSubscriber->ScheduleNext();
+    mIntGauges[prometheus::PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
@@ -88,6 +90,7 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
     if (mTargetSubscriberSchedulerMap.count(jobName)) {
         mTargetSubscriberSchedulerMap[jobName]->Cancel();
         mTargetSubscriberSchedulerMap.erase(jobName);
+        mIntGauges[prometheus::PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
     }
 }
 
@@ -101,6 +104,7 @@ void PrometheusInputRunner::Init() {
     mIsStarted = true;
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();
+    mPromSelfMonitor.Init();
 
     LOG_INFO(sLogger, ("PrometheusInputRunner", "register"));
     // only register when operator exist
@@ -152,6 +156,7 @@ void PrometheusInputRunner::Stop() {
     mIsStarted = false;
     mIsThreadRunning.store(false);
     mTimer->Stop();
+    mPromSelfMonitor.Stop();
 
     LOG_INFO(sLogger, ("PrometheusInputRunner", "stop asyn curl runner"));
     AsynCurlRunner::GetInstance()->Stop();

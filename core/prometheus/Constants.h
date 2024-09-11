@@ -91,6 +91,9 @@ const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
 // self monitor
 const char* const PROM_REGISTER_STATE = "prom_register_state";
+const char* const PROM_JOB_NUM = "prom_job_num";
+
+
 const char* const POD_NAME = "pod_name";
 const char* const OPERATOR_HOST = "operator_host";
 const char* const OPERATOR_PORT = "operator_port";
