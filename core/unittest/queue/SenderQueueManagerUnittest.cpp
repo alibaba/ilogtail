@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "flusher/sls/FlusherSLS.h"
-#include "queue/ExactlyOnceQueueManager.h"
-#include "queue/QueueKeyManager.h"
-#include "queue/QueueParam.h"
-#include "queue/SLSSenderQueueItem.h"
-#include "queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "pipeline/queue/ExactlyOnceQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/QueueParam.h"
+#include "pipeline/queue/SLSSenderQueueItem.h"
+#include "pipeline/queue/SenderQueueManager.h"
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(sender_queue_gc_threshold_sec);
@@ -141,7 +141,7 @@ void SenderQueueManagerUnittest::TestDeleteQueue() {
     APSARA_TEST_EQUAL("", QueueKeyManager::GetInstance()->GetName(key1));
 
     // update queue will remove the queue from gc queue
-    sManager->CreateQueue(key2, vector<shared_ptr<ConcurrencyLimiter>>{sConcurrencyLimiter}, sMaxRate);
+    sManager->ReuseQueue(key2);
     APSARA_TEST_EQUAL(0U, sManager->mQueueDeletionTimeMap.size());
 }
 

@@ -22,14 +22,15 @@
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
-#include "config_manager/ConfigManager.h"
+#include "pipeline/compression/CompressorFactory.h"
 #include "container_manager/ConfigContainerInfoUpdateCmd.h"
+#include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
 #include "provider/provider.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -52,10 +53,16 @@ LogtailPlugin::LogtailPlugin() {
     mPluginValid = false;
     mPluginAlarmConfig.mLogstore = "logtail_alarm";
     mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginAlarmConfig.mCompressor
+        = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::ZSTD);
     mPluginProfileConfig.mLogstore = "shennong_log_profile";
     mPluginProfileConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginProfileConfig.mCompressor
+        = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::ZSTD);
     mPluginContainerConfig.mLogstore = "logtail_containers";
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginContainerConfig.mCompressor
+        = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::ZSTD);
 
     mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
@@ -124,6 +131,12 @@ void LogtailPlugin::Resume() {
 }
 
 int LogtailPlugin::IsValidToSend(long long logstoreKey) {
+    // TODO: because go profile pipeline is not controlled by C++, we cannot know queue key in advance
+    // therefore, we assume true here. This could be a potential problem if network is not available for profile info.
+    // However, since go profile pipeline will be stopped only during process exit, it should be fine.
+    if (logstoreKey == -1) {
+        return true;
+    }
     return SenderQueueManager::GetInstance()->IsValidToPush(logstoreKey) ? 0 : -1;
 }
 

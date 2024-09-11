@@ -104,19 +104,23 @@ set(PLUGIN_SOURCE_FILES_CORE "")
 set(PLUGIN_SOURCE_FILES_SPL "")
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/common.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/common/links.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/input/input.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/input/links.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/processor/processor.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/processor/links.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/flusher.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/flusher/links.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/input/input.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/input/links.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/processor/processor.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/processor/links.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/flusher/flusher.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/plugin/flusher/links.cmake)
 
 # Subdirectories (modules). except for common, input, processor, flusher, observer, helper, spl, and provider.
 set(SUB_DIRECTORIES_LIST
-        batch application app_config checkpoint compression config config/watcher config_manager 
-        container_manager controller event event_handler event_listener file_server go_pipeline log_pb logger 
-        models monitor parser pipeline plugin plugin/creator plugin/instance plugin/interface polling
-        queue reader sdk sender serializer sls_control fuse prometheus prometheus/labels prometheus/schedulers prometheus/async sink/http route ebpf/observer ebpf/security ebpf/handler ebpf runner
+        application app_config checkpoint container_manager logger go_pipeline monitor  models
+        config config/watcher 
+        pipeline pipeline/batch pipeline/compression pipeline/limiter pipeline/plugin pipeline/plugin/creator pipeline/plugin/instance pipeline/plugin/interface pipeline/queue pipeline/route pipeline/serializer
+        runner runner/sink/http protobuf/sls
+        file_server file_server/event file_server/event_handler file_server/event_listener file_server/reader file_server/polling
+        prometheus prometheus/labels prometheus/schedulers prometheus/async
+        ebpf ebpf/observer ebpf/security ebpf/handler
+        parser sls_control sdk
         )
 if (LINUX)
     if (ENABLE_ENTERPRISE)
@@ -164,11 +168,11 @@ add_subdirectory("${PROVIDER_PATH}" "${CMAKE_BINARY_DIR}/provider")
 
 if(MSVC)
     # remove linux event listener
-    file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Linux.cpp event_listener/*_Linux.h)
+    file(GLOB REMOVE_EVENT_LISTENER_SOURCES file_server/event_listener/*_Linux.cpp file_server/event_listener/*_Linux.h)
     list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
 elseif(UNIX)
     # remove windows event listener
-    file(GLOB REMOVE_EVENT_LISTENER_SOURCES event_listener/*_Windows.cpp event_listener/*_Windows.h)
+    file(GLOB REMOVE_EVENT_LISTENER_SOURCES file_server/event_listener/*_Windows.cpp file_server/event_listener/*_Windows.h)
     list(REMOVE_ITEM FRAMEWORK_SOURCE_FILES ${REMOVE_EVENT_LISTENER_SOURCES})
     if (LINUX)
         # observer
@@ -222,7 +226,6 @@ if (BUILD_LOGTAIL_SHARED_LIBRARY)
 endif ()
 
 # Generate independent libraries.
-# add_subdirectory(helper)
 add_subdirectory(go_pipeline)
 add_subdirectory(common)
 
