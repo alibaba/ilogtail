@@ -74,9 +74,9 @@ void MetricExportor::PushCppMetrics() {
 
 void MetricExportor::PushGoMetrics() {
     std::vector<std::map<std::string, std::string>> goDirectMetircsList;
-    LogtailPlugin::GetInstance()->GetPipelineMetrics(goDirectMetircsList, METRIC_EXPORT_TYPE_GO);
+    LogtailPlugin::GetInstance()->GetGoMetrics(goDirectMetircsList, METRIC_EXPORT_TYPE_GO);
     std::vector<std::map<std::string, std::string>> goCppProvidedMetircsList;
-    LogtailPlugin::GetInstance()->GetPipelineMetrics(goCppProvidedMetircsList, METRIC_EXPORT_TYPE_CPP);
+    LogtailPlugin::GetInstance()->GetGoMetrics(goCppProvidedMetircsList, METRIC_EXPORT_TYPE_CPP);
 
     PushGoCppProvidedMetrics(goCppProvidedMetircsList);
     PushGoDirectMetrics(goDirectMetircsList);

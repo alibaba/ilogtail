@@ -296,8 +296,8 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 	return returnStruct
 }
 
-//export GetPipelineMetrics
-func GetPipelineMetrics(metricType string) *C.PluginMetrics {
+//export GetGoMetrics
+func GetGoMetrics(metricType string) *C.PluginMetrics {
 	results := pluginmanager.GetMetrics(metricType)
 	// 统计所有键值对的总数，用于分配内存
 	numMetrics := len(results)

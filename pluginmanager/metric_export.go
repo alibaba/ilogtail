@@ -35,6 +35,18 @@ func GetMetrics(metricType string) []map[string]string {
 }
 
 // 直接输出的go指标，例如go插件指标
+// [
+//
+//		{
+//	    	"label.plugin_name": "processor_test",
+//	    	"value.proc_in_records_total": "100"
+//		},
+//		{
+//	    	"label.plugin_name": "flusher_stdout",
+//	    	"value.flusher_in_records_total": "100"
+//		}
+//
+// ]
 func GetGoDirectMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// go plugin metrics
@@ -43,6 +55,14 @@ func GetGoDirectMetrics() []map[string]string {
 }
 
 // 由C++定义的指标，go把值传过去，例如go的进程级指标
+// [
+//
+//	    {
+//	        "agent_go_memory_used_mb": "100",
+//			"agent_go_routines_total": "20"
+//	    }
+//
+// ]
 func GetGoCppProvidedMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// agent-level metrics
@@ -61,8 +81,8 @@ func GetGoPluginMetrics() []map[string]string {
 
 // go 进程级指标，由C++部分注册
 func GetAgentStat() []map[string]string {
-	records := []map[string]string{}
-	record := map[string]string{}
+	metrics := []map[string]string{}
+	metric := map[string]string{}
 	// key is the metric key in runtime/metrics, value is agent's metric key
 	metricNames := map[string]string{
 		// cpu
@@ -95,9 +115,9 @@ func GetAgentStat() []map[string]string {
 		case goruntimemetrics.KindFloat64:
 			recordValueString = strconv.FormatFloat(recordValue.Float64(), 'g', -1, 64)
 		}
-		record[recordName] = recordValueString
+		metric[recordName] = recordValueString
 	}
 
-	records = append(records, record)
-	return records
+	metrics = append(metrics, metric)
+	return metrics
 }
