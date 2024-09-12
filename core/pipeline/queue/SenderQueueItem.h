@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/QueueKey.h"
 
 namespace logtail {
@@ -60,6 +61,17 @@ struct SenderQueueItem {
     virtual ~SenderQueueItem() = default;
 
     virtual SenderQueueItem* Clone() { return new SenderQueueItem(*this); }
+
+    void SubInProcessingCnt(std::string& configName) const {
+        if (mPipeline) {
+            mPipeline->SubInProcessingCnt();
+        } else {
+            auto p = PipelineManager::GetInstance()->FindConfigByName(configName);
+            if (p != nullptr) {
+                p->SubInProcessingCnt();
+            }
+        }
+    }
 };
 
 } // namespace logtail

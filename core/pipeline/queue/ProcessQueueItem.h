@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "models/PipelineEventGroup.h"
+#include "pipeline/PipelineManager.h"
 
 namespace logtail {
 
@@ -30,6 +31,17 @@ struct ProcessQueueItem {
     size_t mInputIndex = 0; // index of the input in the pipeline
 
     ProcessQueueItem(PipelineEventGroup&& group, size_t index) : mEventGroup(std::move(group)), mInputIndex(index) {}
+
+    AddPipelineInProcessingCnt(std::string& configName) const {
+        if (mPipeline) {
+            mPipeline->AddInProcessingCnt();
+        } else {
+            auto p = PipelineManager::GetInstance()->FindConfigByName(configName);
+            if (p) {
+                p->AddInProcessingCnt();
+            }
+        }
+    }
 };
 
 } // namespace logtail

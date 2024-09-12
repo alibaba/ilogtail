@@ -31,6 +31,7 @@ import (
 
 // Following variables are exported so that tests of main package can reference them.
 var LogtailConfig sync.Map
+var ToStartLogtailConfig *LogstoreConfig
 var LastUnsendBuffer map[string]PluginRunner
 var ContainerConfig *LogstoreConfig
 
@@ -133,11 +134,11 @@ func Init() (err error) {
 
 // timeoutStop wrappers LogstoreConfig.Stop with timeout (5s by default).
 // @return true if Stop returns before timeout, otherwise false.
-func timeoutStop(config *LogstoreConfig, exitFlag bool) bool {
+func timeoutStop(config *LogstoreConfig, removingFlag bool) bool {
 	done := make(chan int)
 	go func() {
 		logger.Info(config.Context.GetRuntimeContext(), "Stop config in goroutine", "begin")
-		_ = config.Stop(exitFlag)
+		_ = config.Stop(removingFlag)
 		close(done)
 		logger.Info(config.Context.GetRuntimeContext(), "Stop config in goroutine", "end")
 	}()
@@ -219,15 +220,15 @@ func StopAll(exitFlag, withInput bool) error {
 }
 
 // Stop stop the given config.
-func Stop(configName string, removingFlag bool) error {
+func Stop(configName string, exitFlag bool) error {
 	defer panicRecover("Run plugin")
 	if object, exists := LogtailConfig.Load(configName); exists {
 		if config, ok := object.(*LogstoreConfig); ok {
-			if hasStopped := timeoutStop(config, true); !hasStopped {
+			if hasStopped := timeoutStop(config, exitFlag); !hasStopped {
 				logger.Error(config.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
 					"timeout when stop config, goroutine might leak")
 			}
-			if !removingFlag {
+			if !exitFlag {
 				LastUnsendBuffer[configName] = config.PluginRunner
 			}
 			LogtailConfig.Delete(configName)
@@ -240,13 +241,17 @@ func Stop(configName string, removingFlag bool) error {
 // Start starts the given config.
 func Start(configName string) error {
 	defer panicRecover("Run plugin")
-	if object, exists := LogtailConfig.Load(configName); exists {
-		if config, ok := object.(*LogstoreConfig); ok {
-			config.Start()
-			return nil
-		}
+	if ToStartLogtailConfig == nil {
+		return fmt.Errorf("no pipeline for the config is created: %s", configName)
 	}
-	return fmt.Errorf("config not found: %s", configName)
+	if ToStartLogtailConfig.ConfigName != configName {
+		// should never happen
+		return fmt.Errorf("config unmatch with to start pipeline: given %s, expect %s", configName, ToStartLogtailConfig.ConfigName)
+	}
+	ToStartLogtailConfig.Start()
+	LogtailConfig.Store(configName, ToStartLogtailConfig)
+	ToStartLogtailConfig = nil
+	return nil
 }
 
 func GetLogtailConfigSize() int {

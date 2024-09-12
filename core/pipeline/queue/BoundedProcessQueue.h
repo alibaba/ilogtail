@@ -38,6 +38,7 @@ public:
 
     bool Push(std::unique_ptr<ProcessQueueItem>&& item) override;
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
+    void InvalidatePop() override;
 
     void SetUpStreamFeedbacks(std::vector<FeedbackInterface*>&& feedbacks);
 

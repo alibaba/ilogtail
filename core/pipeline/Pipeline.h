@@ -24,14 +24,14 @@
 #include <vector>
 
 #include "config/PipelineConfig.h"
-#include "plugin/input/InputContainerStdio.h"
-#include "plugin/input/InputFile.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/FlusherInstance.h"
 #include "pipeline/plugin/instance/InputInstance.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "pipeline/route/Router.h"
+#include "plugin/input/InputContainerStdio.h"
+#include "plugin/input/InputFile.h"
 
 namespace logtail {
 
@@ -45,6 +45,18 @@ public:
     bool Send(std::vector<PipelineEventGroup>&& groupList);
     bool FlushBatch();
     void RemoveProcessQueue() const;
+    void AddInProcessingCnt() const { mProcessingCnt.fetch_add(1); }
+    void SubInProcessingCnt() const {
+        uint16_t currentVal;
+        do {
+            currentVal = atomic_val.load(std::memory_order_relaxed);
+            // cannot sub smaller than 0
+            if (currentVal == 0) {
+                return;
+            }
+        } while (!atomic_val.compare_exchange_weak(
+            currentVal, currentVal - 1, std::memory_order_release, std::memory_order_relaxed));
+    }
 
     const std::string& Name() const { return mName; }
     PipelineContext& GetContext() const { return mContext; }
@@ -88,6 +100,7 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     std::unique_ptr<Json::Value> mConfig;
     std::atomic_uint16_t mPluginID;
+    std::atomic_uint16_t mProcessingCnt;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;

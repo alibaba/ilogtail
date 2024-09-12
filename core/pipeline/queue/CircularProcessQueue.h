@@ -35,6 +35,7 @@ public:
 
     bool Push(std::unique_ptr<ProcessQueueItem>&& item) override;
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
+    void InvalidatePop() override;
 
     void Reset(size_t cap);
 

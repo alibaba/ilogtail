@@ -18,28 +18,28 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "app_config/AppConfig.h"
-#include "pipeline/batch/FlushStrategy.h"
 #include "common/EndpointUtil.h"
 #include "common/HashUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "common/TimeUtil.h"
+#include "pipeline/Pipeline.h"
+#include "pipeline/batch/FlushStrategy.h"
 #include "pipeline/compression/CompressorFactory.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SLSSenderQueueItem.h"
+#include "pipeline/queue/SenderQueueManager.h"
 #include "plugin/flusher/sls/PackIdManager.h"
 #include "plugin/flusher/sls/SLSClientManager.h"
 #include "plugin/flusher/sls/SLSResponse.h"
 #include "plugin/flusher/sls/SendResult.h"
-#include "pipeline/Pipeline.h"
 #include "profile_sender/ProfileSender.h"
-#include "pipeline/queue/QueueKeyManager.h"
-#include "pipeline/queue/SLSSenderQueueItem.h"
-#include "pipeline/queue/SenderQueueManager.h"
-#include "sdk/Common.h"
 #include "runner/FlusherRunner.h"
+#include "sdk/Common.h"
 #include "sls_control/SLSControl.h"
 // TODO: temporarily used here
-#include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "pipeline/PipelineManager.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
 
 using namespace std;
 
@@ -1001,18 +1001,6 @@ bool FlusherSLS::SerializeAndPush(vector<BatchedEventsList>&& groupLists) {
 }
 
 bool FlusherSLS::PushToQueue(QueueKey key, unique_ptr<SenderQueueItem>&& item, uint32_t retryTimes) {
-#ifndef APSARA_UNIT_TEST_MAIN
-    // TODO: temporarily set here, should be removed after independent config update refactor
-    if (item->mFlusher->HasContext()) {
-        item->mPipeline
-            = PipelineManager::GetInstance()->FindConfigByName(item->mFlusher->GetContext().GetConfigName());
-        if (!item->mPipeline) {
-            // should not happen
-            return false;
-        }
-    }
-#endif
-
     const string& str = QueueKeyManager::GetInstance()->GetName(key);
     for (size_t i = 0; i < retryTimes; ++i) {
         int rst = SenderQueueManager::GetInstance()->PushQueue(key, std::move(item));

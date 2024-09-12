@@ -24,11 +24,11 @@
 #include <vector>
 
 #include "common/FeedbackInterface.h"
+#include "pipeline/limiter/ConcurrencyLimiter.h"
+#include "pipeline/limiter/RateLimiter.h"
 #include "pipeline/queue/QueueParam.h"
 #include "pipeline/queue/SenderQueue.h"
 #include "pipeline/queue/SenderQueueItem.h"
-#include "pipeline/limiter/ConcurrencyLimiter.h"
-#include "pipeline/limiter/RateLimiter.h"
 
 namespace logtail {
 

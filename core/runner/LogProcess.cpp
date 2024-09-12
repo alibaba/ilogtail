@@ -15,12 +15,12 @@
 #include "runner/LogProcess.h"
 
 #include "app_config/AppConfig.h"
-#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
@@ -294,6 +294,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 }
                 pipeline->Send(std::move(eventGroupList));
             }
+            // When item is in sender queue, we could decrease the count
+            pipeline->SubInProcessingCnt();
         }
     }
     LOG_WARNING(sLogger, ("runner/LogProcess.hread", "Exit")("threadNo", threadNo));

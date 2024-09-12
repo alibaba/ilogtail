@@ -29,6 +29,14 @@ bool Flusher::Start() {
 }
 
 bool Flusher::Stop(bool isPipelineRemoving) {
+    if (HasContext()) {
+        unique_ptr<SenderQueueItem> tombStone = make_unique<SenderQueueItem>();
+        tombStone->mPipeline = PipelineManager::GetInstance()->FindConfigByName(mContext->GetConfigName());
+        if (!tombStone->mPipeline) {
+            LOG_ERROR(sLogger, ("failed to find pipeline when stop flusher", mContext->GetConfigName()));
+        }
+        SenderQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(tombStone));
+    }
     SenderQueueManager::GetInstance()->DeleteQueue(mQueueKey);
     return true;
 }

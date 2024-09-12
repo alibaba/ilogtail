@@ -211,9 +211,9 @@ func StopAll(exitFlag int, withInputFlag int) {
 }
 
 //export Stop
-func Stop(configName string, removingFlag int) {
-	logger.Info(context.Background(), "Stop", "start", "config", configName, "removing", removingFlag)
-	err := pluginmanager.Stop(configName, removingFlag != 0)
+func Stop(configName string, exitFlag int) {
+	logger.Info(context.Background(), "Stop", "start", "config", configName, "exit", exitFlag)
+	err := pluginmanager.Stop(configName, exitFlag != 0)
 	if err != nil {
 		logger.Error(context.Background(), "PLUGIN_ALARM", "stop error", err)
 	}
