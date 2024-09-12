@@ -97,14 +97,13 @@ void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
     auto item = make_unique<ProcessQueueItem>(std::move(eGroup), mInputIndex);
 #ifdef APSARA_UNIT_TEST_MAIN
     mItem.push_back(std::move(item));
+    return;
 #endif
     while (true) {
-        if (ProcessQueueManager::GetInstance()->IsValidToPush(mQueueKey)) {
-            ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
+        if (ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item)) == 0) {
             break;
-        } else {
-            sleep(1);
         }
+        usleep(10 * 1000);
     }
 }
 
@@ -118,6 +117,15 @@ void ScrapeScheduler::ScheduleNext() {
         this->OnMetricResult(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
+    });
+    future->AddPreCheckCallback([this]() -> bool {
+        if (ProcessQueueManager::GetInstance()->IsValidToPush(mQueueKey)) {
+            return true;
+        } else {
+            this->DelayExecTime(1);
+            this->ScheduleNext();
+            return false;
+        }
     });
 
     if (IsCancelled()) {

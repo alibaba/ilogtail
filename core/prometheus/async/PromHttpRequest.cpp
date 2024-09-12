@@ -27,7 +27,7 @@ void PromHttpRequest::OnSendDone(const HttpResponse& response) {
 }
 
 [[nodiscard]] bool PromHttpRequest::IsContextValid() const {
-    return true;
+    return mFuture->PreCheck();
 }
 
 } // namespace logtail

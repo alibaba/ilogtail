@@ -16,8 +16,21 @@ void PromFuture::Process(const HttpResponse& response, uint64_t timestampMilliSe
     }
 }
 
+bool PromFuture::PreCheck() {
+    for (auto& callback : mPreCheckCallbacks) {
+        if (!callback()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void PromFuture::AddDoneCallback(std::function<void(const HttpResponse&, uint64_t timestampMilliSec)>&& callback) {
     mDoneCallbacks.emplace_back(std::move(callback));
+}
+
+void PromFuture::AddPreCheckCallback(std::function<bool()>&& callback) {
+    mPreCheckCallbacks.emplace_back(std::move(callback));
 }
 
 void PromFuture::Cancel() {
