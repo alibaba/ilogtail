@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "pipeline/InstanceConfigManager.h"
+#include "instance_config/InstanceConfigManager.h"
 
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 

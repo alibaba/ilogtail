@@ -20,7 +20,7 @@
 
 #include "logger/Logger.h"
 #include "pipeline/PipelineManager.h"
-#include "pipeline/InstanceConfigManager.h"
+#include "instance_config/InstanceConfigManager.h"
 
 using namespace std;
 

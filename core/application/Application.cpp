@@ -43,7 +43,7 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
-#include "pipeline/InstanceConfigManager.h"
+#include "instance_config/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "runner/LogProcess.h"
