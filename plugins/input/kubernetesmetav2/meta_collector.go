@@ -348,7 +348,7 @@ func (m *metaCollector) sendInBackground() {
 		}
 		if time.Since(lastSendClusterTime) > time.Duration(m.serviceK8sMeta.Interval)*time.Second {
 			// send cluster entity if in infra domain
-			if m.serviceK8sMeta.Domain == "infra" {
+			if m.serviceK8sMeta.Domain == infraDomain {
 				clusterEntity := m.generateClusterEntity()
 				m.collector.AddRawLog(convertPipelineEvent2Log(clusterEntity))
 				lastSendClusterTime = time.Now()
@@ -406,6 +406,8 @@ func (m *metaCollector) genEntityTypeKey(kind string) string {
 	var prefix string
 	if kind == "" {
 		prefix = "k8s."
+	} else if kind == "cluster" && m.serviceK8sMeta.Domain == acsDomain {
+		prefix = m.serviceK8sMeta.Domain + ".ack."
 	} else {
 		prefix = m.serviceK8sMeta.Domain + ".k8s."
 	}

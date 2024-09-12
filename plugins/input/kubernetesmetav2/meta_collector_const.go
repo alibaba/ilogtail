@@ -26,3 +26,8 @@ const (
 	entityLinkDestEntityIDFieldName   = "__dest_entity_id__"
 	entityLinkRelationTypeFieldName   = "__relation_type__"
 )
+
+const (
+	acsDomain   = "acs"
+	infraDomain = "infra"
+)
