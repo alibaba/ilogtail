@@ -14,12 +14,12 @@
 
 #include <memory>
 
-#include "plugin/flusher/sls/FlusherSLS.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/queue/ExactlyOnceQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SLSSenderQueueItem.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "unittest/Unittest.h"
 
 DECLARE_FLAG_INT32(logtail_queue_gc_threshold_sec);
@@ -71,6 +71,7 @@ private:
     static unique_ptr<PipelineEventGroup> sEventGroup;
     static ExactlyOnceQueueManager* sManager;
     static vector<RangeCheckpointPtr> sCheckpoints;
+    static PipelineContext sCtx;
 
     unique_ptr<ProcessQueueItem> GenerateProcessItem();
     unique_ptr<SenderQueueItem> GenerateSenderItem();
@@ -83,13 +84,14 @@ const size_t ExactlyOnceQueueManagerUnittest::sDataSize;
 unique_ptr<PipelineEventGroup> ExactlyOnceQueueManagerUnittest::sEventGroup;
 ExactlyOnceQueueManager* ExactlyOnceQueueManagerUnittest::sManager;
 vector<RangeCheckpointPtr> ExactlyOnceQueueManagerUnittest::sCheckpoints;
+PipelineContext ExactlyOnceQueueManagerUnittest::sCtx;
 
 void ExactlyOnceQueueManagerUnittest::TestUpdateQueue() {
     QueueKey key = 0;
     {
         // create queue
         size_t queueSize = 5;
-        APSARA_TEST_TRUE(sManager->CreateOrUpdateQueue(key, 0, "test_config", vector<RangeCheckpointPtr>(queueSize)));
+        APSARA_TEST_TRUE(sManager->CreateOrUpdateQueue(key, 0, sCtx, vector<RangeCheckpointPtr>(queueSize)));
         APSARA_TEST_EQUAL(1U, sManager->mSenderQueues.size());
         auto& senderQue = sManager->mSenderQueues.at(key);
         APSARA_TEST_EQUAL(queueSize, senderQue.mCapacity);
@@ -106,7 +108,7 @@ void ExactlyOnceQueueManagerUnittest::TestUpdateQueue() {
     {
         // update queue with the same priority
         size_t queueSize = 8;
-        APSARA_TEST_TRUE(sManager->CreateOrUpdateQueue(key, 0, "test_config", vector<RangeCheckpointPtr>(queueSize)));
+        APSARA_TEST_TRUE(sManager->CreateOrUpdateQueue(key, 0, sCtx, vector<RangeCheckpointPtr>(queueSize)));
         APSARA_TEST_EQUAL(1U, sManager->mSenderQueues.size());
         auto& senderQue = sManager->mSenderQueues.at(key);
         APSARA_TEST_EQUAL(queueSize, senderQue.mCapacity);
@@ -122,7 +124,7 @@ void ExactlyOnceQueueManagerUnittest::TestUpdateQueue() {
     {
         // update queue with different priority
         size_t queueSize = 6;
-        APSARA_TEST_TRUE(sManager->CreateOrUpdateQueue(key, 1, "test_config", vector<RangeCheckpointPtr>(queueSize)));
+        APSARA_TEST_TRUE(sManager->CreateOrUpdateQueue(key, 1, sCtx, vector<RangeCheckpointPtr>(queueSize)));
         APSARA_TEST_EQUAL(1U, sManager->mProcessQueues.size());
         APSARA_TEST_EQUAL(0U, sManager->mProcessPriorityQueue[0].size());
         APSARA_TEST_EQUAL(1U, sManager->mProcessPriorityQueue[1].size());
@@ -141,8 +143,8 @@ void ExactlyOnceQueueManagerUnittest::TestDeleteQueue() {
 
     QueueKey key1 = QueueKeyManager::GetInstance()->GetKey("name_1");
     QueueKey key2 = QueueKeyManager::GetInstance()->GetKey("name_2");
-    sManager->CreateOrUpdateQueue(key1, 1, "test_config_1", sCheckpoints);
-    sManager->CreateOrUpdateQueue(key2, 1, "test_config_2", sCheckpoints);
+    sManager->CreateOrUpdateQueue(key1, 1, sCtx, sCheckpoints);
+    sManager->CreateOrUpdateQueue(key2, 1, sCtx, sCheckpoints);
     sManager->PushProcessQueue(key2, GenerateProcessItem());
 
     // queue exists and not marked deleted
@@ -162,12 +164,12 @@ void ExactlyOnceQueueManagerUnittest::TestDeleteQueue() {
     APSARA_TEST_EQUAL("", QueueKeyManager::GetInstance()->GetName(key1));
 
     // update queue will remove the queue from gc queue
-    sManager->CreateOrUpdateQueue(key2, 0, "test_config_2", sCheckpoints);
+    sManager->CreateOrUpdateQueue(key2, 0, sCtx, sCheckpoints);
     APSARA_TEST_EQUAL(0U, sManager->mQueueDeletionTimeMap.size());
 }
 
 void ExactlyOnceQueueManagerUnittest::TestPushProcessQueue() {
-    sManager->CreateOrUpdateQueue(0, 0, "test_config", sCheckpoints);
+    sManager->CreateOrUpdateQueue(0, 0, sCtx, sCheckpoints);
 
     // queue exists
     APSARA_TEST_TRUE(sManager->IsValidToPushProcessQueue(0));
@@ -184,8 +186,8 @@ void ExactlyOnceQueueManagerUnittest::TestPushProcessQueue() {
 }
 
 void ExactlyOnceQueueManagerUnittest::TestIsAllProcessQueueEmpty() {
-    sManager->CreateOrUpdateQueue(0, 0, "test_config_1", sCheckpoints);
-    sManager->CreateOrUpdateQueue(1, 2, "test_config_2", sCheckpoints);
+    sManager->CreateOrUpdateQueue(0, 0, sCtx, sCheckpoints);
+    sManager->CreateOrUpdateQueue(1, 2, sCtx, sCheckpoints);
     APSARA_TEST_TRUE(sManager->IsAllProcessQueueEmpty());
 
     sManager->PushProcessQueue(0, GenerateProcessItem());
@@ -193,7 +195,7 @@ void ExactlyOnceQueueManagerUnittest::TestIsAllProcessQueueEmpty() {
 }
 
 void ExactlyOnceQueueManagerUnittest::TestPushSenderQueue() {
-    sManager->CreateOrUpdateQueue(0, 0, "test_config", sCheckpoints);
+    sManager->CreateOrUpdateQueue(0, 0, sCtx, sCheckpoints);
 
     // queue exists
     APSARA_TEST_EQUAL(0, sManager->PushSenderQueue(0, GenerateSenderItem()));
@@ -211,7 +213,7 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
         cpt->data.set_sequence_id(0);
         checkpoints1.emplace_back(cpt);
     }
-    sManager->CreateOrUpdateQueue(0, 0, "test_config_1", checkpoints1);
+    sManager->CreateOrUpdateQueue(0, 0, sCtx, checkpoints1);
 
     vector<RangeCheckpointPtr> checkpoints2;
     for (size_t i = 0; i < 2; ++i) {
@@ -221,7 +223,7 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
         cpt->data.set_sequence_id(0);
         checkpoints2.emplace_back(cpt);
     }
-    sManager->CreateOrUpdateQueue(1, 2, "test_config_2", checkpoints2);
+    sManager->CreateOrUpdateQueue(1, 2, sCtx, checkpoints2);
 
     for (size_t i = 0; i <= 2; ++i) {
         sManager->PushSenderQueue(0, GenerateSenderItem());
@@ -250,7 +252,7 @@ void ExactlyOnceQueueManagerUnittest::TestGetAllAvailableSenderQueueItems() {
 }
 
 void ExactlyOnceQueueManagerUnittest::TestRemoveSenderItem() {
-    sManager->CreateOrUpdateQueue(1, 0, "test_config", sCheckpoints);
+    sManager->CreateOrUpdateQueue(1, 0, sCtx, sCheckpoints);
     {
         // queue exists
         auto item = GenerateSenderItem();
@@ -268,8 +270,8 @@ void ExactlyOnceQueueManagerUnittest::TestRemoveSenderItem() {
 }
 
 void ExactlyOnceQueueManagerUnittest::TestIsAllSenderQueueEmpty() {
-    sManager->CreateOrUpdateQueue(0, 0, "test_config_1", sCheckpoints);
-    sManager->CreateOrUpdateQueue(1, 2, "test_config_2", sCheckpoints);
+    sManager->CreateOrUpdateQueue(0, 0, sCtx, sCheckpoints);
+    sManager->CreateOrUpdateQueue(1, 2, sCtx, sCheckpoints);
     APSARA_TEST_TRUE(sManager->IsAllSenderQueueEmpty());
 
     sManager->PushSenderQueue(0, GenerateSenderItem());
@@ -277,8 +279,10 @@ void ExactlyOnceQueueManagerUnittest::TestIsAllSenderQueueEmpty() {
 }
 
 void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
-    sManager->CreateOrUpdateQueue(0, 0, "test_config", sCheckpoints);
-    sManager->CreateOrUpdateQueue(1, 0, "test_config", sCheckpoints);
+    PipelineContext ctx;
+    ctx.SetConfigName("test_config");
+    sManager->CreateOrUpdateQueue(0, 0, ctx, sCheckpoints);
+    sManager->CreateOrUpdateQueue(1, 0, ctx, sCheckpoints);
 
     sManager->InvalidatePopProcessQueue("test_config");
     APSARA_TEST_FALSE(sManager->mProcessQueues[0]->mValidToPop);

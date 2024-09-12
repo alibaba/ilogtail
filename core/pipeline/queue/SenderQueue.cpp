@@ -20,10 +20,25 @@ using namespace std;
 
 namespace logtail {
 
+SenderQueue::SenderQueue(
+    size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
+    : QueueInterface(key, cap, ctx), BoundedSenderQueueInterface(cap, low, high, key, flusherId, ctx) {
+    mQueue.resize(cap);
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+}
+
 bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
+    item->mEnqueTime = chrono::system_clock::now();
+    auto size = item->mData.size();
+
+    mInItemsCnt->Add(1);
+    mInItemsSizeByte->Add(size);
+
     if (Full()) {
-        item->mEnqueTime = time(nullptr);
         mExtraBuffer.push(std::move(item));
+
+        mExtraBufferCnt->Set(mExtraBuffer.size());
+        mExtraBufferDataSizeByte->Add(size);
         return true;
     }
 
@@ -33,17 +48,25 @@ bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
             break;
         }
     }
-    item->mEnqueTime = time(nullptr);
     mQueue[index % mCapacity] = std::move(item);
     if (index == mWrite) {
         ++mWrite;
     }
     ++mSize;
     ChangeStateIfNeededAfterPush();
+
+    mQueueSize->Set(Size());
+    mQueueDataSizeByte->Add(size);
+    mValidToPushFlag->Set(IsValidToPush());
     return true;
 }
 
 bool SenderQueue::Remove(SenderQueueItem* item) {
+    if (item == nullptr) {
+        return false;
+    }
+    auto size = item->mData.size();
+    auto enQueuTime = item->mEnqueTime;
     auto index = mRead;
     for (; index < mWrite; ++index) {
         if (mQueue[index % mCapacity].get() == item) {
@@ -58,14 +81,26 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
         ++mRead;
     }
     --mSize;
+
+    mOutItemsCnt->Add(1);
+    mTotalDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - enQueuTime).count());
+    mQueueDataSizeByte->Sub(size);
+
     if (!mExtraBuffer.empty()) {
+        auto newSize = mExtraBuffer.front()->mData.size();
         Push(std::move(mExtraBuffer.front()));
         mExtraBuffer.pop();
+
+        mExtraBufferCnt->Set(mExtraBuffer.size());
+        mExtraBufferDataSizeByte->Sub(newSize);
         return true;
     }
     if (ChangeStateIfNeededAfterPop()) {
         GiveFeedback();
     }
+
+    mQueueSize->Set(Size());
+    mValidToPushFlag->Set(IsValidToPush());
     return true;
 }
 

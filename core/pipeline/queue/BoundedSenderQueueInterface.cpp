@@ -21,6 +21,15 @@ namespace logtail {
 
 FeedbackInterface* BoundedSenderQueueInterface::sFeedback = nullptr;
 
+BoundedSenderQueueInterface::BoundedSenderQueueInterface(
+    size_t cap, size_t low, size_t high, QueueKey key, const string& flusherId, const PipelineContext& ctx)
+    : QueueInterface(key, cap, ctx), BoundedQueueInterface<std::unique_ptr<SenderQueueItem>>(key, cap, low, high, ctx) {
+    mMetricsRecordRef.AddLabels({{METRIC_LABEL_COMPONENT_NAME, "sender_queue"}});
+    mMetricsRecordRef.AddLabels({{METRIC_LABEL_FLUSHER_PLUGIN_ID, flusherId}});
+    mExtraBufferCnt = mMetricsRecordRef.CreateIntGauge("extra_buffer_size");
+    mExtraBufferDataSizeByte = mMetricsRecordRef.CreateIntGauge("extra_buffer_data_size_byte");
+}
+
 void BoundedSenderQueueInterface::SetFeedback(FeedbackInterface* feedback) {
     if (feedback == nullptr) {
         // should not happen

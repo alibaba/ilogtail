@@ -78,6 +78,11 @@ extern const std::string METRIC_LABEL_FILE_DEV;
 extern const std::string METRIC_LABEL_FILE_INODE;
 extern const std::string METRIC_LABEL_FILE_NAME;
 
+extern const std::string METRIC_LABEL_COMPONENT_NAME;
+extern const std::string METRIC_LABEL_QUEUE_TYPE;
+extern const std::string METRIC_LABEL_EXACTLY_ONCE_FLAG;
+extern const std::string METRIC_LABEL_FLUSHER_PLUGIN_ID;
+
 // input file metrics
 extern const std::string METRIC_INPUT_RECORDS_TOTAL;
 extern const std::string METRIC_INPUT_RECORDS_SIZE_BYTES;
