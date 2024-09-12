@@ -16,6 +16,7 @@
 
 #include "app_config/AppConfig.h"
 #include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "common/http/Curl.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
@@ -95,7 +96,7 @@ bool AsynCurlRunner::AddRequestToClient(unique_ptr<AsynHttpRequest>&& request) {
 
     request->mPrivateData = headers;
     curl_easy_setopt(curl, CURLOPT_PRIVATE, request.get());
-    request->mLastSendTime = time(nullptr);
+    request->mLastSendTimeMilliSec = GetCurrentTimeInMilliSeconds();
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
         LOG_ERROR(sLogger,
@@ -182,7 +183,8 @@ void AsynCurlRunner::HandleCompletedRequests() {
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
             LOG_DEBUG(sLogger,
                       ("send http request completed, request address",
-                       request)("response time", ToString(time(nullptr) - request->mLastSendTime))(
+                       request)("response time millisecond",
+                                ToString(GetCurrentTimeInMilliSeconds() - request->mLastSendTimeMilliSec))(
                           "try cnt", ToString(request->mTryCnt)));
             switch (msg->data.result) {
                 case CURLE_OK: {
