@@ -16,17 +16,17 @@
 
 #pragma once
 
-#include <curl/curl.h>
-
 #include <cstdint>
 #include <map>
 #include <string>
+#include <memory>
 
+#include "common/http/HttpRequest.h"
 #include "common/http/HttpResponse.h"
 
 namespace logtail {
 
 
-bool Send(unique_ptr<HttpRequest>&& request, HttpResponse& response) const = 0;
+bool Send(std::unique_ptr<HttpRequest>&& request, HttpResponse& response);
 
 } // namespace logtail

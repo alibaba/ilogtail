@@ -15,6 +15,7 @@
 #include "common/http/HttpRequest.h"
 #include "common/http/HttpResponse.h"
 #include "common/http/SyncCurl.h"
+#include "unittest/Unittest.h"
 
 
 using namespace std;
@@ -26,19 +27,14 @@ public:
     void TestSend();
 };
 
+
 void SyncCurlUnittest::TestSend() {
     std::unique_ptr<HttpRequest> request;
     HttpResponse res;
-
-    request = std::make_unique<HttpRequest>();
-        request->mMethod = "GET";
-        request->mHost = "example.com";
-        request->mPort = 80;
-        request->mUrl = "/path";
-        request->mTimeout = 10;
-    
+    request = std::make_unique<HttpRequest>("GET", false, "example.com", 80, "/path", "", map<string, string>(), "", 10, 3);
     bool success = Send(std::move(request), res);
     APSARA_TEST_TRUE(success);
+    APSARA_TEST_EQUAL(404, res.mStatusCode);
 }
 
 UNIT_TEST_CASE(SyncCurlUnittest, TestSend)
