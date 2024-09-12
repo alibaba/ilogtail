@@ -43,7 +43,6 @@ public:
 protected:
     static void SetUpTestCase() {
         InputFeedbackInterfaceRegistry::GetInstance()->LoadFeedbackInterfaces();
-        sEventGroup.reset(new PipelineEventGroup(make_shared<SourceBuffer>()));
         for (size_t i = 0; i < 5; ++i) {
             auto cpt = make_shared<RangeCheckpoint>();
             cpt->index = i;
@@ -68,7 +67,6 @@ protected:
 private:
     static const size_t sDataSize = 10;
 
-    static unique_ptr<PipelineEventGroup> sEventGroup;
     static ExactlyOnceQueueManager* sManager;
     static vector<RangeCheckpointPtr> sCheckpoints;
     static PipelineContext sCtx;
@@ -81,7 +79,6 @@ private:
 };
 
 const size_t ExactlyOnceQueueManagerUnittest::sDataSize;
-unique_ptr<PipelineEventGroup> ExactlyOnceQueueManagerUnittest::sEventGroup;
 ExactlyOnceQueueManager* ExactlyOnceQueueManagerUnittest::sManager;
 vector<RangeCheckpointPtr> ExactlyOnceQueueManagerUnittest::sCheckpoints;
 PipelineContext ExactlyOnceQueueManagerUnittest::sCtx;
@@ -294,7 +291,8 @@ void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
 }
 
 unique_ptr<ProcessQueueItem> ExactlyOnceQueueManagerUnittest::GenerateProcessItem() {
-    return make_unique<ProcessQueueItem>(std::move(*sEventGroup), 0);
+    PipelineEventGroup g(make_shared<SourceBuffer>());
+    return make_unique<ProcessQueueItem>(std::move(g), 0);
 }
 
 unique_ptr<SenderQueueItem> ExactlyOnceQueueManagerUnittest::GenerateSenderItem() {

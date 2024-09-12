@@ -65,11 +65,13 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
     if (item == nullptr) {
         return false;
     }
-    auto size = item->mData.size();
-    auto enQueuTime = item->mEnqueTime;
+    size_t size = 0;
+    chrono::system_clock::time_point enQueuTime;
     auto index = mRead;
     for (; index < mWrite; ++index) {
         if (mQueue[index % mCapacity].get() == item) {
+            size = item->mData.size();
+            enQueuTime = item->mEnqueTime;
             mQueue[index % mCapacity].reset();
             break;
         }
