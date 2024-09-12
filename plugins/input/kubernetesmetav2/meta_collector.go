@@ -276,7 +276,6 @@ func (m *metaCollector) processEntityLinkCommonPart(logContents models.LogConten
 	logContents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(lastObservedTime, 10))
 	logContents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 	logContents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-	logContents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 }
 
 func (m *metaCollector) processEntityJSONObject(obj map[string]string) string {
@@ -376,6 +375,7 @@ func (m *metaCollector) generateClusterEntity() models.PipelineEvent {
 	log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(time.Now().Unix(), 10))
 	log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 	log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
+	log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 	return log
 }
 
