@@ -33,7 +33,7 @@ bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     }
     item = std::move(mQueue.front());
     mQueue.pop();
-    item->AddPipelineInProcessingCnt();
+    item->AddPipelineInProcessingCnt(GetConfigName());
     if (ChangeStateIfNeededAfterPop()) {
         GiveFeedback();
     }
@@ -41,9 +41,9 @@ bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
 }
 
 void BoundedProcessQueue::InvalidatePop() {
-    mValidToPop = false;
+    ProcessQueueInterface::InvalidatePop();
     std::size_t size = mQueue.size();
-    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(mConfigName);
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(GetConfigName());
     if (pipeline) {
         for (std::size_t i = 0; i < size; ++i) {
             mQueue.front()->mPipeline = pipeline;

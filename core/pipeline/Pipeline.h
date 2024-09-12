@@ -45,16 +45,16 @@ public:
     bool Send(std::vector<PipelineEventGroup>&& groupList);
     bool FlushBatch();
     void RemoveProcessQueue() const;
-    void AddInProcessingCnt() const { mProcessingCnt.fetch_add(1); }
-    void SubInProcessingCnt() const {
+    void AddInProcessingCnt() { mProcessingCnt.fetch_add(1); }
+    void SubInProcessingCnt() {
         uint16_t currentVal;
         do {
-            currentVal = atomic_val.load(std::memory_order_relaxed);
+            currentVal = mProcessingCnt.load(std::memory_order_relaxed);
             // cannot sub smaller than 0
             if (currentVal == 0) {
                 return;
             }
-        } while (!atomic_val.compare_exchange_weak(
+        } while (!mProcessingCnt.compare_exchange_weak(
             currentVal, currentVal - 1, std::memory_order_release, std::memory_order_relaxed));
     }
 

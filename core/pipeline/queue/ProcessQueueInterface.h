@@ -43,7 +43,7 @@ public:
 
     void SetDownStreamQueues(std::vector<BoundedSenderQueueInterface*>&& ques);
 
-    virtual void InvalidatePop() { mValidToPop = false; }
+    void InvalidatePop() { mValidToPop = false; }
     void ValidatePop() { mValidToPop = true; }
 
     void Reset() { mDownStreamQueues.clear(); }

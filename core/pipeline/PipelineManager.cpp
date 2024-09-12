@@ -16,7 +16,7 @@
 
 #include "pipeline/PipelineManager.h"
 
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "prometheus/PrometheusInputRunner.h"
@@ -24,15 +24,15 @@
 #include "ebpf/eBPFServer.h"
 #include "observer/ObserverManager.h"
 #endif
-#include "processor/daemon/LogProcess.h"
+#include "runner/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 #include "app_config/AppConfig.h"
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 using namespace std;
 
@@ -290,9 +290,7 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
                                           bool& isInputObserverChanged,
                                           bool& isInputFileChanged,
                                           bool& isInputStreamChanged,
-                                          bool& isInputContainerStdioChanged,
-                                          bool& isInputPrometheusChanged,
-                                          bool& isInputEbpfChanged) {
+                                          bool& isInputContainerStdioChanged) {
     string inputType = config["Type"].asString();
     if (inputType == "input_observer_network") {
         isInputObserverChanged = true;
@@ -302,13 +300,6 @@ void PipelineManager::CheckIfInputUpdated(const Json::Value& config,
         isInputStreamChanged = true;
     } else if (inputType == "input_container_stdio") {
         isInputContainerStdioChanged = true;
-    } else if (inputType == "input_prometheus") {
-        isInputPrometheusChanged = true;
-    } else if (inputType == "input_ebpf_processprobe_security" || inputType == "input_ebpf_processprobe_observer"
-               || inputType == "input_ebpf_sockettraceprobe_security"
-               || inputType == "input_ebpf_sockettraceprobe_observer" || inputType == "input_ebpf_fileprobe_security"
-               || inputType == "input_ebpf_profilingprobe_observer") {
-        isInputEbpfChanged = true;
     }
 }
 

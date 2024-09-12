@@ -40,14 +40,14 @@ bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
         return false;
     }
     item = std::move(mQueue.front());
-    item->AddPipelineInProcessingCnt();
+    item->AddPipelineInProcessingCnt(GetConfigName());
     mEventCnt -= item->mEventGroup.GetEvents().size();
     return true;
 }
 
 void CircularProcessQueue::InvalidatePop() {
-    mValidToPop = false;
-    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(mConfigName);
+    ProcessQueueInterface::InvalidatePop();
+    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(GetConfigName());
     if (pipeline) {
         for (auto it = mQueue.begin(); it != mQueue.end(); ++it) {
             (*it)->mPipeline = pipeline;

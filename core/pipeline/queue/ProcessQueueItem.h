@@ -32,7 +32,7 @@ struct ProcessQueueItem {
 
     ProcessQueueItem(PipelineEventGroup&& group, size_t index) : mEventGroup(std::move(group)), mInputIndex(index) {}
 
-    AddPipelineInProcessingCnt(std::string& configName) const {
+    void AddPipelineInProcessingCnt(const std::string& configName) {
         if (mPipeline) {
             mPipeline->AddInProcessingCnt();
         } else {
