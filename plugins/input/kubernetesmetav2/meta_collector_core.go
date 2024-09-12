@@ -323,7 +323,7 @@ func (m *metaCollector) processPodContainerLink(data *k8smeta.ObjectWrapper, met
 	if obj, ok := data.Raw.(*k8smeta.PodContainer); ok {
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
-		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, "container", obj.Pod.Namespace, obj.Container.Name, method, data.FirstObservedTime, data.LastObservedTime)
+		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, "container", obj.Pod.Namespace, obj.Pod.Name+obj.Container.Name, method, data.FirstObservedTime, data.LastObservedTime)
 		log.Contents.Add(entityLinkRelationTypeFieldName, "contains")
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}

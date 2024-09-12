@@ -376,7 +376,6 @@ func (m *metaCollector) generateClusterEntity() models.PipelineEvent {
 	log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(time.Now().Unix(), 10))
 	log.Contents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 	log.Contents.Add(entityCategoryFieldName, defaultEntityCategory)
-	log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 	return log
 }
 
@@ -399,7 +398,6 @@ func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEve
 	log.Contents.Add(entityLastObservedTimeFieldName, content.Get(entityLastObservedTimeFieldName))
 	log.Contents.Add(entityKeepAliveSecondsFieldName, m.serviceK8sMeta.Interval*2)
 	log.Contents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
-	log.Contents.Add(entityClusterIDFieldName, m.serviceK8sMeta.clusterID)
 	log.Timestamp = uint64(time.Now().Unix())
 	return log
 }
