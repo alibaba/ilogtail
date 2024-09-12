@@ -22,11 +22,11 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "file_server/ConfigManager.h"
+#include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "file_server/reader/LogFileReader.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -49,7 +49,7 @@ DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true)
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
-// DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
+
 DEFINE_FLAG_DOUBLE(default_machine_cpu_usage_threshold, "machine level", 0.4);
 DEFINE_FLAG_BOOL(default_resource_auto_scale, "", false);
 DEFINE_FLAG_BOOL(default_input_flow_control, "", false);
@@ -62,41 +62,15 @@ DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-
 #elif defined(_MSC_VER)
 DEFINE_FLAG_STRING(logtail_sys_conf_dir, "store machine-unique-id, user-defined-id, aliuid", "C:\\LogtailData\\");
 #endif
-// const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE = "user_local_config.json";
-// DEFINE_FLAG_STRING(ilogtail_local_config, "local ilogtail config file", DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE = "user_config.d";
-// DEFINE_FLAG_STRING(ilogtail_local_config_dir,
-//                    "local ilogtail config file dir",
-//                    DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
-// DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
-//                    "local ilogtail yaml config file dir",
-//                    DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
-// const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
-// DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
-//                    "remote ilogtail yaml config file dir",
-//                    DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE);
 
-// DEFINE_FLAG_BOOL(default_global_fuse_mode, "default global fuse mode", false);
-// DEFINE_FLAG_BOOL(default_global_mark_offset_flag, "default global mark offset flag", false);
-
-// DEFINE_FLAG_STRING(default_container_mount_path, "", "container_mount.json");
 DEFINE_FLAG_STRING(default_include_config_path, "", "config.d");
 
 DEFINE_FLAG_INT32(default_oas_connect_timeout, "default (minimum) connect timeout for OSARequest", 5);
 DEFINE_FLAG_INT32(default_oas_request_timeout, "default (minimum) request timeout for OSARequest", 10);
-// DEFINE_FLAG_BOOL(rapid_retry_update_config, "", false);
-DEFINE_FLAG_BOOL(check_profile_region, "", false);
-// DEFINE_FLAG_BOOL(enable_collection_mark,
-//                  "enable collection mark function to override check_ulogfs_env in user config",
-//                  false);
-// DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration",
-// false);
-DEFINE_FLAG_INT32(data_server_port, "", 80);
 
-// DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
-// DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
-// DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
+DEFINE_FLAG_BOOL(check_profile_region, "", false);
+
+DEFINE_FLAG_INT32(data_server_port, "", 80);
 
 DECLARE_FLAG_STRING(check_point_filename);
 
@@ -163,28 +137,25 @@ AppConfig::AppConfig() {
     mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
     mSendFlowControl = BOOL_FLAG(enable_flow_control);
     SetIlogtailConfigJson("");
-    // mStreamLogAddress = "0.0.0.0";
-    // mIsOldPubRegion = false;
-    // mOpenStreamLog = false;
+
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
     mProcessThreadCount = INT32_FLAG(process_thread_count);
-    // mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+
     mMachineCpuUsageThreshold = DOUBLE_FLAG(default_machine_cpu_usage_threshold);
     mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mScaledCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
     mResourceAutoScale = BOOL_FLAG(default_resource_auto_scale);
     mInputFlowControl = BOOL_FLAG(default_input_flow_control);
-    // mDefaultRegion = STRING_FLAG(default_region_name);
+
     mAcceptMultiConfigFlag = BOOL_FLAG(default_accept_multi_config);
     mMaxMultiConfigSize = INT32_FLAG(max_multi_config_size);
-    // mUserConfigPath = STRING_FLAG(user_log_config);
+
     mIgnoreDirInodeChanged = false;
     mLogParseAlarmFlag = true;
     mNoInotify = false;
     mSendDataPort = 80;
     mShennongSocket = true;
-    // mInotifyBlackList.insert("/tmp");
 
     mPurageContainerMode = false;
     mForceQuitReadTimeout = 7200;
@@ -192,12 +163,29 @@ AppConfig::AppConfig() {
     CheckPurageContainerMode();
 }
 
+/**
+ * @brief 合并两个JSON对象
+ *
+ * 该函数将子JSON对象的所有成员合并到主JSON对象中。
+ * 如果存在相同的键，子对象的值将覆盖主对象的值。
+ *
+ * @param mainConfJson 主JSON对象，将被修改
+ * @param subConfJson 子JSON对象，其成员将被合并到主对象中
+ */
 void AppConfig::MergeJson(Json::Value& mainConfJson, const Json::Value& subConfJson) {
     for (auto subkey : subConfJson.getMemberNames()) {
         mainConfJson[subkey] = subConfJson[subkey];
     }
 }
 
+/**
+ * @brief 加载包含的配置文件
+ *
+ * 该函数从指定目录加载额外的JSON配置文件，并将其合并到主配置中。
+ * 配置文件按字母顺序加载，只处理.json后缀的文件。
+ *
+ * @param confJson 主配置JSON对象，将被修改以包含额外的配置
+ */
 void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     // New default value of the flag is renamed from /etc/ilogtail/config.d/
     // to config.d, be compatible with old default value.
@@ -247,7 +235,41 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
     }
 }
 
+/**
+ * @brief 加载应用程序配置
+ *
+ * 该函数从指定的配置文件加载Logtail的主要配置。
+ * 它处理配置文件的解析、包含额外配置、设置系统目录等。
+ *
+ * @param ilogtailConfigFile 配置文件的路径
+ */
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
+    // 加载本地配置
+    LoadLocalConfig(ilogtailConfigFile);
+
+    // 加载环境变量配置
+    LoadEnvConfig();
+
+    // // 加载远程配置
+    // LoadRemoteConfig();
+
+    // // 合并所有配置
+    // MergeAllConfigs();
+
+    // // 初始化时，将合并后的配置直接应用到 gflags
+    // ApplyConfigToGFlags();
+
+    ParseEnvToFlags();
+
+    LoadResourceConf(mLocalConfig);
+    // load addr will init sender, sender param depend on LoadResourceConf
+    // LoadAddrConfig(confJson);
+    LoadOtherConf(mLocalConfig);
+
+    CheckAndResetProxyEnv();
+}
+
+void AppConfig::LoadLocalConfig(const std::string& ilogtailConfigFile) {
     std::string processExecutionDir = GetProcessExecutionDir();
     mDockerFilePathConfig = processExecutionDir + STRING_FLAG(ilogtail_docker_file_path_config);
 
@@ -289,24 +311,53 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     }
     SetLogtailSysConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
 
+    // 加载 本地配置
     LoadIncludeConfig(confJson);
     string configJsonString = confJson.toStyledString();
     SetIlogtailConfigJson(configJsonString);
     LOG_INFO(sLogger, ("load logtail config file, path", ilogtailConfigFile));
     LOG_INFO(sLogger, ("load logtail config file, detail", configJsonString));
 
+    mLocalConfig = confJson;
     ParseJsonToFlags(confJson);
-    ParseEnvToFlags();
-
-    LoadResourceConf(confJson);
-    // load addr will init sender, sender param depend on LoadResourceConf
-    // LoadAddrConfig(confJson);
-    LoadOtherConf(confJson);
-
-    CheckAndResetProxyEnv();
-    mConfJson = confJson;
 }
 
+void AppConfig::LoadEnvConfig() {
+    mEnvConfig.clear();
+
+#if defined(__linux__) || defined(__APPLE__)
+    if (environ != NULL) {
+        for (size_t i = 0; environ[i] != NULL; i++) {
+            std::string envStr = environ[i];
+            InitEnvMapping(envStr, mEnvConfig);
+        }
+    }
+#elif defined(_MSC_VER)
+    LPTSTR lpszVariable;
+    LPTCH lpvEnv;
+    lpvEnv = GetEnvironmentStrings();
+    if (lpvEnv == NULL) {
+        APSARA_LOG_WARNING(sLogger, ("GetEnvironmentStrings failed ", GetLastError()));
+    } else {
+        lpszVariable = (LPTSTR)lpvEnv;
+        while (*lpszVariable) {
+            std::string envStr = (std::string)lpszVariable;
+            InitEnvMapping(envStr, mEnvConfig);
+            lpszVariable += lstrlen(lpszVariable) + 1;
+        }
+        FreeEnvironmentStrings(lpvEnv);
+    }
+#endif
+
+    LOG_INFO(sLogger, ("Loaded environment config", mEnvConfig.toStyledString()));
+}
+
+/**
+ * @brief 从环境变量加载标签
+ *
+ * 该函数从环境变量中加载预定义的标签。
+ * 标签键从环境变量中获取，对应的值也从环境变量中读取。
+ */
 void AppConfig::LoadEnvTags() {
     char* envTagKeys = getenv(STRING_FLAG(default_env_tag_keys).c_str());
     if (envTagKeys == NULL) {
@@ -328,7 +379,15 @@ void AppConfig::LoadEnvTags() {
     }
 }
 
-// @return true if input configValue has been updated.
+/**
+ * @brief 从环境变量加载单个配置值
+ *
+ * @tparam T 配置值的类型
+ * @param envKey 环境变量的键
+ * @param configValue 配置值的引用，如果环境变量存在且有效，将被更新
+ * @param minValue 配置值的最小允许值
+ * @return 如果配置值被更新，返回true；否则返回false
+ */
 template <typename T>
 bool LoadSingleValueEnvConfig(const char* envKey, T& configValue, const T minValue) {
     try {
@@ -348,6 +407,13 @@ bool LoadSingleValueEnvConfig(const char* envKey, T& configValue, const T minVal
     return false;
 }
 
+/**
+ * @brief 从环境变量加载配置值（如果存在）
+ *
+ * @tparam T 配置值的类型
+ * @param envKey 环境变量的键
+ * @param cfgValue 配置值的引用，如果环境变量存在，将被更新
+ */
 template <typename T>
 void LoadEnvValueIfExisting(const char* envKey, T& cfgValue) {
     try {
@@ -362,6 +428,13 @@ void LoadEnvValueIfExisting(const char* envKey, T& cfgValue) {
     }
 }
 
+/**
+ * @brief 从环境变量加载资源限制配置
+ *
+ * 该函数从环境变量中加载各种资源限制相关的配置，
+ * 包括CPU使用限制、内存使用限制、最大字节数/秒、
+ * 处理线程数和发送请求并发数。
+ */
 void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("cpu_usage_limit", mCpuUsageUpLimit, (float)0.4);
     LoadSingleValueEnvConfig("mem_usage_limit", mMemUsageUpLimit, (int64_t)384);
@@ -370,6 +443,18 @@ void AppConfig::LoadEnvResourceLimit() {
     LoadSingleValueEnvConfig("send_request_concurrency", mSendRequestConcurrency, (int32_t)2);
 }
 
+/**
+ * @brief 检查是否处于纯容器模式
+ *
+ * 该函数检查系统是否运行在纯容器模式下。
+ *
+ * 主要步骤：
+ * 1. 在企业版中，检查是否设置了用户定义的ID环境变量
+ * 2. 检查默认容器主机路径是否存在
+ * 3. 根据检查结果设置mPurageContainerMode标志
+ *
+ * @note 该函数会更新mPurageContainerMode成员变量
+ */
 void AppConfig::CheckPurageContainerMode() {
 #ifdef __ENTERPRISE__
     if (getenv(STRING_FLAG(ilogtail_user_defined_id_env_name).c_str()) == NULL) {
@@ -384,6 +469,27 @@ void AppConfig::CheckPurageContainerMode() {
     LOG_INFO(sLogger, ("purage container mode", mPurageContainerMode));
 }
 
+/**
+ * @brief 加载资源配置
+ *
+ * @param confJson JSON格式的配置数据
+ *
+ * 该函数从JSON配置中加载各种资源相关的设置，包括但不限于：
+ * - 批量发送间隔
+ * - 最大发送字节数
+ * - 缓冲文件数量和大小
+ * - CPU和内存使用限制
+ * - 自动缩放和流量控制设置
+ * - 检查点文件路径
+ * - Docker相关配置
+ * - Inotify黑名单
+ * - 数据服务器端口
+ *
+ * 函数会根据配置更新相应的成员变量和全局标志。
+ * 对于某些设置，如果配置中未指定，会使用默认值或从环境变量中加载。
+ *
+ * @note 该函数较长，包含了大量的配置项处理逻辑
+ */
 void AppConfig::LoadResourceConf(const Json::Value& confJson) {
     LoadInt32Parameter(
         INT32_FLAG(batch_send_interval), confJson, "batch_send_interval", "ALIYUN_LOGTAIL_BATCH_SEND_INTERVAL");
@@ -755,6 +861,21 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
     }
 }
 
+/**
+ * @brief 检查并重置代理环境变量
+ *
+ * @return bool 如果所有代理设置都有效则返回true，否则返回false
+ *
+ * 该函数执行以下操作：
+ * 1. 检查并设置HTTP代理
+ * 2. 检查并设置HTTPS代理
+ * 3. 检查并设置ALL代理
+ * 4. 处理NO_PROXY设置
+ * 5. 如果设置了任何代理，禁用主机IP替换
+ *
+ * 函数会优先考虑大写的环境变量名，如果不存在则使用小写的。
+ * 对于每种代理类型，如果设置无效，函数会清除相关的环境变量并返回false。
+ */
 bool AppConfig::CheckAndResetProxyEnv() {
     // envs capitalized prioritize those in lower case
     string httpProxy = ToString(getenv("HTTP_PROXY"));
@@ -827,6 +948,17 @@ bool AppConfig::CheckAndResetProxyEnv() {
 
 // valid proxy address format: [scheme://[user:pwd\@]]address[:port], 'http' and '80' assumed if no scheme or port
 // provided
+/**
+ * @brief 检查并重置代理地址
+ *
+ * @param envKey 环境变量键名
+ * @param address 代理地址
+ * @return bool 如果地址有效则返回true，否则返回false
+ *
+ * 该函数验证代理地址的格式是否正确，格式为：[scheme://[user:pwd@]]address[:port]
+ * 如果没有提供方案或端口，则假定为'http'和'80'
+ * 如果地址有效但缺少端口，函数会添加默认端口并更新环境变量
+ */
 bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     if (address.empty()) {
         return true;
@@ -850,12 +982,26 @@ bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     return true;
 }
 
+/**
+ * @brief 加载其他配置项
+ *
+ * @param confJson JSON格式的配置对象
+ *
+ * 该函数从给定的JSON配置对象中加载各种配置项，包括但不限于：
+ * - 流日志开关
+ * - OAS连接和请求超时时间
+ * - 强制退出读取超时时间
+ * - 动态插件列表
+ * - 检查点同步写入开关
+ * - 日志时间自动调整开关
+ * - 检查点搜索相关参数
+ * - 轮询发现相关参数
+ * - 多配置接受标志和最大数量
+ * - 日志解析错误报警标志
+ *
+ * 函数会根据配置项的存在与否来决定是否更新相应的成员变量或全局标志。
+ */
 void AppConfig::LoadOtherConf(const Json::Value& confJson) {
-    // if (confJson.isMember("mapping_conf_path") && confJson["mapping_conf_path"].isString())
-    //     mMappingConfigPath = confJson["mapping_conf_path"].asString();
-    // else
-    //     mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
-
     if (confJson.isMember("streamlog_open") && confJson["streamlog_open"].isBool()) {
         mOpenStreamLog = confJson["streamlog_open"].asBool();
     }
@@ -954,6 +1100,15 @@ void AppConfig::LoadOtherConf(const Json::Value& confJson) {
     }
 }
 
+/**
+ * @brief 初始化环境变量映射
+ *
+ * @param envStr 环境变量字符串，格式为"KEY=VALUE"
+ * @param envMapping 用于存储解析后的环境变量的映射
+ *
+ * 该函数解析给定的环境变量字符串，并将其添加到环境变量映射中。
+ * 如果解析失败，会记录警告日志。
+ */
 void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping) {
     int pos = envStr.find('=');
     if (pos > 0 && size_t(pos) < envStr.size()) {
@@ -964,6 +1119,27 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
         APSARA_LOG_WARNING(sLogger, ("error to find ", "")("pos", pos)("env string", envStr));
     }
 }
+
+void AppConfig::InitEnvMapping(const std::string& envStr, Json::Value& envJson) {
+    int pos = envStr.find('=');
+    if (pos > 0 && size_t(pos) < envStr.size()) {
+        const std::string& key = envStr.substr(0, pos);
+        const std::string& value = envStr.substr(pos + 1);
+        envJson[key] = value;
+    } else {
+        APSARA_LOG_WARNING(sLogger, ("error to find ", "")("pos", pos)("env string", envStr));
+    }
+}
+
+/**
+ * @brief 设置配置标志
+ *
+ * @param flagName 标志名称
+ * @param value 要设置的值
+ *
+ * 该函数尝试设置指定名称的配置标志为给定的值。
+ * 如果设置成功，会记录信息日志；如果标志未定义，会记录调试日志。
+ */
 void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& value) {
     GFLAGS_NAMESPACE::CommandLineFlagInfo info;
     bool rst = GetCommandLineFlagInfo(flagName.c_str(), &info);
@@ -983,6 +1159,21 @@ void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& va
 #include "processenv.h"
 #endif
 
+/**
+ * @brief 从环境变量解析配置标志
+ *
+ * 该函数从系统环境变量中读取配置,并将其设置为对应的标志。
+ *
+ * 主要步骤:
+ * 1. 创建一个映射来存储环境变量
+ * 2. 根据不同的操作系统,使用相应的方法读取环境变量
+ *    - 在Linux/macOS上,使用environ变量
+ *    - 在Windows上,使用GetEnvironmentStrings函数
+ * 3. 将读取到的环境变量存入映射
+ * 4. 遍历映射,将每个环境变量设置为对应的配置标志
+ *
+ * 注意:该函数会直接修改全局配置标志
+ */
 void AppConfig::ParseEnvToFlags() {
     std::map<std::string, std::string> envMapping;
 
@@ -1015,6 +1206,7 @@ void AppConfig::ParseEnvToFlags() {
     }
 }
 
+// 没用到
 void AppConfig::DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& flagMap) {
     flagMap.clear();
     std::vector<GFLAGS_NAMESPACE::CommandLineFlagInfo> OUTPUT;
@@ -1027,6 +1219,7 @@ void AppConfig::DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& 
     LOG_DEBUG(sLogger, ("DumpAllFlagsToMap", flagMap.size())("Detail", ToString(detail)));
 }
 
+// 没用到
 void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::string>& flagMap) {
     for (auto iter : flagMap) {
         SetConfigFlag(iter.first, iter.second);
@@ -1034,6 +1227,23 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
     LOG_DEBUG(sLogger, ("ReadFlagsFromMap", flagMap.size()));
 }
 
+/**
+ * @brief 递归解析JSON配置到标志
+ *
+ * 该函数递归地遍历JSON对象，将其键值对转换为配置标志。
+ *
+ * @param confJson 要解析的JSON对象
+ * @param prefix 当前键的前缀，用于构建完整的标志名
+ *
+ * 主要逻辑:
+ * 1. 遍历JSON对象的所有成员
+ * 2. 对于嵌套的对象，递归调用自身
+ * 3. 对于非对象值:
+ *    - 忽略特定的键（如data_server_list）
+ *    - 将可转换为字符串的值设置为标志
+ *    - 对特定键（如config_server_address_list）强制转换为字符串
+ *    - 记录无法转换的值
+ */
 void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix) {
     const static unordered_set<string> sIgnoreKeySet = {"data_server_list"};
     const static unordered_set<string> sForceKeySet = {"config_server_address_list"};
@@ -1064,10 +1274,33 @@ void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string
     }
 }
 
+/**
+ * @brief 将JSON配置解析为标志
+ *
+ * 该函数将传入的JSON配置对象解析为标志。
+ * 它调用RecurseParseJsonToFlags函数来递归地解析JSON对象,
+ * 将JSON中的键值对转换为相应的配置标志。
+ *
+ * @param confJson 要解析的JSON配置对象
+ */
 void AppConfig::ParseJsonToFlags(const Json::Value& confJson) {
     RecurseParseJsonToFlags(confJson, "");
 }
 
+/**
+ * @brief 检查并调整参数
+ *
+ * 该函数用于检查和调整Logtail的各项参数,主要包括:
+ * 1. 限制缓冲文件的大小和数量
+ * 2. 根据内存限制动态调整各项参数,如最大统计数、缓存大小等
+ * 3. 调整发送相关的参数
+ * 4. 当流量超过一定阈值时,禁用流量控制和随机延迟发送
+ *
+ * 具体调整逻辑如下:
+ * - 限制缓冲文件总大小不超过4GB
+ * - 根据内存限制按比例调整各项参数,但不超过默认最大值
+ * - 当发送流量超过30MB/s时,禁用流量控制和随机延迟发送
+ */
 void AppConfig::CheckAndAdjustParameters() {
     // the max buffer size is 4GB
     // if "fileNum * fileSize" from config more than 4GB, logtail will do restrictions
@@ -1173,6 +1406,17 @@ bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
 // TODO: Use Boost instead.
 // boost::filesystem::directory_iterator end;
 // try { boost::filesystem::directory_iterator(path); } catch (...) { // failed } // OK
+/**
+ * @brief 设置Logtail系统配置目录
+ *
+ * 该函数用于设置Logtail系统配置目录的路径。它执行以下操作：
+ * 1. 设置配置目录路径，确保路径以分隔符结尾
+ * 2. 如果目录不存在，尝试创建
+ * 3. 验证目录的可访问性，如果不可访问则使用进程执行目录作为备选
+ * 4. 记录最终设置的配置目录路径
+ *
+ * @param dirPath 要设置的配置目录路径
+ */
 void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
     mLogtailSysConfDir = dirPath;
     if (dirPath.back() != '/' || dirPath.back() != '\\') {
@@ -1205,21 +1449,6 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
     }
 #endif
 
-    // Update related configurations (local user config).
-    // if (STRING_FLAG(ilogtail_local_config).empty()) {
-    //     LOG_WARNING(sLogger, ("flag error", "ilogtail_local_config must be non-empty"));
-    //     STRING_FLAG(ilogtail_local_config) = DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE;
-    // }
-    // if (STRING_FLAG(ilogtail_local_config_dir).empty()) {
-    //     LOG_WARNING(sLogger, ("flag error", "ilogtail_local_config_dir must be non-empty"));
-    //     STRING_FLAG(ilogtail_local_config_dir) = DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE;
-    // }
-    // mUserLocalConfigPath = AbsolutePath(STRING_FLAG(ilogtail_local_config), mLogtailSysConfDir);
-    // mUserLocalConfigDirPath = AbsolutePath(STRING_FLAG(ilogtail_local_config_dir), mLogtailSysConfDir) +
-    // PATH_SEPARATOR; mUserLocalYamlConfigDirPath
-    //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    // mUserRemoteYamlConfigDirPath
-    //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     LOG_INFO(sLogger, ("set logtail sys conf dir", mLogtailSysConfDir));
 }
 
@@ -1232,6 +1461,13 @@ bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
     return false;
 }
 
+/**
+ * @brief 更新文件标签
+ *
+ * 该函数从指定的配置文件中读取文件标签信息，并更新内部的文件标签存储。
+ * 如果配置文件不存在或格式无效，将记录错误日志。
+ * 只有当新的标签配置与当前存储的配置不同时，才会进行更新。
+ */
 void AppConfig::UpdateFileTags() {
     if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
         return;

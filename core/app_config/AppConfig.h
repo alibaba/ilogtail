@@ -46,7 +46,25 @@ private:
 
 class AppConfig {
 private:
-    Json::Value mConfJson;
+    void LoadLocalConfig(const std::string& ilogtailConfigFile);
+    void LoadEnvConfig();
+    void LoadRemoteConfig();
+    void MergeAllConfigs();
+    void ApplyConfigToGFlags();
+    void RegisterCallbacks();
+
+    Json::Value mLocalConfig;
+    Json::Value mEnvConfig;
+    Json::Value mRemoteConfig;
+    Json::Value mMergedConfig;
+
+    std::map<std::string, std::function<bool()>> mCallbacks;
+
+    DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
+    DoubleBuffer<std::map<std::string, std::string>> mAgentAttrs;
+
+    Json::Value mFileTagsJson;
+
     mutable SpinLock mAppConfigLock;
 
     // ilogtail_config.json content for rebuild
@@ -156,9 +174,6 @@ private:
     std::set<std::string> mDynamicPlugins;
     std::vector<std::string> mHostPathBlacklist;
 
-    Json::Value mFileTagsJson;
-    DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
-
     std::string mBindInterface;
 
     // /**
@@ -250,19 +265,58 @@ private:
     bool CheckAndResetProxyAddress(const char* envKey, std::string& address);
 
     static void InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping);
+    static void InitEnvMapping(const std::string& envStr, Json::Value& envJson);
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
 
 public:
     AppConfig();
-    ~AppConfig(){};
+    ~AppConfig() {};
 
     static AppConfig* GetInstance() {
         static AppConfig singleton;
         return &singleton;
     }
 
+    // 初始化配置
     void LoadAppConfig(const std::string& ilogtailConfigFile);
 
+    // 获取全局参数方法
+    const Json::Value GetLocalConfig() {return mLocalConfig;};
+    const Json::Value& GetEnvConfig() {return mEnvConfig;};
+    const Json::Value GetRemoteConfig() {return mRemoteConfig;};
+
+    // 更新全局参数方法
+    void Run(); // reload线程
+    void ReloadLocalConfig();
+    void ReloadRemoteConfig();
+
+    // 注册回调
+    void RegisterCallback(const std::string& name, std::function<bool()> callback);
+
+    // 合并配置
+    std::string Merge(Json::Value& localConf,
+                      Json::Value& envConfig,
+                      Json::Value& remoteConf,
+                      std::string& name,
+                      std::function<bool(const std::string&, const std::string&)> ValidateFn);
+
+    // 获取特定配置
+    // CPU限制参数等仅与框架相关的参数，计算逻辑可以放在AppConfig
+    float GetMachineCpuUsageThreshold() const { return mMachineCpuUsageThreshold; }
+    float GetScaledCpuUsageUpLimit() const { return mScaledCpuUsageUpLimit; }
+    float GetCpuUsageUpLimit() const { return mCpuUsageUpLimit; }
+
+    // 文件标签相关，获取从文件中来的tags
+    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
+    // 更新从文件中来的tags
+    void UpdateFileTags();
+
+    // Agent属性相关，获取从文件中来的attrs
+    std::map<std::string, std::string>& GetAgentAttrs() { return mAgentAttrs.getReadBuffer(); }
+    // 更新从文件中来的attrs
+    void UpdateAgentAttrs();
+
+    // Legacy:获取各种参数
     bool NoInotify() const { return mNoInotify; }
 
     bool IsInInotifyBlackList(const std::string& path) const;
@@ -305,12 +359,6 @@ public:
     bool IsInputFlowControl() const { return mInputFlowControl; }
 
     bool IsResourceAutoScale() const { return mResourceAutoScale; }
-
-    float GetMachineCpuUsageThreshold() const { return mMachineCpuUsageThreshold; }
-
-    float GetScaledCpuUsageUpLimit() const { return mScaledCpuUsageUpLimit; }
-
-    float GetCpuUsageUpLimit() const { return mCpuUsageUpLimit; }
 
     int64_t GetMemUsageUpLimit() const { return mMemUsageUpLimit; }
 
@@ -396,13 +444,9 @@ public:
     inline const std::set<std::string>& GetDynamicPlugins() const { return mDynamicPlugins; }
     bool IsHostPathMatchBlacklist(const std::string& dirPath) const;
 
-    const Json::Value& GetConfig() const { return mConfJson; }
+    const Json::Value& GetConfig() const { return mLocalConfig; }
 
     const std::string& GetBindInterface() const { return mBindInterface; }
-
-    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
-
-    void UpdateFileTags();
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
