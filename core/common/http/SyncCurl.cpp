@@ -45,13 +45,14 @@ namespace logtail {
             LOG_ERROR(sLogger, ("failed to send request", "Init curl instance error")("request address", request.get()));
             return false;
         }
-
+        bool success = false;
         while (++request->mTryCnt <= request->mMaxTryCnt) {
             CURLcode res = curl_easy_perform(curl);
             if (res == CURLE_OK) {
                 long http_code = 0;
                 if ((res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code)) == CURLE_OK) {
                     response.mStatusCode = (int32_t)http_code;
+                    success = true;
                     break;
                 } else {
                     LOG_ERROR(sLogger, ("failed to send request", std::string("Request get info failed, curl error code : ") + curl_easy_strerror(res))("request address", request.get())("retryCnt", request->mTryCnt));
@@ -60,12 +61,11 @@ namespace logtail {
                 LOG_ERROR(sLogger, ("failed to send request", std::string("Request operation failed, curl error code : ") + curl_easy_strerror(res))("request address", request.get())("retryCnt", request->mTryCnt));
             }
         } 
-
         if (headers != NULL) {
             curl_slist_free_all(headers);
         }
         curl_easy_cleanup(curl);
-        return true;
+        return success;
     }
 
 } // namespace logtail
