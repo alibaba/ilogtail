@@ -246,7 +246,7 @@ func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, 
 	// entity reserved fields
 	logContents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
 	logContents.Add(entityTypeFieldName, m.genEntityTypeKey(kind))
-	logContents.Add(entityIDFieldName, m.genKey(namespace, name))
+	logContents.Add(entityIDFieldName, m.genKey(kind, namespace, name))
 	logContents.Add(entityMethodFieldName, method)
 
 	logContents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(firstObservedTime, 10))
@@ -264,11 +264,11 @@ func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, 
 func (m *metaCollector) processEntityLinkCommonPart(logContents models.LogContents, srcKind, srcNamespace, srcName, destKind, destNamespace, destName, method string, firstObservedTime, lastObservedTime int64) {
 	logContents.Add(entityLinkSrcDomainFieldName, m.serviceK8sMeta.Domain)
 	logContents.Add(entityLinkSrcEntityTypeFieldName, m.genEntityTypeKey(srcKind))
-	logContents.Add(entityLinkSrcEntityIDFieldName, m.genKey(srcNamespace, srcName))
+	logContents.Add(entityLinkSrcEntityIDFieldName, m.genKey(srcKind, srcNamespace, srcName))
 
 	logContents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
 	logContents.Add(entityLinkDestEntityTypeFieldName, m.genEntityTypeKey(destKind))
-	logContents.Add(entityLinkDestEntityIDFieldName, m.genKey(destNamespace, destName))
+	logContents.Add(entityLinkDestEntityIDFieldName, m.genKey(destKind, destNamespace, destName))
 
 	logContents.Add(entityMethodFieldName, method)
 
@@ -358,8 +358,8 @@ func (m *metaCollector) sendInBackground() {
 	}
 }
 
-func (m *metaCollector) genKey(namespace, name string) string {
-	key := m.serviceK8sMeta.clusterID + namespace + name
+func (m *metaCollector) genKey(kind, namespace, name string) string {
+	key := m.serviceK8sMeta.clusterID + kind + namespace + name
 	// #nosec G401
 	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
 }
@@ -369,8 +369,8 @@ func (m *metaCollector) generateClusterEntity() models.PipelineEvent {
 	log.Contents = models.NewLogContents()
 	log.Timestamp = uint64(time.Now().Unix())
 	log.Contents.Add(entityDomainFieldName, m.serviceK8sMeta.Domain)
-	log.Contents.Add(entityTypeFieldName, "infra.k8s.cluster")
-	log.Contents.Add(entityIDFieldName, m.genKey("", ""))
+	log.Contents.Add(entityTypeFieldName, m.genEntityTypeKey("cluster"))
+	log.Contents.Add(entityIDFieldName, m.genKey("", "", ""))
 	log.Contents.Add(entityMethodFieldName, "Update")
 	log.Contents.Add(entityFirstObservedTimeFieldName, strconv.FormatInt(time.Now().Unix(), 10))
 	log.Contents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(time.Now().Unix(), 10))
@@ -389,8 +389,8 @@ func (m *metaCollector) generateEntityClusterLink(entityEvent models.PipelineEve
 	log.Contents.Add(entityLinkSrcEntityIDFieldName, content.Get(entityIDFieldName))
 
 	log.Contents.Add(entityLinkDestDomainFieldName, m.serviceK8sMeta.Domain)
-	log.Contents.Add(entityLinkDestEntityTypeFieldName, "ack.cluster")
-	log.Contents.Add(entityLinkDestEntityIDFieldName, m.serviceK8sMeta.clusterID)
+	log.Contents.Add(entityLinkDestEntityTypeFieldName, m.genEntityTypeKey("cluster"))
+	log.Contents.Add(entityLinkDestEntityIDFieldName, m.genKey("", "", ""))
 
 	log.Contents.Add(entityLinkRelationTypeFieldName, "runs")
 	log.Contents.Add(entityMethodFieldName, content.Get(entityMethodFieldName))
