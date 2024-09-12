@@ -32,10 +32,7 @@ public:
     void TestMetric();
 
 protected:
-    static void SetUpTestCase() {
-        sEventGroup.reset(new PipelineEventGroup(make_shared<SourceBuffer>()));
-        sCtx.SetConfigName("test_config");
-    }
+    static void SetUpTestCase() { sCtx.SetConfigName("test_config"); }
 
     void SetUp() override {
         mQueue.reset(new BoundedProcessQueue(sCap, sLowWatermark, sHighWatermark, sKey, 1, sCtx));
@@ -50,14 +47,16 @@ protected:
     }
 
 private:
-    static unique_ptr<PipelineEventGroup> sEventGroup;
     static PipelineContext sCtx;
     static const QueueKey sKey = 0;
     static const size_t sCap = 6;
     static const size_t sLowWatermark = 2;
     static const size_t sHighWatermark = 4;
 
-    unique_ptr<ProcessQueueItem> GenerateItem() { return make_unique<ProcessQueueItem>(std::move(*sEventGroup), 0); }
+    unique_ptr<ProcessQueueItem> GenerateItem() {
+        PipelineEventGroup g(make_shared<SourceBuffer>());
+        return make_unique<ProcessQueueItem>(std::move(g), 0);
+    }
 
     unique_ptr<BoundedProcessQueue> mQueue;
     unique_ptr<FeedbackInterface> mFeedback1;
@@ -66,7 +65,6 @@ private:
     unique_ptr<BoundedSenderQueueInterface> mSenderQueue2;
 };
 
-unique_ptr<PipelineEventGroup> BoundedProcessQueueUnittest::sEventGroup;
 PipelineContext BoundedProcessQueueUnittest::sCtx;
 
 void BoundedProcessQueueUnittest::TestPush() {
