@@ -58,6 +58,7 @@ private:
     sdk::HttpMessage SendRegisterMessage(const std::string& url) const;
 
     void CancelAllTargetSubscriber();
+    void SubscribeOnce();
 
     bool mIsStarted = false;
     std::mutex mStartMutex;

@@ -16,17 +16,20 @@
 
 #include "PrometheusInputRunner.h"
 
+#include <chrono>
 #include <memory>
 #include <string>
 
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "common/http/AsynCurlRunner.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailMetric.h"
 #include "prometheus/Constants.h"
+#include "prometheus/Utils.h"
 #include "sdk/Common.h"
 #include "sdk/Exception.h"
 
@@ -74,7 +77,10 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
 
     targetSubscriber->mUnRegisterMs = mUnRegisterMs.load();
     targetSubscriber->SetTimer(mTimer);
-    targetSubscriber->SetFirstExecTime(std::chrono::steady_clock::now());
+    auto randSleepMilliSec = GetRandSleepMilliSec(
+        targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
+    auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
+    targetSubscriber->SetFirstExecTime(firstExecTime);
     // 1. add subscriber to mTargetSubscriberSchedulerMap
     {
         WriteLock lock(mSubscriberMapRWLock);
@@ -123,7 +129,7 @@ void PrometheusInputRunner::Init() {
                     }
                 } else {
                     // register success
-                    // response will be { "unregister_ms": 30000 }
+                    // response will be { "unRegisterMs": 30000 }
                     if (!httpResponse.content.empty()) {
                         string responseStr = httpResponse.content;
                         string errMsg;
@@ -132,12 +138,20 @@ void PrometheusInputRunner::Init() {
                             LOG_ERROR(sLogger, ("register failed, parse response failed", responseStr));
                         }
                         if (responseJson.isMember(prometheus::UNREGISTER_MS)
-                            && responseJson[prometheus::UNREGISTER_MS].isUInt64()) {
-                            mUnRegisterMs.store(responseJson[prometheus::UNREGISTER_MS].asUInt64());
+                            && responseJson[prometheus::UNREGISTER_MS].isString()) {
+                            auto tmpStr = responseJson[prometheus::UNREGISTER_MS].asString();
+                            if (tmpStr.empty()) {
+                                mUnRegisterMs = 0;
+                            } else {
+                                mUnRegisterMs.store(StringTo<uint64_t>(tmpStr));
+                                LOG_INFO(sLogger, ("unRegisterMs", ToString(mUnRegisterMs)));
+                            }
                         }
                     }
                     mIntGauges[prometheus::PROM_REGISTER_STATE]->Set(1);
                     LOG_INFO(sLogger, ("Register Success", mPodName));
+                    // subscribe immediately
+                    SubscribeOnce();
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -228,4 +242,12 @@ void PrometheusInputRunner::CancelAllTargetSubscriber() {
         it.second->Cancel();
     }
 }
+
+void PrometheusInputRunner::SubscribeOnce() {
+    ReadLock lock(mSubscriberMapRWLock);
+    for (auto& [k, v] : mTargetSubscriberSchedulerMap) {
+        v->SubscribeOnce(std::chrono::steady_clock::now());
+    }
+}
+
 }; // namespace logtail
