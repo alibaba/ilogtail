@@ -29,11 +29,11 @@
 #include "common/timer/HttpRequestTimerEvent.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
-#include "prometheus/Constants.h"
-#include "prometheus/async/PromHttpRequest.h"
 #include "pipeline/queue/ProcessQueueItem.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKey.h"
+#include "prometheus/Constants.h"
+#include "prometheus/async/PromHttpRequest.h"
 
 using namespace std;
 
@@ -98,7 +98,14 @@ void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
 #ifdef APSARA_UNIT_TEST_MAIN
     mItem.push_back(std::move(item));
 #endif
-    ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
+    while (true) {
+        if (ProcessQueueManager::GetInstance()->IsValidToPush(mQueueKey)) {
+            ProcessQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(item));
+            break;
+        } else {
+            sleep(1);
+        }
+    }
 }
 
 string ScrapeScheduler::GetId() const {
