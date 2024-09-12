@@ -53,6 +53,9 @@ public:
     void Stop() override;
     bool HasRegisteredPlugins() const override;
 
+    // self monitor
+
+
 private:
     PrometheusInputRunner();
     sdk::HttpMessage SendRegisterMessage(const std::string& url) const;
@@ -80,7 +83,7 @@ private:
     std::atomic<uint64_t> mUnRegisterMs;
 
     // self monitor
-    PromSelfMonitor mPromSelfMonitor;
+    std::shared_ptr<PromSelfMonitor> mPromSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
     std::unordered_map<std::string, IntGaugePtr> mIntGauges;

@@ -24,10 +24,11 @@
 
 #include "common/http/HttpResponse.h"
 #include "common/timer/Timer.h"
+#include "pipeline/queue/QueueKey.h"
+#include "prometheus/PromSelfMonitor.h"
 #include "prometheus/schedulers/BaseScheduler.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
-#include "pipeline/queue/QueueKey.h"
 
 
 namespace logtail {
@@ -48,6 +49,7 @@ public:
 
     void ScheduleNext() override;
     void Cancel() override;
+    void InitSelfMonitor(std::shared_ptr<PromSelfMonitor>);
 
     // from pipeline context
     QueueKey mQueueKey;
@@ -71,6 +73,7 @@ private:
     void UpdateScrapeScheduler(std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>>&);
 
     void CancelAllScrapeScheduler();
+    void UpdateSelfMonitor();
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
@@ -81,6 +84,7 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     std::string mETag;
+    std::shared_ptr<PromSelfMonitor> mSelfMonitor;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TargetSubscriberSchedulerUnittest;

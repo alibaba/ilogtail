@@ -308,5 +308,18 @@ void TargetSubscriberScheduler::CancelAllScrapeScheduler() {
     }
 }
 
+void TargetSubscriberScheduler::InitSelfMonitor(std::shared_ptr<PromSelfMonitor> selfMonitor) {
+    mSelfMonitor = std::move(selfMonitor);
+    MetricLabels labels;
+    static const std::unordered_map<std::string, MetricType> sSubscriberMetricKeys = {
+        {"prom_subscribe_targets", MetricType::METRIC_TYPE_INT_GAUGE},
+    };
+    mSelfMonitor->InitMetricManager(GetId(), labels, sSubscriberMetricKeys);
+    auto metricsRecordRef = mSelfMonitor->GetOrCreateReentrantMetricsRecordRef(GetId(), labels);
+    auto promSubscirbeTargets = mSelfMonitor->GetIntGauge(GetId(), "prom_subscribe_targets");
+}
+
+void TargetSubscriberScheduler::UpdateSelfMonitor() {
+}
 
 } // namespace logtail
