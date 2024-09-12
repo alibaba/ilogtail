@@ -91,10 +91,17 @@ const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
 // self monitor
 const char* const PROM_REGISTER_STATE = "prom_register_state";
+const char* const PROM_REGISTER_RETRY = "prom_register_retry";
 const char* const PROM_JOB_NUM = "prom_job_num";
-
+const char* const PROM_SUBSCRIBE_TARGETS = "prom_subscribe_targets";
+const char* const PROM_SUBSCRIBE_TOTAL = "prom_subscribe_total";
+const char* const PROM_SUBSCRIBE_TIME_MS = "prom_subscribe_time_ms";
+const char* const PROM_SCRAPE_TOTAL = "prom_scrape_total";
+const char* const PROM_SCRAPE_BYTES_TOTAL = "prom_scrape_bytes_total";
+const char* const PROM_SCRAPE_TIME_MS = "prom_scrape_time_ms";
 
 const char* const POD_NAME = "pod_name";
 const char* const OPERATOR_HOST = "operator_host";
 const char* const OPERATOR_PORT = "operator_port";
+const char* const STATUS = "status";
 } // namespace logtail::prometheus

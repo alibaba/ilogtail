@@ -23,9 +23,9 @@
 #include "common/http/HttpResponse.h"
 #include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
+#include "pipeline/queue/QueueKey.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
-#include "pipeline/queue/QueueKey.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "pipeline/queue/ProcessQueueItem.h"
@@ -52,6 +52,8 @@ public:
     void ScheduleNext() override;
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
+
+    void InitSelfMonitor(std::shared_ptr<PromSelfMonitor>);
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
@@ -80,6 +82,10 @@ private:
     double mScrapeDurationSeconds = 0;
     uint64_t mScrapeResponseSizeBytes = 0;
     bool mUpState = true;
+
+    // self monitor
+    std::shared_ptr<PromSelfMonitor> mSelfMonitor;
+    std::map<std::string, std::map<std::string, std::string>> mMetricLabelsMap;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParsePrometheusMetricUnittest;
     friend class ScrapeSchedulerUnittest;

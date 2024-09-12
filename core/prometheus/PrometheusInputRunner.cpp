@@ -58,14 +58,11 @@ PrometheusInputRunner::PrometheusInputRunner()
     labels.emplace_back(prometheus::OPERATOR_HOST, mServiceHost);
     labels.emplace_back(prometheus::OPERATOR_PORT, ToString(mServicePort));
 
-    DynamicMetricLabels dynamicLabels;
-    // dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS, []() -> std::string { return FlusherSLS::GetAllProjects(); });
-
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
-        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
 
     mIntGauges[prometheus::PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_REGISTER_STATE);
     mIntGauges[prometheus::PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_JOB_NUM);
+    mCounters[prometheus::PROM_REGISTER_RETRY] = mMetricsRecordRef.CreateCounter(prometheus::PROM_REGISTER_RETRY);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -112,7 +109,7 @@ void PrometheusInputRunner::Init() {
     mIsStarted = true;
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();
-    mPromSelfMonitor->Init();
+    mPromSelfMonitor->Init(mPodName, mServiceHost);
 
     LOG_INFO(sLogger, ("PrometheusInputRunner", "register"));
     // only register when operator exist
@@ -126,8 +123,15 @@ void PrometheusInputRunner::Init() {
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
                 if (httpResponse.statusCode != 200) {
                     LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
+                    mCounters[prometheus::PROM_REGISTER_RETRY]->Add(1);
                     if (retry % 3 == 0) {
-                        LOG_INFO(sLogger, ("register failed, retried", ToString(retry)));
+                        LOG_INFO(sLogger, ("register failed, statusCode", httpResponse.statusCode));
+                    }
+                    // if retry more than 100, stop register, and exit
+                    if (retry == 100) {
+                        std::lock_guard<mutex> lock(mStartMutex);
+                        mIsStarted = false;
+                        break;
                     }
                 } else {
                     // register success
@@ -172,7 +176,6 @@ void PrometheusInputRunner::Stop() {
     mIsStarted = false;
     mIsThreadRunning.store(false);
     mTimer->Stop();
-    mPromSelfMonitor->Stop();
 
     LOG_INFO(sLogger, ("PrometheusInputRunner", "stop asyn curl runner"));
     AsynCurlRunner::GetInstance()->Stop();

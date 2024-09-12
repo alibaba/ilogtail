@@ -1,38 +1,35 @@
 #pragma once
 
-#include "PluginMetricManager.h"
-#include "monitor/LoongCollectorMetricTypes.h"
+#include <map>
+#include <string>
+#include <unordered_map>
+
+#include "monitor/LogtailMetric.h"
+#include "monitor/PluginMetricManager.h"
 
 namespace logtail {
 
 class PromSelfMonitor {
 public:
-    bool Init() { return true; }
-    void Stop();
+    bool Init(const std::string& mPodName, const std::string& mOperatorHost);
 
-    void InitMetricManager(const std::string& key,
-                           MetricLabels& defaultLabels,
-                           std::unordered_map<std::string, MetricType> metricKeys) {
-        if (!mPromMetricsMap.count(key)) {
-            mPromMetricsMap[key] = std::make_shared<PluginMetricManager>(defaultLabels, metricKeys);
-        }
-    }
+    void InitMetricManager(const std::string& key, std::unordered_map<std::string, MetricType> metricKeys);
+    void CounterAdd(const std::string& key,
+                    const std::string& metricName,
+                    const std::map<std::string, std::string>& labels,
+                    uint64_t val = 1);
 
-    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& key, MetricLabels& labels) {
-        if (!mPromMetricsMap.count(key)) {
-            return nullptr;
-        }
-        return mPromMetricsMap[key]->GetOrCreateReentrantMetricsRecordRef(labels);
-    }
-    IntGaugePtr GetIntGauge(const std::string& key, const std::string& name) {
-        if (!mPromMetricsMap.count(key)) {
-            return nullptr;
-        }
-        return mPromMetricsMap[key]->GetIntGauge(name);
-    }
+
+    void IntGaugeSet(const std::string& key,
+                     const std::string& metricName,
+                     const std::map<std::string, std::string>& labels,
+                     uint64_t value);
 
 private:
+    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& key, MetricLabels& labels);
+
     std::map<std::string, PluginMetricManagerPtr> mPromMetricsMap;
+    MetricLabelsPtr mDefaultLabels;
 };
 
 } // namespace logtail

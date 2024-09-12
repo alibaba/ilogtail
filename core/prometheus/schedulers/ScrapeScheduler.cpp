@@ -27,11 +27,11 @@
 #include "common/timer/HttpRequestTimerEvent.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
-#include "prometheus/Constants.h"
-#include "prometheus/async/PromHttpRequest.h"
 #include "pipeline/queue/ProcessQueueItem.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKey.h"
+#include "prometheus/Constants.h"
+#include "prometheus/async/PromHttpRequest.h"
 
 using namespace std;
 
@@ -60,6 +60,19 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
+    mMetricLabelsMap[prometheus::PROM_SCRAPE_TOTAL][prometheus::STATUS] = ToString(response.mStatusCode);
+    mSelfMonitor->CounterAdd(GetId(), prometheus::PROM_SCRAPE_TOTAL, mMetricLabelsMap[prometheus::PROM_SCRAPE_TOTAL]);
+    mMetricLabelsMap[prometheus::PROM_SCRAPE_BYTES_TOTAL][prometheus::STATUS] = ToString(response.mStatusCode);
+    mSelfMonitor->CounterAdd(GetId(),
+                             prometheus::PROM_SCRAPE_BYTES_TOTAL,
+                             mMetricLabelsMap[prometheus::PROM_SCRAPE_BYTES_TOTAL],
+                             response.mBody.size());
+    mMetricLabelsMap[prometheus::PROM_SCRAPE_TIME_MS][prometheus::STATUS] = ToString(response.mStatusCode);
+    mSelfMonitor->IntGaugeSet(GetId(),
+                              prometheus::PROM_SCRAPE_TIME_MS,
+                              mMetricLabelsMap[prometheus::PROM_SCRAPE_TIME_MS],
+                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+
     mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
     mScrapeResponseSizeBytes = response.mBody.size();
@@ -166,5 +179,22 @@ void ScrapeScheduler::Cancel() {
 
 void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {
     mTimer = std::move(timer);
+}
+
+void ScrapeScheduler::InitSelfMonitor(std::shared_ptr<PromSelfMonitor> selfMonitor) {
+    mSelfMonitor = std::move(selfMonitor);
+    MetricLabels defaultLabels{{prometheus::JOB, mScrapeConfigPtr->mJobName}, {prometheus::INSTANCE, mInstance}};
+    static const std::unordered_map<std::string, MetricType> sSubscriberMetricKeys = {
+        {prometheus::PROM_SCRAPE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {prometheus::PROM_SCRAPE_BYTES_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {prometheus::PROM_SUBSCRIBE_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
+    };
+    // init metric labels
+    for (const auto& [metricName, v] : sSubscriberMetricKeys) {
+        for (const auto& [key, value] : defaultLabels) {
+            mMetricLabelsMap[metricName][key] = value;
+        }
+    }
+    mSelfMonitor->InitMetricManager(GetId(), sSubscriberMetricKeys);
 }
 } // namespace logtail

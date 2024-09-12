@@ -87,7 +87,6 @@ private:
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
     std::unordered_map<std::string, IntGaugePtr> mIntGauges;
-    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PrometheusInputRunnerUnittest;

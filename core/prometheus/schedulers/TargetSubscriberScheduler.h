@@ -73,7 +73,6 @@ private:
     void UpdateScrapeScheduler(std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>>&);
 
     void CancelAllScrapeScheduler();
-    void UpdateSelfMonitor();
 
     std::shared_ptr<ScrapeConfig> mScrapeConfigPtr;
 
@@ -84,8 +83,10 @@ private:
     std::shared_ptr<Timer> mTimer;
 
     std::string mETag;
-    std::shared_ptr<PromSelfMonitor> mSelfMonitor;
 
+    // self monitor
+    std::shared_ptr<PromSelfMonitor> mSelfMonitor;
+    std::map<std::string, std::map<std::string, std::string>> mMetricLabelsMap;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TargetSubscriberSchedulerUnittest;
     friend class InputPrometheusUnittest;
