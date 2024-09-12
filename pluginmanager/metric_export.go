@@ -57,7 +57,7 @@ func GetGoDirectMetrics() []map[string]string {
 //
 //	[]map[string]string{
 //		{
-//		    "agent_go_memory_used_mb": "100",
+//			"agent_go_memory_used_mb": "100",
 //			"agent_go_routines_total": "20"
 //		}
 //	}
