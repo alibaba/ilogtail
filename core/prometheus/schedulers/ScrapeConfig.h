@@ -12,6 +12,7 @@
 
 namespace logtail {
 
+
 class ScrapeConfig {
 public:
     std::string mJobName;
@@ -22,7 +23,10 @@ public:
     bool mHonorTimestamps;
     std::string mScheme;
 
-    std::map<std::string, std::string> mAuthHeaders;
+    // auth header
+    // scrape_protocols Accept header: PrometheusProto, OpenMetricsText0.0.1, OpenMetricsText1.0.0, PrometheusText0.0.4
+    // enable_compression Accept-Encoding header: gzip, identity
+    std::map<std::string, std::string> mRequestHeaders;
 
     bool mFollowRedirects;
 
@@ -43,10 +47,13 @@ public:
 private:
     bool InitBasicAuth(const Json::Value& basicAuth);
     bool InitAuthorization(const Json::Value& authorization);
+    bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
+    void InitEnableCompression(bool enableCompression);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;
 #endif
 };
+
 
 } // namespace logtail
