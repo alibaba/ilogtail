@@ -183,7 +183,8 @@ void AsynCurlRunner::HandleCompletedRequests() {
             curl_easy_getinfo(handler, CURLINFO_PRIVATE, &request);
             LOG_DEBUG(sLogger,
                       ("send http request completed, request address",
-                       request)("response time",ToString(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now()- request->mLastSendTime).count()) + "ms"));
+                       request)("response time",ToString(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now()- request->mLastSendTime).count()) + "ms")
+                      ("try cnt", ToString(request->mTryCnt)));
             switch (msg->data.result) {
                 case CURLE_OK: {
                     long statusCode = 0;
