@@ -30,6 +30,10 @@ private:
 
     std::map<std::string, PluginMetricManagerPtr> mPromMetricsMap;
     MetricLabelsPtr mDefaultLabels;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PromSelfMonitorUnittest;
+#endif
 };
 
 } // namespace logtail
