@@ -327,7 +327,6 @@ func initPluginBase(cfgStr string) int {
 	rst := 0
 	initOnce.Do(func() {
 		logger.Init()
-		flags.OverrideByEnv()
 		if pluginmanager.StatisticsConfig != nil {
 			pluginmanager.StatisticsConfig.Start()
 		}

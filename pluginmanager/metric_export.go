@@ -71,9 +71,11 @@ func GetGoCppProvidedMetrics() []map[string]string {
 // go 插件指标，直接输出
 func GetGoPluginMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
-	for _, config := range LogtailConfig {
+	LogtailConfig.Range(func(key, value interface{}) bool {
+		config := value.(*LogstoreConfig)
 		metrics = append(metrics, config.Context.ExportMetricRecords()...)
-	}
+		return true
+	})
 	return metrics
 }
 

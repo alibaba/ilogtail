@@ -99,13 +99,15 @@ func TestHangConfigWhenStop(t *testing.T) {
 	// Initialize plugin and run config.
 	require.Equal(t, 0, InitPluginBase())
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	require.NotNil(t, pluginmanager.ToStartLogtailConfig)
+	require.Equal(t, configName, pluginmanager.ToStartLogtailConfig.ConfigName)
+	Start(configName)
+	time.Sleep(time.Second * 2)
 	config, ok := pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	flusher, _ := pluginmanager.GetConfigFlushers(config.PluginRunner)[0].(*BadFlusher)
 	flusher.Shutdown = shutdown
-	Start(configName)
-	time.Sleep(time.Second * 2)
 
 	// Stop config, it will hang.
 	Stop(configName, 0)
@@ -120,14 +122,16 @@ func TestHangConfigWhenStop(t *testing.T) {
 
 	// Load again, succeed.
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	require.NotNil(t, pluginmanager.ToStartLogtailConfig)
+	require.Equal(t, configName, pluginmanager.ToStartLogtailConfig.ConfigName)
+	Start(configName)
+	time.Sleep(time.Second)
 	config, ok = pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
 	flusher, _ = pluginmanager.GetConfigFlushers(config.PluginRunner)[0].(*BadFlusher)
 	shutdown = make(chan int)
 	flusher.Shutdown = shutdown
-	Start(configName)
-	time.Sleep(time.Second)
 
 	// Stop config, hang again.
 	Stop(configName, 0)
@@ -163,28 +167,30 @@ func TestSlowConfigWhenStop(t *testing.T) {
 	// Initialize plugin and run config.
 	require.Equal(t, 0, InitPluginBase())
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	require.NotNil(t, pluginmanager.ToStartLogtailConfig)
+	require.Equal(t, configName, pluginmanager.ToStartLogtailConfig.ConfigName)
+	Start(configName)
+	time.Sleep(time.Second * 2)
 	config, ok := pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
-	Start(configName)
-	time.Sleep(time.Second * 2)
 
 	// Stop config, it will hang.
 	Stop(configName, 0)
 	// Load again. It will success since independent reload.
 	time.Sleep(time.Second)
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
-	require.Equal(t, 1, pluginmanager.GetLogtailConfigSize())
+	require.NotNil(t, pluginmanager.ToStartLogtailConfig)
 
 	// Wait more time, so that the config can finish stopping.
 	time.Sleep(time.Second * 5)
 	// Load again, succeed.
 	require.Equal(t, 0, LoadConfig("project", "logstore", configName, 0, badConfigStr))
+	Start(configName)
+	time.Sleep(time.Second)
 	config, ok = pluginmanager.GetLogtailConfig(configName)
 	require.True(t, ok)
 	require.Equal(t, configName, config.ConfigName)
-	Start(configName)
-	time.Sleep(time.Second)
 
 	// Quit.
 	time.Sleep(time.Second)

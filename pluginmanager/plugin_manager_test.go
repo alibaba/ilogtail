@@ -170,5 +170,10 @@ func LoadMockConfig(args ...string) error {
 		configStr = args[3]
 	}
 
-	return LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	err := LoadLogstoreConfig(project, logstore, configName, 666, configStr)
+	if err != nil {
+		return err
+	}
+	LogtailConfig.Store(configName, ToStartLogtailConfig)
+	return nil
 }

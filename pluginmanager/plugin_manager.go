@@ -174,11 +174,13 @@ func StopAll(exitFlag, withInput bool) error {
 				}
 			}
 			if matchFlag {
+				logger.Info(logstoreConfig.Context.GetRuntimeContext(), "Stop config", configName)
 				if hasStopped := timeoutStop(logstoreConfig, exitFlag); !hasStopped {
 					// TODO: This alarm can not be sent to server in current alarm design.
 					logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
 						"timeout when stop config, goroutine might leak")
 				}
+				logger.Info(context.Background(), "Stop config all", configName)
 				LogtailConfig.Delete(configName)
 			}
 		}
@@ -231,6 +233,7 @@ func Stop(configName string, exitFlag bool) error {
 			if !exitFlag {
 				LastUnsendBuffer[configName] = config.PluginRunner
 			}
+			logger.Info(config.Context.GetRuntimeContext(), "Stop config now", configName)
 			LogtailConfig.Delete(configName)
 			return nil
 		}
@@ -242,11 +245,12 @@ func Stop(configName string, exitFlag bool) error {
 func Start(configName string) error {
 	defer panicRecover("Run plugin")
 	if ToStartLogtailConfig == nil {
-		return fmt.Errorf("no pipeline for the config is created: %s", configName)
+		return fmt.Errorf("no pipeline loaded for the config: %s", configName)
 	}
-	if ToStartLogtailConfig.ConfigName != configName {
+	realConfigName := config.GetRealConfigName(configName)
+	if ToStartLogtailConfig.ConfigName != realConfigName {
 		// should never happen
-		return fmt.Errorf("config unmatch with to start pipeline: given %s, expect %s", configName, ToStartLogtailConfig.ConfigName)
+		return fmt.Errorf("config unmatch with the loaded pipeline: given %s, expect %s", configName, ToStartLogtailConfig.ConfigName)
 	}
 	ToStartLogtailConfig.Start()
 	LogtailConfig.Store(configName, ToStartLogtailConfig)

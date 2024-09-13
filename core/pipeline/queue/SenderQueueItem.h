@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 
-#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/QueueKey.h"
 
 namespace logtail {

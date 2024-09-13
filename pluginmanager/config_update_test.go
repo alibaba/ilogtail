@@ -69,9 +69,9 @@ func (s *configUpdateTestSuite) TestConfigUpdate() {
 	s.NoError(Stop(updateConfigName, false))
 	s.Equal(0, checkFlusher.GetLogCount(), "the hold on block flusher checker doesn't have any logs")
 	_ = LoadMockConfig(updateConfigName, updateConfigName, updateConfigName, GetTestConfig(updateConfigName))
+	s.NoError(Start(updateConfigName))
 	// Since independently load config, reload block config will be allowed
 	s.NoError(LoadMockConfig(noblockUpdateConfigName, noblockUpdateConfigName, noblockUpdateConfigName, GetTestConfig(noblockUpdateConfigName)))
-	s.NoError(Start(updateConfigName))
 	s.NoError(Start(noblockUpdateConfigName))
 	_, exist := GetLogtailConfig(updateConfigName)
 	s.True(exist)

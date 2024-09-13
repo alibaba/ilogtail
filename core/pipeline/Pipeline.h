@@ -66,7 +66,6 @@ public:
     const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
         return mPluginCntMap;
     }
-    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
 
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
@@ -81,6 +80,7 @@ public:
     std::string GetConfigNameOfGoPipelineWithoutInput() const { return mName + "/2"; }
 
 private:
+    bool LoadGoPipelines() const;
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const std::string& type,
                                const Json::Value& plugin,

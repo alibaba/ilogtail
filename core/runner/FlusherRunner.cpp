@@ -18,14 +18,14 @@
 #include "application/Application.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
-#include "plugin/flusher/sls/DiskBufferWriter.h"
+#include "common/http/HttpRequest.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/plugin/interface/HttpFlusher.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueItem.h"
 #include "pipeline/queue/SenderQueueManager.h"
-#include "common/http/HttpRequest.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "runner/sink/http/HttpSink.h"
 // TODO: temporarily used here
 #include "plugin/flusher/sls/PackIdManager.h"
@@ -148,6 +148,10 @@ void FlusherRunner::Run() {
 }
 
 void FlusherRunner::Dispatch(SenderQueueItem* item) {
+    if (item->mPipeline.get()) {
+        LOG_INFO(sLogger, ("all the item of the last pipeline", "has been processed and in sender queue"));
+        return;
+    }
     switch (item->mFlusher->GetSinkType()) {
         case SinkType::HTTP:
             PushToHttpSink(item);

@@ -30,7 +30,7 @@ bool Flusher::Start() {
 
 bool Flusher::Stop(bool isPipelineRemoving) {
     if (HasContext()) {
-        unique_ptr<SenderQueueItem> tombStone = make_unique<SenderQueueItem>();
+        unique_ptr<SenderQueueItem> tombStone = make_unique<SenderQueueItem>("", 0, this, mQueueKey);
         tombStone->mPipeline = PipelineManager::GetInstance()->FindConfigByName(mContext->GetConfigName());
         if (!tombStone->mPipeline) {
             LOG_ERROR(sLogger, ("failed to find pipeline when stop flusher", mContext->GetConfigName()));
@@ -47,18 +47,6 @@ void Flusher::GenerateQueueKey(const std::string& target) {
 }
 
 bool Flusher::PushToQueue(unique_ptr<SenderQueueItem>&& item, uint32_t retryTimes) {
-#ifndef APSARA_UNIT_TEST_MAIN
-    // TODO: temporarily set here, should be removed after independent config update refactor
-    if (item->mFlusher->HasContext()) {
-        item->mPipeline
-            = PipelineManager::GetInstance()->FindConfigByName(item->mFlusher->GetContext().GetConfigName());
-        if (!item->mPipeline) {
-            // should not happen
-            return false;
-        }
-    }
-#endif
-
     const string& str = QueueKeyManager::GetInstance()->GetName(item->mQueueKey);
     for (size_t i = 0; i < retryTimes; ++i) {
         int rst = SenderQueueManager::GetInstance()->PushQueue(item->mQueueKey, std::move(item));

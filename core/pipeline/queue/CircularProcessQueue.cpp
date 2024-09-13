@@ -41,6 +41,7 @@ bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     }
     item = std::move(mQueue.front());
     item->AddPipelineInProcessingCnt(GetConfigName());
+    mQueue.pop_front();
     mEventCnt -= item->mEventGroup.GetEvents().size();
     return true;
 }
