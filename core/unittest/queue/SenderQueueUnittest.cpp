@@ -184,7 +184,7 @@ void SenderQueueUnittest::TestMetric() {
     mQueue->Push(std::move(item1));
 
     APSARA_TEST_EQUAL(1U, mQueue->mInItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(dataSize, mQueue->mInItemsSizeByte->GetValue());
+    APSARA_TEST_EQUAL(dataSize, mQueue->mInItemDataSizeBytes->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());
@@ -196,20 +196,20 @@ void SenderQueueUnittest::TestMetric() {
     mQueue->Push(GenerateItem());
 
     APSARA_TEST_EQUAL(3U, mQueue->mInItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(dataSize * 3, mQueue->mInItemsSizeByte->GetValue());
+    APSARA_TEST_EQUAL(dataSize * 3, mQueue->mInItemDataSizeBytes->GetValue());
     APSARA_TEST_EQUAL(2U, mQueue->mQueueSize->GetValue());
     APSARA_TEST_EQUAL(dataSize * 2, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mValidToPushFlag->GetValue());
-    APSARA_TEST_EQUAL(1U, mQueue->mExtraBufferCnt->GetValue());
-    APSARA_TEST_EQUAL(dataSize, mQueue->mExtraBufferDataSizeByte->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mExtraBufferSize->GetValue());
+    APSARA_TEST_EQUAL(dataSize, mQueue->mExtraBufferDataSizeBytes->GetValue());
 
     mQueue->Remove(ptr1);
     APSARA_TEST_EQUAL(1U, mQueue->mOutItemsCnt->GetValue());
     APSARA_TEST_EQUAL(2U, mQueue->mQueueSize->GetValue());
     APSARA_TEST_EQUAL(dataSize * 2, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(0U, mQueue->mValidToPushFlag->GetValue());
-    APSARA_TEST_EQUAL(0U, mQueue->mExtraBufferCnt->GetValue());
-    APSARA_TEST_EQUAL(0U, mQueue->mExtraBufferDataSizeByte->GetValue());
+    APSARA_TEST_EQUAL(0U, mQueue->mExtraBufferSize->GetValue());
+    APSARA_TEST_EQUAL(0U, mQueue->mExtraBufferDataSizeBytes->GetValue());
 
     mQueue->Remove(ptr2);
     APSARA_TEST_EQUAL(2U, mQueue->mOutItemsCnt->GetValue());

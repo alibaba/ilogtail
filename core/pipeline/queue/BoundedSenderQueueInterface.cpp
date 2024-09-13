@@ -26,8 +26,8 @@ BoundedSenderQueueInterface::BoundedSenderQueueInterface(
     : QueueInterface(key, cap, ctx), BoundedQueueInterface<std::unique_ptr<SenderQueueItem>>(key, cap, low, high, ctx) {
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_COMPONENT_NAME, "sender_queue"}});
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_FLUSHER_NODE_ID, flusherId}});
-    mExtraBufferCnt = mMetricsRecordRef.CreateIntGauge("extra_buffer_size");
-    mExtraBufferDataSizeByte = mMetricsRecordRef.CreateIntGauge("extra_buffer_data_size_bytes");
+    mExtraBufferSize = mMetricsRecordRef.CreateIntGauge("extra_buffer_size");
+    mExtraBufferDataSizeBytes = mMetricsRecordRef.CreateIntGauge("extra_buffer_data_size_bytes");
 }
 
 void BoundedSenderQueueInterface::SetFeedback(FeedbackInterface* feedback) {

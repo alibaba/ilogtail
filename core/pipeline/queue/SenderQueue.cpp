@@ -32,13 +32,13 @@ bool SenderQueue::Push(unique_ptr<SenderQueueItem>&& item) {
     auto size = item->mData.size();
 
     mInItemsCnt->Add(1);
-    mInItemsSizeByte->Add(size);
+    mInItemDataSizeBytes->Add(size);
 
     if (Full()) {
         mExtraBuffer.push(std::move(item));
 
-        mExtraBufferCnt->Set(mExtraBuffer.size());
-        mExtraBufferDataSizeByte->Add(size);
+        mExtraBufferSize->Set(mExtraBuffer.size());
+        mExtraBufferDataSizeBytes->Add(size);
         return true;
     }
 
@@ -93,8 +93,8 @@ bool SenderQueue::Remove(SenderQueueItem* item) {
         Push(std::move(mExtraBuffer.front()));
         mExtraBuffer.pop();
 
-        mExtraBufferCnt->Set(mExtraBuffer.size());
-        mExtraBufferDataSizeByte->Sub(newSize);
+        mExtraBufferSize->Set(mExtraBuffer.size());
+        mExtraBufferDataSizeBytes->Sub(newSize);
         return true;
     }
     if (ChangeStateIfNeededAfterPop()) {

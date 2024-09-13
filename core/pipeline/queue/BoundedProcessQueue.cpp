@@ -39,7 +39,7 @@ bool BoundedProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
     ChangeStateIfNeededAfterPush();
 
     mInItemsCnt->Add(1);
-    mInItemsSizeByte->Add(size);
+    mInItemDataSizeBytes->Add(size);
     mQueueSize->Set(Size());
     mQueueDataSizeByte->Add(size);
     mValidToPushFlag->Set(IsValidToPush());

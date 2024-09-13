@@ -128,7 +128,7 @@ void BoundedProcessQueueUnittest::TestMetric() {
     mQueue->Push(std::move(item));
 
     APSARA_TEST_EQUAL(1U, mQueue->mInItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(dataSize, mQueue->mInItemsSizeByte->GetValue());
+    APSARA_TEST_EQUAL(dataSize, mQueue->mInItemDataSizeBytes->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
     APSARA_TEST_EQUAL(dataSize, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());

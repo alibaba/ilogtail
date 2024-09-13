@@ -64,8 +64,8 @@ protected:
 
     std::queue<std::unique_ptr<SenderQueueItem>> mExtraBuffer;
 
-    IntGaugePtr mExtraBufferCnt;
-    IntGaugePtr mExtraBufferDataSizeByte;
+    IntGaugePtr mExtraBufferSize;
+    IntGaugePtr mExtraBufferDataSizeBytes;
 };
 
 } // namespace logtail

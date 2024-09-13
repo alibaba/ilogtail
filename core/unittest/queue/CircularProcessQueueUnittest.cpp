@@ -158,7 +158,7 @@ void CircularProcessQueueUnittest::TestMetric() {
     auto dataSize1 = item->mEventGroup.DataSize();
     mQueue->Push(std::move(item));
     APSARA_TEST_EQUAL(1U, mQueue->mInItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(dataSize1, mQueue->mInItemsSizeByte->GetValue());
+    APSARA_TEST_EQUAL(dataSize1, mQueue->mInItemDataSizeBytes->GetValue());
     APSARA_TEST_EQUAL(2U, mQueue->mQueueSize->GetValue());
     APSARA_TEST_EQUAL(dataSize1, mQueue->mQueueDataSizeByte->GetValue());
 
@@ -166,7 +166,7 @@ void CircularProcessQueueUnittest::TestMetric() {
     auto dataSize2 = item->mEventGroup.DataSize();
     mQueue->Push(std::move(item));
     APSARA_TEST_EQUAL(2U, mQueue->mInItemsCnt->GetValue());
-    APSARA_TEST_EQUAL(dataSize1 + dataSize2, mQueue->mInItemsSizeByte->GetValue());
+    APSARA_TEST_EQUAL(dataSize1 + dataSize2, mQueue->mInItemDataSizeBytes->GetValue());
     APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
     APSARA_TEST_EQUAL(dataSize2, mQueue->mQueueDataSizeByte->GetValue());
     APSARA_TEST_EQUAL(2U, mQueue->mDroppedEventsCnt->GetValue());

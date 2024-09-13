@@ -48,7 +48,7 @@ bool CircularProcessQueue::Push(unique_ptr<ProcessQueueItem>&& item) {
     mEventCnt += newCnt;
 
     mInItemsCnt->Add(1);
-    mInItemsSizeByte->Add(size);
+    mInItemDataSizeBytes->Add(size);
     mQueueSize->Set(Size());
     mQueueDataSizeByte->Add(size);
     return true;
