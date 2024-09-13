@@ -35,8 +35,8 @@ namespace logtail {
 
 bool IsValidNumberChar(char c) {
     static const unordered_set<char> sValidChars
-        = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', '+', 'e',
-           'E', 'I', 'N', 'F', 'T', 'Y', 'i', 'n', 'f', 't', 'y', 'X', 'x'};
+        = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', '+', 'e', 'E', 'I',
+           'N', 'F', 'T', 'Y', 'i', 'n', 'f', 't', 'y', 'X', 'x', 'N', 'n', 'A', 'a'};
     return sValidChars.count(c);
 };
 
@@ -264,7 +264,7 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
         ++mTokenLength;
     }
 
-    if (mPos < mLine.size() && mLine[mPos] != ' ' && mLine[mPos] != '\t') {
+    if (mPos < mLine.size() && mLine[mPos] != ' ' && mLine[mPos] != '\t' && mLine[mPos] != '#') {
         HandleError("unexpected end of input in sample value");
         return;
     }
@@ -284,7 +284,7 @@ void TextParser::HandleSampleValue(MetricEvent& metricEvent) {
     metricEvent.SetValue<UntypedSingleValue>(mSampleValue);
     mTokenLength = 0;
     SkipLeadingWhitespace();
-    if (mPos == mLine.size() || !mHonorTimestamps) {
+    if (mPos == mLine.size() || mLine[mPos] == '#' || !mHonorTimestamps) {
         metricEvent.SetTimestamp(mDefaultTimestamp, mDefaultNanoTimestamp);
         mState = TextState::Done;
     } else {

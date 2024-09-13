@@ -218,8 +218,8 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
 
         scrapeScheduler->SetTimer(mTimer);
 
-        auto randSleepMilliSec
-            = GetRandSleepMilliSec(GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
+        auto randSleepMilliSec = GetRandSleepMilliSec(
+            scrapeScheduler->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
         auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 

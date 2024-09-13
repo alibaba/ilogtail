@@ -25,11 +25,11 @@ import (
 	"unsafe"
 
 	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/plugin_main/flags"
 	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
@@ -296,9 +296,9 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 	return returnStruct
 }
 
-//export GetPipelineMetrics
-func GetPipelineMetrics() *C.PluginMetrics {
-	results := pluginmanager.GetMetrics()
+//export GetGoMetrics
+func GetGoMetrics(metricType string) *C.PluginMetrics {
+	results := pluginmanager.GetMetrics(metricType)
 	// 统计所有键值对的总数，用于分配内存
 	numMetrics := len(results)
 
@@ -333,7 +333,6 @@ func initPluginBase(cfgStr string) int {
 	rst := 0
 	initOnce.Do(func() {
 		logger.Init()
-		flags.OverrideByEnv()
 		InitHTTPServer()
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
