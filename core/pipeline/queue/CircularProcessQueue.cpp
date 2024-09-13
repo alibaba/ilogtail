@@ -23,7 +23,7 @@ namespace logtail {
 
 CircularProcessQueue::CircularProcessQueue(size_t cap, int64_t key, uint32_t priority, const PipelineContext& ctx)
     : QueueInterface<std::unique_ptr<ProcessQueueItem>>(key, cap, ctx), ProcessQueueInterface(key, cap, priority, ctx) {
-    mMetricsRecordRef.AddLabels({{METRIC_LABEL_QUEUE_TYPE, "circular"}});
+    mMetricsRecordRef.AddLabels({{METRIC_LABEL_KEY_QUEUE_TYPE, "circular"}});
     mDroppedEventsCnt = mMetricsRecordRef.CreateCounter("dropped_events_cnt");
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 }

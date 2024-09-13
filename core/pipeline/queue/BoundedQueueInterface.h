@@ -25,7 +25,7 @@ class BoundedQueueInterface : virtual public QueueInterface<T> {
 public:
     BoundedQueueInterface(QueueKey key, size_t cap, size_t low, size_t high, const PipelineContext& ctx)
         : QueueInterface<T>(key, cap, ctx), mLowWatermark(low), mHighWatermark(high) {
-        this->mMetricsRecordRef.AddLabels({{METRIC_LABEL_QUEUE_TYPE, "bounded"}});
+        this->mMetricsRecordRef.AddLabels({{METRIC_LABEL_KEY_QUEUE_TYPE, "bounded"}});
         mValidToPushFlag = this->mMetricsRecordRef.CreateIntGauge("valid_to_push");
     }
     virtual ~BoundedQueueInterface() = default;
