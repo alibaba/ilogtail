@@ -1510,8 +1510,8 @@ bool AppConfig::mergeAllConfigs() {
     return false;
 }
 
-void AppConfig::LoadRemoteConfig(const Json::Value& remoteConfig) {
-    mRemoteConfig = remoteConfig;
+void AppConfig::LoadRemoteConfig(Json::Value& remoteConfig) {
+    mRemoteConfig = std::move(remoteConfig);
     if (mergeAllConfigs()) {
         for (const auto& callback : mCallbacks) {
             callback.second(false);

@@ -271,7 +271,7 @@ public:
     AppConfig();
     ~AppConfig(){};
 
-    void LoadRemoteConfig(const Json::Value&);
+    void LoadRemoteConfig(Json::Value&);
 
     static AppConfig* GetInstance() {
         static AppConfig singleton;

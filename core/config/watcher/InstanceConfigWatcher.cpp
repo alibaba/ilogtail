@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "config/watcher/ConfigWatcher.h"
+#include "config/watcher/InstanceConfigWatcher.h"
 
 #include <memory>
 #include <unordered_set>
 
-#include "PipelineConfig.h"
+#include "config/InstanceConfig.h"
 #include "logger/Logger.h"
-#include "pipeline/PipelineManager.h"
+#include "monitor/LogtailAlarm.h"
 
 using namespace std;
 
@@ -27,11 +27,11 @@ namespace logtail {
 
 bool ReadFile(const string& filepath, string& content);
 
-ConfigWatcher::ConfigWatcher() : mPipelineManager(PipelineManager::GetInstance()) {
+InstanceConfigWatcher::InstanceConfigWatcher() : mInstanceConfigManager(InstanceConfigManager::GetInstance()) {
 }
 
-PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
-    PipelineConfigDiff diff;
+InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
+    InstanceConfigDiff diff;
     unordered_set<string> configSet;
     for (const auto& dir : mSourceDir) {
         error_code ec;
@@ -88,7 +88,7 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                     LOG_INFO(sLogger, ("new config found and disabled", "skip current object")("config", configName));
                     continue;
                 }
-                PipelineConfig config(configName, std::move(detail));
+                InstanceConfig config(configName, std::move(detail));
                 if (!config.Parse()) {
                     LOG_ERROR(sLogger, ("new config found but invalid", "skip current object")("config", configName));
                     LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
@@ -108,13 +108,13 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                 mFileInfoMap[filepath] = make_pair(size, mTime);
                 unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
                 if (!LoadConfigDetailFromFile(path, *detail)) {
-                    if (mPipelineManager->FindConfigByName(configName)) {
+                    if (mInstanceConfigManager->FindConfigByName(configName)) {
                         diff.mUnchanged.push_back(configName);
                     }
                     continue;
                 }
                 if (!IsConfigEnabled(configName, *detail)) {
-                    if (mPipelineManager->FindConfigByName(configName)) {
+                    if (mInstanceConfigManager->FindConfigByName(configName)) {
                         diff.mRemoved.push_back(configName);
                         LOG_INFO(sLogger,
                                  ("existing valid config modified and disabled",
@@ -126,9 +126,9 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                     }
                     continue;
                 }
-                shared_ptr<Pipeline> p = mPipelineManager->FindConfigByName(configName);
+                shared_ptr<InstanceConfig> p = mInstanceConfigManager->FindConfigByName(configName);
                 if (!p) {
-                    PipelineConfig config(configName, std::move(detail));
+                    InstanceConfig config(configName, std::move(detail));
                     if (!config.Parse()) {
                         LOG_ERROR(sLogger,
                                   ("existing invalid config modified and remains invalid",
@@ -147,7 +147,7 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                              ("existing invalid config modified and passed topology check",
                               "prepare to build pipeline")("config", configName));
                 } else if (*detail != p->GetConfig()) {
-                    PipelineConfig config(configName, std::move(detail));
+                    InstanceConfig config(configName, std::move(detail));
                     if (!config.Parse()) {
                         diff.mUnchanged.push_back(configName);
                         LOG_ERROR(sLogger,
@@ -173,14 +173,14 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
                 }
             } else {
                 // 为了插件系统过渡使用
-                if (mPipelineManager->FindConfigByName(configName)) {
+                if (mInstanceConfigManager->FindConfigByName(configName)) {
                     diff.mUnchanged.push_back(configName);
                 }
                 LOG_DEBUG(sLogger, ("existing config file unchanged", "skip current object"));
             }
         }
     }
-    for (const auto& name : mPipelineManager->GetAllConfigNames()) {
+    for (const auto& name : mInstanceConfigManager->GetAllConfigNames()) {
         if (configSet.find(name) == configSet.end()) {
             diff.mRemoved.push_back(name);
             LOG_INFO(sLogger,
@@ -205,14 +205,14 @@ PipelineConfigDiff ConfigWatcher::CheckConfigDiff() {
     return diff;
 }
 
-void ConfigWatcher::AddSource(const string& dir, mutex* mux) {
+void InstanceConfigWatcher::AddSource(const string& dir, mutex* mux) {
     mSourceDir.emplace_back(dir);
     if (mux != nullptr) {
         mDirMutexMap[dir] = mux;
     }
 }
 
-void ConfigWatcher::ClearEnvironment() {
+void InstanceConfigWatcher::ClearEnvironment() {
     mSourceDir.clear();
     mFileInfoMap.clear();
 }

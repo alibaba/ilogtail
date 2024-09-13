@@ -32,6 +32,7 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
+#include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/EventDispatcher.h"
 #include "file_server/FileServer.h"
@@ -222,7 +223,7 @@ void Application::Start() { // GCOVR_EXCL_START
                         ("failed to create dir for local pipelineconfig",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
+        ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
     {
         // add local config dir
@@ -235,7 +236,7 @@ void Application::Start() { // GCOVR_EXCL_START
                         ("failed to create dir for local instanceconfig",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
+        InstanceConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__
@@ -286,11 +287,11 @@ void Application::Start() { // GCOVR_EXCL_START
             lastCheckTagsTime = curTime;
         }
         if (curTime - lastConfigCheckTime >= INT32_FLAG(config_scan_interval)) {
-            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!pipelineConfigDiff.IsEmpty()) {
                 PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
             }
-            InstanceConfigDiff instanceConfigDiff = ConfigWatcher::GetInstance()->CheckInstanceConfigDiff();
+            InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
             if (!instanceConfigDiff.IsEmpty()) {
                 InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }

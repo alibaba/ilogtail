@@ -23,8 +23,7 @@ using namespace std;
 
 namespace logtail {
 
-InstanceConfigManager::InstanceConfigManager() {
-}
+InstanceConfigManager::InstanceConfigManager() = default;
 
 void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
@@ -43,11 +42,11 @@ void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
     }
     Json::Value allConfigs;
     for (auto& config : mInstanceConfigMap) {
-        for (const auto& key : config.second->mDetail.get()->getMemberNames()) {
-            allConfigs[key] = Json::Value((*config.second->mDetail.get())[key]);
+        for (const auto& key : config.second->mDetail->getMemberNames()) {
+            allConfigs[key] = Json::Value((*config.second->mDetail)[key]);
         }
     }
-    AppConfig::GetInstance()->LoadRemoteConfig(std::move(allConfigs));
+    AppConfig::GetInstance()->LoadRemoteConfig(allConfigs);
 }
 
 std::shared_ptr<InstanceConfig> InstanceConfigManager::FindConfigByName(const string& configName) const {
@@ -60,6 +59,7 @@ std::shared_ptr<InstanceConfig> InstanceConfigManager::FindConfigByName(const st
 
 vector<string> InstanceConfigManager::GetAllConfigNames() const {
     vector<string> res;
+    res.reserve(mInstanceConfigMap.size());
     for (const auto& item : mInstanceConfigMap) {
         res.push_back(item.first);
     }

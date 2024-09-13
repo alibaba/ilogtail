@@ -81,7 +81,7 @@ protected:
 
     void SetUp() override {
         filesystem::create_directories(configDir);
-        ConfigWatcher::GetInstance()->AddPipelineSource(configDir.string());
+        ConfigWatcher::GetInstance()->AddSource(configDir.string());
     }
 
     void TearDown() override {
@@ -198,11 +198,11 @@ private:
 
 void ConfigUpdateUnittest::OnStartUp() const {
     PipelineConfigDiff diff;
-    diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_TRUE(diff.IsEmpty());
 
     GenerateInitialConfigs();
-    diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_EQUAL(2U, diff.mAdded.size());
     APSARA_TEST_TRUE(diff.mModified.empty());
@@ -218,7 +218,7 @@ void ConfigUpdateUnittest::OnConfigDelete() const {
     APSARA_TEST_EQUAL(1U, PipelineManagerMock::GetInstance()->GetAllConfigNames().size());
 
     filesystem::remove_all(configDir);
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_TRUE(diff.mAdded.empty());
     APSARA_TEST_TRUE(diff.mModified.empty());
@@ -237,7 +237,7 @@ void ConfigUpdateUnittest::OnConfigToInvalidFormat() const {
         ofstream fout(path, ios::trunc);
         fout << newInvalidConfigWithInvalidFormat;
     }
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_TRUE(diff.IsEmpty());
 }
 
@@ -249,7 +249,7 @@ void ConfigUpdateUnittest::OnConfigToInvalidDetail() const {
         ofstream fout(path, ios::trunc);
         fout << newInvalidConfigWithInvalidDetail;
     }
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_EQUAL(3U, diff.mAdded.size());
     APSARA_TEST_EQUAL(1U, diff.mModified.size());
@@ -268,7 +268,7 @@ void ConfigUpdateUnittest::OnConfigToEnabledValid() const {
         ofstream fout(path, ios::trunc);
         fout << newEnabledValidConfig;
     }
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_EQUAL(3U, diff.mAdded.size());
     APSARA_TEST_EQUAL(1U, diff.mModified.size());
@@ -287,7 +287,7 @@ void ConfigUpdateUnittest::OnConfigToDisabledValid() const {
         ofstream fout(path, ios::trunc);
         fout << newDisabledValidConfig;
     }
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_TRUE(diff.mAdded.empty());
     APSARA_TEST_TRUE(diff.mModified.empty());
@@ -302,7 +302,7 @@ void ConfigUpdateUnittest::OnConfigUnchanged() const {
     PrepareInitialSettings();
     APSARA_TEST_EQUAL(1U, PipelineManagerMock::GetInstance()->GetAllConfigNames().size());
 
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_TRUE(diff.IsEmpty());
 
     GenerateInitialConfigs();
@@ -311,7 +311,7 @@ void ConfigUpdateUnittest::OnConfigUnchanged() const {
         filesystem::file_time_type fTime = filesystem::last_write_time(path);
         filesystem::last_write_time(path, fTime + 1s);
     }
-    diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_EQUAL(1U, diff.mAdded.size());
     APSARA_TEST_TRUE(diff.mModified.empty());
@@ -342,7 +342,7 @@ void ConfigUpdateUnittest::OnConfigAdded() const {
         ofstream fout(configDir / "add_disabled_valid.json", ios::trunc);
         fout << disabledValidConfig;
     }
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     APSARA_TEST_FALSE(diff.IsEmpty());
     APSARA_TEST_EQUAL(2U, diff.mAdded.size());
     APSARA_TEST_TRUE(diff.mModified.empty());
@@ -355,7 +355,7 @@ void ConfigUpdateUnittest::OnConfigAdded() const {
 
 void ConfigUpdateUnittest::PrepareInitialSettings() const {
     GenerateInitialConfigs();
-    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+    PipelineConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
     PipelineManagerMock::GetInstance()->UpdatePipelines(diff);
 }
 
