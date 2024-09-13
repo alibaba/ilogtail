@@ -15,7 +15,7 @@
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "config/InstanceConfig.h"
-#include "pipeline/InstanceConfigManager.h"
+#include "instance_config/InstanceConfigManager.h"
 #include "unittest/Unittest.h"
 
 using namespace std;

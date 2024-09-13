@@ -250,20 +250,12 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     // 加载环境变量配置
     LoadEnvConfig();
 
-    // // 加载远程配置
-    // LoadRemoteConfig();
-
-    // // 合并所有配置
-    // MergeAllConfigs();
-
-    // // 初始化时，将合并后的配置直接应用到 gflags
-    // ApplyConfigToGFlags();
+    ParseJsonToFlags(mLocalConfig);
 
     ParseEnvToFlags();
 
     LoadResourceConf(mLocalConfig);
-    // load addr will init sender, sender param depend on LoadResourceConf
-    // LoadAddrConfig(confJson);
+
     LoadOtherConf(mLocalConfig);
 
     CheckAndResetProxyEnv();
@@ -319,7 +311,6 @@ void AppConfig::LoadLocalConfig(const std::string& ilogtailConfigFile) {
     LOG_INFO(sLogger, ("load logtail config file, detail", configJsonString));
 
     mLocalConfig = confJson;
-    ParseJsonToFlags(confJson);
 }
 
 void AppConfig::LoadEnvConfig() {
@@ -946,8 +937,6 @@ bool AppConfig::CheckAndResetProxyEnv() {
     return true;
 }
 
-// valid proxy address format: [scheme://[user:pwd\@]]address[:port], 'http' and '80' assumed if no scheme or port
-// provided
 /**
  * @brief 检查并重置代理地址
  *
@@ -955,9 +944,9 @@ bool AppConfig::CheckAndResetProxyEnv() {
  * @param address 代理地址
  * @return bool 如果地址有效则返回true，否则返回false
  *
- * 该函数验证代理地址的格式是否正确，格式为：[scheme://[user:pwd@]]address[:port]
- * 如果没有提供方案或端口，则假定为'http'和'80'
- * 如果地址有效但缺少端口，函数会添加默认端口并更新环境变量
+ * 该函数验证代理地址的格式是否正确，格式为：[scheme://[user:pwd\@]]address[:port]
+ * 如果没有提供scheme或port，则假定为'http'和'80'
+ * 如果地址有效但缺少port，函数会添加默认port并更新环境变量
  */
 bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
     if (address.empty()) {
@@ -1502,6 +1491,33 @@ void AppConfig::UpdateFileTags() {
         }
     }
     return;
+}
+
+bool AppConfig::MergeAllConfigs() {
+    Json::Value mergedConfig;
+    for (const auto& key : mLocalConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mLocalConfig[key]);
+    }
+    for (const auto& key : mEnvConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mEnvConfig[key]);
+    }
+    for (const auto& key : mRemoteConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mRemoteConfig[key]);
+    }
+    if (mergedConfig != mMergedConfig) {
+        mMergedConfig = mergedConfig;
+        return true;
+    }
+    return false;
+}
+
+void AppConfig::LoadRemoteConfig(const Json::Value& remoteConfig) {
+    mRemoteConfig = remoteConfig;
+    if (MergeAllConfigs()) {
+        for (const auto& callback : mCallbacks) {
+            callback.second(false);
+        }
+    }
 }
 
 } // namespace logtail

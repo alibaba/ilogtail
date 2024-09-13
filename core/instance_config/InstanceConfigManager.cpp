@@ -16,6 +16,7 @@
 
 #include "instance_config/InstanceConfigManager.h"
 
+#include "app_config/AppConfig.h"
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 
 using namespace std;
@@ -40,6 +41,13 @@ void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
         mInstanceConfigMap.erase(configName);
         ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(configName, ConfigFeedbackStatus::DELETED);
     }
+    Json::Value allConfigs;
+    for (auto& config : mInstanceConfigMap) {
+        for (const auto& key : config.second->mDetail.get()->getMemberNames()) {
+            allConfigs[key] = Json::Value((*config.second->mDetail.get())[key]);
+        }
+    }
+    AppConfig::GetInstance()->LoadRemoteConfig(std::move(allConfigs));
 }
 
 std::shared_ptr<InstanceConfig> InstanceConfigManager::FindConfigByName(const string& configName) const {

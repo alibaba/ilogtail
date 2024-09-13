@@ -22,8 +22,8 @@
 #include "config/provider/CommonConfigProvider.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "gmock/gmock.h"
+#include "instance_config/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
-#include "pipeline/InstanceConfigManager.h"
 #include "unittest/Unittest.h"
 
 using namespace testing;
@@ -33,7 +33,8 @@ namespace logtail {
 
 class MockCommonConfigProvider : public CommonConfigProvider {
 public:
-    MOCK_METHOD5(SendHttpRequest, bool(const std::string&, const std::string&, const std::string&, const std::string&, std::string&));
+    MOCK_METHOD5(SendHttpRequest,
+                 bool(const std::string&, const std::string&, const std::string&, const std::string&, std::string&));
 };
 
 class CommonConfigProviderUnittest : public ::testing::Test {
