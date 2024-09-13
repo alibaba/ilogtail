@@ -16,6 +16,8 @@
 
 #include "instance_config/InstanceConfigManager.h"
 
+#include <unordered_map>
+
 #include "app_config/AppConfig.h"
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 
@@ -42,13 +44,13 @@ void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
         mInstanceConfigMap.erase(configName);
         ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(configName, ConfigFeedbackStatus::DELETED);
     }
-    Json::Value allConfigs;
+    std::unordered_map<std::string, Json::Value> allConfigs;
     for (auto& config : mInstanceConfigMap) {
         for (const auto& key : config.second->mDetail->getMemberNames()) {
-            allConfigs[key] = Json::Value((*config.second->mDetail)[key]);
+            allConfigs[config.second->mDirName][key] = Json::Value((*config.second->mDetail)[key]);
         }
     }
-    AppConfig::GetInstance()->LoadRemoteConfig(allConfigs);
+    AppConfig::GetInstance()->LoadInstanceConfig(allConfigs);
 }
 
 std::shared_ptr<InstanceConfig> InstanceConfigManager::FindConfigByName(const string& configName) const {

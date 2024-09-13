@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <utility>
 
 #include "common/EnvUtil.h"
 #include "common/FileSystemUtil.h"
@@ -133,6 +134,9 @@ DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operat
 DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 namespace logtail {
+
+std::string AppConfig::sLocalConfigDir = "local";
+
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
     mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
@@ -162,22 +166,6 @@ AppConfig::AppConfig() {
     mForceQuitReadTimeout = 7200;
     LoadEnvTags();
     CheckPurageContainerMode();
-
-    // add local config dir
-    filesystem::path localConfigPath
-        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
-    error_code ec;
-    filesystem::create_directories(localConfigPath, ec);
-    if (ec) {
-        LOG_WARNING(sLogger,
-                    ("failed to create dir for local instanceconfig",
-                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
-    }
-    InstanceConfigWatcher::GetInstance()->AddLocalSource(localConfigPath.string());
-    InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
-    if (!instanceConfigDiff.IsEmpty()) {
-        InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
-    }
 }
 
 /**
@@ -263,6 +251,24 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     // 加载本地配置
     loadLocalConfig(ilogtailConfigFile);
+
+    // 加载 本地instanceconfig
+    // add local config dir
+    filesystem::path localConfigPath
+        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+    error_code ec;
+    filesystem::create_directories(localConfigPath, ec);
+    if (ec) {
+        LOG_WARNING(sLogger,
+                    ("failed to create dir for local instanceconfig",
+                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+    }
+    InstanceConfigWatcher::GetInstance()->AddLocalSource(localConfigPath.string());
+    InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
+    if (!instanceConfigDiff.IsEmpty()) {
+        InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
+    }
+
 
     // 加载环境变量配置
     loadEnvConfig();
@@ -1510,10 +1516,13 @@ void AppConfig::UpdateFileTags() {
     return;
 }
 
-bool AppConfig::mergeAllConfigs() {
+Json::Value AppConfig::mergeAllConfigs() {
     Json::Value mergedConfig;
     for (const auto& key : mLocalConfig.getMemberNames()) {
         mergedConfig[key] = Json::Value(mLocalConfig[key]);
+    }
+    for (const auto& key : mLocalInstanceConfig.getMemberNames()) {
+        mergedConfig[key] = Json::Value(mLocalInstanceConfig[key]);
     }
     for (const auto& key : mEnvConfig.getMemberNames()) {
         mergedConfig[key] = Json::Value(mEnvConfig[key]);
@@ -1521,20 +1530,40 @@ bool AppConfig::mergeAllConfigs() {
     for (const auto& key : mRemoteConfig.getMemberNames()) {
         mergedConfig[key] = Json::Value(mRemoteConfig[key]);
     }
-    if (mergedConfig != mMergedConfig) {
-        mMergedConfig = mergedConfig;
-        return true;
-    }
-    return false;
+    return mergedConfig;
 }
 
-void AppConfig::LoadRemoteConfig(Json::Value& remoteConfig) {
-    mRemoteConfig = std::move(remoteConfig);
-    if (mergeAllConfigs()) {
-        for (const auto& callback : mCallbacks) {
+void AppConfig::LoadInstanceConfig(std::unordered_map<std::string, Json::Value>& remoteConfig) {
+    mRemoteConfig.clear();
+    mLocalInstanceConfig.clear();
+    for (auto& config : remoteConfig) {
+        if (config.first == AppConfig::sLocalConfigDir) {
+            mLocalInstanceConfig = std::move(config.second);
+        } else {
+            MergeJson(mRemoteConfig, config.second);
+        }
+    }
+    auto mergedConfig = mergeAllConfigs();
+    for (const auto& callback : mCallbacks) {
+        const std::string& key = callback.first;
+        if (!mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+            continue;
+        }
+        if (!mMergedConfig.isMember(key) && mergedConfig.isMember(key)) {
+            callback.second(false);
+        }
+        if (mMergedConfig.isMember(key) && !mergedConfig.isMember(key)) {
+            callback.second(false);
+        }
+        if (mMergedConfig[key] != mergedConfig[key]) {
             callback.second(false);
         }
     }
+    mMergedConfig = std::move(mergedConfig);
+}
+
+void AppConfig::RegisterCallbacks(const std::string& key, std::function<void(bool)> callback) {
+    mCallbacks[key] = std::move(callback);
 }
 
 } // namespace logtail

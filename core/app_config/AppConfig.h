@@ -46,11 +46,13 @@ private:
 
 class AppConfig {
 private:
+    static std::string sLocalConfigDir;
     void loadLocalConfig(const std::string& ilogtailConfigFile);
     void loadEnvConfig();
-    bool mergeAllConfigs();
+    Json::Value mergeAllConfigs();
 
     Json::Value mLocalConfig;
+    Json::Value mLocalInstanceConfig;
     Json::Value mEnvConfig;
     Json::Value mRemoteConfig;
     Json::Value mMergedConfig;
@@ -266,12 +268,12 @@ private:
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
 
 public:
-    void RegisterCallbacks();
+    void RegisterCallbacks(const std::string& key, std::function<void(bool)> callback);
 
     AppConfig();
     ~AppConfig(){};
 
-    void LoadRemoteConfig(Json::Value&);
+    void LoadInstanceConfig(std::unordered_map<std::string, Json::Value>&);
 
     static AppConfig* GetInstance() {
         static AppConfig singleton;
