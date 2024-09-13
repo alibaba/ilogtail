@@ -20,7 +20,7 @@
 
 #include "LoongCollectorMetricTypes.h"
 #include "common/Lock.h"
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
 
@@ -108,7 +108,7 @@ public:
                                    const std::string& logstoreName,
                                    const std::string& region,
                                    const std::string& configName,
-                                   const std::string& pluginName,
+                                   const std::string& pluginType,
                                    const std::string& pluginID,
                                    const std::string& nodeID, 
                                    const std::string& childNodeID,

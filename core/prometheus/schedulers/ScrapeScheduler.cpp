@@ -16,8 +16,6 @@
 
 #include "prometheus/schedulers/ScrapeScheduler.h"
 
-#include <xxhash/xxhash.h>
-
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -31,9 +29,9 @@
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/async/PromHttpRequest.h"
-#include "queue/ProcessQueueItem.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/ProcessQueueItem.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKey.h"
 
 using namespace std;
 
@@ -57,10 +55,8 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
     mHash = mScrapeConfigPtr->mJobName + tmpTargetURL + ToString(mLabels.Hash());
     mInstance = mHost + ":" + ToString(mPort);
     mInterval = mScrapeConfigPtr->mScrapeIntervalSeconds;
-}
 
-bool ScrapeScheduler::operator<(const ScrapeScheduler& other) const {
-    return mHash < other.mHash;
+    mParser = make_unique<TextParser>();
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
@@ -92,18 +88,7 @@ void ScrapeScheduler::SetAutoMetricMeta(PipelineEventGroup& eGroup) {
 }
 
 PipelineEventGroup ScrapeScheduler::BuildPipelineEventGroup(const std::string& content) {
-    PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
-
-    for (const auto& line : SplitString(content, "\r\n")) {
-        auto newLine = TrimString(line);
-        if (newLine.empty() || newLine[0] == '#') {
-            continue;
-        }
-        auto* logEvent = eGroup.AddLogEvent();
-        logEvent->SetContent(prometheus::PROMETHEUS, newLine);
-    }
-
-    return eGroup;
+    return mParser->BuildLogGroup(content);
 }
 
 void ScrapeScheduler::PushEventGroup(PipelineEventGroup&& eGroup) {
@@ -177,19 +162,6 @@ void ScrapeScheduler::Cancel() {
         WriteLock lock(mLock);
         mValidState = false;
     }
-}
-
-uint64_t ScrapeScheduler::GetRandSleep() const {
-    const string& key = mHash;
-    uint64_t h = XXH64(key.c_str(), key.length(), 0);
-    uint64_t randSleep
-        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
-    uint64_t sleepOffset = GetCurrentTimeInMilliSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL);
-    if (randSleep < sleepOffset) {
-        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL;
-    }
-    randSleep -= sleepOffset;
-    return randSleep;
 }
 
 void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {

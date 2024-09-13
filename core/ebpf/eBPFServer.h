@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 
+#include "runner/InputRunner.h"
 #include "pipeline/PipelineContext.h"
 #include "ebpf/SourceManager.h"
 #include "ebpf/config.h"
@@ -32,19 +33,19 @@
 namespace logtail {
 namespace ebpf {
 
-class eBPFServer {
+class eBPFServer : public InputRunner {
 public:
     eBPFServer(const eBPFServer&) = delete;
     eBPFServer& operator=(const eBPFServer&) = delete;
 
-    void Init();
+    void Init() override;
 
     static eBPFServer* GetInstance() {
         static eBPFServer instance;
         return &instance;
     }
 
-    void Stop();
+    void Stop() override;
 
     std::string CheckLoadedPipelineName(nami::PluginType type);
     void UpdatePipelineName(nami::PluginType type, const std::string& name);
@@ -58,6 +59,8 @@ public:
 
     bool SuspendPlugin(const std::string& pipeline_name, nami::PluginType type);
 
+    bool HasRegisteredPlugins() const override;
+
 private:
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
@@ -70,13 +73,14 @@ private:
 
     std::unique_ptr<SourceManager> mSourceManager;
     // source manager
+    std::unique_ptr<EventHandler> mEventCB;
     std::unique_ptr<MeterHandler> mMeterCB;
     std::unique_ptr<SpanHandler> mSpanCB;
     std::unique_ptr<SecurityHandler> mNetworkSecureCB;
     std::unique_ptr<SecurityHandler> mProcessSecureCB;
     std::unique_ptr<SecurityHandler> mFileSecureCB;
 
-    std::mutex mMtx;
+    mutable std::mutex mMtx;
     std::array<std::string, (int)nami::PluginType::MAX> mLoadedPipeline = {};
 
     eBPFAdminConfig mAdminConfig;

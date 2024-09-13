@@ -37,11 +37,11 @@ const char* const X_PROMETHEUS_REFRESH_INTERVAL_SECONDS = "X-Prometheus-Refresh-
 const char* const USER_AGENT = "User-Agent";
 const char* const IF_NONE_MATCH = "If-None-Match";
 const std::string ETAG = "ETag";
-const char* const HTTP = "HTTP";
+const char* const HTTP = "http";
 const char* const APPLICATION_JSON = "application/json";
-const char* const HTTPS = "HTTPS";
+const char* const HTTPS = "https";
 const char* const TARGETS = "targets";
-const char* const UNREGISTER_MS = "unregister_ms";
+const char* const UNREGISTER_MS = "unRegisterMs";
 
 // scrape config
 const char* const SCRAPE_CONFIG = "ScrapeConfig";
@@ -97,7 +97,6 @@ const char* const SCRAPE_DURATION_SECONDS = "scrape_duration_seconds";
 const char* const SCRAPE_RESPONSE_SIZE_BYTES = "scrape_response_size_bytes";
 const char* const SCRAPE_SAMPLES_LIMIT = "scrape_samples_limit";
 const char* const SCRAPE_SAMPLES_POST_METRIC_RELABELING = "scrape_samples_post_metric_relabeling";
-const char* const SCRAPE_SERIES_ADDED = "scrape_series_added";
 const char* const SCRAPE_SAMPLES_SCRAPED = "scrape_samples_scraped";
 const char* const SCRAPE_TIMEOUT_SECONDS = "scrape_timeout_seconds";
 const char* const UP = "up";

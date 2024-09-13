@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/plugin_main/flags"
 )
 
 // Following variables are exported so that tests of main package can reference them.
@@ -101,11 +101,11 @@ var containerConfigJSON = `{
 	]
 }`
 
-func panicRecover(pluginName string) {
+func panicRecover(pluginType string) {
 	if err := recover(); err != nil {
 		trace := make([]byte, 2048)
 		runtime.Stack(trace, true)
-		logger.Error(context.Background(), "PLUGIN_RUNTIME_ALARM", "plugin", pluginName, "panicked", err, "stack", string(trace))
+		logger.Error(context.Background(), "PLUGIN_RUNTIME_ALARM", "plugin", pluginType, "panicked", err, "stack", string(trace))
 	}
 }
 
