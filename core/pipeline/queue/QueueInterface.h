@@ -34,11 +34,11 @@ public:
                                                             });
 
         mInItemsCnt = mMetricsRecordRef.CreateCounter("in_items_cnt");
-        mInItemsSizeByte = mMetricsRecordRef.CreateCounter("in_items_size_byte");
+        mInItemsSizeByte = mMetricsRecordRef.CreateCounter("in_items_size_bytes");
         mOutItemsCnt = mMetricsRecordRef.CreateCounter("out_items_cnt");
         mTotalDelayMs = mMetricsRecordRef.CreateCounter("total_delay_ms");
         mQueueSize = mMetricsRecordRef.CreateIntGauge("queue_size");
-        mQueueDataSizeByte = mMetricsRecordRef.CreateIntGauge("queue_data_size_byte");
+        mQueueDataSizeByte = mMetricsRecordRef.CreateIntGauge("queue_data_size_bytes");
     }
     virtual ~QueueInterface() = default;
 

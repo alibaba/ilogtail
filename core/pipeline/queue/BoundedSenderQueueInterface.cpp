@@ -27,7 +27,7 @@ BoundedSenderQueueInterface::BoundedSenderQueueInterface(
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_COMPONENT_NAME, "sender_queue"}});
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_FLUSHER_NODE_ID, flusherId}});
     mExtraBufferCnt = mMetricsRecordRef.CreateIntGauge("extra_buffer_size");
-    mExtraBufferDataSizeByte = mMetricsRecordRef.CreateIntGauge("extra_buffer_data_size_byte");
+    mExtraBufferDataSizeByte = mMetricsRecordRef.CreateIntGauge("extra_buffer_data_size_bytes");
 }
 
 void BoundedSenderQueueInterface::SetFeedback(FeedbackInterface* feedback) {
