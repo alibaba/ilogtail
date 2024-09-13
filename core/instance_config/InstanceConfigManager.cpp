@@ -27,12 +27,14 @@ InstanceConfigManager::InstanceConfigManager() = default;
 
 void InstanceConfigManager::UpdateInstanceConfigs(InstanceConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
-        std::shared_ptr<InstanceConfig> configTmp(new InstanceConfig(config.mName, std::move(config.mDetail)));
+        std::shared_ptr<InstanceConfig> configTmp(
+            new InstanceConfig(config.mName, std::move(config.mDetail), config.mDirName));
         mInstanceConfigMap[config.mName] = configTmp;
         ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
     }
     for (auto& config : diff.mModified) {
-        std::shared_ptr<InstanceConfig> configTmp(new InstanceConfig(config.mName, std::move(config.mDetail)));
+        std::shared_ptr<InstanceConfig> configTmp(
+            new InstanceConfig(config.mName, std::move(config.mDetail), config.mDirName));
         mInstanceConfigMap[config.mName] = configTmp;
         ConfigFeedbackReceiver::GetInstance().FeedbackInstanceConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
     }

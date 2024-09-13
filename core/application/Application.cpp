@@ -225,19 +225,6 @@ void Application::Start() { // GCOVR_EXCL_START
         }
         ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
-    {
-        // add local config dir
-        filesystem::path localConfigPath
-            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
-        error_code ec;
-        filesystem::create_directories(localConfigPath, ec);
-        if (ec) {
-            LOG_WARNING(sLogger,
-                        ("failed to create dir for local instanceconfig",
-                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
-        }
-        InstanceConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
-    }
 
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");

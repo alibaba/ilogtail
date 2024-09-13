@@ -15,11 +15,13 @@
 #include "AppConfig.h"
 
 #include <algorithm>
+#include <filesystem>
 
 #include "common/EnvUtil.h"
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
+#include "config/watcher/InstanceConfigWatcher.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
@@ -160,6 +162,22 @@ AppConfig::AppConfig() {
     mForceQuitReadTimeout = 7200;
     LoadEnvTags();
     CheckPurageContainerMode();
+
+    // add local config dir
+    filesystem::path localConfigPath
+        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+    error_code ec;
+    filesystem::create_directories(localConfigPath, ec);
+    if (ec) {
+        LOG_WARNING(sLogger,
+                    ("failed to create dir for local instanceconfig",
+                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+    }
+    InstanceConfigWatcher::GetInstance()->AddLocalSource(localConfigPath.string());
+    InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
+    if (!instanceConfigDiff.IsEmpty()) {
+        InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
+    }
 }
 
 /**

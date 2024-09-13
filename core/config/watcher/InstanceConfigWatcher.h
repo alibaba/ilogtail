@@ -42,6 +42,7 @@ public:
 
     InstanceConfigDiff CheckConfigDiff();
     void AddSource(const std::string& dir, std::mutex* mux = nullptr);
+    void AddLocalSource(const std::string& dir, std::mutex* mux = nullptr);
     // for ut
     void SetInstanceConfigManager(const InstanceConfigManager* m) { mInstanceConfigManager = m; }
     void ClearEnvironment();
@@ -51,6 +52,7 @@ private:
     ~InstanceConfigWatcher() = default;
 
     std::vector<std::filesystem::path> mSourceDir;
+    std::vector<std::filesystem::path> mLocalSourceDir;
     std::unordered_map<std::string, std::mutex*> mDirMutexMap;
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mFileInfoMap;
     const InstanceConfigManager* mInstanceConfigManager = nullptr;
