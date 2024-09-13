@@ -25,9 +25,6 @@ private:
 
     std::string mJobName;
 
-    // self monitor
-    IntGaugePtr mInputState;
-
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class InputPrometheusUnittest;
 #endif

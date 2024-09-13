@@ -91,7 +91,7 @@ const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
 // self monitor
 const char* const PROM_REGISTER_STATE = "prom_register_state";
-const char* const PROM_REGISTER_RETRY = "prom_register_retry";
+const char* const PROM_REGISTER_RETRY_TOTAL = "prom_register_retry_total";
 const char* const PROM_JOB_NUM = "prom_job_num";
 const char* const PROM_SUBSCRIBE_TARGETS = "prom_subscribe_targets";
 const char* const PROM_SUBSCRIBE_TOTAL = "prom_subscribe_total";

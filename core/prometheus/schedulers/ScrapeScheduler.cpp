@@ -185,17 +185,17 @@ void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {
 void ScrapeScheduler::InitSelfMonitor(std::shared_ptr<PromSelfMonitor> selfMonitor) {
     mSelfMonitor = std::move(selfMonitor);
     MetricLabels defaultLabels{{prometheus::JOB, mScrapeConfigPtr->mJobName}, {prometheus::INSTANCE, mInstance}};
-    static const std::unordered_map<std::string, MetricType> sSubscriberMetricKeys = {
+    static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys = {
         {prometheus::PROM_SCRAPE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
         {prometheus::PROM_SCRAPE_BYTES_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {prometheus::PROM_SUBSCRIBE_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
+        {prometheus::PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
     };
     // init metric labels
-    for (const auto& [metricName, v] : sSubscriberMetricKeys) {
+    for (const auto& [metricName, v] : sScrapeMetricKeys) {
         for (const auto& [key, value] : defaultLabels) {
             mMetricLabelsMap[metricName][key] = value;
         }
     }
-    mSelfMonitor->InitMetricManager(GetId(), sSubscriberMetricKeys);
+    mSelfMonitor->InitMetricManager(GetId(), sScrapeMetricKeys);
 }
 } // namespace logtail

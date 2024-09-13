@@ -62,7 +62,7 @@ PrometheusInputRunner::PrometheusInputRunner()
 
     mIntGauges[prometheus::PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_REGISTER_STATE);
     mIntGauges[prometheus::PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_JOB_NUM);
-    mCounters[prometheus::PROM_REGISTER_RETRY] = mMetricsRecordRef.CreateCounter(prometheus::PROM_REGISTER_RETRY);
+    mCounters[prometheus::PROM_REGISTER_RETRY_TOTAL] = mMetricsRecordRef.CreateCounter(prometheus::PROM_REGISTER_RETRY_TOTAL);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -123,7 +123,7 @@ void PrometheusInputRunner::Init() {
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
                 if (httpResponse.statusCode != 200) {
                     LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
-                    mCounters[prometheus::PROM_REGISTER_RETRY]->Add(1);
+                    mCounters[prometheus::PROM_REGISTER_RETRY_TOTAL]->Add(1);
                     if (retry % 3 == 0) {
                         LOG_INFO(sLogger, ("register failed, statusCode", httpResponse.statusCode));
                     }

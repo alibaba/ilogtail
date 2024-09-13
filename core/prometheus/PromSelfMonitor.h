@@ -13,7 +13,7 @@ class PromSelfMonitor {
 public:
     bool Init(const std::string& mPodName, const std::string& mOperatorHost);
 
-    void InitMetricManager(const std::string& key, std::unordered_map<std::string, MetricType> metricKeys);
+    void InitMetricManager(const std::string& key, const std::unordered_map<std::string, MetricType>& metricKeys);
     void CounterAdd(const std::string& key,
                     const std::string& metricName,
                     const std::map<std::string, std::string>& labels,
@@ -26,9 +26,10 @@ public:
                      uint64_t value);
 
 private:
-    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& key, MetricLabels& labels);
+    ReentrantMetricsRecordRef
+    GetOrCreateReentrantMetricsRecordRef(const std::string& key, const std::string& metricName, MetricLabels& labels);
 
-    std::map<std::string, PluginMetricManagerPtr> mPromMetricsMap;
+    std::map<std::string, std::map<std::string, PluginMetricManagerPtr>> mPromMetricsMap;
     MetricLabelsPtr mDefaultLabels;
 
 #ifdef APSARA_UNIT_TEST_MAIN
