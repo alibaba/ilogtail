@@ -14,7 +14,7 @@
 
 #include "common/http/HttpRequest.h"
 #include "common/http/HttpResponse.h"
-#include "common/http/SyncCurl.h"
+#include "common/http/Curl.h"
 #include "unittest/Unittest.h"
 
 
@@ -22,22 +22,22 @@ using namespace std;
 
 namespace logtail {
 
-class SyncCurlUnittest : public ::testing::Test {
+class CurlUnittest : public ::testing::Test {
 public:
-    void TestSend();
+    void TestSendHttpRequest();
 };
 
 
-void SyncCurlUnittest::TestSend() {
+void CurlUnittest::TestSendHttpRequest() {
     std::unique_ptr<HttpRequest> request;
     HttpResponse res;
     request = std::make_unique<HttpRequest>("GET", false, "example.com", 80, "/path", "", map<string, string>(), "", 10, 3);
-    bool success = Send(std::move(request), res);
+    bool success = SendHttpRequest(std::move(request), res);
     APSARA_TEST_TRUE(success);
     APSARA_TEST_EQUAL(404, res.mStatusCode);
 }
 
-UNIT_TEST_CASE(SyncCurlUnittest, TestSend)
+UNIT_TEST_CASE(CurlUnittest, TestSendHttpRequest)
 
 } // namespace logtail
 
