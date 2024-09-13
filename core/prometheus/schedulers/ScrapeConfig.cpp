@@ -6,6 +6,7 @@
 #include <string>
 
 #include "common/FileSystemUtil.h"
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
@@ -21,7 +22,7 @@ ScrapeConfig::ScrapeConfig()
       mHonorLabels(false),
       mHonorTimestamps(true),
       mScheme("http"),
-      mFollowRedirects(true),
+      mFollowRedirects(false),
       mMaxScrapeSizeBytes(0),
       mSampleLimit(0),
       mSeriesLimit(0) {
