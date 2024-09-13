@@ -31,6 +31,7 @@
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKey.h"
 #include "prometheus/Constants.h"
+#include "prometheus/PromSelfMonitor.h"
 #include "prometheus/async/PromHttpRequest.h"
 
 using namespace std;

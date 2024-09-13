@@ -24,6 +24,7 @@
 #include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/queue/QueueKey.h"
+#include "prometheus/PromSelfMonitor.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 
