@@ -62,16 +62,16 @@ ScrapeScheduler::ScrapeScheduler(std::shared_ptr<ScrapeConfig> scrapeConfigPtr,
 }
 
 void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t timestampMilliSec) {
-    mMetricLabelsMap[PROM_SCRAPE_TOTAL][prometheus::STATUS] = ToString(response.mStatusCode);
-    mSelfMonitor->CounterAdd(GetId(), PROM_SCRAPE_TOTAL, mMetricLabelsMap[PROM_SCRAPE_TOTAL]);
-    mMetricLabelsMap[PROM_SCRAPE_BYTES_TOTAL][prometheus::STATUS] = ToString(response.mStatusCode);
     mSelfMonitor->CounterAdd(
-        GetId(), PROM_SCRAPE_BYTES_TOTAL, mMetricLabelsMap[PROM_SCRAPE_BYTES_TOTAL], response.mBody.size());
-    mMetricLabelsMap[PROM_SCRAPE_TIME_MS][prometheus::STATUS] = ToString(response.mStatusCode);
-    mSelfMonitor->IntGaugeSet(GetId(),
-                              PROM_SCRAPE_TIME_MS,
-                              mMetricLabelsMap[PROM_SCRAPE_TIME_MS],
-                              GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+        GetId(), PROM_SCRAPE_TOTAL, MetricLabels{{prometheus::STATUS, ToString(response.mStatusCode)}});
+    mSelfMonitor->CounterAdd(GetId(),
+                             PROM_SCRAPE_BYTES_TOTAL,
+                             MetricLabels{{prometheus::STATUS, ToString(response.mStatusCode)}},
+                             response.mBody.size());
+    mSelfMonitor->CounterAdd(GetId(),
+                             PROM_SCRAPE_TIME_MS,
+                             MetricLabels{{prometheus::STATUS, ToString(response.mStatusCode)}},
+                             GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
     mScrapeTimestampMilliSec = timestampMilliSec;
     mScrapeDurationSeconds = 1.0 * (GetCurrentTimeInMilliSeconds() - timestampMilliSec) / 1000;
@@ -187,14 +187,9 @@ void ScrapeScheduler::InitSelfMonitor(std::shared_ptr<PromSelfMonitor> selfMonit
     static const std::unordered_map<std::string, MetricType> sScrapeMetricKeys = {
         {PROM_SCRAPE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
         {PROM_SCRAPE_BYTES_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
+        {PROM_SCRAPE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
     };
-    // init metric labels
-    for (const auto& [metricName, v] : sScrapeMetricKeys) {
-        for (const auto& [key, value] : defaultLabels) {
-            mMetricLabelsMap[metricName][key] = value;
-        }
-    }
-    mSelfMonitor->InitMetricManager(GetId(), sScrapeMetricKeys);
+
+    mSelfMonitor->InitMetricManager(GetId(), sScrapeMetricKeys, defaultLabels);
 }
 } // namespace logtail

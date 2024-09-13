@@ -86,7 +86,9 @@ private:
 
     // self monitor
     std::shared_ptr<PromSelfMonitor> mSelfMonitor;
-    std::map<std::string, std::map<std::string, std::string>> mMetricLabelsMap;
+    MetricsRecordRef mMetricsRecordRef;
+    IntGaugePtr mPromSubscriberTargets;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TargetSubscriberSchedulerUnittest;
     friend class InputPrometheusUnittest;

@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 
+#include "application/Application.h"
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "common/StringTools.h"
@@ -29,6 +30,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogtailMetric.h"
 #include "monitor/MetricConstants.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
 #include "sdk/Common.h"
@@ -54,12 +56,16 @@ PrometheusInputRunner::PrometheusInputRunner()
     // self monitor
     mPromSelfMonitor = std::make_shared<PromSelfMonitor>();
     MetricLabels labels;
-    // labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
+    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
     labels.emplace_back(prometheus::POD_NAME, mPodName);
     labels.emplace_back(prometheus::OPERATOR_HOST, mServiceHost);
     labels.emplace_back(prometheus::OPERATOR_PORT, ToString(mServicePort));
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+    DynamicMetricLabels dynamicLabels;
+    dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
 
     mIntGauges[PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(PROM_REGISTER_STATE);
     mIntGauges[PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(PROM_JOB_NUM);

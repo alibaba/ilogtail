@@ -19,43 +19,39 @@ bool PromSelfMonitor::Init(const std::string& mPodName, const std::string& mOper
     mDefaultLabels->emplace_back(prometheus::OPERATOR_HOST, mOperatorHost);
     return true;
 }
+
 void PromSelfMonitor::InitMetricManager(const std::string& key,
-                                        const std::unordered_map<std::string, MetricType>& metricKeys) {
+                                        const std::unordered_map<std::string, MetricType>& metricKeys,
+                                        MetricLabels labels) {
     if (!mPromMetricsMap.count(key)) {
-        for (const auto& [metricName, type] : metricKeys) {
-            mPromMetricsMap[key][metricName] = std::make_shared<PluginMetricManager>(
-                mDefaultLabels, std::unordered_map<std::string, MetricType>({{metricName, type}}));
-        }
+        auto defaultLabels = std::make_shared<MetricLabels>(*mDefaultLabels);
+        defaultLabels->insert(defaultLabels->end(), labels.begin(), labels.end());
+
+        mPromMetricsMap[key] = std::make_shared<PluginMetricManager>(defaultLabels, metricKeys);
     }
 }
 
 void PromSelfMonitor::CounterAdd(const std::string& key,
                                  const std::string& metricName,
-                                 const std::map<std::string, std::string>& labels,
+                                 const MetricLabels& labels,
                                  uint64_t val) {
-    auto metricLabels = MetricLabels(labels.begin(), labels.end());
-    auto recordRef = GetOrCreateReentrantMetricsRecordRef(key, metricName, metricLabels);
+    auto recordRef = GetOrCreateReentrantMetricsRecordRef(key, labels);
     recordRef->GetCounter(metricName)->Add(val);
 }
 
 void PromSelfMonitor::IntGaugeSet(const std::string& key,
                                   const std::string& metricName,
-                                  const std::map<std::string, std::string>& labels,
+                                  const MetricLabels& labels,
                                   uint64_t value) {
-    auto metricLabels = MetricLabels(labels.begin(), labels.end());
-    auto recordRef = GetOrCreateReentrantMetricsRecordRef(key, metricName, metricLabels);
+    auto recordRef = GetOrCreateReentrantMetricsRecordRef(key, labels);
     recordRef->GetIntGauge(metricName)->Set(value);
 }
 
 ReentrantMetricsRecordRef PromSelfMonitor::GetOrCreateReentrantMetricsRecordRef(const std::string& key,
-                                                                                const std::string& metricName,
-                                                                                MetricLabels& labels) {
+                                                                                const MetricLabels& labels) {
     if (!mPromMetricsMap.count(key)) {
         return nullptr;
     }
-    if (!mPromMetricsMap[key].count(metricName)) {
-        return nullptr;
-    }
-    return mPromMetricsMap[key][metricName]->GetOrCreateReentrantMetricsRecordRef(labels);
+    return mPromMetricsMap[key]->GetOrCreateReentrantMetricsRecordRef(labels);
 }
 } // namespace logtail
