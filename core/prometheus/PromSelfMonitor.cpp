@@ -9,8 +9,12 @@
 using namespace std;
 
 namespace logtail {
-bool PromSelfMonitor::Init(const std::string& mPodName, const std::string& mOperatorHost) {
+
+PromSelfMonitor::PromSelfMonitor() {
     mDefaultLabels = std::make_shared<MetricLabels>();
+}
+
+bool PromSelfMonitor::Init(const std::string& mPodName, const std::string& mOperatorHost) {
     mDefaultLabels->emplace_back(prometheus::POD_NAME, mPodName);
     mDefaultLabels->emplace_back(prometheus::OPERATOR_HOST, mOperatorHost);
     return true;

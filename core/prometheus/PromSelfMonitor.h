@@ -11,6 +11,7 @@ namespace logtail {
 
 class PromSelfMonitor {
 public:
+    PromSelfMonitor();
     bool Init(const std::string& mPodName, const std::string& mOperatorHost);
 
     void InitMetricManager(const std::string& key, const std::unordered_map<std::string, MetricType>& metricKeys);
