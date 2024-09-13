@@ -41,7 +41,7 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
         APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
         APSARA_TEST_TRUE(errorMsg.empty());
-        InstanceConfig config("test1", std::move(detail));
+        InstanceConfig config("test1", std::move(detail), "dir");
         configDiff.mAdded.emplace_back(config);
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);
 
@@ -59,7 +59,7 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
         APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
         APSARA_TEST_TRUE(errorMsg.empty());
-        InstanceConfig config("test1", std::move(detail));
+        InstanceConfig config("test1", std::move(detail), "dir");
         configDiff.mModified.emplace_back(config);
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);
 
