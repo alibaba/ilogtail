@@ -176,7 +176,7 @@ void SenderQueueUnittest::TestMetric() {
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_COMPONENT_NAME, "sender_queue"));
     APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_QUEUE_TYPE, "bounded"));
-    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_FLUSHER_PLUGIN_ID, sFlusherId));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_FLUSHER_NODE_ID, sFlusherId));
 
     auto item1 = GenerateItem();
     auto dataSize = item1->mData.size();

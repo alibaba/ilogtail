@@ -74,7 +74,7 @@ const std::string METRIC_LABEL_CHILD_NODE_ID = "child_node_id";
 const std::string METRIC_LABEL_COMPONENT_NAME = "component_name";
 const std::string METRIC_LABEL_QUEUE_TYPE = "queue_type";
 const std::string METRIC_LABEL_EXACTLY_ONCE_FLAG = "is_exactly_once";
-const std::string METRIC_LABEL_FLUSHER_PLUGIN_ID = "flusher_plugin_id";
+const std::string METRIC_LABEL_FLUSHER_NODE_ID = "flusher_node_id";
 
 // input file plugin labels
 const std::string METRIC_LABEL_FILE_DEV = "file_dev";
