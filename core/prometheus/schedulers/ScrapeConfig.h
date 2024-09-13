@@ -18,16 +18,19 @@ public:
     int64_t mScrapeIntervalSeconds;
     int64_t mScrapeTimeoutSeconds;
     std::string mMetricsPath;
+    bool mHonorLabels;
+    bool mHonorTimestamps;
     std::string mScheme;
 
     std::map<std::string, std::string> mAuthHeaders;
 
     bool mFollowRedirects;
 
-    int64_t mMaxScrapeSizeBytes;
-    int64_t mSampleLimit;
-    int64_t mSeriesLimit;
-    std::vector<RelabelConfig> mRelabelConfigs;
+    uint64_t mMaxScrapeSizeBytes;
+    uint64_t mSampleLimit;
+    uint64_t mSeriesLimit;
+    RelabelConfigList mRelabelConfigs;
+    RelabelConfigList mMetricRelabelConfigs;
 
     std::map<std::string, std::vector<std::string>> mParams;
 
@@ -35,6 +38,7 @@ public:
 
     ScrapeConfig();
     bool Init(const Json::Value& config);
+    bool InitStaticConfig(const Json::Value& config);
 
 private:
     bool InitBasicAuth(const Json::Value& basicAuth);

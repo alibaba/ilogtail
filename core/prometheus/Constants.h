@@ -71,6 +71,8 @@ const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
 const char* const FOLLOW_REDIRECTS = "follow_redirects";
+const char* const HONOR_LABELS = "honor_labels";
+const char* const HONOR_TIMESTAMPS = "honor_timestamps";
 
 
 // metric labels
@@ -92,6 +94,7 @@ const char* const SCRAPE_SAMPLES_POST_METRIC_RELABELING = "scrape_samples_post_m
 const char* const SCRAPE_SAMPLES_SCRAPED = "scrape_samples_scraped";
 const char* const SCRAPE_TIMEOUT_SECONDS = "scrape_timeout_seconds";
 const char* const UP = "up";
+const char* const LC_SCRAPER = "lc_scraper";
 
 const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
 
