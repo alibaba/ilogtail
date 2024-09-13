@@ -22,6 +22,8 @@ void PromSelfMonitorUnittest::TestInitMetricManager() {
     selfMonitor->InitMetricManager("test-key", testMetricKeys);
 
     APSARA_TEST_TRUE(selfMonitor->mPromMetricsMap.count("test-key"));
+    APSARA_TEST_TRUE(selfMonitor->mPromMetricsMap["test-key"].count(prometheus::PROM_SUBSCRIBE_TARGETS));
+    APSARA_TEST_TRUE(selfMonitor->mPromMetricsMap["test-key"].count(prometheus::PROM_SUBSCRIBE_TOTAL));
 }
 
 void PromSelfMonitorUnittest::TestCounterAdd() {
@@ -38,7 +40,7 @@ void PromSelfMonitorUnittest::TestCounterAdd() {
     selfMonitor->CounterAdd("test-key", prometheus::PROM_SUBSCRIBE_TOTAL, metricLabels, 999);
 
     // check result
-    auto metricManager = selfMonitor->mPromMetricsMap["test-key"];
+    auto metricManager = selfMonitor->mPromMetricsMap["test-key"][prometheus::PROM_SUBSCRIBE_TOTAL];
     auto recordRef = metricManager->GetOrCreateReentrantMetricsRecordRef(metricVectorLabels);
     auto metric = recordRef->GetCounter(prometheus::PROM_SUBSCRIBE_TOTAL);
     APSARA_TEST_EQUAL("prom_subscribe_total", metric->GetName());
@@ -53,7 +55,7 @@ void PromSelfMonitorUnittest::TestCounterAdd() {
 
     // check result
     APSARA_TEST_EQUAL(1000ULL, metric->GetValue());
-    metricManager = selfMonitor->mPromMetricsMap["test-key"];
+    metricManager = selfMonitor->mPromMetricsMap["test-key"][prometheus::PROM_SUBSCRIBE_TOTAL];
     recordRef = metricManager->GetOrCreateReentrantMetricsRecordRef(metricVectorLabels);
     metric = recordRef->GetCounter(prometheus::PROM_SUBSCRIBE_TOTAL);
     APSARA_TEST_EQUAL(987ULL, metric->GetValue());
@@ -73,7 +75,7 @@ void PromSelfMonitorUnittest::TestIntGaugeSet() {
     selfMonitor->IntGaugeSet("test-key", prometheus::PROM_SUBSCRIBE_TARGETS, metricLabels, 999);
 
     // check result
-    auto metricManager = selfMonitor->mPromMetricsMap["test-key"];
+    auto metricManager = selfMonitor->mPromMetricsMap["test-key"][prometheus::PROM_SUBSCRIBE_TARGETS];
     auto recordRef = metricManager->GetOrCreateReentrantMetricsRecordRef(metricVectorLabels);
     auto metric = recordRef->GetIntGauge(prometheus::PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL("prom_subscribe_targets", metric->GetName());
@@ -88,7 +90,7 @@ void PromSelfMonitorUnittest::TestIntGaugeSet() {
 
     // check result
     APSARA_TEST_EQUAL(0ULL, metric->GetValue());
-    metricManager = selfMonitor->mPromMetricsMap["test-key"];
+    metricManager = selfMonitor->mPromMetricsMap["test-key"][prometheus::PROM_SUBSCRIBE_TARGETS];
     recordRef = metricManager->GetOrCreateReentrantMetricsRecordRef(metricVectorLabels);
     metric = recordRef->GetIntGauge(prometheus::PROM_SUBSCRIBE_TARGETS);
     APSARA_TEST_EQUAL(987ULL, metric->GetValue());

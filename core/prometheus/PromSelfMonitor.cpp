@@ -18,8 +18,9 @@ bool PromSelfMonitor::Init(const std::string& mPodName, const std::string& mOper
 void PromSelfMonitor::InitMetricManager(const std::string& key,
                                         const std::unordered_map<std::string, MetricType>& metricKeys) {
     if (!mPromMetricsMap.count(key)) {
-        for (const auto& item : metricKeys) {
-            mPromMetricsMap[key][item.first] = std::make_shared<PluginMetricManager>(mDefaultLabels, item);
+        for (const auto& [metricName, type] : metricKeys) {
+            mPromMetricsMap[key][metricName] = std::make_shared<PluginMetricManager>(
+                mDefaultLabels, std::unordered_map<std::string, MetricType>({{metricName, type}}));
         }
     }
 }
