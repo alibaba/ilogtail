@@ -18,6 +18,37 @@
 #include <gflags/gflags.h>
 
 /** Macro to define INT32 flag. Must be used in global scope.                */
+#define DEFINE_SAFE_FLAG_INT32(name, desc, value) DEFINE_int32(safe_flag_name, value, desc)
+
+/** Macro to define INT64 flag. Must be used in global scope */
+#define DEFINE_SAFE_FLAG_INT64(name, desc, value) DEFINE_int64(safe_flag_name, value, desc)
+
+/** Macro to define BOOL flag. Must be used in global scope.               */
+#define DEFINE_SAFE_FLAG_BOOL(name, desc, value) DEFINE_bool(safe_flag_name, value, desc)
+
+/** Macro to define DOUBLE flag. Must be used in global scope.            */
+#define DEFINE_SAFE_FLAG_DOUBLE(name, desc, value) DEFINE_double(safe_flag_name, value, desc)
+
+/** Macro to define STRING flag. Must be used in global scope.            */
+#define DEFINE_SAFE_FLAG_STRING(name, desc, value) DEFINE_string(safe_flag_name, value, desc)
+
+/** Macro to declare INT32 flag                                           */
+#define DECLARE_SAFE_FLAG_INT32(name) DECLARE_int32(safe_flag_name)
+
+/** Macro to declare INT64 flag                                           */
+#define DECLARE_SAFE_FLAG_INT64(name) DECLARE_int64(safe_flag_name)
+
+/** Macro to declare BOOL flag                                            */
+#define DECLARE_SAFE_FLAG_BOOL(name) DECLARE_bool(safe_flag_name)
+
+/** Macro to decclare STRING flag                                         */
+#define DECLARE_SAFE_FLAG_STRING(name) DECLARE_string(safe_flag_name)
+
+/** Macro to declare DOUBLE flag                                          */
+#define DECLARE_SAFE_FLAG_DOUBLE(name) DECLARE_double(safe_flag_name)
+
+
+/** Macro to define INT32 flag. Must be used in global scope.                */
 #define DEFINE_FLAG_INT32(name, desc, value) DEFINE_int32(name, value, desc)
 
 /** Macro to define INT64 flag. Must be used in global scope */
@@ -53,3 +84,15 @@
 #define BOOL_FLAG(name) (FLAGS_##name)
 #define DOUBLE_FLAG(name) (FLAGS_##name)
 #define STRING_FLAG(name) (FLAGS_##name)
+
+#define SAFE_SET_INT32_FLAG(name, value) SetCommandLineOption(safe_flag_name, value)
+#define SAFE_SET_INT64_FLAG(name, value) SetCommandLineOption(safe_flag_name, value)
+#define SAFE_SET_BOOL_FLAG(name, value) SetCommandLineOption(safe_flag_name, value)
+#define SAFE_SET_DOUBLE_FLAG(name, value) SetCommandLineOption(safe_flag_name, value)
+#define SAFE_SET_STRING_FLAG(name, value) SetCommandLineOption(safe_flag_name, value)
+
+#define SAFE_GET_INT32_FLAG(name, value) GetCommandLineOption(safe_flag_name, value)
+#define SAFE_GET_INT64_FLAG(name, value) GetCommandLineOption(safe_flag_name, value)
+#define SAFE_GET_BOOL_FLAG(name, value) GetCommandLineOption(safe_flag_name, value)
+#define SAFE_GET_DOUBLE_FLAG(name, value) GetCommandLineOption(safe_flag_name, value)
+#define SAFE_GET_STRING_FLAG(name, value) GetCommandLineOption(safe_flag_name, value)

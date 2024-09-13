@@ -20,7 +20,6 @@
 #include "common/FileSystemUtil.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
-#include "common/RuntimeUtil.h"
 #include "file_server/ConfigManager.h"
 #include "file_server/reader/LogFileReader.h"
 #include "logger/Logger.h"
@@ -245,10 +244,10 @@ void AppConfig::LoadIncludeConfig(Json::Value& confJson) {
  */
 void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     // 加载本地配置
-    LoadLocalConfig(ilogtailConfigFile);
+    loadLocalConfig(ilogtailConfigFile);
 
     // 加载环境变量配置
-    LoadEnvConfig();
+    loadEnvConfig();
 
     ParseJsonToFlags(mLocalConfig);
 
@@ -261,7 +260,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     CheckAndResetProxyEnv();
 }
 
-void AppConfig::LoadLocalConfig(const std::string& ilogtailConfigFile) {
+void AppConfig::loadLocalConfig(const std::string& ilogtailConfigFile) {
     std::string processExecutionDir = GetProcessExecutionDir();
     mDockerFilePathConfig = processExecutionDir + STRING_FLAG(ilogtail_docker_file_path_config);
 
@@ -313,7 +312,7 @@ void AppConfig::LoadLocalConfig(const std::string& ilogtailConfigFile) {
     mLocalConfig = confJson;
 }
 
-void AppConfig::LoadEnvConfig() {
+void AppConfig::loadEnvConfig() {
     mEnvConfig.clear();
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -1493,7 +1492,7 @@ void AppConfig::UpdateFileTags() {
     return;
 }
 
-bool AppConfig::MergeAllConfigs() {
+bool AppConfig::mergeAllConfigs() {
     Json::Value mergedConfig;
     for (const auto& key : mLocalConfig.getMemberNames()) {
         mergedConfig[key] = Json::Value(mLocalConfig[key]);
@@ -1513,7 +1512,7 @@ bool AppConfig::MergeAllConfigs() {
 
 void AppConfig::LoadRemoteConfig(const Json::Value& remoteConfig) {
     mRemoteConfig = remoteConfig;
-    if (MergeAllConfigs()) {
+    if (mergeAllConfigs()) {
         for (const auto& callback : mCallbacks) {
             callback.second(false);
         }

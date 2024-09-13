@@ -46,11 +46,9 @@ private:
 
 class AppConfig {
 private:
-    void LoadLocalConfig(const std::string& ilogtailConfigFile);
-    void LoadEnvConfig();
-    bool MergeAllConfigs();
-    void ApplyConfigToGFlags();
-    void RegisterCallbacks();
+    void loadLocalConfig(const std::string& ilogtailConfigFile);
+    void loadEnvConfig();
+    bool mergeAllConfigs();
 
     Json::Value mLocalConfig;
     Json::Value mEnvConfig;
@@ -268,6 +266,8 @@ private:
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
 
 public:
+    void RegisterCallbacks();
+
     AppConfig();
     ~AppConfig(){};
 
