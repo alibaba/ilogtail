@@ -28,6 +28,7 @@
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailMetric.h"
+#include "monitor/MetricConstants.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
 #include "sdk/Common.h"
@@ -60,9 +61,9 @@ PrometheusInputRunner::PrometheusInputRunner()
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
 
-    mIntGauges[prometheus::PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_REGISTER_STATE);
-    mIntGauges[prometheus::PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(prometheus::PROM_JOB_NUM);
-    mCounters[prometheus::PROM_REGISTER_RETRY_TOTAL] = mMetricsRecordRef.CreateCounter(prometheus::PROM_REGISTER_RETRY_TOTAL);
+    mIntGauges[PROM_REGISTER_STATE] = mMetricsRecordRef.CreateIntGauge(PROM_REGISTER_STATE);
+    mIntGauges[PROM_JOB_NUM] = mMetricsRecordRef.CreateIntGauge(PROM_JOB_NUM);
+    mCounters[PROM_REGISTER_RETRY_TOTAL] = mMetricsRecordRef.CreateCounter(PROM_REGISTER_RETRY_TOTAL);
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
@@ -87,7 +88,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
     }
     // 2. build Ticker Event and add it to Timer
     targetSubscriber->ScheduleNext();
-    mIntGauges[prometheus::PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
+    mIntGauges[PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
 }
 
 void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
@@ -95,7 +96,7 @@ void PrometheusInputRunner::RemoveScrapeInput(const std::string& jobName) {
     if (mTargetSubscriberSchedulerMap.count(jobName)) {
         mTargetSubscriberSchedulerMap[jobName]->Cancel();
         mTargetSubscriberSchedulerMap.erase(jobName);
-        mIntGauges[prometheus::PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
+        mIntGauges[PROM_JOB_NUM]->Set(mTargetSubscriberSchedulerMap.size());
     }
 }
 
@@ -123,7 +124,7 @@ void PrometheusInputRunner::Init() {
                 sdk::HttpMessage httpResponse = SendRegisterMessage(prometheus::REGISTER_COLLECTOR_PATH);
                 if (httpResponse.statusCode != 200) {
                     LOG_ERROR(sLogger, ("register failed, statusCode", httpResponse.statusCode));
-                    mCounters[prometheus::PROM_REGISTER_RETRY_TOTAL]->Add(1);
+                    mCounters[PROM_REGISTER_RETRY_TOTAL]->Add(1);
                     if (retry % 3 == 0) {
                         LOG_INFO(sLogger, ("register failed, statusCode", httpResponse.statusCode));
                     }
@@ -154,7 +155,7 @@ void PrometheusInputRunner::Init() {
                             }
                         }
                     }
-                    mIntGauges[prometheus::PROM_REGISTER_STATE]->Set(1);
+                    mIntGauges[PROM_REGISTER_STATE]->Set(1);
                     LOG_INFO(sLogger, ("Register Success", mPodName));
                     // subscribe immediately
                     SubscribeOnce();
@@ -198,7 +199,7 @@ void PrometheusInputRunner::Stop() {
                     LOG_ERROR(sLogger, ("unregister failed, statusCode", httpResponse.statusCode));
                 } else {
                     LOG_INFO(sLogger, ("Unregister Success", mPodName));
-                    mIntGauges[prometheus::PROM_REGISTER_STATE]->Set(0);
+                    mIntGauges[PROM_REGISTER_STATE]->Set(0);
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));

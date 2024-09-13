@@ -146,4 +146,15 @@ const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL = "flusher_quota_error_total"
 const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
 const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
 
+// prometheus input metrics
+const std::string PROM_REGISTER_STATE = "prom_register_state";
+const std::string PROM_REGISTER_RETRY_TOTAL = "prom_register_retry_total";
+const std::string PROM_JOB_NUM = "prom_job_num";
+const std::string PROM_SUBSCRIBE_TARGETS = "prom_subscribe_targets";
+const std::string PROM_SUBSCRIBE_TOTAL = "prom_subscribe_total";
+const std::string PROM_SUBSCRIBE_TIME_MS = "prom_subscribe_time_ms";
+const std::string PROM_SCRAPE_TOTAL = "prom_scrape_total";
+const std::string PROM_SCRAPE_BYTES_TOTAL = "prom_scrape_bytes_total";
+const std::string PROM_SCRAPE_TIME_MS = "prom_scrape_time_ms";
+
 } // namespace logtail

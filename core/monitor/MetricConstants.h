@@ -139,4 +139,15 @@ extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
 
+// prometheus input metrics
+extern const std::string PROM_REGISTER_STATE;
+extern const std::string PROM_REGISTER_RETRY_TOTAL;
+extern const std::string PROM_JOB_NUM;
+extern const std::string PROM_SUBSCRIBE_TARGETS;
+extern const std::string PROM_SUBSCRIBE_TOTAL;
+extern const std::string PROM_SUBSCRIBE_TIME_MS;
+extern const std::string PROM_SCRAPE_TOTAL;
+extern const std::string PROM_SCRAPE_BYTES_TOTAL;
+extern const std::string PROM_SCRAPE_TIME_MS;
+
 } // namespace logtail

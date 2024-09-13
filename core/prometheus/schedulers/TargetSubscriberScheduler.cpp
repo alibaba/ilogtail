@@ -27,6 +27,7 @@
 #include "common/timer/HttpRequestTimerEvent.h"
 #include "common/timer/Timer.h"
 #include "logger/Logger.h"
+#include "monitor/MetricConstants.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"
 #include "prometheus/async/PromFuture.h"
@@ -57,13 +58,12 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
 }
 
 void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uint64_t timestampMilliSec) {
-    mMetricLabelsMap[prometheus::PROM_SUBSCRIBE_TOTAL][prometheus::STATUS] = ToString(response.mStatusCode);
-    mSelfMonitor->CounterAdd(
-        GetId(), prometheus::PROM_SUBSCRIBE_TOTAL, mMetricLabelsMap[prometheus::PROM_SUBSCRIBE_TOTAL]);
-    mMetricLabelsMap[prometheus::PROM_SUBSCRIBE_TIME_MS][prometheus::STATUS] = ToString(response.mStatusCode);
+    mMetricLabelsMap[PROM_SUBSCRIBE_TOTAL][prometheus::STATUS] = ToString(response.mStatusCode);
+    mSelfMonitor->CounterAdd(GetId(), PROM_SUBSCRIBE_TOTAL, mMetricLabelsMap[PROM_SUBSCRIBE_TOTAL]);
+    mMetricLabelsMap[PROM_SUBSCRIBE_TIME_MS][prometheus::STATUS] = ToString(response.mStatusCode);
     mSelfMonitor->IntGaugeSet(GetId(),
-                              prometheus::PROM_SUBSCRIBE_TIME_MS,
-                              mMetricLabelsMap[prometheus::PROM_SUBSCRIBE_TIME_MS],
+                              PROM_SUBSCRIBE_TIME_MS,
+                              mMetricLabelsMap[PROM_SUBSCRIBE_TIME_MS],
                               GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
     if (response.mStatusCode == 304) {
@@ -84,10 +84,8 @@ void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uin
     std::unordered_map<std::string, std::shared_ptr<ScrapeScheduler>> newScrapeSchedulerSet
         = BuildScrapeSchedulerSet(targetGroup);
     UpdateScrapeScheduler(newScrapeSchedulerSet);
-    mSelfMonitor->IntGaugeSet(mJobName,
-                              prometheus::PROM_SUBSCRIBE_TARGETS,
-                              mMetricLabelsMap[prometheus::PROM_SUBSCRIBE_TARGETS],
-                              mScrapeSchedulerMap.size());
+    mSelfMonitor->IntGaugeSet(
+        mJobName, PROM_SUBSCRIBE_TARGETS, mMetricLabelsMap[PROM_SUBSCRIBE_TARGETS], mScrapeSchedulerMap.size());
 }
 
 void TargetSubscriberScheduler::UpdateScrapeScheduler(
@@ -326,9 +324,9 @@ void TargetSubscriberScheduler::InitSelfMonitor(std::shared_ptr<PromSelfMonitor>
     mSelfMonitor = std::move(selfMonitor);
     MetricLabels defaultLabels{{prometheus::JOB, mJobName}};
     static const std::unordered_map<std::string, MetricType> sSubscriberMetricKeys = {
-        {prometheus::PROM_SUBSCRIBE_TARGETS, MetricType::METRIC_TYPE_INT_GAUGE},
-        {prometheus::PROM_SUBSCRIBE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
-        {prometheus::PROM_SUBSCRIBE_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
+        {PROM_SUBSCRIBE_TARGETS, MetricType::METRIC_TYPE_INT_GAUGE},
+        {PROM_SUBSCRIBE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
+        {PROM_SUBSCRIBE_TIME_MS, MetricType::METRIC_TYPE_INT_GAUGE},
     };
     // init metric labels
     for (const auto& [metricName, v] : sSubscriberMetricKeys) {
