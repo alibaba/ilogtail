@@ -233,6 +233,7 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
             scrapeScheduler->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
         auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
         scrapeScheduler->SetFirstExecTime(firstExecTime);
+        scrapeScheduler->InitSelfMonitor(mSelfMonitor);
 
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
     }
