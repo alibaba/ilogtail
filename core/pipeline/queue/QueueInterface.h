@@ -34,7 +34,7 @@ public:
                                                             });
 
         mInItemsCnt = mMetricsRecordRef.CreateCounter("in_items_cnt");
-        mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter("in_items_size_bytes");
+        mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter("in_item_data_size_bytes");
         mOutItemsCnt = mMetricsRecordRef.CreateCounter("out_items_cnt");
         mTotalDelayMs = mMetricsRecordRef.CreateCounter("total_delay_ms");
         mQueueSize = mMetricsRecordRef.CreateIntGauge("queue_size");
