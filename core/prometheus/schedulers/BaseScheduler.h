@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "common/http/HttpResponse.h"
 #include "prometheus/async/PromFuture.h"
 
 namespace logtail {
@@ -32,6 +33,7 @@ protected:
 
     ReadWriteLock mLock;
     bool mValidState = true;
-    std::shared_ptr<PromFuture> mFuture;
+    std::shared_ptr<PromFuture<const HttpResponse&, uint64_t>> mFuture;
+    std::shared_ptr<PromFuture<>> mIsContextValidFuture;
 };
 } // namespace logtail

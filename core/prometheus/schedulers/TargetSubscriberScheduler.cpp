@@ -231,11 +231,12 @@ string TargetSubscriberScheduler::GetId() const {
 }
 
 void TargetSubscriberScheduler::ScheduleNext() {
-    auto future = std::make_shared<PromFuture>();
+    auto future = std::make_shared<PromFuture<const HttpResponse&, uint64_t>>();
     future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
         this->OnSubscription(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
+        return true;
     });
     if (IsCancelled()) {
         mFuture->Cancel();
