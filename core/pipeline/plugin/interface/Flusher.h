@@ -44,6 +44,7 @@ public:
 
     QueueKey GetQueueKey() const { return mQueueKey; }
     void SetNodeID(const std::string& nodeID) { mNodeID = nodeID; }
+    const std::string& GetNodeID() const { return mNodeID; }
 
 protected:
     void GenerateQueueKey(const std::string& target);
