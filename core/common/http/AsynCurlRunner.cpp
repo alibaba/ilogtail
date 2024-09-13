@@ -196,7 +196,7 @@ void AsynCurlRunner::HandleCompletedRequests() {
                     // considered as network error
                     if (request->mTryCnt <= request->mMaxTryCnt) {
                         LOG_WARNING(sLogger,
-                                    ("failed to send request", "retry immediately")("retryCnt", ++request->mTryCnt)(
+                                    ("failed to send request", "retry immediately")("retryCnt", request->mTryCnt++)(
                                         "errMsg", curl_easy_strerror(msg->data.result)));
                         // free first，becase mPrivateData will be reset in AddRequestToClient
                         if (request->mPrivateData) {

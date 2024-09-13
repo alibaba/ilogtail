@@ -165,7 +165,7 @@ bool SendHttpRequest(std::unique_ptr<HttpRequest>&& request, HttpResponse& respo
             success = true;
             break;
         } else {
-            LOG_WARNING(sLogger,("failed to send request", "retry immediately")("retryCnt", ++request->mTryCnt)("errMsg", curl_easy_strerror(res))("request address", request.get()));
+            LOG_WARNING(sLogger,("failed to send request", "retry immediately")("retryCnt", request->mTryCnt++)("errMsg", curl_easy_strerror(res))("request address", request.get()));
         }
     } 
     if (headers != NULL) {
