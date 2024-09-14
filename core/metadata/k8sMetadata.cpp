@@ -20,6 +20,8 @@
 #include "common/http/HttpResponse.h"
 #include "common/http/Curl.h"
 
+using namespace std;
+
 namespace logtail {
 
     size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
