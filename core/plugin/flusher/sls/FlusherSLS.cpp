@@ -619,9 +619,6 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
             cpt->Commit();
             cpt->IncreaseSequenceID();
         }
-
-        GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
-        DealSenderQueueItemAfterSend(item, false);
         LOG_DEBUG(sLogger,
                   ("send data to sls succeeded, item address",
                    item)("request id", slsResponse.mRequestId)("config", configName)("region", mRegion)(
@@ -630,6 +627,8 @@ void FlusherSLS::OnSendDone(const HttpResponse& response, SenderQueueItem* item)
                       ToString(chrono::duration_cast<chrono::milliseconds>(curSystemTime - item->mEnqueTime).count())
                           + "ms")("try cnt", data->mTryCnt)("endpoint", data->mCurrentEndpoint)("is profile data",
                                                                                                 isProfileData));
+        GetRegionConcurrencyLimiter(mRegion)->OnSuccess();
+        DealSenderQueueItemAfterSend(item, false);
     } else {
         OperationOnFail operation;
         SendResult sendResult = ConvertErrorCode(slsResponse.mErrorCode);
