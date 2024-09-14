@@ -95,7 +95,7 @@ namespace logtail {
         HttpResponse res;
         std::string path = "/metadata/containerid";
         if (infoType == containerInfoType::IpInfo) {
-            path = "/metadata/ip"
+            path = "/metadata/ip";
         }
         request = std::make_unique<HttpRequest>("GET", false, oneOperatorAddr, 9000, path, "", map<string, string>(), "", 30, 3);
         bool success = SendHttpRequest(std::move(request), res);
