@@ -87,7 +87,7 @@ namespace logtail {
         bool isOk = false;
         isOk = SendRequestToOperator(oneOperatorContainerIdAddr, output, containerInfoType::ContainerIdInfo);
         if (!isOk) {
-            LOG_DEBUG(sLogger, ("Failed to send request"));
+            LOG_DEBUG(sLogger, ("Failed to send request ", urlHost));
         }
         return;
     }   
@@ -126,7 +126,7 @@ namespace logtail {
 
             delete reader;
         } else {
-            LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail"));
+            LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail", urlHost));
         }
         return true;
     }
