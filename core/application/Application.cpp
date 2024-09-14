@@ -370,7 +370,7 @@ void Application::Exit() {
 #else
     auto remoteConfigProviders = GetRemoteConfigProviders();
     for (auto& provider : remoteConfigProviders) {
-        provider->Stop();
+        provider.second->Stop();
     }
 #endif
 

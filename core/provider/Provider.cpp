@@ -21,16 +21,19 @@
 
 namespace logtail {
 
-void InitRemoteConfigProviders() {
-    LegacyCommonConfigProvider::GetInstance()->Init("common");
-    CommonConfigProvider::GetInstance()->Init("common_v2");
+
+std::map<std::string, ConfigProvider*> GetRemoteConfigProviders() {
+    std::map<std::string, ConfigProvider*> providers;
+    providers.insert(std::make_pair("common", LegacyCommonConfigProvider::GetInstance()));
+    providers.insert(std::make_pair("common_v2", CommonConfigProvider::GetInstance()));
+    return providers;
 }
 
-std::vector<ConfigProvider*> GetRemoteConfigProviders() {
-    std::vector<ConfigProvider*> providers;
-    providers.push_back(LegacyCommonConfigProvider::GetInstance());
-    providers.push_back(CommonConfigProvider::GetInstance());
-    return providers;
+void InitRemoteConfigProviders() {
+    auto providers = GetRemoteConfigProviders();
+    for (auto& configProvider : providers) {
+        configProvider.second->Init(configProvider.first);
+    }
 }
 
 ProfileSender* GetProfileSender() {
