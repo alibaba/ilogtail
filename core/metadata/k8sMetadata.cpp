@@ -18,7 +18,7 @@
 #include "logger/Logger.h"
 #include "common/http/HttpRequest.h"
 #include "common/http/HttpResponse.h"
-
+#include "common/http/Curl.h"
 
 namespace logtail {
 
@@ -97,7 +97,7 @@ namespace logtail {
         if (infoType == containerInfoType::IpInfo) {
             path = "/metadata/ip";
         }
-        request = std::make_unique<HttpRequest>("GET", false, oneOperatorAddr, 9000, path, "", map<string, string>(), "", 30, 3);
+        request = std::make_unique<HttpRequest>("GET", false, oneOperatorAddr, 9000, path, "", map<std::string, std::string>(), "", 30, 3);
         bool success = SendHttpRequest(std::move(request), res);
         if (success) {
             Json::CharReaderBuilder readerBuilder;
