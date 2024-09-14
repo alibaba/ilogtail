@@ -54,7 +54,7 @@ public:
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
 
-    void InitSelfMonitor(std::shared_ptr<PromSelfMonitor>);
+    void InitSelfMonitor(const MetricLabels&);
 
 private:
     void PushEventGroup(PipelineEventGroup&&);

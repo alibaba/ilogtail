@@ -54,7 +54,7 @@ PrometheusInputRunner::PrometheusInputRunner()
     mTimer = std::make_shared<Timer>();
 
     // self monitor
-    mPromSelfMonitor = std::make_shared<PromSelfMonitor>();
+    // mPromSelfMonitor = std::make_shared<PromSelfMonitor>();
     MetricLabels labels;
     labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
     labels.emplace_back(prometheus::POD_NAME, mPodName);
@@ -62,7 +62,7 @@ PrometheusInputRunner::PrometheusInputRunner()
     labels.emplace_back(prometheus::OPERATOR_PORT, ToString(mServicePort));
 
     DynamicMetricLabels dynamicLabels;
-    dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
@@ -86,7 +86,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
         targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
     auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
     targetSubscriber->SetFirstExecTime(firstExecTime);
-    targetSubscriber->InitSelfMonitor(mPromSelfMonitor);
+    targetSubscriber->InitSelfMonitor();
     // 1. add subscriber to mTargetSubscriberSchedulerMap
     {
         WriteLock lock(mSubscriberMapRWLock);
@@ -116,7 +116,6 @@ void PrometheusInputRunner::Init() {
     mIsStarted = true;
     mTimer->Init();
     AsynCurlRunner::GetInstance()->Init();
-    mPromSelfMonitor->Init(mPodName, mServiceHost);
 
     LOG_INFO(sLogger, ("PrometheusInputRunner", "register"));
     // only register when operator exist

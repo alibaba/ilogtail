@@ -49,7 +49,7 @@ public:
 
     void ScheduleNext() override;
     void Cancel() override;
-    void InitSelfMonitor(std::shared_ptr<PromSelfMonitor>);
+    void InitSelfMonitor();
 
     // from pipeline context
     QueueKey mQueueKey;

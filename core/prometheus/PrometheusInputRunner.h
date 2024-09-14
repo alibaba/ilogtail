@@ -83,7 +83,6 @@ private:
     std::atomic<uint64_t> mUnRegisterMs;
 
     // self monitor
-    std::shared_ptr<PromSelfMonitor> mPromSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     std::unordered_map<std::string, CounterPtr> mCounters;
     std::unordered_map<std::string, IntGaugePtr> mIntGauges;

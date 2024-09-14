@@ -58,12 +58,9 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
 }
 
 void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uint64_t timestampMilliSec) {
+    mSelfMonitor->CounterAdd(GetId(), PROM_SUBSCRIBE_TOTAL, response.mStatusCode);
     mSelfMonitor->CounterAdd(
-        GetId(), PROM_SUBSCRIBE_TOTAL, MetricLabels{{prometheus::STATUS, ToString(response.mStatusCode)}});
-    mSelfMonitor->CounterAdd(GetId(),
-                             PROM_SUBSCRIBE_TIME_MS,
-                             MetricLabels{{prometheus::STATUS, ToString(response.mStatusCode)}},
-                             GetCurrentTimeInMilliSeconds() - timestampMilliSec);
+        GetId(), PROM_SUBSCRIBE_TIME_MS, response.mStatusCode, GetCurrentTimeInMilliSeconds() - timestampMilliSec);
 
     if (response.mStatusCode == 304) {
         // not modified
@@ -229,7 +226,7 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
             scrapeScheduler->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
         auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
         scrapeScheduler->SetFirstExecTime(firstExecTime);
-        scrapeScheduler->InitSelfMonitor(mSelfMonitor);
+        scrapeScheduler->InitSelfMonitor({{prometheus::POD_NAME, mPodName}});
 
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
     }
@@ -318,13 +315,14 @@ void TargetSubscriberScheduler::CancelAllScrapeScheduler() {
     }
 }
 
-void TargetSubscriberScheduler::InitSelfMonitor(std::shared_ptr<PromSelfMonitor> selfMonitor) {
-    mSelfMonitor = std::move(selfMonitor);
-    MetricLabels defaultLabels{{prometheus::JOB, mJobName}};
+void TargetSubscriberScheduler::InitSelfMonitor() {
+    MetricLabels defaultLabels{{prometheus::JOB, mJobName}, {prometheus::POD_NAME, mPodName}};
     static const std::unordered_map<std::string, MetricType> sSubscriberMetricKeys = {
         {PROM_SUBSCRIBE_TOTAL, MetricType::METRIC_TYPE_COUNTER},
         {PROM_SUBSCRIBE_TIME_MS, MetricType::METRIC_TYPE_COUNTER},
     };
+
+    mSelfMonitor = std::make_shared<PromSelfMonitor>();
     mSelfMonitor->InitMetricManager(mJobName, sSubscriberMetricKeys, defaultLabels);
 
     MetricLabels labels;
