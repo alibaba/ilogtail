@@ -177,10 +177,10 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
 }
 
 void ScrapeScheduler::Cancel() {
-    if (mFuture) {
+    if (mFuture != nullptr) {
         mFuture->Cancel();
     }
-    if (mIsContextValidFuture) {
+    if (mIsContextValidFuture != nullptr) {
         mIsContextValidFuture->Cancel();
     }
     {

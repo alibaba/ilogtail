@@ -26,12 +26,14 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
 }
 
 void PromHttpRequest::OnSendDone(const HttpResponse& response) {
-    mFuture->Process(response,
-                     std::chrono::duration_cast<std::chrono::milliseconds>(mLastSendTime.time_since_epoch()).count());
+    if (mFuture != nullptr) {
+        mFuture->Process(
+            response, std::chrono::duration_cast<std::chrono::milliseconds>(mLastSendTime.time_since_epoch()).count());
+    }
 }
 
 [[nodiscard]] bool PromHttpRequest::IsContextValid() const {
-    if (mIsContextValidFuture) {
+    if (mIsContextValidFuture != nullptr) {
         return mIsContextValidFuture->Process();
     }
     return true;
