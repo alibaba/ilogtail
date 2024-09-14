@@ -137,8 +137,6 @@ const std::string METRIC_PROC_PARSE_STDOUT_TOTAL = "proc_parse_stdout_total";
 const std::string METRIC_PROC_PARSE_STDERR_TOTAL = "proc_parse_stderr_total";
 
 // flusher common metrics
-const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL = "flusher_in_records_total";
-const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES = "flusher_in_records_size_bytes";
 const std::string METRIC_FLUSHER_ERROR_TOTAL = "flusher_error_total";
 const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL = "flusher_discard_records_total";
 const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL = "flusher_success_records_total";
