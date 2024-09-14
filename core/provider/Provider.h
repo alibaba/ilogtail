@@ -24,6 +24,10 @@ namespace logtail {
     providers modules are used to replace the default implementation of ilogtail.
 */
 
+// InitRemoteConfigProviders initializes the remote config providers.
+// It currently initializes the LegacyCommonConfigProvider and CommonConfigProvider.
+void InitRemoteConfigProviders();
+
 // GetRemoteConfigProviders returns a list of remote config providers.
 // It currently returns a list of two providers: LegacyCommonConfigProvider and CommonConfigProvider.
 std::vector<ConfigProvider*> GetRemoteConfigProviders();

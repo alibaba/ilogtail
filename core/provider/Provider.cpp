@@ -21,6 +21,11 @@
 
 namespace logtail {
 
+void InitRemoteConfigProviders() {
+    LegacyCommonConfigProvider::GetInstance()->Init("common");
+    CommonConfigProvider::GetInstance()->Init("common_v2");
+}
+
 std::vector<ConfigProvider*> GetRemoteConfigProviders() {
     std::vector<ConfigProvider*> providers;
     providers.push_back(LegacyCommonConfigProvider::GetInstance());

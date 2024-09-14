@@ -241,11 +241,7 @@ void Application::Start() { // GCOVR_EXCL_START
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
-    auto remoteConfigProviders = GetRemoteConfigProviders();
-    for (size_t i = 0; i < remoteConfigProviders.size(); ++i) {
-        std::string initParam = (i == 0) ? "common" : "common_v" + std::to_string(i+1);
-        remoteConfigProviders[i]->Init(initParam);
-    }
+    InitRemoteConfigProviders();
 #endif
 
     LogtailAlarm::GetInstance()->Init();
