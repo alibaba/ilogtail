@@ -1,4 +1,4 @@
-import {constructProtobufRequest, strToBytes, URL_PREFIX} from "@/api/common";
+import {constructProtobufRequest, URL_PREFIX} from "@/api/common";
 import userProto from "@/proto/user_pb";
 
 export async function getPipelineConfigStatusList(instanceId){

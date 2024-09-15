@@ -35,7 +35,7 @@ func RemoveAgentNow(agentInfo *entity.Agent, timeLimitNano int64) {
 	if nowTime-agentInfo.LastHeartBeatTime >= timeLimitNano {
 		err := repository.RemoveAgentById(agentInfo.InstanceId)
 		if err != nil {
-			log.Println(err)
+			log.Printf("remove agent (id=%s) error %s", agentInfo.InstanceId, err)
 		} else {
 			log.Printf("remove agent (id=%s) success", agentInfo.InstanceId)
 		}

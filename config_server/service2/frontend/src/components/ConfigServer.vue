@@ -6,9 +6,9 @@
       <el-tab-pane label="PipelineConfig" name="pipelineConfig" ref="pipelineConfig">
         <PipelineConfig ref="pipelineConfigComponent"/>
       </el-tab-pane>
-<!--      <el-tab-pane label="InstanceConfig" name="instanceConfig" ref="instanceConfig">-->
-<!--        <InstanceConfig ref="instanceConfigComponent" />-->
-<!--      </el-tab-pane>-->
+      <el-tab-pane label="InstanceConfig" name="instanceConfig" ref="instanceConfig">
+        <InstanceConfig ref="instanceConfigComponent" />
+      </el-tab-pane>
     </el-tabs>
 </template>
 
@@ -20,7 +20,7 @@ import InstanceConfig from "@/components/config/InstanceConfig.vue";
 
 export default {
   name: "ConfigServer",
-  components: { PipelineConfig, AgentGroup},
+  components: {InstanceConfig, PipelineConfig, AgentGroup},
   data() {
     return {
       activeName: "agentGroup",
@@ -35,7 +35,7 @@ export default {
       } else if (this.activeName === 'pipelineConfig') {
         await this.$refs.pipelineConfigComponent.initAllTable()
       } else if (this.activeName === 'instanceConfig') {
-        this.$refs.instanceConfigComponent.created();
+        await this.$refs.instanceConfigComponent.initAllTable();
       }
     },
   }

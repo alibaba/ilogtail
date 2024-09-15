@@ -9,21 +9,20 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "ace-builds": "^1.36.2",
     "axios": "^1.7.7",
     "bufferhelper": "^0.2.1",
-    "codemirror": "^6.0.1",
+    "codemirror": "^5.65.17",
     "core-js": "^3.8.3",
     "element-plus": "^2.8.2",
     "google-protobuf": "^3.21.4",
     "is-base64": "^1.1.0",
     "js-base64": "^3.7.7",
     "js-yaml": "^4.1.0",
-    "monaco-editor": "^0.51.0",
-    "monaco-editor-vue": "^1.0.10",
     "protobufjs": "^7.4.0",
     "protocol-buffers": "^5.0.0",
     "vue": "^3.2.13",
-    "vue-codemirror": "^6.1.1"
+    "vue3-ace-editor": "^2.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

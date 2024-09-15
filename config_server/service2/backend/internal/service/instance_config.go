@@ -135,7 +135,7 @@ func GetAppliedInstanceConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgent
 		return common.ValidateErrorWithMsg("required fields groupName could not be null")
 	}
 
-	agentGroupDetail, err := repository.GetAgentGroupDetail(groupName, true, false)
+	agentGroupDetail, err := repository.GetAgentGroupDetail(groupName, false, true)
 	if err != nil {
 		return common.SystemError(err)
 	}

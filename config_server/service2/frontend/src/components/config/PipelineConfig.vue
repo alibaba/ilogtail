@@ -8,12 +8,39 @@
       <el-form-item label="版本" prop="version">
         <el-input v-model.number="createPipelineConfig.version" />
       </el-form-item>
-      <el-form-item label="配置详情" prop="detail">
-        <el-input v-model="createPipelineConfig.detail" />
+      <div style="text-align: left">
+        配置详情
+        <VAceEditor
+            v-model:value="createPipelineConfig.detail"
+            lang="yaml"
+            theme='github'
+            :options="editorOptions"
+            style="height: 200px; width: 100%;"
+        />
+      </div>
+      <el-button type="primary" @click="onSubmit">保存</el-button>
+    </el-form>
+  </el-dialog>
+
+  <el-dialog v-model="showEditForm" @close="initAllTable">
+    <el-form  :model="selectedRow" ref="ruleFormRef" :rules="createPipelineConfigRules">
+      <el-form-item label="名称" prop="name">
+        <el-input disabled v-model="selectedRow.name" />
       </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSubmit">保存</el-button>
+      <el-form-item label="版本" prop="version">
+        <el-input v-model.number="selectedRow.version" />
       </el-form-item>
+      <div style="text-align: left">
+        配置详情
+        <VAceEditor
+            v-model:value="selectedRow.detail"
+            lang="yaml"
+            theme='github'
+            :options="editorOptions"
+            style="height: 200px; width: 100%;"
+        />
+      </div>
+      <el-button type="primary" @click="savePipelineConfig">保存</el-button>
     </el-form>
   </el-dialog>
 
@@ -22,18 +49,12 @@
     </el-table-column>
     <el-table-column prop="version" label="版本" width="180" >
       <template v-slot="scope">
-        <div v-if="!scope.row.isEditing">
           {{ scope.row.version }}
-        </div>
-        <el-input v-else v-model.number="scope.row.version" placeholder="请输入版本" />
       </template>
     </el-table-column>
     <el-table-column prop="detail" label="详情" >
       <template v-slot="scope">
-        <div v-if="!scope.row.isEditing">
-          {{ scope.row.detail }}
-        </div>
-        <el-input v-else v-model="scope.row.detail" placeholder="请输入详情" />
+        {{ scope.row.detail }}
       </template>
     </el-table-column>
     <el-table-column prop="agentGroupCount" label="agentGroup数量">
@@ -44,13 +65,7 @@
     <el-table-column fixed="right" label="操作" min-width="120">
       <template #default="scope">
         <el-button link type="primary" size="small"
-                   @click="scope.row.isEditing=!scope.row.isEditing">
-          <div v-if="!scope.row.isEditing">
-            编辑
-          </div>
-          <div v-else @click="savePipelineConfig(scope.row)">
-            保存
-          </div>
+                   @click="editPipelineDialog(scope.row)">编辑
         </el-button>
         <el-button link type="primary" size="small"
                    @click="deletePipelineConfigByName(scope.row.name)">
@@ -92,12 +107,24 @@ import {
 import {getAgentGroup, listAgentGroups} from "@/api/agentGroup";
 import {messageShow} from "@/api/common";
 import {ElMessage} from "element-plus";
+import { VAceEditor } from 'vue3-ace-editor';
+import 'ace-builds/src-noconflict/mode-yaml';
+import 'ace-builds/src-noconflict/theme-github';
+import yaml from 'js-yaml';
 
 export default {
   name: "PipelineConfig",
+  components:{
+    VAceEditor
+  },
   data() {
     return {
+      editorOptions: {
+        fontSize: '14px',
+        showPrintMargin: true,
+      },
       showCreateForm: false,
+      showEditForm:false,
       createPipelineConfig: {
         name: "",
         version: "",
@@ -124,15 +151,9 @@ export default {
   },
   async created() {
     await this.initAllTable()
-    this.initDataMap()
   },
 
   methods: {
-    initDataMap() {
-      this.tableData.forEach(item => {
-        item.isEditing = false
-      })
-    },
 
     async initAllTable() {
       let data = await listPipelineConfigs()
@@ -143,20 +164,53 @@ export default {
             version: item.version,
             detail: item.detail,
             appliedAgentGroupList: (await getAppliedAgentGroupsWithPipelineConfig(item.name)).agentGroupNamesList
-                .map(res=>{return{"name":res}})
+                .map(res => {
+                  return {"name": res}
+                })
           }
         }))
       }
 
     },
 
-    addPipelineConfig(){
-      this.showCreateForm=true
+    addPipelineConfig() {
+      this.showCreateForm = true
+      this.createPipelineConfig = {}
+    },
+    someDoesNotHaveType(plugins) {
+      return plugins.some(item => !item.Type)
+    },
+    checkConfigDetail(detail) {
+      try {
+        const obj = yaml.load(detail);
+        console.log(obj);
+        if (!obj || !obj.inputs || !obj.flushers ||
+            this.someDoesNotHaveType(obj.inputs) ||
+            this.someDoesNotHaveType(obj.flushers) ||
+            obj.processors === null || obj.aggregators === null ||
+            (obj.processors && this.someDoesNotHaveType(obj.processors)) ||
+            (obj.aggregators && this.someDoesNotHaveType(obj.aggregators))) {
+          ElMessage.warning(`Config invalid`)
+          return false
+        }
+      } catch (e) {
+        ElMessage.warning(`${e.name} - ${e.reason}`)
+        return false
+      }
+      return true
     },
 
     async onSubmit() {
       this.$refs["ruleFormRef"].validate(async valid => {
         if (valid) {
+          if(this.createPipelineConfig.detail==null || this.createPipelineConfig.detail.trim()===""){
+            ElMessage.error("detail不能为空")
+            return
+          }
+          if(!this.checkConfigDetail(this.createPipelineConfig.detail)){
+            return
+          }
+          console.log(this.createPipelineConfig)
           let data=await createPipelineConfig(this.createPipelineConfig.name,this.createPipelineConfig.version,this.createPipelineConfig.detail)
           messageShow(data, "新增成功")
           this.showCreateForm = false
@@ -213,17 +267,24 @@ export default {
       await this.initAllTable()
     },
 
-    async savePipelineConfig(row) {
+    async savePipelineConfig() {
+      console.log(this.selectedRow)
+      let row=this.selectedRow
       if(row.version==null||row.version===""){
         ElMessage.error("version不能为空")
         return
       }
-      if(row.detail==null||row.detail===""){
+      if(row.detail==null||row.detail.trim()===""){
         ElMessage.error("detail不能为空")
+        return
+      }
+      if(!this.checkConfigDetail(row.detail)){
         return
       }
       const data = await updatePipelineConfig(row.name, row.version, row.detail)
       messageShow(data, "保存成功")
+      this.showEditForm=false
+      await this.initAllTable()
     },
 
     async cancelAppliedAgentGroup(row){
@@ -242,6 +303,11 @@ export default {
         row.description = "取消应用"
         row.isApplied = !row.isApplied
       }
+    },
+
+    editPipelineDialog(row){
+      this.selectedRow=this.findSelectedRow(row.name)
+      this.showEditForm=true
     }
   }
 }

@@ -8,7 +8,6 @@ import (
 	proto "config-server2/internal/protov2"
 	"config-server2/internal/repository"
 	"config-server2/internal/utils"
-	"log"
 	"time"
 )
 
@@ -149,7 +148,6 @@ func GetPipelineConfigStatusList(req *proto.GetConfigStatusListRequest, res *pro
 	if err != nil {
 		return common.SystemError(err)
 	}
-	log.Println(configs)
 	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
 	for _, config := range configs {
 		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())

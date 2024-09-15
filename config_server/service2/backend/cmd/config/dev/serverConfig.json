@@ -10,5 +10,5 @@
     "fetchPipelineConfigDetail": true,
     "fetchInstanceConfigDetail": false
   },
-  "timeLimit": 15
+  "timeLimit": 60
 }

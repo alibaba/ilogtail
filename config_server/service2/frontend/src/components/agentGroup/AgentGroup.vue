@@ -171,7 +171,6 @@ export default {
         ]
       },
 
-      value: "- hosts: all\n  become: yes\n  become_method: sudo\n  gather_facts: no\n\n  tasks:\n  - name: \"install {{ package_name }}\"\n    package:\n      name: \"{{ package_name }}\"\n      state: \"{{ state | default('present') }}\"",
     }
   },
   async created() {
@@ -211,6 +210,7 @@ export default {
       let data = await listAgentGroups()
       if (!data.commonResponse.status) {
         this.tableData = await Promise.all(data.agentGroupsList.map(async item => {
+          console.log((await getAppliedInstanceConfigsForAgentGroup(item.name)))
           return {
             name: item.name,
             value: item.value,
@@ -355,6 +355,7 @@ export default {
 
   async getInstanceConfigInfo(row) {
     let allInstanceConfigList = (await listInstanceConfigs()).configDetailsList
+    console.log(allInstanceConfigList)
     let appliedInstanceConfigList = await Promise.all(
         row.appliedInstanceConfigList.map(async config => (await getInstanceConfig(config.name)).configDetail))
 
