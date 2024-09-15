@@ -18,17 +18,17 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
-#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "pipeline/Pipeline.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
-#include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "pipeline/queue/BoundedProcessQueue.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
+#include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -47,6 +47,7 @@ public:
     void TestProcess() const;
     void TestSend() const;
     void TestFlushBatch() const;
+    void TestInProcessingCount() const;
 
 protected:
     static void SetUpTestCase() {
@@ -62,6 +63,13 @@ protected:
         TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear();
         QueueKeyManager::GetInstance()->Clear();
         ProcessQueueManager::GetInstance()->Clear();
+    }
+
+    unique_ptr<ProcessQueueItem> GenerateProcessItem(shared_ptr<Pipeline> pipeline) const {
+        PipelineEventGroup eventGroup(make_shared<SourceBuffer>());
+        auto item = make_unique<ProcessQueueItem>(std::move(eventGroup), 0);
+        item->mPipeline = pipeline;
+        return item;
     }
 
 private:
@@ -112,6 +120,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("test_region", pipeline->GetContext().GetRegion());
     APSARA_TEST_EQUAL(QueueKeyManager::GetInstance()->GetKey("test_config-flusher_sls-test_project#test_logstore"),
                       pipeline->GetContext().GetLogstoreKey());
+    APSARA_TEST_EQUAL(0U, pipeline->mProcessingCnt.load());
 
     // without sls flusher
     configStr = R"(
@@ -143,6 +152,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetProjectName());
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetLogstoreName());
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetRegion());
+    APSARA_TEST_EQUAL(0U, pipeline->mProcessingCnt.load());
 #ifndef __ENTERPRISE__
     APSARA_TEST_EQUAL(QueueKeyManager::GetInstance()->GetKey("test_config-flusher_sls-"),
                       pipeline->GetContext().GetLogstoreKey());
@@ -243,6 +253,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
+    APSARA_TEST_EQUAL(0U, pipeline->mProcessingCnt.load());
     goPipelineWithInput.clear();
     goPipelineWithoutInput.clear();
 
@@ -288,6 +299,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(1U, pipeline->mRouter.mConditions.size());
     APSARA_TEST_EQUAL(1U, pipeline->mRouter.mAlwaysMatchedFlusherIdx.size());
+    APSARA_TEST_EQUAL(0U, pipeline->mProcessingCnt.load());
 }
 
 void PipelineUnittest::OnFailedInit() const {
@@ -2826,6 +2838,27 @@ void PipelineUnittest::TestFlushBatch() const {
     }
 }
 
+void PipelineUnittest::TestInProcessingCount() const {
+    auto pipeline = make_shared<Pipeline>();
+    pipeline->mPluginID.store(0);
+    pipeline->mProcessingCnt.store(0); // should be set in Init when is running
+
+    unique_ptr<BoundedProcessQueue> processQueue;
+    processQueue.reset(new BoundedProcessQueue(2, 2, 3, 0, 1, "test_config"));
+
+    vector<PipelineEventGroup> group;
+    group.emplace_back(make_shared<SourceBuffer>());
+
+    processQueue->Push(GenerateProcessItem(pipeline));
+    APSARA_TEST_EQUAL(0, pipeline->mProcessingCnt.load());
+    unique_ptr<ProcessQueueItem> item;
+    APSARA_TEST_TRUE(processQueue->Pop(item));
+    APSARA_TEST_EQUAL(1, pipeline->mProcessingCnt.load());
+
+    pipeline->SubInProcessingCnt();
+    APSARA_TEST_EQUAL(0, pipeline->mProcessingCnt.load());
+}
+
 UNIT_TEST_CASE(PipelineUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(PipelineUnittest, OnFailedInit)
 UNIT_TEST_CASE(PipelineUnittest, TestProcessQueue)
@@ -2835,6 +2868,7 @@ UNIT_TEST_CASE(PipelineUnittest, OnInputFileWithContainerDiscovery)
 UNIT_TEST_CASE(PipelineUnittest, TestProcess)
 UNIT_TEST_CASE(PipelineUnittest, TestSend)
 UNIT_TEST_CASE(PipelineUnittest, TestFlushBatch)
+UNIT_TEST_CASE(PipelineUnittest, TestInProcessingCount)
 
 } // namespace logtail
 

@@ -88,6 +88,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     mPluginID.store(0);
+    mProcessingCnt.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string pluginType = detail["Type"].asString();

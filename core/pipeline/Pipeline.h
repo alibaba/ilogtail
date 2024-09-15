@@ -45,7 +45,9 @@ public:
     bool Send(std::vector<PipelineEventGroup>&& groupList);
     bool FlushBatch();
     void RemoveProcessQueue() const;
+    // Should add before or when item pop from ProcessorQueue, must be called in the lock of ProcessorQueue
     void AddInProcessingCnt() { mProcessingCnt.fetch_add(1); }
+    // Should sub when or after item push to SenderQueue
     void SubInProcessingCnt() {
         uint16_t currentVal;
         do {
