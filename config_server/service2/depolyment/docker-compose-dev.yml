@@ -36,10 +36,12 @@ services:
       #确保目录下有agent
       context:  ${AGENT}
       dockerfile: ${AGENT_DEV_DOCKERFILE}
-    image: ilogtail:nzh
+    image: ilogtail-dev:nzh
     environment:
-      CONFIG_SERVER_ADDRESSES: '["config-server:9090"]'
+      CONFIG_SERVER_ADDRESSES: '["host.docker.internal:9090"]'
       TZ: Asia/Shanghai
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       replicas: 2
     networks:

@@ -5,49 +5,31 @@ import (
 	"config-server2/internal/entity"
 	"config-server2/internal/manager"
 	"config-server2/internal/manager/flag"
-	"config-server2/internal/protov2"
+	proto "config-server2/internal/protov2"
 	"config-server2/internal/repository"
-	"config-server2/internal/store"
 	"config-server2/internal/utils"
+	"log"
 	"time"
 )
 
-var s = store.S
-
 // CheckAgentExist  确认心跳，失败则下线对应的实例
 func CheckAgentExist(timeLimit int64) {
-	if timeLimit <= 0 {
-		panic("timeLimit 不能小于等于0")
-	}
-	timeLimitNano := timeLimit * int64(time.Second)
-
-	ticker := time.NewTicker(time.Duration(timeLimitNano))
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			utils.ParallelProcessSlice[entity.Agent](manager.GetAllAgentsBasicInfo(),
-				func(_ int, agentInfo entity.Agent) {
-					manager.RemoveAgentNow(&agentInfo, timeLimitNano)
-				})
-		}
-	}
+	utils.TimedTask(timeLimit, func(timeLimitParam int64) {
+		timeLimitNano := timeLimitParam * int64(time.Second)
+		utils.ParallelProcessSlice[entity.Agent](manager.GetAllAgentsBasicInfo(),
+			func(_ int, agentInfo entity.Agent) {
+				manager.RemoveAgentNow(&agentInfo, timeLimitNano)
+			})
+	})
 }
 
-func HeartBeat(req *protov2.HeartbeatRequest, res *protov2.HeartbeatResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
+func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error {
 	instanceId := req.InstanceId
 	if instanceId == nil {
 		return common.ValidateErrorWithMsg("required field instanceId could not be null")
 	}
 
 	var err error
-	res.RequestId = requestId
 	sequenceNum := req.SequenceNum
 
 	rationality := manager.JudgeSequenceNumRationality(instanceId, sequenceNum)
@@ -68,6 +50,17 @@ func HeartBeat(req *protov2.HeartbeatRequest, res *protov2.HeartbeatResponse) er
 		return common.SystemError(err)
 	}
 
+	//for _ , group:=range agent.Tags {
+	//	agentGroupDetail, err := repository.GetAgentGroupDetail(group.Name, true, true)
+	//	// 把已经应用到某个组上的
+	//	for _, tag := range agent.Tags {
+	//		err := repository.CreatePipelineConfigForAgent(string(instanceId), ta)
+	//		if err != nil {
+	//			return err
+	//		}
+	//	}
+	//}
+
 	//如果req未设置fullState,agent会不会上传其他的configStatus
 	err = flag.HandleRequestFlags(req, res)
 	if err != nil {
@@ -82,19 +75,13 @@ func HeartBeat(req *protov2.HeartbeatRequest, res *protov2.HeartbeatResponse) er
 	return nil
 }
 
-func FetchPipelineConfigDetail(req *protov2.FetchConfigRequest, res *protov2.FetchConfigResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
+func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	instanceId := req.InstanceId
 	if instanceId == nil {
 		return common.ValidateErrorWithMsg("required field instanceId could not be null")
 	}
 
 	var err error
-	res.RequestId = requestId
 	strInstanceId := string(instanceId)
 
 	//创建或更新pipelineConfig的status and message
@@ -119,19 +106,13 @@ func FetchPipelineConfigDetail(req *protov2.FetchConfigRequest, res *protov2.Fet
 	return nil
 }
 
-func FetchInstanceConfigDetail(req *protov2.FetchConfigRequest, res *protov2.FetchConfigResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
+func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchConfigResponse) error {
 	instanceId := req.InstanceId
 	if instanceId == nil {
 		return common.ValidateErrorWithMsg("required field instanceId could not be null")
 	}
 
 	var err error
-	res.RequestId = requestId
 	strInstanceId := string(instanceId)
 
 	//Store in the agent_instance table
@@ -156,24 +137,54 @@ func FetchInstanceConfigDetail(req *protov2.FetchConfigRequest, res *protov2.Fet
 	return nil
 }
 
-func ListAgentsInGroup(req *protov2.ListAgentsRequest, res *protov2.ListAgentsResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId is null")
-	}
+func ListAgentsInGroup(req *proto.ListAgentsRequest, res *proto.ListAgentsResponse) error {
 	groupName := req.GroupName
 	if groupName == "" {
-		return common.ValidateErrorWithMsg("required fields groupName is null")
+		return common.ValidateErrorWithMsg("required fields groupName could not be null")
 	}
-	res.RequestId = req.RequestId
 	agents, err := repository.ListAgentsByGroupName(groupName)
 	if err != nil {
 		return common.SystemError(err)
 	}
-	protoAgents := make([]*protov2.Agent, 0)
+	protoAgents := make([]*proto.Agent, 0)
 	for _, agent := range agents {
 		protoAgents = append(protoAgents, (*agent).Parse2Proto())
 	}
 	res.Agents = protoAgents
+	return nil
+}
+
+func GetPipelineConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
+	instanceId := req.InstanceId
+	if instanceId == nil {
+		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
+	}
+	configs, err := repository.GetPipelineConfigStatusList(string(instanceId))
+	if err != nil {
+		return common.SystemError(err)
+	}
+	log.Println(configs)
+	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
+	for _, config := range configs {
+		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())
+	}
+	res.AgentConfigStatus = agentConfigStatusList
+	return nil
+}
+
+func GetInstanceConfigStatusList(req *proto.GetConfigStatusListRequest, res *proto.GetConfigStatusListResponse) error {
+	instanceId := req.InstanceId
+	if instanceId == nil {
+		return common.ValidateErrorWithMsg("required fields instanceId could not be null")
+	}
+	configs, err := repository.GetInstanceConfigStatusList(string(instanceId))
+	if err != nil {
+		return common.SystemError(err)
+	}
+	agentConfigStatusList := make([]*proto.AgentConfigStatus, 0)
+	for _, config := range configs {
+		agentConfigStatusList = append(agentConfigStatusList, config.Parse2ProtoAgentConfigStatus())
+	}
+	res.AgentConfigStatus = agentConfigStatusList
 	return nil
 }

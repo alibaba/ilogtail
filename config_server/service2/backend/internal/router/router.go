@@ -15,8 +15,8 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/GetAgentGroup", handler.GetAgentGroup)
 		userRouter.POST("/ListAgentGroups", handler.ListAgentGroups)
 		userRouter.POST("/ListAgents", handler.ListAgentsInGroup)
-		userRouter.POST("/GetAppliedAgentGroupsWithPipelineConfig", handler.GetAppliedAgentGroupsWithPipelineConfig)
-		userRouter.POST("/GetAppliedAgentGroupsWithInstanceConfig", handler.GetAppliedAgentGroupsWithInstanceConfig)
+		userRouter.POST("/GetAppliedPipelineConfigsForAgentGroup", handler.GetAppliedPipelineConfigsForAgentGroup)
+		userRouter.POST("/GetAppliedInstanceConfigsForAgentGroup", handler.GetAppliedInstanceConfigsForAgentGroup)
 
 		userRouter.POST("/CreatePipelineConfig", handler.CreatePipelineConfig)
 		userRouter.POST("/UpdatePipelineConfig", handler.UpdatePipelineConfig)
@@ -25,7 +25,8 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/ListPipelineConfigs", handler.ListPipelineConfigs)
 		userRouter.POST("/ApplyPipelineConfigToAgentGroup", handler.ApplyPipelineConfigToAgentGroup)
 		userRouter.POST("/RemovePipelineConfigFromAgentGroup", handler.RemovePipelineConfigFromAgentGroup)
-		userRouter.POST("/GetAppliedPipelineConfigsForAgentGroup", handler.GetAppliedPipelineConfigsForAgentGroup)
+		userRouter.POST("/GetAppliedAgentGroupsWithPipelineConfig", handler.GetAppliedAgentGroupsWithPipelineConfig)
+		userRouter.POST("/GetPipelineConfigStatusList", handler.GetPipelineConfigStatusList)
 
 		userRouter.POST("/CreateInstanceConfig", handler.CreateInstanceConfig)
 		userRouter.POST("/UpdateInstanceConfig", handler.UpdateInstanceConfig)
@@ -34,13 +35,15 @@ func initUserRouter(router *gin.Engine) {
 		userRouter.POST("/ListInstanceConfigs", handler.ListInstanceConfigs)
 		userRouter.POST("/ApplyInstanceConfigToAgentGroup", handler.ApplyInstanceConfigToAgentGroup)
 		userRouter.POST("/RemoveInstanceConfigFromAgentGroup", handler.RemoveInstanceConfigFromAgentGroup)
-		userRouter.POST("/GetAppliedInstanceConfigsForAgentGroup", handler.GetAppliedInstanceConfigsForAgentGroup)
+		userRouter.POST("/GetAppliedAgentGroupsWithInstanceConfig", handler.GetAppliedAgentGroupsWithInstanceConfig)
+		userRouter.POST("/GetInstanceConfigStatusList", handler.GetInstanceConfigStatusList)
 	}
 
 }
 
 func initAgentRouter(router *gin.Engine) {
 	agentRouter := router.Group("/Agent")
+	agentRouter.Use(gin.Logger())
 	{
 		agentRouter.POST("/Heartbeat", handler.HeartBeat)
 		agentRouter.POST("/FetchPipelineConfig", handler.FetchPipelineConfig)
@@ -62,6 +65,7 @@ func initTest(router *gin.Engine) {
 
 func InitAllRouter(router *gin.Engine) {
 	handler.CheckAgentExist()
+	handler.AppliedOrRemoveConfigForAgentGroup()
 	initAgentRouter(router)
 	initUserRouter(router)
 	initTest(router)

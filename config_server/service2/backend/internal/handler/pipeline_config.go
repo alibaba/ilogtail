@@ -5,6 +5,7 @@ import (
 	proto "config-server2/internal/protov2"
 	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func CreatePipelineConfig(c *gin.Context) {
@@ -15,6 +16,11 @@ func CreatePipelineConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -34,6 +40,11 @@ func UpdatePipelineConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -53,6 +64,11 @@ func DeletePipelineConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -72,6 +88,11 @@ func GetPipelineConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -91,6 +112,11 @@ func ListPipelineConfigs(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -103,6 +129,7 @@ func ListPipelineConfigs(c *gin.Context) {
 }
 
 // 对于之前应用到组的配置，若后续有agent加入到组里面，是否需要更新
+
 func ApplyPipelineConfigToAgentGroup(c *gin.Context) {
 	request := &proto.ApplyConfigToAgentGroupRequest{}
 	response := &proto.ApplyConfigToAgentGroupResponse{}
@@ -111,11 +138,15 @@ func ApplyPipelineConfigToAgentGroup(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
 	}
-
 	err = service.ApplyPipelineConfigToAgentGroup(request, response)
 	if err != nil {
 		err = common.SystemError(err)
@@ -131,6 +162,11 @@ func RemovePipelineConfigFromAgentGroup(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -142,19 +178,24 @@ func RemovePipelineConfigFromAgentGroup(c *gin.Context) {
 	}
 }
 
-func GetAppliedPipelineConfigsForAgentGroup(c *gin.Context) {
-	request := &proto.GetAppliedConfigsForAgentGroupRequest{}
-	response := &proto.GetAppliedConfigsForAgentGroupResponse{}
+func GetAppliedAgentGroupsWithPipelineConfig(c *gin.Context) {
+	request := &proto.GetAppliedAgentGroupsRequest{}
+	response := &proto.GetAppliedAgentGroupsResponse{}
 	var err error
 	defer func() {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
 	}
-	err = service.GetAppliedPipelineConfigsForAgentGroup(request, response)
+	err = service.GetAppliedAgentGroupsForPipelineConfigName(request, response)
 	if err != nil {
 		err = common.SystemError(err)
 		return

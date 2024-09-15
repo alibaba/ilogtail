@@ -1,15 +1,14 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <ConfigServer></ConfigServer>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import ConfigServer from "@/components/ConfigServer.vue";
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    ConfigServer,
   }
 }
 </script>

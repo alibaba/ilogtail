@@ -24,6 +24,21 @@ func ParseProtoConfigInfo2AgentPipelineConfig(instanceId string, c *proto.Config
 	}
 }
 
+func (apc AgentPipelineConfig) Equals(obj any) bool {
+	if a1, ok := obj.(AgentPipelineConfig); ok {
+		return apc.AgentInstanceId == a1.AgentInstanceId && apc.PipelineConfigName == a1.PipelineConfigName
+	}
+	return false
+}
+
+func (apc AgentPipelineConfig) Parse2ProtoAgentConfigStatus() *proto.AgentConfigStatus {
+	return &proto.AgentConfigStatus{
+		Name:    apc.PipelineConfigName,
+		Status:  proto.ConfigStatus(apc.Status),
+		Message: apc.Message,
+	}
+}
+
 type AgentInstanceConfig struct {
 	AgentInstanceId    string `gorm:"primarykey"`
 	InstanceConfigName string `gorm:"primarykey"`
@@ -42,4 +57,19 @@ func ParseProtoConfigInfo2AgentInstanceConfig(instanceId string, c *proto.Config
 		Status:             ConfigStatus(c.Status),
 		Message:            c.Message,
 	}
+}
+
+func (aic AgentInstanceConfig) Parse2ProtoAgentConfigStatus() *proto.AgentConfigStatus {
+	return &proto.AgentConfigStatus{
+		Name:    aic.InstanceConfigName,
+		Status:  proto.ConfigStatus(aic.Status),
+		Message: aic.Message,
+	}
+}
+
+func (aic AgentInstanceConfig) Equals(obj any) bool {
+	if a1, ok := obj.(AgentInstanceConfig); ok {
+		return aic.AgentInstanceId == a1.AgentInstanceId && aic.InstanceConfigName == a1.InstanceConfigName
+	}
+	return false
 }

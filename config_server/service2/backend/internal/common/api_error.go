@@ -51,14 +51,6 @@ func SystemError(err error) error {
 	if errors.As(err, &apiError) {
 		return ErrorWithMsg(apiError.Code, apiError.Message)
 	}
-	//////errors.Is work不了
-	//if reflect.TypeOf(err) == reflect.TypeOf(&ApiError{}) {
-	//	return err.(*ApiError)
-	//}
-
-	//if err.Error() == "" {
-	//	return ErrorWithMsg(SystemFailed.Code, SystemFailed.Message)
-	//}
 	return ErrorWithMsg(SystemFailed.Code, err.Error())
 }
 

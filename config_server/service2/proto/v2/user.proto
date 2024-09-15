@@ -1,4 +1,5 @@
 syntax = "proto3";
+option go_package = "/protov2;";
 import "agent.proto";
 
 
@@ -9,8 +10,12 @@ message Agent{
     AgentAttributes attributes = 4;             // Agent's basic attributes
     string running_status = 5;                  // Human readable running status
     int64 startup_time = 6;                     // Required, Agent's startup time
-    uint64 flags = 7;                          // Predefined command flag
-    bytes opaque = 8;                          // Opaque data for extension
+}
+
+message AgentConfigStatus{
+    string name=1;
+    ConfigStatus status = 2; // Config's status
+    string message = 3;      // Optional error message
 }
 
 // API: /User/CreateAgentGroup
@@ -22,7 +27,7 @@ message CreateAgentGroupRequest {
 
 message CreateAgentGroupResponse {
     bytes request_id = 1;
-    CommonResponse commonResponse=2;
+    CommonResponse common_response=2;
 }
 
 // API: /User/UpdateAgentGroup
@@ -34,7 +39,7 @@ message UpdateAgentGroupRequest {
 
 message UpdateAgentGroupResponse {
     bytes request_id = 1;
-    CommonResponse commonResponse=2;
+    CommonResponse common_response=2;
 }
 
 // API: /User/DeleteAgentGroup/
@@ -46,7 +51,7 @@ message DeleteAgentGroupRequest {
 
 message DeleteAgentGroupResponse {
     bytes request_id = 1;
-    CommonResponse commonResponse=2;
+    CommonResponse common_response=2;
 }
 
 // API: /User/GetAgentGroup/
@@ -125,6 +130,19 @@ message GetConfigResponse {
     ConfigDetail config_detail = 3;
 }
 
+// API: /User/GetPipelineConfigStatusList
+// API: /User/GetInstanceConfigStatusList
+message GetConfigStatusListRequest{
+    bytes request_id = 1;
+    bytes instance_id=2;
+}
+
+message GetConfigStatusListResponse{
+    bytes request_id = 1;
+    CommonResponse common_response=2;
+    repeated AgentConfigStatus agent_config_status=3;
+}
+
 // API: /User/ListPipelineConfigs
 // API: /User/ListInstanceConfigs
 message ListConfigsRequest {
@@ -164,8 +182,9 @@ message RemoveConfigFromAgentGroupResponse {
     CommonResponse common_response=2;
 }
 
-// API: /User/GetAppliedInstanceConfigsForAgentGroup/
+
 // API: /User/GetAppliedPipelineConfigsForAgentGroup/
+// API: /User/GetAppliedInstanceConfigsForAgentGroup/
 message GetAppliedConfigsForAgentGroupRequest {
     bytes request_id = 1;
     string group_name = 2;

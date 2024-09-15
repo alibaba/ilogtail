@@ -6,4 +6,4 @@ import App from './App.vue'
 
 let app=createApp(App)
 app.use(ElementPlus)
-createApp(App).mount('#app')
+app.mount('#app')

@@ -19,17 +19,6 @@ func TestRemoveAgentId(t *testing.T) {
 	}
 }
 
-func TestGetAllAgents(t *testing.T) {
-
-	//err = S.Connect()
-	//if err != nil {
-	//	return
-	//}
-	var list []entity.Agent
-	list = GetAllAgentsBasicInfo()
-	fmt.Println(list)
-}
-
 func TestGetAgentById(t *testing.T) {
 	var err error
 	err = store.S.Connect()

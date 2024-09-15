@@ -80,8 +80,6 @@ func (a Agent) Parse2Proto() *protov2.Agent {
 	protoAgent.Attributes = a.Attributes.Parse2Proto()
 	protoAgent.RunningStatus = a.RunningStatus
 	protoAgent.StartupTime = a.StartupTime
-	protoAgent.Flags = a.Flags
-	protoAgent.Opaque = a.Opaque
 	return protoAgent
 }
 

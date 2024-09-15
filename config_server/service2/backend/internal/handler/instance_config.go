@@ -5,6 +5,7 @@ import (
 	proto "config-server2/internal/protov2"
 	"config-server2/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func CreateInstanceConfig(c *gin.Context) {
@@ -15,6 +16,11 @@ func CreateInstanceConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -34,6 +40,11 @@ func UpdateInstanceConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -53,6 +64,11 @@ func DeleteInstanceConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -72,6 +88,11 @@ func GetInstanceConfig(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -91,6 +112,11 @@ func ListInstanceConfigs(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -110,6 +136,11 @@ func ApplyInstanceConfigToAgentGroup(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -129,6 +160,11 @@ func RemoveInstanceConfigFromAgentGroup(c *gin.Context) {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -140,19 +176,24 @@ func RemoveInstanceConfigFromAgentGroup(c *gin.Context) {
 	}
 }
 
-func GetAppliedInstanceConfigsForAgentGroup(c *gin.Context) {
-	request := &proto.GetAppliedConfigsForAgentGroupRequest{}
-	response := &proto.GetAppliedConfigsForAgentGroupResponse{}
+func GetAppliedAgentGroupsWithInstanceConfig(c *gin.Context) {
+	request := &proto.GetAppliedAgentGroupsRequest{}
+	response := &proto.GetAppliedAgentGroupsResponse{}
 	var err error
 	defer func() {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
+	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
 	}
-	err = service.GetAppliedInstanceConfigsForAgentGroup(request, response)
+	err = service.GetAppliedAgentGroupsForInstanceConfigName(request, response)
 	if err != nil {
 		err = common.SystemError(err)
 		return

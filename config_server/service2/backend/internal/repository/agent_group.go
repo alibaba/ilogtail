@@ -14,11 +14,8 @@ func CreateAgentGroup(group *entity.AgentGroup) error {
 }
 
 func UpdateAgentGroup(group *entity.AgentGroup) error {
-	row := s.DB.Model(&group).Updates(group).RowsAffected
-	if row != 1 {
-		return common.ServerErrorWithMsg("update agentGroup(%s) error", group.Name)
-	}
-	return nil
+	err := s.DB.Save(group).Error
+	return err
 }
 
 func DeleteAgentGroup(name string) error {
@@ -43,6 +40,22 @@ func GetAgentGroupDetail(name string, containPipelineConfigs bool, containInstan
 		return nil, common.ServerErrorWithMsg("get agentGroup(name=%s) error", name)
 	}
 	return agentGroup, nil
+}
+
+func GetAllAgentGroupDetail(containAgents bool, containPipelineConfigs bool, containInstanceConfigs bool) ([]*entity.AgentGroup, error) {
+	agentGroups := make([]*entity.AgentGroup, 0)
+	tx := s.DB.Where("1=1")
+	if containAgents {
+		tx.Preload("Agents")
+	}
+	if containPipelineConfigs {
+		tx.Preload("PipelineConfigs")
+	}
+	if containInstanceConfigs {
+		tx.Preload("InstanceConfigs")
+	}
+	err := tx.Find(&agentGroups).Error
+	return agentGroups, err
 }
 
 func GetAllAgentGroup() ([]*entity.AgentGroup, error) {

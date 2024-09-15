@@ -14,11 +14,8 @@ func CreatePipelineConfig(config *entity.PipelineConfig) error {
 }
 
 func UpdatePipelineConfig(config *entity.PipelineConfig) error {
-	row := s.DB.Model(&config).Updates(config).RowsAffected
-	if row != 1 {
-		return common.ServerErrorWithMsg("update pipelineConfig(%s) error", config.Name)
-	}
-	return nil
+	err := s.DB.Save(config).Error
+	return err
 }
 
 func DeletePipelineConfig(configName string) error {
@@ -55,23 +52,30 @@ func CreatePipelineConfigForAgentGroup(groupName string, configName string) erro
 	return common.SystemError(err)
 }
 
-func CreatePipelineConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
-	agentPipelineConfigs := make([]entity.AgentPipelineConfig, 0)
-	for _, instanceId := range agentInstanceIds {
-		agentPipelineConfig := entity.AgentPipelineConfig{
-			AgentInstanceId:    instanceId,
-			PipelineConfigName: configName,
-		}
-		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
+func CreatePipelineConfigForAgent(instanceId string, configName string) error {
+	agentPipelineConfig := entity.AgentPipelineConfig{
+		AgentInstanceId:    instanceId,
+		PipelineConfigName: configName,
 	}
-	//if len(agentPipelineConfigs) > 0 {
-	//	err := s.DB.Create(&agentPipelineConfigs).Error
-	//	return common.SystemError(err)
-	//}
-	err := s.DB.Create(&agentPipelineConfigs).Error
-	return common.SystemError(err)
-	//return nil
+	err := s.DB.FirstOrCreate(&agentPipelineConfig).Error
+	return err
 }
+
+//func CreatePipelineConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
+//	agentPipelineConfigs := make([]entity.AgentPipelineConfig, 0)
+//	for _, instanceId := range agentInstanceIds {
+//		agentPipelineConfig := entity.AgentPipelineConfig{
+//			AgentInstanceId:    instanceId,
+//			PipelineConfigName: configName,
+//		}
+//		agentPipelineConfigs = append(agentPipelineConfigs, agentPipelineConfig)
+//	}
+//	if len(agentPipelineConfigs) > 0 {
+//		err := s.DB.Create(&agentPipelineConfigs).Error
+//		return common.SystemError(err)
+//	}
+//	return nil
+//}
 
 func DeletePipelineConfigForAgentGroup(groupName string, configName string) error {
 	removeConfig := entity.PipelineConfig{
@@ -98,4 +102,18 @@ func DeletePipelineConfigForAgentInGroup(agentInstanceIds []string, configName s
 		return common.SystemError(err)
 	}
 	return nil
+}
+
+func DeleteAllPipelineConfigAndAgent() {
+	s.DB.Exec("TRUNCATE TABLE agent_pipeline_config")
+}
+
+func AddPipelineConfigAndAgent(agentPipelineConfigMapList []entity.AgentPipelineConfig) {
+	s.DB.Create(&agentPipelineConfigMapList)
+}
+
+func ListAgentPipelineConfig() []entity.AgentPipelineConfig {
+	agentPipelineConfigs := make([]entity.AgentPipelineConfig, 0)
+	s.DB.Find(&agentPipelineConfigs)
+	return agentPipelineConfigs
 }

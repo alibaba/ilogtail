@@ -1,6 +1,6 @@
 package utils
 
-func ContainElement[T comparable](arr []T, val T, eqCondition func(T, T) bool) bool {
+func ContainElement[T comparable](arr []T, val any, eqCondition func(T, any) bool) bool {
 	if arr == nil || len(arr) == 0 {
 		return false
 	}

@@ -14,11 +14,8 @@ func CreateInstanceConfig(config *entity.InstanceConfig) error {
 }
 
 func UpdateInstanceConfig(config *entity.InstanceConfig) error {
-	row := s.DB.Model(&config).Updates(config).RowsAffected
-	if row != 1 {
-		return common.ServerErrorWithMsg("update InstanceConfig(%s) error", config.Name)
-	}
-	return nil
+	err := s.DB.Save(config).Error
+	return err
 }
 
 func DeleteInstanceConfig(configName string) error {
@@ -55,23 +52,32 @@ func CreateInstanceConfigForAgentGroup(groupName string, configName string) erro
 	return common.SystemError(err)
 }
 
-func CreateInstanceConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
-	agentInstanceConfigs := make([]entity.AgentInstanceConfig, 0)
-	for _, instanceId := range agentInstanceIds {
-		agentInstanceConfig := entity.AgentInstanceConfig{
-			AgentInstanceId:    instanceId,
-			InstanceConfigName: configName,
-		}
-		agentInstanceConfigs = append(agentInstanceConfigs, agentInstanceConfig)
+func CreateInstanceConfigForAgent(instanceId string, configName string) error {
+	agentPipelineConfig := entity.AgentPipelineConfig{
+		AgentInstanceId:    instanceId,
+		PipelineConfigName: configName,
 	}
-
-	if len(agentInstanceConfigs) > 0 {
-		err := s.DB.Create(agentInstanceConfigs).Error
-		return common.SystemError(err)
-	}
-
-	return nil
+	err := s.DB.FirstOrCreate(&agentPipelineConfig).Error
+	return err
 }
+
+//func CreateInstanceConfigForAgentInGroup(agentInstanceIds []string, configName string) error {
+//	agentInstanceConfigs := make([]entity.AgentInstanceConfig, 0)
+//	for _, instanceId := range agentInstanceIds {
+//		agentInstanceConfig := entity.AgentInstanceConfig{
+//			AgentInstanceId:    instanceId,
+//			InstanceConfigName: configName,
+//		}
+//		agentInstanceConfigs = append(agentInstanceConfigs, agentInstanceConfig)
+//	}
+//
+//	if len(agentInstanceConfigs) > 0 {
+//		err := s.DB.Create(agentInstanceConfigs).Error
+//		return common.SystemError(err)
+//	}
+//
+//	return nil
+//}
 
 func DeleteInstanceConfigForAgentGroup(groupName string, configName string) error {
 	removeConfig := entity.InstanceConfig{
@@ -98,4 +104,18 @@ func DeleteInstanceConfigForAgentInGroup(agentInstanceIds []string, configName s
 		return common.SystemError(err)
 	}
 	return nil
+}
+
+func DeleteAllInstanceConfigAndAgent() {
+	s.DB.Exec("TRUNCATE TABLE agent_instance_config")
+}
+
+func AddInstanceConfigAndAgent(agentInstanceConfigMapList []entity.AgentInstanceConfig) {
+	s.DB.Create(&agentInstanceConfigMapList)
+}
+
+func ListAgentInstanceConfig() []entity.AgentInstanceConfig {
+	agentInstanceConfigs := make([]entity.AgentInstanceConfig, 0)
+	s.DB.Find(&agentInstanceConfigs)
+	return agentInstanceConfigs
 }

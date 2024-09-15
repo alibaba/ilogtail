@@ -18,9 +18,16 @@ func GetAgentByiId(instanceId string) *entity.Agent {
 	return nil
 }
 
-func GetAllAgentsBasicInfo() []entity.Agent {
+func GetAllAgents(containPipelineConfigs bool, containInstanceConfigs bool) []entity.Agent {
 	var agentInfoList []entity.Agent
-	s.DB.Find(&agentInfoList)
+	tx := s.DB
+	if containPipelineConfigs {
+		tx.Preload("PipelineConfigs")
+	}
+	if containInstanceConfigs {
+		tx.Preload("InstanceConfigs")
+	}
+	tx.Find(&agentInfoList)
 	return agentInfoList
 }
 
@@ -37,13 +44,17 @@ func RemoveAgentById(instanceId string) error {
 }
 
 func UpdateAgentById(agent *entity.Agent, filed ...string) error {
-	var err error
 	if filed == nil {
-		err = s.DB.Model(agent).Updates(*agent).Error
-		return common.SystemError(err)
+		row := s.DB.Model(agent).Updates(*agent).RowsAffected
+		if row != 1 {
+			return common.ServerErrorWithMsg("update agent error")
+		}
 	}
-	err = s.DB.Model(agent).Select(filed).Updates(*agent).Error
-	return common.SystemError(err)
+	row := s.DB.Model(agent).Select(filed).Updates(*agent).RowsAffected
+	if row != 1 {
+		return common.ServerErrorWithMsg("update agent filed error")
+	}
+	return nil
 }
 
 func CreateOrUpdateAgentBasicInfo(conflictColumnNames []string, agent ...*entity.Agent) error {
@@ -57,4 +68,22 @@ func ListAgentsByGroupName(groupName string) ([]*entity.Agent, error) {
 		return nil, err
 	}
 	return agentGroup.Agents, nil
+}
+
+func GetPipelineConfigStatusList(instanceId string) ([]*entity.AgentPipelineConfig, error) {
+	configs := make([]*entity.AgentPipelineConfig, 0)
+	err := s.DB.Where("agent_instance_id=?", instanceId).Find(&configs).Error
+	if err != nil {
+		return nil, err
+	}
+	return configs, err
+}
+
+func GetInstanceConfigStatusList(instanceId string) ([]*entity.AgentInstanceConfig, error) {
+	configs := make([]*entity.AgentInstanceConfig, 0)
+	err := s.DB.Where("agent_instance_id=?", instanceId).Find(&configs).Error
+	if err != nil {
+		return nil, err
+	}
+	return configs, err
 }

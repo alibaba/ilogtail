@@ -5,23 +5,19 @@ import (
 	"config-server2/internal/entity"
 	proto "config-server2/internal/protov2"
 	"config-server2/internal/repository"
+	"config-server2/internal/utils"
 )
 
 func CreatePipelineConfig(req *proto.CreateConfigRequest, res *proto.CreateConfigResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
 	configDetail := req.ConfigDetail
-	if configDetail.Name == "" {
+	if utils.IsEmptyOrWhitespace(configDetail.Name) {
 		return common.ValidateErrorWithMsg("required field configName could not be null")
 	}
 
 	if configDetail.Version == 0 {
-		return common.ValidateErrorWithMsg("required field configName could not be null")
+		return common.ValidateErrorWithMsg("required field version could not be null")
 	}
-	res.RequestId = requestId
+
 	pipelineConfig := entity.ParseProtoPipelineConfig2PipelineConfig(configDetail)
 	err := repository.CreatePipelineConfig(pipelineConfig)
 	return common.SystemError(err)
@@ -29,51 +25,34 @@ func CreatePipelineConfig(req *proto.CreateConfigRequest, res *proto.CreateConfi
 }
 
 func UpdatePipelineConfig(req *proto.UpdateConfigRequest, res *proto.UpdateConfigResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
 	configDetail := req.ConfigDetail
 	if configDetail.Name == "" {
 		return common.ValidateErrorWithMsg("required field configName could not be null")
 	}
 
 	if configDetail.Version == 0 {
-		return common.ValidateErrorWithMsg("required field configName could not be null")
+		return common.ValidateErrorWithMsg("required field version could not be null")
 	}
-	res.RequestId = requestId
 	pipelineConfig := entity.ParseProtoPipelineConfig2PipelineConfig(configDetail)
 	err := repository.UpdatePipelineConfig(pipelineConfig)
 	return common.SystemError(err)
 }
 
 func DeletePipelineConfig(req *proto.DeleteConfigRequest, res *proto.DeleteConfigResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
 	configName := req.ConfigName
 	if configName == "" {
 		return common.ValidateErrorWithMsg("required field configName could not be null")
 	}
-	res.RequestId = requestId
 	err := repository.DeletePipelineConfig(configName)
 	return common.SystemError(err)
 }
 
 func GetPipelineConfig(req *proto.GetConfigRequest, res *proto.GetConfigResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-
 	configName := req.ConfigName
 	if configName == "" {
 		return common.ValidateErrorWithMsg("required field configName could not be null")
 	}
-	res.RequestId = requestId
+
 	pipelineConfig, err := repository.GetPipelineConfig(configName)
 	if err != nil {
 		return common.SystemError(err)
@@ -85,11 +64,6 @@ func GetPipelineConfig(req *proto.GetConfigRequest, res *proto.GetConfigResponse
 }
 
 func ListPipelineConfigs(req *proto.ListConfigsRequest, res *proto.ListConfigsResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
-	res.RequestId = requestId
 	pipelineConfigs, err := repository.ListPipelineConfigs()
 	if err != nil {
 		return common.SystemError(err)
@@ -102,10 +76,6 @@ func ListPipelineConfigs(req *proto.ListConfigsRequest, res *proto.ListConfigsRe
 }
 
 func ApplyPipelineConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, res *proto.ApplyConfigToAgentGroupResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
 	groupName := req.GroupName
 	if groupName == "" {
 		return common.ValidateErrorWithMsg("required fields groupName could not be null")
@@ -114,7 +84,7 @@ func ApplyPipelineConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, 
 	if configName == "" {
 		return common.ValidateErrorWithMsg("required fields configName could not be null")
 	}
-	res.RequestId = requestId
+
 	var err error
 	err = repository.CreatePipelineConfigForAgentGroup(groupName, configName)
 	if err != nil {
@@ -126,20 +96,16 @@ func ApplyPipelineConfigToAgentGroup(req *proto.ApplyConfigToAgentGroupRequest, 
 		return common.SystemError(err)
 	}
 
-	agentInstanceIds := make([]string, 0)
 	for _, agent := range agents {
-		agentInstanceIds = append(agentInstanceIds, agent.InstanceId)
+		err := repository.CreatePipelineConfigForAgent(agent.InstanceId, configName)
+		if err != nil {
+			return err
+		}
 	}
-
-	return repository.CreatePipelineConfigForAgentInGroup(agentInstanceIds, configName)
-
+	return nil
 }
 
 func RemovePipelineConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupRequest, res *proto.RemoveConfigFromAgentGroupResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
 	groupName := req.GroupName
 	if groupName == "" {
 		return common.ValidateErrorWithMsg("required fields groupName could not be null")
@@ -148,7 +114,6 @@ func RemovePipelineConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupReq
 	if configName == "" {
 		return common.ValidateErrorWithMsg("required fields configName could not be null")
 	}
-	res.RequestId = requestId
 
 	err := repository.DeletePipelineConfigForAgentGroup(groupName, configName)
 	if err != nil {
@@ -169,15 +134,10 @@ func RemovePipelineConfigFromAgentGroup(req *proto.RemoveConfigFromAgentGroupReq
 }
 
 func GetAppliedPipelineConfigsForAgentGroup(req *proto.GetAppliedConfigsForAgentGroupRequest, res *proto.GetAppliedConfigsForAgentGroupResponse) error {
-	requestId := req.RequestId
-	if requestId == nil {
-		return common.ValidateErrorWithMsg("required fields requestId could not be null")
-	}
 	groupName := req.GroupName
 	if groupName == "" {
 		return common.ValidateErrorWithMsg("required fields groupName could not be null")
 	}
-	res.RequestId = requestId
 
 	agentGroupDetail, err := repository.GetAgentGroupDetail(groupName, true, false)
 	if err != nil {

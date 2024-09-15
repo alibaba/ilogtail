@@ -27,7 +27,7 @@ func CreateOrUpdateAgentBasicInfo(agent *entity.Agent) error {
 }
 
 func GetAllAgentsBasicInfo() []entity.Agent {
-	return repository.GetAllAgentsBasicInfo()
+	return repository.GetAllAgents(false, false)
 }
 
 func RemoveAgentNow(agentInfo *entity.Agent, timeLimitNano int64) {

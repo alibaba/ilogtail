@@ -8,6 +8,10 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
+func AppliedOrRemoveConfigForAgentGroup() {
+	go service.AppliedOrRemoveConfigForAgentGroup(15)
+}
+
 func CreateAgentGroup(c *gin.Context) {
 	request := &proto.CreateAgentGroupRequest{}
 	response := &proto.CreateAgentGroupResponse{}
@@ -17,6 +21,10 @@ func CreateAgentGroup(c *gin.Context) {
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -37,6 +45,10 @@ func UpdateAgentGroup(c *gin.Context) {
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -57,6 +69,10 @@ func DeleteAgentGroup(c *gin.Context) {
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -77,6 +93,10 @@ func GetAgentGroup(c *gin.Context) {
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -97,6 +117,10 @@ func ListAgentGroups(c *gin.Context) {
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
@@ -108,41 +132,48 @@ func ListAgentGroups(c *gin.Context) {
 	}
 }
 
-func GetAppliedAgentGroupsWithPipelineConfig(c *gin.Context) {
-	request := &proto.GetAppliedAgentGroupsRequest{}
-	response := &proto.GetAppliedAgentGroupsResponse{}
+func GetAppliedPipelineConfigsForAgentGroup(c *gin.Context) {
+	request := &proto.GetAppliedConfigsForAgentGroupRequest{}
+	response := &proto.GetAppliedConfigsForAgentGroupResponse{}
 	var err error
 	defer func() {
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
 	}
-	err = service.GetAppliedAgentGroupsForPipelineConfigName(request, response)
+	err = service.GetAppliedPipelineConfigsForAgentGroup(request, response)
 	if err != nil {
 		err = common.SystemError(err)
 		return
 	}
 }
 
-func GetAppliedAgentGroupsWithInstanceConfig(c *gin.Context) {
-	request := &proto.GetAppliedAgentGroupsRequest{}
-	response := &proto.GetAppliedAgentGroupsResponse{}
+func GetAppliedInstanceConfigsForAgentGroup(c *gin.Context) {
+	request := &proto.GetAppliedConfigsForAgentGroupRequest{}
+	response := &proto.GetAppliedConfigsForAgentGroupResponse{}
 	var err error
 	defer func() {
-
 		response.CommonResponse = common.GenerateCommonResponse(err)
 		common.SuccessProtobufRes(c, response)
 	}()
 	err = c.ShouldBindBodyWith(request, binding.ProtoBuf)
+	response.RequestId = request.RequestId
+	if response.RequestId == nil {
+		err = common.ValidateErrorWithMsg("required fields requestId could not be null")
+	}
 	if err != nil {
 		err = common.SystemError(err)
 		return
 	}
-	err = service.GetAppliedAgentGroupsForInstanceConfigName(request, response)
+	err = service.GetAppliedInstanceConfigsForAgentGroup(request, response)
 	if err != nil {
 		err = common.SystemError(err)
 		return

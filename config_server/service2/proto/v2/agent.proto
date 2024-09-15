@@ -1,4 +1,5 @@
 syntax = "proto3";
+option go_package = "/protov2;";
 
 message AgentGroupTag {
     string name = 1;
