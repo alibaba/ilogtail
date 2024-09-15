@@ -108,12 +108,8 @@ func DeleteAllPipelineConfigAndAgent() {
 	s.DB.Exec("TRUNCATE TABLE agent_pipeline_config")
 }
 
-func AddPipelineConfigAndAgent(agentPipelineConfigMapList []entity.AgentPipelineConfig) {
-	s.DB.Create(&agentPipelineConfigMapList)
-}
-
-func ListAgentPipelineConfig() []entity.AgentPipelineConfig {
-	agentPipelineConfigs := make([]entity.AgentPipelineConfig, 0)
+func ListAgentPipelineConfig() []*entity.AgentPipelineConfig {
+	agentPipelineConfigs := make([]*entity.AgentPipelineConfig, 0)
 	s.DB.Find(&agentPipelineConfigs)
 	return agentPipelineConfigs
 }

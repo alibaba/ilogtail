@@ -9,7 +9,7 @@ import (
 )
 
 func AppliedOrRemoveConfigForAgentGroup() {
-	go service.AppliedOrRemoveConfigForAgentGroup(15)
+	go service.AppliedOrRemoveConfigForAgentGroup(30)
 }
 
 func CreateAgentGroup(c *gin.Context) {

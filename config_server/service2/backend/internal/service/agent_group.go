@@ -3,6 +3,7 @@ package service
 import (
 	"config-server2/internal/common"
 	"config-server2/internal/entity"
+	"config-server2/internal/manager"
 	"config-server2/internal/protov2"
 	"config-server2/internal/repository"
 	"config-server2/internal/utils"
@@ -15,47 +16,9 @@ func AppliedOrRemoveConfigForAgentGroup(timeLimit int64) {
 		if err != nil {
 			panic(err)
 		}
-		//修改，先查出来全部的，如果全部里面有group映射的东西，那么我就留下来，否则直接删掉
-		agentPipelineConfigMapList := repository.ListAgentPipelineConfig()
-		agentInstanceConfigMapList := repository.ListAgentInstanceConfig()
-		for _, agentGroupDetail := range agentGroupDetails {
-			agents := agentGroupDetail.Agents
-			pipelineConfigs := agentGroupDetail.PipelineConfigs
-			instanceConfigs := agentGroupDetail.InstanceConfigs
-			for _, agent := range agents {
-				for _, pipelineConfig := range pipelineConfigs {
-					a := entity.AgentPipelineConfig{
-						AgentInstanceId:    agent.InstanceId,
-						PipelineConfigName: pipelineConfig.Name,
-					}
-					//得两个list求差集
-					if !utils.ContainElement(agentPipelineConfigMapList, a, entity.AgentPipelineConfig.Equals) {
-						agentPipelineConfigMapList = append(agentPipelineConfigMapList, a)
-					}
-				}
-			}
-
-			for _, agent := range agents {
-				for _, instanceConfig := range instanceConfigs {
-					a := entity.AgentInstanceConfig{
-						AgentInstanceId:    agent.InstanceId,
-						InstanceConfigName: instanceConfig.Name,
-					}
-					if !utils.ContainElement(agentInstanceConfigMapList, a, entity.AgentInstanceConfig.Equals) {
-						agentInstanceConfigMapList = append(agentInstanceConfigMapList, a)
-					}
-				}
-			}
-		}
-
-		repository.DeleteAllPipelineConfigAndAgent()
-		repository.DeleteAllInstanceConfigAndAgent()
-		if agentPipelineConfigMapList != nil && len(agentPipelineConfigMapList) != 0 {
-			repository.AddPipelineConfigAndAgent(agentPipelineConfigMapList)
-		}
-		if agentInstanceConfigMapList != nil && len(agentInstanceConfigMapList) != 0 {
-			repository.AddInstanceConfigAndAgent(agentInstanceConfigMapList)
-		}
+		utils.ParallelProcessTask(agentGroupDetails,
+			manager.AppliedOrRemovePipelineConfigForAgentGroup,
+			manager.AppliedOrRemoveInstanceConfigForAgentGroup)
 	})
 }
 

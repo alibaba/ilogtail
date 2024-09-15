@@ -50,17 +50,6 @@ func HeartBeat(req *proto.HeartbeatRequest, res *proto.HeartbeatResponse) error 
 		return common.SystemError(err)
 	}
 
-	//for _ , group:=range agent.Tags {
-	//	agentGroupDetail, err := repository.GetAgentGroupDetail(group.Name, true, true)
-	//	// 把已经应用到某个组上的
-	//	for _, tag := range agent.Tags {
-	//		err := repository.CreatePipelineConfigForAgent(string(instanceId), ta)
-	//		if err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
-
 	//如果req未设置fullState,agent会不会上传其他的configStatus
 	err = flag.HandleRequestFlags(req, res)
 	if err != nil {
@@ -102,7 +91,6 @@ func FetchPipelineConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 		return common.SystemError(err)
 	}
 	res.ConfigDetails = pipelineConfigUpdates
-	//fmt.PrintfRed("%+v", res)
 	return nil
 }
 
@@ -114,8 +102,6 @@ func FetchInstanceConfigDetail(req *proto.FetchConfigRequest, res *proto.FetchCo
 
 	var err error
 	strInstanceId := string(instanceId)
-
-	//Store in the agent_instance table
 
 	agentInstanceConfigs := make([]*entity.AgentInstanceConfig, 0)
 	for _, reqConfig := range req.ReqConfigs {

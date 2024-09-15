@@ -11,7 +11,7 @@ type AgentPipelineConfig struct {
 	Message            string
 }
 
-func (AgentPipelineConfig) TableName() string {
+func (apc AgentPipelineConfig) TableName() string {
 	return agentPipelineConfigTable
 }
 
@@ -26,6 +26,9 @@ func ParseProtoConfigInfo2AgentPipelineConfig(instanceId string, c *proto.Config
 
 func (apc AgentPipelineConfig) Equals(obj any) bool {
 	if a1, ok := obj.(AgentPipelineConfig); ok {
+		return apc.AgentInstanceId == a1.AgentInstanceId && apc.PipelineConfigName == a1.PipelineConfigName
+	}
+	if a1, ok := obj.(*AgentPipelineConfig); ok {
 		return apc.AgentInstanceId == a1.AgentInstanceId && apc.PipelineConfigName == a1.PipelineConfigName
 	}
 	return false
@@ -46,7 +49,7 @@ type AgentInstanceConfig struct {
 	Message            string
 }
 
-func (AgentInstanceConfig) TableName() string {
+func (aic AgentInstanceConfig) TableName() string {
 	return agentInstanceConfigTable
 }
 
@@ -69,6 +72,9 @@ func (aic AgentInstanceConfig) Parse2ProtoAgentConfigStatus() *proto.AgentConfig
 
 func (aic AgentInstanceConfig) Equals(obj any) bool {
 	if a1, ok := obj.(AgentInstanceConfig); ok {
+		return aic.AgentInstanceId == a1.AgentInstanceId && aic.InstanceConfigName == a1.InstanceConfigName
+	}
+	if a1, ok := obj.(*AgentInstanceConfig); ok {
 		return aic.AgentInstanceId == a1.AgentInstanceId && aic.InstanceConfigName == a1.InstanceConfigName
 	}
 	return false

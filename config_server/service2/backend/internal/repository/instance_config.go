@@ -110,12 +110,8 @@ func DeleteAllInstanceConfigAndAgent() {
 	s.DB.Exec("TRUNCATE TABLE agent_instance_config")
 }
 
-func AddInstanceConfigAndAgent(agentInstanceConfigMapList []entity.AgentInstanceConfig) {
-	s.DB.Create(&agentInstanceConfigMapList)
-}
-
-func ListAgentInstanceConfig() []entity.AgentInstanceConfig {
-	agentInstanceConfigs := make([]entity.AgentInstanceConfig, 0)
+func ListAgentInstanceConfig() []*entity.AgentInstanceConfig {
+	agentInstanceConfigs := make([]*entity.AgentInstanceConfig, 0)
 	s.DB.Find(&agentInstanceConfigs)
 	return agentInstanceConfigs
 }
