@@ -110,6 +110,7 @@ import {ElMessage} from "element-plus";
 import { VAceEditor } from 'vue3-ace-editor';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github';
+import yaml from "js-yaml";
 
 export default {
   name: "InstanceConfig",
@@ -182,6 +183,9 @@ export default {
             ElMessage.error("detail不能为空")
             return
           }
+          if(!this.checkConfigDetail(this.createPipelineConfig.detail)){
+            return
+          }
           console.log(this.createInstanceConfig)
           let data=await createInstanceConfig(this.createInstanceConfig.name,this.createInstanceConfig.version,this.createInstanceConfig.detail)
           messageShow(data, "新增成功")
@@ -228,6 +232,29 @@ export default {
       this.selectedRow.allAgentGroupList=allAgentGroupList
     },
 
+    someDoesNotHaveType(plugins) {
+      return plugins.some(item => !item.Type)
+    },
+    checkConfigDetail(detail) {
+      try {
+        const obj = yaml.load(detail);
+        console.log(obj);
+        if (!obj || !obj.inputs || !obj.flushers ||
+            this.someDoesNotHaveType(obj.inputs) ||
+            this.someDoesNotHaveType(obj.flushers) ||
+            obj.processors === null || obj.aggregators === null ||
+            (obj.processors && this.someDoesNotHaveType(obj.processors)) ||
+            (obj.aggregators && this.someDoesNotHaveType(obj.aggregators))) {
+          ElMessage.warning(`Config invalid`)
+          return false
+        }
+      } catch (e) {
+        ElMessage.warning(`${e.name} - ${e.reason}`)
+        return false
+      }
+      return true
+    },
+
     async closeAgentGroupDialog(){
       this.showAgentGroupDialog=false
       await this.initAllTable()
@@ -248,6 +275,9 @@ export default {
       }
       if(row.detail==null||row.detail.trim()===""){
         ElMessage.error("detail不能为空")
+        return
+      }
+      if(!this.checkConfigDetail(row.detail)){
         return
       }
       const data = await updateInstanceConfig(row.name, row.version, row.detail)

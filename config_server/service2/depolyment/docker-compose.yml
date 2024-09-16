@@ -23,11 +23,28 @@ services:
       - "9090:9090"
     environment:
       TZ: Asia/Shanghai
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - server
     depends_on:
       - mysql
 
+  config-server-ui:
+    build:
+      context: ${CONFIG_SERVER_UI}
+      dockerfile: Dockerfile
+    image: config-server-ui:nzh
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Asia/Shanghai
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - server
+
+# 通过下面的服务启动ilogtail agent的docker版本，并与config-server成功通信，具体配置流程见readme
   agent:
     build:
       context: ${AGENT}
