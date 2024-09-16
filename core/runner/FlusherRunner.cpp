@@ -98,7 +98,7 @@ void FlusherRunner::PushToHttpSink(SenderQueueItem* item, bool withLimit) {
 void FlusherRunner::Run() {
     LOG_INFO(sLogger, ("flusher runner", "started"));
     while (true) {
-        int32_t curTime = time(NULL);
+        auto curTime = chrono::system_clock::now();
 
         vector<SenderQueueItem*> items;
         SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());
@@ -121,11 +121,11 @@ void FlusherRunner::Run() {
         }
 
         for (auto itr = items.begin(); itr != items.end(); ++itr) {
-            int32_t waitTime = curTime - (*itr)->mEnqueTime;
+            auto waitTime = chrono::duration_cast<chrono::milliseconds>(curTime - (*itr)->mEnqueTime);
             LOG_DEBUG(sLogger,
                       ("got item from sender queue, item address",
                        *itr)("config-flusher-dst", QueueKeyManager::GetInstance()->GetName((*itr)->mQueueKey))(
-                          "wait time", ToString(waitTime))("try cnt", ToString((*itr)->mTryCnt)));
+                          "wait time", ToString(waitTime.count()) + "ms")("try cnt", ToString((*itr)->mTryCnt)));
 
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendFlowControl()) {
                 RateLimiter::FlowControl((*itr)->mRawSize, mSendLastTime, mSendLastByte, true);

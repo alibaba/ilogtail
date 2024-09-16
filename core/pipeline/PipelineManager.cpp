@@ -224,12 +224,12 @@ void PipelineManager::StopAllPipelines() {
         StreamLogManager::GetInstance()->Shutdown();
     }
 #endif
+    PrometheusInputRunner::GetInstance()->Stop();
 #if defined(__linux__) && !defined(__ANDROID__)
     ObserverManager::GetInstance()->HoldOn(true);
     ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
-    PrometheusInputRunner::GetInstance()->Stop();
 
     LogtailPlugin::GetInstance()->StopAll(true, true);
 

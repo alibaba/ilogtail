@@ -289,10 +289,11 @@ bool Pipeline::Init(PipelineConfig&& config) {
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
         if (isInputSupportAck) {
-            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(mContext.GetProcessQueueKey(), priority);
+            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(
+                mContext.GetProcessQueueKey(), priority, mContext);
         } else {
             ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
-                mContext.GetProcessQueueKey(), priority, 1024);
+                mContext.GetProcessQueueKey(), priority, 1024, mContext);
         }
 
 
