@@ -2843,8 +2843,9 @@ void PipelineUnittest::TestInProcessingCount() const {
     pipeline->mPluginID.store(0);
     pipeline->mProcessingCnt.store(0); // should be set in Init when is running
 
+    PipelineContext ctx;
     unique_ptr<BoundedProcessQueue> processQueue;
-    processQueue.reset(new BoundedProcessQueue(2, 2, 3, 0, 1, "test_config"));
+    processQueue.reset(new BoundedProcessQueue(2, 2, 3, 0, 1, ctx));
 
     vector<PipelineEventGroup> group;
     group.emplace_back(make_shared<SourceBuffer>());
