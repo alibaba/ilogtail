@@ -228,12 +228,36 @@ func (c *ComposeBooter) CopyCoreLogs() {
 		if err != nil {
 			logger.Error(context.Background(), "COPY_LOG_ALARM", "type", "main", "err", err)
 		}
+		// print the log content
+		file, err := os.OpenFile(config.LogDir+"/ilogtail.LOG", os.O_RDONLY, 0750)
+		if err != nil {
+			logger.Error(context.Background(), "OPEN_LOG_ALARM", "err", err)
+			return
+		}
+		defer file.Close()
+		buf := make([]byte, 1024)
+		n, _ := file.Read(buf)
+		fmt.Println(string(buf[:n]))
+		fmt.Println("========================================")
+		time.Sleep(5 * time.Second)
 		cmd = exec.Command("docker", "cp", c.logtailID+":/ilogtail/logtail_plugin.LOG", config.LogDir)
 		output, err = cmd.CombinedOutput()
 		logger.Debugf(context.Background(), "\n%s", string(output))
 		if err != nil {
 			logger.Error(context.Background(), "COPY_LOG_ALARM", "type", "plugin", "err", err)
 		}
+		// print the log content
+		file, err = os.OpenFile(config.LogDir+"/logtail_plugin.LOG", os.O_RDONLY, 0750)
+		if err != nil {
+			logger.Error(context.Background(), "OPEN_LOG_ALARM", "err", err)
+			return
+		}
+		defer file.Close()
+		buf = make([]byte, 1024)
+		n, _ = file.Read(buf)
+		fmt.Println(string(buf[:n]))
+		fmt.Println("========================================")
+		time.Sleep(5 * time.Second)
 	}
 }
 
