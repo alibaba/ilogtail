@@ -2841,7 +2841,7 @@ void PipelineUnittest::TestFlushBatch() const {
 void PipelineUnittest::TestInProcessingCount() const {
     auto pipeline = make_shared<Pipeline>();
     pipeline->mPluginID.store(0);
-    pipeline->mProcessingCnt.store(0); // should be set in Init when is running
+    pipeline->mProcessingCnt.store(0);
 
     PipelineContext ctx;
     unique_ptr<BoundedProcessQueue> processQueue;
