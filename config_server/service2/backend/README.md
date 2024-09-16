@@ -1,13 +1,13 @@
 # Config-server
 
-本项目针对https://github.com/alibaba/ilogtail/tree/main/config_server/protocol/v2中提到的Agent行为进行了V2版本的适配，基本实现了能力报告、心跳压缩、配置状态上报等功能；
+本项目针对https://github.com/alibaba/ilogtail/tree/main/config_server/protocol/v2 中提到的Agent行为进行了V2版本的适配，基本实现了能力报告、心跳压缩、配置状态上报等功能；
 并适配用户端实现了Config-server的前端页面Config-server-ui，项目见[README.md](../frontend/README.md)。
 
 ## 快速开始
 
 ### 启动Agent
 
-在ilogtail仓库https://github.com/alibaba/ilogtail下载latest版本，配置`ilogtail_config.json`（若不存在，请先创建），添加如下信息，其中`endpoint_list`为ConfigServer的集群地址，并启动Agent。
+在ilogtail仓库https://github.com/alibaba/ilogtail 下载latest版本，配置`ilogtail_config.json`（若不存在，请先创建），添加如下信息，其中`endpoint_list`为ConfigServer的集群地址，并启动Agent。
 若Agent以docker容器方式启动，则配置为`docker.internal.host:9090`。
 ```json
 {
@@ -53,7 +53,9 @@ go build -o ConfigServer ./cmd
 
 ### ConfigServer配置
 
-打开`service2/backend/cmd/config/prod`文件夹，编辑`serverConfig.json`（若不存在，请先创建），填入以下信息，其中`address`为应用程序运行的ip和端口；`capabilities`标识Server端拥有的能力，`responseFlags`实现了心跳压缩，详情见https://github.com/alibaba/ilogtail/tree/main/config_server/protocol/v2；若长时间没接收到某个Agent的心跳检测（超时上限为`timeLimit`），server端自动下线该Agent。
+打开`service2/backend/cmd/config/prod`文件夹，编辑`serverConfig.json`（若不存在，请先创建），
+填入以下信息，其中`address`为应用程序运行的ip和端口；`capabilities`标识Server端拥有的能力，`responseFlags`实现了心跳压缩，
+详情见https://github.com/alibaba/ilogtail/tree/main/config_server/protocol/v2 ；若长时间没接收到某个Agent的心跳检测（超时上限为`timeLimit`），server端自动下线该Agent。
 
 ```json
 {
