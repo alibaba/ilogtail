@@ -14,7 +14,7 @@ func CreateLogEvent(t time.Time, enableTimestampNano bool, fields map[string]str
 	for key, val := range fields {
 		cont := &protocol.LogEvent_Content{
 			Key:   key,
-			Value: val,
+			Value: []byte(val),
 		}
 		logEvent.Contents = append(logEvent.Contents, cont)
 	}
@@ -34,7 +34,7 @@ func CreateLogEventByArray(t time.Time, enableTimestampNano bool, columns []stri
 	for index := range columns {
 		cont := &protocol.LogEvent_Content{
 			Key:   columns[index],
-			Value: values[index],
+			Value: []byte(values[index]),
 		}
 		logEvent.Contents = append(logEvent.Contents, cont)
 	}
@@ -52,7 +52,7 @@ func CreateLogEventByRawLogV1(log *protocol.Log) (*protocol.LogEvent, error) {
 	for _, logC := range log.Contents {
 		cont := &protocol.LogEvent_Content{
 			Key:   logC.Key,
-			Value: logC.Value,
+			Value: []byte(logC.Value),
 		}
 		logEvent.Contents = append(logEvent.Contents, cont)
 	}
@@ -67,7 +67,7 @@ func CreateLogEventByRawLogV2(log *models.Log) (*protocol.LogEvent, error) {
 	for k, v := range log.Contents.Iterator() {
 		cont := &protocol.LogEvent_Content{
 			Key:   k,
-			Value: v.(string),
+			Value: []byte(v.(string)),
 		}
 		logEvent.Contents = append(logEvent.Contents, cont)
 	}
@@ -100,11 +100,15 @@ func CreatePipelineEventGroupV1(logEvents []*protocol.LogEvent, ctx map[string]i
 	var pipelineEventGroup protocol.PipelineEventGroup
 	pipelineEventGroup.Type = protocol.PipelineEventGroup_LOG
 	pipelineEventGroup.Logs = logEvents
-	if _, ok := ctx["tags"]; ok {
-		pipelineEventGroup.Tags = ctx["tags"].(map[string]string)
+	if tags, ok := ctx["tags"].(map[string]string); ok {
+		pipelineEventGroup.Tags = make(map[string][]byte, len(tags))
+		for k, v := range tags {
+			pipelineEventGroup.Tags[k] = []byte(v)
+		}
 	}
-	if _, ok := ctx["source"]; ok {
-		pipelineEventGroup.Metadata["source"] = ctx["source"].(string)
+	if source, ok := ctx["source"].(string); ok {
+		pipelineEventGroup.Metadata = make(map[string][]byte)
+		pipelineEventGroup.Metadata["source"] = []byte(source)
 	}
 	return &pipelineEventGroup, nil
 }
@@ -149,13 +153,13 @@ func CreatePipelineEventGroupV2(groupInfo *models.GroupInfo, events []models.Pip
 		}
 	}
 
-	pipelineEventGroup.Tags = make(map[string]string, groupInfo.Tags.Len())
+	pipelineEventGroup.Tags = make(map[string][]byte, groupInfo.Tags.Len())
 	for k, v := range groupInfo.Tags.Iterator() {
-		pipelineEventGroup.Tags[k] = v
+		pipelineEventGroup.Tags[k] = []byte(v)
 	}
-	pipelineEventGroup.Metadata = make(map[string]string, groupInfo.Metadata.Len())
+	pipelineEventGroup.Metadata = make(map[string][]byte, groupInfo.Metadata.Len())
 	for k, v := range groupInfo.Metadata.Iterator() {
-		pipelineEventGroup.Metadata[k] = v
+		pipelineEventGroup.Metadata[k] = []byte(v)
 	}
 	return &pipelineEventGroup, nil
 }
