@@ -45,18 +45,18 @@ services:
       - server
 
 # 通过下面的服务启动ilogtail agent的docker版本，并与config-server成功通信，具体配置流程见readme
-  agent:
-    build:
-      context: ${AGENT}
-      dockerfile: Dockerfile-agent
-    image: ilogtail:nzh
-    environment:
-      CONFIG_SERVER_ADDRESSES: '["config-server:9090"]'
-      TZ: Asia/Shanghai
-    deploy:
-      replicas: 3
-    networks:
-      - server
+#  agent:
+#    build:
+#      context: ${AGENT}
+#      dockerfile: Dockerfile-agent
+#    image: ilogtail:nzh
+#    environment:
+#      CONFIG_SERVER_ADDRESSES: '["config-server:9090"]'
+#      TZ: Asia/Shanghai
+#    deploy:
+#      replicas: 3
+#    networks:
+#      - server
 
 #替换成你自己的网络
 networks:
