@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
@@ -236,8 +237,22 @@ func (c *ComposeBooter) CopyCoreLogs() {
 		}
 		defer file.Close()
 		buf := make([]byte, 1024)
-		n, _ := file.Read(buf)
-		fmt.Println(string(buf[:n]))
+		for {
+			// 从文件中读取内容到缓冲区
+			n, err := file.Read(buf)
+			if err != nil && err != io.EOF {
+				fmt.Println("Error reading file:", err)
+				return
+			}
+
+			// 如果读取到文件结束，则退出循环
+			if n == 0 {
+				break
+			}
+
+			// 打印读取到的内容
+			fmt.Print(string(buf[:n]))
+		}
 		fmt.Println("========================================")
 		time.Sleep(5 * time.Second)
 		cmd = exec.Command("docker", "cp", c.logtailID+":/ilogtail/logtail_plugin.LOG", config.LogDir)
@@ -254,8 +269,22 @@ func (c *ComposeBooter) CopyCoreLogs() {
 		}
 		defer file.Close()
 		buf = make([]byte, 1024)
-		n, _ = file.Read(buf)
-		fmt.Println(string(buf[:n]))
+		for {
+			// 从文件中读取内容到缓冲区
+			n, err := file.Read(buf)
+			if err != nil && err != io.EOF {
+				fmt.Println("Error reading file:", err)
+				return
+			}
+
+			// 如果读取到文件结束，则退出循环
+			if n == 0 {
+				break
+			}
+
+			// 打印读取到的内容
+			fmt.Print(string(buf[:n]))
+		}
 		fmt.Println("========================================")
 		time.Sleep(5 * time.Second)
 	}
