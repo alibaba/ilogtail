@@ -19,7 +19,7 @@
 #include "StringTools.h"
 #include "common/JsonUtil.h"
 #include "models/PipelineEventGroup.h"
-#include "processor/inner/ProcessorPromParseMetricNative.h"
+#include "plugin/processor/inner/ProcessorPromParseMetricNative.h"
 #include "prometheus/Constants.h"
 #include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
@@ -75,7 +75,7 @@ void ProcessorParsePrometheusMetricUnittest::TestProcess() {
 
     // make events
     auto parser = TextParser();
-    auto splitByLines = [](const std::string& content, time_t timestamp) {
+    auto splitByLines = [](const std::string& content) {
         PipelineEventGroup eGroup(std::make_shared<SourceBuffer>());
 
         for (const auto& line : SplitString(content, "\r\n")) {
@@ -85,7 +85,6 @@ void ProcessorParsePrometheusMetricUnittest::TestProcess() {
             }
             auto* MetricEvent = eGroup.AddLogEvent();
             MetricEvent->SetContent(prometheus::PROMETHEUS, newLine);
-            MetricEvent->SetTimestamp(timestamp);
         }
 
         return eGroup;
@@ -103,8 +102,7 @@ void ProcessorParsePrometheusMetricUnittest::TestProcess() {
                 test_metric8{k1="v1", k3="v2", } 9.9410452992e+10 1715829785083
 
                 # end
-                    )""",
-                                   0);
+                    )""");
     // set timestamp in nanoseconds
     auto timestampMilliSec = GetCurrentTimeInMilliSeconds();
     eventGroup.SetMetadata(EventGroupMetaKey::PROMETHEUS_SCRAPE_TIMESTAMP_MILLISEC, ToString(timestampMilliSec));
@@ -125,7 +123,8 @@ void ProcessorParsePrometheusMetricUnittest::TestProcess() {
     APSARA_TEST_EQUAL("test_metric8", eventGroup.GetEvents().at(7).Cast<MetricEvent>().GetName());
 
     // judge timestamp
-    APSARA_TEST_EQUAL(timestampMilliSec / 1000, eventGroup.GetEvents().at(0).Cast<MetricEvent>().GetTimestamp());
+    APSARA_TEST_EQUAL(time_t(timestampMilliSec / 1000),
+                      eventGroup.GetEvents().at(0).Cast<MetricEvent>().GetTimestamp());
 }
 
 UNIT_TEST_CASE(ProcessorParsePrometheusMetricUnittest, TestInit)

@@ -23,11 +23,12 @@
 #include "common/http/HttpResponse.h"
 #include "common/timer/Timer.h"
 #include "models/PipelineEventGroup.h"
+#include "prometheus/labels/TextParser.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/QueueKey.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
-#include "queue/ProcessQueueItem.h"
+#include "pipeline/queue/ProcessQueueItem.h"
 #endif
 
 namespace logtail {
@@ -43,8 +44,6 @@ public:
     ScrapeScheduler(const ScrapeScheduler&) = default;
     ~ScrapeScheduler() override = default;
 
-    bool operator<(const ScrapeScheduler& other) const;
-
     void OnMetricResult(const HttpResponse&, uint64_t timestampMilliSec);
     void SetTimer(std::shared_ptr<Timer> timer);
 
@@ -53,8 +52,6 @@ public:
     void ScheduleNext() override;
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
-
-    uint64_t GetRandSleep() const;
 
 private:
     void PushEventGroup(PipelineEventGroup&&);
@@ -71,6 +68,8 @@ private:
     int32_t mPort;
     std::string mInstance;
     Labels mLabels;
+
+    std::unique_ptr<TextParser> mParser;
 
     QueueKey mQueueKey;
     size_t mInputIndex;

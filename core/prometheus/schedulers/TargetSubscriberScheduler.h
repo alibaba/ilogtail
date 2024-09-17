@@ -27,7 +27,7 @@
 #include "prometheus/schedulers/BaseScheduler.h"
 #include "prometheus/schedulers/ScrapeConfig.h"
 #include "prometheus/schedulers/ScrapeScheduler.h"
-#include "queue/QueueKey.h"
+#include "pipeline/queue/QueueKey.h"
 
 
 namespace logtail {
@@ -42,6 +42,7 @@ public:
 
     void OnSubscription(const HttpResponse&, uint64_t);
     void SetTimer(std::shared_ptr<Timer> timer);
+    void SubscribeOnce(std::chrono::steady_clock::time_point execTime);
 
     std::string GetId() const;
 
