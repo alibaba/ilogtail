@@ -158,7 +158,9 @@ func (p *checkPointManager) keyMatch(key []byte) bool {
 	// configName in checkpoint is real config Name, while configName in LogtailConfig has suffix '/1' or '/2'
 	// since checkpoint is only used in input, so configName can only be 'realConfigName/1', meaning go pipeline with input
 	configName += "/1"
-	_, existFlag := LogtailConfig.Load(configName)
+	LogtailConfigLock.RLock()
+	_, existFlag := LogtailConfig[configName]
+	LogtailConfigLock.RUnlock()
 	return existFlag
 }
 

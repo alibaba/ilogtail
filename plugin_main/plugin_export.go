@@ -161,10 +161,12 @@ func UnloadConfig(project string, logstore string, configName string) int {
 
 //export ProcessRawLog
 func ProcessRawLog(configName string, rawLog []byte, packID string, topic string) int {
-	plugin, ok := pluginmanager.GetLogtailConfig(configName)
-	if !ok {
+	pluginmanager.LogtailConfigLock.RLock()
+	plugin, flag := pluginmanager.LogtailConfig[configName]
+	if !flag {
 		return -1
 	}
+	pluginmanager.LogtailConfigLock.RUnlock()
 
 	// rawLog will be copied when it is converted to string, packID and topic
 	// are unused now, so deep copy is unnecessary.
@@ -173,28 +175,34 @@ func ProcessRawLog(configName string, rawLog []byte, packID string, topic string
 
 //export ProcessRawLogV2
 func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic string, tags []byte) int {
-	config, ok := pluginmanager.GetLogtailConfig(configName)
-	if !ok {
+	pluginmanager.LogtailConfigLock.RLock()
+	config, flag := pluginmanager.LogtailConfig[configName]
+	if !flag {
 		return -1
 	}
+	pluginmanager.LogtailConfigLock.RUnlock()
 	return config.ProcessRawLogV2(rawLog, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
 }
 
 //export ProcessLog
 func ProcessLog(configName string, logBytes []byte, packID string, topic string, tags []byte) int {
-	config, ok := pluginmanager.GetLogtailConfig(configName)
-	if !ok {
+	pluginmanager.LogtailConfigLock.RLock()
+	config, flag := pluginmanager.LogtailConfig[configName]
+	if !flag {
 		return -1
 	}
+	pluginmanager.LogtailConfigLock.RUnlock()
 	return config.ProcessLog(logBytes, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
 }
 
 //export ProcessLogGroup
 func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
-	config, ok := pluginmanager.GetLogtailConfig(configName)
-	if !ok {
+	pluginmanager.LogtailConfigLock.RLock()
+	config, flag := pluginmanager.LogtailConfig[configName]
+	if !flag {
 		return -1
 	}
+	pluginmanager.LogtailConfigLock.RUnlock()
 	return config.ProcessLogGroup(logBytes, util.StringDeepCopy(packID))
 }
 

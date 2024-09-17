@@ -62,7 +62,7 @@ func (s *managerTestSuite) AfterTest(suiteName, testName string) {
 /*
 func (s *managerTestSuite) TestResumeHoldOn() {
 	for i := 0; i < 10; i++ {
-		s.NoError(LoadMockConfig(), "got err when logad config")
+		s.NoError(LoadAndStartMockConfig(), "got err when logad config")
 		s.NoError(Resume(), "got err when resume")
 		time.Sleep(time.Millisecond * time.Duration(10))
 		s.NoError(HoldOn(false), "got err when hold on")
@@ -71,15 +71,13 @@ func (s *managerTestSuite) TestResumeHoldOn() {
 */
 
 func (s *managerTestSuite) TestPluginManager() {
-	s.NoError(LoadMockConfig(), "got err when logad config")
-	s.NoError(Start("test_config"), "got err when resume")
+	s.NoError(LoadAndStartMockConfig(), "got err when logad config")
 	time.Sleep(time.Millisecond * time.Duration(10))
 	s.NoError(Stop("test_config", false), "got err when hold on")
 	for i := 0; i < 5; i++ {
-		s.NoError(LoadMockConfig(), "got err when logad config")
-		s.NoError(Start("test_config"), "got err when resume")
+		s.NoError(LoadAndStartMockConfig(), "got err when logad config")
 		time.Sleep(time.Millisecond * time.Duration(1500))
-		config, ok := GetLogtailConfig("test_config")
+		config, ok := LogtailConfig["test_config"]
 		s.True(ok)
 		s.Equal(2, len(GetConfigFlushers(config.PluginRunner)))
 		c, ok := GetConfigFlushers(config.PluginRunner)[1].(*checker.FlusherChecker)
@@ -99,7 +97,7 @@ func GetTestConfig(configName string) string {
 }
 
 // project, logstore, config, configJsonStr
-func LoadMockConfig(args ...string) error {
+func LoadAndStartMockConfig(args ...string) error {
 	project := "test_prj"
 	if len(args) > 0 {
 		project = args[0]
@@ -174,6 +172,5 @@ func LoadMockConfig(args ...string) error {
 	if err != nil {
 		return err
 	}
-	LogtailConfig.Store(configName, ToStartLogtailConfig)
-	return nil
+	return Start(configName)
 }

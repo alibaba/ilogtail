@@ -20,7 +20,6 @@ package pluginmanager
 import (
 	"context"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -49,7 +48,9 @@ type logstoreConfigTestSuite struct {
 
 func (s *logstoreConfigTestSuite) BeforeTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test start ========================", suiteName, testName)
-	LogtailConfig = sync.Map{}
+	LogtailConfigLock.Lock()
+	LogtailConfig = make(map[string]*LogstoreConfig)
+	LogtailConfigLock.Unlock()
 }
 
 func (s *logstoreConfigTestSuite) AfterTest(suiteName, testName string) {
@@ -98,11 +99,10 @@ func (s *logstoreConfigTestSuite) TestPluginGlobalConfig() {
 			}
 		]
 	}`
-	s.NoError(LoadMockConfig("project", "logstore", "1", str), "load config fail")
-	s.Equal(GetLogtailConfigSize(), 1)
-	config, ok := GetLogtailConfig("1")
-	s.True(ok)
-	s.Equal(config.ConfigName, "1")
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "1", str), "load config fail")
+	s.Equal(len(LogtailConfig), 1)
+	s.Equal(LogtailConfig["1"].ConfigName, "1")
+	config := LogtailConfig["1"]
 	s.Equal(config.ProjectName, "project")
 	s.Equal(config.LogstoreName, "logstore")
 	s.Equal(config.LogstoreKey, int64(666))
@@ -122,22 +122,15 @@ func (s *logstoreConfigTestSuite) TestPluginGlobalConfig() {
 }
 
 func (s *logstoreConfigTestSuite) TestLoadConfig() {
-	s.NoError(LoadMockConfig("project", "logstore", "1"))
-	s.NoError(LoadMockConfig("project", "logstore", "3"))
-	s.NoError(LoadMockConfig("project", "logstore", "2"))
-	s.Equal(GetLogtailConfigSize(), 3)
-	config, exist := GetLogtailConfig("1")
-	s.True(exist)
-	s.Equal(config.ConfigName, "1")
-	config, exist = GetLogtailConfig("2")
-	s.True(exist)
-	s.Equal(config.ConfigName, "2")
-	config, exist = GetLogtailConfig("3")
-	s.True(exist)
-	s.Equal(config.ConfigName, "3")
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "1"))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "3"))
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "2"))
+	s.Equal(len(LogtailConfig), 3)
+	s.Equal(LogtailConfig["1"].ConfigName, "1")
+	s.Equal(LogtailConfig["2"].ConfigName, "2")
+	s.Equal(LogtailConfig["3"].ConfigName, "3")
 	for i := 0; i < 3; i++ {
-		config, exist := GetLogtailConfig(strconv.Itoa(i + 1))
-		s.True(exist)
+		config := LogtailConfig[strconv.Itoa(i+1)]
 		s.Equal(config.ProjectName, "project")
 		s.Equal(config.LogstoreName, "logstore")
 		s.Equal(config.LogstoreKey, int64(666))
@@ -249,10 +242,9 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 	}
 `
 
-	s.NoError(LoadMockConfig("project", "logstore", "test", jsonStr))
-	s.Equal(GetLogtailConfigSize(), 1)
-	config, ok := GetLogtailConfig("test")
-	s.True(ok)
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "test", jsonStr))
+	s.Equal(len(LogtailConfig), 1)
+	config := LogtailConfig["test"]
 	s.Equal(config.ProjectName, "project")
 	s.Equal(config.LogstoreName, "logstore")
 	s.Equal(config.ConfigName, "test")
@@ -267,7 +259,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 	s.Equal(config.GlobalConfig, &global_config.LogtailGlobalConfig)
 
 	// check plugin inner info
-	_, ok = config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
+	_, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
 	s.True(ok)
 	_, ok = config.PluginRunner.(*pluginv1Runner).ExtensionPlugins["ext_basicauth/basicauth_user1"].(*basicauth.ExtensionBasicAuth)
 	s.True(ok)
@@ -337,10 +329,9 @@ func (s *logstoreConfigTestSuite) TestGetExtension() {
 	}
 `
 
-	s.NoError(LoadMockConfig("project", "logstore", "test", jsonStr))
-	s.Equal(GetLogtailConfigSize(), 1)
-	config, ok := GetLogtailConfig("test")
-	s.True(ok)
+	s.NoError(LoadAndStartMockConfig("project", "logstore", "test", jsonStr))
+	s.Equal(len(LogtailConfig), 1)
+	config := LogtailConfig["test"]
 	s.Equal(config.ProjectName, "project")
 	s.Equal(config.LogstoreName, "logstore")
 	s.Equal(config.ConfigName, "test")
@@ -355,7 +346,7 @@ func (s *logstoreConfigTestSuite) TestGetExtension() {
 	s.Equal(config.GlobalConfig, &global_config.LogtailGlobalConfig)
 
 	// check plugin inner info
-	_, ok = config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
+	_, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
 	s.True(ok)
 	_, ok = config.PluginRunner.(*pluginv1Runner).ExtensionPlugins["ext_basicauth/basicauth_user1"].(*basicauth.ExtensionBasicAuth)
 	s.True(ok)

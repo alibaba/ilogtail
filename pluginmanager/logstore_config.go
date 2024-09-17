@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	"github.com/alibaba/ilogtail/pkg/config"
@@ -352,6 +351,21 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 	contextImp.logstoreC = logstoreC
 
+	// Check if the config has been disabled (keep disabled if config detail is unchanged).
+	DisabledLogtailConfigLock.Lock()
+	if disabledConfig, hasDisabled := DisabledLogtailConfig[configName]; hasDisabled {
+		if disabledConfig.configDetailHash == logstoreC.configDetailHash {
+			DisabledLogtailConfigLock.Unlock()
+			return nil, fmt.Errorf("failed to create config because timeout "+
+				"stop has happened on it: %v", configName)
+		}
+		delete(DisabledLogtailConfig, configName)
+		DisabledLogtailConfigLock.Unlock()
+		logger.Info(contextImp.GetRuntimeContext(), "retry timeout config because config detail has changed")
+	} else {
+		DisabledLogtailConfigLock.Unlock()
+	}
+
 	var plugins = make(map[string]interface{})
 	if err = json.Unmarshal([]byte(jsonStr), &plugins); err != nil {
 		return nil, err
@@ -655,7 +669,9 @@ func initPluginRunner(lc *LogstoreConfig) (PluginRunner, error) {
 func LoadLogstoreConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) error {
 	if len(jsonStr) == 0 {
 		logger.Info(context.Background(), "delete config", configName, "logstore", logstore)
-		LogtailConfig.Delete(configName)
+		LogtailConfigLock.Lock()
+		delete(LogtailConfig, configName)
+		LogtailConfigLock.Unlock()
 		return nil
 	}
 	logger.Info(context.Background(), "load config", configName, "logstore", logstore)
@@ -663,7 +679,11 @@ func LoadLogstoreConfig(project string, logstore string, configName string, logs
 	if err != nil {
 		return err
 	}
-	ToStartLogtailConfig = logstoreC
+	if logstoreC.PluginRunner.IsWithInputPlugin() {
+		ToStartLogtailConfigWithInput = logstoreC
+	} else {
+		ToStartLogtailConfigWithoutInput = logstoreC
+	}
 	return nil
 }
 
@@ -856,6 +876,8 @@ func (lc *LogstoreConfig) genNodeID(lastOne bool) (string, string) {
 }
 
 func init() {
-	LogtailConfig = sync.Map{}
+	LogtailConfigLock.Lock()
+	LogtailConfig = make(map[string]*LogstoreConfig)
+	LogtailConfigLock.Unlock()
 	LastUnsendBuffer = make(map[string]PluginRunner)
 }

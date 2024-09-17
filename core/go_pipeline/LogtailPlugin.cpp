@@ -142,12 +142,12 @@ void LogtailPlugin::Stop(const std::string& configName, bool removingFlag) {
 
 void LogtailPlugin::Start(const std::string& configName) {
     if (mPluginValid && mStartFun != NULL) {
-        LOG_INFO(sLogger, ("Go pipelines start", "starts"));
+        LOG_INFO(sLogger, ("Go pipelines start", "starts")("config name", configName));
         GoString goConfigName;
         goConfigName.n = configName.size();
         goConfigName.p = configName.c_str();
         mStartFun(goConfigName);
-        LOG_INFO(sLogger, ("Go pipelines start", "succeeded"));
+        LOG_INFO(sLogger, ("Go pipelines start", "succeeded")("config name", configName));
     }
 }
 

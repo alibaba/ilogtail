@@ -17,12 +17,10 @@ import (
 	"context"
 
 	"github.com/alibaba/ilogtail/test/engine/setup"
-	"github.com/alibaba/ilogtail/test/engine/setup/dockercompose"
 )
 
 func DeleteContainers(ctx context.Context) (context.Context, error) {
 	if setup.Env.GetType() == "docker-compose" {
-		dockercompose.CopyCoreLogs()
 		// Delete containers
 		dockerComposeEnv, ok := setup.Env.(*setup.DockerComposeEnv)
 		if !ok {

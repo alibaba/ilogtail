@@ -103,11 +103,11 @@ func recordDeleteContainers(logGroup *protocol.LogGroup, containerIDs map[string
 		projectSet := make(map[string]struct{})
 
 		// get project list
-		LogtailConfig.Range(func(key, value interface{}) bool {
-			logstoreConfig := value.(*LogstoreConfig)
+		LogtailConfigLock.RLock()
+		for _, logstoreConfig := range LogtailConfig {
 			projectSet[logstoreConfig.ProjectName] = struct{}{}
-			return true
-		})
+		}
+		LogtailConfigLock.RUnlock()
 		keys := make([]string, 0, len(projectSet))
 		for k := range projectSet {
 			if len(k) > 0 {
@@ -130,8 +130,9 @@ func refreshEnvAndLabel() {
 	envSet = make(map[string]struct{})
 	containerLabelSet = make(map[string]struct{})
 	k8sLabelSet = make(map[string]struct{})
-	LogtailConfig.Range(func(key, value interface{}) bool {
-		logstoreConfig := value.(*LogstoreConfig)
+
+	LogtailConfigLock.RLock()
+	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.CollectingContainersMeta {
 			for key := range logstoreConfig.EnvSet {
 				envSet[key] = struct{}{}
@@ -143,8 +144,8 @@ func refreshEnvAndLabel() {
 				k8sLabelSet[key] = struct{}{}
 			}
 		}
-		return true
-	})
+	}
+	LogtailConfigLock.RUnlock()
 	logger.Info(context.Background(), "envSet", envSet, "containerLabelSet", containerLabelSet, "k8sLabelSet", k8sLabelSet)
 }
 
@@ -153,8 +154,8 @@ func compareEnvAndLabel() (diffEnvSet, diffContainerLabelSet, diffK8sLabelSet ma
 	diffEnvSet = make(map[string]struct{})
 	diffContainerLabelSet = make(map[string]struct{})
 	diffK8sLabelSet = make(map[string]struct{})
-	LogtailConfig.Range(func(key, value interface{}) bool {
-		logstoreConfig := value.(*LogstoreConfig)
+	LogtailConfigLock.RLock()
+	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.CollectingContainersMeta {
 			for key := range logstoreConfig.EnvSet {
 				if _, ok := envSet[key]; !ok {
@@ -175,8 +176,8 @@ func compareEnvAndLabel() (diffEnvSet, diffContainerLabelSet, diffK8sLabelSet ma
 				}
 			}
 		}
-		return true
-	})
+	}
+	LogtailConfigLock.RUnlock()
 	return diffEnvSet, diffContainerLabelSet, diffK8sLabelSet
 }
 
@@ -184,11 +185,11 @@ func getContainersToRecord(containerIDs map[string]struct{}) (map[string]struct{
 	projectSet := make(map[string]struct{})
 	recordedContainerIds := make(map[string]struct{})
 
-	LogtailConfig.Range(func(key, value interface{}) bool {
-		logstoreConfig := value.(*LogstoreConfig)
+	LogtailConfigLock.RLock()
+	for _, logstoreConfig := range LogtailConfig {
 		projectSet[logstoreConfig.ProjectName] = struct{}{}
-		return true
-	})
+	}
+	LogtailConfigLock.RUnlock()
 	keys := make([]string, 0, len(projectSet))
 	for k := range projectSet {
 		if len(k) > 0 {
@@ -235,11 +236,11 @@ func compareEnvAndLabelAndRecordContainer() []*helper.ContainerDetail {
 
 	if len(diffEnvSet) != 0 || len(diffContainerLabelSet) != 0 || len(diffK8sLabelSet) != 0 {
 		projectSet := make(map[string]struct{})
-		LogtailConfig.Range(func(key, value interface{}) bool {
-			logstoreConfig := value.(*LogstoreConfig)
+		LogtailConfigLock.RLock()
+		for _, logstoreConfig := range LogtailConfig {
 			projectSet[logstoreConfig.ProjectName] = struct{}{}
-			return true
-		})
+		}
+		LogtailConfigLock.RUnlock()
 		keys := make([]string, 0, len(projectSet))
 		for k := range projectSet {
 			if len(k) > 0 {
@@ -278,13 +279,13 @@ func compareEnvAndLabelAndRecordContainer() []*helper.ContainerDetail {
 
 func isCollectContainers() bool {
 	found := false
-	LogtailConfig.Range(func(key, value interface{}) bool {
-		logstoreConfig := value.(*LogstoreConfig)
+	LogtailConfigLock.RLock()
+	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.CollectingContainersMeta {
 			found = true
 			return false // exit range iteration
 		}
-		return true
-	})
+	}
+	LogtailConfigLock.RUnlock()
 	return found
 }

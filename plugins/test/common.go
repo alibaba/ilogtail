@@ -49,17 +49,18 @@ func GetTestConfig(configName string) string {
 }
 
 func LoadDefaultConfig() *pluginmanager.LogstoreConfig {
-	return LoadMockConfig("project", "logstore", "configName", GetTestConfig("config"))
+	return LoadAndStartMockConfig("project", "logstore", "configName", GetTestConfig("config"))
 }
 
 // project, logstore, config, jsonStr
-func LoadMockConfig(project, logstore, configName, jsonStr string) *pluginmanager.LogstoreConfig {
+func LoadAndStartMockConfig(project, logstore, configName, jsonStr string) *pluginmanager.LogstoreConfig {
 	err := pluginmanager.LoadLogstoreConfig(project, logstore, configName, 666, jsonStr)
 	if err != nil {
 		panic(err)
 	}
-	object, _ := pluginmanager.LogtailConfig.Load(configName)
-	return object.(*pluginmanager.LogstoreConfig)
+	pluginmanager.Start(configName)
+	object, _ := pluginmanager.LogtailConfig[configName]
+	return object
 }
 
 func PluginStart() error {
