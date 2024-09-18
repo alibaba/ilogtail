@@ -90,9 +90,9 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
                 }
                 InstanceConfig config(configName, std::move(detail), dir.string());
                 diff.mAdded.push_back(std::move(config));
-                LOG_INFO(
-                    sLogger,
-                    ("new config found and passed topology check", "prepare to build pipeline")("config", configName));
+                LOG_INFO(sLogger,
+                         ("new config found and passed topology check", "prepare to load instanceConfig")("config",
+                                                                                                          configName));
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
                 mFileInfoMap[filepath] = make_pair(size, mTime);
@@ -105,7 +105,7 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
                         diff.mRemoved.push_back(configName);
                         LOG_INFO(sLogger,
                                  ("existing valid config modified and disabled",
-                                  "prepare to stop current running pipeline")("config", configName));
+                                  "prepare to stop current running instanceConfig")("config", configName));
                     } else {
                         LOG_INFO(sLogger,
                                  ("existing invalid config modified and disabled", "skip current object")("config",
@@ -119,13 +119,13 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
                     diff.mAdded.push_back(std::move(config));
                     LOG_INFO(sLogger,
                              ("existing invalid config modified and passed topology check",
-                              "prepare to build pipeline")("config", configName));
+                              "prepare to load instanceConfig")("config", configName));
                 } else if (*detail != p->GetConfig()) {
                     InstanceConfig config(configName, std::move(detail), dir.string());
                     diff.mModified.push_back(std::move(config));
                     LOG_INFO(sLogger,
                              ("existing valid config modified and passed topology check",
-                              "prepare to rebuild pipeline")("config", configName));
+                              "prepare to reload instanceConfig")("config", configName));
                 } else {
                     LOG_DEBUG(sLogger,
                               ("existing valid config file modified, but no change found", "skip current object"));
@@ -138,8 +138,9 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
     for (const auto& name : mInstanceConfigManager->GetAllConfigNames()) {
         if (configSet.find(name) == configSet.end()) {
             diff.mRemoved.push_back(name);
-            LOG_INFO(sLogger,
-                     ("existing valid config is removed", "prepare to stop current running pipeline")("config", name));
+            LOG_INFO(
+                sLogger,
+                ("existing valid config is removed", "prepare to stop current running instanceConfig")("config", name));
         }
     }
     std::vector<std::string> keysToRemove;
@@ -155,20 +156,13 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
 
     if (!diff.IsEmpty()) {
         LOG_INFO(sLogger,
-                 ("config files scan done", "got updates, begin to update pipelines")("added", diff.mAdded.size())(
-                     "modified", diff.mModified.size())("removed", diff.mRemoved.size()));
+                 ("config files scan done", "got updates, begin to update instanceConfigs")(
+                     "added", diff.mAdded.size())("modified", diff.mModified.size())("removed", diff.mRemoved.size()));
     } else {
         LOG_DEBUG(sLogger, ("config files scan done", "no update"));
     }
 
     return diff;
-}
-
-void InstanceConfigWatcher::AddLocalSource(const string& dir, mutex* mux) {
-    mLocalSourceDir.emplace_back(dir);
-    if (mux != nullptr) {
-        mDirMutexMap[dir] = mux;
-    }
 }
 
 void InstanceConfigWatcher::AddSource(const string& dir, mutex* mux) {

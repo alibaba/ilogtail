@@ -259,7 +259,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
                     ("failed to create dir for local instanceconfig",
                      "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
     }
-    InstanceConfigWatcher::GetInstance()->AddLocalSource(localConfigPath.string());
+    InstanceConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     InstanceConfigDiff instanceConfigDiff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
     if (!instanceConfigDiff.IsEmpty()) {
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);

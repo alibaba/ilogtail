@@ -43,7 +43,6 @@ public:
 
     InstanceConfigDiff CheckConfigDiff();
     void AddSource(const std::string& dir, std::mutex* mux = nullptr);
-    void AddLocalSource(const std::string& dir, std::mutex* mux = nullptr);
     // for ut
     void SetInstanceConfigManager(const InstanceConfigManager* m) { mInstanceConfigManager = m; }
     void ClearEnvironment();
