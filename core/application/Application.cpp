@@ -241,7 +241,8 @@ void Application::Start() { // GCOVR_EXCL_START
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
-    InitRemoteConfigProviders();
+    auto remoteConfigProviders = GetRemoteConfigProviders();
+    InitRemoteConfigProviders(remoteConfigProviders);
 #endif
 
     LogtailAlarm::GetInstance()->Init();

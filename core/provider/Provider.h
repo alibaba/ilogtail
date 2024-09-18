@@ -27,11 +27,11 @@ namespace logtail {
 // GetRemoteConfigProviders returns a map of remote config providers.
 // The key is the filepath that the provider will use, and the value is the provider instance.
 // It currently returns two providers: LegacyCommonConfigProvider and CommonConfigProvider.
-std::map<std::string, ConfigProvider*> GetRemoteConfigProviders();
+std::vector<std::pair<std::string, ConfigProvider*>> GetRemoteConfigProviders() ;
 
 // InitRemoteConfigProviders initializes the remote config providers.
 // It currently initializes the LegacyCommonConfigProvider and CommonConfigProvider.
-void InitRemoteConfigProviders();
+void InitRemoteConfigProviders(const std::vector<std::pair<std::string, ConfigProvider*>>& providers)
 
 // GetProfileSender returns the ProfileSender instance.
 ProfileSender* GetProfileSender();

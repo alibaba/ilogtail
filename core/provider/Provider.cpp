@@ -22,16 +22,15 @@
 namespace logtail {
 
 
-std::map<std::string, ConfigProvider*> GetRemoteConfigProviders() {
-    std::map<std::string, ConfigProvider*> providers;
-    providers.insert(std::make_pair("common", LegacyCommonConfigProvider::GetInstance()));
-    providers.insert(std::make_pair("common_v2", CommonConfigProvider::GetInstance()));
+std::vector<std::pair<std::string, ConfigProvider*>> GetRemoteConfigProviders() {
+    std::vector<std::pair<std::string, ConfigProvider*>> providers;
+    providers.push_back(std::make_pair("common", LegacyCommonConfigProvider::GetInstance()));
+    providers.push_back(std::make_pair("common_v2", CommonConfigProvider::GetInstance()));
     return providers;
 }
 
-void InitRemoteConfigProviders() {
-    auto providers = GetRemoteConfigProviders();
-    for (auto& configProvider : providers) {
+void InitRemoteConfigProviders(const std::vector<std::pair<std::string, ConfigProvider*>>& providers) {
+    for (const auto& configProvider : providers) {
         configProvider.second->Init(configProvider.first);
     }
 }
