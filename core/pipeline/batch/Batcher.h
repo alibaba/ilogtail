@@ -114,7 +114,7 @@ public:
         mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUP_SIZE_BYTES);
         mOutEventsCnt = mMetricsRecordRef.CreateCounter(METRIC_OUT_EVENTS_CNT);
         mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_TOTAL_DELAY_MS);
-        mEventBatchItemsCnt = mMetricsRecordRef.CreateIntGauge("buffers_cnt");
+        mEventBatchItemsCnt = mMetricsRecordRef.CreateIntGauge("event_batches_cnt");
         mBufferedGroupsCnt = mMetricsRecordRef.CreateIntGauge("buffered_groups_cnt");
         mBufferedEventsCnt = mMetricsRecordRef.CreateIntGauge("buffered_events_cnt");
         mBufferedDataSizeByte = mMetricsRecordRef.CreateIntGauge("buffered_data_size_bytes");
