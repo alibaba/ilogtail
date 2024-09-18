@@ -20,28 +20,64 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
                                  uint32_t timeout,
                                  uint32_t maxTryCnt,
                                  bool followRedirects,
-                                 std::shared_ptr<PromFuture> future)
+                                 std::shared_ptr<PromFuture> future,
+                                 std::shared_ptr<ScrapeConfig> scrapeConfig)
     : AsynHttpRequest(method, httpsFlag, host, port, url, query, header, body, timeout, maxTryCnt),
       mFuture(std::move(future)),
-      mFollowRedirects(followRedirects) {
+      mFollowRedirects(followRedirects),
+      mScrapeConfig(std::move(scrapeConfig)) {
 }
 
-void PromHttpRequest::SetAdditionalOptions(CURL* curl) const {
+void SetAdditionalOptions(CURL* curl,
+                          bool followRedirects,
+                          const std::string& acceptEncoding,
+                          const std::string& caInfo,
+                          const std::string& certPath,
+                          const std::string& keyPath,
+                          uint64_t minVersion,
+                          bool insecureSkip,
+                          const std::string& proxyURL,
+                          const std::string& noProxy) {
     if (curl) {
         // follow redirect
-        if (mFollowRedirects) {
+        if (followRedirects) {
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
             curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
         }
-        // gzip
-        // curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
-        // tls
-        // 设置 CA 证书
-        // curl_easy_setopt(curl, CURLOPT_CAINFO, "/path/to/cacert.pem");
 
-        // // 可能需要证书
-        // curl_easy_setopt(curl, CURLOPT_SSLCERT, "/path/to/client-cert.pem");
-        // curl_easy_setopt(curl, CURLOPT_SSLCERTPASSWD, "password");
+        // encoding
+        if (!acceptEncoding.empty()) {
+            curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, acceptEncoding.c_str());
+        }
+
+        // tls
+        if (!caInfo.empty()) {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, caInfo.c_str());
+        }
+        if (!certPath.empty()) {
+            curl_easy_setopt(curl, CURLOPT_SSLCERT, certPath.c_str());
+        }
+        if (!keyPath.empty()) {
+            curl_easy_setopt(curl, CURLOPT_SSLKEY, keyPath.c_str());
+        }
+        if (minVersion != 0) {
+            curl_easy_setopt(curl, CURLOPT_SSLVERSION, minVersion);
+        }
+        if (insecureSkip) {
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        } else {
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+        }
+
+        // proxy
+        if (!proxyURL.empty()) {
+            curl_easy_setopt(curl, CURLOPT_PROXY, proxyURL.c_str());
+        }
+        if (!noProxy.empty()) {
+            curl_easy_setopt(curl, CURLOPT_NOPROXY, noProxy.c_str());
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 
 #include "prometheus/schedulers/ScrapeConfig.h"
 
+#include <curl/curl.h>
 #include <json/value.h>
 
 #include <string>
@@ -22,11 +23,15 @@ ScrapeConfig::ScrapeConfig()
       mHonorLabels(false),
       mHonorTimestamps(true),
       mScheme("http"),
-      mFollowRedirects(false),
+      mFollowRedirects(true),
+      mAcceptEncoding(prometheus::IDENTITY),
+      mInsecureSkipVerify(true),
+      mMinVersion(0),
       mMaxScrapeSizeBytes(0),
       mSampleLimit(0),
       mSeriesLimit(0) {
 }
+
 bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
     if (!InitStaticConfig(scrapeConfig)) {
         return false;
@@ -43,9 +48,10 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
 
     if (scrapeConfig.isMember(prometheus::ENABLE_COMPRESSION)
         && scrapeConfig[prometheus::ENABLE_COMPRESSION].isBool()) {
-        InitEnableCompression(scrapeConfig[prometheus::ENABLE_COMPRESSION].asBool());
-    } else {
-        InitEnableCompression(true);
+        auto tmp = scrapeConfig[prometheus::ENABLE_COMPRESSION].asBool();
+        if (tmp) {
+            mAcceptEncoding = prometheus::GZIP;
+        }
     }
 
     // basic auth, authorization, oauth2
@@ -69,6 +75,25 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
 
     if (scrapeConfig.isMember(prometheus::FOLLOW_REDIRECTS) && scrapeConfig[prometheus::FOLLOW_REDIRECTS].isBool()) {
         mFollowRedirects = scrapeConfig[prometheus::FOLLOW_REDIRECTS].asBool();
+    }
+
+    if (scrapeConfig.isMember(prometheus::TLS_CONFIG) && scrapeConfig[prometheus::TLS_CONFIG].isObject()) {
+        if (!InitTLSConfig(scrapeConfig[prometheus::TLS_CONFIG])) {
+            LOG_ERROR(sLogger, ("tls config error", ""));
+            return false;
+        }
+    }
+
+    if (scrapeConfig.isMember(prometheus::PROXY_URL) && scrapeConfig[prometheus::PROXY_URL].isString()) {
+        mProxyURL = scrapeConfig[prometheus::PROXY_URL].asString();
+    }
+
+    if (scrapeConfig.isMember(prometheus::NO_PROXY) && scrapeConfig[prometheus::NO_PROXY].isString()) {
+        mNoProxy = scrapeConfig[prometheus::NO_PROXY].asString();
+    }
+
+    if (scrapeConfig.isMember(prometheus::PROXY_CONNECT_HEADER)
+        && scrapeConfig[prometheus::PROXY_CONNECT_HEADER].isObject()) {
     }
 
     if (scrapeConfig.isMember(prometheus::PARAMS) && scrapeConfig[prometheus::PARAMS].isObject()) {
@@ -334,12 +359,39 @@ bool ScrapeConfig::InitScrapeProtocols(const Json::Value& scrapeProtocols) {
     return true;
 }
 
-void ScrapeConfig::InitEnableCompression(bool enableCompression) {
-    if (enableCompression) {
-        mRequestHeaders[prometheus::ACCEPT_ENCODING] = prometheus::GZIP;
-    } else {
-        mRequestHeaders[prometheus::ACCEPT_ENCODING] = prometheus::IDENTITY;
+bool ScrapeConfig::InitTLSConfig(const Json::Value& tlsConfig) {
+    if (tlsConfig.isMember(prometheus::CA_FILE) && tlsConfig[prometheus::CA_FILE].isString()) {
+        mCaFile = tlsConfig[prometheus::CA_FILE].asString();
     }
+    if (tlsConfig.isMember(prometheus::CERT_FILE) && tlsConfig[prometheus::CERT_FILE].isString()) {
+        mCertFile = tlsConfig[prometheus::CERT_FILE].asString();
+    }
+    if (tlsConfig.isMember(prometheus::KEY_FILE) && tlsConfig[prometheus::KEY_FILE].isString()) {
+        mKeyFile = tlsConfig[prometheus::KEY_FILE].asString();
+    }
+    if (tlsConfig.isMember(prometheus::SERVER_NAME) && tlsConfig[prometheus::SERVER_NAME].isString()) {
+        mRequestHeaders[prometheus::HOST] = tlsConfig[prometheus::SERVER_NAME].asString();
+    }
+    if (tlsConfig.isMember(prometheus::INSECURE_SKIP_VERIFY) && tlsConfig[prometheus::INSECURE_SKIP_VERIFY].isBool()) {
+        mInsecureSkipVerify = tlsConfig[prometheus::INSECURE_SKIP_VERIFY].asBool();
+    }
+    if (tlsConfig.isMember(prometheus::MIN_VERSION) && tlsConfig[prometheus::MIN_VERSION].isString()) {
+        static const map<string, uint64_t> sMinVersionMap = {
+            {"TLS10", CURL_SSLVERSION_TLSv1_0},
+            {"TLS11", CURL_SSLVERSION_TLSv1_1},
+            {"TLS12", CURL_SSLVERSION_TLSv1_2},
+            {"TLS13", CURL_SSLVERSION_TLSv1_3},
+        };
+
+        auto tmp = tlsConfig[prometheus::MIN_VERSION].asString();
+        if (sMinVersionMap.count(tmp)) {
+            mMinVersion = sMinVersionMap.at(tmp);
+        } else {
+            LOG_ERROR(sLogger, ("unknown min_version", tmp));
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace logtail

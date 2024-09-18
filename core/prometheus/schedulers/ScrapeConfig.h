@@ -1,5 +1,6 @@
 #pragma once
 
+#include <curl/curl.h>
 #include <json/value.h>
 
 #include <cstdint>
@@ -29,6 +30,18 @@ public:
     std::map<std::string, std::string> mRequestHeaders;
 
     bool mFollowRedirects;
+    std::string mAcceptEncoding;
+
+    // tls
+    std::string mCaFile;
+    std::string mCertFile;
+    std::string mKeyFile;
+    bool mInsecureSkipVerify;
+    uint64_t mMinVersion;
+
+    // proxy
+    std::string mProxyURL;
+    std::string mNoProxy;
 
     uint64_t mMaxScrapeSizeBytes;
     uint64_t mSampleLimit;
@@ -49,6 +62,7 @@ private:
     bool InitAuthorization(const Json::Value& authorization);
     bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
     void InitEnableCompression(bool enableCompression);
+    bool InitTLSConfig(const Json::Value& tlsConfig);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;
