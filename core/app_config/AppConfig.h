@@ -284,20 +284,15 @@ public:
     void LoadAppConfig(const std::string& ilogtailConfigFile);
 
     // 获取全局参数方法
-    const Json::Value GetLocalConfig() {
+    const Json::Value& GetLocalConfig() {
         return mLocalConfig;
     };
     const Json::Value& GetEnvConfig() {
         return mEnvConfig;
     };
-    const Json::Value GetRemoteConfig() {
+    const Json::Value& GetRemoteConfig() {
         return mRemoteConfig;
     };
-
-    // 更新全局参数方法
-    void Run(); // reload线程
-    void ReloadLocalConfig();
-    void ReloadRemoteConfig();
 
     // 注册回调
     void RegisterCallback(const std::string& name, std::function<bool()> callback);

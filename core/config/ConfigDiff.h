@@ -41,7 +41,6 @@ public:
     std::vector<InstanceConfig> mAdded;
     std::vector<InstanceConfig> mModified;
     std::vector<std::string> mRemoved;
-    std::vector<std::string> mUnchanged; // 过渡使用，仅供插件系统用
 };
 
 } // namespace logtail

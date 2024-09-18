@@ -56,8 +56,6 @@ struct InstanceConfig {
         return *this;
     }
 
-    bool Parse() { return true; }
-
     const Json::Value& GetConfig() const { return *mDetail; }
 };
 

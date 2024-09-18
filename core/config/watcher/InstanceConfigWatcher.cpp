@@ -80,7 +80,7 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
             filesystem::file_time_type mTime = filesystem::last_write_time(path, ec);
             if (iter == mFileInfoMap.end()) {
                 mFileInfoMap[filepath] = make_pair(size, mTime);
-                unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
+                unique_ptr<Json::Value> detail = make_unique<Json::Value>(new Json::Value());
                 if (!LoadConfigDetailFromFile(path, *detail)) {
                     continue;
                 }
@@ -89,13 +89,6 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
                     continue;
                 }
                 InstanceConfig config(configName, std::move(detail), dir.string());
-                if (!config.Parse()) {
-                    LOG_ERROR(sLogger, ("new config found but invalid", "skip current object")("config", configName));
-                    LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                                           "new config found but invalid: skip current object, config: "
-                                                               + configName);
-                    continue;
-                }
                 diff.mAdded.push_back(std::move(config));
                 LOG_INFO(
                     sLogger,
@@ -103,11 +96,8 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
                 mFileInfoMap[filepath] = make_pair(size, mTime);
-                unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
+                unique_ptr<Json::Value> detail = make_unique<Json::Value>(new Json::Value());
                 if (!LoadConfigDetailFromFile(path, *detail)) {
-                    if (mInstanceConfigManager->FindConfigByName(configName)) {
-                        diff.mUnchanged.push_back(configName);
-                    }
                     continue;
                 }
                 if (!IsConfigEnabled(configName, *detail)) {
@@ -126,47 +116,21 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
                 shared_ptr<InstanceConfig> p = mInstanceConfigManager->FindConfigByName(configName);
                 if (!p) {
                     InstanceConfig config(configName, std::move(detail), dir.string());
-                    if (!config.Parse()) {
-                        LOG_ERROR(sLogger,
-                                  ("existing invalid config modified and remains invalid",
-                                   "skip current object")("config", configName));
-                        LogtailAlarm::GetInstance()->SendAlarm(
-                            CATEGORY_CONFIG_ALARM,
-                            "existing invalid config modified and remains invalid: skip current object, config: "
-                                + configName);
-                        continue;
-                    }
                     diff.mAdded.push_back(std::move(config));
                     LOG_INFO(sLogger,
                              ("existing invalid config modified and passed topology check",
                               "prepare to build pipeline")("config", configName));
                 } else if (*detail != p->GetConfig()) {
                     InstanceConfig config(configName, std::move(detail), dir.string());
-                    if (!config.Parse()) {
-                        diff.mUnchanged.push_back(configName);
-                        LOG_ERROR(sLogger,
-                                  ("existing valid config modified and becomes invalid",
-                                   "keep current pipeline running")("config", configName));
-                        LogtailAlarm::GetInstance()->SendAlarm(
-                            CATEGORY_CONFIG_ALARM,
-                            "existing valid config modified and becomes invalid: skip current object, config: "
-                                + configName);
-                        continue;
-                    }
                     diff.mModified.push_back(std::move(config));
                     LOG_INFO(sLogger,
                              ("existing valid config modified and passed topology check",
                               "prepare to rebuild pipeline")("config", configName));
                 } else {
-                    diff.mUnchanged.push_back(configName);
                     LOG_DEBUG(sLogger,
                               ("existing valid config file modified, but no change found", "skip current object"));
                 }
             } else {
-                // 为了插件系统过渡使用
-                if (mInstanceConfigManager->FindConfigByName(configName)) {
-                    diff.mUnchanged.push_back(configName);
-                }
                 LOG_DEBUG(sLogger, ("existing config file unchanged", "skip current object"));
             }
         }
