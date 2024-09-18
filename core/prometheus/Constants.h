@@ -50,6 +50,7 @@ const char* const SCHEME = "scheme";
 const char* const METRICS_PATH = "metrics_path";
 const char* const SCRAPE_INTERVAL = "scrape_interval";
 const char* const SCRAPE_TIMEOUT = "scrape_timeout";
+const char* const SCRAPE_PROTOCOLS = "scrape_protocols";
 const char* const HEADERS = "headers";
 const char* const PARAMS = "params";
 const char* const QUERY_STRING = "query_string";
@@ -70,7 +71,31 @@ const char* const USERNAME_FILE = "username_file";
 const char* const PASSWORD = "password";
 const char* const PASSWORD_FILE = "password_file";
 const char* const BASIC_PREFIX = "Basic ";
+const char* const FOLLOW_REDIRECTS = "follow_redirects";
+const char* const HONOR_LABELS = "honor_labels";
+const char* const HONOR_TIMESTAMPS = "honor_timestamps";
+const char* const TLS_CONFIG = "tls_config";
+const char* const CA_FILE = "ca_file";
+const char* const CERT_FILE = "cert_file";
+const char* const KEY_FILE = "key_file";
+const char* const SERVER_NAME = "server_name";
+const char* const HOST = "host";
+const char* const INSECURE_SKIP_VERIFY = "insecure_skip_verify";
+const char* const MIN_VERSION = "min_version";
+const char* const PROXY_URL = "proxy_url";
+const char* const NO_PROXY = "no_proxy";
+const char* const PROXY_FROM_ENVIRONMENT = "proxy_from_environment";
+const char* const PROXY_CONNECT_HEADER = "proxy_connect_header";
 
+
+// scrape protocols, from https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
+// text/plain, application/openmetrics-text will be used
+// version of openmetrics is 1.0.0 or 0.0.1, from
+// https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#extensions-and-improvements
+const char* const PrometheusProto = "PrometheusProto";
+const char* const PrometheusText0_0_4 = "PrometheusText0.0.4";
+const char* const OpenMetricsText0_0_1 = "OpenMetricsText0.0.1";
+const char* const OpenMetricsText1_0_0 = "OpenMetricsText1.0.0";
 
 // metric labels
 const char* const JOB = "job";
@@ -91,7 +116,14 @@ const char* const SCRAPE_SAMPLES_POST_METRIC_RELABELING = "scrape_samples_post_m
 const char* const SCRAPE_SAMPLES_SCRAPED = "scrape_samples_scraped";
 const char* const SCRAPE_TIMEOUT_SECONDS = "scrape_timeout_seconds";
 const char* const UP = "up";
+const char* const LC_SCRAPER = "lc_scraper";
 
 const char* const SCRAPE_TIMESTAMP_MILLISEC = "scrape_timestamp_millisec";
+
+// scrape config compression
+const char* const ENABLE_COMPRESSION = "enable_compression";
+const char* const ACCEPT_ENCODING = "Accept-Encoding";
+const char* const GZIP = "gzip";
+const char* const IDENTITY = "identity";
 
 } // namespace logtail::prometheus

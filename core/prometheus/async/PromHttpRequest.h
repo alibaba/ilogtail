@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 
+#include "ScrapeConfig.h"
 #include "common/http/HttpRequest.h"
 #include "prometheus/async/PromFuture.h"
 
@@ -20,9 +21,13 @@ public:
                     const std::string& body,
                     uint32_t timeout,
                     uint32_t maxTryCnt,
-                    std::shared_ptr<PromFuture> future);
+                    bool followRedirects,
+                    std::shared_ptr<PromFuture> future,
+                    std::shared_ptr<ScrapeConfig> scrapeConfig = nullptr);
     PromHttpRequest(const PromHttpRequest&) = default;
     ~PromHttpRequest() override = default;
+
+    // void SetAdditionalOptions(CURL*) const override;
 
     void OnSendDone(const HttpResponse& response) override;
     [[nodiscard]] bool IsContextValid() const override;
@@ -31,6 +36,9 @@ private:
     void SetNextExecTime(std::chrono::steady_clock::time_point execTime);
 
     std::shared_ptr<PromFuture> mFuture;
+
+    bool mFollowRedirects = false;
+    std::shared_ptr<ScrapeConfig> mScrapeConfig;
 };
 
 } // namespace logtail
