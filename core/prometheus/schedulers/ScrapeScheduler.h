@@ -53,7 +53,6 @@ public:
     void ScheduleNext() override;
     void ScrapeOnce(std::chrono::steady_clock::time_point execTime);
     void Cancel() override;
-
     void InitSelfMonitor(const MetricLabels&);
 
 private:

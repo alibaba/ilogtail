@@ -49,7 +49,7 @@ public:
 
     void ScheduleNext() override;
     void Cancel() override;
-    void InitSelfMonitor();
+    void InitSelfMonitor(const MetricLabels&);
 
     // from pipeline context
     QueueKey mQueueKey;
@@ -88,6 +88,7 @@ private:
     std::shared_ptr<PromSelfMonitor> mSelfMonitor;
     MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mPromSubscriberTargets;
+    MetricLabels mDefaultLabels;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class TargetSubscriberSchedulerUnittest;

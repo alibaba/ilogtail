@@ -24,7 +24,6 @@
 #include "common/Lock.h"
 #include "common/timer/Timer.h"
 #include "monitor/LogtailMetric.h"
-#include "prometheus/PromSelfMonitor.h"
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 #include "runner/InputRunner.h"
 #include "sdk/Common.h"
