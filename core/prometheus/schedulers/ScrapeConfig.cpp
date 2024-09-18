@@ -1,7 +1,6 @@
 
 #include "prometheus/schedulers/ScrapeConfig.h"
 
-#include <curl/curl.h>
 #include <json/value.h>
 
 #include <string>
@@ -26,7 +25,6 @@ ScrapeConfig::ScrapeConfig()
       mFollowRedirects(true),
       mAcceptEncoding(prometheus::IDENTITY),
       mInsecureSkipVerify(true),
-      mMinVersion(0),
       mMaxScrapeSizeBytes(0),
       mSampleLimit(0),
       mSeriesLimit(0) {
@@ -90,6 +88,14 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
 
     if (scrapeConfig.isMember(prometheus::NO_PROXY) && scrapeConfig[prometheus::NO_PROXY].isString()) {
         mNoProxy = scrapeConfig[prometheus::NO_PROXY].asString();
+    }
+
+    if (scrapeConfig.isMember(prometheus::PROXY_FROM_ENVIRONMENT)
+        && scrapeConfig[prometheus::PROXY_FROM_ENVIRONMENT].isBool()) {
+        auto tmp = scrapeConfig[prometheus::PROXY_FROM_ENVIRONMENT].asBool();
+        if (tmp) {
+            InitProxyFromEnv();
+        }
     }
 
     if (scrapeConfig.isMember(prometheus::PROXY_CONNECT_HEADER)
@@ -375,21 +381,28 @@ bool ScrapeConfig::InitTLSConfig(const Json::Value& tlsConfig) {
     if (tlsConfig.isMember(prometheus::INSECURE_SKIP_VERIFY) && tlsConfig[prometheus::INSECURE_SKIP_VERIFY].isBool()) {
         mInsecureSkipVerify = tlsConfig[prometheus::INSECURE_SKIP_VERIFY].asBool();
     }
-    if (tlsConfig.isMember(prometheus::MIN_VERSION) && tlsConfig[prometheus::MIN_VERSION].isString()) {
-        static const map<string, uint64_t> sMinVersionMap = {
-            {"TLS10", CURL_SSLVERSION_TLSv1_0},
-            {"TLS11", CURL_SSLVERSION_TLSv1_1},
-            {"TLS12", CURL_SSLVERSION_TLSv1_2},
-            {"TLS13", CURL_SSLVERSION_TLSv1_3},
-        };
+    return true;
+}
 
-        auto tmp = tlsConfig[prometheus::MIN_VERSION].asString();
-        if (sMinVersionMap.count(tmp)) {
-            mMinVersion = sMinVersionMap.at(tmp);
-        } else {
-            LOG_ERROR(sLogger, ("unknown min_version", tmp));
-            return false;
+bool ScrapeConfig::InitProxyFromEnv() {
+    static const set<std::string> sProxyEnvNames = {"HTTP_PROXY", "https_proxy", "HTTPs_PROXY", "https_proxy"};
+    set<std::string> proxyURL;
+    for (const auto& proxyEnvName : sProxyEnvNames) {
+        auto* proxy = getenv(proxyEnvName.c_str());
+        if (proxy == NULL) {
+            continue;
         }
+        proxyURL.insert(string(proxy));
+    }
+    if (proxyURL.size() != 1) {
+        LOG_ERROR(sLogger, ("proxy env error", ""));
+        return false;
+    }
+    mProxyURL = *proxyURL.begin();
+
+    auto* noProxy = getenv(prometheus::NO_PROXY);
+    if (noProxy != NULL) {
+        mNoProxy = string(noProxy);
     }
     return true;
 }

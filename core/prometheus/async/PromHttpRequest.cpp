@@ -31,10 +31,9 @@ PromHttpRequest::PromHttpRequest(const std::string& method,
 void SetAdditionalOptions(CURL* curl,
                           bool followRedirects,
                           const std::string& acceptEncoding,
-                          const std::string& caInfo,
-                          const std::string& certPath,
-                          const std::string& keyPath,
-                          uint64_t minVersion,
+                          const std::string& caFile,
+                          const std::string& certFile,
+                          const std::string& keyFile,
                           bool insecureSkip,
                           const std::string& proxyURL,
                           const std::string& noProxy) {
@@ -51,17 +50,14 @@ void SetAdditionalOptions(CURL* curl,
         }
 
         // tls
-        if (!caInfo.empty()) {
-            curl_easy_setopt(curl, CURLOPT_CAINFO, caInfo.c_str());
+        if (!caFile.empty()) {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, caFile.c_str());
         }
-        if (!certPath.empty()) {
-            curl_easy_setopt(curl, CURLOPT_SSLCERT, certPath.c_str());
+        if (!certFile.empty()) {
+            curl_easy_setopt(curl, CURLOPT_SSLCERT, certFile.c_str());
         }
-        if (!keyPath.empty()) {
-            curl_easy_setopt(curl, CURLOPT_SSLKEY, keyPath.c_str());
-        }
-        if (minVersion != 0) {
-            curl_easy_setopt(curl, CURLOPT_SSLVERSION, minVersion);
+        if (!keyFile.empty()) {
+            curl_easy_setopt(curl, CURLOPT_SSLKEY, keyFile.c_str());
         }
         if (insecureSkip) {
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);

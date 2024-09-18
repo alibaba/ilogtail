@@ -1,6 +1,5 @@
 #pragma once
 
-#include <curl/curl.h>
 #include <json/value.h>
 
 #include <cstdint>
@@ -37,7 +36,6 @@ public:
     std::string mCertFile;
     std::string mKeyFile;
     bool mInsecureSkipVerify;
-    uint64_t mMinVersion;
 
     // proxy
     std::string mProxyURL;
@@ -63,6 +61,7 @@ private:
     bool InitScrapeProtocols(const Json::Value& scrapeProtocols);
     void InitEnableCompression(bool enableCompression);
     bool InitTLSConfig(const Json::Value& tlsConfig);
+    bool InitProxyFromEnv();
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ScrapeConfigUnittest;
