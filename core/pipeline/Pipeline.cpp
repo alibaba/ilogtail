@@ -16,6 +16,7 @@
 
 #include "pipeline/Pipeline.h"
 
+#include <chrono>
 #include <cstdint>
 #include <utility>
 
@@ -314,6 +315,14 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), std::move(senderQueues));
     }
 
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, {{METRIC_LABEL_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_CONFIG_NAME, mName}});
+    mStartTime = mMetricsRecordRef.CreateIntGauge("start_time");
+    mProcessorsInEventsCnt = mMetricsRecordRef.CreateCounter("processors_in_events_cnt");
+    mProcessorsInGroupsCnt = mMetricsRecordRef.CreateCounter("processors_in_event_groups_cnt");
+    mProcessorsInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter("processors_in_event_group_data_size_bytes");
+    mProcessorsTotalDelayMs = mMetricsRecordRef.CreateCounter("processors_total_delay_ms");
+
     return true;
 }
 
@@ -337,16 +346,26 @@ void Pipeline::Start() {
         input->Start();
     }
 
+    mStartTime->Set(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count());
     LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName));
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
+    for (const auto& logGroup : logGroupList) {
+        mProcessorsInEventsCnt->Add(logGroup.GetEvents().size());
+        mProcessorsInGroupDataSizeBytes->Add(logGroup.DataSize());
+    }
+    mProcessorsInGroupsCnt->Add(logGroupList.size());
+
+    auto before = chrono::system_clock::now();
     for (auto& p : mInputs[inputIndex]->GetInnerProcessors()) {
         p->Process(logGroupList);
     }
     for (auto& p : mProcessorLine) {
         p->Process(logGroupList);
     }
+    mProcessorsTotalDelayMs->Add(
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
 }
 
 bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
