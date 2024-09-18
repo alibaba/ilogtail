@@ -47,8 +47,6 @@ DEFINE_FLAG_INT32(default_local_file_size, "default size of one buffer file", 20
 DEFINE_FLAG_INT32(pub_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(process_thread_count, "", 1);
 DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
-DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
-DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
 
@@ -139,8 +137,6 @@ std::string AppConfig::sLocalConfigDir = "local";
 
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));
-    mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
-    mSendFlowControl = BOOL_FLAG(enable_flow_control);
     SetIlogtailConfigJson("");
 
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
@@ -1395,16 +1391,8 @@ void AppConfig::CheckAndAdjustParameters() {
                                                                            INT32_FLAG(max_reader_open_files)));
 
     LOG_INFO(sLogger,
-             ("send byte per second limit", mMaxBytePerSec)("batch send interval", INT32_FLAG(batch_send_interval))(
-                 "batch send size", INT32_FLAG(batch_send_metric_size)));
-    // when inflow exceed 30MB/s, FlowControl lose precision
-    if (mMaxBytePerSec >= 30 * 1024 * 1024) {
-        if (mSendFlowControl)
-            mSendFlowControl = false;
-        if (mSendRandomSleep)
-            mSendRandomSleep = false;
-        LOG_INFO(sLogger, ("send flow control", "disable")("send random sleep", "disable"));
-    }
+             ("batch send interval", INT32_FLAG(batch_send_interval))("batch send size",
+                                                                      INT32_FLAG(batch_send_metric_size)));
 }
 
 bool AppConfig::IsInInotifyBlackList(const std::string& path) const {
@@ -1562,8 +1550,104 @@ void AppConfig::LoadInstanceConfig(std::unordered_map<std::string, Json::Value>&
     mMergedConfig = std::move(mergedConfig);
 }
 
-void AppConfig::RegisterCallbacks(const std::string& key, std::function<void(bool)> callback) {
+void AppConfig::RegisterCallback(const std::string& key, std::function<bool(bool)> callback) {
     mCallbacks[key] = std::move(callback);
+}
+
+int32_t AppConfig::MergeInt32(int32_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int32_t value)>& validateFn) {
+    int32_t res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
+        res = localConf[name].asInt64();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
+        res = envConfig[name].asInt64();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isInt64() && validateFn(name, remoteConf[name].asInt64())) {
+        res = remoteConf[name].asInt64();
+    }
+    return res;
+}
+
+int64_t AppConfig::MergeInt64(int64_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int64_t value)>& validateFn) {
+    int64_t res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
+        res = localConf[name].asInt64();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
+        res = envConfig[name].asInt64();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isInt64() && validateFn(name, remoteConf[name].asInt64())) {
+        res = remoteConf[name].asInt64();
+    }
+    return res;
+}
+
+bool AppConfig::MergeBool(bool defaultValue,
+                          const Json::Value& localConf,
+                          const Json::Value& envConfig,
+                          const Json::Value& remoteConf,
+                          const std::string name,
+                          const std::function<bool(const std::string key, const bool value)>& validateFn) {
+    bool res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isBool() && validateFn(name, localConf[name].asBool())) {
+        res = localConf[name].asBool();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isBool() && validateFn(name, envConfig[name].asBool())) {
+        res = envConfig[name].asBool();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isBool() && validateFn(name, remoteConf[name].asBool())) {
+        res = remoteConf[name].asBool();
+    }
+    return res;
+}
+
+std::string
+AppConfig::MergeString(const std::string& defaultValue,
+                       const Json::Value& localConf,
+                       const Json::Value& envConfig,
+                       const Json::Value& remoteConf,
+                       const std::string name,
+                       const std::function<bool(const std::string key, const std::string& value)>& validateFn) {
+    std::string res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isString() && validateFn(name, localConf[name].asString())) {
+        res = localConf[name].asString();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isString() && validateFn(name, envConfig[name].asString())) {
+        res = envConfig[name].asString();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isString() && validateFn(name, remoteConf[name].asString())) {
+        res = remoteConf[name].asString();
+    }
+    return res;
+}
+
+double AppConfig::MergeDouble(double defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const double value)>& validateFn) {
+    double res = defaultValue;
+    if (localConf.isMember(name) && localConf[name].isDouble() && validateFn(name, localConf[name].asDouble())) {
+        res = localConf[name].asDouble();
+    }
+    if (envConfig.isMember(name) && envConfig[name].isDouble() && validateFn(name, envConfig[name].asDouble())) {
+        res = envConfig[name].asDouble();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isDouble() && validateFn(name, remoteConf[name].asDouble())) {
+        res = remoteConf[name].asDouble();
+    }
+    return res;
 }
 
 } // namespace logtail

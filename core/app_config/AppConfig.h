@@ -57,7 +57,7 @@ private:
     Json::Value mRemoteConfig;
     Json::Value mMergedConfig;
 
-    std::map<std::string, std::function<void(bool)>> mCallbacks;
+    std::map<std::string, std::function<bool(bool)>> mCallbacks;
 
     DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
     DoubleBuffer<std::map<std::string, std::string>> mAgentAttrs;
@@ -105,8 +105,6 @@ private:
     // local config
     // std::string mMappingConfigPath;
 
-    bool mSendRandomSleep;
-    bool mSendFlowControl;
 
     int32_t mMaxMultiConfigSize;
     bool mAcceptMultiConfigFlag;
@@ -268,8 +266,6 @@ private:
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
 
 public:
-    void RegisterCallbacks(const std::string& key, std::function<void(bool)> callback);
-
     AppConfig();
     ~AppConfig(){};
 
@@ -294,15 +290,52 @@ public:
         return mRemoteConfig;
     };
 
+    static int32_t MergeInt32(int32_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int32_t value)>& validateFn);
+
+    static int64_t MergeInt64(int64_t defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const int64_t value)>& validateFn);
+
+    static bool MergeBool(bool defaultValue,
+                          const Json::Value& localConf,
+                          const Json::Value& envConfig,
+                          const Json::Value& remoteConf,
+                          const std::string name,
+                          const std::function<bool(const std::string key, const bool value)>& validateFn);
+
+    static std::string
+    MergeString(const std::string& defaultValue,
+                const Json::Value& localConf,
+                const Json::Value& envConfig,
+                const Json::Value& remoteConf,
+                const std::string name,
+                const std::function<bool(const std::string key, const std::string& value)>& validateFn);
+
+    static double MergeDouble(double defaultValue,
+                              const Json::Value& localConf,
+                              const Json::Value& envConfig,
+                              const Json::Value& remoteConf,
+                              const std::string name,
+                              const std::function<bool(const std::string key, const double value)>& validateFn);
+
+
     // 注册回调
-    void RegisterCallback(const std::string& name, std::function<bool()> callback);
+    void RegisterCallback(const std::string& key, std::function<bool(bool)> callback);
 
     // 合并配置
     std::string Merge(Json::Value& localConf,
                       Json::Value& envConfig,
                       Json::Value& remoteConf,
                       std::string& name,
-                      std::function<bool(const std::string&, const std::string&)> ValidateFn);
+                      std::function<bool(const std::string&, const std::string&)> validateFn);
 
     // 获取特定配置
     // CPU限制参数等仅与框架相关的参数，计算逻辑可以放在AppConfig
@@ -339,14 +372,6 @@ public:
 
     bool IsLogParseAlarmValid() const {
         return mLogParseAlarmFlag;
-    }
-
-    bool IsSendRandomSleep() const {
-        return mSendRandomSleep;
-    }
-
-    bool IsSendFlowControl() const {
-        return mSendFlowControl;
     }
 
     // std::string GetDefaultRegion() const;
@@ -412,6 +437,10 @@ public:
 
     int32_t GetMaxBytePerSec() const {
         return mMaxBytePerSec;
+    }
+
+    void SetMaxBytePerSec(int32_t maxBytePerSec) {
+        mMaxBytePerSec = maxBytePerSec;
     }
 
     int32_t GetBytePerSec() const {
