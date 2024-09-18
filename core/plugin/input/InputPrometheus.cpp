@@ -70,9 +70,8 @@ bool InputPrometheus::Start() {
 
     mTargetSubscirber->mQueueKey = mContext->GetProcessQueueKey();
     auto defaultLabels = GetMetricsRecordRef()->GetLabels();
-    mTargetSubscirber->InitSelfMonitor(*defaultLabels);
 
-    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(mTargetSubscirber));
+    PrometheusInputRunner::GetInstance()->UpdateScrapeInput(std::move(mTargetSubscirber), *defaultLabels);
     return true;
 }
 

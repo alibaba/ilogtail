@@ -44,7 +44,7 @@ public:
     }
 
     // input plugin update
-    void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber);
+    void UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber, const MetricLabels& defaultLabels);
     void RemoveScrapeInput(const std::string& jobName);
 
     // target discover and scrape

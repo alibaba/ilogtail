@@ -73,12 +73,15 @@ PrometheusInputRunner::PrometheusInputRunner()
 }
 
 /// @brief receive scrape jobs from input plugins and update scrape jobs
-void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber) {
+void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberScheduler> targetSubscriber,
+                                              const MetricLabels& defaultLabels) {
     RemoveScrapeInput(targetSubscriber->GetId());
 
     targetSubscriber->mServiceHost = mServiceHost;
     targetSubscriber->mServicePort = mServicePort;
     targetSubscriber->mPodName = mPodName;
+
+    targetSubscriber->InitSelfMonitor(defaultLabels);
 
     targetSubscriber->mUnRegisterMs = mUnRegisterMs.load();
     targetSubscriber->SetTimer(mTimer);
@@ -86,7 +89,7 @@ void PrometheusInputRunner::UpdateScrapeInput(std::shared_ptr<TargetSubscriberSc
         targetSubscriber->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
     auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
     targetSubscriber->SetFirstExecTime(firstExecTime);
-    
+
     // 1. add subscriber to mTargetSubscriberSchedulerMap
     {
         WriteLock lock(mSubscriberMapRWLock);
