@@ -2,6 +2,7 @@ package kubernetesmetav2
 
 import (
 	"github.com/alibaba/ilogtail/pkg/flags"
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -33,19 +34,27 @@ type ServiceK8sMeta struct {
 	Ingress               bool
 	Container             bool
 	// other
+	context       pipeline.Context
 	metaManager   *k8smeta.MetaManager
 	collector     pipeline.Collector
 	metaCollector *metaCollector
 	configName    string
 	clusterID     string
+	// self metric
+	entityCount pipeline.CounterMetric
+	linkCount   pipeline.CounterMetric
 }
 
 // Init called for init some system resources, like socket, mutex...
 // return interval(ms) and error flag, if interval is 0, use default interval
 func (s *ServiceK8sMeta) Init(context pipeline.Context) (int, error) {
+	s.context = context
 	s.metaManager = k8smeta.GetMetaManagerInstance()
 	s.configName = context.GetConfigName()
 
+	metricRecord := s.context.GetMetricRecord()
+	s.entityCount = helper.NewCounterMetricAndRegister(metricRecord, "k8s_meta_entity_count")
+	s.linkCount = helper.NewCounterMetricAndRegister(metricRecord, "k8s_meta_link_count")
 	return 0, nil
 }
 

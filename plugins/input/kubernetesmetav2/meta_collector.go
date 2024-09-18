@@ -259,6 +259,7 @@ func (m *metaCollector) processEntityCommonPart(logContents models.LogContents, 
 	logContents.Add(entityKindFieldName, kind)
 	logContents.Add(entityNameFieldName, name)
 	logContents.Add(entityCreationTimeFieldName, creationTime.Format(time.RFC3339))
+	m.serviceK8sMeta.entityCount.Add(1)
 }
 
 func (m *metaCollector) processEntityLinkCommonPart(logContents models.LogContents, srcKind, srcNamespace, srcName, destKind, destNamespace, destName, method string, firstObservedTime, lastObservedTime int64) {
@@ -276,6 +277,7 @@ func (m *metaCollector) processEntityLinkCommonPart(logContents models.LogConten
 	logContents.Add(entityLastObservedTimeFieldName, strconv.FormatInt(lastObservedTime, 10))
 	logContents.Add(entityKeepAliveSecondsFieldName, strconv.FormatInt(int64(m.serviceK8sMeta.Interval*2), 10))
 	logContents.Add(entityCategoryFieldName, defaultEntityLinkCategory)
+	m.serviceK8sMeta.linkCount.Add(1)
 }
 
 func (m *metaCollector) processEntityJSONObject(obj map[string]string) string {

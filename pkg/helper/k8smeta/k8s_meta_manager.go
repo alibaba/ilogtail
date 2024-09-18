@@ -13,9 +13,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	controllerConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 var metaManager *MetaManager
@@ -40,23 +38,27 @@ type MetaManager struct {
 	clientset *kubernetes.Clientset
 	stopCh    chan struct{}
 
-	eventCh chan *K8sMetaEvent
-	ready   atomic.Bool
+	ready atomic.Bool
 
+	metadataHandler  *metadataHandler
 	cacheMap         map[string]MetaCache
 	linkGenerator    *LinkGenerator
 	linkRegisterMap  map[string][]string
 	linkRegisterLock sync.RWMutex
 
-	metricContext pipeline.Context
+	// self metrics
+	addEventCount      atomic.Int64
+	updateEventCount   atomic.Int64
+	deleteEventCount   atomic.Int64
+	cacheResourceCount atomic.Int64
 }
 
 func GetMetaManagerInstance() *MetaManager {
 	onceManager.Do(func() {
 		metaManager = &MetaManager{
-			stopCh:  make(chan struct{}),
-			eventCh: make(chan *K8sMetaEvent, 1000),
+			stopCh: make(chan struct{}),
 		}
+		metaManager.metadataHandler = newMetadataHandler()
 		metaManager.cacheMap = make(map[string]MetaCache)
 		for _, resource := range AllResources {
 			metaManager.cacheMap[resource] = newK8sMetaCache(metaManager.stopCh, resource)
@@ -84,7 +86,6 @@ func (m *MetaManager) Init(configPath string) (err error) {
 		return err
 	}
 	m.clientset = clientset
-	m.metricContext = &helper.LocalContext{}
 
 	go func() {
 		startTime := time.Now()
@@ -145,13 +146,50 @@ func (m *MetaManager) UnRegisterSendFunc(configName string, resourceType string)
 	}
 }
 
-func (m *MetaManager) GetMetricContext() pipeline.Context {
-	return m.metricContext
+func GetMetaManagerMetrics() []map[string]string {
+	manager := GetMetaManagerInstance()
+	if manager == nil || !manager.IsReady() {
+		return nil
+	}
+	metrics := make([]map[string]string, 0)
+	// cache
+	queueLen := 0
+	for _, cache := range manager.cacheMap {
+		queueLen += len(cache.(*k8sMetaCache).eventCh)
+	}
+	metrics = append(metrics, map[string]string{
+		"value.k8s_meta_add_event_count":       fmt.Sprintf("%d", manager.addEventCount.Load()),
+		"value.k8s_meta_update_event_count":    fmt.Sprintf("%d", manager.updateEventCount.Load()),
+		"value.k8s_meta_delete_event_count":    fmt.Sprintf("%d", manager.deleteEventCount.Load()),
+		"value.k8s_meta_cache_resource_count":  fmt.Sprintf("%d", manager.cacheResourceCount.Load()),
+		"value.k8s_meta_event_queue_len_total": fmt.Sprintf("%d", queueLen),
+	})
+	manager.addEventCount.Add(-manager.addEventCount.Load())
+	manager.updateEventCount.Add(-manager.updateEventCount.Load())
+	manager.deleteEventCount.Add(-manager.deleteEventCount.Load())
+
+	// http server
+	httpServerMetrics := manager.metadataHandler.GetMetrics()
+	metrics = append(metrics, httpServerMetrics)
+	return metrics
+}
+
+func (m *MetaManager) AddEventCount() {
+	m.addEventCount.Add(1)
+	m.cacheResourceCount.Add(1)
+}
+
+func (m *MetaManager) UpdateEventCount() {
+	m.updateEventCount.Add(1)
+}
+
+func (m *MetaManager) DeleteEventCount() {
+	m.deleteEventCount.Add(1)
+	m.cacheResourceCount.Add(-1)
 }
 
 func (m *MetaManager) runServer() {
-	metadataHandler := newMetadataHandler()
-	go metadataHandler.K8sServerRun(m.stopCh)
+	go m.metadataHandler.K8sServerRun(m.stopCh)
 }
 
 func isEntity(resourceType string) bool {

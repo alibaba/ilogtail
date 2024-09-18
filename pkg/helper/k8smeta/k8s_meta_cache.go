@@ -86,6 +86,7 @@ func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
 					LastObservedTime:  nowTime,
 				},
 			}
+			metaManager.AddEventCount()
 		},
 		UpdateFunc: func(oldObj interface{}, obj interface{}) {
 			nowTime := time.Now().Unix()
@@ -98,6 +99,7 @@ func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
 					LastObservedTime:  nowTime,
 				},
 			}
+			metaManager.UpdateEventCount()
 		},
 		DeleteFunc: func(obj interface{}) {
 			m.eventCh <- &K8sMetaEvent{
@@ -108,6 +110,7 @@ func (m *k8sMetaCache) watch(stopCh <-chan struct{}) {
 					LastObservedTime: time.Now().Unix(),
 				},
 			}
+			metaManager.DeleteEventCount()
 		},
 	})
 	go factory.Start(stopCh)

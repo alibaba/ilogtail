@@ -17,6 +17,8 @@ import (
 	goruntimemetrics "runtime/metrics"
 	"strconv"
 	"strings"
+
+	"github.com/alibaba/ilogtail/pkg/helper/k8smeta"
 )
 
 const (
@@ -50,6 +52,8 @@ func GetGoDirectMetrics() []map[string]string {
 	metrics := make([]map[string]string, 0)
 	// go plugin metrics
 	metrics = append(metrics, GetGoPluginMetrics()...)
+	// k8s meta metrics
+	metrics = append(metrics, k8smeta.GetMetaManagerMetrics()...)
 	return metrics
 }
 

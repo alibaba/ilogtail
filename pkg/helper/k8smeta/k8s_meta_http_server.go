@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	app "k8s.io/api/apps/v1"
@@ -21,6 +22,11 @@ type requestBody struct {
 
 type metadataHandler struct {
 	metaManager *MetaManager
+
+	// self metrics
+	requestCount atomic.Int64
+	totalLatency atomic.Int64
+	maxLatency   atomic.Int64
 }
 
 func newMetadataHandler() *metadataHandler {
@@ -46,9 +52,9 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	mux := http.NewServeMux()
 
 	// TODO: add port in ip endpoint
-	mux.HandleFunc("/metadata/ip", m.handlePodMetaByUniqueID)
-	mux.HandleFunc("/metadata/containerid", m.handlePodMetaByUniqueID)
-	mux.HandleFunc("/metadata/host", m.handlePodMetaByHostIP)
+	mux.HandleFunc("/metadata/ip", m.handler(m.handlePodMetaByHostIP))
+	mux.HandleFunc("/metadata/containerid", m.handler(m.handlePodMetaByUniqueID))
+	mux.HandleFunc("/metadata/host", m.handler(m.handlePodMetaByHostIP))
 	server.Handler = mux
 	for {
 		if m.metaManager.IsReady() {
@@ -64,6 +70,35 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	}()
 	<-stopCh
 	return nil
+}
+
+func (m *metadataHandler) GetMetrics() map[string]string {
+	avgLatency := "0"
+	if m.requestCount.Load() != 0 {
+		avgLatency = strconv.FormatFloat(float64(m.totalLatency.Load())/float64(m.requestCount.Load()), 'f', -1, 64)
+	}
+	metrics := map[string]string{
+		"value.k8s_meta_http_request_count": strconv.FormatInt(m.requestCount.Load(), 10),
+		"value.k8s_meta_http_avg_latency":   avgLatency,
+		"value.k8s_meta_http_max_latency":   strconv.FormatInt(m.maxLatency.Load(), 10),
+	}
+	m.requestCount.Store(-m.requestCount.Load())
+	m.totalLatency.Store(-m.totalLatency.Load())
+	m.maxLatency.Store(0)
+	return metrics
+}
+
+func (m *metadataHandler) handler(handleFunc func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+		m.requestCount.Add(1)
+		handleFunc(w, r)
+		latency := time.Since(startTime).Milliseconds()
+		m.totalLatency.Add(latency)
+		if latency > m.maxLatency.Load() {
+			m.maxLatency.Store(latency)
+		}
+	}
 }
 
 func (m *metadataHandler) handlePodMetaByUniqueID(w http.ResponseWriter, r *http.Request) {
