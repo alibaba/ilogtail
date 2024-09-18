@@ -142,11 +142,15 @@ InstanceConfigDiff InstanceConfigWatcher::CheckConfigDiff() {
                      ("existing valid config is removed", "prepare to stop current running pipeline")("config", name));
         }
     }
+    std::vector<std::string> keysToRemove;
     for (const auto& item : mFileInfoMap) {
         string configName = filesystem::path(item.first).stem().string();
         if (configSet.find(configName) == configSet.end()) {
-            mFileInfoMap.erase(item.first);
+            keysToRemove.push_back(item.first);
         }
+    }
+    for (const auto& key : keysToRemove) {
+        mFileInfoMap.erase(key);
     }
 
     if (!diff.IsEmpty()) {

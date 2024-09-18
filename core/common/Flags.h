@@ -91,8 +91,8 @@
 #define SAFE_SET_DOUBLE_FLAG(name, value) gflags::SetCommandLineOption("SAFE_FLAG_" #name, value)
 #define SAFE_SET_STRING_FLAG(name, value) gflags::SetCommandLineOption("SAFE_FLAG_" #name, value)
 
-#define SAFE_GET_INT32_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, value)
-#define SAFE_GET_INT64_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, value)
-#define SAFE_GET_BOOL_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, value)
-#define SAFE_GET_DOUBLE_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, value)
-#define SAFE_GET_STRING_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, value)
+#define SAFE_GET_INT32_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, &value)
+#define SAFE_GET_INT64_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, &value)
+#define SAFE_GET_BOOL_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, &value)
+#define SAFE_GET_DOUBLE_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, &value)
+#define SAFE_GET_STRING_FLAG(name, value) gflags::GetCommandLineOption("SAFE_FLAG_" #name, &value)
