@@ -223,7 +223,7 @@ void Application::Start() { // GCOVR_EXCL_START
                         ("failed to create dir for local pipelineconfig",
                          "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
         }
-        ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
+        InstanceConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
     }
 
 #ifdef __ENTERPRISE__

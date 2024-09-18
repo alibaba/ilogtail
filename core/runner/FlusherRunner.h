@@ -54,6 +54,7 @@ private:
 
     void Run();
     void Dispatch(SenderQueueItem* item);
+    void UpdateSendFlowControl();
 
     std::future<void> mThreadRes;
     std::atomic_bool mIsFlush = false;
@@ -67,8 +68,6 @@ private:
 
     bool mSendRandomSleep;
     bool mSendFlowControl;
-
-    void UpdateSendFlowControl();
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PluginRegistryUnittest;

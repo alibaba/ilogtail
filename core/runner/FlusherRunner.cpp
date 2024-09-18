@@ -55,7 +55,7 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
     const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
     const auto& envConf = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConf = AppConfig::GetInstance()->GetRemoteConfig();
-    auto ValidateFn = [](const std::string key, const int32_t value) -> bool {
+    auto ValidateFn = [](const std::string& key, const int32_t value) -> bool {
         if (key == "max_bytes_per_sec") {
             if (value < (int32_t)(1024 * 1024)) {
                 return false;

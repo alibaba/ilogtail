@@ -332,36 +332,6 @@ void AppConfig::loadLocalConfig(const std::string& ilogtailConfigFile) {
     mLocalConfig = confJson;
 }
 
-void AppConfig::loadEnvConfig() {
-    mEnvConfig.clear();
-
-#if defined(__linux__) || defined(__APPLE__)
-    if (environ != NULL) {
-        for (size_t i = 0; environ[i] != NULL; i++) {
-            std::string envStr = environ[i];
-            InitEnvMapping(envStr, mEnvConfig);
-        }
-    }
-#elif defined(_MSC_VER)
-    LPTSTR lpszVariable;
-    LPTCH lpvEnv;
-    lpvEnv = GetEnvironmentStrings();
-    if (lpvEnv == NULL) {
-        APSARA_LOG_WARNING(sLogger, ("GetEnvironmentStrings failed ", GetLastError()));
-    } else {
-        lpszVariable = (LPTSTR)lpvEnv;
-        while (*lpszVariable) {
-            std::string envStr = (std::string)lpszVariable;
-            InitEnvMapping(envStr, mEnvConfig);
-            lpszVariable += lstrlen(lpszVariable) + 1;
-        }
-        FreeEnvironmentStrings(lpvEnv);
-    }
-#endif
-
-    LOG_INFO(sLogger, ("Loaded environment config", mEnvConfig.toStyledString()));
-}
-
 /**
  * @brief 从环境变量加载标签
  *
@@ -1010,6 +980,11 @@ bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
  * 函数会根据配置项的存在与否来决定是否更新相应的成员变量或全局标志。
  */
 void AppConfig::LoadOtherConf(const Json::Value& confJson) {
+    // if (confJson.isMember("mapping_conf_path") && confJson["mapping_conf_path"].isString())
+    //     mMappingConfigPath = confJson["mapping_conf_path"].asString();
+    // else
+    //     mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+
     if (confJson.isMember("streamlog_open") && confJson["streamlog_open"].isBool()) {
         mOpenStreamLog = confJson["streamlog_open"].asBool();
     }
@@ -1128,17 +1103,6 @@ void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, 
     }
 }
 
-void AppConfig::InitEnvMapping(const std::string& envStr, Json::Value& envJson) {
-    int pos = envStr.find('=');
-    if (pos > 0 && size_t(pos) < envStr.size()) {
-        const std::string& key = envStr.substr(0, pos);
-        const std::string& value = envStr.substr(pos + 1);
-        envJson[key] = value;
-    } else {
-        APSARA_LOG_WARNING(sLogger, ("error to find ", "")("pos", pos)("env string", envStr));
-    }
-}
-
 /**
  * @brief 设置配置标志
  *
@@ -1167,22 +1131,7 @@ void AppConfig::SetConfigFlag(const std::string& flagName, const std::string& va
 #include "processenv.h"
 #endif
 
-/**
- * @brief 从环境变量解析配置标志
- *
- * 该函数从系统环境变量中读取配置,并将其设置为对应的标志。
- *
- * 主要步骤:
- * 1. 创建一个映射来存储环境变量
- * 2. 根据不同的操作系统,使用相应的方法读取环境变量
- *    - 在Linux/macOS上,使用environ变量
- *    - 在Windows上,使用GetEnvironmentStrings函数
- * 3. 将读取到的环境变量存入映射
- * 4. 遍历映射,将每个环境变量设置为对应的配置标志
- *
- * 注意:该函数会直接修改全局配置标志
- */
-void AppConfig::ParseEnvToFlags() {
+std::map<std::string, std::string> AppConfig::GetEnvMapping() {
     std::map<std::string, std::string> envMapping;
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -1207,14 +1156,63 @@ void AppConfig::ParseEnvToFlags() {
         }
     }
 #endif
-    for (auto iter = envMapping.begin(); iter != envMapping.end(); ++iter) {
-        const std::string& key = iter->first;
-        const std::string& value = iter->second;
+    return envMapping;
+}
+
+void AppConfig::ParseEnvToFlags() {
+    std::map<std::string, std::string> envMapping = GetEnvMapping();
+
+    for (auto& iter : envMapping) {
+        const std::string& key = iter.first;
+        const std::string& value = iter.second;
         SetConfigFlag(key, value);
     }
 }
 
-// 没用到
+void AppConfig::loadEnvConfig() {
+    std::map<std::string, std::string> envMapping = GetEnvMapping();
+    mEnvConfig.clear();
+    for (const auto& iter : envMapping) {
+        const std::string& flagName = iter.first;
+        const std::string& strValue = iter.second;
+        GFLAGS_NAMESPACE::CommandLineFlagInfo info;
+        bool rst = GetCommandLineFlagInfo(flagName.c_str(), &info);
+        if (rst) {
+            // 尝试解析为 double
+            char* end;
+            double doubleValue = strtod(strValue.c_str(), &end);
+            if (*end == '\0') {
+                mEnvConfig[flagName] = doubleValue;
+                continue;
+            }
+
+            // 尝试解析为 int64_t
+            int64_t int64Value = strtoll(strValue.c_str(), &end, 10);
+            if (*end == '\0' && errno != ERANGE) {
+                mEnvConfig[flagName] = Json::Int64(int64Value);
+                continue;
+            }
+
+            // 尝试解析为 int32_t
+            int32_t int32Value = static_cast<int32_t>(strtol(strValue.c_str(), &end, 10));
+            if (*end == '\0' && errno != ERANGE && static_cast<int64_t>(int32Value) == int64Value) {
+                mEnvConfig[flagName] = int32Value;
+                continue;
+            }
+
+            // 检查是否为 bool
+            if (strValue == "true" || strValue == "false") {
+                mEnvConfig[flagName] = (strValue == "true");
+                continue;
+            }
+
+            // 如果以上都不是，则作为 string 存储
+            mEnvConfig[flagName] = strValue;
+        }
+    }
+    LOG_INFO(sLogger, ("Loaded environment config", mEnvConfig.toStyledString()));
+}
+
 void AppConfig::DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& flagMap) {
     flagMap.clear();
     std::vector<GFLAGS_NAMESPACE::CommandLineFlagInfo> OUTPUT;
@@ -1227,7 +1225,6 @@ void AppConfig::DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& 
     LOG_DEBUG(sLogger, ("DumpAllFlagsToMap", flagMap.size())("Detail", ToString(detail)));
 }
 
-// 没用到
 void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::string>& flagMap) {
     for (auto iter : flagMap) {
         SetConfigFlag(iter.first, iter.second);
@@ -1449,6 +1446,21 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
     }
 #endif
 
+    // Update related configurations (local user config).
+    // if (STRING_FLAG(ilogtail_local_config).empty()) {
+    //     LOG_WARNING(sLogger, ("flag error", "ilogtail_local_config must be non-empty"));
+    //     STRING_FLAG(ilogtail_local_config) = DEFAULT_ILOGTAIL_LOCAL_CONFIG_FLAG_VALUE;
+    // }
+    // if (STRING_FLAG(ilogtail_local_config_dir).empty()) {
+    //     LOG_WARNING(sLogger, ("flag error", "ilogtail_local_config_dir must be non-empty"));
+    //     STRING_FLAG(ilogtail_local_config_dir) = DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE;
+    // }
+    // mUserLocalConfigPath = AbsolutePath(STRING_FLAG(ilogtail_local_config), mLogtailSysConfDir);
+    // mUserLocalConfigDirPath = AbsolutePath(STRING_FLAG(ilogtail_local_config_dir), mLogtailSysConfDir) +
+    // PATH_SEPARATOR; mUserLocalYamlConfigDirPath
+    //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
+    // mUserRemoteYamlConfigDirPath
+    //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     LOG_INFO(sLogger, ("set logtail sys conf dir", mLogtailSysConfDir));
 }
 

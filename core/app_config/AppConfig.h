@@ -223,6 +223,7 @@ private:
      *
      */
     void ParseEnvToFlags();
+    std::map<std::string, std::string> GetEnvMapping();
 
     /**
      * @brief Load resource related configs such as cpu, memory, buffer size, thread number, send concurrency.
