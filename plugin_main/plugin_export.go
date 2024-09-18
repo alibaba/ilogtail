@@ -371,7 +371,7 @@ func initPluginBase(cfgStr string) int {
 // setGCPercentForSlowStart sets GC percent with a small value at startup
 // to avoid high RSS (caused by data catch-up) to trigger OOM-kill.
 func setGCPercentForSlowStart() {
-	gcPercent := 20
+	gcPercent := 300
 	_ = util.InitFromEnvInt("ALIYUN_LOGTAIL_GOLANG_GC_PERCENT", &gcPercent, gcPercent)
 	defaultGCPercent := debug.SetGCPercent(gcPercent)
 	logger.Infof(context.Background(), "set startup GC percent from %v to %v", defaultGCPercent, gcPercent)

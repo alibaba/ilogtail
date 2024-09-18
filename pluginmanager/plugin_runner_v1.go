@@ -148,7 +148,7 @@ func (p *pluginv1Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
 		// TODO : give config for MaxCachedSize and PushNativeTimeout
-		wrapper.MaxCachedSize = 100
+		wrapper.MaxCachedSize = 1000
 		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
 		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
 		wrapper.ShutdownCachedChan = make(chan struct{})
@@ -164,7 +164,7 @@ func (p *pluginv1Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 	wrapper.LogsChan = p.LogsChan
 	if p.LogstoreConfig.GlobalConfig.GoInputToNativeProcessor {
 		// TODO : give config for MaxCachedSize and PushNativeTimeout
-		wrapper.MaxCachedSize = 100
+		wrapper.MaxCachedSize = 1000
 		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
 		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
 		wrapper.ShutdownCachedChan = make(chan struct{})
@@ -242,6 +242,7 @@ func (p *pluginv1Runner) runProcessor() {
 func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	var logCtx *pipeline.LogWithContext
+
 	for {
 		select {
 		case <-cc.CancelToken():

@@ -32,6 +32,7 @@ type LogGroupWithContext struct {
 
 type LogEventWithContext struct {
 	LogEvent *protocol.LogEvent
+	Tags     map[string]string
 	Context  map[string]interface{}
 }
 

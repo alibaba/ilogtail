@@ -97,11 +97,7 @@ func (p *ServiceWrapperV1) AddDataWithContext(tags map[string]string, fields map
 	// need push to native processor
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEvent(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, fields)
-		if ctx == nil {
-			ctx = make(map[string]interface{}, 1)
-		}
-		ctx[ctxKeyTags] = tags
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
+		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Tags: tags, Context: ctx}
 		p.inputRecordsTotal.Add(1)
 		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
 		return
@@ -126,11 +122,7 @@ func (p *ServiceWrapperV1) AddDataArrayWithContext(tags map[string]string,
 	// need push to native processor
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
 		logEvent, _ := helper.CreateLogEventByArray(logTime, p.Config.GlobalConfig.EnableTimestampNanosecond, columns, values)
-		if ctx == nil {
-			ctx = make(map[string]interface{}, 1)
-		}
-		ctx[ctxKeyTags] = tags
-		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Context: ctx}
+		p.LogsCachedChan <- &pipeline.LogEventWithContext{LogEvent: logEvent, Tags: tags, Context: ctx}
 		p.inputRecordsTotal.Add(1)
 		p.inputRecordsSizeBytes.Add(int64(logEvent.Size()))
 		return
@@ -154,58 +146,72 @@ func (p *ServiceWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[strin
 
 func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 	eventCached := make([]*protocol.LogEvent, 0, p.MaxCachedSize+1)
+	var tagsCached map[string]string
 	var ctxCached map[string]interface{}
 	var event *pipeline.LogEventWithContext
+	timer := time.NewTimer(p.PushNativeTimeout)
+	defer timer.Stop()
+	defer close(p.LogsCachedChan)
+	defer close(p.ShutdownCachedChan)
 
 	for {
 		select {
-		case <-time.After(p.PushNativeTimeout):
+		case <-timer.C:
 			if len(eventCached) != 0 {
-				p.pushNativeProcessQueue(eventCached, ctxCached)
+				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
 				eventCached = eventCached[:0]
-				ctxCached = make(map[string]interface{})
 			}
+			if !timer.Stop() {
+				<-timer.C
+			}
+			timer.Reset(p.PushNativeTimeout)
 		case event = <-p.LogsCachedChan:
-			logTags, okLog := event.Context[ctxKeyTags].(map[string]string)
-			cachedTags, okCached := ctxCached[ctxKeyTags].(map[string]string)
-			if okLog && okCached {
-				if !reflect.DeepEqual(logTags, cachedTags) {
-					p.pushNativeProcessQueue(eventCached, ctxCached)
+			// check if tags and context are the same, if not, push the cached logs
+			if len(eventCached) != 0 {
+				same := true
+				for k, v := range event.Tags {
+					if tagsCached[k] != v {
+						same = false
+						break
+					}
+				}
+				same = same && reflect.DeepEqual(ctxCached, event.Context)
+				if !same {
+					p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
 					eventCached = eventCached[:0]
-					ctxCached = event.Context
+					if !timer.Stop() {
+						<-timer.C
+					}
+					timer.Reset(p.PushNativeTimeout)
 				}
 			}
+			// cache the log event
 			eventCached = append(eventCached, event.LogEvent)
-			if len(ctxCached) == 0 {
-				ctxCached = event.Context
-			}
+			tagsCached = event.Tags
+			ctxCached = event.Context
+			// push the cached logs if the cache is full
 			if len(eventCached) >= p.MaxCachedSize {
-				p.pushNativeProcessQueue(eventCached, ctxCached)
+				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
 				eventCached = eventCached[:0]
-				ctxCached = make(map[string]interface{})
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(p.PushNativeTimeout)
 			}
 		case <-p.ShutdownCachedChan:
 			if len(eventCached) != 0 {
-				p.pushNativeProcessQueue(eventCached, ctxCached)
+				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
 			}
 			for len(p.LogsCachedChan) > 0 {
 				<-p.LogsCachedChan
 			}
-			close(p.LogsCachedChan)
-			close(p.ShutdownCachedChan)
 			return
 		}
 	}
 }
 
-func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, ctx map[string]interface{}) {
-	tags, ok := ctx[ctxKeyTags].(map[string]string)
-	if ok {
-		for k, v := range p.Tags {
-			tags[k] = v
-		}
-	}
-	group, _ := helper.CreatePipelineEventGroupV1(events, ctx)
+func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, tags map[string]string, ctx map[string]interface{}) {
+	group, _ := helper.CreatePipelineEventGroupV1(events, p.Tags, tags, ctx)
 	buffer, err := group.Marshal()
 	if err != nil {
 		logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "marshal log failed", err)
@@ -222,5 +228,8 @@ func (p *ServiceWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, c
 	case pipeline.PULL:
 		logtail.PushQueue(p.Config.ConfigName, buffer)
 	default:
+	}
+	for _, event := range events {
+		helper.LogEventPool.Put(event)
 	}
 }

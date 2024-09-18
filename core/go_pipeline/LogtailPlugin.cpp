@@ -279,7 +279,6 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
     }
 
     string pbStr(pbBuffer, pbSize);
-    eventGroupSrc.Clear();
     if (!eventGroupSrc.ParseFromString(pbStr)) {
         LOG_ERROR(sLogger, ("parse pb failed in PushQueue", "invalid pb"));
         return -1;
