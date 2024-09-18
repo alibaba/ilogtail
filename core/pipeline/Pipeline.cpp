@@ -22,7 +22,6 @@
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "monitor/MetricConstants.h"
 #include "pipeline/batch/TimeoutFlushManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "pipeline/queue/ProcessQueueManager.h"
@@ -74,16 +73,9 @@ bool Pipeline::Init(PipelineConfig&& config) {
     mContext.SetCreateTime(config.mCreateTime);
     mContext.SetPipeline(*this);
     mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
-
-
-    WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
-                                                        {
-                                                            {METRIC_LABEL_PROJECT, config.mProject},
-                                                            {METRIC_LABEL_CONFIG_NAME, config.mName},
-                                                        });
+    mMetricsRecordRef.AddLabels({{METRIC_LABEL_PROJECT, config.mProject}});
     mMetricsRecordRef.AddLabels({{METRIC_LABEL_CONFIG_NAME, mName}});
     WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
-    mLoadDelayMs = mMetricsRecordRef.CreateCounter("config_load_delay_ms");
 
     // for special treatment below
     const InputFile* inputFile = nullptr;

@@ -25,6 +25,7 @@
 
 #include "config/PipelineConfig.h"
 #include "models/PipelineEventGroup.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/FlusherInstance.h"
 #include "pipeline/plugin/instance/InputInstance.h"
@@ -37,6 +38,10 @@ namespace logtail {
 
 class Pipeline {
 public:
+    Pipeline() {
+        WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef, {});
+        mLoadDelayMs = mMetricsRecordRef.CreateCounter("config_load_delay_ms");
+    }
     // copy/move control functions are deleted because of mContext
     bool Init(PipelineConfig&& config);
     void Start();
