@@ -410,7 +410,7 @@ func Contains[T comparable](s []T, e T) bool {
 }
 
 func String2Bytes(s string) []byte {
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s)) //nolint
 	bh := reflect.SliceHeader{
 		Data: sh.Data,
 		Len:  sh.Len,
