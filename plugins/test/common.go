@@ -58,8 +58,10 @@ func LoadAndStartMockConfig(project, logstore, configName, jsonStr string) *plug
 	if err != nil {
 		panic(err)
 	}
-	pluginmanager.Start(configName)
-	object, _ := pluginmanager.LogtailConfig[configName]
+	if err := pluginmanager.Start(configName); err != nil {
+		panic(err)
+	}
+	object := pluginmanager.LogtailConfig[configName]
 	return object
 }
 

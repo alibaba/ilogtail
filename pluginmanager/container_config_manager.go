@@ -283,7 +283,7 @@ func isCollectContainers() bool {
 	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.CollectingContainersMeta {
 			found = true
-			return false // exit range iteration
+			break
 		}
 	}
 	LogtailConfigLock.RUnlock()

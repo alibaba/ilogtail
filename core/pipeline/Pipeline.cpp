@@ -22,6 +22,7 @@
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/batch/TimeoutFlushManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
 #include "pipeline/queue/ProcessQueueManager.h"
@@ -66,12 +67,23 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
 }
 
 bool Pipeline::Init(PipelineConfig&& config) {
+    mInitTime = std::chrono::system_clock::now();
     mName = config.mName;
     mConfig = std::move(config.mDetail);
     mContext.SetConfigName(mName);
     mContext.SetCreateTime(config.mCreateTime);
     mContext.SetPipeline(*this);
     mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
+
+
+    WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef,
+                                                        {
+                                                            {METRIC_LABEL_PROJECT, config.mProject},
+                                                            {METRIC_LABEL_CONFIG_NAME, config.mName},
+                                                        });
+    mMetricsRecordRef.AddLabels({{METRIC_LABEL_CONFIG_NAME, mName}});
+    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
+    mLoadDelayMs = mMetricsRecordRef.CreateCounter("config_load_delay_ms");
 
     // for special treatment below
     const InputFile* inputFile = nullptr;
@@ -339,6 +351,7 @@ void Pipeline::Start() {
     }
 
     LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName));
+    mLoadDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - mInitTime).count());
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
@@ -477,7 +490,6 @@ bool Pipeline::LoadGoPipelines() const {
     // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
     if (!mGoPipelineWithoutInput.isNull()) {
         string content = mGoPipelineWithoutInput.toStyledString();
-        LOG_INFO(sLogger, ("load go pipeline", "without input")("content", content)("config", mName));
         string goConfigName = GetConfigNameOfGoPipelineWithoutInput();
         if (!LogtailPlugin::GetInstance()->LoadPipeline(goConfigName,
                                                         content,
@@ -498,7 +510,6 @@ bool Pipeline::LoadGoPipelines() const {
     }
     if (!mGoPipelineWithInput.isNull()) {
         string content = mGoPipelineWithInput.toStyledString();
-        LOG_INFO(sLogger, ("load go pipeline", "with input")("content", content)("config", mName));
         string goConfigName = GetConfigNameOfGoPipelineWithInput();
         if (!LogtailPlugin::GetInstance()->LoadPipeline(goConfigName,
                                                         content,

@@ -278,17 +278,16 @@ func Start(configName string) error {
 		LogtailConfigLock.Unlock()
 		ToStartLogtailConfigWithoutInput = nil
 		return nil
-	} else {
-		// should never happen
-		var loadedConfigName string
-		if ToStartLogtailConfigWithInput != nil {
-			loadedConfigName = ToStartLogtailConfigWithInput.ConfigNameWithSuffix
-		}
-		if ToStartLogtailConfigWithoutInput != nil {
-			loadedConfigName += " " + ToStartLogtailConfigWithoutInput.ConfigNameWithSuffix
-		}
-		return fmt.Errorf("config unmatch with the loaded pipeline: given %s, expect %s", configName, loadedConfigName)
 	}
+	// should never happen
+	var loadedConfigName string
+	if ToStartLogtailConfigWithInput != nil {
+		loadedConfigName = ToStartLogtailConfigWithInput.ConfigNameWithSuffix
+	}
+	if ToStartLogtailConfigWithoutInput != nil {
+		loadedConfigName += " " + ToStartLogtailConfigWithoutInput.ConfigNameWithSuffix
+	}
+	return fmt.Errorf("config unmatch with the loaded pipeline: given %s, expect %s", configName, loadedConfigName)
 }
 
 func init() {

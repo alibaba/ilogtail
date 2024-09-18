@@ -104,6 +104,11 @@ private:
     std::atomic_uint16_t mPluginID;
     std::atomic_uint16_t mProcessingCnt;
 
+    // self-observation
+    mutable MetricsRecordRef mMetricsRecordRef;
+    std::chrono::system_clock::time_point mInitTime;
+    CounterPtr mLoadDelayMs;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;
     friend class PipelineUnittest;
