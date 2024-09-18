@@ -25,8 +25,8 @@ bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context, 
         return false;
     }
 
-    mInEventsCnt = mPlugin->GetMetricsRecordRef().CreateCounter("in_events_cnt");
-    mInGroupDataSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter("in_event_group_data_size_bytes");
+    mInEventsCnt = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_IN_EVENTS_CNT);
+    mInGroupDataSizeBytes = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_IN_EVENT_GROUP_SIZE_BYTES);
     return true;
 }
 

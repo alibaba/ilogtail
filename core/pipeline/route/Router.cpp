@@ -39,8 +39,8 @@ bool Router::Init(std::vector<pair<size_t, const Json::Value*>> configs, const P
                                                          {{METRIC_LABEL_PROJECT, ctx.GetProjectName()},
                                                           {METRIC_LABEL_CONFIG_NAME, ctx.GetConfigName()},
                                                           {METRIC_LABEL_KEY_COMPONENT_NAME, "router"}});
-    mInEventsCnt = mMetricsRecordRef.CreateCounter("in_events_cnt");
-    mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter("in_event_group_data_size_bytes");
+    mInEventsCnt = mMetricsRecordRef.CreateCounter(METRIC_IN_EVENTS_CNT);
+    mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUP_SIZE_BYTES);
     return true;
 }
 

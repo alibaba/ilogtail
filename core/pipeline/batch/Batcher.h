@@ -110,10 +110,10 @@ public:
             labels.emplace_back("enable_group_batch", "false");
         }
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-        mInEventsCnt = mMetricsRecordRef.CreateCounter("in_events_cnt");
-        mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter("in_event_group_data_size_bytes");
-        mOutEventsCnt = mMetricsRecordRef.CreateCounter("out_events_cnt");
-        mTotalDelayMs = mMetricsRecordRef.CreateCounter("total_delay_ms");
+        mInEventsCnt = mMetricsRecordRef.CreateCounter(METRIC_IN_EVENTS_CNT);
+        mInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUP_SIZE_BYTES);
+        mOutEventsCnt = mMetricsRecordRef.CreateCounter(METRIC_OUT_EVENTS_CNT);
+        mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_TOTAL_DELAY_MS);
         mEventBatchItemsCnt = mMetricsRecordRef.CreateIntGauge("buffers_cnt");
         mBufferedGroupsCnt = mMetricsRecordRef.CreateIntGauge("buffered_groups_cnt");
         mBufferedEventsCnt = mMetricsRecordRef.CreateIntGauge("buffered_events_cnt");

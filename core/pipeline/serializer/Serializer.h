@@ -53,13 +53,13 @@ public:
              {METRIC_LABEL_CONFIG_NAME, f->GetContext().GetConfigName()},
              {METRIC_LABEL_KEY_COMPONENT_NAME, "serializer"},
              {METRIC_LABEL_KEY_FLUSHER_NODE_ID, f->GetNodeID()}});
-        mInItemsCnt = mMetricsRecordRef.CreateCounter("in_items_cnt");
-        mInItemSizeBytes = mMetricsRecordRef.CreateCounter("in_item_data_size_bytes");
-        mOutItemsCnt = mMetricsRecordRef.CreateCounter("out_items_cnt");
-        mOutItemSizeBytes = mMetricsRecordRef.CreateCounter("out_item_data_size_bytes");
+        mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEMS_CNT);
+        mInItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEM_SIZE_BYTES);
+        mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_OUT_ITEMS_CNT);
+        mOutItemSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_OUT_ITEM_SIZE_BYTES);
         mDiscardedItemsCnt = mMetricsRecordRef.CreateCounter("discarded_items_cnt");
         mDiscardedItemSizeBytes = mMetricsRecordRef.CreateCounter("discarded_item_data_size_bytes");
-        mTotalDelayMs = mMetricsRecordRef.CreateCounter("total_delay_ms");
+        mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_TOTAL_DELAY_MS);
     }
     virtual ~Serializer() = default;
 
