@@ -16,8 +16,6 @@
 
 #include "prometheus/schedulers/TargetSubscriberScheduler.h"
 
-#include <xxhash/xxhash.h>
-
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -58,7 +56,7 @@ bool TargetSubscriberScheduler::operator<(const TargetSubscriberScheduler& other
     return mJobName < other.mJobName;
 }
 
-void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response) {
+void TargetSubscriberScheduler::OnSubscription(const HttpResponse& response, uint64_t) {
     if (response.mStatusCode == 304) {
         // not modified
         return;
@@ -102,15 +100,20 @@ void TargetSubscriberScheduler::UpdateScrapeScheduler(
             if (mScrapeSchedulerMap.find(k) == mScrapeSchedulerMap.end()) {
                 mScrapeSchedulerMap[k] = v;
                 if (mTimer) {
+                    auto tmpCurrentMilliSeconds = GetCurrentTimeInMilliSeconds();
+                    auto tmpRandSleepMilliSec = GetRandSleepMilliSec(
+                        v->GetId(), mScrapeConfigPtr->mScrapeIntervalSeconds, tmpCurrentMilliSeconds);
+
                     // zero-cost upgrade
                     if (mUnRegisterMs > 0
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
-                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000
-                            > mUnRegisterMs * 1000000)
-                        && (GetCurrentTimeInNanoSeconds() + v->GetRandSleep()
-                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000000000 * 2
-                            < mUnRegisterMs * 1000000)) {
+                        && (tmpCurrentMilliSeconds + tmpRandSleepMilliSec
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000
+                            > mUnRegisterMs)
+                        && (tmpCurrentMilliSeconds + tmpRandSleepMilliSec
+                                - (uint64_t)mScrapeConfigPtr->mScrapeIntervalSeconds * 1000 * 2
+                            < mUnRegisterMs)) {
                         // scrape once just now
+                        LOG_INFO(sLogger, ("scrape zero cost", ToString(tmpCurrentMilliSeconds)));
                         v->ScrapeOnce(std::chrono::steady_clock::now());
                     }
                     v->ScheduleNext();
@@ -212,9 +215,10 @@ TargetSubscriberScheduler::BuildScrapeSchedulerSet(std::vector<Labels>& targetGr
             = std::make_shared<ScrapeScheduler>(mScrapeConfigPtr, host, port, resultLabel, mQueueKey, mInputIndex);
 
         scrapeScheduler->SetTimer(mTimer);
-        auto firstExecTime
-            = std::chrono::steady_clock::now() + std::chrono::nanoseconds(scrapeScheduler->GetRandSleep());
 
+        auto randSleepMilliSec = GetRandSleepMilliSec(
+            scrapeScheduler->GetId(), prometheus::RefeshIntervalSeconds, GetCurrentTimeInMilliSeconds());
+        auto firstExecTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(randSleepMilliSec);
         scrapeScheduler->SetFirstExecTime(firstExecTime);
 
         scrapeSchedulerMap[scrapeScheduler->GetId()] = scrapeScheduler;
@@ -232,8 +236,8 @@ string TargetSubscriberScheduler::GetId() const {
 
 void TargetSubscriberScheduler::ScheduleNext() {
     auto future = std::make_shared<PromFuture>();
-    future->AddDoneCallback([this](const HttpResponse& response) {
-        this->OnSubscription(response);
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampMilliSec) {
+        this->OnSubscription(response, timestampMilliSec);
         this->ExecDone();
         this->ScheduleNext();
     });
@@ -258,6 +262,18 @@ void TargetSubscriberScheduler::Cancel() {
         mValidState = false;
     }
     CancelAllScrapeScheduler();
+}
+
+void TargetSubscriberScheduler::SubscribeOnce(std::chrono::steady_clock::time_point execTime) {
+    auto future = std::make_shared<PromFuture>();
+    future->AddDoneCallback([this](const HttpResponse& response, uint64_t timestampNanoSec) {
+        this->OnSubscription(response, timestampNanoSec);
+    });
+    mFuture = future;
+    auto event = BuildSubscriberTimerEvent(execTime);
+    if (mTimer) {
+        mTimer->PushEvent(std::move(event));
+    }
 }
 
 std::unique_ptr<TimerEvent>
