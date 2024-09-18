@@ -24,14 +24,14 @@ namespace logtail {
     providers modules are used to replace the default implementation of ilogtail.
 */
 
-// GetRemoteConfigProviders returns a map of remote config providers.
-// The key is the filepath that the provider will use, and the value is the provider instance.
+// GetRemoteConfigProviders returns a vector of pairs for remote config providers.
+// The first element is the filepath that the provider will use, and the second one is the provider instance.
 // It currently returns two providers: LegacyCommonConfigProvider and CommonConfigProvider.
-std::vector<std::pair<std::string, ConfigProvider*>> GetRemoteConfigProviders() ;
+std::vector<std::pair<std::string, ConfigProvider*>> GetRemoteConfigProviders();
 
 // InitRemoteConfigProviders initializes the remote config providers.
 // It currently initializes the LegacyCommonConfigProvider and CommonConfigProvider.
-void InitRemoteConfigProviders(const std::vector<std::pair<std::string, ConfigProvider*>>& providers)
+void InitRemoteConfigProviders(const std::vector<std::pair<std::string, ConfigProvider*>>& providers);
 
 // GetProfileSender returns the ProfileSender instance.
 ProfileSender* GetProfileSender();
