@@ -41,6 +41,8 @@ DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
 using namespace std;
 using namespace logtail;
 
+std::optional<logtail::PipelineEventGroup> TransferPBToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
+
 LogtailPlugin* LogtailPlugin::s_instance = NULL;
 
 LogtailPlugin::LogtailPlugin() {
@@ -283,73 +285,14 @@ int LogtailPlugin::PushQueue(const char* configName, int configNameSize, const c
         LOG_ERROR(sLogger, ("parse pb failed in PushQueue", "invalid pb"));
         return -1;
     }
-    logtail::PipelineEventGroup eventGroupDst(std::make_shared<SourceBuffer>());
-    for (auto& tag : eventGroupSrc.tags()) {
-        eventGroupDst.SetTag(tag.first, tag.second);
-    }
-    for (auto& metaData : eventGroupSrc.metadata()) {
-        if (metaData.first == "source") {
-            eventGroupDst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
-        }
-    }
-    switch (eventGroupSrc.type())
-    {
-    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_LOG:
-        if (eventGroupSrc.logs_size() == 0) {
-            LOG_ERROR(sLogger, ("invalid event group, no logs", ""));
-            return -1;
-        }
-        eventGroupDst.MutableEvents().reserve(eventGroupSrc.logs_size());
-        for (auto& logSrc : eventGroupSrc.logs()) {
-            auto logDst = eventGroupDst.CreateLogEvent();
-            std::optional<uint32_t> ns;
-            time_t t = time_t(logSrc.time());
-            if (logSrc.has_time_ns()) {
-                ns = logSrc.time_ns();
-            }
-            logDst->SetTimestamp(t, ns);
-            for (auto& content_pair : logSrc.contents()) {
-                logDst->SetContent(content_pair.key(), content_pair.value());
-            }
-            eventGroupDst.MutableEvents().emplace_back(std::move(logDst));
-        }
-        break;
-    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_METRIC:
-        if (eventGroupSrc.metrics_size() == 0) {
-            LOG_ERROR(sLogger, ("invalid event group, no metrics", ""));
-            return -1;
-        }
-        eventGroupDst.MutableEvents().reserve(eventGroupSrc.metrics_size());
-        for (auto& metricSrc : eventGroupSrc.metrics()) {
-            auto metricDst = eventGroupDst.CreateMetricEvent();
-            uint32_t t = metricSrc.time();
-            std::optional<uint32_t> ns;
-            if (metricSrc.has_time_ns()) {
-                ns = metricSrc.time_ns();
-            }
-            metricDst->SetTimestamp(t, ns);
-            metricDst->SetName(metricSrc.name());
-            switch (metricSrc.type()) {
-            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_SINGLE:
-                metricDst->SetValue(UntypedSingleValue{metricSrc.singlevalue()});
-                break;
-            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_MULTI:
-                LOG_ERROR(sLogger, ("metric value type mutivalue unsported", ""));
-            }
-            for (auto& tag_pair : metricSrc.tags()) {
-                metricDst->SetTag(tag_pair.first, tag_pair.second);
-            }
-            eventGroupDst.MutableEvents().emplace_back(std::move(metricDst));
-        }
-        break;
-    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_SPAN:
-        break;
-    default:
-        LOG_ERROR(sLogger, ("invalid event type", eventGroupSrc.type()));
+    auto eventGroupDst = TransferPBToPipelineEventGroup(eventGroupSrc);
+    if (eventGroupDst == std::nullopt) {
+        LOG_ERROR(sLogger, ("transfer pb to pipeline_event_group failed", ""));
+        return -1;
     }
 
     auto processQueueKey = pipeline->GetContext().GetProcessQueueKey();
-    return ProcessQueueManager::GetInstance()->PushQueue(processQueueKey, std::make_unique<ProcessQueueItem>(std::move(eventGroupDst), 0xFFFFFFFF));
+    return ProcessQueueManager::GetInstance()->PushQueue(processQueueKey, std::make_unique<ProcessQueueItem>(std::move(eventGroupDst.value()), 0xFFFFFFFF));
 }
 
 
@@ -672,4 +615,71 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
         }
     }
     return K8sContainerMeta();
+}
+
+std::optional<logtail::PipelineEventGroup> TransferPBToPipelineEventGroup(const sls_logs::PipelineEventGroup& src) {
+    logtail::PipelineEventGroup dst(std::make_shared<SourceBuffer>());
+    switch (src.type())
+    {
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_LOG:
+        if (src.logs_size() == 0) {
+            return std::nullopt;
+        }
+        dst.MutableEvents().reserve(src.logs_size());
+        for (auto& logSrc : src.logs()) {
+            auto logDst = dst.CreateLogEvent();
+            std::optional<uint32_t> ns;
+            time_t t = time_t(logSrc.time());
+            if (logSrc.has_time_ns()) {
+                ns = logSrc.time_ns();
+            }
+            logDst->SetTimestamp(t, ns);
+            for (auto& content_pair : logSrc.contents()) {
+                logDst->SetContent(content_pair.key(), content_pair.value());
+            }
+            dst.MutableEvents().emplace_back(std::move(logDst));
+        }
+        break;
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_METRIC:
+        if (src.metrics_size() == 0) {
+            return std::nullopt;
+        }
+        dst.MutableEvents().reserve(src.metrics_size());
+        for (auto& metricSrc : src.metrics()) {
+            auto metricDst = dst.CreateMetricEvent();
+            uint32_t t = metricSrc.time();
+            std::optional<uint32_t> ns;
+            if (metricSrc.has_time_ns()) {
+                ns = metricSrc.time_ns();
+            }
+            metricDst->SetTimestamp(t, ns);
+            metricDst->SetName(metricSrc.name());
+            switch (metricSrc.type()) {
+            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_SINGLE:
+                metricDst->SetValue(UntypedSingleValue{metricSrc.singlevalue()});
+                break;
+            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_MULTI:
+                LOG_ERROR(sLogger, ("metric value type mutivalue unsported", ""));
+            }
+            for (auto& tag_pair : metricSrc.tags()) {
+                metricDst->SetTag(tag_pair.first, tag_pair.second);
+            }
+            dst.MutableEvents().emplace_back(std::move(metricDst));
+        }
+        break;
+    default:
+        return std::nullopt;
+    }
+
+    for (auto& tag : src.tags()) {
+        dst.SetTag(tag.first, tag.second);
+    }
+
+    for (auto& metaData : src.metadata()) {
+        if (metaData.first == "source") {
+            dst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
+        }
+    }
+
+    return dst;
 }
