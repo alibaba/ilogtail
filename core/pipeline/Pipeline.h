@@ -26,6 +26,7 @@
 #include "config/PipelineConfig.h"
 #include "models/PipelineEventGroup.h"
 #include "monitor/MetricConstants.h"
+#include "monitor/LogtailMetric.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/FlusherInstance.h"
 #include "pipeline/plugin/instance/InputInstance.h"
@@ -109,13 +110,17 @@ private:
     std::atomic_uint16_t mPluginID;
     std::atomic_uint16_t mProcessingCnt;
 
-    // self-observation
     mutable MetricsRecordRef mMetricsRecordRef;
+    IntGaugePtr mStartTime;
+    CounterPtr mProcessorsInEventsCnt;
+    CounterPtr mProcessorsInGroupsCnt;
+    CounterPtr mProcessorsInGroupDataSizeBytes;
+    CounterPtr mProcessorsTotalDelayMs;
     std::chrono::system_clock::time_point mInitTime;
     CounterPtr mLoadDelayMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class PipelineMock;
+        friend class PipelineMock;
     friend class PipelineUnittest;
     friend class InputContainerStdioUnittest;
     friend class InputFileUnittest;
