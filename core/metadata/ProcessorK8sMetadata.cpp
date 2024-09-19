@@ -76,10 +76,10 @@ bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::st
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
-    StringView container_id_view("container.id");
-    StringView containerId_view = e.HasTag(container_id_view) ? e.GetTag(container_id_view) : StringView{};
-    if (!containerId_view.empty()) {
-        std::string containerId(containerId_view);
+    StringView containerIdViewKey("container.id");
+    StringView containerIdView = e.HasTag(containerIdViewKey) ? e.GetTag(containerIdViewKey) : StringView{};
+    if (!containerIdView.empty()) {
+        std::string containerId(containerIdView);
         std::shared_ptr<k8sContainerInfo> container_info = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
         if (container_info == nullptr) {
             containerVec.push_back(containerId);
@@ -93,10 +93,10 @@ bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::st
         }
     }
 
-    StringView ip_view("remote_ip");
-    StringView remote_ip_view = e.HasTag(ip_view) ? e.GetTag(ip_view) : StringView{};
-    if (!remote_ip_view.empty()) {
-        std::string remote_ip(remote_ip_view);
+    StringView ipView("remote_ip");
+    StringView remoteIpView = e.HasTag(ipView) ? e.GetTag(ipView) : StringView{};
+    if (!remoteIpView.empty()) {
+        std::string remote_ip(remoteIpView);
         std::shared_ptr<k8sContainerInfo> ip_info = k8sMetadata.GetInfoByIpFromCache(remote_ip);
         if (ip_info == nullptr) {
             remoteIpVec.push_back(remote_ip);
@@ -115,10 +115,10 @@ bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
-    StringView container_id_view("container.id");
-    StringView containerId_view = e.HasTag(container_id_view) ? e.GetTag(container_id_view) : StringView{};
-    if (!containerId_view.empty()) {
-        std::string containerId(containerId_view);
+    StringView containerIdViewKey("container.id");
+    StringView containerIdView = e.HasTag(containerIdViewKey) ? e.GetTag(containerIdViewKey) : StringView{};
+    if (!containerIdView.empty()) {
+        std::string containerId(containerIdView);
         std::shared_ptr<k8sContainerInfo> container_info = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
         if (container_info == nullptr) {
             containerVec.push_back(containerId);
@@ -132,10 +132,10 @@ bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std
         }
     }
 
-    StringView ip_view("remote_ip");
-    StringView remote_ip_view = e.HasTag(ip_view) ? e.GetTag(ip_view) : StringView{};
-    if (!remote_ip_view.empty()) {
-        std::string remote_ip(remote_ip_view);
+    StringView ipView("remote_ip");
+    StringView remoteIpView = e.HasTag(ipView) ? e.GetTag(ipView) : StringView{};
+    if (!remoteIpView.empty()) {
+        std::string remote_ip(remoteIpView);
         std::shared_ptr<k8sContainerInfo> ip_info = k8sMetadata.GetInfoByIpFromCache(remote_ip);
         if (ip_info == nullptr) {
             remoteIpVec.push_back(remote_ip);
