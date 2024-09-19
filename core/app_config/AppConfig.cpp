@@ -157,6 +157,9 @@ DEFINE_FLAG_STRING(loong_collector_operator_service, "loong collector operator s
 DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operator service port", 8888);
 DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
+DEFINE_FLAG_STRING(loong_collector_k8s_meta_service, "loong metadata operator service", "");
+DEFINE_FLAG_INT32(loong_collector_k8s_meta_service_port, "loong metadata operator service port", 9000);
+
 namespace logtail {
 AppConfig::AppConfig() {
     LOG_INFO(sLogger, ("AppConfig AppConfig", "success"));

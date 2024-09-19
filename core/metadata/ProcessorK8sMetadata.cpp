@@ -45,10 +45,10 @@ void ProcessorK8sMetadata::Process(PipelineEventGroup& logGroup) {
     }
     auto& k8sMetadata = K8sMetadata::GetInstance();
     if (!container_vec.empty()) {
-        k8sMetadata.GetByContainerIds(container_vec);
+        k8sMetadata.GetByContainerIdsFromServer(container_vec);
     }
     if (!remote_ip_vec.empty()) {
-        k8sMetadata.GetByIps(remote_ip_vec);
+        k8sMetadata.GetByIpsFromServer(remote_ip_vec);
     }
     for (size_t i = 0; i < cotainer_not_tag.size(); ++i) {
         ProcessEvent(events[i], container_vec, remote_ip_vec);

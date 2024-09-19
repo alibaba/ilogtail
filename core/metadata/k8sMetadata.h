@@ -15,7 +15,11 @@
 #include <string>
 #include <curl/curl.h>
 #include "common/LRUCache.h"
+#include "app_config/AppConfig.h"
 #include <json/json.h>
+
+DECLARE_FLAG_STRING(loong_collector_k8s_meta_service);
+DECLARE_FLAG_INT32(loong_collector_k8s_meta_service_port);
 
 namespace logtail {
     struct k8sContainerInfo {
@@ -42,36 +46,42 @@ namespace logtail {
 
     class K8sMetadata {
         private:
-            lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> container_cache;
-            lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> ip_cache;
-            std::string oneOperatorAddr;
-            std::string oneOperatorContainerIdAddr;
-            K8sMetadata(size_t cacheSize, const std::string& operatorAddr)
-              : container_cache(cacheSize, 0), ip_cache(cacheSize, 0), oneOperatorAddr(operatorAddr) {
-                //GetByLocalHost();
-                oneOperatorContainerIdAddr = oneOperatorAddr;
+            lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> containerCache;
+            lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> ipCache;
+            std::string mServiceHost;
+            std::string mServicePort;
+            K8sMetadata(size_t cacheSize)
+              : containerCache(cacheSize, 0), ipCache(cacheSize, 0){
+                mServiceHost = STRING_FLAG(loong_collector_operator_service);
+                mServicePort = INT32_FLAG(loong_collector_operator_service_port);
               }
             K8sMetadata(const K8sMetadata&) = delete;
             K8sMetadata& operator=(const K8sMetadata&) = delete;
 
-        public:
-            static K8sMetadata& GetInstance(size_t cacheSize = 500, const std::string& operatorAddr = "oneoperator") {
-                static K8sMetadata instance(cacheSize, operatorAddr);
-                return instance;
-            }
-
-            // 公共方法
-            void GetByContainerIds(std::vector<std::string> containerIds);
-            void GetByLocalHost();
-            void GetByIps(std::vector<std::string> ips);
-            std::shared_ptr<k8sContainerInfo> GetInfoByContainerIdFromCache(const std::string& containerId);
-            std::shared_ptr<k8sContainerInfo> GetInfoByIpFromCache(const std::string& ip);
-            bool SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
-            void GetK8sMetadataFromOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
             void SetIpCache(const Json::Value& root);
             void SetContainerCache(const Json::Value& root);
             void FromInfoJson(const Json::Value& json, k8sContainerInfo& info);
             void FromContainerJson(const Json::Value& json, std::shared_ptr<ContainerData> data);
+
+        public:
+            static K8sMetadata& GetInstance() {
+                static K8sMetadata instance(500);
+                return instance;
+            }
+
+            // 公共方法
+            //if cache not have,get from server
+            void GetByContainerIdsFromServer(std::vector<std::string> containerIds);
+            void GetByLocalHostFromServer();
+            void GetByIpsFromServer(std::vector<std::string> ips);
+            // get info by container id from cache
+            std::shared_ptr<k8sContainerInfo> GetInfoByContainerIdFromCache(const std::string& containerId);
+            // get info by ip from cache
+            std::shared_ptr<k8sContainerInfo> GetInfoByIpFromCache(const std::string& ip);
+            bool SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType);
+    #ifdef APSARA_UNIT_TEST_MAIN
+        friend class k8sMetadataUnittest;
+    #endif
     };  
     
 } // namespace logtail

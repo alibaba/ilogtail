@@ -81,16 +81,7 @@ namespace logtail {
             FromInfoJson(json[key], info);
             data->containers[key] = info;
         }
-    } 
-
-    void K8sMetadata::GetK8sMetadataFromOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {
-        bool isOk = false;
-        isOk = SendRequestToOperator(oneOperatorContainerIdAddr, output, containerInfoType::ContainerIdInfo);
-        if (!isOk) {
-            LOG_DEBUG(sLogger, ("Failed to send request ", urlHost));
-        }
-        return;
-    }   
+    }
 
     bool K8sMetadata::SendRequestToOperator(const std::string& urlHost, const std::string& output, containerInfoType infoType) {    
         std::unique_ptr<HttpRequest> request;
@@ -99,8 +90,12 @@ namespace logtail {
         if (infoType == containerInfoType::IpInfo) {
             path = "/metadata/ip";
         }
-        request = std::make_unique<HttpRequest>("GET", false, oneOperatorAddr, 9000, path, "", map<std::string, std::string>(), "", 30, 3);
+        request = std::make_unique<HttpRequest>("GET", false, mServiceHost, mServicePort, path, "", map<std::string, std::string>(), output, 30, 3);
         bool success = SendHttpRequest(std::move(request), res);
+        if (res.mStatusCode != 200) {
+            LOG_DEBUG(sLogger, ("fetch k8s meta from one operator fail, code is ", res.mStatusCode));
+            return false;
+        }
         if (success) {
             Json::CharReaderBuilder readerBuilder;
             Json::CharReader* reader = readerBuilder.newCharReader();
@@ -115,9 +110,9 @@ namespace logtail {
                 FromContainerJson(root, data); 
                 for (const auto& pair : data->containers) {
                     if (infoType == containerInfoType::ContainerIdInfo) {
-                        container_cache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+                        containerCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
                     } else {
-                        ip_cache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+                        ipCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
                     }
                 }
             } else {
@@ -131,17 +126,17 @@ namespace logtail {
         return true;
     }
 
-    void K8sMetadata::GetByContainerIds(std::vector<std::string> containerIds) {
+    void K8sMetadata::GetByContainerIdsFromServer(std::vector<std::string> containerIds) {
         Json::Value jsonObj;
         for (auto& str : containerIds) {
             jsonObj["keys"].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
-        GetK8sMetadataFromOperator(oneOperatorContainerIdAddr, output, containerInfoType::ContainerIdInfo);
+        SendRequestToOperator(mServiceHost, output, containerInfoType::ContainerIdInfo);
     }
 
-    void K8sMetadata::GetByLocalHost() {
+    void K8sMetadata::GetByLocalHostFromServer() {
         std::string hostIp = GetHostIp();
         std::list<std::string> strList{hostIp};
         Json::Value jsonObj;
@@ -150,8 +145,8 @@ namespace logtail {
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
-        std::string urlHost = "http://" + oneOperatorAddr + "/metadata/host";
-        GetK8sMetadataFromOperator(urlHost, output, containerInfoType::ContainerIdInfo);
+        std::string urlHost = mServiceHost;
+        SendRequestToOperator(urlHost, output, containerInfoType::ContainerIdInfo);
     }
 
     void K8sMetadata::SetContainerCache(const Json::Value& root) {
@@ -161,7 +156,7 @@ namespace logtail {
         }
         FromContainerJson(root, data);  
         for (const auto& pair : data->containers) {
-           container_cache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+           containerCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
         }
     }
 
@@ -172,33 +167,33 @@ namespace logtail {
         }
         FromContainerJson(root, data);  
         for (const auto& pair : data->containers) {
-           ip_cache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
+           ipCache.insert(pair.first, std::make_shared<k8sContainerInfo>(pair.second));
         }
     }
 
-    void K8sMetadata::GetByIps(std::vector<std::string> ips) {
+    void K8sMetadata::GetByIpsFromServer(std::vector<std::string> ips) {
         Json::Value jsonObj;
         for (auto& str : ips) {
             jsonObj["keys"].append(str);
         }
         Json::StreamWriterBuilder writer;
         std::string output = Json::writeString(writer, jsonObj);
-        std::string urlHost = "http://" + oneOperatorAddr + "/metadata/ip";
-        GetK8sMetadataFromOperator(urlHost, output, containerInfoType::IpInfo);
+        std::string urlHost = mServiceHost;
+        SendRequestToOperator(urlHost, output, containerInfoType::IpInfo);
     }
 
     std::shared_ptr<k8sContainerInfo> K8sMetadata::GetInfoByContainerIdFromCache(const std::string& containerId) {
          if (containerId.empty()) {
             return nullptr;
          }
-         return container_cache.get(containerId);
+         return containerCache.get(containerId);
     }
     
     std::shared_ptr<k8sContainerInfo> K8sMetadata::GetInfoByIpFromCache(const std::string& ip) {
         if (ip.empty()){
             return nullptr;
         }
-        std::shared_ptr<k8sContainerInfo> ip_info =  ip_cache.get(ip);
+        std::shared_ptr<k8sContainerInfo> ip_info =  ipCache.get(ip);
         if (ip_info == nullptr) {
             return ip_info;
         }

@@ -54,7 +54,7 @@ public:
 
         auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetContainerCache(root);
-        k8sMetadata.GetByLocalHost();
+        k8sMetadata.GetByLocalHostFromServer();
         
         // Assume GetInfoByContainerIdFromCache returns non-null shared_ptr for valid IDs,
         // and check for some expectations.
@@ -262,7 +262,7 @@ public:
 
         auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetIpCache(root);
-        k8sMetadata.GetByLocalHost();
+        k8sMetadata.GetByLocalHostFromServer();
         unique_ptr<SpanEvent> mSpanEvent;
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
@@ -376,7 +376,7 @@ public:
 
         auto& k8sMetadata = K8sMetadata::GetInstance();
         k8sMetadata.SetIpCache(root);
-        k8sMetadata.GetByLocalHost();
+        k8sMetadata.GetByLocalHostFromServer();
         
         auto sourceBuffer = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup(sourceBuffer);
