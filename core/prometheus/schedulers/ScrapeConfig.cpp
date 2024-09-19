@@ -6,6 +6,7 @@
 #include <string>
 
 #include "common/FileSystemUtil.h"
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "prometheus/Constants.h"
 #include "prometheus/Utils.h"

@@ -22,6 +22,7 @@ const char* const REPLACEMENT = "replacement";
 const char* const ACTION = "action";
 const char* const MODULUS = "modulus";
 const char* const NAME = "__name__";
+const std::string EXPORTED_PREFIX = "exported_";
 
 // prometheus env
 const char* const OPERATOR_HOST = "OPERATOR_HOST";

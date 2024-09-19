@@ -91,7 +91,8 @@ bool ProcessorPromRelabelMetricNative::ProcessEvent(PipelineEventPtr& e, const G
         // if confiliction, then rename it exported_<label_name>
         for (const auto& [k, v] : targetTags) {
             if (sourceEvent.HasTag(k)) {
-                sourceEvent.SetTag("exported_" + k.to_string(), sourceEvent.GetTag(k).to_string());
+                auto key = prometheus::EXPORTED_PREFIX + k.to_string();
+                sourceEvent.SetTag(key, sourceEvent.GetTag(k).to_string());
                 sourceEvent.DelTag(k);
             } else {
                 sourceEvent.SetTag(k, v);
