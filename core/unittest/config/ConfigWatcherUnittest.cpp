@@ -34,7 +34,7 @@ public:
 protected:
     void SetUp() override {
         ConfigWatcher::GetInstance()->AddSource(configDir.string());
-        // ConfigWatcher::GetInstance()->AddInstanceSource(instanceConfigDir.string());
+        InstanceConfigWatcher::GetInstance()->AddSource(instanceConfigDir.string());
     }
 
     void TearDown() override { ConfigWatcher::GetInstance()->ClearEnvironment(); }
@@ -57,15 +57,15 @@ void ConfigWatcherUnittest::InvalidConfigDirFound() const {
         APSARA_TEST_TRUE(diff.IsEmpty());
         filesystem::remove("config");
     }
-    // {
-    //     InstanceConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
-    //     APSARA_TEST_TRUE(diff.IsEmpty());
+    {
+        InstanceConfigDiff diff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
+        APSARA_TEST_TRUE(diff.IsEmpty());
 
-    //     { ofstream fout("instanceconfig"); }
-    //     diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
-    //     APSARA_TEST_TRUE(diff.IsEmpty());
-    //     filesystem::remove("instanceconfig");
-    // }
+        { ofstream fout("instanceconfig"); }
+        diff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
+        APSARA_TEST_TRUE(diff.IsEmpty());
+        filesystem::remove("instanceconfig");
+    }
 }
 
 void ConfigWatcherUnittest::InvalidConfigFileFound() const {
@@ -83,20 +83,20 @@ void ConfigWatcherUnittest::InvalidConfigFileFound() const {
         APSARA_TEST_TRUE(diff.IsEmpty());
         filesystem::remove_all(configDir);
     }
-    // {
-    //     filesystem::create_directories(instanceConfigDir);
+    {
+        filesystem::create_directories(instanceConfigDir);
 
-    //     filesystem::create_directories(instanceConfigDir / "dir");
-    //     { ofstream fout(instanceConfigDir / "unsupported_extenstion.zip"); }
-    //     { ofstream fout(instanceConfigDir / "empty_file.json"); }
-    //     {
-    //         ofstream fout(instanceConfigDir / "invalid_format.json");
-    //         fout << "[}";
-    //     }
-    //     InstanceConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
-    //     APSARA_TEST_TRUE(diff.IsEmpty());
-    //     filesystem::remove_all(instanceConfigDir);
-    // }
+        filesystem::create_directories(instanceConfigDir / "dir");
+        { ofstream fout(instanceConfigDir / "unsupported_extenstion.zip"); }
+        { ofstream fout(instanceConfigDir / "empty_file.json"); }
+        {
+            ofstream fout(instanceConfigDir / "invalid_format.json");
+            fout << "[}";
+        }
+        InstanceConfigDiff diff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
+        APSARA_TEST_TRUE(diff.IsEmpty());
+        filesystem::remove_all(instanceConfigDir);
+    }
 }
 
 void ConfigWatcherUnittest::DuplicateConfigs() const {
