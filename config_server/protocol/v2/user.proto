@@ -1,209 +1,226 @@
 syntax = "proto3";
-package config_server.proto.v2;
-option go_package = "/;protov2";
+option go_package = "/protov2;";
 import "agent.proto";
 
 
 message Agent{
-    uint64 capabilities = 1;                    // Bitmask of flags defined by AgentCapabilities enum
-    bytes instance_id = 2;                      // Required, Agent's unique identification, consistent throughout the process lifecycle
-    string agent_type = 3;                      // Required, Agent's type(ilogtail, ..)
-    AgentAttributes attributes = 4;             // Agent's basic attributes
-    string running_status = 5;                  // Human readable running status
-    int64 startup_time = 6;                     // Required, Agent's startup time
-    uint64 flags = 7;                          // Predefined command flag
-    bytes opaque = 8;                          // Opaque data for extension
+  uint64 capabilities = 1;                    // Bitmask of flags defined by AgentCapabilities enum
+  bytes instance_id = 2;                      // Required, Agent's unique identification, consistent throughout the process lifecycle
+  string agent_type = 3;                      // Required, Agent's type(ilogtail, ..)
+  AgentAttributes attributes = 4;             // Agent's basic attributes
+  string running_status = 5;                  // Human readable running status
+  int64 startup_time = 6;                     // Required, Agent's startup time
+}
+
+message AgentConfigStatus{
+  string name=1;
+  ConfigStatus status = 2; // Config's status
+  string message = 3;      // Optional error message
 }
 
 // API: /User/CreateAgentGroup
 
 message CreateAgentGroupRequest {
-    bytes request_id = 1;
-    AgentGroupTag agent_group = 2;
+  bytes request_id = 1;
+  AgentGroupTag agent_group = 2;
 }
 
 message CreateAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
 // API: /User/UpdateAgentGroup
 
 message UpdateAgentGroupRequest {
-    bytes request_id = 1;
-    AgentGroupTag agent_group = 2;
+  bytes request_id = 1;
+  AgentGroupTag agent_group = 2;
 }
 
 message UpdateAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
 // API: /User/DeleteAgentGroup/
 
 message DeleteAgentGroupRequest {
-    bytes request_id = 1;
-    string group_name = 2;
+  bytes request_id = 1;
+  string group_name = 2;
 }
 
 message DeleteAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
 // API: /User/GetAgentGroup/
 
 message GetAgentGroupRequest {
-    bytes request_id = 1;
-    string group_name = 2;
+  bytes request_id = 1;
+  string group_name = 2;
 }
 
 message GetAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
-    AgentGroupTag agent_group = 3;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
+  AgentGroupTag agent_group = 3;
 }
 
-// API: /User/ListAgentGroups/ 
+// API: /User/ListAgentGroups/
 
 message ListAgentGroupsRequest {
-    bytes request_id = 1;
+  bytes request_id = 1;
 }
 
 message ListAgentGroupsResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 
-    repeated AgentGroupTag agent_groups = 4;
+  repeated AgentGroupTag agent_groups = 4;
 }
 
 // API: /User/CreatePipelineConfig
 // API: /User/CreateInstanceConfig
 message CreateConfigRequest {
-    bytes request_id = 1;
-    ConfigDetail config_detail = 2;
+  bytes request_id = 1;
+  ConfigDetail config_detail = 2;
 }
 
 message CreateConfigResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse =2;
+  bytes request_id = 1;
+  CommonResponse common_response =2;
 }
 
 // API: /User/UpdatePipelineConfig
 // API: /User/UpdateInstanceConfig
 message UpdateConfigRequest {
-    bytes request_id = 1;
-    ConfigDetail config_detail = 2;
+  bytes request_id = 1;
+  ConfigDetail config_detail = 2;
 }
 
 message UpdateConfigResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
 // API: /User/DeletePipelineConfig
 // API: /User/DeleteInstanceConfig
 message DeleteConfigRequest {
-    bytes request_id = 1;
-    string config_name = 2;
+  bytes request_id = 1;
+  string config_name = 2;
 }
 
 message DeleteConfigResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
 // API: /User/GetPipelineConfig
 // API: /User/GetInstanceConfig
 message GetConfigRequest {
-    bytes request_id = 1;
-    string config_name = 2;
+  bytes request_id = 1;
+  string config_name = 2;
 }
 
 message GetConfigResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 
-    ConfigDetail config_detail = 3;
+  ConfigDetail config_detail = 3;
+}
+
+// API: /User/GetPipelineConfigStatusList
+// API: /User/GetInstanceConfigStatusList
+message GetConfigStatusListRequest{
+  bytes request_id = 1;
+  bytes instance_id=2;
+}
+
+message GetConfigStatusListResponse{
+  bytes request_id = 1;
+  CommonResponse common_response=2;
+  repeated AgentConfigStatus agent_config_status=3;
 }
 
 // API: /User/ListPipelineConfigs
 // API: /User/ListInstanceConfigs
 message ListConfigsRequest {
-    bytes request_id = 1;
+  bytes request_id = 1;
 }
 
 message ListConfigsResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 
-    repeated ConfigDetail config_details = 3;
+  repeated ConfigDetail config_details = 3;
 }
 
 // API: /User/ApplyPipelineConfigToAgentGroup
 // API: /User/ApplyInstanceConfigToAgentGroup
 message ApplyConfigToAgentGroupRequest {
-    bytes request_id = 1;
-    string config_name = 2;
-    string group_name = 3;
+  bytes request_id = 1;
+  string config_name = 2;
+  string group_name = 3;
 }
 
 message ApplyConfigToAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
 // API: /User/RemovePipelineConfigFromAgentGroup/
 // API: /User/RemoveInstanceConfigFromAgentGroup/
 message RemoveConfigFromAgentGroupRequest {
-    bytes request_id = 1;
-    string config_name = 2;
-    string group_name = 3;
+  bytes request_id = 1;
+  string config_name = 2;
+  string group_name = 3;
 }
 
 message RemoveConfigFromAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 }
 
-// API: /User/GetAppliedInstanceConfigsForAgentGroup/
+
 // API: /User/GetAppliedPipelineConfigsForAgentGroup/
+// API: /User/GetAppliedInstanceConfigsForAgentGroup/
 message GetAppliedConfigsForAgentGroupRequest {
-    bytes request_id = 1;
-    string group_name = 2;
+  bytes request_id = 1;
+  string group_name = 2;
 }
 
 message GetAppliedConfigsForAgentGroupResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 
-    repeated string config_names = 4;
+  repeated string config_names = 4;
 }
 
 // API: /User/GetAppliedAgentGroupsWithPipelineConfig/
 // API: /User/GetAppliedAgentGroupsWithInstanceConfig/
 message GetAppliedAgentGroupsRequest {
-    bytes request_id = 1;
-    string config_name = 2;
+  bytes request_id = 1;
+  string config_name = 2;
 }
 
 message GetAppliedAgentGroupsResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 
-    repeated string agent_group_names = 3;
+  repeated string agent_group_names = 3;
 }
 
 // API: /User/ListAgents/
 
 message ListAgentsRequest {
-    bytes request_id = 1;
-    string group_name = 2;
+  bytes request_id = 1;
+  string group_name = 2;
 }
 
 message ListAgentsResponse {
-    bytes request_id = 1;
-    CommonResponse commonResponse=2;
+  bytes request_id = 1;
+  CommonResponse common_response=2;
 
-    repeated Agent agents = 3;
+  repeated Agent agents = 3;
 }

@@ -102,11 +102,11 @@ type BrowserPerfData struct {
 	unknownFields protoimpl.UnknownFields
 
 	Service string `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
-	// Service version in browser is the Instance concept in the backend.
+	// Service version in browser is the Instance concept in the service.
 	ServiceVersion string `protobuf:"bytes,2,opt,name=serviceVersion,proto3" json:"serviceVersion,omitempty"`
-	// Perf data time, set by the backend side.
+	// Perf data time, set by the service side.
 	Time int64 `protobuf:"varint,3,opt,name=time,proto3" json:"time,omitempty"`
-	// Page path in browser is the endpoint concept in the backend
+	// Page path in browser is the endpoint concept in the service
 	// Page path in the browser, mostly it is URI, without parameter
 	PagePath string `protobuf:"bytes,4,opt,name=pagePath,proto3" json:"pagePath,omitempty"`
 	// Unit of all time related field should be `ms`.
@@ -305,11 +305,11 @@ type BrowserErrorLog struct {
 	// UUID
 	UniqueId string `protobuf:"bytes,1,opt,name=uniqueId,proto3" json:"uniqueId,omitempty"`
 	Service  string `protobuf:"bytes,2,opt,name=service,proto3" json:"service,omitempty"`
-	// Service version in browser is the Instance concept in the backend.
+	// Service version in browser is the Instance concept in the service.
 	ServiceVersion string `protobuf:"bytes,3,opt,name=serviceVersion,proto3" json:"serviceVersion,omitempty"`
-	// Error log time, set by the backend side.
+	// Error log time, set by the service side.
 	Time int64 `protobuf:"varint,4,opt,name=time,proto3" json:"time,omitempty"`
-	// Page path in browser is the endpoint concept in the backend
+	// Page path in browser is the endpoint concept in the service
 	// Page path in the browser, mostly it is URI, without parameter
 	PagePath string        `protobuf:"bytes,5,opt,name=pagePath,proto3" json:"pagePath,omitempty"`
 	Category ErrorCategory `protobuf:"varint,6,opt,name=category,proto3,enum=skywalking.v3.ErrorCategory" json:"category,omitempty"`
