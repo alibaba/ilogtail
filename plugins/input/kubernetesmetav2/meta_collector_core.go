@@ -84,7 +84,6 @@ func (m *metaCollector) processPodEntity(data *k8smeta.ObjectWrapper, method str
 					volumes = append(volumes, volumeInfo)
 				}
 				containerLog.Contents.Add("volumes", m.processEntityJSONArray(volumes))
-				m.serviceK8sMeta.entityCount.Add(1)
 				result = append(result, containerLog)
 			}
 		}
