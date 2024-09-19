@@ -56,5 +56,5 @@ go test -v -timeout 30m -run ^TestE2EOnDockerComposePerformance$/^.*Vector$ gith
 
 ### 测试结果
 
-- 所有测试结果将以json格式记录在`test/benchmark/report/<your_scenario>.json`中，目前记录了测试过程中CPU最大使用率、CPU平均使用率、内存最大使用率、内存平均使用率参数。
-- 运行`scripts/benchmark_collect_result.sh`会将`test/benchmark/report/`下所有结果收集并生成汇总结果到`test/benchmark/report/combines_result.json`，主要用于github benmark action收集本次测试数据并与历史数据汇总
+- 所有统计结果将以json格式记录在`test/benchmark/report/<your_scenario>_statistic.json`中，目前记录了测试过程中CPU最大使用率、CPU平均使用率、内存最大使用率、内存平均使用率参数；所有实时结果序列将以json格式记录在`test/benchmark/report/<your_scenario>_records.json`中，目前记录了测试运行过程中的CPU使用率、内存使用率时间序列。
+- 运行`scripts/benchmark_collect_result.sh`会将数据以github benchmark action所需格式汇总，会将`test/benchmark/report/*ilogtail_statistic.json`下所有结果收集并生成汇总结果到`test/benchmark/report/ilogtail_statistic_all.json`中，并将`test/benchmark/report/*records.json`汇总到`test/benchmark/report/records_all.json`
