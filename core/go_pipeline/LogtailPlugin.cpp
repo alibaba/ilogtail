@@ -31,6 +31,7 @@
 #include "pipeline/PipelineManager.h"
 #include "profile_sender/ProfileSender.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "protobuf/sls/pipeline_event.pb.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -41,6 +42,8 @@ using namespace std;
 using namespace logtail;
 
 LogtailPlugin* LogtailPlugin::s_instance = NULL;
+
+logtail::PipelineEventGroup TransferToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
 
 LogtailPlugin::LogtailPlugin() {
     mPluginAdapterPtr = NULL;
@@ -564,4 +567,71 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
         }
     }
     return K8sContainerMeta();
+}
+
+std::optional<logtail::PipelineEventGroup> TransferToPipelineEventGroup(const sls_logs::PipelineEventGroup& src) {
+    logtail::PipelineEventGroup dst(std::make_shared<SourceBuffer>());
+    switch (src.type())
+    {
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_LOG:
+        if (src.logs_size() == 0) {
+            return std::nullopt;
+        }
+        dst.MutableEvents().reserve(src.logs_size());
+        for (auto& logSrc : src.logs()) {
+            auto logDst = dst.CreateLogEvent();
+            std::optional<uint32_t> ns;
+            time_t t = time_t(logSrc.time());
+            if (logSrc.has_time_ns()) {
+                ns = logSrc.time_ns();
+            }
+            logDst->SetTimestamp(t, ns);
+            for (auto& content_pair : logSrc.contents()) {
+                logDst->SetContent(content_pair.key(), content_pair.value());
+            }
+            dst.MutableEvents().emplace_back(std::move(logDst));
+        }
+        break;
+    case sls_logs::PipelineEventGroup::EventType::PipelineEventGroup_EventType_METRIC:
+        if (src.metrics_size() == 0) {
+            return std::nullopt;
+        }
+        dst.MutableEvents().reserve(src.metrics_size());
+        for (auto& metricSrc : src.metrics()) {
+            auto metricDst = dst.CreateMetricEvent();
+            uint32_t t = metricSrc.time();
+            std::optional<uint32_t> ns;
+            if (metricSrc.has_time_ns()) {
+                ns = metricSrc.time_ns();
+            }
+            metricDst->SetTimestamp(t, ns);
+            metricDst->SetName(metricSrc.name());
+            switch (metricSrc.type()) {
+            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_SINGLE:
+                metricDst->SetValue(UntypedSingleValue{metricSrc.singlevalue()});
+                break;
+            case sls_logs::MetricEvent::MetricValueType::MetricEvent_MetricValueType_MULTI:
+                LOG_ERROR(sLogger, ("metric value type mutivalue unsported", ""));
+            }
+            for (auto& tag_pair : metricSrc.tags()) {
+                metricDst->SetTag(tag_pair.first, tag_pair.second);
+            }
+            dst.MutableEvents().emplace_back(std::move(metricDst));
+        }
+        break;
+    default:
+        return std::nullopt;
+    }
+
+    for (auto& tag : src.tags()) {
+        dst.SetTag(tag.first, tag.second);
+    }
+
+    for (auto& metaData : src.metadata()) {
+        if (metaData.first == "source") {
+            dst.SetMetadata(logtail::EventGroupMetaKey::SOURCE_ID, metaData.second);
+        }
+    }
+
+    return dst;
 }

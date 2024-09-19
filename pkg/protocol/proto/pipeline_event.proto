@@ -1,0 +1,85 @@
+syntax = "proto2";
+package sls_logs;
+
+message LogEvent {  
+    required uint32 Time = 1;  
+    optional fixed32 Time_ns = 2;  
+    message Content {      
+        required string Key = 1;      
+        required bytes Value = 2;  
+    }    
+    repeated Content Contents= 3;  
+    repeated string Values = 4;   
+    optional uint64 Offset = 5; 
+    optional string Level = 6;
+}
+
+message MetricEvent {  
+    required uint32 Time = 1;// UNIX Time Format  
+    optional fixed32 Time_ns = 2;  
+    required string Name = 3;  
+    enum MetricValueType {    
+        SINGLE = 0;    
+        MULTI = 1;    
+    }  
+    required MetricValueType Type = 4;
+    optional double SingleValue = 5;
+    map<string, double> MultiValue = 6;
+    map<string, string> Tags = 7;
+}
+
+message SpanEvent {
+    required uint32 Time = 1;
+    optional fixed32 Time_ns = 2;
+    required string TraceID = 3;
+    required string SpanID = 4;
+    optional string TraceState = 5;
+    optional string ParentSpanID = 6;
+    optional string Name = 7;
+    enum SpanKind {
+        UNSPECIFIED = 0;
+        INTERVAL = 1;
+        SERVER = 2;
+        CLIENT = 3;
+        PRODUCER = 4;
+        CONSUMER = 5;
+    }
+    optional SpanKind Kind = 8;
+    required uint64 StartTimeNs = 9;
+    required uint64 EndTimeNs = 10;
+    map<string, string> Tags = 11;
+    message InnerEvent {
+        required uint64 TimestampNs = 1;
+        required string Name = 2;
+        map<string, string> Tags = 3;
+    }
+    repeated InnerEvent Events = 12;
+    message SpanLink {
+        required string TraceID = 1;
+        required string SpanID = 2;
+        optional string TraceState = 3;
+        map<string, string> Tags = 4;
+    }
+    repeated SpanLink Links = 13;
+    enum StatusCode {
+        Unset = 0;
+        Ok = 1;
+        Error = 2;
+    }
+    optional StatusCode Status = 14;
+    map<string, string> ScopeTags = 15;
+}
+
+message PipelineEventGroup {  
+    map<string, bytes> Metadata = 1;  
+    map<string, bytes> Tags = 2;  
+    enum EventType {    
+        LOG = 0;    
+        METRIC = 1;    
+        SPAN = 2;  
+    }  
+    required EventType Type = 3; 
+    repeated LogEvent Logs = 4;    
+    repeated MetricEvent Metrics = 5;    
+    repeated SpanEvent Spans = 6;  
+}
