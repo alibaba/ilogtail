@@ -24,14 +24,15 @@
 #include <vector>
 
 #include "config/PipelineConfig.h"
-#include "plugin/input/InputContainerStdio.h"
-#include "plugin/input/InputFile.h"
 #include "models/PipelineEventGroup.h"
+#include "monitor/LogtailMetric.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/FlusherInstance.h"
 #include "pipeline/plugin/instance/InputInstance.h"
 #include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "pipeline/route/Router.h"
+#include "plugin/input/InputContainerStdio.h"
+#include "plugin/input/InputFile.h"
 
 namespace logtail {
 
@@ -84,18 +85,25 @@ private:
     std::unique_ptr<Json::Value> mConfig;
     std::atomic_uint16_t mPluginID;
 
+    mutable MetricsRecordRef mMetricsRecordRef;
+    IntGaugePtr mStartTime;
+    CounterPtr mProcessorsInEventsCnt;
+    CounterPtr mProcessorsInGroupsCnt;
+    CounterPtr mProcessorsInGroupDataSizeBytes;
+    CounterPtr mProcessorsTotalDelayMs;
+
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class PipelineMock;
+        friend class PipelineMock;
     friend class PipelineUnittest;
     friend class InputContainerStdioUnittest;
     friend class InputFileUnittest;
     friend class InputPrometheusUnittest;
     friend class ProcessorTagNativeUnittest;
     friend class FlusherSLSUnittest;
-    friend class InputEBPFFileSecurityUnittest;
-    friend class InputEBPFProcessSecurityUnittest;
-    friend class InputEBPFNetworkSecurityUnittest;
-    friend class InputEBPFNetworkObserverUnittest;
+    friend class InputFileSecurityUnittest;
+    friend class InputProcessSecurityUnittest;
+    friend class InputNetworkSecurityUnittest;
+    friend class InputNetworkObserverUnittest;
 #endif
 };
 
