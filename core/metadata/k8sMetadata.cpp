@@ -103,10 +103,7 @@ namespace logtail {
             std::string errors;
 
             if (reader->parse(res.mBody.c_str(), res.mBody.c_str() + res.mBody.size(), &root, &errors)) {
-                std::shared_ptr<ContainerData> data = std::make_unique<ContainerData>();
-                if (data == nullptr) {
-                    return true;
-                }
+                std::shared_ptr<ContainerData> data = std::make_shared<ContainerData>();
                 FromContainerJson(root, data); 
                 for (const auto& pair : data->containers) {
                     if (infoType == containerInfoType::ContainerIdInfo) {
@@ -150,7 +147,7 @@ namespace logtail {
     }
 
     void K8sMetadata::SetContainerCache(const Json::Value& root) {
-        std::shared_ptr<ContainerData> data = std::make_unique<ContainerData>();
+        std::shared_ptr<ContainerData> data = std::make_shared<ContainerData>();
         if (data == nullptr) {
             return;
         }
@@ -161,7 +158,7 @@ namespace logtail {
     }
 
     void K8sMetadata::SetIpCache(const Json::Value& root) {
-        std::shared_ptr<ContainerData> data = std::make_unique<ContainerData>();
+        std::shared_ptr<ContainerData> data = std::make_shared<ContainerData>();
         if (data == nullptr) {
             return;
         }
