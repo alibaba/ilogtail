@@ -69,10 +69,10 @@ static const int64_t NANO_CONVERTING = 1000000000;
 void PollingDirFile::Start() {
     ClearCache();
     mAgentConfigTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
-    mAgentPollingDirCacheSizeTotal
-        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL);
-    mAgentPollingFileCacheSizeTotal
-        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL);
+    mPollingDirCacheSize
+        = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("polling_dir_cache_size");
+    mPollingFileCacheSize
+        = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("polling_file_cache_size");
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
 }
@@ -157,10 +157,10 @@ void PollingDirFile::Polling() {
                 ScopedSpinLock lock(mCacheLock);
                 size_t pollingDirCacheSize = mDirCacheMap.size();
                 LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", pollingDirCacheSize);
-                mAgentPollingDirCacheSizeTotal->Set(pollingDirCacheSize);
+                mPollingDirCacheSize->Set(pollingDirCacheSize);
                 size_t pollingFileCacheSize = mFileCacheMap.size();
                 LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", pollingFileCacheSize);
-                mAgentPollingFileCacheSizeTotal->Set(pollingFileCacheSize);
+                mPollingFileCacheSize->Set(pollingFileCacheSize);
             }
 
             // Iterate all normal configs, make sure stat count will not exceed limit.

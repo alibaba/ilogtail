@@ -41,6 +41,15 @@ namespace logtail {
 
 bool FlusherRunner::Init() {
     srand(time(nullptr));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
+                                                         {{METRIC_LABEL_KEY_RUNNER_NAME, "flusher_runner"}});
+    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEMS_CNT);
+    mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEM_SIZE_BYTES);
+    mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter("in_item_raw_data_size_bytes");
+    mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_OUT_ITEMS_CNT);
+    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_TOTAL_DELAY_MS);
+    mWaitingItemsCnt = mMetricsRecordRef.CreateIntGauge("waiting_items_cnt");
+
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);
     return true;
@@ -105,6 +114,13 @@ void FlusherRunner::Run() {
         if (items.empty()) {
             SenderQueueManager::GetInstance()->Wait(1000);
         } else {
+            for (auto itr = items.begin(); itr != items.end(); ++itr) {
+                mInItemDataSizeBytes->Add((*itr)->mData.size());
+                mInItemRawDataSizeBytes->Add((*itr)->mRawSize);
+            }
+            mInItemsCnt->Add(items.size());
+            mWaitingItemsCnt->Add(items.size());
+
             // smoothing send tps, walk around webserver load burst
             uint32_t bufferPackageCount = items.size();
             if (!Application::GetInstance()->IsExiting() && AppConfig::GetInstance()->IsSendRandomSleep()) {
@@ -132,6 +148,10 @@ void FlusherRunner::Run() {
             }
 
             Dispatch(*itr);
+            mWaitingItemsCnt->Sub(1);
+            mOutItemsCnt->Add(1);
+            mTotalDelayMs->Add(
+                chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - curTime).count());
         }
 
         // TODO: move the following logic to scheduler

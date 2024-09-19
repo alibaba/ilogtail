@@ -27,6 +27,7 @@
 #include "file_server/event/Event.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
+#include "file_server/FileServer.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ PollingModify::~PollingModify() {
 
 void PollingModify::Start() {
     ClearCache();
-    mAgentPollingModifySizeTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL);
+    mPollingModifySize = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("polling_modify_size");
 
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
@@ -251,7 +252,7 @@ void PollingModify::Polling() {
             int32_t statCount = 0;
             size_t pollingModifySizeTotal = mModifyCacheMap.size();
             LogtailMonitor::GetInstance()->UpdateMetric("polling_modify_size", pollingModifySizeTotal);
-            mAgentPollingModifySizeTotal->Set(pollingModifySizeTotal);
+            mPollingModifySize->Set(pollingModifySizeTotal);
             for (auto iter = mModifyCacheMap.begin(); iter != mModifyCacheMap.end(); ++iter) {
                 if (!mRuningFlag || mHoldOnFlag)
                     break;

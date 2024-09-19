@@ -45,21 +45,12 @@ const std::string METRIC_AGENT_MEMORY = "agent_memory_used_mb";
 const std::string METRIC_AGENT_MEMORY_GO = "agent_go_memory_used_mb";
 const std::string METRIC_AGENT_GO_ROUTINES_TOTAL = "agent_go_routines_total";
 const std::string METRIC_AGENT_OPEN_FD_TOTAL = "agent_open_fd_total";
-const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL = "agent_polling_dir_cache_size_total";
-const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL = "agent_polling_file_cache_size_total";
-const std::string METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL = "agent_polling_modify_size_total";
-const std::string METRIC_AGENT_REGISTER_HANDLER_TOTAL = "agent_register_handler_total";
 const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL = "agent_instance_config_total";
 const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL = "agent_pipeline_config_total";
 const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL = "agent_env_pipeline_config_total";
 const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL = "agent_crd_pipeline_config_total";
 const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL = "agent_console_pipeline_config_total";
 const std::string METRIC_AGENT_PLUGIN_TOTAL = "agent_plugin_total";
-const std::string METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL = "agent_process_queue_full_total";
-const std::string METRIC_AGENT_PROCESS_QUEUE_TOTAL = "agent_process_queue_total";
-const std::string METRIC_AGENT_SEND_QUEUE_FULL_TOTAL = "agent_send_queue_full_total";
-const std::string METRIC_AGENT_SEND_QUEUE_TOTAL = "agent_send_queue_total";
-const std::string METRIC_AGENT_USED_SENDING_CONCURRENCY = "agent_used_sending_concurrency";
 
 // common plugin labels
 const std::string METRIC_LABEL_PROJECT = "project";
@@ -72,6 +63,7 @@ const std::string METRIC_LABEL_NODE_ID = "node_id";
 const std::string METRIC_LABEL_CHILD_NODE_ID = "child_node_id";
 
 const std::string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
+const std::string METRIC_LABEL_KEY_RUNNER_NAME = "runner_name";
 const std::string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
 const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
 const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
@@ -150,6 +142,7 @@ const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
 const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
 
 const std::string METRIC_IN_EVENTS_CNT = "in_events_cnt";
+const std::string METRIC_IN_EVENT_GROUPS_CNT = "in_event_groups_cnt";
 const std::string METRIC_IN_ITEMS_CNT = "in_items_cnt";
 const std::string METRIC_IN_EVENT_GROUP_SIZE_BYTES = "in_event_group_data_size_bytes";
 const std::string METRIC_IN_ITEM_SIZE_BYTES = "in_item_data_size_bytes";

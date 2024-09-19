@@ -47,21 +47,12 @@ extern const std::string METRIC_AGENT_MEMORY;
 extern const std::string METRIC_AGENT_MEMORY_GO;
 extern const std::string METRIC_AGENT_GO_ROUTINES_TOTAL;
 extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
-extern const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL;
-extern const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL;
-extern const std::string METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL;
-extern const std::string METRIC_AGENT_REGISTER_HANDLER_TOTAL;
 extern const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL;
 extern const std::string METRIC_AGENT_PLUGIN_TOTAL;
-extern const std::string METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL;
-extern const std::string METRIC_AGENT_PROCESS_QUEUE_TOTAL;
-extern const std::string METRIC_AGENT_SEND_QUEUE_FULL_TOTAL;
-extern const std::string METRIC_AGENT_SEND_QUEUE_TOTAL;
-extern const std::string METRIC_AGENT_USED_SENDING_CONCURRENCY;
 
 // common plugin labels
 extern const std::string METRIC_LABEL_PROJECT;
@@ -79,6 +70,7 @@ extern const std::string METRIC_LABEL_FILE_INODE;
 extern const std::string METRIC_LABEL_FILE_NAME;
 
 extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
+extern const std::string METRIC_LABEL_KEY_RUNNER_NAME;
 extern const std::string METRIC_LABEL_KEY_QUEUE_TYPE;
 extern const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG;
 extern const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID;
@@ -143,6 +135,7 @@ extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
 
 extern const std::string METRIC_IN_EVENTS_CNT;
+extern const std::string METRIC_IN_EVENT_GROUPS_CNT;
 extern const std::string METRIC_IN_ITEMS_CNT;
 extern const std::string METRIC_IN_EVENT_GROUP_SIZE_BYTES;
 extern const std::string METRIC_IN_ITEM_SIZE_BYTES;
