@@ -88,7 +88,7 @@ void LogInput::Start() {
 
     mInteruptFlag = false;
 
-    mLastRunTime = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("last_run_time");
+    mLastRunTime = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_LAST_RUN_TIME);
     mAgentOpenFdTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
     mRegisterdHandlersCnt = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("registered_handlers_cnt");
     mReadersCnt = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("readers_cnt");

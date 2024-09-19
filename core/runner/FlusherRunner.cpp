@@ -49,6 +49,7 @@ bool FlusherRunner::Init() {
     mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_OUT_ITEMS_CNT);
     mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_TOTAL_DELAY_MS);
     mWaitingItemsCnt = mMetricsRecordRef.CreateIntGauge("waiting_items_cnt");
+    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_LAST_RUN_TIME);
 
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);
@@ -108,6 +109,7 @@ void FlusherRunner::Run() {
     LOG_INFO(sLogger, ("flusher runner", "started"));
     while (true) {
         auto curTime = chrono::system_clock::now();
+        mLastRunTime->Set(chrono::duration_cast<chrono::seconds>(curTime.time_since_epoch()).count());
 
         vector<SenderQueueItem*> items;
         SenderQueueManager::GetInstance()->GetAllAvailableItems(items, !Application::GetInstance()->IsExiting());

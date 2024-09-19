@@ -63,6 +63,7 @@ private:
     // CounterPtr mTotalDelayMs; // TODO: should record distribution instead of average
     IntGaugePtr mSendingItemsCnt;
     IntGaugePtr mSendConcurrency;
+    IntGaugePtr mLastRunTime;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class FlusherRunnerUnittest;

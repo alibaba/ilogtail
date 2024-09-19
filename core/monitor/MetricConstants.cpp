@@ -151,5 +151,6 @@ const std::string METRIC_OUT_ITEMS_CNT = "out_items_cnt";
 const std::string METRIC_OUT_EVENT_GROUP_SIZE_BYTES = "out_event_group_data_size_bytes";
 const std::string METRIC_OUT_ITEM_SIZE_BYTES = "out_item_data_size_bytes";
 const std::string METRIC_TOTAL_DELAY_MS = "total_delay_ms";
+const std::string METRIC_LAST_RUN_TIME = "last_run_time";
 
 } // namespace logtail

@@ -42,6 +42,7 @@ bool HttpSink::Init() {
     mOutFailedItemsCnt = mMetricsRecordRef.CreateCounter("out_failed_items_cnt");
     mSendingItemsCnt = mMetricsRecordRef.CreateIntGauge("sending_items_cnt");
     mSendConcurrency = mMetricsRecordRef.CreateIntGauge("send_concurrency");
+    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_LAST_RUN_TIME);
 
     // TODO: should be dynamic
     mSendConcurrency->Set(AppConfig::GetInstance()->GetSendRequestConcurrency());
@@ -63,6 +64,8 @@ void HttpSink::Stop() {
 void HttpSink::Run() {
     LOG_INFO(sLogger, ("http sink", "started"));
     while (true) {
+        mLastRunTime->Set(
+            chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count());
         unique_ptr<HttpSinkRequest> request;
         if (mQueue.WaitAndPop(request, 500)) {
             mInItemsCnt->Add(1);
@@ -88,7 +91,7 @@ void HttpSink::Run() {
     }
 }
 
-bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
+bool HttpSink::AddRequestToClient(unique_ptr<HttpSinkRequest>&& request) {
     curl_slist* headers = nullptr;
     CURL* curl = CreateCurlHandler(request->mMethod,
                                    request->mHTTPSFlag,
@@ -116,7 +119,7 @@ bool HttpSink::AddRequestToClient(std::unique_ptr<HttpSinkRequest>&& request) {
 
     request->mPrivateData = headers;
     curl_easy_setopt(curl, CURLOPT_PRIVATE, request.get());
-    request->mLastSendTime = std::chrono::system_clock::now();
+    request->mLastSendTime = chrono::system_clock::now();
 
     auto res = curl_multi_add_handle(mClient, curl);
     if (res != CURLM_OK) {
@@ -140,6 +143,8 @@ void HttpSink::DoRun() {
     CURLMcode mc;
     int runningHandlers = 1;
     while (runningHandlers) {
+        auto curTime = chrono::system_clock::now();
+        mLastRunTime->Set(chrono::duration_cast<chrono::seconds>(curTime.time_since_epoch()).count());
         if ((mc = curl_multi_perform(mClient, &runningHandlers)) != CURLM_OK) {
             LOG_ERROR(
                 sLogger,

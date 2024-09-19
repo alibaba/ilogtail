@@ -144,5 +144,6 @@ extern const std::string METRIC_OUT_ITEMS_CNT;
 extern const std::string METRIC_OUT_EVENT_GROUP_SIZE_BYTES;
 extern const std::string METRIC_OUT_ITEM_SIZE_BYTES;
 extern const std::string METRIC_TOTAL_DELAY_MS;
+extern const std::string METRIC_LAST_RUN_TIME;
 
 } // namespace logtail

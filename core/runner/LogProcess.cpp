@@ -44,6 +44,7 @@ thread_local MetricsRecordRef LogProcess::sMetricsRecordRef;
 thread_local CounterPtr LogProcess::sInGroupsCnt;
 thread_local CounterPtr LogProcess::sInEventsCnt;
 thread_local CounterPtr LogProcess::sInGroupDataSizeBytes;
+thread_local IntGaugePtr LogProcess::sLastRunTime;
 
 LogProcess::LogProcess() : mAccessProcessThreadRWL(ReadWriteLock::PREFER_WRITER) {
 }
@@ -147,6 +148,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUPS_CNT);
     sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_IN_EVENTS_CNT);
     sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUP_SIZE_BYTES);
+    sLastRunTime = sMetricsRecordRef.CreateIntGauge(METRIC_LAST_RUN_TIME);
 
     static int32_t lastMergeTime = 0;
     while (true) {
@@ -160,6 +162,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 
         {
             ReadLock lock(mAccessProcessThreadRWL);
+            sLastRunTime->Set(curTime);
 
             unique_ptr<ProcessQueueItem> item;
             string configName;

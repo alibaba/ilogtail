@@ -71,6 +71,7 @@ private:
     CounterPtr mOutItemsCnt;
     CounterPtr mTotalDelayMs;
     IntGaugePtr mWaitingItemsCnt;
+    IntGaugePtr mLastRunTime;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PluginRegistryUnittest;

@@ -65,6 +65,7 @@ private:
     thread_local static CounterPtr sInGroupsCnt;
     thread_local static CounterPtr sInEventsCnt;
     thread_local static CounterPtr sInGroupDataSizeBytes;
+    thread_local static IntGaugePtr sLastRunTime;
 };
 
 } // namespace logtail
