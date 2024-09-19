@@ -43,7 +43,7 @@ using namespace logtail;
 
 LogtailPlugin* LogtailPlugin::s_instance = NULL;
 
-std::optional<logtail::PipelineEventGroup> TransferToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
+std::optional<logtail::PipelineEventGroup> TransferPBToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
 
 LogtailPlugin::LogtailPlugin() {
     mPluginAdapterPtr = NULL;
@@ -569,7 +569,7 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
     return K8sContainerMeta();
 }
 
-std::optional<logtail::PipelineEventGroup> TransferToPipelineEventGroup(const sls_logs::PipelineEventGroup& src) {
+std::optional<logtail::PipelineEventGroup> TransferPBToPipelineEventGroup(const sls_logs::PipelineEventGroup& src) {
     logtail::PipelineEventGroup dst(std::make_shared<SourceBuffer>());
     switch (src.type())
     {
