@@ -43,7 +43,7 @@ using namespace logtail;
 
 LogtailPlugin* LogtailPlugin::s_instance = NULL;
 
-logtail::PipelineEventGroup TransferToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
+std::optional<logtail::PipelineEventGroup> TransferToPipelineEventGroup(const sls_logs::PipelineEventGroup& src);
 
 LogtailPlugin::LogtailPlugin() {
     mPluginAdapterPtr = NULL;
