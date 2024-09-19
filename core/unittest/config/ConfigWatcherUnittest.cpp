@@ -55,7 +55,7 @@ void ConfigWatcherUnittest::InvalidConfigDirFound() const {
         { ofstream fout("config"); }
         diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
         APSARA_TEST_TRUE(diff.IsEmpty());
-        filesystem::remove("config");
+        filesystem::remove_all("config");
     }
     {
         InstanceConfigDiff diff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
@@ -64,7 +64,7 @@ void ConfigWatcherUnittest::InvalidConfigDirFound() const {
         { ofstream fout("instanceconfig"); }
         diff = InstanceConfigWatcher::GetInstance()->CheckConfigDiff();
         APSARA_TEST_TRUE(diff.IsEmpty());
-        filesystem::remove("instanceconfig");
+        filesystem::remove_all("instanceconfig");
     }
 }
 
