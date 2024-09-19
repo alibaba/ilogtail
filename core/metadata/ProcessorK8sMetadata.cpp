@@ -80,31 +80,31 @@ bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::st
     StringView containerIdView = e.HasTag(containerIdViewKey) ? e.GetTag(containerIdViewKey) : StringView{};
     if (!containerIdView.empty()) {
         std::string containerId(containerIdView);
-        std::shared_ptr<k8sContainerInfo> container_info = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
-        if (container_info == nullptr) {
+        std::shared_ptr<k8sContainerInfo> containerInfo = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
+        if (containerInfo == nullptr) {
             containerVec.push_back(containerId);
             res = false;
         } else {
-            e.SetTag("workloadName", container_info->workloadName);
-            e.SetTag("workloadKind", container_info->workloadKind);
-            e.SetTag("namespace", container_info->k8sNamespace);
-            e.SetTag("serviceName", container_info->serviceName);
-            e.SetTag("pid", container_info->armsAppId);
+            e.SetTag("workloadName", containerInfo->workloadName);
+            e.SetTag("workloadKind", containerInfo->workloadKind);
+            e.SetTag("namespace", containerInfo->k8sNamespace);
+            e.SetTag("serviceName", containerInfo->serviceName);
+            e.SetTag("pid", containerInfo->armsAppId);
         }
     }
 
     StringView ipView("remote_ip");
     StringView remoteIpView = e.HasTag(ipView) ? e.GetTag(ipView) : StringView{};
     if (!remoteIpView.empty()) {
-        std::string remote_ip(remoteIpView);
-        std::shared_ptr<k8sContainerInfo> ip_info = k8sMetadata.GetInfoByIpFromCache(remote_ip);
-        if (ip_info == nullptr) {
-            remoteIpVec.push_back(remote_ip);
+        std::string remoteIp(remoteIpView);
+        std::shared_ptr<k8sContainerInfo> ipInfo = k8sMetadata.GetInfoByIpFromCache(remoteIp);
+        if (ipInfo == nullptr) {
+            remoteIpVec.push_back(remoteIp);
             res = false;
         } else {
-            e.SetTag("peerWorkloadName", ip_info->workloadName);
-            e.SetTag("peerWorkloadKind", ip_info->workloadKind);
-            e.SetTag("peerNamespace", ip_info->k8sNamespace);
+            e.SetTag("peerWorkloadName", ipInfo->workloadName);
+            e.SetTag("peerWorkloadKind", ipInfo->workloadKind);
+            e.SetTag("peerNamespace", ipInfo->k8sNamespace);
         }
     }
 
@@ -119,31 +119,31 @@ bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std
     StringView containerIdView = e.HasTag(containerIdViewKey) ? e.GetTag(containerIdViewKey) : StringView{};
     if (!containerIdView.empty()) {
         std::string containerId(containerIdView);
-        std::shared_ptr<k8sContainerInfo> container_info = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
-        if (container_info == nullptr) {
+        std::shared_ptr<k8sContainerInfo> containerInfo = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
+        if (containerInfo == nullptr) {
             containerVec.push_back(containerId);
             res = false;
         } else {
-            e.SetTag("workloadName", container_info->workloadName);
-            e.SetTag("workloadKind", container_info->workloadKind);
-            e.SetTag("namespace", container_info->k8sNamespace);
-            e.SetTag("serviceName", container_info->serviceName);
-            e.SetTag("pid", container_info->armsAppId);
+            e.SetTag("workloadName", containerInfo->workloadName);
+            e.SetTag("workloadKind", containerInfo->workloadKind);
+            e.SetTag("namespace", containerInfo->k8sNamespace);
+            e.SetTag("serviceName", containerInfo->serviceName);
+            e.SetTag("pid", containerInfo->armsAppId);
         }
     }
 
     StringView ipView("remote_ip");
     StringView remoteIpView = e.HasTag(ipView) ? e.GetTag(ipView) : StringView{};
     if (!remoteIpView.empty()) {
-        std::string remote_ip(remoteIpView);
-        std::shared_ptr<k8sContainerInfo> ip_info = k8sMetadata.GetInfoByIpFromCache(remote_ip);
-        if (ip_info == nullptr) {
-            remoteIpVec.push_back(remote_ip);
+        std::string remoteIp(remoteIpView);
+        std::shared_ptr<k8sContainerInfo> ipInfo = k8sMetadata.GetInfoByIpFromCache(remoteIp);
+        if (ipInfo == nullptr) {
+            remoteIpVec.push_back(remoteIp);
             res = false;
         } else {
-            e.SetTag("peerWorkloadName", ip_info->workloadName);
-            e.SetTag("peerWorkloadKind", ip_info->workloadKind);
-            e.SetTag("peerNamespace", ip_info->k8sNamespace);
+            e.SetTag("peerWorkloadName", ipInfo->workloadName);
+            e.SetTag("peerWorkloadKind", ipInfo->workloadKind);
+            e.SetTag("peerNamespace", ipInfo->k8sNamespace);
         }
     }
 
