@@ -35,44 +35,44 @@ void ProcessorK8sMetadata::Process(PipelineEventGroup& logGroup) {
         return;
     }
     EventsContainer& events = logGroup.MutableEvents();
-    std::vector<std::string> container_vec;
-    std::vector<std::string> remote_ip_vec;
-    std::vector<size_t>  cotainer_not_tag;
+    std::vector<std::string> containerVec;
+    std::vector<std::string> remoteIpVec;
+    std::vector<size_t>  cotainerNotTag;
     for (size_t rIdx = 0; rIdx < events.size(); ++rIdx) {
-        if (!ProcessEvent(events[rIdx], container_vec, remote_ip_vec)) {
-            cotainer_not_tag.push_back(rIdx);
+        if (!ProcessEvent(events[rIdx], containerVec, remoteIpVec)) {
+            cotainerNotTag.push_back(rIdx);
         }
     }
     auto& k8sMetadata = K8sMetadata::GetInstance();
-    if (!container_vec.empty()) {
-        k8sMetadata.GetByContainerIdsFromServer(container_vec);
+    if (!containerVec.empty()) {
+        k8sMetadata.GetByContainerIdsFromServer(containerVec);
     }
-    if (!remote_ip_vec.empty()) {
-        k8sMetadata.GetByIpsFromServer(remote_ip_vec);
+    if (!remoteIpVec.empty()) {
+        k8sMetadata.GetByIpsFromServer(remoteIpVec);
     }
-    for (size_t i = 0; i < cotainer_not_tag.size(); ++i) {
-        ProcessEvent(events[i], container_vec, remote_ip_vec);
+    for (size_t i = 0; i < cotainerNotTag.size(); ++i) {
+        ProcessEvent(events[i], containerVec, remoteIpVec);
     }
-    cotainer_not_tag.clear();
-    container_vec.clear();
-    remote_ip_vec.clear();
+    cotainerNotTag.clear();
+    containerVec.clear();
+    remoteIpVec.clear();
 }
 
-bool ProcessorK8sMetadata::ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& container_vec,  std::vector<std::string>& remote_ip_vec) {
+bool ProcessorK8sMetadata::ProcessEvent(PipelineEventPtr& e,  std::vector<std::string>& containerVec,  std::vector<std::string>& remoteIpVec) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
 
     if (e.Is<MetricEvent>()) {
-        return ProcessEventForMetric(e.Cast<MetricEvent>(), container_vec, remote_ip_vec);
+        return ProcessEventForMetric(e.Cast<MetricEvent>(), containerVec, remoteIpVec);
     } else if (e.Is<SpanEvent>()) {
-        return ProcessEventForSpan(e.Cast<SpanEvent>(), container_vec, remote_ip_vec);
+        return ProcessEventForSpan(e.Cast<SpanEvent>(), containerVec, remoteIpVec);
     }
 
     return true;
 }
 
-bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::string>& container_vec, std::vector<std::string>& remote_ip_vec) {
+bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
@@ -82,7 +82,7 @@ bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::st
         std::string containerId(containerId_view);
         std::shared_ptr<k8sContainerInfo> container_info = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
         if (container_info == nullptr) {
-            container_vec.push_back(containerId);
+            containerVec.push_back(containerId);
             res = false;
         } else {
             e.SetTag("workloadName", container_info->workloadName);
@@ -99,7 +99,7 @@ bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::st
         std::string remote_ip(remote_ip_view);
         std::shared_ptr<k8sContainerInfo> ip_info = k8sMetadata.GetInfoByIpFromCache(remote_ip);
         if (ip_info == nullptr) {
-            remote_ip_vec.push_back(remote_ip);
+            remoteIpVec.push_back(remote_ip);
             res = false;
         } else {
             e.SetTag("peerWorkloadName", ip_info->workloadName);
@@ -111,7 +111,7 @@ bool ProcessorK8sMetadata::ProcessEventForSpan(SpanEvent& e, std::vector<std::st
     return res;
 }
 
-bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std::string>& container_vec, std::vector<std::string>& remote_ip_vec) {
+bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std::string>& containerVec, std::vector<std::string>& remoteIpVec) {
     bool res = true;
     
     auto& k8sMetadata = K8sMetadata::GetInstance();
@@ -121,7 +121,7 @@ bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std
         std::string containerId(containerId_view);
         std::shared_ptr<k8sContainerInfo> container_info = k8sMetadata.GetInfoByContainerIdFromCache(containerId);
         if (container_info == nullptr) {
-            container_vec.push_back(containerId);
+            containerVec.push_back(containerId);
             res = false;
         } else {
             e.SetTag("workloadName", container_info->workloadName);
@@ -138,7 +138,7 @@ bool ProcessorK8sMetadata::ProcessEventForMetric(MetricEvent& e, std::vector<std
         std::string remote_ip(remote_ip_view);
         std::shared_ptr<k8sContainerInfo> ip_info = k8sMetadata.GetInfoByIpFromCache(remote_ip);
         if (ip_info == nullptr) {
-            remote_ip_vec.push_back(remote_ip);
+            remoteIpVec.push_back(remote_ip);
             res = false;
         } else {
             e.SetTag("peerWorkloadName", ip_info->workloadName);
