@@ -16,6 +16,7 @@
 
 #include "common/FeedbackInterface.h"
 #include "models/PipelineEventGroup.h"
+#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/BoundedProcessQueue.h"
 #include "pipeline/queue/SenderQueue.h"
 #include "unittest/Unittest.h"
@@ -30,6 +31,7 @@ public:
     void TestPush();
     void TestPop();
     void TestMetric();
+    void TestSetPipeline();
 
 protected:
     static void SetUpTestCase() { sCtx.SetConfigName("test_config"); }
@@ -140,9 +142,30 @@ void BoundedProcessQueueUnittest::TestMetric() {
     APSARA_TEST_EQUAL(1U, mQueue->mValidToPushFlag->GetValue());
 }
 
+void BoundedProcessQueueUnittest::TestSetPipeline() {
+    auto pipeline = make_shared<Pipeline>();
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test_config"] = pipeline;
+
+    auto item1 = GenerateItem();
+    auto p1 = item1.get();
+    auto pipelineTmp = make_shared<Pipeline>();
+    item1->mPipeline = pipelineTmp;
+
+    auto item2 = GenerateItem();
+    auto p2 = item2.get();
+
+    mQueue->Push(std::move(item1));
+    mQueue->Push(std::move(item2));
+    mQueue->SetPipelineForItems("test_config");
+
+    APSARA_TEST_EQUAL(pipelineTmp, p1->mPipeline);
+    APSARA_TEST_EQUAL(pipeline, p2->mPipeline);
+}
+
 UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestPush)
 UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestPop)
 UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestMetric)
+UNIT_TEST_CASE(BoundedProcessQueueUnittest, TestSetPipeline)
 
 } // namespace logtail
 

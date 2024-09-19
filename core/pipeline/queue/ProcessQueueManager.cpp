@@ -229,16 +229,19 @@ bool ProcessQueueManager::SetFeedbackInterface(QueueKey key, vector<FeedbackInte
     return true;
 }
 
-void ProcessQueueManager::InvalidatePop(const string& configName) {
+void ProcessQueueManager::InvalidatePop(const string& configName, bool isPipelineRemoving) {
     if (QueueKeyManager::GetInstance()->HasKey(configName)) {
         auto key = QueueKeyManager::GetInstance()->GetKey(configName);
         lock_guard<mutex> lock(mQueueMux);
         auto iter = mQueues.find(key);
         if (iter != mQueues.end()) {
             (*iter->second.first)->InvalidatePop();
+            if (!isPipelineRemoving) {
+                (*iter->second.first)->SetPipelineForItems(configName);
+            }
         }
     } else {
-        ExactlyOnceQueueManager::GetInstance()->InvalidatePopProcessQueue(configName);
+        ExactlyOnceQueueManager::GetInstance()->InvalidatePopProcessQueue(configName, isPipelineRemoving);
     }
 }
 

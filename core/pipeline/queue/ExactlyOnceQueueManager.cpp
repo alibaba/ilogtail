@@ -148,11 +148,14 @@ bool ExactlyOnceQueueManager::IsAllProcessQueueEmpty() const {
     return true;
 }
 
-void ExactlyOnceQueueManager::InvalidatePopProcessQueue(const string& configName) {
+void ExactlyOnceQueueManager::InvalidatePopProcessQueue(const string& configName, bool isPipelineRemoving) {
     lock_guard<mutex> lock(mProcessQueueMux);
     for (auto& iter : mProcessQueues) {
         if (iter.second->GetConfigName() == configName) {
             iter.second->InvalidatePop();
+            if (!isPipelineRemoving) {
+                iter.second->SetPipelineForItems(configName);
+            }
         }
     }
 }
