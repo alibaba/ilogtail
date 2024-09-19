@@ -29,9 +29,9 @@ type metadataHandler struct {
 	maxLatency   atomic.Int64
 }
 
-func newMetadataHandler() *metadataHandler {
+func newMetadataHandler(metaManager *MetaManager) *metadataHandler {
 	metadataHandler := &metadataHandler{
-		metaManager: GetMetaManagerInstance(),
+		metaManager: metaManager,
 	}
 	return metadataHandler
 }
@@ -52,7 +52,7 @@ func (m *metadataHandler) K8sServerRun(stopCh <-chan struct{}) error {
 	mux := http.NewServeMux()
 
 	// TODO: add port in ip endpoint
-	mux.HandleFunc("/metadata/ip", m.handler(m.handlePodMetaByHostIP))
+	mux.HandleFunc("/metadata/ip", m.handler(m.handlePodMetaByUniqueID))
 	mux.HandleFunc("/metadata/containerid", m.handler(m.handlePodMetaByUniqueID))
 	mux.HandleFunc("/metadata/host", m.handler(m.handlePodMetaByHostIP))
 	server.Handler = mux
@@ -82,8 +82,8 @@ func (m *metadataHandler) GetMetrics() map[string]string {
 		"value.k8s_meta_http_avg_latency":   avgLatency,
 		"value.k8s_meta_http_max_latency":   strconv.FormatInt(m.maxLatency.Load(), 10),
 	}
-	m.requestCount.Store(-m.requestCount.Load())
-	m.totalLatency.Store(-m.totalLatency.Load())
+	m.requestCount.Add(-m.requestCount.Load())
+	m.totalLatency.Add(-m.totalLatency.Load())
 	m.maxLatency.Store(0)
 	return metrics
 }

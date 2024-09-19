@@ -58,7 +58,7 @@ func GetMetaManagerInstance() *MetaManager {
 		metaManager = &MetaManager{
 			stopCh: make(chan struct{}),
 		}
-		metaManager.metadataHandler = newMetadataHandler()
+		metaManager.metadataHandler = newMetadataHandler(metaManager)
 		metaManager.cacheMap = make(map[string]MetaCache)
 		for _, resource := range AllResources {
 			metaManager.cacheMap[resource] = newK8sMetaCache(metaManager.stopCh, resource)

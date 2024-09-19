@@ -265,7 +265,7 @@ func (m *metaCollector) processPodNodeLink(data *k8smeta.ObjectWrapper, method s
 		log := &models.Log{}
 		log.Contents = models.NewLogContents()
 		m.processEntityLinkCommonPart(log.Contents, obj.Pod.Kind, obj.Pod.Namespace, obj.Pod.Name, obj.Node.Kind, "", obj.Node.Name, method, data.FirstObservedTime, data.LastObservedTime)
-		log.Contents.Add(entityLinkRelationTypeFieldName, "related_to")
+		log.Contents.Add(entityLinkRelationTypeFieldName, "runs")
 		log.Timestamp = uint64(time.Now().Unix())
 		return []models.PipelineEvent{log}
 	}
