@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Flags.h"
 #include "app_config/AppConfig.h"
 #include "common/JsonUtil.h"
 #include "config/InstanceConfig.h"
 #include "instance_config/InstanceConfigManager.h"
+#include "runner/FlusherRunner.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
 
 DECLARE_FLAG_BOOL(enable_send_tps_smoothing);
 DECLARE_FLAG_BOOL(enable_flow_control);
+DECLARE_FLAG_INT32(default_max_send_byte_per_sec);
 
 namespace logtail {
 
@@ -93,7 +96,7 @@ bool InstanceConfigManagerUnittest::LoadModuleConfig(bool isInit) {
 
 void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
     {
-        AppConfig::GetInstance();
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
         AppConfig::GetInstance()->RegisterCallback(
             "bool_true", std::bind(&InstanceConfigManagerUnittest::LoadModuleConfig, this, std::placeholders::_1));
         AppConfig::GetInstance()->RegisterCallback(
@@ -116,10 +119,21 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         AppConfig::GetInstance()->RegisterCallback(
             "string_false", std::bind(&InstanceConfigManagerUnittest::LoadModuleConfig, this, std::placeholders::_1));
     }
-
+    FlusherRunner::GetInstance()->Init();
     // Added
     {
         InstanceConfigDiff configDiff;
+        {
+            std::string content = R"({
+                "max_bytes_per_sec": 1234
+            })";
+            std::string errorMsg;
+            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
+            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            APSARA_TEST_TRUE(errorMsg.empty());
+            InstanceConfig config("test0", std::move(detail), "dir");
+            configDiff.mAdded.emplace_back(config);
+        }
         {
             std::string content = R"({
                 "bool_true": true,
@@ -152,16 +166,29 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         }
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);
 
-        APSARA_TEST_EQUAL(2U, InstanceConfigManager::GetInstance()->GetAllConfigNames().size());
+        APSARA_TEST_EQUAL(3U, InstanceConfigManager::GetInstance()->GetAllConfigNames().size());
         APSARA_TEST_NOT_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test1"));
         APSARA_TEST_NOT_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test2"));
         APSARA_TEST_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test3"));
     }
-
+    APSARA_TEST_EQUAL(INT32_FLAG(default_max_send_byte_per_sec), AppConfig::GetInstance()->GetMaxBytePerSec());
+    APSARA_TEST_EQUAL(true, FlusherRunner::GetInstance()->mSendRandomSleep);
+    APSARA_TEST_EQUAL(true, FlusherRunner::GetInstance()->mSendFlowControl);
     // Modified
     status = 1;
     {
         InstanceConfigDiff configDiff;
+        {
+            std::string content = R"({
+                "max_bytes_per_sec": 31457280
+            })";
+            std::string errorMsg;
+            unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
+            APSARA_TEST_TRUE(ParseJsonTable(content, *detail, errorMsg));
+            APSARA_TEST_TRUE(errorMsg.empty());
+            InstanceConfig config("test0", std::move(detail), "dir");
+            configDiff.mAdded.emplace_back(config);
+        }
         {
             std::string content = R"({
                 "bool_true": false,
@@ -194,12 +221,14 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         }
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);
 
-        APSARA_TEST_EQUAL(2U, InstanceConfigManager::GetInstance()->GetAllConfigNames().size());
+        APSARA_TEST_EQUAL(3U, InstanceConfigManager::GetInstance()->GetAllConfigNames().size());
         APSARA_TEST_NOT_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test1"));
         APSARA_TEST_NOT_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test2"));
         APSARA_TEST_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test3"));
     }
-
+    APSARA_TEST_EQUAL(31457280, AppConfig::GetInstance()->GetMaxBytePerSec());
+    APSARA_TEST_EQUAL(false, FlusherRunner::GetInstance()->mSendRandomSleep);
+    APSARA_TEST_EQUAL(false, FlusherRunner::GetInstance()->mSendFlowControl);
     // Removed
     status = 2;
     {
@@ -208,10 +237,13 @@ void InstanceConfigManagerUnittest::TestUpdateInstanceConfigs() {
         configDiff.mRemoved.emplace_back("test2");
         InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(configDiff);
 
-        APSARA_TEST_EQUAL(0U, InstanceConfigManager::GetInstance()->GetAllConfigNames().size());
+        APSARA_TEST_EQUAL(1U, InstanceConfigManager::GetInstance()->GetAllConfigNames().size());
+        APSARA_TEST_NOT_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test0"));
         APSARA_TEST_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test1"));
+        APSARA_TEST_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test2"));
         APSARA_TEST_EQUAL(nullptr, InstanceConfigManager::GetInstance()->FindConfigByName("test3"));
     }
+    FlusherRunner::GetInstance()->Stop();
 }
 
 UNIT_TEST_CASE(InstanceConfigManagerUnittest, TestUpdateInstanceConfigs)
