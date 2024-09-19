@@ -40,6 +40,7 @@ protected:
         mSenderQueue1.reset(new SenderQueue(10, 0, 10, 0, "", sCtx));
         mSenderQueue2.reset(new SenderQueue(10, 0, 10, 0, "", sCtx));
         mQueue->SetDownStreamQueues(vector<BoundedSenderQueueInterface*>{mSenderQueue1.get(), mSenderQueue2.get()});
+        mQueue->ValidatePop();
     }
 
 private:

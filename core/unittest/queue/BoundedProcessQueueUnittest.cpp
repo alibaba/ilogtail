@@ -46,6 +46,7 @@ protected:
         mFeedback1.reset(new FeedbackInterfaceMock);
         mFeedback2.reset(new FeedbackInterfaceMock);
         mQueue->SetUpStreamFeedbacks(vector<FeedbackInterface*>{mFeedback1.get(), mFeedback2.get()});
+        mQueue->ValidatePop();
     }
 
 private:
