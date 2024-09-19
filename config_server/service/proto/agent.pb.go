@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v3.6.1
-// source: agent.proto
+// source: agent.protov2
 
 package configserver_proto
 
@@ -173,7 +173,7 @@ type ConfigInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"` // Required, Config's type
+	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.protov2.ConfigType" json:"type,omitempty"` // Required, Config's type
 	Name    string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                     // Required, Config's unique identification
 	Version int64      `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`                              // Required, Config's version number
 	Context string     `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`                               // Config's context
@@ -245,12 +245,12 @@ type ConfigCheckResult struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type        ConfigType  `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"`                                   // Required, Config's type
+	Type        ConfigType  `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.protov2.ConfigType" json:"type,omitempty"`                                   // Required, Config's type
 	Name        string      `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                                                       // Required, Config's unique identification
 	OldVersion  int64       `protobuf:"varint,3,opt,name=old_version,json=oldVersion,proto3" json:"old_version,omitempty"`                                        // Required, Config's current version number
 	NewVersion  int64       `protobuf:"varint,4,opt,name=new_version,json=newVersion,proto3" json:"new_version,omitempty"`                                        // Required, Config's latest version number
 	Context     string      `protobuf:"bytes,5,opt,name=context,proto3" json:"context,omitempty"`                                                                 // Config's context
-	CheckStatus CheckStatus `protobuf:"varint,6,opt,name=check_status,json=checkStatus,proto3,enum=configserver.proto.CheckStatus" json:"check_status,omitempty"` // Required, Config's update status
+	CheckStatus CheckStatus `protobuf:"varint,6,opt,name=check_status,json=checkStatus,proto3,enum=configserver.protov2.CheckStatus" json:"check_status,omitempty"` // Required, Config's update status
 }
 
 func (x *ConfigCheckResult) Reset() {
@@ -333,7 +333,7 @@ type ConfigDetail struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"` // Required, Config's type
+	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.protov2.ConfigType" json:"type,omitempty"` // Required, Config's type
 	Name    string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                     // Required, Config's unique identification
 	Version int64      `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`                              // Required, Config's version number
 	Context string     `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`                               // Config's context
@@ -702,7 +702,7 @@ type HeartBeatResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	RequestId            string               `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	Code                 RespCode             `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code                 RespCode             `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message              string               `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	PipelineCheckResults []*ConfigCheckResult `protobuf:"bytes,4,rep,name=pipeline_check_results,json=pipelineCheckResults,proto3" json:"pipeline_check_results,omitempty"` // Agent's PIPELINE_CONFIG update status
 	AgentCheckResults    []*ConfigCheckResult `protobuf:"bytes,5,rep,name=agent_check_results,json=agentCheckResults,proto3" json:"agent_check_results,omitempty"`          // Agent's AGENT_CONFIG update status
@@ -855,7 +855,7 @@ type FetchPipelineConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	RequestId     string          `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"` // PIPELINE_CONFIGs' detail
 }
@@ -1000,7 +1000,7 @@ type FetchAgentConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	RequestId     string          `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.protov2.RespCode" json:"code,omitempty"`
 	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"` // AGENT_CONFIGs' detail
 }
@@ -1267,44 +1267,44 @@ func file_agent_proto_rawDescGZIP() []byte {
 var file_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_agent_proto_goTypes = []interface{}{
-	(ConfigType)(0),                     // 0: configserver.proto.ConfigType
-	(CheckStatus)(0),                    // 1: configserver.proto.CheckStatus
-	(RespCode)(0),                       // 2: configserver.proto.RespCode
-	(*ConfigInfo)(nil),                  // 3: configserver.proto.ConfigInfo
-	(*ConfigCheckResult)(nil),           // 4: configserver.proto.ConfigCheckResult
-	(*ConfigDetail)(nil),                // 5: configserver.proto.ConfigDetail
-	(*AgentAttributes)(nil),             // 6: configserver.proto.AgentAttributes
-	(*Command)(nil),                     // 7: configserver.proto.Command
-	(*HeartBeatRequest)(nil),            // 8: configserver.proto.HeartBeatRequest
-	(*HeartBeatResponse)(nil),           // 9: configserver.proto.HeartBeatResponse
-	(*FetchPipelineConfigRequest)(nil),  // 10: configserver.proto.FetchPipelineConfigRequest
-	(*FetchPipelineConfigResponse)(nil), // 11: configserver.proto.FetchPipelineConfigResponse
-	(*FetchAgentConfigRequest)(nil),     // 12: configserver.proto.FetchAgentConfigRequest
-	(*FetchAgentConfigResponse)(nil),    // 13: configserver.proto.FetchAgentConfigResponse
-	nil,                                 // 14: configserver.proto.AgentAttributes.ExtrasEntry
-	nil,                                 // 15: configserver.proto.Command.ArgsEntry
+	(ConfigType)(0),                     // 0: configserver.protov2.ConfigType
+	(CheckStatus)(0),                    // 1: configserver.protov2.CheckStatus
+	(RespCode)(0),                       // 2: configserver.protov2.RespCode
+	(*ConfigInfo)(nil),                  // 3: configserver.protov2.ConfigInfo
+	(*ConfigCheckResult)(nil),           // 4: configserver.protov2.ConfigCheckResult
+	(*ConfigDetail)(nil),                // 5: configserver.protov2.ConfigDetail
+	(*AgentAttributes)(nil),             // 6: configserver.protov2.AgentAttributes
+	(*Command)(nil),                     // 7: configserver.protov2.Command
+	(*HeartBeatRequest)(nil),            // 8: configserver.protov2.HeartBeatRequest
+	(*HeartBeatResponse)(nil),           // 9: configserver.protov2.HeartBeatResponse
+	(*FetchPipelineConfigRequest)(nil),  // 10: configserver.protov2.FetchPipelineConfigRequest
+	(*FetchPipelineConfigResponse)(nil), // 11: configserver.protov2.FetchPipelineConfigResponse
+	(*FetchAgentConfigRequest)(nil),     // 12: configserver.protov2.FetchAgentConfigRequest
+	(*FetchAgentConfigResponse)(nil),    // 13: configserver.protov2.FetchAgentConfigResponse
+	nil,                                 // 14: configserver.protov2.AgentAttributes.ExtrasEntry
+	nil,                                 // 15: configserver.protov2.Command.ArgsEntry
 }
 var file_agent_proto_depIdxs = []int32{
-	0,  // 0: configserver.proto.ConfigInfo.type:type_name -> configserver.proto.ConfigType
-	0,  // 1: configserver.proto.ConfigCheckResult.type:type_name -> configserver.proto.ConfigType
-	1,  // 2: configserver.proto.ConfigCheckResult.check_status:type_name -> configserver.proto.CheckStatus
-	0,  // 3: configserver.proto.ConfigDetail.type:type_name -> configserver.proto.ConfigType
-	14, // 4: configserver.proto.AgentAttributes.extras:type_name -> configserver.proto.AgentAttributes.ExtrasEntry
-	15, // 5: configserver.proto.Command.args:type_name -> configserver.proto.Command.ArgsEntry
-	6,  // 6: configserver.proto.HeartBeatRequest.attributes:type_name -> configserver.proto.AgentAttributes
-	3,  // 7: configserver.proto.HeartBeatRequest.pipeline_configs:type_name -> configserver.proto.ConfigInfo
-	3,  // 8: configserver.proto.HeartBeatRequest.agent_configs:type_name -> configserver.proto.ConfigInfo
-	2,  // 9: configserver.proto.HeartBeatResponse.code:type_name -> configserver.proto.RespCode
-	4,  // 10: configserver.proto.HeartBeatResponse.pipeline_check_results:type_name -> configserver.proto.ConfigCheckResult
-	4,  // 11: configserver.proto.HeartBeatResponse.agent_check_results:type_name -> configserver.proto.ConfigCheckResult
-	7,  // 12: configserver.proto.HeartBeatResponse.custom_commands:type_name -> configserver.proto.Command
-	3,  // 13: configserver.proto.FetchPipelineConfigRequest.req_configs:type_name -> configserver.proto.ConfigInfo
-	2,  // 14: configserver.proto.FetchPipelineConfigResponse.code:type_name -> configserver.proto.RespCode
-	5,  // 15: configserver.proto.FetchPipelineConfigResponse.config_details:type_name -> configserver.proto.ConfigDetail
-	6,  // 16: configserver.proto.FetchAgentConfigRequest.attributes:type_name -> configserver.proto.AgentAttributes
-	3,  // 17: configserver.proto.FetchAgentConfigRequest.req_configs:type_name -> configserver.proto.ConfigInfo
-	2,  // 18: configserver.proto.FetchAgentConfigResponse.code:type_name -> configserver.proto.RespCode
-	5,  // 19: configserver.proto.FetchAgentConfigResponse.config_details:type_name -> configserver.proto.ConfigDetail
+	0,  // 0: configserver.protov2.ConfigInfo.type:type_name -> configserver.protov2.ConfigType
+	0,  // 1: configserver.protov2.ConfigCheckResult.type:type_name -> configserver.protov2.ConfigType
+	1,  // 2: configserver.protov2.ConfigCheckResult.check_status:type_name -> configserver.protov2.CheckStatus
+	0,  // 3: configserver.protov2.ConfigDetail.type:type_name -> configserver.protov2.ConfigType
+	14, // 4: configserver.protov2.AgentAttributes.extras:type_name -> configserver.protov2.AgentAttributes.ExtrasEntry
+	15, // 5: configserver.protov2.Command.args:type_name -> configserver.protov2.Command.ArgsEntry
+	6,  // 6: configserver.protov2.HeartBeatRequest.attributes:type_name -> configserver.protov2.AgentAttributes
+	3,  // 7: configserver.protov2.HeartBeatRequest.pipeline_configs:type_name -> configserver.protov2.ConfigInfo
+	3,  // 8: configserver.protov2.HeartBeatRequest.agent_configs:type_name -> configserver.protov2.ConfigInfo
+	2,  // 9: configserver.protov2.HeartBeatResponse.code:type_name -> configserver.protov2.RespCode
+	4,  // 10: configserver.protov2.HeartBeatResponse.pipeline_check_results:type_name -> configserver.protov2.ConfigCheckResult
+	4,  // 11: configserver.protov2.HeartBeatResponse.agent_check_results:type_name -> configserver.protov2.ConfigCheckResult
+	7,  // 12: configserver.protov2.HeartBeatResponse.custom_commands:type_name -> configserver.protov2.Command
+	3,  // 13: configserver.protov2.FetchPipelineConfigRequest.req_configs:type_name -> configserver.protov2.ConfigInfo
+	2,  // 14: configserver.protov2.FetchPipelineConfigResponse.code:type_name -> configserver.protov2.RespCode
+	5,  // 15: configserver.protov2.FetchPipelineConfigResponse.config_details:type_name -> configserver.protov2.ConfigDetail
+	6,  // 16: configserver.protov2.FetchAgentConfigRequest.attributes:type_name -> configserver.protov2.AgentAttributes
+	3,  // 17: configserver.protov2.FetchAgentConfigRequest.req_configs:type_name -> configserver.protov2.ConfigInfo
+	2,  // 18: configserver.protov2.FetchAgentConfigResponse.code:type_name -> configserver.protov2.RespCode
+	5,  // 19: configserver.protov2.FetchAgentConfigResponse.config_details:type_name -> configserver.protov2.ConfigDetail
 	20, // [20:20] is the sub-list for method output_type
 	20, // [20:20] is the sub-list for method input_type
 	20, // [20:20] is the sub-list for extension type_name
