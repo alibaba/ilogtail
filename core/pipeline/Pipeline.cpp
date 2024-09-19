@@ -16,20 +16,21 @@
 
 #include "pipeline/Pipeline.h"
 
+#include <chrono>
 #include <cstdint>
 #include <utility>
 
-#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
-#include "plugin/flusher/sls/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "pipeline/plugin/PluginRegistry.h"
-#include "plugin/processor/ProcessorParseApsaraNative.h"
 #include "pipeline/queue/ProcessQueueManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
 #include "pipeline/queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/processor/ProcessorParseApsaraNative.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
@@ -317,10 +318,11 @@ bool Pipeline::Init(PipelineConfig&& config) {
             : mContext.GetGlobalConfig().mProcessPriority - 1;
 
         if (isInputSupportAck) {
-            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(mContext.GetProcessQueueKey(), priority);
+            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(
+                mContext.GetProcessQueueKey(), priority, mContext);
         } else {
             ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
-                mContext.GetProcessQueueKey(), priority, 100);
+                mContext.GetProcessQueueKey(), priority, 1024, mContext);
         }
 
 
@@ -342,10 +344,19 @@ bool Pipeline::Init(PipelineConfig&& config) {
         ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), std::move(senderQueues));
     }
 
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, {{METRIC_LABEL_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_CONFIG_NAME, mName}});
+    mStartTime = mMetricsRecordRef.CreateIntGauge("start_time");
+    mProcessorsInEventsCnt = mMetricsRecordRef.CreateCounter("processors_in_events_cnt");
+    mProcessorsInGroupsCnt = mMetricsRecordRef.CreateCounter("processors_in_event_groups_cnt");
+    mProcessorsInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter("processors_in_event_group_data_size_bytes");
+    mProcessorsTotalDelayMs = mMetricsRecordRef.CreateCounter("processors_total_delay_ms");
+
     return true;
 }
 
 void Pipeline::Start() {
+#ifndef APSARA_UNIT_TEST_MAIN
     // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入startDisabled里
     for (const auto& flusher : mFlushers) {
         flusher->Start();
@@ -365,10 +376,19 @@ void Pipeline::Start() {
         input->Start();
     }
 
-    LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName));
+    mStartTime->Set(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count());
+#endif
+    LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName)("ptr", mStartTime.get()));
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
+    for (const auto& logGroup : logGroupList) {
+        mProcessorsInEventsCnt->Add(logGroup.GetEvents().size());
+        mProcessorsInGroupDataSizeBytes->Add(logGroup.DataSize());
+    }
+    mProcessorsInGroupsCnt->Add(logGroupList.size());
+
+    auto before = chrono::system_clock::now();
     // inputIndex == 0xFFFFFFFF means the input is Go input
     if (inputIndex != 0xFFFFFFFF && inputIndex < mInputs.size()) {
         for (auto& p : mInputs[inputIndex]->GetInnerProcessors()) {
@@ -378,6 +398,8 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputInd
     for (auto& p : mProcessorLine) {
         p->Process(logGroupList);
     }
+    mProcessorsTotalDelayMs->Add(
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - before).count());
 }
 
 bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
@@ -412,6 +434,7 @@ bool Pipeline::FlushBatch() {
 }
 
 void Pipeline::Stop(bool isRemoving) {
+#ifndef APSARA_UNIT_TEST_MAIN
     // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入stopDisabled里
     for (const auto& input : mInputs) {
         input->Stop(isRemoving);
@@ -434,7 +457,7 @@ void Pipeline::Stop(bool isRemoving) {
     for (const auto& flusher : mFlushers) {
         flusher->Stop(isRemoving);
     }
-
+#endif
     LOG_INFO(sLogger, ("pipeline stop", "succeeded")("config", mName));
 }
 

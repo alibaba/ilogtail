@@ -16,8 +16,6 @@
 
 #include "prometheus/schedulers/ScrapeScheduler.h"
 
-#include <xxhash/xxhash.h>
-
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -69,7 +67,7 @@ void ScrapeScheduler::OnMetricResult(const HttpResponse& response, uint64_t time
     if (response.mStatusCode != 200) {
         mScrapeResponseSizeBytes = 0;
         string headerStr;
-        for (const auto& [k, v] : mScrapeConfigPtr->mAuthHeaders) {
+        for (const auto& [k, v] : mScrapeConfigPtr->mRequestHeaders) {
             headerStr.append(k).append(":").append(v).append(";");
         }
         LOG_WARNING(sLogger,
@@ -146,7 +144,7 @@ std::unique_ptr<TimerEvent> ScrapeScheduler::BuildScrapeTimerEvent(std::chrono::
                                                      mPort,
                                                      mScrapeConfigPtr->mMetricsPath,
                                                      mScrapeConfigPtr->mQueryString,
-                                                     mScrapeConfigPtr->mAuthHeaders,
+                                                     mScrapeConfigPtr->mRequestHeaders,
                                                      "",
                                                      mScrapeConfigPtr->mScrapeTimeoutSeconds,
                                                      mScrapeConfigPtr->mScrapeIntervalSeconds
@@ -164,19 +162,6 @@ void ScrapeScheduler::Cancel() {
         WriteLock lock(mLock);
         mValidState = false;
     }
-}
-
-uint64_t ScrapeScheduler::GetRandSleep() const {
-    const string& key = mHash;
-    uint64_t h = XXH64(key.c_str(), key.length(), 0);
-    uint64_t randSleep
-        = ((double)1.0) * mScrapeConfigPtr->mScrapeIntervalSeconds * (1.0 * h / (double)0xFFFFFFFFFFFFFFFF);
-    uint64_t sleepOffset = GetCurrentTimeInMilliSeconds() % (mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL);
-    if (randSleep < sleepOffset) {
-        randSleep += mScrapeConfigPtr->mScrapeIntervalSeconds * 1000ULL;
-    }
-    randSleep -= sleepOffset;
-    return randSleep;
 }
 
 void ScrapeScheduler::SetTimer(std::shared_ptr<Timer> timer) {

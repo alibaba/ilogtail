@@ -24,6 +24,7 @@
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
 #include "MetricStore.h"
+
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
@@ -161,12 +162,12 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
-    DoubleGaugePtr mGlobalCpuGauge;
+    DoubleGaugePtr mAgentCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
-    IntGaugePtr mGlobalMemoryGauge;
+    IntGaugePtr mAgentMemoryGauge;
 
-    IntGaugePtr mGlobalUsedSendingConcurrency;
+    IntGaugePtr mAgentUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
