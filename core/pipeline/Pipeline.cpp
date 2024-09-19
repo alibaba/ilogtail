@@ -349,7 +349,7 @@ void Pipeline::Start() {
 
     mStartTime->Set(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count());
 #endif
-    LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName)("ptr", mStartTime.get()));
+    LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName));
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputIndex) {
