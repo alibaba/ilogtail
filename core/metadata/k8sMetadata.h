@@ -50,7 +50,7 @@ namespace logtail {
             lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> containerCache;
             lru11::Cache<std::string, std::shared_ptr<k8sContainerInfo>> ipCache;
             std::string mServiceHost;
-            std::string mServicePort;
+            int32_t mServicePort;
             K8sMetadata(size_t cacheSize)
               : containerCache(cacheSize, 0), ipCache(cacheSize, 0){
                 mServiceHost = STRING_FLAG(loong_collector_k8s_meta_service);
