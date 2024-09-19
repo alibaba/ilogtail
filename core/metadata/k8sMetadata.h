@@ -17,6 +17,7 @@
 #include "common/LRUCache.h"
 #include "app_config/AppConfig.h"
 #include <json/json.h>
+#include "common/Flags.h"
 
 DECLARE_FLAG_STRING(loong_collector_k8s_meta_service);
 DECLARE_FLAG_INT32(loong_collector_k8s_meta_service_port);
@@ -52,8 +53,8 @@ namespace logtail {
             std::string mServicePort;
             K8sMetadata(size_t cacheSize)
               : containerCache(cacheSize, 0), ipCache(cacheSize, 0){
-                mServiceHost = STRING_FLAG(loong_collector_operator_service);
-                mServicePort = INT32_FLAG(loong_collector_operator_service_port);
+                mServiceHost = STRING_FLAG(loong_collector_k8s_meta_service);
+                mServicePort = INT32_FLAG(loong_collector_k8s_meta_service_port);
               }
             K8sMetadata(const K8sMetadata&) = delete;
             K8sMetadata& operator=(const K8sMetadata&) = delete;
