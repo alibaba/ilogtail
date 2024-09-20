@@ -221,7 +221,7 @@ namespace sdk {
                                                       const std::string& compressedLogGroup,
                                                       uint32_t rawSize,
                                                       const std::string& hashKey,
-                                                      bool isMetrics) {
+                                                      bool isTimeSeries) {
         map<string, string> httpHeader;
         httpHeader[CONTENT_TYPE] = TYPE_LOG_PROTOBUF;
         if (!mKeyProvider.empty()) {
@@ -229,7 +229,7 @@ namespace sdk {
         }
         httpHeader[X_LOG_BODYRAWSIZE] = std::to_string(rawSize);
         httpHeader[X_LOG_COMPRESSTYPE] = Client::GetCompressTypeString(compressType);
-        if (isMetrics) {
+        if (isTimeSeries) {
             return SynPostMetricStoreLogs(project, logstore, compressedLogGroup, httpHeader);
         } else {
             return SynPostLogStoreLogs(project, logstore, compressedLogGroup, httpHeader, hashKey);
@@ -260,7 +260,7 @@ namespace sdk {
                                                                       SenderQueueItem* item,
                                                                       const std::string& hashKey,
                                                                       int64_t hashKeySeqID,
-                                                                      bool isMetrics) {
+                                                                      bool isTimeSeries) {
         map<string, string> httpHeader;
         httpHeader[CONTENT_TYPE] = TYPE_LOG_PROTOBUF;
         if (!mKeyProvider.empty()) {
@@ -268,9 +268,9 @@ namespace sdk {
         }
         httpHeader[X_LOG_BODYRAWSIZE] = std::to_string(rawSize);
         httpHeader[X_LOG_COMPRESSTYPE] = Client::GetCompressTypeString(compressType);
-        if (isMetrics) {
+        if (isTimeSeries) {
             return CreateAsynPostMetricStoreLogsRequest(
-                project, logstore, compressedLogGroup, httpHeader, hashKey, hashKeySeqID, item);
+                project, logstore, compressedLogGroup, httpHeader,item);
         } else {
             return CreateAsynPostLogStoreLogsRequest(
                 project, logstore, compressedLogGroup, httpHeader, hashKey, hashKeySeqID, item);
@@ -332,8 +332,6 @@ namespace sdk {
                                                  const std::string& logstore,
                                                  const std::string& body,
                                                  std::map<std::string, std::string>& httpHeader,
-                                                 const std::string& hashKey,
-                                                 int64_t hashKeySeqID,
                                                  SenderQueueItem* item) {
         string operation = METRICSTORES;
         operation.append("/").append(project).append("/").append(logstore).append("/api/v1/write");

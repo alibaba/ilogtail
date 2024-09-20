@@ -101,7 +101,7 @@ namespace sdk {
                                                   const std::string& compressedLogGroup,
                                                   uint32_t rawSize,
                                                   const std::string& hashKey = "",
-                                                  bool isMetrics = false);
+                                                  bool isTimeSeries = false);
 
         PostLogStoreLogsResponse PostMetricStoreLogs(const std::string& project,
                                                      const std::string& logstore,
@@ -139,7 +139,7 @@ namespace sdk {
                                                                        SenderQueueItem* item,
                                                                        const std::string& hashKey = "",
                                                                        int64_t hashKeySeqID = kInvalidHashKeySeqID,
-                                                                       bool isMetrics = false);
+                                                                       bool isTimeSeries = false);
         /** Async Put metrics data to SLS metricstore. Unsuccessful opertaion will cause an LOGException.
          * @param project The project name
          * @param logstore The logstore name
@@ -207,8 +207,6 @@ namespace sdk {
                                              const std::string& logstore,
                                              const std::string& body,
                                              std::map<std::string, std::string>& httpHeader,
-                                             const std::string& hashKey,
-                                             int64_t hashKeySeqID,
                                              SenderQueueItem* item);
 
         // PingSLSServer sends a trivial data packet to SLS for some inner purposes.
