@@ -164,13 +164,13 @@ func (p *ServiceWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[strin
 
 func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 	var event *pipeline.LogEventWithContext
-	var isValidToPushNativeProcessQueue bool = true
+	isValidToPushNativeProcessQueue := true
 
 	for {
 		if isValidToPushNativeProcessQueue {
 			select {
 			case <-p.timer.C:
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 			case event = <-p.LogsCachedChan:
 				p.eventCached = append(p.eventCached, event.LogEvent)
 				p.tagCached = append(p.tagCached, event.Tags)
@@ -178,7 +178,7 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 				if len(p.eventCached) < p.MaxCachedSize {
 					continue
 				}
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 			case <-p.ShutdownCachedChan:
 				for event = range p.LogsCachedChan {
 				}
@@ -187,7 +187,7 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 		} else {
 			select {
 			case <-p.timer.C:
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 			case <-p.ShutdownCachedChan:
 				for event = range p.LogsCachedChan {
 				}
@@ -198,7 +198,7 @@ func (p *ServiceWrapperV1) runPushNativeProcessQueueInternal() {
 
 }
 
-func (p *ServiceWrapperV1) pushNativeProcessQueue() bool {
+func (p *ServiceWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
 	if len(p.eventCached) == 0 {
 		return true
 	}
@@ -236,16 +236,27 @@ func (p *ServiceWrapperV1) pushNativeProcessQueue() bool {
 	}
 
 	// try to pushNativeProcessQueue
-	var rst int = 0
+	rst := 0
 	switch p.Input.GetMode() {
 	case pipeline.PUSH:
-		for i := 0; i < 5; i++ {
-			if logtail.IsValidToProcess(p.Config.ConfigName) {
-				if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
-					break
+		if retryCnt <= 0 {
+			for {
+				if logtail.IsValidToProcess(p.Config.ConfigName) {
+					if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
+						break
+					}
 				}
+				time.Sleep(time.Duration(10) * time.Millisecond)
 			}
-			time.Sleep(time.Duration(10) * time.Millisecond)
+		} else {
+			for i := 0; i < retryCnt; i++ {
+				if logtail.IsValidToProcess(p.Config.ConfigName) {
+					if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
+						break
+					}
+				}
+				time.Sleep(time.Duration(10) * time.Millisecond)
+			}
 		}
 		// if logtail.IsValidToProcess(p.Config.ConfigName) {
 		// 	rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer)

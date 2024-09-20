@@ -172,13 +172,13 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 	p.ctxCached = make([]map[string]interface{}, 0, p.MaxCachedSize+1)
 	p.timer = time.NewTimer(p.PushNativeTimeout)
 	var event *pipeline.LogEventWithContext
-	var isValidToPushNativeProcessQueue bool = true
+	isValidToPushNativeProcessQueue := true
 
 	for {
 		if isValidToPushNativeProcessQueue {
 			select {
 			case <-p.timer.C:
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 			case event = <-p.LogsCachedChan:
 				p.eventCached = append(p.eventCached, event.LogEvent)
 				p.tagCached = append(p.tagCached, event.Tags)
@@ -186,7 +186,7 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 				if len(p.eventCached) < p.MaxCachedSize {
 					continue
 				}
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 			case <-p.ShutdownCachedChan:
 				for len(p.LogsCachedChan) > 0 {
 					<-p.LogsCachedChan
@@ -199,7 +199,7 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 		} else {
 			select {
 			case <-p.timer.C:
-				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue(5)
 			case <-p.ShutdownCachedChan:
 				for len(p.LogsCachedChan) > 0 {
 					<-p.LogsCachedChan
@@ -214,7 +214,7 @@ func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
 
 }
 
-func (p *MetricWrapperV1) pushNativeProcessQueue() bool {
+func (p *MetricWrapperV1) pushNativeProcessQueue(retryCnt int) bool {
 	if len(p.eventCached) == 0 {
 		return true
 	}
@@ -252,16 +252,27 @@ func (p *MetricWrapperV1) pushNativeProcessQueue() bool {
 	}
 
 	// try to pushNativeProcessQueue
-	var rst int = 0
+	rst := 0
 	switch p.Input.GetMode() {
 	case pipeline.PUSH:
-		for i := 0; i < 5; i++ {
-			if logtail.IsValidToProcess(p.Config.ConfigName) {
-				if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
-					break
+		if retryCnt <= 0 {
+			for {
+				if logtail.IsValidToProcess(p.Config.ConfigName) {
+					if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
+						break
+					}
 				}
+				time.Sleep(time.Duration(10) * time.Millisecond)
 			}
-			time.Sleep(time.Duration(10) * time.Millisecond)
+		} else {
+			for i := 0; i < retryCnt; i++ {
+				if logtail.IsValidToProcess(p.Config.ConfigName) {
+					if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
+						break
+					}
+				}
+				time.Sleep(time.Duration(10) * time.Millisecond)
+			}
 		}
 	case pipeline.PULL:
 		logtail.PushQueue(p.Config.ConfigName, p.pbBuffer)
