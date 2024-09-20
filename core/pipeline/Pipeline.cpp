@@ -73,9 +73,6 @@ bool Pipeline::Init(PipelineConfig&& config) {
     mContext.SetCreateTime(config.mCreateTime);
     mContext.SetPipeline(*this);
     mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
-    mMetricsRecordRef.AddLabels({{METRIC_LABEL_PROJECT, config.mProject}});
-    mMetricsRecordRef.AddLabels({{METRIC_LABEL_CONFIG_NAME, mName}});
-    WriteMetrics::GetInstance()->CommitMetricsRecordRef(mMetricsRecordRef);
 
     // for special treatment below
     const InputFile* inputFile = nullptr;
