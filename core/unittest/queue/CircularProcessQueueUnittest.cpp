@@ -40,7 +40,7 @@ protected:
         mSenderQueue1.reset(new SenderQueue(10, 0, 10, 0, "", sCtx));
         mSenderQueue2.reset(new SenderQueue(10, 0, 10, 0, "", sCtx));
         mQueue->SetDownStreamQueues(vector<BoundedSenderQueueInterface*>{mSenderQueue1.get(), mSenderQueue2.get()});
-        mQueue->ValidatePop();
+        mQueue->EnablePop();
     }
 
 private:
@@ -100,9 +100,9 @@ void CircularProcessQueueUnittest::TestPop() {
 
     mQueue->Push(GenerateItem(1));
     // invalidate pop
-    mQueue->InvalidatePop();
+    mQueue->DisablePop();
     APSARA_TEST_FALSE(mQueue->Pop(item));
-    mQueue->ValidatePop();
+    mQueue->EnablePop();
 
     // downstream queues are not valid to push
     mSenderQueue1->mValidToPush = false;

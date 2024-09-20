@@ -293,7 +293,7 @@ void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
     auto p2 = item2.get();
     sManager->PushProcessQueue(2, std::move(item2));
 
-    sManager->InvalidatePopProcessQueue("test_config", false);
+    sManager->DisablePopProcessQueue("test_config", false);
     APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[1]->mValidToPop);
     APSARA_TEST_FALSE(ExactlyOnceQueueManager::GetInstance()->mProcessQueues[2]->mValidToPop);
     APSARA_TEST_EQUAL(pipeline1, p1->mPipeline);
@@ -310,7 +310,7 @@ void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
     auto pipeline2 = make_shared<Pipeline>();
     PipelineManager::GetInstance()->mPipelineNameEntityMap["test_config"] = pipeline2;
 
-    sManager->InvalidatePopProcessQueue("test_config", false);
+    sManager->DisablePopProcessQueue("test_config", false);
     APSARA_TEST_FALSE(sManager->mProcessQueues[1]->mValidToPop);
     APSARA_TEST_FALSE(sManager->mProcessQueues[2]->mValidToPop);
     APSARA_TEST_EQUAL(pipeline1, p1->mPipeline);
@@ -326,7 +326,7 @@ void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
     auto p6 = item6.get();
     sManager->PushProcessQueue(2, std::move(item6));
 
-    sManager->InvalidatePopProcessQueue("test_config", true);
+    sManager->DisablePopProcessQueue("test_config", true);
     APSARA_TEST_FALSE(sManager->mProcessQueues[1]->mValidToPop);
     APSARA_TEST_FALSE(sManager->mProcessQueues[2]->mValidToPop);
     APSARA_TEST_EQUAL(pipeline1, p1->mPipeline);
@@ -336,7 +336,7 @@ void ExactlyOnceQueueManagerUnittest::OnPipelineUpdate() {
     APSARA_TEST_EQUAL(nullptr, p5->mPipeline);
     APSARA_TEST_EQUAL(nullptr, p6->mPipeline);
 
-    sManager->ValidatePopProcessQueue("test_config");
+    sManager->EnablePopProcessQueue("test_config");
     APSARA_TEST_TRUE(sManager->mProcessQueues[1]->mValidToPop);
     APSARA_TEST_TRUE(sManager->mProcessQueues[2]->mValidToPop);
 }

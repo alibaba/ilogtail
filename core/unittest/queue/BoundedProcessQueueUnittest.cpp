@@ -46,7 +46,7 @@ protected:
         mFeedback1.reset(new FeedbackInterfaceMock);
         mFeedback2.reset(new FeedbackInterfaceMock);
         mQueue->SetUpStreamFeedbacks(vector<FeedbackInterface*>{mFeedback1.get(), mFeedback2.get()});
-        mQueue->ValidatePop();
+        mQueue->EnablePop();
     }
 
 private:
@@ -94,9 +94,9 @@ void BoundedProcessQueueUnittest::TestPop() {
 
     mQueue->Push(GenerateItem());
     // invalidate pop
-    mQueue->InvalidatePop();
+    mQueue->DisablePop();
     APSARA_TEST_EQUAL(0, mQueue->Pop(item));
-    mQueue->ValidatePop();
+    mQueue->EnablePop();
 
     // downstream queues are not valid to push
     mSenderQueue1->mValidToPush = false;

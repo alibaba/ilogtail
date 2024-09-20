@@ -42,8 +42,8 @@ public:
 
     void SetDownStreamQueues(std::vector<BoundedSenderQueueInterface*>&& ques);
 
-    void InvalidatePop() { mValidToPop = false; }
-    void ValidatePop() { mValidToPop = true; }
+    void DisablePop() { mValidToPop = false; }
+    void EnablePop() { mValidToPop = true; }
 
     virtual void SetPipelineForItems(const std::string& name) const = 0;
 

@@ -337,7 +337,7 @@ void Pipeline::Start() {
         // TODO: 加载该Go流水线
     }
 
-    ProcessQueueManager::GetInstance()->ValidatePop(mName);
+    ProcessQueueManager::GetInstance()->EnablePop(mName);
 
     if (!mGoPipelineWithInput.isNull()) {
         // TODO: 加载该Go流水线
