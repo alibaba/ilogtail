@@ -10,6 +10,11 @@ services:
       MYSQL_ROOT_PASSWORD: "123456"
     cap_add:
       - SYS_NICE
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      retries: 5
+      timeout: 5s
     networks:
       - server
 
@@ -28,7 +33,8 @@ services:
     networks:
       - server
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   config-server-ui:
     build:
