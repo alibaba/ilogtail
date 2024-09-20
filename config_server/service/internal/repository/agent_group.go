@@ -6,7 +6,7 @@ import (
 )
 
 func CreateAgentGroup(group *entity.AgentGroup) error {
-	row := s.DB.Create(group).RowsAffected
+	row := s.Db.Create(group).RowsAffected
 	if row != 1 {
 		return common.ServerErrorWithMsg("create agentGroup(%s) error", group.Name)
 	}
@@ -14,12 +14,12 @@ func CreateAgentGroup(group *entity.AgentGroup) error {
 }
 
 func UpdateAgentGroup(group *entity.AgentGroup) error {
-	err := s.DB.Save(group).Error
+	err := s.Db.Save(group).Error
 	return err
 }
 
 func DeleteAgentGroup(name string) error {
-	row := s.DB.Where("name=?", name).Delete(&entity.AgentGroup{}).RowsAffected
+	row := s.Db.Where("name=?", name).Delete(&entity.AgentGroup{}).RowsAffected
 	if row != 1 {
 		return common.ServerErrorWithMsg("delete agentGroup(name=%s) error", name)
 	}
@@ -28,7 +28,7 @@ func DeleteAgentGroup(name string) error {
 
 func GetAgentGroupDetail(name string, containPipelineConfigs bool, containInstanceConfigs bool) (*entity.AgentGroup, error) {
 	agentGroup := &entity.AgentGroup{}
-	tx := s.DB.Where("name=?", name)
+	tx := s.Db.Where("name=?", name)
 	if containPipelineConfigs {
 		tx.Preload("PipelineConfigs")
 	}
@@ -44,7 +44,7 @@ func GetAgentGroupDetail(name string, containPipelineConfigs bool, containInstan
 
 func GetAllAgentGroupDetail(containAgents bool, containPipelineConfigs bool, containInstanceConfigs bool) ([]*entity.AgentGroup, error) {
 	agentGroups := make([]*entity.AgentGroup, 0)
-	tx := s.DB.Where("1=1")
+	tx := s.Db.Where("1=1")
 	if containAgents {
 		tx.Preload("Agents")
 	}
@@ -60,13 +60,13 @@ func GetAllAgentGroupDetail(containAgents bool, containPipelineConfigs bool, con
 
 func GetAllAgentGroup() ([]*entity.AgentGroup, error) {
 	agentGroups := make([]*entity.AgentGroup, 0)
-	err := s.DB.Find(&agentGroups).Error
+	err := s.Db.Find(&agentGroups).Error
 	return agentGroups, err
 }
 
 func GetAppliedAgentGroupForPipelineConfigName(configName string) ([]string, error) {
 	pipelineConfig := &entity.PipelineConfig{}
-	row := s.DB.Preload("AgentGroups").Where("name=?", configName).Find(&pipelineConfig).RowsAffected
+	row := s.Db.Preload("AgentGroups").Where("name=?", configName).Find(&pipelineConfig).RowsAffected
 	if row != 1 {
 		return nil, common.ServerErrorWithMsg("can not find name=%s pipelineConfig")
 	}
@@ -78,7 +78,7 @@ func GetAppliedAgentGroupForPipelineConfigName(configName string) ([]string, err
 }
 func GetAppliedAgentGroupForInstanceConfigName(configName string) ([]string, error) {
 	instanceConfig := &entity.InstanceConfig{}
-	row := s.DB.Preload("AgentGroups").Where("name=?", configName).Find(&instanceConfig).RowsAffected
+	row := s.Db.Preload("AgentGroups").Where("name=?", configName).Find(&instanceConfig).RowsAffected
 	if row != 1 {
 		return nil, common.ServerErrorWithMsg("can not find name=%s pipelineConfig")
 	}

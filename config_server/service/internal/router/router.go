@@ -7,7 +7,6 @@ import (
 
 func initUserRouter(router *gin.Engine) {
 	userRouter := router.Group("/User")
-	userRouter.Use(gin.Logger())
 	{
 		userRouter.POST("/CreateAgentGroup", handler.CreateAgentGroup)
 		userRouter.POST("/UpdateAgentGroup", handler.UpdateAgentGroup)
@@ -43,13 +42,14 @@ func initUserRouter(router *gin.Engine) {
 
 func initAgentRouter(router *gin.Engine) {
 	agentRouter := router.Group("/Agent")
-	agentRouter.Use(gin.Logger())
 	{
 		agentRouter.POST("/Heartbeat", handler.HeartBeat)
 		agentRouter.POST("/FetchPipelineConfig", handler.FetchPipelineConfig)
 		//agent有bug暂时不开启此路由
 		//agentRouter.POST("/FetchProcessConfig", handler.FetchProcessConfig)
 	}
+	handler.CheckAgentExist()
+	handler.AppliedOrRemoveConfigForAgentGroup()
 }
 
 func initTest(router *gin.Engine) {
@@ -64,8 +64,6 @@ func initTest(router *gin.Engine) {
 }
 
 func InitAllRouter(router *gin.Engine) {
-	handler.CheckAgentExist()
-	handler.AppliedOrRemoveConfigForAgentGroup()
 	initAgentRouter(router)
 	initUserRouter(router)
 	initTest(router)

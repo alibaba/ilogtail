@@ -17,7 +17,7 @@ func CreateOrUpdateAgentInstanceConfigs(conflictColumnNames []string, assignment
 
 func GetPipelineConfigByName(name string) (*entity.PipelineConfig, error) {
 	pipelineConfig := entity.PipelineConfig{}
-	row := s.DB.Where("name=?", name).Find(&pipelineConfig).RowsAffected
+	row := s.Db.Where("name=?", name).Find(&pipelineConfig).RowsAffected
 	if row != 1 {
 		return nil, common.ServerErrorWithMsg("pipelineName=%s can not be found", name)
 	}
@@ -26,7 +26,7 @@ func GetPipelineConfigByName(name string) (*entity.PipelineConfig, error) {
 
 func GetInstanceConfigByName(name string) (*entity.InstanceConfig, error) {
 	instanceConfig := entity.InstanceConfig{}
-	row := s.DB.Where("name=?", name).Find(&instanceConfig).RowsAffected
+	row := s.Db.Where("name=?", name).Find(&instanceConfig).RowsAffected
 	if row != 1 {
 		return nil, common.ServerErrorWithMsg("instanceName=%s can not be found", name)
 	}
@@ -34,11 +34,11 @@ func GetInstanceConfigByName(name string) (*entity.InstanceConfig, error) {
 }
 
 func GetPipelineConfigsByAgent(agent *entity.Agent) error {
-	err := s.DB.Preload("PipelineConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
+	err := s.Db.Preload("PipelineConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
 	return common.SystemError(err)
 }
 
 func GetInstanceConfigsByAgent(agent *entity.Agent) error {
-	err := s.DB.Preload("InstanceConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
+	err := s.Db.Preload("InstanceConfigs").Where("instance_id=?", agent.InstanceId).Find(agent).Error
 	return common.SystemError(err)
 }

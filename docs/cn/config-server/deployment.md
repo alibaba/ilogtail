@@ -4,15 +4,13 @@
 
 ## 快速开始
 
-进入`deployment`目录，运行`deployment-compose.yml`，启动三个容器（`mysql`、`config-server`、`config-server-ui`）
+下载ilogtail源码，进入`config_server/deployment`目录，运行`deployment-compose.yml`，启动三个容器（`mysql`、`config-server`、`config-server-ui`）
 
 ```shell
 docker compose -f docker-compose.yml up -d
 ```
 
 启动成功后，通过`http://{your-ip}:8080`即可实现前端页面的访问
-
-![config-server-ui](../ui/public/config-server-ui.png)
 
 ## Agent启动
 
@@ -38,4 +36,3 @@ docker compose -f docker-compose.yml up -d
 ```shell
 docker compose -f docker-compose.yml up -d
 ```
-

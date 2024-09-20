@@ -11,8 +11,8 @@ import (
 var S = new(GormStore)
 
 type GormStore struct {
-	config *config.GormConfig
-	DB     *gorm.DB
+	Config *config.GormConfig
+	Db     *gorm.DB
 }
 
 var tableList = []any{
@@ -39,23 +39,56 @@ var tableNameList = []string{
 	entity.AgentInstanceConfig{}.TableName(),
 }
 
-func (s *GormStore) Connect() error {
+func (s *GormStore) Connect2Db() error {
 	var err error
 	var dialect gorm.Dialector
-	s.config, dialect, err = config.GetConnection()
+	s.Config, dialect, err = config.Connect2Db()
 	if err != nil {
 		return err
 	}
-	s.DB, err = gorm.Open(dialect)
+	log.Printf("test connect database type=%s host=%s:%d ...",
+		s.Config.Type, s.Config.Host, s.Config.Port)
+	s.Db, err = gorm.Open(dialect)
 	if err != nil {
 		return err
 	}
-	log.Printf(" database %s (%s:%d) connect success...", s.config.Type, s.config.Host, s.config.Port)
+	dbName := s.Config.DbName
+	log.Printf("create database %s ...", dbName)
+	err = s.Db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", dbName)).Error
+	if err != nil {
+		return err
+	}
+	log.Printf("create database %s success ...", dbName)
+	log.Printf("check %s ...", dbName)
+	err = s.Db.Exec(fmt.Sprintf("USE %s", s.Config.DbName)).Error
+	if err != nil {
+		return err
+	}
+	log.Printf("check %s success", dbName)
+	return nil
+}
+
+func (s *GormStore) Connect2SpecifiedDb() error {
+	var err error
+	var dialect gorm.Dialector
+	s.Config, dialect, err = config.Connect2SpecifiedDb()
+	if err != nil {
+		return err
+	}
+	dbName := s.Config.DbName
+	log.Printf("test connect database type=%s host=%s:%d dbName=%s ...",
+		s.Config.Type, s.Config.Host, s.Config.Port, dbName)
+	s.Db, err = gorm.Open(dialect)
+	if err != nil {
+		return err
+	}
+	log.Printf("sucess connect database type=%s host=%s:%d dbName=%s ...",
+		s.Config.Type, s.Config.Host, s.Config.Port, dbName)
 	return nil
 }
 
 func (s *GormStore) Close() error {
-	db, err := s.DB.DB()
+	db, err := s.Db.DB()
 	if err != nil {
 		return err
 	}
@@ -64,17 +97,22 @@ func (s *GormStore) Close() error {
 
 func (s *GormStore) CreateTables() error {
 	//AgentPipeConfig和AgentInstanceConfig要额外autoMigrate是因为他们有多余的属性
-	err := s.DB.AutoMigrate(tableList...)
-	return err
+	log.Printf("create tables ...")
+	err := s.Db.AutoMigrate(tableList...)
+	if err != nil {
+		return err
+	}
+	log.Printf("create tables success ...")
+	return nil
 }
 
 func (s *GormStore) DeleteTables() error {
 	var err error
-	s.DB.Exec("SET FOREIGN_KEY_CHECKS = 0;")
+	s.Db.Exec("SET FOREIGN_KEY_CHECKS = 0;")
 	for _, tableName := range tableNameList {
-		if s.DB.Migrator().HasTable(tableName) {
+		if s.Db.Migrator().HasTable(tableName) {
 
-			err = s.DB.Migrator().DropTable(tableName)
+			err = s.Db.Migrator().DropTable(tableName)
 			if err != nil {
 				return err
 			}
@@ -85,11 +123,11 @@ func (s *GormStore) DeleteTables() error {
 
 func (s *GormStore) DeleteTable() error {
 	var err error
-	s.DB.Exec("SET FOREIGN_KEY_CHECKS = 0;")
+	s.Db.Exec("SET FOREIGN_KEY_CHECKS = 0;")
 	for _, tableName := range tableNameList {
-		if s.DB.Migrator().HasTable(tableName) {
+		if s.Db.Migrator().HasTable(tableName) {
 			var clearDataSql = fmt.Sprintf("TRUNCATE TABLE %s", tableName)
-			err = s.DB.Exec(clearDataSql).Error
+			err = s.Db.Exec(clearDataSql).Error
 			if err != nil {
 				return err
 			}
@@ -100,15 +138,19 @@ func (s *GormStore) DeleteTable() error {
 
 func init() {
 	var err error
-	err = S.Connect()
+	err = S.Connect2Db()
 	if err != nil {
 		panic(err)
 	}
-	if S.config.AutoMigrate {
+	if S.Config.AutoMigrate {
 		err = S.CreateTables()
 		if err != nil {
 			panic(err)
 		}
+	}
+	err = S.Connect2SpecifiedDb()
+	if err != nil {
+		panic(err)
 	}
 }
 

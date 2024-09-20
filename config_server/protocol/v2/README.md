@@ -75,7 +75,7 @@
         // The Agent can accept pipeline configuration from the Server.
         AcceptsPipelineConfig          = 0x00000001;
         // The Agent can accept process configuration from the Server.
-        AcceptsProcessConfig           = 0x00000002;
+        AcceptsInstanceConfig           = 0x00000002;
         // The Agent can accept custom command from the Server.
         AcceptsCustomCommand           = 0x00000004;
 
@@ -127,7 +127,7 @@
         // The Server can remember pipeline config status.
         RembersPipelineConfigStatus        = 0x00000002;
         // The Server can remember process config status.
-        RembersProcessConfigStatus         = 0x00000004;
+        RembersInstanceConfigStatus         = 0x00000004;
         // The Server can remember custom command status.
         RembersCustomCommandStatus         = 0x00000008;
 
@@ -150,7 +150,7 @@
         // restarted and lost state).
         ReportFullState           = 0x00000001;
         FetchPipelineConfigDetail = 0x00000002;
-        FetchProcessConfigDetail  = 0x00000004;
+        FetchInstanceConfigDetail  = 0x00000004;
         // bits before 2^16 (inclusive) are reserved for future official fields
     }
 
@@ -198,9 +198,9 @@ Client：直接从response中获得detail，应用成功后下次心跳需要上
 
 若Server的响应不包含detail
 
-Client：根据process\_config\_updates的信息构造FetchProcessConfigRequest
+Client：根据process\_config\_updates的信息构造FetchInstanceConfigRequest
 
-Server：返回FetchProcessConfigResponse
+Server：返回FetchInstanceConfigResponse
 
 Client获取到多个进程配置时，自动合并，若产生冲突默认行为是未定义。
 

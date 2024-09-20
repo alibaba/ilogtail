@@ -47,18 +47,19 @@ services:
     networks:
       - server
 
-#  config-server-ui:
-#    build:
-#      context: ${CONFIG_SERVER_UI}
-#      dockerfile: Dockerfile
-#    image: config-server-ui:nzh
-#    environment:
-#      CONFIG_SERVER_ADDRESS: http://config-server:10000
-#      TZ: Asia/Shanghai
-#    ports:
-#      - "8080:80"
-#    networks:
-#      - server
+  config-server-ui:
+    build:
+      context: ${CONFIG_SERVER_UI}
+      dockerfile: Dockerfile
+    image: config-server-ui:nzh
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Asia/Shanghai
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - server
 
 networks:
   server:
