@@ -150,8 +150,6 @@ func (p *pluginv1Runner) addMetricInput(pluginMeta *pipeline.PluginMeta, input p
 		// TODO : give config for MaxCachedSize and PushNativeTimeout
 		wrapper.MaxCachedSize = 1000
 		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
-		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
-		wrapper.ShutdownCachedChan = make(chan struct{})
 	}
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
 	return wrapper.Init(pluginMeta, inputInterval)
@@ -166,8 +164,6 @@ func (p *pluginv1Runner) addServiceInput(pluginMeta *pipeline.PluginMeta, input 
 		// TODO : give config for MaxCachedSize and PushNativeTimeout
 		wrapper.MaxCachedSize = 1000
 		wrapper.PushNativeTimeout = time.Duration(1000) * time.Millisecond
-		wrapper.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
-		wrapper.ShutdownCachedChan = make(chan struct{})
 	}
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
 	return wrapper.Init(pluginMeta)

@@ -36,6 +36,12 @@ type MetricWrapperV1 struct {
 	PushNativeTimeout  time.Duration
 	LogsCachedChan     chan *pipeline.LogEventWithContext
 	ShutdownCachedChan chan struct{}
+
+	eventCached []*protocol.LogEvent
+	tagCached   []map[string]string
+	ctxCached   []map[string]interface{}
+	timer       *time.Timer
+	pbBuffer    []byte
 }
 
 func (p *MetricWrapperV1) Init(pluginMeta *pipeline.PluginMeta, inputInterval int) error {
@@ -56,10 +62,21 @@ func (p *MetricWrapperV1) Run(control *pipeline.AsyncControl) {
 	logger.Info(p.Config.Context.GetRuntimeContext(), "start run metric ", p.Input.Description())
 	defer panicRecover(p.Input.Description())
 	if p.Config.GlobalConfig.GoInputToNativeProcessor {
+		p.LogsCachedChan = make(chan *pipeline.LogEventWithContext, 10)
+		p.ShutdownCachedChan = make(chan struct{})
+		p.eventCached = make([]*protocol.LogEvent, 0, p.MaxCachedSize+1)
+		p.tagCached = make([]map[string]string, 0, p.MaxCachedSize+1)
+		p.ctxCached = make([]map[string]interface{}, 0, p.MaxCachedSize+1)
+		p.timer = time.NewTimer(p.PushNativeTimeout)
 		go p.runPushNativeProcessQueueInternal()
 	}
 	for {
 		exitFlag := util.RandomSleep(p.Interval, 0.1, control.CancelToken())
+		if exitFlag {
+			if p.Config.GlobalConfig.GoInputToNativeProcessor {
+				p.ShutdownCachedChan <- struct{}{}
+			}
+		}
 		startTime := time.Now()
 		err := p.Input.Collect(p)
 		p.LatencyMetric.Observe(float64(time.Since(startTime)))
@@ -68,7 +85,9 @@ func (p *MetricWrapperV1) Run(control *pipeline.AsyncControl) {
 		}
 		if exitFlag {
 			if p.Config.GlobalConfig.GoInputToNativeProcessor {
-				p.ShutdownCachedChan <- struct{}{}
+				p.timer.Stop()
+				close(p.LogsCachedChan)
+				close(p.ShutdownCachedChan)
 			}
 			return
 		}
@@ -148,78 +167,128 @@ func (p *MetricWrapperV1) AddRawLogWithContext(log *protocol.Log, ctx map[string
 }
 
 func (p *MetricWrapperV1) runPushNativeProcessQueueInternal() {
-	eventCached := make([]*protocol.LogEvent, 0, p.MaxCachedSize+1)
-	var tagsCached map[string]string
-	var ctxCached map[string]interface{}
+	p.eventCached = make([]*protocol.LogEvent, 0, p.MaxCachedSize+1)
+	p.tagCached = make([]map[string]string, 0, p.MaxCachedSize+1)
+	p.ctxCached = make([]map[string]interface{}, 0, p.MaxCachedSize+1)
+	p.timer = time.NewTimer(p.PushNativeTimeout)
 	var event *pipeline.LogEventWithContext
-	timer := time.NewTimer(p.PushNativeTimeout)
-	defer timer.Stop()
-	defer close(p.LogsCachedChan)
-	defer close(p.ShutdownCachedChan)
+	var isValidToPushNativeProcessQueue bool = true
 
 	for {
-		select {
-		case <-timer.C:
-			if len(eventCached) != 0 {
-				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
-				eventCached = eventCached[:0]
-			}
-			if !timer.Stop() {
-				<-timer.C
-			}
-			timer.Reset(p.PushNativeTimeout)
-		case event = <-p.LogsCachedChan:
-			if len(eventCached) != 0 && (!reflect.DeepEqual(tagsCached, event.Tags) || !reflect.DeepEqual(ctxCached, event.Context)) {
-				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
-				eventCached = eventCached[:0]
-				if !timer.Stop() {
-					<-timer.C
+		if isValidToPushNativeProcessQueue {
+			select {
+			case <-p.timer.C:
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+			case event = <-p.LogsCachedChan:
+				p.eventCached = append(p.eventCached, event.LogEvent)
+				p.tagCached = append(p.tagCached, event.Tags)
+				p.ctxCached = append(p.ctxCached, event.Context)
+				if len(p.eventCached) < p.MaxCachedSize {
+					continue
 				}
-				timer.Reset(p.PushNativeTimeout)
-			}
-			eventCached = append(eventCached, event.LogEvent)
-			tagsCached = event.Tags
-			ctxCached = event.Context
-			if len(eventCached) >= p.MaxCachedSize {
-				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
-				eventCached = eventCached[:0]
-				if !timer.Stop() {
-					<-timer.C
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+			case <-p.ShutdownCachedChan:
+				for len(p.LogsCachedChan) > 0 {
+					<-p.LogsCachedChan
 				}
-				timer.Reset(p.PushNativeTimeout)
+				p.timer.Stop()
+				close(p.LogsCachedChan)
+				close(p.ShutdownCachedChan)
+				return
 			}
-		case <-p.ShutdownCachedChan:
-			if len(eventCached) != 0 {
-				p.pushNativeProcessQueue(eventCached, tagsCached, ctxCached)
+		} else {
+			select {
+			case <-p.timer.C:
+				isValidToPushNativeProcessQueue = p.pushNativeProcessQueue()
+			case <-p.ShutdownCachedChan:
+				for len(p.LogsCachedChan) > 0 {
+					<-p.LogsCachedChan
+				}
+				p.timer.Stop()
+				close(p.LogsCachedChan)
+				close(p.ShutdownCachedChan)
+				return
 			}
-			for len(p.LogsCachedChan) > 0 {
-				<-p.LogsCachedChan
-			}
-			return
 		}
 	}
+
 }
 
-func (p *MetricWrapperV1) pushNativeProcessQueue(events []*protocol.LogEvent, tags map[string]string, ctx map[string]interface{}) {
-	group, _ := helper.CreatePipelineEventGroupV1(events, p.Tags, tags, ctx)
-	buffer, err := group.Marshal()
-	if err != nil {
-		logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "marshal log failed", err)
-		return
+func (p *MetricWrapperV1) pushNativeProcessQueue() bool {
+	if len(p.eventCached) == 0 {
+		return true
 	}
+
+	// create pipelineEventGroup and marshal to pbBuffer
+	pushSize := 0
+	if len(p.pbBuffer) == 0 {
+		tag := p.tagCached[0]
+		ctx := p.ctxCached[0]
+		i := 1
+		for ; i < len(p.eventCached); i++ {
+			same := true
+			for k, v := range p.tagCached[i] {
+				if tag[k] != v {
+					same = false
+					break
+				}
+			}
+			if !same || !reflect.DeepEqual(ctx, p.ctxCached[i]) {
+				break
+			}
+		}
+		pushSize = i
+		group, _ := helper.CreatePipelineEventGroupV1(p.eventCached[:pushSize], p.Tags, tag, ctx)
+		pbSize := group.Size()
+		if cap(p.pbBuffer) < pbSize {
+			if cap(p.pbBuffer)*2 >= pbSize {
+				p.pbBuffer = make([]byte, cap(p.pbBuffer)*2)
+			} else {
+				p.pbBuffer = make([]byte, pbSize)
+			}
+		}
+		n, _ := group.MarshalTo(p.pbBuffer)
+		p.pbBuffer = p.pbBuffer[:n]
+	}
+
+	// try to pushNativeProcessQueue
+	var rst int = 0
 	switch p.Input.GetMode() {
 	case pipeline.PUSH:
 		for i := 0; i < 5; i++ {
-			if logtail.IsValidToProcess(p.Config.ConfigName) && logtail.PushQueue(p.Config.ConfigName, buffer) == 0 {
-				break
+			if logtail.IsValidToProcess(p.Config.ConfigName) {
+				if rst = logtail.PushQueue(p.Config.ConfigName, p.pbBuffer); rst == 0 {
+					break
+				}
 			}
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 	case pipeline.PULL:
-		logtail.PushQueue(p.Config.ConfigName, buffer)
+		logtail.PushQueue(p.Config.ConfigName, p.pbBuffer)
 	default:
 	}
-	for _, event := range events {
-		helper.LogEventPool.Put(event)
+
+	// clear buffer and reset timer
+	if !p.timer.Stop() {
+		select {
+		case <-p.timer.C:
+		default:
+		}
 	}
+	p.timer.Reset(p.PushNativeTimeout)
+	if rst != 0 {
+		return false
+	}
+	if pushSize != 0 {
+		i := 0
+		for ; i < pushSize; i++ {
+			helper.LogEventPool.Put(p.eventCached[i])
+		}
+		for ; i < len(p.eventCached); i++ {
+			p.eventCached[i-pushSize] = p.eventCached[i]
+		}
+		p.eventCached = p.eventCached[:len(p.eventCached)-pushSize]
+	}
+	p.pbBuffer = p.pbBuffer[:0]
+	return true
 }
