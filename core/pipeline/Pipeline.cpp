@@ -341,7 +341,7 @@ void Pipeline::Start() {
         LogtailPlugin::GetInstance()->Start(GetConfigNameOfGoPipelineWithoutInput());
     }
 
-    ProcessQueueManager::GetInstance()->ValidatePop(mContext.GetConfigName());
+    ProcessQueueManager::GetInstance()->EnablePop(mName);
 
     if (!mGoPipelineWithInput.isNull()) {
         LogtailPlugin::GetInstance()->Start(GetConfigNameOfGoPipelineWithInput());

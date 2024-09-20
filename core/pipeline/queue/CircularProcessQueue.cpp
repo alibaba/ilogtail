@@ -15,6 +15,7 @@
 #include "pipeline/queue/CircularProcessQueue.h"
 
 #include "logger/Logger.h"
+#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/QueueKeyManager.h"
 
 using namespace std;
@@ -72,12 +73,11 @@ bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     return true;
 }
 
-void CircularProcessQueue::InvalidatePop() {
-    ProcessQueueInterface::InvalidatePop();
-    auto pipeline = PipelineManager::GetInstance()->FindConfigByName(GetConfigName());
-    if (pipeline) {
-        for (auto it = mQueue.begin(); it != mQueue.end(); ++it) {
-            (*it)->mPipeline = pipeline;
+void CircularProcessQueue::SetPipelineForItems(const std::string& name) const {
+    auto p = PipelineManager::GetInstance()->FindConfigByName(name);
+    for (auto& item : mQueue) {
+        if (!item->mPipeline) {
+            item->mPipeline = p;
         }
     }
 }

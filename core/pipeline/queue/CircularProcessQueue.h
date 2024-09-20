@@ -33,7 +33,7 @@ public:
 
     bool Push(std::unique_ptr<ProcessQueueItem>&& item) override;
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
-    void InvalidatePop();
+    void SetPipelineForItems(const std::string& name) const override;
 
     void Reset(size_t cap);
 
