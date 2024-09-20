@@ -33,6 +33,7 @@
 #include "common/memory/SourceBuffer.h"
 #include "event/Event.h"
 #include "file_server/FileDiscoveryOptions.h"
+#include "file_server/FileServer.h"
 #include "file_server/MultilineOptions.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
@@ -73,10 +74,10 @@ public:
         : mSourceBuffer(std::make_unique<SourceBuffer>()),
           mStringBuffer(mSourceBuffer->AllocateStringBuffer(size + 1)) {}
     virtual LineInfo NewGetLastLine(StringView buffer,
-                                 int32_t end,
-                                 size_t protocolFunctionIndex,
-                                 bool needSingleLine,
-                                 std::vector<BaseLineParse*>* lineParsers)
+                                    int32_t end,
+                                    size_t protocolFunctionIndex,
+                                    bool needSingleLine,
+                                    std::vector<BaseLineParse*>* lineParsers)
         = 0;
     StringBuffer* GetStringBuffer();
 
@@ -88,10 +89,10 @@ private:
 class ContainerdTextParser : public BaseLineParse {
 public:
     LineInfo NewGetLastLine(StringView buffer,
-                         int32_t end,
-                         size_t protocolFunctionIndex,
-                         bool needSingleLine,
-                         std::vector<BaseLineParse*>* lineParsers) override;
+                            int32_t end,
+                            size_t protocolFunctionIndex,
+                            bool needSingleLine,
+                            std::vector<BaseLineParse*>* lineParsers) override;
     void parseLine(LineInfo rawLine, LineInfo& paseLine);
     void mergeLines(LineInfo& resultLine, const LineInfo& additionalLine, bool shouldResetBuffer);
     ContainerdTextParser(size_t size) : BaseLineParse(size) {}
@@ -100,10 +101,10 @@ public:
 class DockerJsonFileParser : public BaseLineParse {
 public:
     LineInfo NewGetLastLine(StringView buffer,
-                         int32_t end,
-                         size_t protocolFunctionIndex,
-                         bool needSingleLine,
-                         std::vector<BaseLineParse*>* lineParsers) override;
+                            int32_t end,
+                            size_t protocolFunctionIndex,
+                            bool needSingleLine,
+                            std::vector<BaseLineParse*>* lineParsers) override;
     bool parseLine(LineInfo rawLine, LineInfo& paseLine);
     DockerJsonFileParser(size_t size) : BaseLineParse(size) {}
 };
@@ -111,10 +112,10 @@ public:
 class RawTextParser : public BaseLineParse {
 public:
     LineInfo NewGetLastLine(StringView buffer,
-                         int32_t end,
-                         size_t protocolFunctionIndex,
-                         bool needSingleLine,
-                         std::vector<BaseLineParse*>* lineParsers) override;
+                            int32_t end,
+                            size_t protocolFunctionIndex,
+                            bool needSingleLine,
+                            std::vector<BaseLineParse*>* lineParsers) override;
     LineInfo parse(StringView buffer, int32_t end, size_t protocolFunctionIndex);
     RawTextParser(size_t size) : BaseLineParse(size) {}
 };
@@ -444,6 +445,9 @@ public:
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
     FileReaderOptions::InputType GetInputType() { return mReaderConfig.first->mInputType; }
 
+    void SetMetrics();
+    void ReportMetrics(uint64_t readSize);
+
 protected:
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool tryRollback = true);
     void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool tryRollback = true);
@@ -533,6 +537,14 @@ protected:
     std::string mLogstore;
     std::string mConfigName;
     std::string mRegion;
+
+    MetricLabels mMetricLabels;
+    bool mMetricsEnabled;
+    ReentrantMetricsRecordRef mMetricsRecordRef;
+    CounterPtr mInputRecordsSizeBytesCounter;
+    CounterPtr mInputReadTotalCounter;
+    GaugePtr mInputFileSizeBytesGauge;
+    GaugePtr mInputFileOffsetBytesGauge;
 
 private:
     bool mHasReadContainerBom = false;
