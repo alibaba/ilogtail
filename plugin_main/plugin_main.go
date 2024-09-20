@@ -165,7 +165,7 @@ func main() {
 		p := fmt.Sprintf("PluginProject_%d", i)
 		l := fmt.Sprintf("PluginLogstore_%d", i)
 		c := fmt.Sprintf("1.0#PluginProject_%d##Config%d", i, i)
-		if LoadConfig(p, l, c, 123, cfg) != 0 {
+		if LoadPipeline(p, l, c, 123, cfg) != 0 {
 			logger.Warningf(context.Background(), "START_PLUGIN_ALARM", "%s_%s_%s start fail, config is %s", p, l, c, cfg)
 			return
 		}
@@ -177,8 +177,8 @@ func main() {
 		<-signals.SetupSignalHandler()
 	}
 	logger.Info(context.Background(), "########################## exit process begin ##########################")
-	StopAll(1, 1)
-	StopAll(1, 0)
+	StopAll(1)
+	StopAll(0)
 	logger.Info(context.Background(), "########################## exit process done ##########################")
 }
 

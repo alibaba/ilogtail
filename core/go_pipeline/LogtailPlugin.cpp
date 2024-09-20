@@ -51,7 +51,6 @@ LogtailPlugin::LogtailPlugin() {
     mStopFun = NULL;
     mStartFun = NULL;
     mLoadGlobalConfigFun = NULL;
-    mProcessRawLogFun = NULL;
     mPluginValid = false;
     mPluginAlarmConfig.mLogstore = "logtail_alarm";
     mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
@@ -112,7 +111,7 @@ bool LogtailPlugin::UnloadPipeline(const std::string& project,
                                    const std::string& pipelineName) {
     if (!mPluginValid) {
         LOG_ERROR(sLogger, ("UnloadPipeline", "plugin not valid"));
-        return false
+        return false;
     }
 
     if (mPluginValid && mUnloadPipelineFun != NULL) {
@@ -129,6 +128,8 @@ bool LogtailPlugin::UnloadPipeline(const std::string& project,
 
         return mUnloadPipelineFun(goProject, goLogstore, goConfigName) == 0;
     }
+
+    return false;
 }
 
 void LogtailPlugin::StopAll(bool withInputFlag) {
@@ -373,9 +374,9 @@ bool LogtailPlugin::LoadPluginBase() {
             return mPluginValid;
         }
         // 加载单个配置
-        mLoadPipelineFun = (LoadConfigFun)loader.LoadMethod("LoadConfig", error);
+        mLoadPipelineFun = (LoadPipelineFun)loader.LoadMethod("LoadPipelineFun", error);
         if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load LoadConfig error, Message", error));
+            LOG_ERROR(sLogger, ("load LoadPipelineFun error, Message", error));
             return mPluginValid;
         }
         // 卸载单个配置

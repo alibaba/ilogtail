@@ -159,7 +159,7 @@ func loadMockConfig() error {
 	if err != nil {
 		return err
 	}
-	LogtailConfig[configName] = ToStartLogtailConfigWithInput
+	LogtailConfig[configName] = ToStartPipelineConfigWithInput
 	return nil
 }
 

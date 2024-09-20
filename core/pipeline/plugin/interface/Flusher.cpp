@@ -29,11 +29,23 @@ bool Flusher::Start() {
 }
 
 bool Flusher::Stop(bool isPipelineRemoving) {
-    if (HasContext()) {
-        SenderQueueManager::GetInstance()->NotifyPipelineStop(mQueueKey, mContext->GetConfigName());
-    }
+    // TODO: temporarily used here
+    SetPipelineForItemsWhenStop();
     SenderQueueManager::GetInstance()->DeleteQueue(mQueueKey);
     return true;
+}
+
+void Flusher::SetPipelineForItemsWhenStop() {
+    vector<SenderQueueItem*> items;
+    SenderQueueManager::GetInstance()->GetAllAvailableItems(mQueueKey, items, false);
+    if (HasContext()) {
+        auto pipeline = PipelineManager::GetInstance()->FindConfigByName(mContext->GetConfigName());
+        for (auto item : items) {
+            item->mPipeline = pipeline;
+        }
+    } else {
+        LOG_ERROR(sLogger, ("failed to get pipeline context", "context not found")("action", "discard data"));
+    }
 }
 
 void Flusher::GenerateQueueKey(const std::string& target) {

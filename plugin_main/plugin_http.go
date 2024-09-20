@@ -114,7 +114,7 @@ func HandleLoadConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, cfg := range loadConfigs {
 		Stop(cfg.ConfigName, 0)
-		LoadConfig(cfg.Project, cfg.Logstore, cfg.ConfigName, cfg.LogstoreKey, cfg.JSONStr)
+		LoadPipeline(cfg.Project, cfg.Logstore, cfg.ConfigName, cfg.LogstoreKey, cfg.JSONStr)
 		Start(cfg.ConfigName)
 	}
 }
@@ -123,8 +123,8 @@ func HandleLoadConfig(w http.ResponseWriter, r *http.Request) {
 func HandleHoldOn(w http.ResponseWriter, r *http.Request) {
 	controlLock.Lock()
 	defer controlLock.Unlock()
-	StopAll(1, 1)
-	StopAll(1, 0)
+	StopAll(1)
+	StopAll(0)
 	// flush async logs when hold on with exit flag.
 	logger.Flush()
 	w.WriteHeader(http.StatusOK)

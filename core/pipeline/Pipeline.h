@@ -56,7 +56,7 @@ public:
             LOG_ERROR(sLogger, ("in processing count error", "sub when 0")("config", mName));
             return;
         }
-        mInProcessCnt.fetch_sub(1);
+        mInProcessCntWhenStop.fetch_sub(1);
     }
 
     const std::string& Name() const { return mName; }

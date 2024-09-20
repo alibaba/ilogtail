@@ -46,8 +46,8 @@ func Test_checkPointManager_HoldOn(t *testing.T) {
 		shutdown := make(chan struct{}, 1)
 		go func() {
 			for i := 0; i < 100; i++ {
-				CheckPointManager.Resume()
-				CheckPointManager.HoldOn()
+				CheckPointManager.Start()
+				CheckPointManager.Stop()
 			}
 			shutdown <- struct{}{}
 		}()
@@ -74,7 +74,7 @@ func Test_checkPointManager_run(t *testing.T) {
 		if data, err := CheckPointManager.GetCheckpoint("2", "yy"); err != nil || string(data) != "yyyyyy" {
 			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))
 		}
-		CheckPointManager.Resume()
+		CheckPointManager.Start()
 		time.Sleep(time.Second * time.Duration(1))
 		if data, err := CheckPointManager.GetCheckpoint("1", "xx"); err != nil || string(data) != "xxxxx" {
 			t.Errorf("checkPointManager.GetCheckpoint() error, %v %v", err, string(data))
@@ -94,7 +94,7 @@ func Test_checkPointManager_run(t *testing.T) {
 	})
 
 	*CheckPointCleanInterval = 3600
-	CheckPointManager.HoldOn()
+	CheckPointManager.Stop()
 }
 
 func Test_checkPointManager_keyMatch(t *testing.T) {

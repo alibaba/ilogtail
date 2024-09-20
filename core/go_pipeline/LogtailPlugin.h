@@ -212,8 +212,8 @@ public:
                       const std::string& logstore = "",
                       const std::string& region = "",
                       logtail::QueueKey logstoreKey = 0);
-    bool UnloadPipeline(const std::string& pipelineName);
-    void StopAll(bool exitFlag, bool withInputFlag);
+    bool UnloadPipeline(const std::string& project, const std::string& logstore, const std::string& pipelineName);
+    void StopAll(bool withInputFlag);
     void Stop(const std::string& configName, bool removingFlag);
     void Start(const std::string& configName);
 

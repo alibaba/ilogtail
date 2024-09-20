@@ -50,8 +50,8 @@ func (s *configUpdateTestSuite) BeforeTest(suiteName, testName string) {
 
 func (s *configUpdateTestSuite) AfterTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test end ========================", suiteName, testName)
-	s.NoError(StopAll(true, false))
-	s.NoError(StopAll(true, true))
+	s.NoError(StopAll(false))
+	s.NoError(StopAll(true))
 	LogtailConfigLock.Lock()
 	LogtailConfig = make(map[string]*LogstoreConfig)
 	LogtailConfigLock.Unlock()
@@ -111,8 +111,8 @@ func (s *configUpdateTestSuite) TestConfigUpdateMany() {
 
 	// load normal config
 	for i := 0; i < 3; i++ {
-		s.NoError(StopAll(false, true))
-		s.NoError(StopAll(false, false))
+		s.NoError(StopAll(true))
+		s.NoError(StopAll(false))
 		s.NoError(LoadAndStartMockConfig(noblockUpdateConfigName, noblockUpdateConfigName, noblockUpdateConfigName, GetTestConfig(noblockUpdateConfigName)))
 		LogtailConfigLock.RLock()
 		s.NotNil(LogtailConfig[noblockUpdateConfigName])
@@ -166,8 +166,8 @@ func (s *configUpdateTestSuite) TestStopAllExit() {
 	s.True(ok)
 	checkFlusher.Block = false
 	time.Sleep(time.Second * time.Duration(5))
-	s.NoError(StopAll(true, true))
-	s.NoError(StopAll(true, false))
+	s.NoError(StopAll(true))
+	s.NoError(StopAll(false))
 	s.Equal(20000, checkFlusher.GetLogCount())
 }
 
@@ -180,8 +180,8 @@ func (s *configUpdateTestSuite) TestStopAllExitTimeout() {
 	checkFlusher, ok := GetConfigFlushers(config.PluginRunner)[0].(*checker.FlusherChecker)
 	s.True(ok)
 	s.Equal(0, checkFlusher.GetLogCount())
-	s.NoError(StopAll(true, true))
-	s.NoError(StopAll(true, false))
+	s.NoError(StopAll(true))
+	s.NoError(StopAll(false))
 	time.Sleep(time.Second)
 	s.Equal(0, checkFlusher.GetLogCount())
 	checkFlusher.Block = false

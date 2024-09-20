@@ -92,7 +92,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     mPluginID.store(0);
-    mInProcessCnt.store(0);
+    mInProcessCntWhenStop.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string pluginType = detail["Type"].asString();
@@ -417,7 +417,7 @@ void Pipeline::Stop(bool isRemoving) {
         LogtailPlugin::GetInstance()->Stop(GetConfigNameOfGoPipelineWithInput(), isRemoving);
     }
 
-    ProcessQueueManager::GetInstance()->InvalidatePop(mContext.GetConfigName());
+    ProcessQueueManager::GetInstance()->DisablePop(mName, isRemoving);
     WaitAllInProcessFinish();
 
     if (!isRemoving) {
@@ -545,7 +545,7 @@ PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
 void Pipeline::WaitAllInProcessFinish() {
     uint64_t startTime = GetCurrentTimeInMilliSeconds();
     bool alarmOnce = false;
-    while (mInProcessCnt.load() != 0) {
+    while (mInProcessCntWhenStop.load() != 0) {
         usleep(1000 * 10); // 10ms
         uint64_t duration = GetCurrentTimeInMilliSeconds() - startTime;
         if (!alarmOnce && duration > 1000) { // 1s
