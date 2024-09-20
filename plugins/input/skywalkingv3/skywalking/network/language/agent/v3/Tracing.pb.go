@@ -467,7 +467,7 @@ type SpanObject struct {
 	// We don't recommend to include the parameter, such as HTTP request parameters, as a part of the operation, especially this is the name of the entry span.
 	// All statistic for the endpoints are aggregated base on this name. Those parameters should be added in the tags if necessary.
 	// If in some cases, it have to be a part of the operation name,
-	// users should use the Group Parameterized Endpoints capability at the service to get the meaningful metrics.
+	// users should use the Group Parameterized Endpoints capability at the backend to get the meaningful metrics.
 	// Read https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/endpoint-grouping-rules.md
 	OperationName string `protobuf:"bytes,6,opt,name=operationName,proto3" json:"operationName,omitempty"`
 	// Remote address of the peer in RPC/MQ case.
@@ -486,20 +486,20 @@ type SpanObject struct {
 	// Follow this doc for more details, https://github.com/apache/skywalking/blob/master/docs/en/guides/Component-library-settings.md
 	ComponentId int32 `protobuf:"varint,10,opt,name=componentId,proto3" json:"componentId,omitempty"`
 	// The status of the span. False means the tracked execution ends in the unexpected status.
-	// This affects the successful rate statistic in the service.
+	// This affects the successful rate statistic in the backend.
 	// Exception or error code happened in the tracked process doesn't mean isError == true, the implementations of agent plugin and tracing SDK make the final decision.
 	IsError bool `protobuf:"varint,11,opt,name=isError,proto3" json:"isError,omitempty"`
 	// String key, String value pair.
 	// Tags provides more informance, includes parameters.
 	//
-	// In the OAP service analysis, some special tag or tag combination could provide other advanced features.
+	// In the OAP backend analysis, some special tag or tag combination could provide other advanced features.
 	// https://github.com/apache/skywalking/blob/master/docs/en/guides/Java-Plugin-Development-Guide.md#special-span-tags
 	Tags []*v3.KeyStringValuePair `protobuf:"bytes,12,rep,name=tags,proto3" json:"tags,omitempty"`
 	// String key, String value pair with an accurate timestamp.
 	// Logging some events happening in the context of the span duration.
 	Logs []*Log `protobuf:"bytes,13,rep,name=logs,proto3" json:"logs,omitempty"`
-	// Force the service don't do analysis, if the value is TRUE.
-	// The service has its own configurations to follow or override this.
+	// Force the backend don't do analysis, if the value is TRUE.
+	// The backend has its own configurations to follow or override this.
 	//
 	// Use this mostly because the agent/SDK could know more context of the service role.
 	SkipAnalysis bool `protobuf:"varint,14,opt,name=skipAnalysis,proto3" json:"skipAnalysis,omitempty"`

@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ManagementServiceClient interface {
 	// Report custom properties of a service instance.
 	ReportInstanceProperties(ctx context.Context, in *InstanceProperties, opts ...grpc.CallOption) (*v3.Commands, error)
-	// Keep the instance alive in the service analysis.
+	// Keep the instance alive in the backend analysis.
 	// Only recommend to do separate keepAlive report when no trace and metrics needs to be reported.
 	// Otherwise, it is duplicated.
 	KeepAlive(ctx context.Context, in *InstancePingPkg, opts ...grpc.CallOption) (*v3.Commands, error)
@@ -59,7 +59,7 @@ func (c *managementServiceClient) KeepAlive(ctx context.Context, in *InstancePin
 type ManagementServiceServer interface {
 	// Report custom properties of a service instance.
 	ReportInstanceProperties(context.Context, *InstanceProperties) (*v3.Commands, error)
-	// Keep the instance alive in the service analysis.
+	// Keep the instance alive in the backend analysis.
 	// Only recommend to do separate keepAlive report when no trace and metrics needs to be reported.
 	// Otherwise, it is duplicated.
 	KeepAlive(context.Context, *InstancePingPkg) (*v3.Commands, error)

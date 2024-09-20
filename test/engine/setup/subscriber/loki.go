@@ -73,7 +73,7 @@ func (l *LokiSubscriber) Name() string {
 }
 
 func (l *LokiSubscriber) Description() string {
-	return "this a loki subscriber, which is the default mock service for Ilogtail."
+	return "this a loki subscriber, which is the default mock backend for Ilogtail."
 }
 
 func (l *LokiSubscriber) GetData(startTime int32) ([]*protocol.LogGroup, error) {

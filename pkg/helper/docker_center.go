@@ -559,10 +559,10 @@ func (dc *DockerCenter) CreateInfoDetail(info types.ContainerJSON, envConfigPref
 		tags := strings.SplitN(info.Name, "_", 6)
 		// containerNamePrefix：k8s
 		// containerName：php-redis
-		// podFullName：ui-2337258262-154p7
+		// podFullName：frontend-2337258262-154p7
 		// computeHash：154p7
-		// deploymentName：ui
-		// replicaSetName：ui-2337258262
+		// deploymentName：frontend
+		// replicaSetName：frontend-2337258262
 		// namespace：default
 		// podUID：d8a2e2dd-3617-11e7-a4b0-ecf4bbe5d414
 
