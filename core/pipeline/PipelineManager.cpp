@@ -231,7 +231,7 @@ void PipelineManager::StopAllPipelines() {
 #endif
     FileServer::GetInstance()->Stop();
 
-    LogtailPlugin::GetInstance()->StopAll(true, true);
+    LogtailPlugin::GetInstance()->StopAll(true);
 
     bool logProcessFlushFlag = false;
     for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
@@ -246,7 +246,7 @@ void PipelineManager::StopAllPipelines() {
 
     FlushAllBatch();
 
-    LogtailPlugin::GetInstance()->StopAll(true, false);
+    LogtailPlugin::GetInstance()->StopAll(false);
 
     // TODO: make it common
     FlusherSLS::RecycleResourceIfNotUsed();

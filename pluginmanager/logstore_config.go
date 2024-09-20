@@ -141,18 +141,18 @@ func (lc *LogstoreConfig) Start() {
 }
 
 // Stop stops plugin instances and corresponding goroutines of config.
-// @exitFlag passed from Logtail, indicates that if Logtail will quit after this.
+// @removedFlag passed from C++, indicates that if config will be removed after this.
 // Procedures:
 // 1. SetUrgent to all flushers to indicate them current state.
 // 2. Stop all input plugins, stop generating logs.
 // 3. Stop processor goroutine, pass all existing logs to aggregator.
 // 4. Stop all aggregator plugins, make all logs to LogGroups.
 // 5. Set stopping flag, stop flusher goroutine.
-// 6. If Logtail is exiting and there are remaining data, try to flush once.
+// 6. If config will be removed and there are remaining data, try to flush once.
 // 7. Stop flusher plugins.
-func (lc *LogstoreConfig) Stop(removingFlag bool) error {
-	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "begin", "removing", removingFlag)
-	if err := lc.PluginRunner.Stop(removingFlag); err != nil {
+func (lc *LogstoreConfig) Stop(removedFlag bool) error {
+	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "begin", "removing", removedFlag)
+	if err := lc.PluginRunner.Stop(removedFlag); err != nil {
 		return err
 	}
 	logger.Info(lc.Context.GetRuntimeContext(), "Plugin Runner stop", "done")
@@ -169,14 +169,6 @@ var (
 	tagDelimiter = []byte("^^^")
 	tagSeparator = []byte("~=~")
 )
-
-func (lc *LogstoreConfig) ProcessRawLog(rawLog []byte, packID string, topic string) int {
-	log := &protocol.Log{}
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: rawStringKey, Value: string(rawLog)})
-	logger.Debug(context.Background(), "Process raw log ", packID, topic, len(rawLog))
-	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
-	return 0
-}
 
 // extractTags extracts tags from rawTags and append them into log.
 // Rule: k1~=~v1^^^k2~=~v2
@@ -680,17 +672,31 @@ func LoadLogstoreConfig(project string, logstore string, configName string, logs
 		return err
 	}
 	if logstoreC.PluginRunner.IsWithInputPlugin() {
-		ToStartLogtailConfigWithInput = logstoreC
+		ToStartPipelineConfigWithInput = logstoreC
 	} else {
-		ToStartLogtailConfigWithoutInput = logstoreC
+		ToStartPipelineConfigWithoutInput = logstoreC
 	}
 	return nil
+}
+
+func UnloadLogstoreConfig(project string, logstore string, configName string) error {
+	logger.Info(context.Background(), "unload config", configName, "logstore", logstore)
+	if ToStartPipelineConfigWithInput.ConfigNameWithSuffix == configName {
+		ToStartPipelineConfigWithInput = nil
+		return nil
+	}
+	if ToStartPipelineConfigWithoutInput.ConfigNameWithSuffix == configName {
+		ToStartPipelineConfigWithoutInput = nil
+		return nil
+	}
+	logger.Error(context.Background(), "unload config", "config not found", configName)
+	return fmt.Errorf("config not found")
 }
 
 func loadBuiltinConfig(name string, project string, logstore string,
 	configName string, cfgStr string) (*LogstoreConfig, error) {
 	logger.Infof(context.Background(), "load built-in config %v, config name: %v, logstore: %v", name, configName, logstore)
-	return createLogstoreConfig(project, logstore, configName, 0, cfgStr)
+	return createLogstoreConfig(project, logstore, configName, -1, cfgStr)
 }
 
 // loadMetric creates a metric plugin object and append to logstoreConfig.MetricPlugins.
@@ -879,5 +885,4 @@ func init() {
 	LogtailConfigLock.Lock()
 	LogtailConfig = make(map[string]*LogstoreConfig)
 	LogtailConfigLock.Unlock()
-	LastUnsendBuffer = make(map[string]PluginRunner)
 }

@@ -69,11 +69,11 @@ func PluginStart() error {
 	return pluginmanager.Start("")
 }
 
-func PluginStop(forceFlushFlag bool) error {
-	if err := pluginmanager.StopAll(forceFlushFlag, true); err != nil {
+func PluginStop() error {
+	if err := pluginmanager.StopAll(true); err != nil {
 		return err
 	}
-	if err := pluginmanager.StopAll(forceFlushFlag, false); err != nil {
+	if err := pluginmanager.StopAll(false); err != nil {
 		return err
 	}
 	return nil

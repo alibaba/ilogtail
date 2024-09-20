@@ -148,10 +148,6 @@ void FlusherRunner::Run() {
 }
 
 void FlusherRunner::Dispatch(SenderQueueItem* item) {
-    if (item->mPipeline.get()) {
-        LOG_INFO(sLogger, ("all the item of the last pipeline", "has been processed and in sender queue"));
-        return;
-    }
     switch (item->mFlusher->GetSinkType()) {
         case SinkType::HTTP:
             PushToHttpSink(item);

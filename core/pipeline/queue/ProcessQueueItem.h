@@ -34,14 +34,10 @@ struct ProcessQueueItem {
 
     ProcessQueueItem(PipelineEventGroup&& group, size_t index) : mEventGroup(std::move(group)), mInputIndex(index) {}
 
-    void AddPipelineInProcessingCnt(const std::string& configName) {
+    void AddPipelineInProcessCntIfStop(const std::string& configName) {
+        // pipeline is stopping, add in processing count
         if (mPipeline) {
-            mPipeline->AddInProcessingCnt();
-        } else {
-            auto p = PipelineManager::GetInstance()->FindConfigByName(configName);
-            if (p) {
-                p->AddInProcessingCnt();
-            }
+            mPipeline->AddInProcessCntWhenStop();
         }
     }
 };

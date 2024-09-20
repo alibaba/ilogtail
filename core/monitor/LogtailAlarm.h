@@ -99,9 +99,7 @@ enum LogtailAlarmType {
     COMPRESS_FAIL_ALARM = 65,
     SERIALIZE_FAIL_ALARM = 66,
     RELABEL_METRIC_FAIL_ALARM = 67,
-    STOP_TOO_SLOW_ALARM = 68,
-    STOP_ALL_TOO_SLOW_ALARM = 69,
-    ALL_LOGTAIL_ALARM_NUM = 70
+    ALL_LOGTAIL_ALARM_NUM = 68
 };
 
 struct LogtailAlarmMessage {

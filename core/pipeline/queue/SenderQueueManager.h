@@ -61,6 +61,7 @@ public:
     bool RemoveItem(QueueKey key, SenderQueueItem* item);
     bool IsAllQueueEmpty() const;
     void ClearUnusedQueues();
+    void NotifyPipelineStop(QueueKey key, const std::string& configName);
 
     bool Wait(uint64_t ms);
     void Trigger();

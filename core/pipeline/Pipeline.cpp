@@ -67,7 +67,6 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
 }
 
 bool Pipeline::Init(PipelineConfig&& config) {
-    mInitTime = std::chrono::system_clock::now();
     mName = config.mName;
     mConfig = std::move(config.mDetail);
     mContext.SetConfigName(mName);
@@ -93,7 +92,7 @@ bool Pipeline::Init(PipelineConfig&& config) {
     }
 
     mPluginID.store(0);
-    mProcessingCnt.store(0);
+    mInProcessCnt.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
         string pluginType = detail["Type"].asString();
@@ -353,7 +352,6 @@ void Pipeline::Start() {
     }
 
     mStartTime->Set(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count());
-    mLoadDelayMs->Add(chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - mInitTime).count());
 #endif
     LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName)("ptr", mStartTime.get()));
 }
@@ -420,24 +418,7 @@ void Pipeline::Stop(bool isRemoving) {
     }
 
     ProcessQueueManager::GetInstance()->InvalidatePop(mContext.GetConfigName());
-
-    // Wait for all processing item finish
-    uint64_t startTime = GetCurrentTimeInMilliSeconds();
-    bool alarmFlag = false;
-    while (mProcessingCnt.load() != 0) {
-        usleep(1000 * 10); // 10ms
-        uint64_t duration = GetCurrentTimeInMilliSeconds() - startTime;
-        if (!alarmFlag && duration > 1000) { // 1s
-            LOG_ERROR(sLogger, ("pipeline stop", "too slow")("config", mName)("cost", duration));
-            LogtailAlarm::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
-                                                   string("pipeline stop too slow, config: ") + mName
-                                                       + "; cost:" + std::to_string(duration),
-                                                   mContext.GetProjectName(),
-                                                   mContext.GetLogstoreName(),
-                                                   mContext.GetRegion());
-            alarmFlag = true;
-        }
-    }
+    WaitAllInProcessFinish();
 
     if (!isRemoving) {
         FlushBatch();
@@ -500,13 +481,9 @@ void Pipeline::CopyNativeGlobalParamToGoPipeline(Json::Value& pipeline) {
 }
 
 bool Pipeline::LoadGoPipelines() const {
-    // TODO：将下面的代码替换成批量原子Load。
-    // note:
-    // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
     if (!mGoPipelineWithoutInput.isNull()) {
         string content = mGoPipelineWithoutInput.toStyledString();
-        string goConfigName = GetConfigNameOfGoPipelineWithoutInput();
-        if (!LogtailPlugin::GetInstance()->LoadPipeline(goConfigName,
+        if (!LogtailPlugin::GetInstance()->LoadPipeline(GetConfigNameOfGoPipelineWithoutInput(),
                                                         content,
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
@@ -525,8 +502,7 @@ bool Pipeline::LoadGoPipelines() const {
     }
     if (!mGoPipelineWithInput.isNull()) {
         string content = mGoPipelineWithInput.toStyledString();
-        string goConfigName = GetConfigNameOfGoPipelineWithInput();
-        if (!LogtailPlugin::GetInstance()->LoadPipeline(goConfigName,
+        if (!LogtailPlugin::GetInstance()->LoadPipeline(GetConfigNameOfGoPipelineWithInput(),
                                                         content,
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
@@ -540,6 +516,10 @@ bool Pipeline::LoadGoPipelines() const {
                                                    mContext.GetProjectName(),
                                                    mContext.GetLogstoreName(),
                                                    mContext.GetRegion());
+            if (!mGoPipelineWithoutInput.isNull()) {
+                LogtailPlugin::GetInstance()->UnloadPipeline(
+                    mContext.GetProjectName(), mContext.GetLogstoreName(), GetConfigNameOfGoPipelineWithoutInput());
+            }
             return false;
         }
     }
@@ -560,6 +540,25 @@ PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
     }
     return PluginInstance::PluginMeta(
         std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
+}
+
+void Pipeline::WaitAllInProcessFinish() {
+    uint64_t startTime = GetCurrentTimeInMilliSeconds();
+    bool alarmOnce = false;
+    while (mInProcessCnt.load() != 0) {
+        usleep(1000 * 10); // 10ms
+        uint64_t duration = GetCurrentTimeInMilliSeconds() - startTime;
+        if (!alarmOnce && duration > 1000) { // 1s
+            LOG_ERROR(sLogger, ("pipeline stop", "too slow")("config", mName)("cost", duration));
+            LogtailAlarm::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
+                                                   string("pipeline stop too slow, config: ") + mName
+                                                       + "; cost:" + std::to_string(duration),
+                                                   mContext.GetProjectName(),
+                                                   mContext.GetLogstoreName(),
+                                                   mContext.GetRegion());
+            alarmOnce = true;
+        }
+    }
 }
 
 } // namespace logtail

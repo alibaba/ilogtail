@@ -41,7 +41,6 @@ type checkPointManager struct {
 	shutdown       chan struct{}
 	waitgroup      sync.WaitGroup
 	initFlag       bool
-	runningFlag    bool
 	configCounter  map[string]int
 	cleanThreshold int
 }
@@ -110,12 +109,8 @@ func (p *checkPointManager) Init() error {
 	return nil
 }
 
-func (p *checkPointManager) HoldOn() {
-	if !p.runningFlag {
-		return
-	}
-	logger.Info(context.Background(), "checkpoint", "HoldOn")
-	p.runningFlag = false
+func (p *checkPointManager) Stop() {
+	logger.Info(context.Background(), "checkpoint", "Stop")
 	if p.db == nil {
 		return
 	}
@@ -123,12 +118,8 @@ func (p *checkPointManager) HoldOn() {
 	p.waitgroup.Wait()
 }
 
-func (p *checkPointManager) Resume() {
-	if p.runningFlag {
-		return
-	}
-	logger.Info(context.Background(), "checkpoint", "Resume")
-	p.runningFlag = true
+func (p *checkPointManager) Start() {
+	logger.Info(context.Background(), "checkpoint", "Start")
 	if p.db == nil {
 		return
 	}
@@ -139,7 +130,7 @@ func (p *checkPointManager) Resume() {
 func (p *checkPointManager) run() {
 	for {
 		if util.RandomSleep(time.Second*time.Duration(*CheckPointCleanInterval), 0.1, p.shutdown) {
-			logger.Info(context.Background(), "checkpoint", "HoldOn success")
+			logger.Info(context.Background(), "checkpoint", "Stop success")
 			p.waitgroup.Done()
 			return
 		}

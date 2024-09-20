@@ -25,8 +25,8 @@
 
 #include "config/PipelineConfig.h"
 #include "models/PipelineEventGroup.h"
-#include "monitor/MetricConstants.h"
 #include "monitor/LogtailMetric.h"
+#include "monitor/MetricConstants.h"
 #include "pipeline/PipelineContext.h"
 #include "pipeline/plugin/instance/FlusherInstance.h"
 #include "pipeline/plugin/instance/InputInstance.h"
@@ -39,10 +39,6 @@ namespace logtail {
 
 class Pipeline {
 public:
-    Pipeline() {
-        WriteMetrics::GetInstance()->CreateMetricsRecordRef(mMetricsRecordRef, {});
-        mLoadDelayMs = mMetricsRecordRef.CreateCounter("config_load_delay_ms");
-    }
     // copy/move control functions are deleted because of mContext
     bool Init(PipelineConfig&& config);
     void Start();
@@ -52,18 +48,15 @@ public:
     bool FlushBatch();
     void RemoveProcessQueue() const;
     // Should add before or when item pop from ProcessorQueue, must be called in the lock of ProcessorQueue
-    void AddInProcessingCnt() { mProcessingCnt.fetch_add(1); }
+    void AddInProcessCntWhenStop() { mInProcessCntWhenStop.fetch_add(1); }
     // Should sub when or after item push to SenderQueue
-    void SubInProcessingCnt() {
-        uint16_t currentVal;
-        do {
-            currentVal = mProcessingCnt.load(std::memory_order_relaxed);
-            // cannot sub smaller than 0
-            if (currentVal == 0) {
-                return;
-            }
-        } while (!mProcessingCnt.compare_exchange_weak(
-            currentVal, currentVal - 1, std::memory_order_release, std::memory_order_relaxed));
+    void SubInProcessCntWhenStop() {
+        if (mInProcessCntWhenStop.load() == 0) {
+            // should never happen
+            LOG_ERROR(sLogger, ("in processing count error", "sub when 0")("config", mName));
+            return;
+        }
+        mInProcessCnt.fetch_sub(1);
     }
 
     const std::string& Name() const { return mName; }
@@ -96,6 +89,7 @@ private:
                                Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
     bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
+    void WaitAllInProcessFinish();
 
     std::string mName;
     std::vector<std::unique_ptr<InputInstance>> mInputs;
@@ -108,7 +102,7 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     std::unique_ptr<Json::Value> mConfig;
     std::atomic_uint16_t mPluginID;
-    std::atomic_uint16_t mProcessingCnt;
+    std::atomic_int16_t mInProcessCntWhenStop;
 
     mutable MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mStartTime;
@@ -116,11 +110,10 @@ private:
     CounterPtr mProcessorsInGroupsCnt;
     CounterPtr mProcessorsInGroupDataSizeBytes;
     CounterPtr mProcessorsTotalDelayMs;
-    std::chrono::system_clock::time_point mInitTime;
     CounterPtr mLoadDelayMs;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-        friend class PipelineMock;
+    friend class PipelineMock;
     friend class PipelineUnittest;
     friend class InputContainerStdioUnittest;
     friend class InputFileUnittest;

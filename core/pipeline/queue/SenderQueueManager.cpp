@@ -196,6 +196,16 @@ void SenderQueueManager::Trigger() {
     mCond.notify_one();
 }
 
+void SenderQueueManager::NotifyPipelineStop(QueueKey key, const std::string& configName) {
+    unique_ptr<SenderQueueItem> tombStone = make_unique<SenderQueueItem>("", 0, this, key);
+    tombStone->mPipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
+    if (!tombStone->mPipeline) {
+        LOG_ERROR(sLogger, ("failed to find pipeline when stop pipeline", mContext->GetConfigName()));
+        return;
+    }
+    SenderQueueManager::GetInstance()->PushQueue(mQueueKey, std::move(tombStone));
+}
+
 #ifdef APSARA_UNIT_TEST_MAIN
 void SenderQueueManager::Clear() {
     lock_guard<mutex> lock(mQueueMux);

@@ -192,12 +192,17 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             }
 
             mThreadFlags[threadNo] = true;
-            auto pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
-            if (!pipeline) {
-                LOG_INFO(sLogger,
-                         ("pipeline not found during processing, perhaps due to config deletion",
-                          "discard data")("config", configName));
-                continue;
+            std::shared_ptr<Pipeline> pipeline;
+            if (item->mPipeline) {
+                pipeline = item->mPipeline;
+            } else {
+                pipeline = PipelineManager::GetInstance()->FindConfigByName(configName);
+                if (!pipeline) {
+                    LOG_INFO(sLogger,
+                             ("pipeline not found during processing, perhaps due to config deletion",
+                              "discard data")("config", configName));
+                    continue;
+                }
             }
 
             // record profile, must be placed here since readbytes info exists only before processing
@@ -295,8 +300,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 }
                 pipeline->Send(std::move(eventGroupList));
             }
-            // When item is in sender queue, we could decrease the count
-            pipeline->SubInProcessingCnt();
+            // When pipeline is stopping and item is in sender queue, we could decrease the count
+            if (item->mPipeline) {
+                pipeline->SubInProcessCntWhenStop();
+            }
         }
     }
     LOG_WARNING(sLogger, ("runner/LogProcess.hread", "Exit")("threadNo", threadNo));

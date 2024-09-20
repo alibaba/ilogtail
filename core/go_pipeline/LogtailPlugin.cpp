@@ -45,7 +45,8 @@ LogtailPlugin* LogtailPlugin::s_instance = NULL;
 LogtailPlugin::LogtailPlugin() {
     mPluginAdapterPtr = NULL;
     mPluginBasePtr = NULL;
-    mLoadConfigFun = NULL;
+    mLoadPipelineFun = NULL;
+    mUnloadPipelineFun = NULL;
     mStopAllFun = NULL;
     mStopFun = NULL;
     mStartFun = NULL;
@@ -84,7 +85,7 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
         LoadPluginBase();
     }
 
-    if (mPluginValid && mLoadConfigFun != NULL) {
+    if (mPluginValid && mLoadPipelineFun != NULL) {
         GoString goProject;
         GoString goLogstore;
         GoString goConfigName;
@@ -100,39 +101,63 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
         goLogstore.p = logstore.c_str();
         long long goLogStoreKey = static_cast<long long>(logstoreKey);
 
-        return mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig) == 0;
+        return mLoadPipelineFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig) == 0;
     }
 
     return false;
 }
 
-void LogtailPlugin::StopAll(bool exitFlag, bool withInputFlag) {
+bool LogtailPlugin::UnloadPipeline(const std::string& project,
+                                   const std::string& logstore,
+                                   const std::string& pipelineName) {
+    if (!mPluginValid) {
+        LOG_ERROR(sLogger, ("UnloadPipeline", "plugin not valid"));
+        return false
+    }
+
+    if (mPluginValid && mUnloadPipelineFun != NULL) {
+        GoString goProject;
+        GoString goLogstore;
+        GoString goConfigName;
+
+        goProject.n = project.size();
+        goProject.p = project.c_str();
+        goLogstore.n = logstore.size();
+        goLogstore.p = logstore.c_str();
+        goConfigName.n = pipelineName.size();
+        goConfigName.p = pipelineName.c_str();
+
+        return mUnloadPipelineFun(goProject, goLogstore, goConfigName) == 0;
+    }
+}
+
+void LogtailPlugin::StopAll(bool withInputFlag) {
     if (mPluginValid && mStopAllFun != NULL) {
         LOG_INFO(sLogger, ("Go pipelines stop all", "starts"));
         auto stopAllStart = GetCurrentTimeInMilliSeconds();
-        mStopAllFun(exitFlag ? 1 : 0, withInputFlag ? 1 : 0);
+        mStopAllFun(withInputFlag ? 1 : 0);
         auto stopAllCost = GetCurrentTimeInMilliSeconds() - stopAllStart;
         LOG_INFO(sLogger, ("Go pipelines stop all", "succeeded")("cost", ToString(stopAllCost) + "ms"));
         if (stopAllCost >= 60 * 1000) {
-            LogtailAlarm::GetInstance()->SendAlarm(STOP_ALL_TOO_SLOW_ALARM,
+            LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
                                                    "Stopping all Go pipelines took " + ToString(stopAllCost) + "ms");
         }
     }
 }
 
-void LogtailPlugin::Stop(const std::string& configName, bool removingFlag) {
+void LogtailPlugin::Stop(const std::string& configName, bool removedFlag) {
     if (mPluginValid && mStopFun != NULL) {
         LOG_INFO(sLogger, ("Go pipelines stop", "starts")("config", configName));
         auto stopStart = GetCurrentTimeInMilliSeconds();
         GoString goConfigName;
         goConfigName.n = configName.size();
         goConfigName.p = configName.c_str();
-        mStopFun(goConfigName, removingFlag ? 1 : 0);
+        mStopFun(goConfigName, removedFlag ? 1 : 0);
         auto stopCost = GetCurrentTimeInMilliSeconds() - stopStart;
         LOG_INFO(sLogger, ("Go pipelines stop", "succeeded")("config", configName)("cost", ToString(stopCost) + "ms"));
-        if (stopCost >= 10 * 1000) {
+        if (stopCost >= 30 * 1000) {
             LogtailAlarm::GetInstance()->SendAlarm(
-                STOP_TOO_SLOW_ALARM, "Stopping Go pipeline " + configName + " took " + ToString(stopCost) + "ms");
+                HOLD_ON_TOO_SLOW_ALARM, "Stopping Go pipeline " + configName + " took " + ToString(stopCost) + "ms");
         }
     }
 }
@@ -347,16 +372,16 @@ bool LogtailPlugin::LoadPluginBase() {
             LOG_ERROR(sLogger, ("load LoadGlobalConfig error, Message", error));
             return mPluginValid;
         }
-        // 加载单个配置，目前应该是Resume的时候，全量加载一次
-        mLoadConfigFun = (LoadConfigFun)loader.LoadMethod("LoadConfig", error);
+        // 加载单个配置
+        mLoadPipelineFun = (LoadConfigFun)loader.LoadMethod("LoadConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadConfig error, Message", error));
             return mPluginValid;
         }
-        // 更新配置，目前应该没有调用点
-        mUnloadConfigFun = (UnloadConfigFun)loader.LoadMethod("UnloadConfig", error);
+        // 卸载单个配置
+        mUnloadPipelineFun = (UnloadPipelineFun)loader.LoadMethod("UnloadPipelineFun", error);
         if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load UnloadConfig error, Message", error));
+            LOG_ERROR(sLogger, ("load UnloadPipelineFun error, Message", error));
             return mPluginValid;
         }
         // 停止所有插件
@@ -375,17 +400,6 @@ bool LogtailPlugin::LoadPluginBase() {
         mStartFun = (StartFun)loader.LoadMethod("Start", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load Start error, Message", error));
-            return mPluginValid;
-        }
-        // C++传递原始二进制数据到golang插件，v1和v2的区别:是否传递tag
-        mProcessRawLogFun = (ProcessRawLogFun)loader.LoadMethod("ProcessRawLog", error);
-        if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load ProcessRawLog error, Message", error));
-            return mPluginValid;
-        }
-        mProcessRawLogV2Fun = (ProcessRawLogV2Fun)loader.LoadMethod("ProcessRawLogV2", error);
-        if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load ProcessRawLogV2 error, Message", error));
             return mPluginValid;
         }
         // C++获取容器信息的

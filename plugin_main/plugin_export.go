@@ -130,8 +130,8 @@ func LoadGlobalConfig(jsonStr string) int {
 	return retcode
 }
 
-//export LoadConfig
-func LoadConfig(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
+//export LoadPipeline
+func LoadPipeline(project string, logstore string, configName string, logstoreKey int64, jsonStr string) int {
 	logger.Debug(context.Background(), "load config", configName, logstoreKey, "\n"+jsonStr)
 	defer func() {
 		if err := recover(); err != nil {
@@ -153,35 +153,14 @@ func LoadConfig(project string, logstore string, configName string, logstoreKey 
 	return 0
 }
 
-//export UnloadConfig
-func UnloadConfig(project string, logstore string, configName string) int {
+//export UnloadPipeline
+func UnloadPipeline(project string, logstore string, configName string) int {
 	logger.Debug(context.Background(), "unload config", configName)
+	err := pluginmanager.UnloadLogstoreConfig(util.StringDeepCopy(project), util.StringDeepCopy(logstore), util.StringDeepCopy(configName))
+	if err != nil {
+		return 1
+	}
 	return 0
-}
-
-//export ProcessRawLog
-func ProcessRawLog(configName string, rawLog []byte, packID string, topic string) int {
-	pluginmanager.LogtailConfigLock.RLock()
-	plugin, flag := pluginmanager.LogtailConfig[configName]
-	if !flag {
-		return -1
-	}
-	pluginmanager.LogtailConfigLock.RUnlock()
-
-	// rawLog will be copied when it is converted to string, packID and topic
-	// are unused now, so deep copy is unnecessary.
-	return plugin.ProcessRawLog(rawLog, util.StringDeepCopy(packID), topic)
-}
-
-//export ProcessRawLogV2
-func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic string, tags []byte) int {
-	pluginmanager.LogtailConfigLock.RLock()
-	config, flag := pluginmanager.LogtailConfig[configName]
-	if !flag {
-		return -1
-	}
-	pluginmanager.LogtailConfigLock.RUnlock()
-	return config.ProcessRawLogV2(rawLog, util.StringDeepCopy(packID), util.StringDeepCopy(topic), tags)
 }
 
 //export ProcessLog
@@ -199,17 +178,18 @@ func ProcessLog(configName string, logBytes []byte, packID string, topic string,
 func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
 	pluginmanager.LogtailConfigLock.RLock()
 	config, flag := pluginmanager.LogtailConfig[configName]
+	pluginmanager.LogtailConfigLock.RUnlock()
 	if !flag {
+		logger.Error(context.Background(), "PLUGIN_ALARM", "config not found", configName)
 		return -1
 	}
-	pluginmanager.LogtailConfigLock.RUnlock()
 	return config.ProcessLogGroup(logBytes, util.StringDeepCopy(packID))
 }
 
 //export StopAll
-func StopAll(exitFlag int, withInputFlag int) {
+func StopAll(withInputFlag int) {
 	logger.Info(context.Background(), "Stop all", "start")
-	err := pluginmanager.StopAll(exitFlag != 0, withInputFlag != 0)
+	err := pluginmanager.StopAll(withInputFlag != 0)
 	if err != nil {
 		logger.Error(context.Background(), "PLUGIN_ALARM", "stop all error", err)
 	}
@@ -219,9 +199,9 @@ func StopAll(exitFlag int, withInputFlag int) {
 }
 
 //export Stop
-func Stop(configName string, exitFlag int) {
-	logger.Info(context.Background(), "Stop", "start", "config", configName, "exit", exitFlag)
-	err := pluginmanager.Stop(configName, exitFlag != 0)
+func Stop(configName string, removedFlag int) {
+	logger.Info(context.Background(), "Stop", "start", "config", configName, "removed", removedFlag)
+	err := pluginmanager.Stop(configName, removedFlag != 0)
 	if err != nil {
 		logger.Error(context.Background(), "PLUGIN_ALARM", "stop error", err)
 	}
@@ -348,7 +328,7 @@ func initPluginBase(cfgStr string) int {
 		if err != nil {
 			logger.Error(context.Background(), "CHECKPOINT_INIT_ALARM", "init checkpoint manager error", err)
 		}
-		pluginmanager.CheckPointManager.Resume()
+		pluginmanager.CheckPointManager.Start()
 		InitHTTPServer()
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
