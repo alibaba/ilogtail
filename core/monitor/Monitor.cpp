@@ -32,15 +32,15 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
-#include "config_manager/ConfigManager.h"
-#include "event_handler/LogInput.h"
-#include "flusher/sls/FlusherSLS.h"
+#include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
-#include "sender/FlusherRunner.h"
+#include "monitor/MetricExportor.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "protobuf/sls/sls_logs.pb.h"
+#include "runner/FlusherRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ObserverManager.h"
 #endif
@@ -50,6 +50,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "pipeline/PipelineManager.h"
+#include "provider/Provider.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -113,9 +114,9 @@ bool LogtailMonitor::Init() {
 #endif
 
     // init metrics
-    mGlobalCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU);
-    mGlobalMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY);
-    mGlobalUsedSendingConcurrency
+    mAgentCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU);
+    mAgentMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY);
+    mAgentUsedSendingConcurrency
         = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
 
     // Initialize monitor thread.
@@ -178,10 +179,10 @@ void LogtailMonitor::Monitor() {
 
                 GetMemStat();
                 CalCpuStat(curCpuStat, mCpuStat);
-                if (CheckHardCpuLimit() || CheckHardMemLimit()) {
+                if (CheckHardMemLimit()) {
                     LOG_ERROR(sLogger,
                               ("Resource used by program exceeds hard limit",
-                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                               "prepare restart Logtail")("mem_rss", mMemStat.mRss));
                     Suicide();
                 }
             }
@@ -267,14 +268,14 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
     // CPU usage of Logtail process.
     AddLogContent(logPtr, "cpu", mCpuStat.mCpuUsage);
-    mGlobalCpuGauge->Set(mCpuStat.mCpuUsage);
+    mAgentCpuGauge->Set(mCpuStat.mCpuUsage);
 #if defined(__linux__) // TODO: Remove this if auto scale is available on Windows.
     // CPU usage of system.
     AddLogContent(logPtr, "os_cpu", mOsCpuStatForScale.mOsCpuUsage);
 #endif
     // Memory usage of Logtail process.
     AddLogContent(logPtr, "mem", mMemStat.mRss);
-    mGlobalMemoryGauge->Set(mMemStat.mRss);
+    mAgentMemoryGauge->Set(mMemStat.mRss);
     // The version, uuid of Logtail.
     AddLogContent(logPtr, "version", ILOGTAIL_VERSION);
     AddLogContent(logPtr, "uuid", Application::GetInstance()->GetUUID());
@@ -298,7 +299,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "plugin_stats", PipelineManager::GetInstance()->GetPluginStatistics());
     // Metrics.
     vector<string> allProfileRegion;
-    ProfileSender::GetInstance()->GetAllProfileRegion(allProfileRegion);
+    GetProfileSender()->GetAllProfileRegion(allProfileRegion);
     UpdateMetric("region", allProfileRegion);
 #ifdef __ENTERPRISE__
     UpdateMetric("config_update_count", EnterpriseConfigProvider::GetInstance()->GetConfigUpdateTotalCount());
@@ -319,7 +320,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     }
     int32_t usedSendingConcurrency = FlusherRunner::GetInstance()->GetSendingBufferCount();
     UpdateMetric("used_sending_concurrency", usedSendingConcurrency);
-    mGlobalUsedSendingConcurrency->Set(usedSendingConcurrency);
+    mAgentUsedSendingConcurrency->Set(usedSendingConcurrency);
 
     AddLogContent(logPtr, "metric_json", MetricToString());
     AddLogContent(logPtr, "status", CheckLogtailStatus());
@@ -346,10 +347,10 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
         }
 
         if (i == allProfileRegion.size() - 1) {
-            ProfileSender::GetInstance()->SendToProfileProject(allProfileRegion[i], logGroup);
+            GetProfileSender()->SendToProfileProject(allProfileRegion[i], logGroup);
         } else {
             LogGroup copyLogGroup = logGroup;
-            ProfileSender::GetInstance()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
+            GetProfileSender()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
         }
     }
     return true;
@@ -470,15 +471,8 @@ bool LogtailMonitor::CheckSoftMemLimit() {
     return false;
 }
 
-bool LogtailMonitor::CheckHardCpuLimit() {
-    float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
-        ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
-        : AppConfig::GetInstance()->GetCpuUsageUpLimit();
-    return mCpuStat.mCpuUsage > 10 * cpuUsageLimit;
-}
-
 bool LogtailMonitor::CheckHardMemLimit() {
-    return mMemStat.mRss > 10 * AppConfig::GetInstance()->GetMemUsageUpLimit();
+    return mMemStat.mRss > 5 * AppConfig::GetInstance()->GetMemUsageUpLimit();
 }
 
 void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
@@ -555,6 +549,13 @@ std::string LogtailMonitor::GetLoadAvg() {
     std::getline(fin, loadStr);
     fin.close();
     return loadStr;
+}
+
+uint32_t LogtailMonitor::GetCpuCores() {
+    if (!CalCpuCores()) {
+        return 0;
+    }
+    return mCpuCores;
 }
 
 // Get the number of cores in CPU.
@@ -713,8 +714,7 @@ void LoongCollectorMonitor::Init() {
     labels.emplace_back(METRIC_LABEL_UUID, Application::GetInstance()->GetUUID());
     labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
     DynamicMetricLabels dynamicLabels;
-    dynamicLabels.emplace_back(METRIC_LABEL_PROJECTS,
-                               []() -> std::string { return FlusherSLS::GetAllProjects(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
 #ifdef __ENTERPRISE__
     dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
                                []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
@@ -729,6 +729,7 @@ void LoongCollectorMonitor::Init() {
     // mDoubleGauges[METRIC_AGENT_CPU_GO] = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU_GO);
     mIntGauges[METRIC_AGENT_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY);
     mIntGauges[METRIC_AGENT_MEMORY_GO] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY_GO);
+    mIntGauges[METRIC_AGENT_GO_ROUTINES_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL);
     mIntGauges[METRIC_AGENT_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
     mIntGauges[METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL]
         = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL);
@@ -738,10 +739,14 @@ void LoongCollectorMonitor::Init() {
         = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL);
     mIntGauges[METRIC_AGENT_REGISTER_HANDLER_TOTAL]
         = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
-    // mIntGauges[METRIC_AGENT_INSTANCE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_INSTANCE_CONFIG_TOTAL);
-    mIntGauges[METRIC_AGENT_PIPELINE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
-    // mIntGauges[METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL);
-    // mIntGauges[METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_INSTANCE_CONFIG_TOTAL] =
+    // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_INSTANCE_CONFIG_TOTAL);
+    mIntGauges[METRIC_AGENT_PIPELINE_CONFIG_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL] =
+    // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL] =
+    // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL);
     // mIntGauges[METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL]
     //     = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL);
     // mIntGauges[METRIC_AGENT_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PLUGIN_TOTAL);
@@ -757,6 +762,7 @@ void LoongCollectorMonitor::Init() {
 }
 
 void LoongCollectorMonitor::Stop() {
+    MetricExportor::GetInstance()->PushMetrics(true);
 }
 
 CounterPtr LoongCollectorMonitor::GetCounter(std::string key) {

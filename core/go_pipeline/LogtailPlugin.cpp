@@ -22,14 +22,15 @@
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
-#include "config_manager/ConfigManager.h"
+#include "common/compression/CompressorFactory.h"
 #include "container_manager/ConfigContainerInfoUpdateCmd.h"
+#include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
-#include "profile_sender/ProfileSender.h"
-#include "queue/SenderQueueManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
+#include "provider/Provider.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -52,10 +53,13 @@ LogtailPlugin::LogtailPlugin() {
     mPluginValid = false;
     mPluginAlarmConfig.mLogstore = "logtail_alarm";
     mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginAlarmConfig.mCompressor = CompressorFactory::GetInstance()->Create(CompressType::ZSTD);
     mPluginProfileConfig.mLogstore = "shennong_log_profile";
     mPluginProfileConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginProfileConfig.mCompressor = CompressorFactory::GetInstance()->Create(CompressType::ZSTD);
     mPluginContainerConfig.mLogstore = "logtail_containers";
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginContainerConfig.mCompressor = CompressorFactory::GetInstance()->Create(CompressType::ZSTD);
 
     mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
@@ -124,6 +128,12 @@ void LogtailPlugin::Resume() {
 }
 
 int LogtailPlugin::IsValidToSend(long long logstoreKey) {
+    // TODO: because go profile pipeline is not controlled by C++, we cannot know queue key in advance
+    // therefore, we assume true here. This could be a potential problem if network is not available for profile info.
+    // However, since go profile pipeline will be stopped only during process exit, it should be fine.
+    if (logstoreKey == -1) {
+        return 0;
+    }
     return SenderQueueManager::GetInstance()->IsValidToPush(logstoreKey) ? 0 : -1;
 }
 
@@ -161,22 +171,22 @@ int LogtailPlugin::SendPbV2(const char* configName,
     FlusherSLS* pConfig = NULL;
     if (configNameStr == alarmConfig->mLogstore) {
         pConfig = alarmConfig;
-        pConfig->mProject = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
+        pConfig->mProject = GetProfileSender()->GetDefaultProfileProjectName();
+        pConfig->mRegion = GetProfileSender()->GetDefaultProfileRegion();
         if (pConfig->mProject.empty()) {
             return 0;
         }
     } else if (configNameStr == profileConfig->mLogstore) {
         pConfig = profileConfig;
-        pConfig->mProject = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
+        pConfig->mProject = GetProfileSender()->GetDefaultProfileProjectName();
+        pConfig->mRegion = GetProfileSender()->GetDefaultProfileRegion();
         if (pConfig->mProject.empty()) {
             return 0;
         }
     } else if (configNameStr == containerConfig->mLogstore) {
         pConfig = containerConfig;
-        pConfig->mProject = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
+        pConfig->mProject = GetProfileSender()->GetDefaultProfileProjectName();
+        pConfig->mRegion = GetProfileSender()->GetDefaultProfileRegion();
         if (pConfig->mProject.empty()) {
             return 0;
         }
@@ -369,10 +379,10 @@ bool LogtailPlugin::LoadPluginBase() {
             LOG_ERROR(sLogger, ("load ProcessLogGroup error, Message", error));
             return mPluginValid;
         }
-        // 获取golang插件部分统计信息
-        mGetPipelineMetricsFun = (GetPipelineMetricsFun)loader.LoadMethod("GetPipelineMetrics", error);
+        // 获取golang部分指标信息
+        mGetGoMetricsFun = (GetGoMetricsFun)loader.LoadMethod("GetGoMetrics", error);
         if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load GetPipelineMetrics error, Message", error));
+            LOG_ERROR(sLogger, ("load GetGoMetrics error, Message", error));
             return mPluginValid;
         }
 
@@ -457,9 +467,13 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     }
 }
 
-void LogtailPlugin::GetPipelineMetrics(std::vector<std::map<std::string, std::string>>& metircsList) {
-    if (mGetPipelineMetricsFun != nullptr) {
-        auto metrics = mGetPipelineMetricsFun();
+void LogtailPlugin::GetGoMetrics(std::vector<std::map<std::string, std::string>>& metircsList,
+                                 const string& metricType) {
+    if (mGetGoMetricsFun != nullptr) {
+        GoString type;
+        type.n = metricType.size();
+        type.p = metricType.c_str();
+        auto metrics = mGetGoMetricsFun(type);
         if (metrics != nullptr) {
             for (int i = 0; i < metrics->count; ++i) {
                 std::map<std::string, std::string> item;

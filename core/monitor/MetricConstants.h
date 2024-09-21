@@ -35,7 +35,6 @@ extern const std::string METRIC_LABEL_INSTANCE_ID;
 extern const std::string METRIC_LABEL_IP;
 extern const std::string METRIC_LABEL_OS;
 extern const std::string METRIC_LABEL_OS_DETAIL;
-extern const std::string METRIC_LABEL_PROJECTS;
 extern const std::string METRIC_LABEL_USER_DEFINED_ID;
 extern const std::string METRIC_LABEL_UUID;
 extern const std::string METRIC_LABEL_VERSION;
@@ -46,6 +45,7 @@ extern const std::string METRIC_AGENT_CPU;
 extern const std::string METRIC_AGENT_CPU_GO;
 extern const std::string METRIC_AGENT_MEMORY;
 extern const std::string METRIC_AGENT_MEMORY_GO;
+extern const std::string METRIC_AGENT_GO_ROUTINES_TOTAL;
 extern const std::string METRIC_AGENT_OPEN_FD_TOTAL;
 extern const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL;
 extern const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL;
@@ -77,6 +77,11 @@ extern const std::string METRIC_LABEL_CHILD_NODE_ID;
 extern const std::string METRIC_LABEL_FILE_DEV;
 extern const std::string METRIC_LABEL_FILE_INODE;
 extern const std::string METRIC_LABEL_FILE_NAME;
+
+extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
+extern const std::string METRIC_LABEL_KEY_QUEUE_TYPE;
+extern const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG;
+extern const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID;
 
 // input file metrics
 extern const std::string METRIC_INPUT_RECORDS_TOTAL;
@@ -120,9 +125,31 @@ extern const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_MERGED_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL;
 
-
 // processor parse container log native metrics
 extern const std::string METRIC_PROC_PARSE_STDOUT_TOTAL;
 extern const std::string METRIC_PROC_PARSE_STDERR_TOTAL;
+
+// flusher common metrics
+extern const std::string METRIC_FLUSHER_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL;
+extern const std::string METRIC_FLUSHER_SUCCESS_TIME_MS;
+extern const std::string METRIC_FLUSHER_ERROR_TIME_MS;
+
+// flusher sls metrics
+extern const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
+extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
+
+extern const std::string METRIC_IN_EVENTS_CNT;
+extern const std::string METRIC_IN_ITEMS_CNT;
+extern const std::string METRIC_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_IN_ITEM_SIZE_BYTES;
+extern const std::string METRIC_OUT_EVENTS_CNT;
+extern const std::string METRIC_OUT_ITEMS_CNT;
+extern const std::string METRIC_OUT_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_OUT_ITEM_SIZE_BYTES;
+extern const std::string METRIC_TOTAL_DELAY_MS;
 
 } // namespace logtail

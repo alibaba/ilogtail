@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "plugin/PluginRegistry.h"
-#include "queue/SenderQueueManager.h"
-#include "sender/FlusherRunner.h"
-#include "sink/http/HttpSink.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "pipeline/queue/SenderQueueManager.h"
+#include "runner/FlusherRunner.h"
+#include "runner/sink/http/HttpSink.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -33,6 +33,9 @@ void FlusherRunnerUnittest::TestDispatch() {
         // http
         auto flusher = make_unique<FlusherHttpMock>();
         Json::Value tmp;
+        PipelineContext ctx;
+        flusher->SetContext(ctx);
+        flusher->SetMetricsRecordRef("name", "pluginId", "nodeId", "childNodeId");
         flusher->Init(Json::Value(), tmp);
 
         auto item = make_unique<SenderQueueItem>("content", 10, flusher.get(), flusher->GetQueueKey());
@@ -49,6 +52,9 @@ void FlusherRunnerUnittest::TestDispatch() {
         // unknown
         auto flusher = make_unique<FlusherMock>();
         Json::Value tmp;
+        PipelineContext ctx;
+        flusher->SetContext(ctx);
+        flusher->SetMetricsRecordRef("name", "pluginId", "nodeId", "childNodeId");
         flusher->Init(Json::Value(), tmp);
 
         auto item = make_unique<SenderQueueItem>("content", 10, flusher.get(), flusher->GetQueueKey());

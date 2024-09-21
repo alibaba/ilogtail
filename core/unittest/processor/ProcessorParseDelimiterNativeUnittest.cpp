@@ -17,11 +17,11 @@
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseDelimiterNative.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
-#include "processor/inner/ProcessorSplitLogStringNative.h"
-#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
+#include "plugin/processor/ProcessorParseDelimiterNative.h"
+#include "plugin/processor/inner/ProcessorMergeMultilineLogNative.h"
+#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
+#include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -1510,6 +1510,87 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
+    {
+        std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "'-' 'file0' '947113' '192.168.0.3' '2024-08-15T15:25:24.195264681' 'PUT
+/dir/resource.txt
+HTTP/2.0' '200' '154' 'go-sdk'"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond": 0,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "1": "-",
+                        "2": "file0",
+                        "3": "947113",
+                        "4": "192.168.0.3",
+                        "5": "2024-08-15T15:25:24.195264681",
+                        "6": "PUT\n/dir/resource.txt\nHTTP/2.0",
+                        "7": "200",
+                        "8": "154",
+                        "9": "go-sdk"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+        // ProcessorSplitMultilineLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = " ";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("1");
+            config["Keys"].append("2");
+            config["Keys"].append("3");
+            config["Keys"].append("4");
+            config["Keys"].append("5");
+            config["Keys"].append("6");
+            config["Keys"].append("7");
+            config["Keys"].append("8");
+            config["Keys"].append("9");
+            config["KeepingSourceWhenParseFail"] = false;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = true;
+            config["StartPattern"] = "[a-zA-Z0-9]*";
+            config["UnmatchedContentTreatment"] = "single_line";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, getPluginMeta());
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
     {
         std::string inJson = R"({
         "events" :

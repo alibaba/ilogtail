@@ -24,7 +24,7 @@
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
 #include "MetricStore.h"
-#include "profile_sender/ProfileSender.h"
+
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
@@ -88,6 +88,8 @@ public:
     bool Init();
     void Stop();
 
+    uint32_t GetCpuCores();
+
     // GetRealtimeCpuLevel return a value to indicates current CPU usage level.
     // LogInput use it to do flow control.
     float GetRealtimeCpuLevel() { return mRealtimeCpuStat.mCpuUsage / mScaledCpuUsageUpLimit; }
@@ -114,7 +116,6 @@ private:
     // @return true if the memory usage exceeds limit continuously.
     bool CheckSoftMemLimit();
 
-    bool CheckHardCpuLimit();
     bool CheckHardMemLimit();
 
     // SendStatusProfile collects status profile and send them to server.
@@ -161,18 +162,18 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
-    DoubleGaugePtr mGlobalCpuGauge;
+    DoubleGaugePtr mAgentCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
-    IntGaugePtr mGlobalMemoryGauge;
+    IntGaugePtr mAgentMemoryGauge;
 
-    IntGaugePtr mGlobalUsedSendingConcurrency;
+    IntGaugePtr mAgentUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
 #if defined(__linux__)
     const static int32_t CPU_STAT_FOR_SCALE_ARRAY_SIZE = 2;
-    int32_t mCpuCores;
+    int32_t mCpuCores = 0;
     CpuStat mCpuStatForScale;
     OsCpuStat mOsCpuStatForScale;
     // mCpuArrayForScale and mOsCpuArrayForScale store lastest two CPU usage of

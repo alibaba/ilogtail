@@ -64,14 +64,14 @@ ram_limit_nproc=\$((ram_size / 1024 / 768))
 
 EOF
 
-  if [ $EXPORT_GO_ENVS ]; then
+  if [ $EXPORT_GO_ENVS = "true" ]; then
     envs=($(go env | grep -E 'GOPRIVATE=(".+"|'\''.+'\'')|GOPROXY=(".+"|'\''.+'\'')'))
     for v in ${envs[@]}; do
       echo "go env -w $v" >> $BUILD_SCRIPT_FILE
     done
   fi
 
-  if [ $COPY_GIT_CONFIGS ]; then
+  if [ $COPY_GIT_CONFIGS = "true" ]; then
     globalUrlConfigs=($(git config -l --global 2>/dev/null | grep -E '^url\.'||true))
     for gc in ${globalUrlConfigs[@]:-}; do
       echo "git config --global $(echo "$gc" | sed 's/=/ /')" >> $BUILD_SCRIPT_FILE
@@ -107,7 +107,7 @@ function generateCopyScript() {
     fi
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
       echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build core/build' >>$COPY_SCRIPT_FILE
-      echo 'rm -rf core/log_pb && docker cp "$id":'${PATH_IN_DOCKER}'/core/log_pb core/log_pb' >>$COPY_SCRIPT_FILE
+      echo 'rm -rf core/protobuf/sls && docker cp "$id":'${PATH_IN_DOCKER}'/core/protobuf/sls core/protobuf/sls' >>$COPY_SCRIPT_FILE
     fi
   else
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
@@ -115,7 +115,7 @@ function generateCopyScript() {
     echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
     if [ $BUILD_LOGTAIL_UT = "ON" ]; then
       echo 'docker cp "$id":'${PATH_IN_DOCKER}'/core/build core/build' >>$COPY_SCRIPT_FILE
-      echo 'rm -rf core/log_pb && docker cp "$id":'${PATH_IN_DOCKER}'/core/log_pb core/log_pb' >>$COPY_SCRIPT_FILE
+      echo 'rm -rf core/protobuf/sls && docker cp "$id":'${PATH_IN_DOCKER}'/core/protobuf/sls core/protobuf/sls' >>$COPY_SCRIPT_FILE
     fi
   fi
   echo 'echo -e "{\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE

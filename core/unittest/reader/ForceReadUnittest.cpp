@@ -24,14 +24,14 @@
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
-#include "config_manager/ConfigManager.h"
-#include "event/BlockEventManager.h"
-#include "event/Event.h"
-#include "event_handler/EventHandler.h"
+#include "file_server/ConfigManager.h"
+#include "file_server/event/BlockEventManager.h"
+#include "file_server/event/Event.h"
+#include "file_server/event_handler/EventHandler.h"
 #include "file_server/FileServer.h"
 #include "logger/Logger.h"
 #include "pipeline/Pipeline.h"
-#include "queue/ProcessQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -118,7 +118,8 @@ protected:
         FileServer::GetInstance()->AddFileDiscoveryConfig(mConfigName, &discoveryOpts, &ctx);
         FileServer::GetInstance()->AddFileReaderConfig(mConfigName, &readerOpts, &ctx);
         FileServer::GetInstance()->AddMultilineConfig(mConfigName, &multilineOpts, &ctx);
-        ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(0, 0);
+        ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(0, 0, ctx);
+        ProcessQueueManager::GetInstance()->EnablePop(mConfigName);
     }
 
     void TearDown() override { remove(utf8File.c_str()); }

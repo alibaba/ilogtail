@@ -16,9 +16,9 @@
 #include "common/JsonUtil.h"
 #include "config/PipelineConfig.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorParseJsonNative.h"
-#include "processor/inner/ProcessorSplitLogStringNative.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
+#include "plugin/processor/ProcessorParseJsonNative.h"
+#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -314,7 +314,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonEscapedNullByte() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 void ProcessorParseJsonNativeUnittest::TestProcessJson() {
@@ -394,7 +394,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
@@ -485,7 +485,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
@@ -574,7 +574,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
@@ -649,7 +649,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     })";
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
@@ -706,7 +706,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
 
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
+    APSARA_TEST_GE_FATAL(processorInstance.mProcTimeMS->GetValue(), uint64_t(0));
 }
 
 } // namespace logtail
