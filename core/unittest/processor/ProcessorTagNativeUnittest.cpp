@@ -48,7 +48,6 @@ void ProcessorTagNativeUnittest::TestInit() {
     {
         ProcessorTagNative processor;
         processor.SetContext(mContext);
-        std::string pluginId = "testID";
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
     }
 }
@@ -77,7 +76,6 @@ void ProcessorTagNativeUnittest::TestProcess() {
         mContext.GetPipeline().mGoPipelineWithoutInput = Json::Value("test");
         ProcessorTagNative processor;
         processor.SetContext(mContext);
-        std::string pluginId = "testID";
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         processor.Process(eventGroup);
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));
@@ -94,7 +92,6 @@ void ProcessorTagNativeUnittest::TestProcess() {
         mContext.SetPipeline(pipeline);
         ProcessorTagNative processor;
         processor.SetContext(mContext);
-        std::string pluginId = "testID";
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         processor.Process(eventGroup);
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));

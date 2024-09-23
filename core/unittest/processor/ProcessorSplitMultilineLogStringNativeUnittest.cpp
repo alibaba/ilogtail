@@ -64,7 +64,7 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginCon
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
     // input: 1 event, 2 lines
@@ -348,7 +348,7 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBeginEnd
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
     // input: 1 event, 2 lines
@@ -607,7 +607,7 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithBegin() 
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + start
     // input: 1 event, 2 lines
@@ -860,7 +860,7 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithContinue
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch
     // input: 1 event, 1 line
@@ -1068,7 +1068,7 @@ void ProcessorSplitMultilineLogDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: end
     // input: 1 event, 1 line
@@ -1232,7 +1232,7 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginContinu
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
     // input: 1 event, 2 lines
@@ -1610,7 +1610,7 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + unmatch
     // input: 1 event, 2 lines
@@ -1996,7 +1996,7 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithBegin() {
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch + start
     // input: 1 event, 2 lines
@@ -2273,7 +2273,7 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithContinueEnd(
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: unmatch
     // input: 1 event, 1 line
@@ -2544,7 +2544,7 @@ void ProcessorSplitMultilineLogKeepUnmatchUnittest::TestLogSplitWithEnd() {
     // ProcessorSplitMultilineLogStringNative
     ProcessorSplitMultilineLogStringNative ProcessorSplitMultilineLogStringNative;
     ProcessorSplitMultilineLogStringNative.SetContext(mContext);
-    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1");
+    ProcessorSplitMultilineLogStringNative.SetMetricsRecordRef(ProcessorSplitMultilineLogStringNative::sName, "1", "1", "1");
     APSARA_TEST_TRUE_FATAL(ProcessorSplitMultilineLogStringNative.Init(config));
     // case: end
     // input: 1 event, 1 line

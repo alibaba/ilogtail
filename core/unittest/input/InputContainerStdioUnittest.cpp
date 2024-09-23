@@ -113,7 +113,7 @@ void InputContainerStdioUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // valid optional param
@@ -128,7 +128,7 @@ void InputContainerStdioUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // invalid optional param
@@ -141,7 +141,7 @@ void InputContainerStdioUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 
     // TailingAllMatchedFiles
@@ -154,7 +154,7 @@ void InputContainerStdioUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(input->mFileReader.mTailingAllMatchedFiles);
 
@@ -166,7 +166,7 @@ void InputContainerStdioUnittest::OnSuccessfulInit() {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
 }
 
@@ -204,7 +204,7 @@ void InputContainerStdioUnittest::OnEnableContainerDiscovery() {
     optionalGoPipelineJson["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     input.reset(new InputContainerStdio());
     input->SetContext(ctx);
-    input->SetMetricsRecordRef(InputContainerStdio::sName, "1");
+    input->SetMetricsRecordRef(InputContainerStdio::sName, "1", "1", "1");
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }

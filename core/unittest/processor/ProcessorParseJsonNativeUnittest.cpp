@@ -41,22 +41,19 @@ public:
 };
 
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestInit);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestAddLog);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJson);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonEscapedNullByte);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessEventKeepUnmatch);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessEventDiscardUnmatch);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonContent);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonRaw);
-
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestMultipleLines);
+
+PluginInstance::PluginMeta getPluginMeta(){
+    PluginInstance::PluginMeta pluginMeta{"testgetPluginID", "testNodeID", "testNodeChildID"};
+    return pluginMeta;
+}
 
 void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
     // error json
@@ -120,8 +117,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\0';
             config["AppendingLogPositionMeta"] = false;
 
-            std::string pluginId = "testID";
-
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
@@ -130,7 +125,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
 
             // run function ProcessorParseJsonNative
             ProcessorParseJsonNative& processorParseJsonNative = *(new ProcessorParseJsonNative);
-            ProcessorInstance processorInstance(&processorParseJsonNative, pluginId);
+            ProcessorInstance processorInstance(&processorParseJsonNative, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
             processorParseJsonNative.Process(eventGroup);
 
@@ -204,8 +199,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["SplitChar"] = '\0';
             config["AppendingLogPositionMeta"] = false;
 
-            std::string pluginId = "testID";
-
             // run function ProcessorSplitLogStringNative
             ProcessorSplitLogStringNative processor;
             processor.SetContext(mContext);
@@ -214,7 +207,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
 
             // run function ProcessorParseJsonNative
             ProcessorParseJsonNative& processorParseJsonNative = *(new ProcessorParseJsonNative);
-            ProcessorInstance processorInstance(&processorParseJsonNative, pluginId);
+            ProcessorInstance processorInstance(&processorParseJsonNative, getPluginMeta());
             APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
             processorParseJsonNative.Process(eventGroup);
 
@@ -236,8 +229,7 @@ void ProcessorParseJsonNativeUnittest::TestInit() {
 
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
@@ -246,8 +238,7 @@ void ProcessorParseJsonNativeUnittest::TestAddLog() {
     Json::Value config;
     config["SourceKey"] = "content";
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     auto eventGroup = PipelineEventGroup(std::make_shared<SourceBuffer>());
@@ -289,8 +280,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonEscapedNullByte() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -355,8 +345,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -441,8 +430,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -532,8 +520,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -610,8 +597,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
@@ -685,8 +671,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     eventGroup.FromJsonString(inJson);
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+    ProcessorInstance processorInstance(&processor, getPluginMeta());
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));

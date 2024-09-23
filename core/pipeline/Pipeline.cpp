@@ -24,13 +24,13 @@
 #include "flusher/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/daemon/LogProcess.h"
+#include "processor/inner/ProcessorMergeMultilineLogNative.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "processor/inner/ProcessorSplitLogStringNative.h"
 #include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
 #include "processor/inner/ProcessorTagNative.h"
-#include "processor/daemon/LogProcess.h"
 
 // for special treatment
 #include "file_server/MultilineOptions.h"
@@ -50,20 +50,18 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
     }
 }
 
-bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
-                                        int16_t& pluginIndex,
-                                        const Config& config) {
+bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile, const Config& config) {
     unique_ptr<ProcessorInstance> processor;
     Json::Value detail;
     if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
         mContext.SetRequiringJsonReaderFlag(true);
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["SplitChar"] = Json::Value('\0');
         detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
     } else if (inputFile->mMultiline.IsMultiline()) {
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitMultilineLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["Mode"] = Json::Value("custom");
         detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
         detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
@@ -78,7 +76,7 @@ bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
         }
     } else {
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
     }
     if (!processor->Init(detail, mContext)) {
@@ -90,14 +88,13 @@ bool Pipeline::handleInputFileProcessor(const logtail::InputFile* inputFile,
 }
 
 bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerStdio* inputContainerStdio,
-                                                int16_t& pluginIndex,
-                                                const Config& config) {
+                                                  const Config& config) {
     unique_ptr<ProcessorInstance> processor;
     // ProcessorSplitLogStringNative
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["SplitChar"] = Json::Value('\n');
         if (!processor->Init(detail, mContext)) {
             return false;
@@ -108,7 +105,7 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseContainerLogNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["IgnoringStdout"] = Json::Value(inputContainerStdio->mIgnoringStdout);
         detail["IgnoringStderr"] = Json::Value(inputContainerStdio->mIgnoringStderr);
         detail["KeepingSourceWhenParseFail"] = Json::Value(inputContainerStdio->mKeepingSourceWhenParseFail);
@@ -122,7 +119,7 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
     {
         Json::Value detail;
         processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                   to_string(++pluginIndex));
+                                                                   GenNextPluginMeta(false));
         detail["MergeType"] = Json::Value("flag");
         if (!processor->Init(detail, mContext)) {
             return false;
@@ -134,11 +131,11 @@ bool Pipeline::handleInputContainerStdioProcessor(const logtail::InputContainerS
         if (config.mIsFirstProcessorJson || inputContainerStdio->mMultiline.mMode == MultilineOptions::Mode::JSON) {
             mContext.SetRequiringJsonReaderFlag(true);
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       GenNextPluginMeta(false));
             detail["SplitChar"] = Json::Value('\0');
         } else {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMergeMultilineLogNative::sName,
-                                                                       to_string(++pluginIndex));
+                                                                       GenNextPluginMeta(false));
             detail["Mode"] = Json::Value("custom");
             detail["MergeType"] = Json::Value("regex");
             detail["StartPattern"] = Json::Value(inputContainerStdio->mMultiline.mStartPattern);
@@ -180,10 +177,10 @@ bool Pipeline::Init(Config&& config) {
     mContext.SetSLSInfo(SLSTmp.get());
 #endif
 
-    int16_t pluginIndex = 0;
+    mPluginID.store(0);
     for (auto detail : config.mInputs) {
         string name = (*detail)["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
+        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
             if (!input->Init(*detail, mContext, optionalGoPipeline)) {
@@ -208,7 +205,7 @@ bool Pipeline::Init(Config&& config) {
     if (config.IsProcessRunnerInvolved()) {
         Json::Value detail;
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, GenNextPluginMeta(false));
         if (!processor->Init(detail, mContext)) {
             // should not happen
             return false;
@@ -217,17 +214,17 @@ bool Pipeline::Init(Config&& config) {
     }
 
     // add log split processor for input_file
-    if (inputFile && !handleInputFileProcessor(inputFile, pluginIndex, config)) {
+    if (inputFile && !handleInputFileProcessor(inputFile, config)) {
         return false;
     }
-    if (inputContainerStdio && !handleInputContainerStdioProcessor(inputContainerStdio, pluginIndex, config)) {
+    if (inputContainerStdio && !handleInputContainerStdioProcessor(inputContainerStdio, config)) {
         return false;
     }
 
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
         string name = (*config.mProcessors[i])["Type"].asString();
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(name, GenNextPluginMeta(false));
         if (processor) {
             if (!processor->Init(*config.mProcessors[i], mContext)) {
                 return false;
@@ -259,7 +256,7 @@ bool Pipeline::Init(Config&& config) {
     for (auto detail : config.mFlushers) {
         string name = (*detail)["Type"].asString();
         unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateFlusher(name, GenNextPluginMeta(false));
         if (flusher) {
             Json::Value optionalGoPipeline;
             if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {
@@ -472,6 +469,27 @@ bool Pipeline::LoadGoPipelines() const {
         }
     }
     return true;
+}
+
+std::string Pipeline::GetNowPluginID() {
+    return std::to_string(mPluginID.load());
+}
+
+std::string Pipeline::GenNextPluginID() {
+    mPluginID.fetch_add(1);
+    return std::to_string(mPluginID.load());
+}
+
+PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
+    mPluginID.fetch_add(1);
+    int32_t childNodeID = mPluginID.load();
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
+        childNodeID += 1;
+    }
+    return PluginInstance::PluginMeta(
+        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
 }
 
 } // namespace logtail
