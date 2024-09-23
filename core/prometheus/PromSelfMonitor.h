@@ -21,12 +21,13 @@ public:
     void IntGaugeSet(const std::string& metricName, uint64_t status, uint64_t value);
 
 private:
-    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(uint64_t status);
+    ReentrantMetricsRecordRef GetOrCreateReentrantMetricsRecordRef(const std::string& status);
+    std::string& StatusToString(uint64_t status);
 
     PluginMetricManagerPtr mPluginMetricManagerPtr;
-    std::map<uint64_t, ReentrantMetricsRecordRef> mPromStatusMap;
-    std::map<std::string, std::map<uint64_t, CounterPtr>> mMetricsCounterMap;
-    std::map<std::string, std::map<uint64_t, IntGaugePtr>> mMetricsIntGaugeMap;
+    std::map<std::string, ReentrantMetricsRecordRef> mPromStatusMap;
+    std::map<std::string, std::map<std::string, CounterPtr>> mMetricsCounterMap;
+    std::map<std::string, std::map<std::string, IntGaugePtr>> mMetricsIntGaugeMap;
     MetricLabelsPtr mDefaultLabels;
 
 #ifdef APSARA_UNIT_TEST_MAIN
