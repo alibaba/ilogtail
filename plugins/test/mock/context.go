@@ -24,21 +24,24 @@ import (
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 func NewEmptyContext(project, logstore, configName string) *EmptyContext {
 	ctx, c := pkg.NewLogtailContextMetaWithoutAlarm(project, logstore, configName)
-	return &EmptyContext{
+	emptyContext := EmptyContext{
 		ctx:        ctx,
 		common:     c,
 		checkpoint: make(map[string][]byte),
 	}
+
+	emptyContext.RegisterMetricRecord(make([]pipeline.LabelPair, 0))
+	return &emptyContext
 }
 
 type EmptyContext struct {
-	MetricsRecords []*pipeline.MetricsRecord
+	MetricsRecords             []*pipeline.MetricsRecord
+	logstoreConfigMetricRecord *pipeline.MetricsRecord
 
 	common      *pkg.LogtailContextMeta
 	ctx         context.Context
@@ -78,18 +81,25 @@ func (p *EmptyContext) RegisterMetricRecord(labels []pipeline.LabelPair) *pipeli
 	contextMutex.Lock()
 	defer contextMutex.Unlock()
 
-	metricsRecord := &pipeline.MetricsRecord{Context: p}
-	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "project", Value: p.GetProject()})
-	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "config_name", Value: p.GetConfigName()})
-	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "plugins", Value: p.pluginNames})
-	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "category", Value: p.GetProject()})
-	metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: "source_ip", Value: util.GetIPAddress()})
-	for _, label := range labels {
-		metricsRecord.Labels = append(metricsRecord.Labels, pipeline.Label{Key: label.Key, Value: label.Value})
+	metricsRecord := &pipeline.MetricsRecord{
+		Context: p,
+		Labels:  labels,
 	}
 
 	p.MetricsRecords = append(p.MetricsRecords, metricsRecord)
 	return metricsRecord
+}
+
+func (p *EmptyContext) RegisterLogstoreConfigMetricRecord(labels []pipeline.LabelPair) *pipeline.MetricsRecord {
+	p.logstoreConfigMetricRecord = &pipeline.MetricsRecord{
+		Context: p,
+		Labels:  labels,
+	}
+	return p.logstoreConfigMetricRecord
+}
+
+func (p *EmptyContext) GetLogstoreConfigMetricRecord() *pipeline.MetricsRecord {
+	return p.logstoreConfigMetricRecord
 }
 
 func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
@@ -100,18 +110,6 @@ func (p *EmptyContext) GetMetricRecord() *pipeline.MetricsRecord {
 	}
 	contextMutex.RUnlock()
 	return p.RegisterMetricRecord(nil)
-}
-
-func (p *EmptyContext) MetricSerializeToPB(logGroup *protocol.LogGroup) {
-	if logGroup == nil {
-		return
-	}
-
-	contextMutex.Lock()
-	defer contextMutex.Unlock()
-	for _, metricsRecord := range p.MetricsRecords {
-		metricsRecord.Serialize(logGroup)
-	}
 }
 
 // ExportMetricRecords is used for exporting metrics records.
