@@ -170,7 +170,6 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
         }
 #endif
         reader->SetMetrics();
-        reader->SetMetrics();
 
         reader->InitReader(
             readerConfig.first->mTailingAllMatchedFiles, LogFileReader::BACKWARD_TO_FIXED_POS, exactlyonceConcurrency);
@@ -722,7 +721,6 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         free(readBuf);
         return;
     }
-    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
     if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
         if (mMultilineConfig.first->GetStartPatternReg() == nullptr) {
             for (size_t i = 0; i < readSizeReal - 1; ++i) {
@@ -2053,19 +2051,12 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
                                          content.data.size(),
                                          *mMultilineConfig.first->GetEndPatternReg(),
                                          exception)) {
-                                         content.data.size(),
-                                         *mMultilineConfig.first->GetEndPatternReg(),
-                                         exception)) {
                         // Ensure the end line is complete
                         if (buffer[content.lineEnd] == '\n') {
                             return content.lineEnd + 1;
                         }
                     }
                 } else if (mMultilineConfig.first->GetStartPatternReg()
-                           && BoostRegexSearch(content.data.data(),
-                                               content.data.size(),
-                                               *mMultilineConfig.first->GetStartPatternReg(),
-                                               exception)) {
                            && BoostRegexSearch(content.data.data(),
                                                content.data.size(),
                                                *mMultilineConfig.first->GetStartPatternReg(),
@@ -2110,10 +2101,6 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
                         }
                     }
                 } else if (mMultilineConfig.first->GetStartPatternReg()
-                           && BoostRegexSearch(content.data(),
-                                               content.size(),
-                                               *mMultilineConfig.first->GetStartPatternReg(),
-                                               exception)) {
                            && BoostRegexSearch(content.data(),
                                                content.size(),
                                                *mMultilineConfig.first->GetStartPatternReg(),
@@ -2293,10 +2280,6 @@ LineInfo RawTextParser::NewGetLastLine(StringView buffer,
                                        size_t protocolFunctionIndex,
                                        bool needSingleLine,
                                        std::vector<BaseLineParse*>* lineParsers) {
-                                       int32_t end,
-                                       size_t protocolFunctionIndex,
-                                       bool needSingleLine,
-                                       std::vector<BaseLineParse*>* lineParsers) {
     if (end == 0) {
         return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     }
@@ -2321,10 +2304,6 @@ LineInfo RawTextParser::NewGetLastLine(StringView buffer,
 }
 
 LineInfo DockerJsonFileParser::NewGetLastLine(StringView buffer,
-                                              int32_t end,
-                                              size_t protocolFunctionIndex,
-                                              bool needSingleLine,
-                                              std::vector<BaseLineParse*>* lineParsers) {
                                               int32_t end,
                                               size_t protocolFunctionIndex,
                                               bool needSingleLine,
@@ -2403,10 +2382,6 @@ bool DockerJsonFileParser::parseLine(LineInfo rawLine, LineInfo& paseLine) {
 }
 
 LineInfo ContainerdTextParser::NewGetLastLine(StringView buffer,
-                                              int32_t end,
-                                              size_t protocolFunctionIndex,
-                                              bool needSingleLine,
-                                              std::vector<BaseLineParse*>* lineParsers) {
                                               int32_t end,
                                               size_t protocolFunctionIndex,
                                               bool needSingleLine,

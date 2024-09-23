@@ -14,11 +14,8 @@
 
 #include <cstdlib>
 
-
 #include "Aggregator.h"
 #include "app_config/AppConfig.h"
-#include "flusher/FlusherSLS.h"
-#include "unittest/Unittest.h"
 #include "flusher/FlusherSLS.h"
 #include "unittest/Unittest.h"
 
@@ -31,7 +28,6 @@ namespace logtail {
 class AggregatorUnittest : public ::testing::Test {
 public:
     void SetUp() override { AppConfig::GetInstance()->mMaxHoldedDataSize = 20 * 1024 * 1024; }
-    void SetUp() override { AppConfig::GetInstance()->mMaxHoldedDataSize = 20 * 1024 * 1024; }
 
     void TearDown() override {
         Aggregator* aggregator = Aggregator::GetInstance();
@@ -42,7 +38,6 @@ public:
     void TestLogstoreMergeTypeAdd();
     void TestLogstoreMergeTypeAddLargeGroup();
     void TestTopicMergeTypeAdd();
-
 
 private:
 };
@@ -57,12 +52,10 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
     std::string sourceId = "test";
     std::string logstore = "testLogstore";
 
-
     INT32_FLAG(batch_send_interval) = 2;
     DOUBLE_FLAG(loggroup_bytes_inflation) = 1.2;
 
     int64_t logGroupKey = 123;
-
 
     std::unique_ptr<FlusherSLS> flusher;
     PipelineContext ctx;
@@ -79,10 +72,8 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
     Aggregator* aggregator = Aggregator::GetInstance();
     int count = 10;
     for (int i = 0; i < count; i++) {
-    for (int i = 0; i < count; i++) {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
-
 
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
@@ -96,18 +87,7 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
         content->set_key(key);
         content->set_value(value);
         uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
-        uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
 
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
         aggregator->Add(projectName,
                         sourceId,
                         logGroup,
@@ -127,7 +107,6 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
     int64_t logstoreKey = HashString(projectName + "_" + logstore);
     std::unordered_map<int64_t, PackageListMergeBuffer*>::iterator pIter;
     pIter = aggregator->mPackageListMergeMap.find(logstoreKey);
-    pIter = aggregator->mPackageListMergeMap.find(logstoreKey);
     APSARA_TEST_NOT_EQUAL(pIter, aggregator->mPackageListMergeMap.end());
     if (pIter != aggregator->mPackageListMergeMap.end()) {
         APSARA_TEST_EQUAL((pIter->second)->mMergeItems.size(), 10);
@@ -143,7 +122,6 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
 
-
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
         logTag->set_value("testValue");
@@ -155,18 +133,6 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
         std::string value = "testValue";
         content->set_key(key);
         content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
-
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
         uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
 
         aggregator->Add(projectName,
@@ -186,10 +152,8 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
     APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 0);
 
     for (int i = 0; i < count; i++) {
-    for (int i = 0; i < count; i++) {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
-
 
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
@@ -202,18 +166,6 @@ void AggregatorUnittest::TestLogstoreMergeTypeAdd() {
         std::string value = "testValue";
         content->set_key(key);
         content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
-
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
         uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
 
         aggregator->Add(projectName,
@@ -243,12 +195,10 @@ void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
     std::string sourceId = "test";
     std::string logstore = "testLogstore";
 
-
     INT32_FLAG(batch_send_interval) = 2;
     DOUBLE_FLAG(loggroup_bytes_inflation) = 1.2;
 
     int64_t logGroupKey = 123;
-
 
     std::unique_ptr<FlusherSLS> flusher;
     PipelineContext ctx;
@@ -271,11 +221,9 @@ void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
 
-
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
         logTag->set_value("testValue");
-
 
         std::string key = "testKey";
         std::string value = "testValue";
@@ -284,7 +232,6 @@ void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
 
         AppConfig::GetInstance()->mMaxHoldedDataSize = 1024;
 
-        int count = 1024 / logByteSize + 1;
         int count = 1024 / logByteSize + 1;
 
         uint32_t logGroupSize = 0;
@@ -296,12 +243,10 @@ void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
         //    ? (AppConfig::GetInstance()->GetMaxHoldedDataSize() - logByteSize)
         //    : 0;
         for (int i = 0; i < count; i++) {
-        for (int i = 0; i < count; i++) {
             sls_logs::Log* log = logGroup.add_logs();
             log->set_time(time(NULL));
             sls_logs::Log_Content* content = nullptr;
             content = log->add_contents();
-
 
             content->set_key(key);
             content->set_value(value);
@@ -319,20 +264,7 @@ void AggregatorUnittest::TestLogstoreMergeTypeAddLargeGroup() {
                         filename,
                         context);
 
-        }
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
-
         std::unordered_map<int64_t, PackageListMergeBuffer*>::iterator pIter;
-        pIter = aggregator->mPackageListMergeMap.find(logstoreKey);
         pIter = aggregator->mPackageListMergeMap.find(logstoreKey);
         APSARA_TEST_NOT_EQUAL(pIter, aggregator->mPackageListMergeMap.end());
         if (pIter != aggregator->mPackageListMergeMap.end()) {
@@ -357,7 +289,6 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
     int64_t logGroupKey = 123;
     INT32_FLAG(merge_log_count_limit) = 10;
 
-
     std::unique_ptr<FlusherSLS> flusher;
     PipelineContext ctx;
     ctx.SetConfigName("test_config");
@@ -375,10 +306,8 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
 
     int32_t curTime = time(NULL);
     for (int i = 0; i < count; i++) {
-    for (int i = 0; i < count; i++) {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
-
 
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
@@ -391,18 +320,6 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
         std::string value = "testValue";
         content->set_key(key);
         content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
-
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
         uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
 
         aggregator->Add(projectName,
@@ -429,7 +346,6 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
 
-
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
         logTag->set_value("testValue");
@@ -441,18 +357,6 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
         std::string value = "testValue";
         content->set_key(key);
         content->set_value(value);
-        uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
-
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
         uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
 
         aggregator->Add(projectName,
@@ -479,13 +383,10 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
     }
 
     // add 9 more log
-    // add 9 more log
     curTime = time(NULL);
-    for (int i = 0; i < 9; i++) {
     for (int i = 0; i < 9; i++) {
         sls_logs::LogGroup logGroup;
         logGroup.set_category(logstore);
-
 
         sls_logs::LogTag* logTag = logGroup.add_logtags();
         logTag->set_key("testKey");
@@ -510,18 +411,6 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
                         defaultRegion,
                         filename,
                         context);
-        uint32_t logGroupSize = (key.size() + value.size() + 5) * DOUBLE_FLAG(loggroup_bytes_inflation);
-
-        aggregator->Add(projectName,
-                        sourceId,
-                        logGroup,
-                        logGroupKey,
-                        flusher.get(),
-                        mergeType,
-                        logGroupSize,
-                        defaultRegion,
-                        filename,
-                        context);
         APSARA_TEST_EQUAL(aggregator->mSendVectorSize, 0);
         APSARA_TEST_EQUAL(aggregator->mPackageListMergeMap.size(), 0);
         APSARA_TEST_EQUAL(aggregator->mMergeMap.size(), 1);
@@ -534,7 +423,6 @@ void AggregatorUnittest::TestTopicMergeTypeAdd() {
         APSARA_TEST_EQUAL((itr->second)->mLogGroup.logs_size(), 10);
     }
 }
-} // namespace logtail
 } // namespace logtail
 
 int main(int argc, char** argv) {

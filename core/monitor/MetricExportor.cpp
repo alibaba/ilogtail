@@ -159,7 +159,6 @@ void MetricExportor::PushGoPluginMetrics() {
 void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
     std::map<std::string, sls_logs::LogGroup*>::iterator iter;
     for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
-    for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
         sls_logs::LogGroup* logGroup = iter->second;
         logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
         logGroup->set_source(LogFileProfiler::mIpAddr);

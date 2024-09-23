@@ -117,10 +117,6 @@ public:
                             size_t protocolFunctionIndex,
                             bool needSingleLine,
                             std::vector<BaseLineParse*>* lineParsers) override;
-                            int32_t end,
-                            size_t protocolFunctionIndex,
-                            bool needSingleLine,
-                            std::vector<BaseLineParse*>* lineParsers) override;
     LineInfo parse(StringView buffer, int32_t end, size_t protocolFunctionIndex);
     RawTextParser(size_t size) : BaseLineParse(size) {}
 };
@@ -449,9 +445,6 @@ public:
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
     FileReaderOptions::InputType GetInputType() { return mReaderConfig.first->mInputType; }
-
-    void SetMetrics();
-    void ReportMetrics(uint64_t readSize);
 
     void SetMetrics();
     void ReportMetrics(uint64_t readSize);

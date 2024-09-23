@@ -41,12 +41,12 @@ type ProcessorJSON struct {
 	context pipeline.Context
 }
 
-const pluginName = "processor_json"
+const pluginType = "processor_json"
 
 // Init called for init some system resources, like socket, mutex...
 func (p *ProcessorJSON) Init(context pipeline.Context) error {
 	if p.SourceKey == "" {
-		return fmt.Errorf("must specify SourceKey for plugin %v", pluginName)
+		return fmt.Errorf("must specify SourceKey for plugin %v", pluginType)
 	}
 	p.context = context
 	return nil
@@ -102,7 +102,7 @@ func (p *ProcessorJSON) shouldKeepSource(err error) bool {
 }
 
 func init() {
-	pipeline.Processors[pluginName] = func() pipeline.Processor {
+	pipeline.Processors[pluginType] = func() pipeline.Processor {
 		return &ProcessorJSON{
 			SourceKey:              "",
 			NoKeyError:             true,
