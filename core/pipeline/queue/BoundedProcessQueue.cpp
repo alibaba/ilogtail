@@ -54,7 +54,7 @@ bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     }
     item = std::move(mQueue.front());
     mQueue.pop_front();
-    item->AddPipelineInProcessCntIfStop(GetConfigName());
+    item->AddPipelineInProcessCnt(GetConfigName());
     if (ChangeStateIfNeededAfterPop()) {
         GiveFeedback();
     }

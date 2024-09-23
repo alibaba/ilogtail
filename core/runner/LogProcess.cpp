@@ -300,10 +300,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 }
                 pipeline->Send(std::move(eventGroupList));
             }
-            // When pipeline is stopping and item is in sender queue, we could decrease the count
-            if (item->mPipeline) {
-                pipeline->SubInProcessCntWhenStop();
-            }
+            pipeline->SubInProcessCnt();
         }
     }
     LOG_WARNING(sLogger, ("runner/LogProcess.hread", "Exit")("threadNo", threadNo));

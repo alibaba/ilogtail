@@ -48,15 +48,15 @@ public:
     bool FlushBatch();
     void RemoveProcessQueue() const;
     // Should add before or when item pop from ProcessorQueue, must be called in the lock of ProcessorQueue
-    void AddInProcessCntWhenStop() { mInProcessCntWhenStop.fetch_add(1); }
+    void AddInProcessCnt() { mInProcessCnt.fetch_add(1); }
     // Should sub when or after item push to SenderQueue
-    void SubInProcessCntWhenStop() {
-        if (mInProcessCntWhenStop.load() == 0) {
+    void SubInProcessCnt() {
+        if (mInProcessCnt.load() == 0) {
             // should never happen
             LOG_ERROR(sLogger, ("in processing count error", "sub when 0")("config", mName));
             return;
         }
-        mInProcessCntWhenStop.fetch_sub(1);
+        mInProcessCnt.fetch_sub(1);
     }
 
     const std::string& Name() const { return mName; }
@@ -102,7 +102,7 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     std::unique_ptr<Json::Value> mConfig;
     std::atomic_uint16_t mPluginID;
-    std::atomic_int16_t mInProcessCntWhenStop;
+    std::atomic_int16_t mInProcessCnt;
 
     mutable MetricsRecordRef mMetricsRecordRef;
     IntGaugePtr mStartTime;
