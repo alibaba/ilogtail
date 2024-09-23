@@ -34,6 +34,7 @@
 #include "event/Event.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/FileServer.h"
+#include "file_server/FileServer.h"
 #include "file_server/MultilineOptions.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
@@ -112,6 +113,10 @@ public:
 class RawTextParser : public BaseLineParse {
 public:
     LineInfo NewGetLastLine(StringView buffer,
+                            int32_t end,
+                            size_t protocolFunctionIndex,
+                            bool needSingleLine,
+                            std::vector<BaseLineParse*>* lineParsers) override;
                             int32_t end,
                             size_t protocolFunctionIndex,
                             bool needSingleLine,
@@ -444,6 +449,9 @@ public:
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
     FileReaderOptions::InputType GetInputType() { return mReaderConfig.first->mInputType; }
+
+    void SetMetrics();
+    void ReportMetrics(uint64_t readSize);
 
     void SetMetrics();
     void ReportMetrics(uint64_t readSize);

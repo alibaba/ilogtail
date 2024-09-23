@@ -17,6 +17,10 @@
 #include <filesystem>
 
 #include "LogFileProfiler.h"
+
+#include <filesystem>
+
+#include "LogFileProfiler.h"
 #include "LogtailMetric.h"
 #include "MetricConstants.h"
 #include "app_config/AppConfig.h"
@@ -31,6 +35,8 @@
 
 using namespace sls_logs;
 using namespace std;
+
+DECLARE_FLAG_STRING(metrics_report_method);
 
 DECLARE_FLAG_STRING(metrics_report_method);
 
@@ -153,11 +159,14 @@ void MetricExportor::PushGoPluginMetrics() {
 void MetricExportor::SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
     std::map<std::string, sls_logs::LogGroup*>::iterator iter;
     for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
+    for (iter = logGroupMap.begin(); iter != logGroupMap.end(); iter++) {
         sls_logs::LogGroup* logGroup = iter->second;
         logGroup->set_category(METRIC_SLS_LOGSTORE_NAME);
         logGroup->set_source(LogFileProfiler::mIpAddr);
         logGroup->set_topic(METRIC_TOPIC_TYPE);
         if (METRIC_REGION_DEFAULT == iter->first) {
+            ProfileSender::GetInstance()->SendToProfileProject(ProfileSender::GetInstance()->GetDefaultProfileRegion(),
+                                                               *logGroup);
             ProfileSender::GetInstance()->SendToProfileProject(ProfileSender::GetInstance()->GetDefaultProfileRegion(),
                                                                *logGroup);
         } else {
