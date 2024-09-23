@@ -88,11 +88,11 @@ void LogInput::Start() {
 
     mInteruptFlag = false;
 
-    mLastRunTime = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_LAST_RUN_TIME);
+    mLastRunTime = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
     mAgentOpenFdTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
-    mRegisterdHandlersCnt = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("registered_handlers_cnt");
-    mReadersCnt = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("readers_cnt");
-    mEnableFileIncludedByMultiConfigs = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("enable_file_included_by_multi_configs");
+    mRegisterdHandlersCnt = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_WATCHED_DIRS_CNT);
+    mActiveReadersCnt = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_ACTIVE_READERS_CNT);
+    mEnableFileIncludedByMultiConfigs = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG);
 
     new Thread([this]() { ProcessLoop(); });
 }
@@ -355,7 +355,7 @@ void LogInput::UpdateCriticalMetric(int32_t curTime) {
     LogtailMonitor::GetInstance()->UpdateMetric("register_handler", handlerCount);
     mRegisterdHandlersCnt->Set(handlerCount);
     LogtailMonitor::GetInstance()->UpdateMetric("reader_count", CheckPointManager::Instance()->GetReaderCount());
-    mReadersCnt->Set(CheckPointManager::Instance()->GetReaderCount());
+    mActiveReadersCnt->Set(CheckPointManager::Instance()->GetReaderCount());
     LogtailMonitor::GetInstance()->UpdateMetric("multi_config", AppConfig::GetInstance()->IsAcceptMultiConfig());
     mEventProcessCount = 0;
 }

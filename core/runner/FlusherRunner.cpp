@@ -43,13 +43,13 @@ bool FlusherRunner::Init() {
     srand(time(nullptr));
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
                                                          {{METRIC_LABEL_KEY_RUNNER_NAME, "flusher_runner"}});
-    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEMS_CNT);
-    mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEM_SIZE_BYTES);
-    mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter("in_item_raw_data_size_bytes");
-    mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_OUT_ITEMS_CNT);
-    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_TOTAL_DELAY_MS);
-    mWaitingItemsCnt = mMetricsRecordRef.CreateIntGauge("waiting_items_cnt");
-    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_LAST_RUN_TIME);
+    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_CNT);
+    mInItemDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEM_SIZE_BYTES);
+    mOutItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_OUT_ITEMS_CNT);
+    mTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_TOTAL_DELAY_MS);
+    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
+    mInItemRawDataSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_FLUSHER_IN_ITEM_RAW_SIZE_BYTES);
+    mWaitingItemsCnt = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_FLUSHER_WAITING_ITEMS_CNT);
 
     mThreadRes = async(launch::async, &FlusherRunner::Run, this);
     mLastCheckSendClientTime = time(nullptr);

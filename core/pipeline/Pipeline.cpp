@@ -317,11 +317,12 @@ bool Pipeline::Init(PipelineConfig&& config) {
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         mMetricsRecordRef, {{METRIC_LABEL_PROJECT, mContext.GetProjectName()}, {METRIC_LABEL_CONFIG_NAME, mName}});
-    mStartTime = mMetricsRecordRef.CreateIntGauge("start_time");
-    mProcessorsInEventsCnt = mMetricsRecordRef.CreateCounter("processors_in_events_cnt");
-    mProcessorsInGroupsCnt = mMetricsRecordRef.CreateCounter("processors_in_event_groups_cnt");
-    mProcessorsInGroupDataSizeBytes = mMetricsRecordRef.CreateCounter("processors_in_event_group_data_size_bytes");
-    mProcessorsTotalDelayMs = mMetricsRecordRef.CreateCounter("processors_total_delay_ms");
+    mStartTime = mMetricsRecordRef.CreateIntGauge(METRIC_PIPELINE_START_TIME);
+    mProcessorsInEventsCnt = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENTS_CNT);
+    mProcessorsInGroupsCnt = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_CNT);
+    mProcessorsInGroupDataSizeBytes
+        = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES);
+    mProcessorsTotalDelayMs = mMetricsRecordRef.CreateCounter(METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS);
 
     return true;
 }

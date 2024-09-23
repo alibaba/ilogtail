@@ -141,16 +141,78 @@ const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL = "flusher_quota_error_total"
 const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
 const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
 
-const std::string METRIC_IN_EVENTS_CNT = "in_events_cnt";
-const std::string METRIC_IN_EVENT_GROUPS_CNT = "in_event_groups_cnt";
-const std::string METRIC_IN_ITEMS_CNT = "in_items_cnt";
-const std::string METRIC_IN_EVENT_GROUP_SIZE_BYTES = "in_event_group_data_size_bytes";
-const std::string METRIC_IN_ITEM_SIZE_BYTES = "in_item_data_size_bytes";
-const std::string METRIC_OUT_EVENTS_CNT = "out_events_cnt";
-const std::string METRIC_OUT_ITEMS_CNT = "out_items_cnt";
-const std::string METRIC_OUT_EVENT_GROUP_SIZE_BYTES = "out_event_group_data_size_bytes";
-const std::string METRIC_OUT_ITEM_SIZE_BYTES = "out_item_data_size_bytes";
-const std::string METRIC_TOTAL_DELAY_MS = "total_delay_ms";
-const std::string METRIC_LAST_RUN_TIME = "last_run_time";
+//////////////////////////////////////////////////////////////////////////
+// plugin
+//////////////////////////////////////////////////////////////////////////
+// common metrics
+const std::string METRIC_PLUGIN_IN_EVENTS_CNT = "plugin_in_events_total";
+const std::string METRIC_PLUGIN_IN_EVENT_GROUP_SIZE_BYTES = "plugin_in_event_group_size_bytes";
+
+//////////////////////////////////////////////////////////////////////////
+// component
+//////////////////////////////////////////////////////////////////////////
+// common metrics
+const std::string METRIC_COMPONENT_IN_EVENTS_CNT = "component_in_events_total";
+const std::string METRIC_COMPONENT_IN_ITEMS_CNT = "component_in_items_total";
+const std::string METRIC_COMPONENT_IN_EVENT_GROUP_SIZE_BYTES = "component_in_event_group_size_bytes";
+const std::string METRIC_COMPONENT_IN_ITEM_SIZE_BYTES = "component_in_item_size_bytes";
+const std::string METRIC_COMPONENT_OUT_EVENTS_CNT = "component_out_events_total";
+const std::string METRIC_COMPONENT_OUT_ITEMS_CNT = "component_out_items_total";
+const std::string METRIC_COMPONENT_OUT_ITEM_SIZE_BYTES = "component_out_item_size_bytes";
+const std::string METRIC_COMPONENT_TOTAL_DELAY_MS = "component_total_delay_ms";
+const std::string METRIC_COMPONENT_DISCARDED_ITEMS_CNT = "component_discarded_items_total";
+const std::string METRIC_COMPONENT_DISCARDED_ITEMS_SIZE_BYTES = "component_discarded_item_size_bytes";
+
+// batcher metrics
+const std::string METRIC_COMPONENT_BATCHER_EVENT_BATCHES_CNT = "component_event_batches_total";
+const std::string METRIC_COMPONENT_BATCHER_BUFFERED_GROUPS_CNT = "component_buffered_groups_total";
+const std::string METRIC_COMPONENT_BATCHER_BUFFERED_EVENTS_CNT = "component_buffered_events_total";
+const std::string METRIC_COMPONENT_BATCHER_BUFFERED_SIZE_BYTES = "component_buffered_size_bytes";
+
+// queue metrics
+const std::string METRIC_COMPONENT_QUEUE_SIZE_CNT = "component_queue_size";
+const std::string METRIC_COMPONENT_QUEUE_SIZE_BYTES = "component_queue_size_bytes";
+const std::string METRIC_COMPONENT_QUEUE_VALID_TO_PUSH_FLAG = "component_valid_to_push";
+const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE = "component_extra_buffer_size";
+const std::string METRIC_COMPONENT_QUEUE_EXTRA_BUFFER_SIZE_BYTES = "component_extra_buffer_size";
+const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_CNT = "component_discarded_events_total";
+
+//////////////////////////////////////////////////////////////////////////
+// pipeline
+//////////////////////////////////////////////////////////////////////////
+const std::string METRIC_PIPELINE_START_TIME = "pipeline_start_time";
+const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_CNT = "pipeline_processors_in_events_total";
+const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_CNT = "pipeline_processors_in_event_groups_total";
+const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES = "pipeline_processors_in_event_group_size_bytes";
+const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS = "pipeline_processors_total_delay_ms";
+
+//////////////////////////////////////////////////////////////////////////
+// runner
+//////////////////////////////////////////////////////////////////////////
+// common metrics
+const std::string METRIC_RUNNER_IN_EVENTS_CNT = "runner_in_events_total";
+const std::string METRIC_RUNNER_IN_EVENT_GROUPS_CNT = "runner_in_event_groups_total";
+const std::string METRIC_RUNNER_IN_ITEMS_CNT = "runner_in_items_total";
+const std::string METRIC_RUNNER_IN_EVENT_GROUP_SIZE_BYTES = "runner_in_event_group_size_bytes";
+const std::string METRIC_RUNNER_IN_ITEM_SIZE_BYTES = "runner_in_item_size_bytes";
+const std::string METRIC_RUNNER_OUT_ITEMS_CNT = "runner_out_items_total";
+const std::string METRIC_RUNNER_TOTAL_DELAY_MS = "runner_total_delay_ms";
+const std::string METRIC_RUNNER_LAST_RUN_TIME = "runner_last_run_time";
+
+// http sink metrics
+const std::string METRIC_RUNNER_HTTP_SINK_OUT_SUCCESSFUL_ITEMS_CNT = "runner_out_successful_items_total";
+const std::string METRIC_RUNNER_HTTP_SINK_OUT_FAILED_ITEMS_CNT = "runner_out_failed_items_total";
+const std::string METRIC_RUNNER_HTTP_SINK_SENDING_ITEMS_CNT = "runner_sending_items_total";
+const std::string METRIC_RUNNER_HTTP_SINK_SEND_CONCURRENCY = "runner_send_concurrency";
+
+// flusher runner metrics
+const std::string METRIC_RUNNER_FLUSHER_IN_ITEM_RAW_SIZE_BYTES = "runner_in_item_raw_size_bytes";
+const std::string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_CNT = "runner_waiting_items_total";
+
+// file server metrics
+const std::string METRIC_RUNNER_FILE_WATCHED_DIRS_CNT = "runner_watched_dirs_total";
+const std::string METRIC_RUNNER_FILE_ACTIVE_READERS_CNT = "runner_active_readers_total";
+const std::string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG
+    = "runner_enable_file_included_by_multi_configs";
 
 } // namespace logtail

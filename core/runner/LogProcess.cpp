@@ -143,12 +143,13 @@ bool LogProcess::FlushOut(int32_t waitMs) {
 
 void* LogProcess::ProcessLoop(int32_t threadNo) {
     LOG_DEBUG(sLogger, ("LogProcess", "Start")("threadNo", threadNo));
+    // thread local metrics should be initialized in each thread
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
         sMetricsRecordRef, {{METRIC_LABEL_KEY_RUNNER_NAME, "processor_runner"}, {"thread_no", ToString(threadNo)}});
-    sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUPS_CNT);
-    sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_IN_EVENTS_CNT);
-    sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_IN_EVENT_GROUP_SIZE_BYTES);
-    sLastRunTime = sMetricsRecordRef.CreateIntGauge(METRIC_LAST_RUN_TIME);
+    sInGroupsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUPS_CNT);
+    sInEventsCnt = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENTS_CNT);
+    sInGroupDataSizeBytes = sMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_EVENT_GROUP_SIZE_BYTES);
+    sLastRunTime = sMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
 
     static int32_t lastMergeTime = 0;
     while (true) {

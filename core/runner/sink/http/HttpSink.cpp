@@ -37,12 +37,12 @@ bool HttpSink::Init() {
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef,
                                                          {{METRIC_LABEL_KEY_RUNNER_NAME, "http sink"}});
-    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_IN_ITEMS_CNT);
-    mOutSuccessfulItemsCnt = mMetricsRecordRef.CreateCounter("out_successful_items_cnt");
-    mOutFailedItemsCnt = mMetricsRecordRef.CreateCounter("out_failed_items_cnt");
-    mSendingItemsCnt = mMetricsRecordRef.CreateIntGauge("sending_items_cnt");
-    mSendConcurrency = mMetricsRecordRef.CreateIntGauge("send_concurrency");
-    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_LAST_RUN_TIME);
+    mInItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_IN_ITEMS_CNT);
+    mLastRunTime = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_LAST_RUN_TIME);
+    mOutSuccessfulItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_HTTP_SINK_OUT_SUCCESSFUL_ITEMS_CNT);
+    mOutFailedItemsCnt = mMetricsRecordRef.CreateCounter(METRIC_RUNNER_HTTP_SINK_OUT_FAILED_ITEMS_CNT);
+    mSendingItemsCnt = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_HTTP_SINK_SENDING_ITEMS_CNT);
+    mSendConcurrency = mMetricsRecordRef.CreateIntGauge(METRIC_RUNNER_HTTP_SINK_SEND_CONCURRENCY);
 
     // TODO: should be dynamic
     mSendConcurrency->Set(AppConfig::GetInstance()->GetSendRequestConcurrency());

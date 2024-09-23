@@ -83,7 +83,7 @@ private:
     IntGaugePtr mLastRunTime;
     IntGaugePtr mAgentOpenFdTotal;
     IntGaugePtr mRegisterdHandlersCnt;
-    IntGaugePtr mReadersCnt;
+    IntGaugePtr mActiveReadersCnt;
     IntGaugePtr mEnableFileIncludedByMultiConfigs;
 
     std::atomic_int mLastReadEventTime{0};
