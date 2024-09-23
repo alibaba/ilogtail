@@ -343,21 +343,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 	contextImp.logstoreC = logstoreC
 
-	// Check if the config has been disabled (keep disabled if config detail is unchanged).
-	DisabledLogtailConfigLock.Lock()
-	if disabledConfig, hasDisabled := DisabledLogtailConfig[configName]; hasDisabled {
-		if disabledConfig.configDetailHash == logstoreC.configDetailHash {
-			DisabledLogtailConfigLock.Unlock()
-			return nil, fmt.Errorf("failed to create config because timeout "+
-				"stop has happened on it: %v", configName)
-		}
-		delete(DisabledLogtailConfig, configName)
-		DisabledLogtailConfigLock.Unlock()
-		logger.Info(contextImp.GetRuntimeContext(), "retry timeout config because config detail has changed")
-	} else {
-		DisabledLogtailConfigLock.Unlock()
-	}
-
 	var plugins = make(map[string]interface{})
 	if err = json.Unmarshal([]byte(jsonStr), &plugins); err != nil {
 		return nil, err

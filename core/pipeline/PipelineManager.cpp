@@ -108,7 +108,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
-            diff.mUnchanged.push_back(config.mName);
             ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
                                                                                ConfigFeedbackStatus::FAILED);
             continue;
