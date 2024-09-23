@@ -36,7 +36,7 @@ ExactlyOnceQueueManager::ExactlyOnceQueueManager() : mProcessQueueParam(INT32_FL
 
 bool ExactlyOnceQueueManager::CreateOrUpdateQueue(QueueKey key,
                                                   uint32_t priority,
-                                                  const string& config,
+                                                  const PipelineContext& ctx,
                                                   const vector<RangeCheckpointPtr>& checkpoints) {
     {
         lock_guard<mutex> lock(mGCMux);
@@ -49,7 +49,7 @@ bool ExactlyOnceQueueManager::CreateOrUpdateQueue(QueueKey key,
         if (iter != mSenderQueues.end()) {
             iter->second.Reset(checkpoints);
         } else {
-            mSenderQueues.try_emplace(key, checkpoints, key);
+            mSenderQueues.try_emplace(key, checkpoints, key, ctx);
             iter = mSenderQueues.find(key);
         }
         // limiters are set on first push to the queue
@@ -65,7 +65,7 @@ bool ExactlyOnceQueueManager::CreateOrUpdateQueue(QueueKey key,
                                                        iter->second);
                 iter->second->SetPriority(priority);
             }
-            iter->second->SetConfigName(config);
+            iter->second->SetConfigName(ctx.GetConfigName());
             // note: do not reset process queue, to be the same as original implementation
         } else {
             // note: Ideally, queue capacity should be the same as checkpoint size. However, since process queue cannot
@@ -76,7 +76,7 @@ bool ExactlyOnceQueueManager::CreateOrUpdateQueue(QueueKey key,
                                                          mProcessQueueParam.GetHighWatermark(),
                                                          key,
                                                          priority,
-                                                         config);
+                                                         ctx);
             // mProcessPriorityQueue[priority].emplace_back(
             //     checkpoints.size(), checkpoints.size() - 1, checkpoints.size(), key, priority, config);
             mProcessQueues[key] = prev(mProcessPriorityQueue[priority].end());
@@ -148,20 +148,23 @@ bool ExactlyOnceQueueManager::IsAllProcessQueueEmpty() const {
     return true;
 }
 
-void ExactlyOnceQueueManager::InvalidatePopProcessQueue(const string& configName) {
+void ExactlyOnceQueueManager::DisablePopProcessQueue(const string& configName, bool isPipelineRemoving) {
     lock_guard<mutex> lock(mProcessQueueMux);
     for (auto& iter : mProcessQueues) {
         if (iter.second->GetConfigName() == configName) {
-            iter.second->InvalidatePop();
+            iter.second->DisablePop();
+            if (!isPipelineRemoving) {
+                iter.second->SetPipelineForItems(configName);
+            }
         }
     }
 }
 
-void ExactlyOnceQueueManager::ValidatePopProcessQueue(const string& configName) {
+void ExactlyOnceQueueManager::EnablePopProcessQueue(const string& configName) {
     lock_guard<mutex> lock(mProcessQueueMux);
     for (auto& iter : mProcessQueues) {
         if (iter.second->GetConfigName() == configName) {
-            iter.second->ValidatePop();
+            iter.second->EnablePop();
         }
     }
 }

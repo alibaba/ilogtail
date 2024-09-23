@@ -31,8 +31,7 @@ class BoundedSenderQueueInterface;
 // not thread-safe, should be protected explicitly by queue manager
 class ProcessQueueInterface : virtual public QueueInterface<std::unique_ptr<ProcessQueueItem>> {
 public:
-    ProcessQueueInterface(int64_t key, size_t cap, uint32_t priority, const std::string& config)
-        : QueueInterface(key, cap), mPriority(priority), mConfigName(config) {}
+    ProcessQueueInterface(int64_t key, size_t cap, uint32_t priority, const PipelineContext& ctx);
     virtual ~ProcessQueueInterface() = default;
 
     void SetPriority(uint32_t priority) { mPriority = priority; }
@@ -43,12 +42,12 @@ public:
 
     void SetDownStreamQueues(std::vector<BoundedSenderQueueInterface*>&& ques);
 
-    void InvalidatePop() { mValidToPop = false; }
-    void ValidatePop() { mValidToPop = true; }
+    void DisablePop() { mValidToPop = false; }
+    void EnablePop() { mValidToPop = true; }
 
-    void Reset() {
-        mDownStreamQueues.clear();
-    }
+    virtual void SetPipelineForItems(const std::string& name) const = 0;
+
+    void Reset() { mDownStreamQueues.clear(); }
 
 protected:
     bool IsValidToPop() const;
@@ -60,7 +59,7 @@ private:
     std::string mConfigName;
 
     std::vector<BoundedSenderQueueInterface*> mDownStreamQueues;
-    bool mValidToPop = true;
+    bool mValidToPop = false;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class BoundedProcessQueueUnittest;

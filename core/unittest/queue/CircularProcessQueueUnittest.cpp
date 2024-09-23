@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "models/PipelineEventGroup.h"
+#include "pipeline/PipelineManager.h"
 #include "pipeline/queue/CircularProcessQueue.h"
 #include "pipeline/queue/SenderQueue.h"
 #include "unittest/Unittest.h"
@@ -27,17 +28,23 @@ public:
     void TestPush();
     void TestPop();
     void TestReset();
+    void TestMetric();
+    void TestSetPipeline();
 
 protected:
-    void SetUp() override {
-        mQueue.reset(new CircularProcessQueue(sCap, sKey, 1, "test_config"));
+    static void SetUpTestCase() { sCtx.SetConfigName("test_config"); }
 
-        mSenderQueue1.reset(new SenderQueue(10, 0, 10, 0));
-        mSenderQueue2.reset(new SenderQueue(10, 0, 10, 0));
+    void SetUp() override {
+        mQueue.reset(new CircularProcessQueue(sCap, sKey, 1, sCtx));
+
+        mSenderQueue1.reset(new SenderQueue(10, 0, 10, 0, "", sCtx));
+        mSenderQueue2.reset(new SenderQueue(10, 0, 10, 0, "", sCtx));
         mQueue->SetDownStreamQueues(vector<BoundedSenderQueueInterface*>{mSenderQueue1.get(), mSenderQueue2.get()});
+        mQueue->EnablePop();
     }
 
 private:
+    static PipelineContext sCtx;
     static const QueueKey sKey = 0;
     static const size_t sCap = 2;
 
@@ -53,6 +60,8 @@ private:
     unique_ptr<BoundedSenderQueueInterface> mSenderQueue1;
     unique_ptr<BoundedSenderQueueInterface> mSenderQueue2;
 };
+
+PipelineContext CircularProcessQueueUnittest::sCtx;
 
 void CircularProcessQueueUnittest::TestPush() {
     unique_ptr<ProcessQueueItem> res;
@@ -91,9 +100,9 @@ void CircularProcessQueueUnittest::TestPop() {
 
     mQueue->Push(GenerateItem(1));
     // invalidate pop
-    mQueue->InvalidatePop();
+    mQueue->DisablePop();
     APSARA_TEST_FALSE(mQueue->Pop(item));
-    mQueue->ValidatePop();
+    mQueue->EnablePop();
 
     // downstream queues are not valid to push
     mSenderQueue1->mValidToPush = false;
@@ -141,9 +150,61 @@ void CircularProcessQueueUnittest::TestReset() {
     }
 }
 
+void CircularProcessQueueUnittest::TestMetric() {
+    APSARA_TEST_EQUAL(4U, mQueue->mMetricsRecordRef->GetLabels()->size());
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_PROJECT, ""));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_CONFIG_NAME, "test_config"));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_COMPONENT_NAME, "process_queue"));
+    APSARA_TEST_TRUE(mQueue->mMetricsRecordRef.HasLabel(METRIC_LABEL_KEY_QUEUE_TYPE, "circular"));
+
+    auto item = GenerateItem(2);
+    auto dataSize1 = item->mEventGroup.DataSize();
+    mQueue->Push(std::move(item));
+    APSARA_TEST_EQUAL(1U, mQueue->mInItemsCnt->GetValue());
+    APSARA_TEST_EQUAL(dataSize1, mQueue->mInItemDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL(2U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(dataSize1, mQueue->mQueueDataSizeByte->GetValue());
+
+    item = GenerateItem(1);
+    auto dataSize2 = item->mEventGroup.DataSize();
+    mQueue->Push(std::move(item));
+    APSARA_TEST_EQUAL(2U, mQueue->mInItemsCnt->GetValue());
+    APSARA_TEST_EQUAL(dataSize1 + dataSize2, mQueue->mInItemDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL(1U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(dataSize2, mQueue->mQueueDataSizeByte->GetValue());
+    APSARA_TEST_EQUAL(2U, mQueue->mDroppedEventsCnt->GetValue());
+
+    mQueue->Pop(item);
+    APSARA_TEST_EQUAL(1U, mQueue->mOutItemsCnt->GetValue());
+    APSARA_TEST_EQUAL(0U, mQueue->mQueueSize->GetValue());
+    APSARA_TEST_EQUAL(0U, mQueue->mQueueDataSizeByte->GetValue());
+}
+
+void CircularProcessQueueUnittest::TestSetPipeline() {
+    auto pipeline = make_shared<Pipeline>();
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test_config"] = pipeline;
+
+    auto item1 = GenerateItem(1);
+    auto p1 = item1.get();
+    auto pipelineTmp = make_shared<Pipeline>();
+    item1->mPipeline = pipelineTmp;
+
+    auto item2 = GenerateItem(1);
+    auto p2 = item2.get();
+
+    mQueue->Push(std::move(item1));
+    mQueue->Push(std::move(item2));
+    mQueue->SetPipelineForItems("test_config");
+
+    APSARA_TEST_EQUAL(pipelineTmp, p1->mPipeline);
+    APSARA_TEST_EQUAL(pipeline, p2->mPipeline);
+}
+
 UNIT_TEST_CASE(CircularProcessQueueUnittest, TestPush)
 UNIT_TEST_CASE(CircularProcessQueueUnittest, TestPop)
 UNIT_TEST_CASE(CircularProcessQueueUnittest, TestReset)
+UNIT_TEST_CASE(CircularProcessQueueUnittest, TestMetric)
+UNIT_TEST_CASE(CircularProcessQueueUnittest, TestSetPipeline)
 
 } // namespace logtail
 

@@ -78,6 +78,11 @@ extern const std::string METRIC_LABEL_FILE_DEV;
 extern const std::string METRIC_LABEL_FILE_INODE;
 extern const std::string METRIC_LABEL_FILE_NAME;
 
+extern const std::string METRIC_LABEL_KEY_COMPONENT_NAME;
+extern const std::string METRIC_LABEL_KEY_QUEUE_TYPE;
+extern const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG;
+extern const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID;
+
 // input file metrics
 extern const std::string METRIC_INPUT_RECORDS_TOTAL;
 extern const std::string METRIC_INPUT_RECORDS_SIZE_BYTES;
@@ -125,8 +130,6 @@ extern const std::string METRIC_PROC_PARSE_STDOUT_TOTAL;
 extern const std::string METRIC_PROC_PARSE_STDERR_TOTAL;
 
 // flusher common metrics
-extern const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL;
-extern const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES;
 extern const std::string METRIC_FLUSHER_ERROR_TOTAL;
 extern const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL;
 extern const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL;
@@ -138,6 +141,16 @@ extern const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL;
 extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
+
+extern const std::string METRIC_IN_EVENTS_CNT;
+extern const std::string METRIC_IN_ITEMS_CNT;
+extern const std::string METRIC_IN_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_IN_ITEM_SIZE_BYTES;
+extern const std::string METRIC_OUT_EVENTS_CNT;
+extern const std::string METRIC_OUT_ITEMS_CNT;
+extern const std::string METRIC_OUT_EVENT_GROUP_SIZE_BYTES;
+extern const std::string METRIC_OUT_ITEM_SIZE_BYTES;
+extern const std::string METRIC_TOTAL_DELAY_MS;
 
 // prometheus input metrics
 extern const std::string PROM_REGISTER_STATE;
