@@ -37,15 +37,6 @@ bool ScrapeConfig::Init(const Json::Value& scrapeConfig) {
             return false;
         }
     } else {
-        return false;
-    }
-
-    if (scrapeConfig.isMember(prometheus::SCRAPE_PROTOCOLS) && scrapeConfig[prometheus::SCRAPE_PROTOCOLS].isArray()) {
-        if (!InitScrapeProtocols(scrapeConfig[prometheus::SCRAPE_PROTOCOLS])) {
-            LOG_ERROR(sLogger, ("scrape protocol config error", scrapeConfig[prometheus::SCRAPE_PROTOCOLS]));
-            return false;
-        }
-    } else {
         Json::Value nullJson;
         InitScrapeProtocols(nullJson);
     }
