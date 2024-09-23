@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -122,7 +121,6 @@ func (c *ComposeBooter) Start(ctx context.Context) error {
 		}
 		logger.Error(context.Background(), "START_DOCKER_COMPOSE_ERROR",
 			"stdout", execError.Error.Error())
-		fmt.Println("START_DOCKER_COMPOSE_ERROR ", execError.Error)
 		if i == 2 {
 			return execError.Error
 		}
@@ -230,19 +228,11 @@ func (c *ComposeBooter) CopyCoreLogs() {
 		if err != nil {
 			logger.Error(context.Background(), "COPY_LOG_ALARM", "type", "main", "err", err)
 		}
-		content, err := ioutil.ReadFile(config.LogDir + "/ilogtail.LOG")
-		for _, line := range strings.Split(string(content), "\n") {
-			fmt.Println(line)
-		}
 		cmd = exec.Command("docker", "cp", c.logtailID+":/ilogtail/logtail_plugin.LOG", config.LogDir)
 		output, err = cmd.CombinedOutput()
 		logger.Debugf(context.Background(), "\n%s", string(output))
 		if err != nil {
 			logger.Error(context.Background(), "COPY_LOG_ALARM", "type", "plugin", "err", err)
-		}
-		content, err = ioutil.ReadFile(config.LogDir + "/logtail_plugin.LOG")
-		for _, line := range strings.Split(string(content), "\n") {
-			fmt.Println(line)
 		}
 	}
 }

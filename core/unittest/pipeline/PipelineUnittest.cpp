@@ -2865,6 +2865,7 @@ void PipelineUnittest::TestInProcessingCount() const {
     vector<PipelineEventGroup> group;
     group.emplace_back(make_shared<SourceBuffer>());
 
+    processQueue->EnablePop();
     processQueue->Push(GenerateProcessItem(pipeline));
     APSARA_TEST_EQUAL(0, pipeline->mInProcessCnt.load());
     unique_ptr<ProcessQueueItem> item;

@@ -374,13 +374,13 @@ bool LogtailPlugin::LoadPluginBase() {
             return mPluginValid;
         }
         // 加载单个配置
-        mLoadPipelineFun = (LoadPipelineFun)loader.LoadMethod("LoadPipelineFun", error);
+        mLoadPipelineFun = (LoadPipelineFun)loader.LoadMethod("LoadPipeline", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadPipelineFun error, Message", error));
             return mPluginValid;
         }
         // 卸载单个配置
-        mUnloadPipelineFun = (UnloadPipelineFun)loader.LoadMethod("UnloadPipelineFun", error);
+        mUnloadPipelineFun = (UnloadPipelineFun)loader.LoadMethod("UnloadPipeline", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load UnloadPipelineFun error, Message", error));
             return mPluginValid;
