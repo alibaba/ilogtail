@@ -15,20 +15,22 @@
  */
 
 #pragma once
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <iostream>
 #include <atomic>
-#include "common/LogstoreSenderQueue.h"
-#include "common/WaitObject.h"
-#include "common/Lock.h"
-#include "common/Thread.h"
-#include "sdk/Closure.h"
-#include "log_pb/sls_logs.pb.h"
-#include "log_pb/logtail_buffer_meta.pb.h"
-#include "aggregator/Aggregator.h"
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "SenderQueueParam.h"
+#include "aggregator/Aggregator.h"
+#include "common/Lock.h"
+#include "common/LogstoreSenderQueue.h"
+#include "common/Thread.h"
+#include "common/WaitObject.h"
+#include "log_pb/logtail_buffer_meta.pb.h"
+#include "log_pb/sls_logs.pb.h"
+#include "monitor/Monitor.h"
+#include "sdk/Closure.h"
 
 namespace logtail {
 
@@ -232,6 +234,9 @@ private:
 
     PTMutex mSendStatisticLock;
     std::unordered_map<std::string, std::vector<SendStatistic*>> mSendStatisticMap;
+
+    IntGaugePtr mGlobalSendQueueFullTotal;
+    IntGaugePtr mGlobalSendQueueTotal;
 
     PTMutex mSendClientLock;
     std::unordered_map<std::string, SlsClientInfo*> mSendClientMap;

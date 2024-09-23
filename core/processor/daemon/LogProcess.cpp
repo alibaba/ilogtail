@@ -41,7 +41,6 @@
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
 #include "monitor/LogtailAlarm.h"
-#include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "sdk/Client.h"
@@ -97,6 +96,8 @@ LogProcess::~LogProcess() {
 void LogProcess::Start() {
     if (mInitialized)
         return;
+    mGlobalProcessQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_FULL_TOTAL);
+    mGlobalProcessQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_PROCESS_QUEUE_TOTAL);
     mInitialized = true;
     // mLocalTimeZoneOffsetSecond = GetLocalTimeZoneOffsetSecond();
     // LOG_INFO(sLogger, ("local timezone offset second", mLocalTimeZoneOffsetSecond));
@@ -249,7 +250,9 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             int32_t eoTotalCount = 0;
             mLogFeedbackQueue.GetStatus(invalidCount, totalCount, eoInvalidCount, eoTotalCount);
             sMonitor->UpdateMetric("process_queue_full", invalidCount);
+            mGlobalProcessQueueFullTotal->Set(invalidCount);
             sMonitor->UpdateMetric("process_queue_total", totalCount);
+            mGlobalProcessQueueTotal->Set(totalCount);
             if (eoTotalCount > 0) {
                 sMonitor->UpdateMetric("eo_process_queue_full", eoInvalidCount);
                 sMonitor->UpdateMetric("eo_process_queue_total", eoTotalCount);

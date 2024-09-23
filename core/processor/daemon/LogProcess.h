@@ -28,6 +28,7 @@
 #include "common/LogstoreFeedbackQueue.h"
 #include "common/Thread.h"
 #include "log_pb/sls_logs.pb.h"
+#include "monitor/Monitor.h"
 #include "pipeline/PipelineContext.h"
 #include "reader/LogFileReader.h"
 
@@ -124,6 +125,9 @@ private:
     std::atomic_bool* mThreadFlags; // whether thread is sending data or wait
     // int32_t mBufferCountLimit;
     ReadWriteLock mAccessProcessThreadRWL;
+
+    IntGaugePtr mGlobalProcessQueueFullTotal;
+    IntGaugePtr mGlobalProcessQueueTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

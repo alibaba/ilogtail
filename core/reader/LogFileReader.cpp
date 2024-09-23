@@ -49,6 +49,7 @@
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
+#include "monitor/MetricConstants.h"
 #include "processor/inner/ProcessorParseContainerLogNative.h"
 #include "rapidjson/document.h"
 #include "reader/JsonLogFileReader.h"
@@ -167,6 +168,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
             reader->SetSymbolicLinkFlag(buf.IsLink());
         }
 #endif
+        reader->SetMetrics();
 
         reader->InitReader(
             readerConfig.first->mTailingAllMatchedFiles, LogFileReader::BACKWARD_TO_FIXED_POS, exactlyonceConcurrency);
@@ -195,6 +197,26 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     BaseLineParse* baseLineParsePtr = nullptr;
     baseLineParsePtr = GetParser<RawTextParser>(0);
     mLineParsers.emplace_back(baseLineParsePtr);
+}
+
+void LogFileReader::SetMetrics() {
+    mMetricLabels = {{METRIC_LABEL_FILE_NAME, GetConvertedPath()},
+                     {METRIC_LABEL_FILE_DEV, std::to_string(GetDevInode().dev)},
+                     {METRIC_LABEL_FILE_INODE, std::to_string(GetDevInode().inode)}};
+    mMetricsRecordRef = FileServer::GetInstance()->GetOrCreateReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
+    if (mMetricsRecordRef == nullptr) {
+        LOG_ERROR(sLogger,
+                  ("failed to init metrics", "cannot get config's metricRecordRef")("config name", GetConfigName()));
+        mMetricsEnabled = false;
+        return;
+    }
+
+    mMetricsEnabled = true;
+
+    mInputRecordsSizeBytesCounter = mMetricsRecordRef->GetCounter(METRIC_INPUT_RECORDS_SIZE_BYTES);
+    mInputReadTotalCounter = mMetricsRecordRef->GetCounter(METRIC_INPUT_READ_TOTAL);
+    mInputFileSizeBytesGauge = mMetricsRecordRef->GetIntGauge(METRIC_INPUT_FILE_SIZE_BYTES);
+    mInputFileOffsetBytesGauge = mMetricsRecordRef->GetIntGauge(METRIC_INPUT_FILE_OFFSET_BYTES);
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag, int32_t idxInReaderArray) {
@@ -698,7 +720,7 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         free(readBuf);
         return;
     }
-    if(mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
         if (mMultilineConfig.first->GetStartPatternReg() == nullptr) {
             for (size_t i = 0; i < readSizeReal - 1; ++i) {
                 if (readBuf[i] == '\n') {
@@ -713,8 +735,10 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
             for (size_t endPs = 0; endPs < readSizeReal - 1; ++endPs) {
                 if (readBuf[endPs] == '\n') {
                     LineInfo line = NewGetLastLine(StringView(readBuf, readSizeReal - 1), endPs, true);
-                    if (BoostRegexSearch(
-                            line.data.data(), line.data.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                    if (BoostRegexSearch(line.data.data(),
+                                         line.data.size(),
+                                         *mMultilineConfig.first->GetStartPatternReg(),
+                                         exception)) {
                         mLastFilePos += line.lineBegin;
                         mCache.clear();
                         free(readBuf);
@@ -749,7 +773,6 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
                 }
             }
         }
-
     }
 
     LOG_WARNING(sLogger,
@@ -2015,7 +2038,7 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
         endPs = size;
     }
     rollbackLineFeedCount = 0;
-    if(mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
+    if (mReaderConfig.first->mInputType == FileReaderOptions::InputType::InputContainerStdio) {
         // Multiline rollback
         if (mMultilineConfig.first->IsMultiline()) {
             std::string exception;
@@ -2024,19 +2047,19 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
                 if (mMultilineConfig.first->GetEndPatternReg()) {
                     // start + end, continue + end, end
                     if (BoostRegexSearch(content.data.data(),
-                                        content.data.size(),
-                                        *mMultilineConfig.first->GetEndPatternReg(),
-                                        exception)) {
+                                         content.data.size(),
+                                         *mMultilineConfig.first->GetEndPatternReg(),
+                                         exception)) {
                         // Ensure the end line is complete
                         if (buffer[content.lineEnd] == '\n') {
                             return content.lineEnd + 1;
                         }
                     }
                 } else if (mMultilineConfig.first->GetStartPatternReg()
-                        && BoostRegexSearch(content.data.data(),
-                                            content.data.size(),
-                                            *mMultilineConfig.first->GetStartPatternReg(),
-                                            exception)) {
+                           && BoostRegexSearch(content.data.data(),
+                                               content.data.size(),
+                                               *mMultilineConfig.first->GetStartPatternReg(),
+                                               exception)) {
                     // start + continue, start
                     rollbackLineFeedCount += content.rollbackLineFeedCount;
                     // Keep all the buffer if rollback all
@@ -2077,8 +2100,10 @@ LogFileReader::RemoveLastIncompleteLog(char* buffer, int32_t size, int32_t& roll
                         }
                     }
                 } else if (mMultilineConfig.first->GetStartPatternReg()
-                        && BoostRegexSearch(
-                            content.data(), content.size(), *mMultilineConfig.first->GetStartPatternReg(), exception)) {
+                           && BoostRegexSearch(content.data(),
+                                               content.size(),
+                                               *mMultilineConfig.first->GetStartPatternReg(),
+                                               exception)) {
                     // start + continue, start
                     ++rollbackLineFeedCount;
                     // Keep all the buffer if rollback all
@@ -2201,6 +2226,15 @@ std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
     return result;
 }
 
+void LogFileReader::ReportMetrics(uint64_t readSize) {
+    if (mMetricsEnabled) {
+        mInputReadTotalCounter->Add(1);
+        mInputRecordsSizeBytesCounter->Add(readSize);
+        mInputFileOffsetBytesGauge->Set(GetLastFilePos());
+        mInputFileSizeBytesGauge->Set(GetFileSize());
+    }
+}
+
 LogFileReader::~LogFileReader() {
     // if (mLogBeginRegPtr != NULL) {
     //     delete mLogBeginRegPtr;
@@ -2221,6 +2255,7 @@ LogFileReader::~LogFileReader() {
                  "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                  "file size", mLastFileSize)("last file position", mLastFilePos));
     CloseFilePtr();
+    FileServer::GetInstance()->ReleaseReentrantMetricsRecordRef(GetConfigName(), mMetricLabels);
 
     // Mark GC so that corresponding resources can be released.
     // For config update, reader will be recreated, which will retrieve these
@@ -2240,10 +2275,10 @@ StringBuffer* BaseLineParse::GetStringBuffer() {
 }
 
 LineInfo RawTextParser::NewGetLastLine(StringView buffer,
-                                   int32_t end,
-                                   size_t protocolFunctionIndex,
-                                   bool needSingleLine,
-                                   std::vector<BaseLineParse*>* lineParsers) {
+                                       int32_t end,
+                                       size_t protocolFunctionIndex,
+                                       bool needSingleLine,
+                                       std::vector<BaseLineParse*>* lineParsers) {
     if (end == 0) {
         return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     }
@@ -2268,10 +2303,10 @@ LineInfo RawTextParser::NewGetLastLine(StringView buffer,
 }
 
 LineInfo DockerJsonFileParser::NewGetLastLine(StringView buffer,
-                                          int32_t end,
-                                          size_t protocolFunctionIndex,
-                                          bool needSingleLine,
-                                          std::vector<BaseLineParse*>* lineParsers) {
+                                              int32_t end,
+                                              size_t protocolFunctionIndex,
+                                              bool needSingleLine,
+                                              std::vector<BaseLineParse*>* lineParsers) {
     if (end == 0) {
         return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     }
@@ -2346,10 +2381,10 @@ bool DockerJsonFileParser::parseLine(LineInfo rawLine, LineInfo& paseLine) {
 }
 
 LineInfo ContainerdTextParser::NewGetLastLine(StringView buffer,
-                                          int32_t end,
-                                          size_t protocolFunctionIndex,
-                                          bool needSingleLine,
-                                          std::vector<BaseLineParse*>* lineParsers) {
+                                              int32_t end,
+                                              size_t protocolFunctionIndex,
+                                              bool needSingleLine,
+                                              std::vector<BaseLineParse*>* lineParsers) {
     if (end == 0) {
         return {.data = StringView(), .lineBegin = 0, .lineEnd = 0, .rollbackLineFeedCount = 0, .fullLine = false};
     }

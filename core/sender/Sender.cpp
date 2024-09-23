@@ -46,7 +46,6 @@
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
 #include "monitor/LogtailAlarm.h"
-#include "monitor/Monitor.h"
 #include "processor/daemon/LogProcess.h"
 #include "sdk/Client.h"
 #include "sdk/Exception.h"
@@ -681,9 +680,12 @@ bool Sender::LZ4CompressLogGroup(const sls_logs::LogGroup& logGroup, std::string
 bool Sender::Init(void) {
     SLSControl::GetInstance()->Init();
 
+    // TODO：Sender的初始化在LoongCollectorMonitor之前，这里会Get失败。等完善输出模块插件指标时一起解决
+    // mGlobalSendQueueFullTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_SEND_QUEUE_FULL_TOTAL);
+    // mGlobalSendQueueTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_GLOBAL_SEND_QUEUE_TOTAL);
+
     static Aggregator* aggregator = Aggregator::GetInstance();
     aggregator->CleanLogPackSeqMap();
-
 
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
     MockAsyncSend = NULL;
