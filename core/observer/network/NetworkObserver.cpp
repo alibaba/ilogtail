@@ -20,9 +20,7 @@
 #include "MachineInfoUtil.h"
 #include "Monitor.h"
 #include "ProcessObserver.h"
-#include "Sender.h"
 #include "common/LogtailCommonFlags.h"
-#include "config_manager/ConfigManager.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "logger/Logger.h"
 #include "metas/ConnectionMetaManager.h"
@@ -34,7 +32,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "common/HashUtil.h"
-#include "flusher/FlusherSLS.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
 
 DEFINE_FLAG_INT64(sls_observer_network_ebpf_connection_gc_interval,
                   "SLS Observer NetWork connection gc interval seconds",

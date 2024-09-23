@@ -22,14 +22,15 @@
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
-#include "config_manager/ConfigManager.h"
+#include "pipeline/compression/CompressorFactory.h"
 #include "container_manager/ConfigContainerInfoUpdateCmd.h"
+#include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "pipeline/PipelineManager.h"
 #include "profile_sender/ProfileSender.h"
-#include "sender/Sender.h"
+#include "pipeline/queue/SenderQueueManager.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -52,10 +53,16 @@ LogtailPlugin::LogtailPlugin() {
     mPluginValid = false;
     mPluginAlarmConfig.mLogstore = "logtail_alarm";
     mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginAlarmConfig.mCompressor
+        = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::ZSTD);
     mPluginProfileConfig.mLogstore = "shennong_log_profile";
     mPluginProfileConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginProfileConfig.mCompressor
+        = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::ZSTD);
     mPluginContainerConfig.mLogstore = "logtail_containers";
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginContainerConfig.mCompressor
+        = CompressorFactory::GetInstance()->Create(Json::Value(), PipelineContext(), "flusher_sls", CompressType::ZSTD);
 
     mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
@@ -74,7 +81,7 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
                                  const std::string& project,
                                  const std::string& logstore,
                                  const std::string& region,
-                                 logtail::LogstoreFeedBackKey logstoreKey) {
+                                 logtail::QueueKey logstoreKey) {
     if (!mPluginValid) {
         LoadPluginBase();
     }
@@ -124,7 +131,13 @@ void LogtailPlugin::Resume() {
 }
 
 int LogtailPlugin::IsValidToSend(long long logstoreKey) {
-    return Sender::Instance()->GetSenderFeedBackInterface()->IsValidToPush(logstoreKey) ? 0 : -1;
+    // TODO: because go profile pipeline is not controlled by C++, we cannot know queue key in advance
+    // therefore, we assume true here. This could be a potential problem if network is not available for profile info.
+    // However, since go profile pipeline will be stopped only during process exit, it should be fine.
+    if (logstoreKey == -1) {
+        return 0;
+    }
+    return SenderQueueManager::GetInstance()->IsValidToPush(logstoreKey) ? 0 : -1;
 }
 
 int LogtailPlugin::SendPb(const char* configName,
@@ -181,7 +194,7 @@ int LogtailPlugin::SendPbV2(const char* configName,
             return 0;
         }
     } else {
-        shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindPipelineByName(configNameStr);
+        shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindConfigByName(configNameStr);
         if (!p) {
             LOG_INFO(sLogger,
                      ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)(
@@ -195,7 +208,7 @@ int LogtailPlugin::SendPbV2(const char* configName,
     if (shardHashSize > 0) {
         shardHashStr.assign(shardHash, static_cast<size_t>(shardHashSize));
     }
-    return pConfig->Send(std::string(pbBuffer, pbSize), shardHash, logstore) ? 0 : -1;
+    return pConfig->Send(std::string(pbBuffer, pbSize), shardHashStr, logstore) ? 0 : -1;
 }
 
 int LogtailPlugin::ExecPluginCmd(
@@ -310,31 +323,37 @@ bool LogtailPlugin::LoadPluginBase() {
                 return mPluginValid;
             }
         }
+        // 加载全局配置，目前应该没有调用点
         mLoadGlobalConfigFun = (LoadGlobalConfigFun)loader.LoadMethod("LoadGlobalConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadGlobalConfig error, Message", error));
             return mPluginValid;
         }
+        // 加载单个配置，目前应该是Resume的时候，全量加载一次
         mLoadConfigFun = (LoadConfigFun)loader.LoadMethod("LoadConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load LoadConfig error, Message", error));
             return mPluginValid;
         }
+        // 更新配置，目前应该没有调用点
         mUnloadConfigFun = (UnloadConfigFun)loader.LoadMethod("UnloadConfig", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load UnloadConfig error, Message", error));
             return mPluginValid;
         }
+        // 插件暂停
         mHoldOnFun = (HoldOnFun)loader.LoadMethod("HoldOn", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load HoldOn error, Message", error));
             return mPluginValid;
         }
+        // 插件恢复
         mResumeFun = (ResumeFun)loader.LoadMethod("Resume", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load Resume error, Message", error));
             return mPluginValid;
         }
+        // C++传递原始二进制数据到golang插件，v1和v2的区别:是否传递tag
         mProcessRawLogFun = (ProcessRawLogFun)loader.LoadMethod("ProcessRawLog", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load ProcessRawLog error, Message", error));
@@ -345,20 +364,28 @@ bool LogtailPlugin::LoadPluginBase() {
             LOG_ERROR(sLogger, ("load ProcessRawLogV2 error, Message", error));
             return mPluginValid;
         }
-
+        // C++获取容器信息的
         mGetContainerMetaFun = (GetContainerMetaFun)loader.LoadMethod("GetContainerMeta", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load GetContainerMeta error, Message", error));
             return mPluginValid;
         }
+        // C++传递单条数据到golang插件
         mProcessLogsFun = (ProcessLogsFun)loader.LoadMethod("ProcessLog", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load ProcessLogs error, Message", error));
             return mPluginValid;
         }
+        // C++传递数据到golang插件
         mProcessLogGroupFun = (ProcessLogGroupFun)loader.LoadMethod("ProcessLogGroup", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load ProcessLogGroup error, Message", error));
+            return mPluginValid;
+        }
+        // 获取golang部分指标信息
+        mGetGoMetricsFun = (GetGoMetricsFun)loader.LoadMethod("GetGoMetrics", error);
+        if (!error.empty()) {
+            LOG_ERROR(sLogger, ("load GetGoMetrics error, Message", error));
             return mPluginValid;
         }
 
@@ -440,6 +467,37 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     GoInt rst = mProcessLogGroupFun(goConfigName, goLog, goPackId);
     if (rst != (GoInt)0) {
         LOG_WARNING(sLogger, ("process loggroup error", configName)("result", rst));
+    }
+}
+
+void LogtailPlugin::GetGoMetrics(std::vector<std::map<std::string, std::string>>& metircsList, const string& metricType) {
+    if (mGetGoMetricsFun != nullptr) {
+        GoString type;
+        type.n = metricType.size();
+        type.p = metricType.c_str();
+        auto metrics = mGetGoMetricsFun(type);
+        if (metrics != nullptr) {
+            for (int i = 0; i < metrics->count; ++i) {
+                std::map<std::string, std::string> item;
+                InnerPluginMetric* innerpm = metrics->metrics[i];
+                if (innerpm != nullptr) {
+                    for (int j = 0; j < innerpm->count; ++j) {
+                        InnerKeyValue* innerkv = innerpm->keyValues[j];
+                        if (innerkv != nullptr) {
+                            item.insert(std::make_pair(std::string(innerkv->key), std::string(innerkv->value)));
+                            free(innerkv->key);
+                            free(innerkv->value);
+                            free(innerkv);
+                        }
+                    }
+                    free(innerpm->keyValues);
+                    free(innerpm);
+                }
+                metircsList.emplace_back(item);
+            }
+            free(metrics->metrics);
+            free(metrics);
+        }
     }
 }
 

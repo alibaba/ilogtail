@@ -15,16 +15,19 @@
  */
 
 #pragma once
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <set>
-#include <ctime>
 #include <json/json.h>
+
 #include <boost/optional.hpp>
+#include <ctime>
+#include <memory>
+#include <set>
+#include <string>
+#include <unordered_map>
+
 #include "common/DevInode.h"
 #include "common/EncodingConverter.h"
 #include "common/SplitedFilePath.h"
+#include "file_server/reader/LogFileReader.h"
 
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "AppConfig.h"
@@ -47,6 +50,7 @@ public:
     std::string mConfigName;
     std::string mFileName;
     std::string mRealFileName;
+    int32_t mIdxInReaderArray = LogFileReader::CHECKPOINT_IDX_OF_NEW_READER_IN_ARRAY;
 
     CheckPoint() {}
 

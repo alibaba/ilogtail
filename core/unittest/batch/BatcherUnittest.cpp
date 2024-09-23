@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "batch/Batcher.h"
+#include "pipeline/batch/Batcher.h"
 #include "common/JsonUtil.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
@@ -41,7 +41,7 @@ protected:
     void SetUp() override {
         mCtx.SetConfigName("test_config");
         sFlusher->SetContext(mCtx);
-        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1");
+        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1", "1", "1");
     }
 
     void TearDown() override { TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear(); }

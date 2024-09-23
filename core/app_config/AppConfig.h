@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "common/Lock.h"
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 namespace logtail {
 
@@ -203,6 +203,11 @@ private:
     void ParseJsonToFlags(const Json::Value& confJson);
     /**
      * @brief Overwrite gflags with the values in environment variales
+     *
+     */
+    void RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix);
+    /**
+     * @brief Overwrite gflags with the values in environment variales Recursively
      *
      */
     void ParseEnvToFlags();
@@ -407,6 +412,7 @@ public:
     friend class AppConfigUnittest;
     friend class PipelineUnittest;
     friend class InputFileUnittest;
+    friend class InputPrometheusUnittest;
     friend class InputContainerStdioUnittest;
     friend class BatcherUnittest;
 #endif

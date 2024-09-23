@@ -20,16 +20,24 @@
 using namespace std;
 
 namespace logtail {
-    
+
 void ConfigProvider::Init(const string& dir) {
     // default path: /etc/ilogtail/config/${dir}
-    mSourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
-    mSourceDir /= "config";
-    mSourceDir /= dir;
+    mPipelineSourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
+    mPipelineSourceDir /= "config";
+    mPipelineSourceDir /= dir;
+
+    mInstanceSourceDir.assign(AppConfig::GetInstance()->GetLogtailSysConfDir());
+    mInstanceSourceDir /= "instanceconfig";
+    mInstanceSourceDir /= dir;
 
     error_code ec;
-    filesystem::create_directories(mSourceDir, ec);
-    ConfigWatcher::GetInstance()->AddSource(mSourceDir, &mMux);
+    filesystem::create_directories(mPipelineSourceDir, ec);
+    ConfigWatcher::GetInstance()->AddPipelineSource(mPipelineSourceDir, &mPipelineMux);
+
+    ec.clear();
+    filesystem::create_directories(mInstanceSourceDir, ec);
+    ConfigWatcher::GetInstance()->AddInstanceSource(mInstanceSourceDir, &mInstanceMux);
 }
 
 } // namespace logtail

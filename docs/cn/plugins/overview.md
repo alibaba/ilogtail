@@ -26,6 +26,10 @@
 | [`service_otlp`](input/service-otlp.md)<br>OTLP数据                             | 社区<br>[`Zhu Shunjia`](https://github.com/shunjiazhu)       | 通过http/grpc协议，接收OTLP数据。                               |
 | [`service_pgsql`](input/service-pgsql.md)<br>PostgreSQL查询数据                   | SLS官方                                                      | 将PostgresSQL数据输入到iLogtail。                            |
 | [`service_syslog`](input/service-syslog.md)<br>Syslog数据                       | SLS官方                                                      | 采集syslog数据。                                           |
+| [`input_file_security`](input/input-file-security.md)<br> 文件安全数据                                      | SLS官方 | 文件安全数据采集。                                                 |
+| [`input_network_observer`](input/input-network-observer.md)<br> 网络可观测数据                                      | SLS官方 | 网络可观测数据采集。                                                 |
+| [`input_network_security`](input/input-network-security.md)<br> 网络安全数据                                      | SLS官方 | 网络安全数据采集。                                                 |
+| [`input_process_security`](input/input-process-security.md)<br> 进程安全数据                                      | SLS官方 | 进程安全数据采集。                                                 |
 
 ## 处理
 
@@ -111,3 +115,9 @@
 | 名称                                                                         | 提供方                                             | 简介                          |
 |----------------------------------------------------------------------------|-------------------------------------------------|-----------------------------|
 | [`ext_default_decoder`](extension/ext-default-decoder.md)<br> 默认的decoder扩展 | 社区<br>[`snakorse`](https://github.com/snakorse) | 将内置支持的Format以Decoder扩展的形式封装 |
+
+### Encoder
+
+| 名称                                                                         | 提供方                                                    | 简介                          |
+|----------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------|
+| [`ext_default_encoder`](extension/ext-default-encoder.md)<br> 默认的encoder扩展 | 社区<br>[`yuanshuai.1900`](https://github.com/aiops1900) | 将内置支持的Format以Encoder扩展的形式封装 |

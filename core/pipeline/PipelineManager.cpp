@@ -16,27 +16,29 @@
 
 #include "pipeline/PipelineManager.h"
 
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
+#include "ebpf/eBPFServer.h"
 #include "observer/ObserverManager.h"
 #endif
-#include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
+#include "runner/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 #include "app_config/AppConfig.h"
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "config/feedbacker/ConfigFeedbackReceiver.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 
 using namespace std;
 
 namespace logtail {
 
-void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
+void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
@@ -93,6 +95,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         DecreasePluginUsageCnt(iter->second->GetPluginStatistics());
         iter->second->RemoveProcessQueue();
         mPipelineNameEntityMap.erase(iter);
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(name, ConfigFeedbackStatus::DELETED);
     }
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config));
@@ -107,8 +110,11 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
                 config.mLogstore,
                 config.mRegion);
             diff.mUnchanged.push_back(config.mName);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
                   "stop the old pipeline and start the new one")("config", config.mName));
@@ -131,10 +137,13 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
                 config.mProject,
                 config.mLogstore,
                 config.mRegion);
+            ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName,
+                                                                               ConfigFeedbackStatus::FAILED);
             continue;
         }
         LOG_INFO(sLogger,
                  ("pipeline building for new config succeeded", "begin to start pipeline")("config", config.mName));
+        ConfigFeedbackReceiver::GetInstance().FeedbackPipelineConfigStatus(config.mName, ConfigFeedbackStatus::APPLIED);
         mPipelineNameEntityMap[config.mName] = p;
         IncreasePluginUsageCnt(p->GetPluginStatistics());
         p->Start();
@@ -159,6 +168,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
             isFileServerStarted = true;
         }
     }
+
 #if defined(__linux__) && !defined(__ANDROID__)
     if (isInputObserverChanged) {
         if (isInputObserverStarted) {
@@ -189,7 +199,7 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #endif
 }
 
-shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configName) const {
+shared_ptr<Pipeline> PipelineManager::FindConfigByName(const string& configName) const {
     auto it = mPipelineNameEntityMap.find(configName);
     if (it != mPipelineNameEntityMap.end()) {
         return it->second;
@@ -197,7 +207,7 @@ shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configNam
     return nullptr;
 }
 
-vector<string> PipelineManager::GetAllPipelineNames() const {
+vector<string> PipelineManager::GetAllConfigNames() const {
     vector<string> res;
     for (const auto& item : mPipelineNameEntityMap) {
         res.push_back(item.first);
@@ -223,12 +233,13 @@ void PipelineManager::StopAllPipelines() {
         StreamLogManager::GetInstance()->Shutdown();
     }
 #endif
+    PrometheusInputRunner::GetInstance()->Stop();
 #if defined(__linux__) && !defined(__ANDROID__)
     ObserverManager::GetInstance()->HoldOn(true);
+    ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
 
-    Sender::Instance()->SetQueueUrgent();
     bool logProcessFlushFlag = false;
     for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
         logProcessFlushFlag = LogProcess::GetInstance()->FlushOut(10);
@@ -244,11 +255,14 @@ void PipelineManager::StopAllPipelines() {
 
     LogtailPlugin::GetInstance()->HoldOn(true);
 
+    // TODO: make it common
+    FlusherSLS::RecycleResourceIfNotUsed();
+
     // Sender should be stopped after profiling threads are stopped.
     LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
 }
 
-shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
+shared_ptr<Pipeline> PipelineManager::BuildPipeline(PipelineConfig&& config) {
     shared_ptr<Pipeline> p = make_shared<Pipeline>();
     // only config.mDetail is removed, other members can be safely used later
     if (!p->Init(std::move(config))) {

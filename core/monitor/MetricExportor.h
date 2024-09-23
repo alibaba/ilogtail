@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "Monitor.h"
 #include "profile_sender/ProfileSender.h"
 
 
@@ -31,8 +32,28 @@ public:
 
 private:
     MetricExportor();
-    
+
+    void PushCppMetrics();
+    void PushGoMetrics();
+
+    // Send Methods
+    void SendToSLS(std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
+    void SendToLocalFile(std::string& metricsContent, const std::string metricsFileNamePrefix);
+
+    // go metrics
+    void PushGoDirectMetrics(std::vector<std::map<std::string, std::string>>& metricsList);
+    void PushGoCppProvidedMetrics(std::vector<std::map<std::string, std::string>>& metricsList);
+    void SerializeGoDirectMetricsListToLogGroupMap(std::vector<std::map<std::string, std::string>>& metricsList,
+                                                   std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
+    void SerializeGoDirectMetricsListToString(std::vector<std::map<std::string, std::string>>& metricsList,
+                                              std::string& metricsContent);
+
     int32_t mSendInterval;
     int32_t mLastSendTime;
+    // go process-level metrics
+    DoubleGaugePtr mAgentCpuGo;
+    IntGaugePtr mAgentMemGo;
+    IntGaugePtr mAgentGoRoutines;
 };
-}
+
+} // namespace logtail

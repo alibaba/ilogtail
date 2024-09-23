@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/plugin/instance/ProcessorInstance.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -30,14 +30,12 @@ public:
 };
 
 void ProcessorInstanceUnittest::TestName() const {
-    unique_ptr<ProcessorInstance> processor
-        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), "0"));
+    unique_ptr<ProcessorInstance> processor = make_unique<ProcessorInstance>(new ProcessorMock(), PluginInstance::PluginMeta("0", "0", "1"));
     APSARA_TEST_EQUAL(ProcessorMock::sName, processor->Name());
 }
 
 void ProcessorInstanceUnittest::TestInit() const {
-    unique_ptr<ProcessorInstance> processor
-        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), "0"));
+    unique_ptr<ProcessorInstance> processor = make_unique<ProcessorInstance>(new ProcessorMock(), PluginInstance::PluginMeta("0", "0", "1"));
     Json::Value config;
     PipelineContext context;
     APSARA_TEST_TRUE(processor->Init(config, context));
@@ -45,8 +43,7 @@ void ProcessorInstanceUnittest::TestInit() const {
 }
 
 void ProcessorInstanceUnittest::TestProcess() const {
-    unique_ptr<ProcessorInstance> processor
-        = unique_ptr<ProcessorInstance>(new ProcessorInstance(new ProcessorMock(), "0"));
+    unique_ptr<ProcessorInstance> processor = make_unique<ProcessorInstance>(new ProcessorMock(), PluginInstance::PluginMeta("0", "0", "1"));
     Json::Value config;
     PipelineContext context;
     processor->Init(config, context);

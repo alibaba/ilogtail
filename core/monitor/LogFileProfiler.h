@@ -21,16 +21,13 @@
 #include <unordered_map>
 #include <map>
 #include <json/json.h>
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 namespace sls_logs {
 class LogGroup;
 }
 
 namespace logtail {
-// forward declaration
-struct LoggroupTimeValue;
-
 // Collect the log file's profile such as lines processed.
 class LogFileProfiler {
 public:

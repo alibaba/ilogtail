@@ -19,20 +19,40 @@
 #include <cstdint>
 #include <utility>
 
-#include "batch/TimeoutFlushManager.h"
 #include "common/Flags.h"
 #include "common/ParamExtractor.h"
-#include "flusher/FlusherSLS.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "input/InputFeedbackInterfaceRegistry.h"
-#include "plugin/PluginRegistry.h"
-#include "processor/ProcessorParseApsaraNative.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/processor/ProcessorParseApsaraNative.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 using namespace std;
+
+namespace {
+class AggregatorDefaultConfig {
+public:
+    static AggregatorDefaultConfig& Instance() {
+        static AggregatorDefaultConfig instance;
+        return instance;
+    }
+
+    Json::Value* GetJsonConfig() { return &aggregatorDefault; }
+
+private:
+    Json::Value aggregatorDefault;
+    AggregatorDefaultConfig() { aggregatorDefault["Type"] = "aggregator_default"; }
+
+    AggregatorDefaultConfig(AggregatorDefaultConfig const&) = delete;
+    void operator=(AggregatorDefaultConfig const&) = delete;
+};
+} // namespace
 
 namespace logtail {
 
@@ -45,7 +65,7 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
     }
 }
 
-bool Pipeline::Init(Config&& config) {
+bool Pipeline::Init(PipelineConfig&& config) {
     mName = config.mName;
     mConfig = std::move(config.mDetail);
     mContext.SetConfigName(mName);
@@ -58,23 +78,24 @@ bool Pipeline::Init(Config&& config) {
     const InputContainerStdio* inputContainerStdio = nullptr;
     bool hasFlusherSLS = false;
 
-#ifdef __ENTERPRISE__
-    // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
-    unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
-    SLSTmp->mProject = config.mProject;
-    SLSTmp->mLogstore = config.mLogstore;
-    SLSTmp->mRegion = config.mRegion;
-    mContext.SetSLSInfo(SLSTmp.get());
-#endif
+    // to send alarm and init MetricsRecord before flusherSLS is built, a temporary object is made, which will be
+    unique_ptr<FlusherSLS> SLSTmp = make_unique<FlusherSLS>();
+    if (!config.mProject.empty()) {
+        SLSTmp->mProject = config.mProject;
+        SLSTmp->mLogstore = config.mLogstore;
+        SLSTmp->mRegion = config.mRegion;
+        mContext.SetSLSInfo(SLSTmp.get());
+    }
 
-    uint32_t pluginIndex = 0;
+    mPluginID.store(0);
     for (size_t i = 0; i < config.mInputs.size(); ++i) {
         const Json::Value& detail = *config.mInputs[i];
-        string name = detail["Type"].asString();
-        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
+        string pluginType = detail["Type"].asString();
+        unique_ptr<InputInstance> input
+            = PluginRegistry::GetInstance()->CreateInput(pluginType, GenNextPluginMeta(false));
         if (input) {
             Json::Value optionalGoPipeline;
-            if (!input->Init(detail, mContext, pluginIndex, i, optionalGoPipeline)) {
+            if (!input->Init(detail, mContext, i, optionalGoPipeline)) {
                 return false;
             }
             mInputs.emplace_back(std::move(input));
@@ -82,56 +103,66 @@ bool Pipeline::Init(Config&& config) {
                 MergeGoPipeline(optionalGoPipeline, mGoPipelineWithInput);
             }
             // for special treatment below
-            if (name == InputFile::sName) {
+            if (pluginType == InputFile::sName) {
                 inputFile = static_cast<const InputFile*>(mInputs[0]->GetPlugin());
-            } else if (name == InputContainerStdio::sName) {
+            } else if (pluginType == InputContainerStdio::sName) {
                 inputContainerStdio = static_cast<const InputContainerStdio*>(mInputs[0]->GetPlugin());
             }
         } else {
-            AddPluginToGoPipeline(detail, "inputs", mGoPipelineWithInput);
+            AddPluginToGoPipeline(pluginType, detail, "inputs", mGoPipelineWithInput);
         }
-        ++mPluginCntMap["inputs"][name];
+        ++mPluginCntMap["inputs"][pluginType];
     }
 
     for (size_t i = 0; i < config.mProcessors.size(); ++i) {
-        string name = (*config.mProcessors[i])["Type"].asString();
+        const Json::Value& detail = *config.mProcessors[i];
+        string pluginType = detail["Type"].asString();
         unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateProcessor(pluginType, GenNextPluginMeta(false));
         if (processor) {
-            if (!processor->Init(*config.mProcessors[i], mContext)) {
+            if (!processor->Init(detail, mContext)) {
                 return false;
             }
             mProcessorLine.emplace_back(std::move(processor));
             // for special treatment of topicformat in apsara mode
-            if (i == 0 && name == ProcessorParseApsaraNative::sName) {
+            if (i == 0 && pluginType == ProcessorParseApsaraNative::sName) {
                 mContext.SetIsFirstProcessorApsaraFlag(true);
             }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
-                AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithInput);
+                AddPluginToGoPipeline(pluginType, detail, "processors", mGoPipelineWithInput);
             } else {
-                AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithoutInput);
+                AddPluginToGoPipeline(pluginType, detail, "processors", mGoPipelineWithoutInput);
             }
         }
-        ++mPluginCntMap["processors"][name];
+        ++mPluginCntMap["processors"][pluginType];
     }
 
-    for (auto detail : config.mAggregators) {
+    if (config.mAggregators.empty() && config.IsFlushingThroughGoPipelineExisted()) {
+        // an aggregator_default plugin will be add to go pipeline when mAggregators is empty and need to send go data
+        // to cpp flusher.
+        config.mAggregators.push_back(AggregatorDefaultConfig::Instance().GetJsonConfig());
+    }
+    for (size_t i = 0; i < config.mAggregators.size(); ++i) {
+        const Json::Value& detail = *config.mAggregators[i];
+        string pluginType = detail["Type"].asString();
+        GenNextPluginMeta(false);
         if (ShouldAddPluginToGoPipelineWithInput()) {
-            AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithInput);
+            AddPluginToGoPipeline(pluginType, detail, "aggregators", mGoPipelineWithInput);
         } else {
-            AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithoutInput);
+            AddPluginToGoPipeline(pluginType, detail, "aggregators", mGoPipelineWithoutInput);
         }
-        ++mPluginCntMap["aggregators"][(*detail)["Type"].asString()];
+        ++mPluginCntMap["aggregators"][pluginType];
     }
 
-    for (auto detail : config.mFlushers) {
-        string name = (*detail)["Type"].asString();
+    for (size_t i = 0; i < config.mFlushers.size(); ++i) {
+        const Json::Value& detail = *config.mFlushers[i];
+        string pluginType = detail["Type"].asString();
         unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
+            = PluginRegistry::GetInstance()->CreateFlusher(pluginType, GenNextPluginMeta(false));
         if (flusher) {
             Json::Value optionalGoPipeline;
-            if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {
+            if (!flusher->Init(detail, mContext, optionalGoPipeline)) {
                 return false;
             }
             mFlushers.emplace_back(std::move(flusher));
@@ -142,28 +173,36 @@ bool Pipeline::Init(Config&& config) {
                     MergeGoPipeline(optionalGoPipeline, mGoPipelineWithoutInput);
                 }
             }
-            if (name == FlusherSLS::sName) {
+            if (pluginType == FlusherSLS::sName) {
                 hasFlusherSLS = true;
                 mContext.SetSLSInfo(static_cast<const FlusherSLS*>(mFlushers.back()->GetPlugin()));
             }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
-                AddPluginToGoPipeline(*detail, "flushers", mGoPipelineWithInput);
+                AddPluginToGoPipeline(pluginType, detail, "flushers", mGoPipelineWithInput);
             } else {
-                AddPluginToGoPipeline(*detail, "flushers", mGoPipelineWithoutInput);
+                AddPluginToGoPipeline(pluginType, detail, "flushers", mGoPipelineWithoutInput);
             }
         }
-        ++mPluginCntMap["flushers"][name];
+        ++mPluginCntMap["flushers"][pluginType];
     }
 
-    for (auto detail : config.mExtensions) {
+    // route is only enabled in native flushing mode, thus the index in config is the same as that in mFlushers
+    if (!mRouter.Init(config.mRouter, mContext)) {
+        return false;
+    }
+
+    for (size_t i = 0; i < config.mExtensions.size(); ++i) {
+        const Json::Value& detail = *config.mExtensions[i];
+        string pluginType = detail["Type"].asString();
+        GenNextPluginMeta(false);
         if (!mGoPipelineWithInput.isNull()) {
-            AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithInput);
+            AddPluginToGoPipeline(pluginType, detail, "extensions", mGoPipelineWithInput);
         }
         if (!mGoPipelineWithoutInput.isNull()) {
-            AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithoutInput);
+            AddPluginToGoPipeline(pluginType, detail, "extensions", mGoPipelineWithoutInput);
         }
-        ++mPluginCntMap["extensions"][(*detail)["Type"].asString()];
+        ++mPluginCntMap["extensions"][pluginType];
     }
 
     // global module must be initialized at last, since native input or flusher plugin may generate global param in Go
@@ -230,10 +269,32 @@ bool Pipeline::Init(Config&& config) {
         if (mContext.GetProcessQueueKey() == -1) {
             mContext.SetProcessQueueKey(QueueKeyManager::GetInstance()->GetKey(mName));
         }
+
+        // TODO: for go input, we currently assume bounded process queue
+        bool isInputSupportAck = mInputs.empty() ? true : mInputs[0]->SupportAck();
+        for (auto& input : mInputs) {
+            if (input->SupportAck() != isInputSupportAck) {
+                PARAM_ERROR_RETURN(mContext.GetLogger(),
+                                   mContext.GetAlarm(),
+                                   "not all inputs' ack support are the same",
+                                   noModule,
+                                   mName,
+                                   mContext.GetProjectName(),
+                                   mContext.GetLogstoreName(),
+                                   mContext.GetRegion());
+            }
+        }
         uint32_t priority = mContext.GetGlobalConfig().mProcessPriority == 0
             ? ProcessQueueManager::sMaxPriority
             : mContext.GetGlobalConfig().mProcessPriority - 1;
-        ProcessQueueManager::GetInstance()->CreateOrUpdateQueue(mContext.GetProcessQueueKey(), priority);
+        if (isInputSupportAck) {
+            ProcessQueueManager::GetInstance()->CreateOrUpdateBoundedQueue(
+                mContext.GetProcessQueueKey(), priority, mContext);
+        } else {
+            ProcessQueueManager::GetInstance()->CreateOrUpdateCircularQueue(
+                mContext.GetProcessQueueKey(), priority, 1024, mContext);
+        }
+
 
         unordered_set<FeedbackInterface*> feedbackSet;
         for (const auto& input : mInputs) {
@@ -243,14 +304,14 @@ bool Pipeline::Init(Config&& config) {
                 feedbackSet.insert(feedback);
             }
         }
-        vector<FeedbackInterface*> feedbacks(feedbackSet.begin(), feedbackSet.end());
-        ProcessQueueManager::GetInstance()->SetFeedbackInterface(mContext.GetProcessQueueKey(), feedbacks);
+        ProcessQueueManager::GetInstance()->SetFeedbackInterface(
+            mContext.GetProcessQueueKey(), vector<FeedbackInterface*>(feedbackSet.begin(), feedbackSet.end()));
 
-        vector<SingleLogstoreSenderManager<SenderQueueParam>*> senderQueues;
+        vector<BoundedSenderQueueInterface*> senderQueues;
         for (const auto& flusher : mFlushers) {
-            senderQueues.push_back(flusher->GetSenderQueue());
+            senderQueues.push_back(SenderQueueManager::GetInstance()->GetQueue(flusher->GetQueueKey()));
         }
-        ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), senderQueues);
+        ProcessQueueManager::GetInstance()->SetDownStreamQueues(mContext.GetProcessQueueKey(), std::move(senderQueues));
     }
 
     return true;
@@ -288,24 +349,35 @@ void Pipeline::Process(vector<PipelineEventGroup>& logGroupList, size_t inputInd
     }
 }
 
-void Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
+bool Pipeline::Send(vector<PipelineEventGroup>&& groupList) {
+    bool allSucceeded = true;
     for (auto& group : groupList) {
-        // TODO: support route
-        for (size_t i = 0; i < mFlushers.size(); ++i) {
-            if (i + 1 != mFlushers.size()) {
-                mFlushers[i]->Send(group.Copy());
+        auto flusherIdx = mRouter.Route(group);
+        for (size_t i = 0; i < flusherIdx.size(); ++i) {
+            if (flusherIdx[i] >= mFlushers.size()) {
+                LOG_ERROR(
+                    sLogger,
+                    ("unexpected error", "invalid flusher index")("flusher index", flusherIdx[i])("config", mName));
+                allSucceeded = false;
+                continue;
+            }
+            if (i + 1 != flusherIdx.size()) {
+                allSucceeded = mFlushers[flusherIdx[i]]->Send(group.Copy()) && allSucceeded;
             } else {
-                mFlushers[i]->Send(std::move(group));
+                allSucceeded = mFlushers[flusherIdx[i]]->Send(std::move(group)) && allSucceeded;
             }
         }
     }
+    return allSucceeded;
 }
 
-void Pipeline::FlushBatch() {
+bool Pipeline::FlushBatch() {
+    bool allSucceeded = true;
     for (auto& flusher : mFlushers) {
-        flusher->FlushAll();
+        allSucceeded = flusher->FlushAll() && allSucceeded;
     }
     TimeoutFlushManager::GetInstance()->ClearRecords(mName);
+    return allSucceeded;
 }
 
 void Pipeline::Stop(bool isRemoving) {
@@ -337,7 +409,6 @@ void Pipeline::Stop(bool isRemoving) {
 
 void Pipeline::RemoveProcessQueue() const {
     ProcessQueueManager::GetInstance()->DeleteQueue(mContext.GetProcessQueueKey());
-    QueueKeyManager::GetInstance()->RemoveKey(mContext.GetProcessQueueKey());
 }
 
 void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
@@ -356,10 +427,18 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
     }
 }
 
-void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
+std::string Pipeline::GenPluginTypeWithID(std::string pluginType, std::string pluginID) {
+    return pluginType + "/" + pluginID;
+}
+
+// Rule: pluginTypeWithID=pluginType/pluginID#pluginPriority.
+void Pipeline::AddPluginToGoPipeline(const string& pluginType,
+                                     const Json::Value& plugin,
+                                     const string& module,
+                                     Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
-    res["type"] = plugin["Type"];
+    res["type"] = GenPluginTypeWithID(pluginType, GetNowPluginID());
     res["detail"] = detail;
     dst[module].append(res);
 }
@@ -415,6 +494,22 @@ bool Pipeline::LoadGoPipelines() const {
         }
     }
     return true;
+}
+
+std::string Pipeline::GetNowPluginID() {
+    return std::to_string(mPluginID.load());
+}
+
+PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
+    mPluginID.fetch_add(1);
+    int32_t childNodeID = mPluginID.load();
+    if (lastOne) {
+        childNodeID = -1;
+    } else {
+        childNodeID += 1;
+    }
+    return PluginInstance::PluginMeta(
+        std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
 }
 
 } // namespace logtail

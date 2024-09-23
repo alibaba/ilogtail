@@ -22,10 +22,10 @@
 #include "common/Thread.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
-#include "config_manager/ConfigManager.h"
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "profile_sender/ProfileSender.h"
-#include "sender/Sender.h"
+#include "pipeline/queue/QueueKeyManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
 
 DEFINE_FLAG_INT32(logtail_alarm_interval, "the interval of two same type alarm message", 30);
 DEFINE_FLAG_INT32(logtail_low_level_alarm_speed, "the speed(count/second) which logtail's low level alarm allow", 100);
@@ -193,9 +193,10 @@ void LogtailAlarm::SendAllRegionAlarm() {
                 continue;
             }
             // check sender queue status, if invalid jump this region
-            LogstoreFeedBackKey alarmPrjLogstoreKey = GenerateLogstoreFeedBackKey(
-                ProfileSender::GetInstance()->GetProfileProjectName(region), string("logtail_alarm"));
-            if (!Sender::Instance()->GetSenderFeedBackInterface()->IsValidToPush(alarmPrjLogstoreKey)) {
+
+            QueueKey alarmPrjLogstoreKey = QueueKeyManager::GetInstance()->GetKey(
+                "-flusher_sls-" + ProfileSender::GetInstance()->GetProfileProjectName(region) + "#logtail_alarm");
+            if (!SenderQueueManager::GetInstance()->IsValidToPush(alarmPrjLogstoreKey)) {
                 // jump this region
                 ++sendRegionIndex;
                 sendAlarmTypeIndex = 0;
@@ -297,7 +298,7 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
     }
 
     // ignore alarm for profile data
-    if (Sender::IsProfileData(region, projectName, category)) {
+    if (ProfileSender::GetInstance()->IsProfileData(region, projectName, category)) {
         return;
     }
     // LOG_DEBUG(sLogger, ("Add Alarm", region)("projectName", projectName)("alarm index",

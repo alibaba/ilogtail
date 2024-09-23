@@ -26,6 +26,70 @@ const std::string METRIC_TOPIC_FIELD_NAME = "__topic__";
 const std::string LABEL_PREFIX = "label.";
 const std::string VALUE_PREFIX = "value.";
 
+// global metrics labels
+
+const std::string METRIC_LABEL_ALIUIDS = "aliuids";
+const std::string METRIC_LABEL_INSTANCE_ID = "instance_id";
+const std::string METRIC_LABEL_IP = "ip";
+const std::string METRIC_LABEL_OS = "os";
+const std::string METRIC_LABEL_OS_DETAIL = "os_detail";
+const std::string METRIC_LABEL_USER_DEFINED_ID = "user_defined_id";
+const std::string METRIC_LABEL_UUID = "uuid";
+const std::string METRIC_LABEL_VERSION = "version";
+
+// global metrics values
+
+const std::string METRIC_AGENT_CPU = "agent_cpu_percent";
+const std::string METRIC_AGENT_CPU_GO = "agent_go_cpu_percent";
+const std::string METRIC_AGENT_MEMORY = "agent_memory_used_mb";
+const std::string METRIC_AGENT_MEMORY_GO = "agent_go_memory_used_mb";
+const std::string METRIC_AGENT_GO_ROUTINES_TOTAL = "agent_go_routines_total";
+const std::string METRIC_AGENT_OPEN_FD_TOTAL = "agent_open_fd_total";
+const std::string METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL = "agent_polling_dir_cache_size_total";
+const std::string METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL = "agent_polling_file_cache_size_total";
+const std::string METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL = "agent_polling_modify_size_total";
+const std::string METRIC_AGENT_REGISTER_HANDLER_TOTAL = "agent_register_handler_total";
+const std::string METRIC_AGENT_INSTANCE_CONFIG_TOTAL = "agent_instance_config_total";
+const std::string METRIC_AGENT_PIPELINE_CONFIG_TOTAL = "agent_pipeline_config_total";
+const std::string METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL = "agent_env_pipeline_config_total";
+const std::string METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL = "agent_crd_pipeline_config_total";
+const std::string METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL = "agent_console_pipeline_config_total";
+const std::string METRIC_AGENT_PLUGIN_TOTAL = "agent_plugin_total";
+const std::string METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL = "agent_process_queue_full_total";
+const std::string METRIC_AGENT_PROCESS_QUEUE_TOTAL = "agent_process_queue_total";
+const std::string METRIC_AGENT_SEND_QUEUE_FULL_TOTAL = "agent_send_queue_full_total";
+const std::string METRIC_AGENT_SEND_QUEUE_TOTAL = "agent_send_queue_total";
+const std::string METRIC_AGENT_USED_SENDING_CONCURRENCY = "agent_used_sending_concurrency";
+
+// common plugin labels
+const std::string METRIC_LABEL_PROJECT = "project";
+const std::string METRIC_LABEL_LOGSTORE = "logstore";
+const std::string METRIC_LABEL_REGION = "region";
+const std::string METRIC_LABEL_CONFIG_NAME = "config_name";
+const std::string METRIC_LABEL_PLUGIN_NAME = "plugin_name";
+const std::string METRIC_LABEL_PLUGIN_ID = "plugin_id";
+const std::string METRIC_LABEL_NODE_ID = "node_id";
+const std::string METRIC_LABEL_CHILD_NODE_ID = "child_node_id";
+
+const std::string METRIC_LABEL_KEY_COMPONENT_NAME = "component_name";
+const std::string METRIC_LABEL_KEY_QUEUE_TYPE = "queue_type";
+const std::string METRIC_LABEL_KEY_EXACTLY_ONCE_FLAG = "is_exactly_once";
+const std::string METRIC_LABEL_KEY_FLUSHER_NODE_ID = "flusher_node_id";
+
+// input file plugin labels
+const std::string METRIC_LABEL_FILE_DEV = "file_dev";
+const std::string METRIC_LABEL_FILE_INODE = "file_inode";
+const std::string METRIC_LABEL_FILE_NAME = "file_name";
+
+// input file metrics
+const std::string METRIC_INPUT_RECORDS_TOTAL = "input_records_total";
+const std::string METRIC_INPUT_RECORDS_SIZE_BYTES = "input_records_size_bytes";
+const std::string METRIC_INPUT_BATCH_TOTAL = "input_batch_total";
+const std::string METRIC_INPUT_READ_TOTAL = "input_read_total";
+const std::string METRIC_INPUT_FILE_SIZE_BYTES = "input_file_size_bytes";
+const std::string METRIC_INPUT_FILE_READ_DELAY_TIME_MS = "input_file_read_delay_time_ms";
+const std::string METRIC_INPUT_FILE_OFFSET_BYTES = "input_file_offset_bytes";
+const std::string METRIC_INPUT_FILE_MONITOR_TOTAL = "input_file_monitor_total";
 
 // processor common metrics
 const std::string METRIC_PROC_IN_RECORDS_TOTAL = "proc_in_records_total";
@@ -56,7 +120,6 @@ const std::string METRIC_PROC_FILTER_OUT_SIZE_BYTES = "proc_filter_out_size_byte
 const std::string METRIC_PROC_FILTER_ERROR_TOTAL = "proc_filter_error_total";
 const std::string METRIC_PROC_FILTER_RECORDS_TOTAL = "proc_filter_records_total";
 
-
 // processore plugin name
 const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_native";
 
@@ -72,5 +135,20 @@ const std::string METRIC_PROC_MERGE_MULTILINE_LOG_UNMATCHED_RECORDS_TOTAL
 // processor parse container log native metrics
 const std::string METRIC_PROC_PARSE_STDOUT_TOTAL = "proc_parse_stdout_total";
 const std::string METRIC_PROC_PARSE_STDERR_TOTAL = "proc_parse_stderr_total";
+
+// flusher common metrics
+const std::string METRIC_FLUSHER_IN_RECORDS_TOTAL = "flusher_in_records_total";
+const std::string METRIC_FLUSHER_IN_RECORDS_SIZE_BYTES = "flusher_in_records_size_bytes";
+const std::string METRIC_FLUSHER_ERROR_TOTAL = "flusher_error_total";
+const std::string METRIC_FLUSHER_DISCARD_RECORDS_TOTAL = "flusher_discard_records_total";
+const std::string METRIC_FLUSHER_SUCCESS_RECORDS_TOTAL = "flusher_success_records_total";
+const std::string METRIC_FLUSHER_SUCCESS_TIME_MS = "flusher_success_time_ms";
+const std::string METRIC_FLUSHER_ERROR_TIME_MS = "flusher_error_time_ms";
+
+// flusher sls metrics
+const std::string METRIC_FLUSHER_NETWORK_ERROR_TOTAL = "flusher_network_error_total";
+const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL = "flusher_quota_error_total";
+const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
+const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
 
 } // namespace logtail

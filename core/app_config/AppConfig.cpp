@@ -21,13 +21,12 @@
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
-#include "config_manager/ConfigManager.h"
+#include "file_server/ConfigManager.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "reader/LogFileReader.h"
-#include "sender/Sender.h"
+#include "file_server/reader/LogFileReader.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -150,6 +149,13 @@ DEFINE_FLAG_INT32(max_holded_data_size,
 DEFINE_FLAG_INT32(pub_max_holded_data_size,
                   "for every id and metric name, the max data size can be holded in memory (default 512KB)",
                   512 * 1024);
+DEFINE_FLAG_STRING(metrics_report_method,
+                   "method to report metrics (default none, means logtail will not report metrics)",
+                   "sls");
+
+DEFINE_FLAG_STRING(loong_collector_operator_service, "loong collector operator service", "");
+DEFINE_FLAG_INT32(loong_collector_operator_service_port, "loong collector operator service port", 8888);
+DEFINE_FLAG_STRING(_pod_name_, "agent pod name", "");
 
 namespace logtail {
 AppConfig::AppConfig() {
@@ -1028,24 +1034,38 @@ void AppConfig::ReadFlagsFromMap(const std::unordered_map<std::string, std::stri
     LOG_DEBUG(sLogger, ("ReadFlagsFromMap", flagMap.size()));
 }
 
-void AppConfig::ParseJsonToFlags(const Json::Value& confJson) {
-    const static unordered_set<string> sForceKeySet = {"config_server_address_list"};
+void AppConfig::RecurseParseJsonToFlags(const Json::Value& confJson, std::string prefix) {
     const static unordered_set<string> sIgnoreKeySet = {"data_server_list"};
+    const static unordered_set<string> sForceKeySet = {"config_server_address_list"};
     for (auto name : confJson.getMemberNames()) {
-        if (sIgnoreKeySet.find(name) != sIgnoreKeySet.end()) {
-            continue;
-        }
         auto jsonvalue = confJson[name];
-        if (jsonvalue.isConvertibleTo(Json::stringValue)) {
-            SetConfigFlag(name, jsonvalue.asString());
-        } else if (sForceKeySet.find(name) != sForceKeySet.end()) {
-            SetConfigFlag(name, jsonvalue.toStyledString());
+        string fullName;
+        if (prefix.empty()) {
+            fullName = name;
         } else {
-            APSARA_LOG_INFO(sLogger,
-                            ("Set config flag failed", "can not convert json value to flag")("flag name", name)(
-                                "jsonvalue", jsonvalue.toStyledString()));
+            fullName = prefix + "_" + name;
+        }
+        if (jsonvalue.isObject()) {
+            RecurseParseJsonToFlags(jsonvalue, fullName);
+        } else {
+            if (sIgnoreKeySet.find(fullName) != sIgnoreKeySet.end()) {
+                continue;
+            }
+            if (jsonvalue.isConvertibleTo(Json::stringValue)) {
+                SetConfigFlag(fullName, jsonvalue.asString());
+            } else if (sForceKeySet.find(fullName) != sForceKeySet.end()) {
+                SetConfigFlag(fullName, jsonvalue.toStyledString());
+            } else {
+                APSARA_LOG_INFO(sLogger,
+                                ("Set config flag failed", "can not convert json value to flag")("flag name", fullName)(
+                                    "jsonvalue", jsonvalue.toStyledString()));
+            }
         }
     }
+}
+
+void AppConfig::ParseJsonToFlags(const Json::Value& confJson) {
+    RecurseParseJsonToFlags(confJson, "");
 }
 
 void AppConfig::CheckAndAdjustParameters() {

@@ -21,7 +21,7 @@
 #include <thread>
 
 #include "common/Strptime.h"
-#include "log_pb/sls_logs.pb.h"
+#include "protobuf/sls/sls_logs.pb.h"
 #include "pipeline/PipelineContext.h"
 
 // Time and timestamp utility.
@@ -93,4 +93,5 @@ bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
 
 bool ParseLogTimeZoneOffsetSecond(const std::string& logTZ, int& logTimeZoneOffsetSecond);
 
+std::string NumberToDigitString(uint32_t number, uint8_t length);
 } // namespace logtail

@@ -32,14 +32,15 @@
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/version.h"
-#include "config_manager/ConfigManager.h"
-#include "event_handler/LogInput.h"
+#include "file_server/event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
-#include "sender/Sender.h"
+#include "monitor/MetricExportor.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "protobuf/sls/sls_logs.pb.h"
+#include "runner/FlusherRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ObserverManager.h"
 #endif
@@ -49,6 +50,7 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "pipeline/PipelineManager.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -111,6 +113,12 @@ bool LogtailMonitor::Init() {
     mCpuArrayForScaleIdx = 0;
 #endif
 
+    // init metrics
+    mAgentCpuGauge = LoongCollectorMonitor::GetInstance()->GetDoubleGauge(METRIC_AGENT_CPU);
+    mAgentMemoryGauge = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_MEMORY);
+    mAgentUsedSendingConcurrency
+        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
+
     // Initialize monitor thread.
     mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
     return true;
@@ -132,7 +140,7 @@ void LogtailMonitor::Stop() {
 
 void LogtailMonitor::Monitor() {
     LOG_INFO(sLogger, ("profiling", "started"));
-    int32_t lastMonitorTime = time(NULL);
+    int32_t lastMonitorTime = time(NULL), lastCheckHardLimitTime = time(nullptr);
     CpuStat curCpuStat;
     {
         unique_lock<mutex> lock(mThreadRunningMux);
@@ -164,40 +172,54 @@ void LogtailMonitor::Monitor() {
             }
 #endif
 
+            static int32_t checkHardLimitInterval
+                = INT32_FLAG(monitor_interval) > 30 ? INT32_FLAG(monitor_interval) / 6 : 5;
+            if ((monitorTime - lastCheckHardLimitTime) >= checkHardLimitInterval) {
+                lastCheckHardLimitTime = monitorTime;
+
+                GetMemStat();
+                CalCpuStat(curCpuStat, mCpuStat);
+                if (CheckHardMemLimit()) {
+                    LOG_ERROR(sLogger,
+                              ("Resource used by program exceeds hard limit",
+                               "prepare restart Logtail")("mem_rss", mMemStat.mRss));
+                    Suicide();
+                }
+            }
+
+
             // Update statistics and send to logtail_status_profile regularly.
             // If CPU or memory limit triggered, send to logtail_suicide_profile.
-            if ((monitorTime - lastMonitorTime) < INT32_FLAG(monitor_interval))
-                continue;
-            lastMonitorTime = monitorTime;
+            if ((monitorTime - lastMonitorTime) >= INT32_FLAG(monitor_interval)) {
+                lastMonitorTime = monitorTime;
 
-            // Memory usage has exceeded limit, try to free some timeout objects.
-            if (1 == mMemStat.mViolateNum) {
-                LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
-                LogInput::GetInstance()->SetForceClearFlag(true);
-            }
-            GetMemStat();
-            CalCpuStat(curCpuStat, mCpuStat);
-            // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
-            // or memory exceeds limit) // is greater or equal than limits (
-            // flag(cpu_limit_num) and flag(mem_limit_num)).
-            // Returning true means too much violations, so we have to prepare to restart
-            // logtail to release resource.
-            // Mainly for controlling memory because we have no idea to descrease memory usage.
-            if (CheckCpuLimit() || CheckMemLimit()) {
-                LOG_ERROR(sLogger,
-                          ("Resource used by program exceeds upper limit",
-                           "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
-                Suicide();
-            }
+                // Memory usage has exceeded limit, try to free some timeout objects.
+                if (1 == mMemStat.mViolateNum) {
+                    LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
+                    LogInput::GetInstance()->SetForceClearFlag(true);
+                }
+                // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
+                // or memory exceeds limit) // is greater or equal than limits (
+                // flag(cpu_limit_num) and flag(mem_limit_num)).
+                // Returning true means too much violations, so we have to prepare to restart
+                // logtail to release resource.
+                // Mainly for controlling memory because we have no idea to descrease memory usage.
+                if (CheckSoftCpuLimit() || CheckSoftMemLimit()) {
+                    LOG_ERROR(sLogger,
+                              ("Resource used by program exceeds upper limit for some time",
+                               "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                    Suicide();
+                }
 
-            if (IsHostIpChanged()) {
-                Suicide();
-            }
+                if (IsHostIpChanged()) {
+                    Suicide();
+                }
 
-            SendStatusProfile(false);
-            if (BOOL_FLAG(logtail_dump_monitor_info)) {
-                if (!DumpMonitorInfo(monitorTime))
-                    LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+                SendStatusProfile(false);
+                if (BOOL_FLAG(logtail_dump_monitor_info)) {
+                    if (!DumpMonitorInfo(monitorTime))
+                        LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+                }
             }
         }
     }
@@ -246,12 +268,14 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
     // CPU usage of Logtail process.
     AddLogContent(logPtr, "cpu", mCpuStat.mCpuUsage);
+    mAgentCpuGauge->Set(mCpuStat.mCpuUsage);
 #if defined(__linux__) // TODO: Remove this if auto scale is available on Windows.
     // CPU usage of system.
     AddLogContent(logPtr, "os_cpu", mOsCpuStatForScale.mOsCpuUsage);
 #endif
     // Memory usage of Logtail process.
     AddLogContent(logPtr, "mem", mMemStat.mRss);
+    mAgentMemoryGauge->Set(mMemStat.mRss);
     // The version, uuid of Logtail.
     AddLogContent(logPtr, "version", ILOGTAIL_VERSION);
     AddLogContent(logPtr, "uuid", Application::GetInstance()->GetUUID());
@@ -259,7 +283,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "user_defined_id", EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet());
     AddLogContent(logPtr, "aliuids", EnterpriseConfigProvider::GetInstance()->GetAliuidSet());
 #endif
-    AddLogContent(logPtr, "projects", Sender::Instance()->GetAllProjects());
+    AddLogContent(logPtr, "projects", FlusherSLS::GetAllProjects());
     AddLogContent(logPtr, "instance_id", Application::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "instance_key", id);
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
@@ -294,7 +318,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     if (!envTags.empty()) {
         UpdateMetric("env_config_count", envTags.size());
     }
-    UpdateMetric("used_sending_concurrency", Sender::Instance()->GetSendingBufferCount());
+    int32_t usedSendingConcurrency = FlusherRunner::GetInstance()->GetSendingBufferCount();
+    UpdateMetric("used_sending_concurrency", usedSendingConcurrency);
+    mAgentUsedSendingConcurrency->Set(usedSendingConcurrency);
 
     AddLogContent(logPtr, "metric_json", MetricToString());
     AddLogContent(logPtr, "status", CheckLogtailStatus());
@@ -309,13 +335,13 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     // Dump to local and send to enabled regions.
     DumpToLocal(logGroup);
     for (size_t i = 0; i < allProfileRegion.size(); ++i) {
-        if (BOOL_FLAG(check_profile_region) && !Sender::Instance()->IsRegionContainingConfig(allProfileRegion[i])) {
+        if (BOOL_FLAG(check_profile_region) && !FlusherSLS::IsRegionContainingConfig(allProfileRegion[i])) {
             LOG_DEBUG(sLogger, ("region does not contain config for this instance", allProfileRegion[i]));
             continue;
         }
 
         // Check if the region is disabled.
-        if (!Sender::Instance()->GetRegionStatus(allProfileRegion[i])) {
+        if (!FlusherSLS::GetRegionStatus(allProfileRegion[i])) {
             LOG_DEBUG(sLogger, ("disabled region, do not send status profile to region", allProfileRegion[i]));
             continue;
         }
@@ -424,7 +450,7 @@ void LogtailMonitor::CalCpuStat(const CpuStat& curCpu, CpuStat& savedCpu) {
 #endif
 }
 
-bool LogtailMonitor::CheckCpuLimit() {
+bool LogtailMonitor::CheckSoftCpuLimit() {
     float cpuUsageLimit = AppConfig::GetInstance()->IsResourceAutoScale()
         ? AppConfig::GetInstance()->GetScaledCpuUsageUpLimit()
         : AppConfig::GetInstance()->GetCpuUsageUpLimit();
@@ -436,13 +462,17 @@ bool LogtailMonitor::CheckCpuLimit() {
     return false;
 }
 
-bool LogtailMonitor::CheckMemLimit() {
+bool LogtailMonitor::CheckSoftMemLimit() {
     if (mMemStat.mRss > AppConfig::GetInstance()->GetMemUsageUpLimit()) {
         if (++mMemStat.mViolateNum > INT32_FLAG(mem_limit_num))
             return true;
     } else
         mMemStat.mViolateNum = 0;
     return false;
+}
+
+bool LogtailMonitor::CheckHardMemLimit() {
+    return mMemStat.mRss > 5 * AppConfig::GetInstance()->GetMemUsageUpLimit();
 }
 
 void LogtailMonitor::DumpToLocal(const sls_logs::LogGroup& logGroup) {
@@ -519,6 +549,13 @@ std::string LogtailMonitor::GetLoadAvg() {
     std::getline(fin, loadStr);
     fin.close();
     return loadStr;
+}
+
+uint32_t LogtailMonitor::GetCpuCores() {
+    if (!CalCpuCores()) {
+        return 0;
+    }
+    return mCpuCores;
 }
 
 // Get the number of cores in CPU.
@@ -661,5 +698,98 @@ bool LogtailMonitor::CalOsCpuStat() {
 #endif
 }
 #endif
+
+LoongCollectorMonitor* LoongCollectorMonitor::GetInstance() {
+    static LoongCollectorMonitor instance;
+    return &instance;
+}
+
+void LoongCollectorMonitor::Init() {
+    // create metric record
+    MetricLabels labels;
+    labels.emplace_back(METRIC_LABEL_INSTANCE_ID, Application::GetInstance()->GetInstanceId());
+    labels.emplace_back(METRIC_LABEL_IP, LogFileProfiler::mIpAddr);
+    labels.emplace_back(METRIC_LABEL_OS, OS_NAME);
+    labels.emplace_back(METRIC_LABEL_OS_DETAIL, LogFileProfiler::mOsDetail);
+    labels.emplace_back(METRIC_LABEL_UUID, Application::GetInstance()->GetUUID());
+    labels.emplace_back(METRIC_LABEL_VERSION, ILOGTAIL_VERSION);
+    DynamicMetricLabels dynamicLabels;
+    dynamicLabels.emplace_back(METRIC_LABEL_PROJECT, []() -> std::string { return FlusherSLS::GetAllProjects(); });
+#ifdef __ENTERPRISE__
+    dynamicLabels.emplace_back(METRIC_LABEL_ALIUIDS,
+                               []() -> std::string { return EnterpriseConfigProvider::GetInstance()->GetAliuidSet(); });
+    dynamicLabels.emplace_back(METRIC_LABEL_USER_DEFINED_ID, []() -> std::string {
+        return EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
+    });
+#endif
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(
+        mMetricsRecordRef, std::move(labels), std::move(dynamicLabels));
+    // init value
+    mDoubleGauges[METRIC_AGENT_CPU] = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU);
+    // mDoubleGauges[METRIC_AGENT_CPU_GO] = mMetricsRecordRef.CreateDoubleGauge(METRIC_AGENT_CPU_GO);
+    mIntGauges[METRIC_AGENT_MEMORY] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY);
+    mIntGauges[METRIC_AGENT_MEMORY_GO] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_MEMORY_GO);
+    mIntGauges[METRIC_AGENT_GO_ROUTINES_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_GO_ROUTINES_TOTAL);
+    mIntGauges[METRIC_AGENT_OPEN_FD_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
+    mIntGauges[METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_DIR_CACHE_SIZE_TOTAL);
+    mIntGauges[METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_FILE_CACHE_SIZE_TOTAL);
+    mIntGauges[METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_POLLING_MODIFY_SIZE_TOTAL);
+    mIntGauges[METRIC_AGENT_REGISTER_HANDLER_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
+    // mIntGauges[METRIC_AGENT_INSTANCE_CONFIG_TOTAL] =
+    // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_INSTANCE_CONFIG_TOTAL);
+    mIntGauges[METRIC_AGENT_PIPELINE_CONFIG_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL] =
+    // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_ENV_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL] =
+    // mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CRD_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL]
+    //     = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_CONSOLE_PIPELINE_CONFIG_TOTAL);
+    // mIntGauges[METRIC_AGENT_PLUGIN_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PLUGIN_TOTAL);
+    mIntGauges[METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PROCESS_QUEUE_FULL_TOTAL);
+    mIntGauges[METRIC_AGENT_PROCESS_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_PROCESS_QUEUE_TOTAL);
+    mIntGauges[METRIC_AGENT_SEND_QUEUE_FULL_TOTAL]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_SEND_QUEUE_FULL_TOTAL);
+    mIntGauges[METRIC_AGENT_SEND_QUEUE_TOTAL] = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_SEND_QUEUE_TOTAL);
+    mIntGauges[METRIC_AGENT_USED_SENDING_CONCURRENCY]
+        = mMetricsRecordRef.CreateIntGauge(METRIC_AGENT_USED_SENDING_CONCURRENCY);
+    LOG_INFO(sLogger, ("LoongCollectorMonitor", "started"));
+}
+
+void LoongCollectorMonitor::Stop() {
+    MetricExportor::GetInstance()->PushMetrics(true);
+}
+
+CounterPtr LoongCollectorMonitor::GetCounter(std::string key) {
+    auto it = mCounters.find(key);
+    if (it != mCounters.end()) {
+        return it->second;
+    }
+    LOG_WARNING(sLogger, ("get global counter failed, counter key", key));
+    return nullptr;
+}
+
+IntGaugePtr LoongCollectorMonitor::GetIntGauge(std::string key) {
+    auto it = mIntGauges.find(key);
+    if (it != mIntGauges.end()) {
+        return it->second;
+    }
+    LOG_WARNING(sLogger, ("get global gauge failed, gauge key", key));
+    return nullptr;
+}
+
+DoubleGaugePtr LoongCollectorMonitor::GetDoubleGauge(std::string key) {
+    auto it = mDoubleGauges.find(key);
+    if (it != mDoubleGauges.end()) {
+        return it->second;
+    }
+    LOG_WARNING(sLogger, ("get global gauge failed, gauge key", key));
+    return nullptr;
+}
 
 } // namespace logtail

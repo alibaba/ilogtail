@@ -66,23 +66,23 @@ type InputKafka struct {
 }
 
 const (
-	pluginName = "service_kafka"
+	pluginType = "service_kafka"
 )
 
 func (k *InputKafka) Init(context pipeline.Context) (int, error) {
 	k.context = context
 
 	if len(k.Brokers) == 0 {
-		return 0, fmt.Errorf("must specify Brokers for plugin %v", pluginName)
+		return 0, fmt.Errorf("must specify Brokers for plugin %v", pluginType)
 	}
 	if len(k.Topics) == 0 {
-		return 0, fmt.Errorf("must specify Topics for plugin %v", pluginName)
+		return 0, fmt.Errorf("must specify Topics for plugin %v", pluginType)
 	}
 	if k.ConsumerGroup == "" {
-		return 0, fmt.Errorf("must specify ConsumerGroup for plugin %v", pluginName)
+		return 0, fmt.Errorf("must specify ConsumerGroup for plugin %v", pluginType)
 	}
 	if k.ClientID == "" {
-		return 0, fmt.Errorf("must specify ClientID for plugin %v", pluginName)
+		return 0, fmt.Errorf("must specify ClientID for plugin %v", pluginType)
 	}
 
 	// init decoder
@@ -256,8 +256,8 @@ func (k *InputKafka) Stop() error {
 	k.readyCloser.Do(func() {
 		close(k.ready)
 	})
-	k.wg.Wait()
 	k.cancelConsumer()
+	k.wg.Wait()
 	err := k.consumerGroupClient.Close()
 	if err != nil {
 		e := fmt.Errorf("[inputs.kafka_consumer] Error closing consumer: %v", err)
@@ -272,7 +272,7 @@ func (k *InputKafka) Collect(collector pipeline.Collector) error {
 }
 
 func init() {
-	pipeline.ServiceInputs[pluginName] = func() pipeline.ServiceInput {
+	pipeline.ServiceInputs[pluginType] = func() pipeline.ServiceInput {
 		return &InputKafka{
 			ConsumerGroup: "",
 			ClientID:      "",

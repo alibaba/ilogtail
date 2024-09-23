@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "plugin/creator/StaticInputCreator.h"
-#include "plugin/instance/PluginInstance.h"
+#include "pipeline/plugin/creator/StaticInputCreator.h"
+#include "pipeline/plugin/instance/PluginInstance.h"
 #include "unittest/plugin/PluginMock.h"
 #include "unittest/Unittest.h"
 
@@ -40,9 +40,11 @@ void StaticInputCreatorUnittest::TestIsDynamic() {
 
 void StaticInputCreatorUnittest::TestCreate() {
     StaticInputCreator<InputMock> creator;
-    unique_ptr<PluginInstance> processorMock = creator.Create("0");
-    APSARA_TEST_NOT_EQUAL(nullptr, processorMock.get());
-    APSARA_TEST_EQUAL("0", processorMock->Id());
+    unique_ptr<PluginInstance> inputMock = creator.Create({"0", "0", "1"});
+    APSARA_TEST_NOT_EQUAL(nullptr, inputMock.get());
+    APSARA_TEST_EQUAL_FATAL("0", inputMock->PluginID());
+    APSARA_TEST_EQUAL_FATAL("0", inputMock->NodeID());
+    APSARA_TEST_EQUAL_FATAL("1", inputMock->ChildNodeID());
 }
 
 UNIT_TEST_CASE(StaticInputCreatorUnittest, TestName)

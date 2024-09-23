@@ -21,8 +21,9 @@
 #include <mutex>
 #include <string>
 
+#include "LogtailMetric.h"
+#include "MetricConstants.h"
 #include "MetricStore.h"
-#include "profile_sender/ProfileSender.h"
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
@@ -86,6 +87,8 @@ public:
     bool Init();
     void Stop();
 
+    uint32_t GetCpuCores();
+
     // GetRealtimeCpuLevel return a value to indicates current CPU usage level.
     // LogInput use it to do flow control.
     float GetRealtimeCpuLevel() { return mRealtimeCpuStat.mCpuUsage / mScaledCpuUsageUpLimit; }
@@ -105,12 +108,14 @@ private:
     // set @curCpu to @savedCpu after calculation.
     void CalCpuStat(const CpuStat& curCpu, CpuStat& savedCpu);
 
-    // CheckCpuLimit checks if current cpu usage exceeds limit.
+    // CheckSoftCpuLimit checks if current cpu usage exceeds limit.
     // @return true if the cpu usage exceeds limit continuously.
-    bool CheckCpuLimit();
-    // CheckMemLimit checks if the memory usage exceeds limit.
+    bool CheckSoftCpuLimit();
+    // CheckSoftMemLimit checks if the memory usage exceeds limit.
     // @return true if the memory usage exceeds limit continuously.
-    bool CheckMemLimit();
+    bool CheckSoftMemLimit();
+
+    bool CheckHardMemLimit();
 
     // SendStatusProfile collects status profile and send them to server.
     // @suicide indicates if the target LogStore is logtail_suicide_profile.
@@ -156,14 +161,18 @@ private:
     CpuStat mRealtimeCpuStat;
     // Use to calculate CPU limit, updated regularly (30s by default).
     CpuStat mCpuStat;
+    DoubleGaugePtr mAgentCpuGauge;
     // Memory usage statistics.
     MemStat mMemStat;
+    IntGaugePtr mAgentMemoryGauge;
+
+    IntGaugePtr mAgentUsedSendingConcurrency;
 
     // Current scale up level, updated by CheckScaledCpuUsageUpLimit.
     float mScaledCpuUsageUpLimit;
 #if defined(__linux__)
     const static int32_t CPU_STAT_FOR_SCALE_ARRAY_SIZE = 2;
-    int32_t mCpuCores;
+    int32_t mCpuCores = 0;
     CpuStat mCpuStatForScale;
     OsCpuStat mOsCpuStatForScale;
     // mCpuArrayForScale and mOsCpuArrayForScale store lastest two CPU usage of
@@ -177,6 +186,26 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ConfigUpdatorUnittest;
 #endif
+};
+
+class LoongCollectorMonitor {
+public:
+    static LoongCollectorMonitor* GetInstance();
+
+    void Init();
+    void Stop();
+
+    CounterPtr GetCounter(std::string key);
+    IntGaugePtr GetIntGauge(std::string key);
+    DoubleGaugePtr GetDoubleGauge(std::string key);
+
+private:
+    // MetricRecord
+    MetricsRecordRef mMetricsRecordRef;
+    // metrics
+    std::unordered_map<std::string, CounterPtr> mCounters;
+    std::unordered_map<std::string, IntGaugePtr> mIntGauges;
+    std::unordered_map<std::string, DoubleGaugePtr> mDoubleGauges;
 };
 
 } // namespace logtail

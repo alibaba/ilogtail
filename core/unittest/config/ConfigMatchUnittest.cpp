@@ -37,14 +37,14 @@
 #include <json/json.h>
 #include "common/Flags.h"
 #include "common/FileSystemUtil.h"
-#include "event_handler/EventHandler.h"
-#include "polling/PollingEventQueue.h"
-#include "controller/EventDispatcher.h"
+#include "file_server/event_handler/EventHandler.h"
+#include "file_server/polling/PollingEventQueue.h"
+#include "file_server/EventDispatcher.h"
 #include "app_config/AppConfig.h"
-#include "config_manager/ConfigManager.h"
-#include "reader/LogFileReader.h"
-#include "event_handler/LogInput.h"
-#include "event/Event.h"
+#include "file_server/ConfigManager.h"
+#include "file_server/reader/LogFileReader.h"
+#include "file_server/event_handler/LogInput.h"
+#include "file_server/event/Event.h"
 #include "logger/Logger.h"
 using namespace std;
 
@@ -1043,7 +1043,7 @@ void ConfigMatchUnittest::TestChinesePathAndFilePattern() {
     filePattern = EncodingConverter::GetInstance()->FromACPToUTF8(filePattern);
 #endif
     {
-        Config cfg(basePath, filePattern, LogType::REGEX_LOG, "log", ".*", "", "", "project", true, 3, 3, "logstore");
+        PipelineConfig cfg(basePath, filePattern, LogType::REGEX_LOG, "log", ".*", "", "", "project", true, 3, 3, "logstore");
         fsutil::Dir dir(pathRoot);
         APSARA_TEST_TRUE(dir.Open());
         while (fsutil::Entry ent = dir.ReadNext()) {

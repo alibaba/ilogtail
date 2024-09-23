@@ -18,13 +18,16 @@
 
 #include <string>
 
-#include "plugin/PluginRegistry.h"
-#include "plugin/creator/StaticFlusherCreator.h"
-#include "plugin/creator/StaticInputCreator.h"
-#include "plugin/creator/StaticProcessorCreator.h"
-#include "plugin/instance/FlusherInstance.h"
-#include "plugin/instance/InputInstance.h"
-#include "plugin/instance/ProcessorInstance.h"
+#include "pipeline/Pipeline.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "pipeline/plugin/creator/StaticFlusherCreator.h"
+#include "pipeline/plugin/creator/StaticInputCreator.h"
+#include "pipeline/plugin/creator/StaticProcessorCreator.h"
+#include "pipeline/plugin/interface/Flusher.h"
+#include "pipeline/plugin/interface/HttpFlusher.h"
+#include "pipeline/plugin/interface/Input.h"
+#include "pipeline/plugin/interface/Processor.h"
+#include "pipeline/queue/SenderQueueManager.h"
 
 namespace logtail {
 
@@ -49,15 +52,21 @@ public:
     static const std::string sName;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, uint32_t& pluginIdx, Json::Value& optionalGoPipeline) override {
-        auto processor
-            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorInnerMock::sName, std::to_string(++pluginIdx));
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override {
+        if (config.isMember("SupportAck")) {
+            mSupportAck = config["SupportAck"].asBool();
+        }
+        auto processor = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorInnerMock::sName, mContext->GetPipeline().GenNextPluginMeta(false));
         processor->Init(Json::Value(), *mContext);
         mInnerProcessors.emplace_back(std::move(processor));
         return true;
     }
     bool Start() override { return true; }
     bool Stop(bool isPipelineRemoving) override { return true; }
+    bool SupportAck() const override { return mSupportAck; }
+
+    bool mSupportAck = true;
 };
 
 const std::string InputMock::sName = "input_mock";
@@ -83,23 +92,58 @@ public:
     static const std::string sName;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override { return true; }
-    bool Register() override { return true; }
-    bool Unregister(bool isPipelineRemoving) override { return true; }
-    void Send(PipelineEventGroup&& g) override {}
-    void Flush(size_t key) override { mFlushedQueues.push_back(key); }
-    void FlushAll() override {}
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override {
+        GenerateQueueKey("mock");
+        SenderQueueManager::GetInstance()->CreateQueue(mQueueKey, mNodeID, *mContext);
+        return true;
+    }
+    bool Send(PipelineEventGroup&& g) override { return mIsValid; }
+    bool Flush(size_t key) override {
+        mFlushedQueues.push_back(key);
+        return true;
+    }
+    bool FlushAll() override { return mIsValid; }
 
+    bool mIsValid = true;
     std::vector<size_t> mFlushedQueues;
 };
 
 const std::string FlusherMock::sName = "flusher_mock";
+
+class FlusherHttpMock : public HttpFlusher {
+public:
+    static const std::string sName;
+
+    const std::string& Name() const override { return sName; }
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override {
+        GenerateQueueKey("mock");
+        SenderQueueManager::GetInstance()->CreateQueue(mQueueKey, mNodeID, *mContext);
+        return true;
+    }
+    bool Send(PipelineEventGroup&& g) override { return mIsValid; }
+    bool Flush(size_t key) override {
+        mFlushedQueues.push_back(key);
+        return true;
+    }
+    bool FlushAll() override { return mIsValid; }
+    std::unique_ptr<HttpSinkRequest> BuildRequest(SenderQueueItem* item) const override {
+        return std::make_unique<HttpSinkRequest>(
+            "", false, "", 80, "", "", std::map<std::string, std::string>(), "", nullptr);
+    }
+    void OnSendDone(const HttpResponse& response, SenderQueueItem* item) override {}
+
+    bool mIsValid = true;
+    std::vector<size_t> mFlushedQueues;
+};
+
+const std::string FlusherHttpMock::sName = "flusher_http_mock";
 
 void LoadPluginMock() {
     PluginRegistry::GetInstance()->RegisterInputCreator(new StaticInputCreator<InputMock>());
     PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorInnerMock>());
     PluginRegistry::GetInstance()->RegisterProcessorCreator(new StaticProcessorCreator<ProcessorMock>());
     PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherMock>());
+    PluginRegistry::GetInstance()->RegisterFlusherCreator(new StaticFlusherCreator<FlusherHttpMock>());
 }
 
 } // namespace logtail

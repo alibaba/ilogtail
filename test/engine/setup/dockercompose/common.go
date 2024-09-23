@@ -20,6 +20,11 @@ import (
 	"sync"
 )
 
+const (
+	dockerComposeTypeE2E       = "e2e"
+	dockerComposeTypeBenchmark = "benchmark"
+)
+
 var networkMapping = make(map[string]string)
 var mu sync.Mutex
 var instance Booter
@@ -37,9 +42,9 @@ func Load(loadType string) error {
 	mu.Lock()
 	defer mu.Unlock()
 	switch loadType {
-	case "e2e":
+	case dockerComposeTypeE2E:
 		instance = NewComposeBooter()
-	case "benchmark":
+	case dockerComposeTypeBenchmark:
 		instance = NewComposeBenchmarkBooter()
 	default:
 		return errors.New("invalid load type")

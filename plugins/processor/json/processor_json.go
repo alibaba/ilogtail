@@ -19,6 +19,7 @@ import (
 
 	"github.com/buger/jsonparser"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -38,17 +39,20 @@ type ProcessorJSON struct {
 	IgnoreFirstConnector   bool // 是否忽略第一个Connector
 	ExpandArray            bool // 是否展开数组类型
 
-	context pipeline.Context
+	context              pipeline.Context
+	procParseInSizeBytes pipeline.CounterMetric
 }
 
-const pluginName = "processor_json"
+const pluginType = "processor_json"
 
 // Init called for init some system resources, like socket, mutex...
 func (p *ProcessorJSON) Init(context pipeline.Context) error {
 	if p.SourceKey == "" {
-		return fmt.Errorf("must specify SourceKey for plugin %v", pluginName)
+		return fmt.Errorf("must specify SourceKey for plugin %v", pluginType)
 	}
 	p.context = context
+	metricsRecord := p.context.GetMetricRecord()
+	p.procParseInSizeBytes = helper.NewCounterMetricAndRegister(metricsRecord, "proc_parse_in_size_bytes")
 	return nil
 }
 
@@ -65,6 +69,7 @@ func (p *ProcessorJSON) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 
 func (p *ProcessorJSON) processLog(log *protocol.Log) {
 	findKey := false
+	p.procParseInSizeBytes.Add(int64(log.Size()))
 	for idx := range log.Contents {
 		if log.Contents[idx].Key == p.SourceKey {
 			objectVal := log.Contents[idx].Value
@@ -102,7 +107,7 @@ func (p *ProcessorJSON) shouldKeepSource(err error) bool {
 }
 
 func init() {
-	pipeline.Processors[pluginName] = func() pipeline.Processor {
+	pipeline.Processors[pluginType] = func() pipeline.Processor {
 		return &ProcessorJSON{
 			SourceKey:              "",
 			NoKeyError:             true,

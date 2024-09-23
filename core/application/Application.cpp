@@ -32,31 +32,37 @@
 #include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
-#include "config_manager/ConfigManager.h"
-#include "controller/EventDispatcher.h"
-#include "event_handler/LogInput.h"
+#include "file_server/EventDispatcher.h"
+#include "file_server/event_handler/LogInput.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/FileServer.h"
+#include "plugin/flusher/sls/DiskBufferWriter.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "input/InputFeedbackInterfaceRegistry.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
 #include "monitor/Monitor.h"
+#include "pipeline/InstanceConfigManager.h"
 #include "pipeline/PipelineManager.h"
-#include "plugin/PluginRegistry.h"
-#include "processor/daemon/LogProcess.h"
-#include "sender/Sender.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "runner/LogProcess.h"
+#include "pipeline/queue/ExactlyOnceQueueManager.h"
+#include "pipeline/queue/SenderQueueManager.h"
+#include "runner/FlusherRunner.h"
+#include "runner/sink/http/HttpSink.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #include "config/provider/LegacyConfigProvider.h"
 #if defined(__linux__) && !defined(__ANDROID__)
+#include "common/LinuxDaemonUtil.h"
 #include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
 #else
 #include "config/provider/CommonConfigProvider.h"
+#include "config/provider/LegacyCommonConfigProvider.h"
 #endif
-#include "queue/ExactlyOnceQueueManager.h"
 
 DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
 DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
@@ -67,6 +73,10 @@ DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
 DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
 DEFINE_FLAG_INT32(queue_check_gc_interval_sec, "30s", 30);
+#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
+DEFINE_FLAG_BOOL(enable_cgroup, "", true);
+#endif
+
 
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
 DECLARE_FLAG_BOOL(global_network_success);
@@ -152,6 +162,12 @@ void Application::Init() {
     GenerateInstanceId();
     TryGetUUID();
 
+#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
+    if (BOOL_FLAG(enable_cgroup)) {
+        CreateCGroup();
+    }
+#endif
+
     int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
     LogFileProfiler::mSystemBootTime = systemBootTime > 0 ? systemBootTime : GetSystemBootTime();
 
@@ -184,35 +200,54 @@ void Application::Init() {
     LOG_INFO(sLogger, ("app info", appInfo));
 }
 
-void Application::Start() {
+void Application::Start() { // GCOVR_EXCL_START
     LogtailMonitor::GetInstance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
 #endif
-    // flusher_sls should always be loaded, since profiling will rely on this.
-    Sender::Instance()->Init();
+    BoundedSenderQueueInterface::SetFeedback(ProcessQueueManager::GetInstance());
 
-    // add local config dir
-    filesystem::path localConfigPath
-        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
-    error_code ec;
-    filesystem::create_directories(localConfigPath, ec);
-    if (ec) {
-        LOG_WARNING(sLogger,
-                    ("failed to create dir for local config",
-                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+    HttpSink::GetInstance()->Init();
+    FlusherRunner::GetInstance()->Init();
+
+    {
+        // add local config dir
+        filesystem::path localConfigPath
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
+        error_code ec;
+        filesystem::create_directories(localConfigPath, ec);
+        if (ec) {
+            LOG_WARNING(sLogger,
+                        ("failed to create dir for local pipelineconfig",
+                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+        }
+        ConfigWatcher::GetInstance()->AddPipelineSource(localConfigPath.string());
     }
-    ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
+    {
+        // add local config dir
+        filesystem::path localConfigPath
+            = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "instanceconfig" / "local";
+        error_code ec;
+        filesystem::create_directories(localConfigPath, ec);
+        if (ec) {
+            LOG_WARNING(sLogger,
+                        ("failed to create dir for local instanceconfig",
+                         "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+        }
+        ConfigWatcher::GetInstance()->AddInstanceSource(localConfigPath.string());
+    }
 
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
 #else
-    CommonConfigProvider::GetInstance()->Init("common");
+    CommonConfigProvider::GetInstance()->Init("common_v2");
+    LegacyCommonConfigProvider::GetInstance()->Init("common");
 #endif
 
     LogtailAlarm::GetInstance()->Init();
+    LoongCollectorMonitor::GetInstance()->Init();
     LogtailMonitor::GetInstance()->Init();
 
     PluginRegistry::GetInstance()->LoadPlugins();
@@ -251,9 +286,13 @@ void Application::Start() {
             lastCheckTagsTime = curTime;
         }
         if (curTime - lastConfigCheckTime >= INT32_FLAG(config_scan_interval)) {
-            ConfigDiff diff = ConfigWatcher::GetInstance()->CheckConfigDiff();
-            if (!diff.IsEmpty()) {
-                PipelineManager::GetInstance()->UpdatePipelines(diff);
+            PipelineConfigDiff pipelineConfigDiff = ConfigWatcher::GetInstance()->CheckPipelineConfigDiff();
+            if (!pipelineConfigDiff.IsEmpty()) {
+                PipelineManager::GetInstance()->UpdatePipelines(pipelineConfigDiff);
+            }
+            InstanceConfigDiff instanceConfigDiff = ConfigWatcher::GetInstance()->CheckInstanceConfigDiff();
+            if (!instanceConfigDiff.IsEmpty()) {
+                InstanceConfigManager::GetInstance()->UpdateInstanceConfigs(instanceConfigDiff);
             }
             lastConfigCheckTime = curTime;
         }
@@ -270,6 +309,8 @@ void Application::Start() {
 #endif
         if (curTime - lastQueueGCTime >= INT32_FLAG(queue_check_gc_interval_sec)) {
             ExactlyOnceQueueManager::GetInstance()->ClearTimeoutQueues();
+            // this should be called in the same thread as config update
+            SenderQueueManager::GetInstance()->ClearUnusedQueues();
             lastQueueGCTime = curTime;
         }
         if (curTime - lastUpdateMetricTime >= 40) {
@@ -296,7 +337,7 @@ void Application::Start() {
 
         this_thread::sleep_for(chrono::seconds(1));
     }
-}
+} // GCOVR_EXCL_STOP
 
 void Application::GenerateInstanceId() {
     mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(mStartTime);
@@ -330,17 +371,19 @@ void Application::Exit() {
     LegacyConfigProvider::GetInstance()->Stop();
 #else
     CommonConfigProvider::GetInstance()->Stop();
+    LegacyCommonConfigProvider::GetInstance()->Stop();
 #endif
 
     LogtailMonitor::GetInstance()->Stop();
+    LoongCollectorMonitor::GetInstance()->Stop();
     LogtailAlarm::GetInstance()->Stop();
     // from now on, alarm should not be used.
 
-    if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
-        LOG_WARNING(sLogger, ("flush SLS sender data", "failed"));
-    } else {
-        LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
-    }
+    FlusherRunner::GetInstance()->Stop();
+    HttpSink::GetInstance()->Stop();
+
+    // TODO: make it common
+    FlusherSLS::RecycleResourceIfNotUsed();
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
@@ -372,29 +415,6 @@ void Application::CheckCriticalCondition(int32_t curTime) {
         sleep(10);
         _exit(1);
     }
-
-    int32_t lastDaemonRunTime = Sender::Instance()->GetLastDeamonRunTime();
-    if (lastDaemonRunTime > 0 && curTime - lastDaemonRunTime > 3600) {
-        LOG_ERROR(sLogger, ("last sender daemon run time is too old", lastDaemonRunTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM,
-                                               "last sender daemon run time is too old: " + ToString(lastDaemonRunTime)
-                                                   + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    int32_t lastSendTime = Sender::Instance()->GetLastSendTime();
-    if (lastSendTime > 0 && curTime - lastSendTime > 3600 * 12) {
-        LOG_ERROR(sLogger, ("last send time is too old", lastSendTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM,
-                                               "last send time is too old: " + ToString(lastSendTime) + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    LogtailMonitor::GetInstance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
 }
 
 bool Application::GetUUIDThread() {

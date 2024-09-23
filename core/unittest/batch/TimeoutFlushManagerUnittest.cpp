@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "batch/TimeoutFlushManager.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -31,7 +31,7 @@ protected:
         sFlusher = make_unique<FlusherMock>();
         sCtx.SetConfigName("test_config");
         sFlusher->SetContext(sCtx);
-        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1");
+        sFlusher->SetMetricsRecordRef(FlusherMock::sName, "1", "1", "1");
     }
 
     void TearDown() override { TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear(); }

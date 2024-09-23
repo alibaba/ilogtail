@@ -16,10 +16,9 @@
 
 #include <json/json.h>
 
-#include "common/LogstoreFeedbackQueue.h"
 #include "common/ParamExtractor.h"
 #include "pipeline/PipelineContext.h"
-#include "queue/ProcessQueueManager.h"
+#include "pipeline/queue/ProcessQueueManager.h"
 
 using namespace std;
 

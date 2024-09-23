@@ -56,7 +56,7 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *pipeline.Async
 	}
 }
 
-func flushOutStore[T FlushData, F pipeline.Flusher](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
+func flushOutStore[T FlushData, F FlusherWrapperInterface](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
 	for _, flusher := range flushers {
 		for waitCount := 0; !flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
 			if waitCount > maxFlushOutTime*100 {
@@ -117,14 +117,14 @@ func GetConfigFlushers(runner PluginRunner) []pipeline.Flusher {
 		}
 	} else if r, ok := runner.(*pluginv2Runner); ok {
 		for _, f := range r.FlusherPlugins {
-			flushers = append(flushers, f)
+			flushers = append(flushers, f.Flusher)
 		}
 	}
 	return flushers
 }
 
-func pluginUnImplementError(category pluginCategory, version ConfigVersion, pluginName string) error {
-	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, strings.ToUpper(string(version)), pluginName)
+func pluginUnImplementError(category pluginCategory, version ConfigVersion, pluginType string) error {
+	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, strings.ToUpper(string(version)), pluginType)
 }
 
 func pluginCategoryUndefinedError(category pluginCategory) error {

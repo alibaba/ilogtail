@@ -18,16 +18,17 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
+#include "pipeline/batch/TimeoutFlushManager.h"
 #include "common/JsonUtil.h"
-#include "common/LogstoreFeedbackKey.h"
-#include "config/Config.h"
-#include "input/InputFeedbackInterfaceRegistry.h"
+#include "config/PipelineConfig.h"
+#include "plugin/input/InputFeedbackInterfaceRegistry.h"
 #include "pipeline/Pipeline.h"
-#include "plugin/PluginRegistry.h"
-#include "processor/inner/ProcessorSplitLogStringNative.h"
-#include "processor/inner/ProcessorSplitMultilineLogStringNative.h"
-#include "queue/ProcessQueueManager.h"
-#include "queue/QueueKeyManager.h"
+#include "pipeline/plugin/PluginRegistry.h"
+#include "plugin/processor/inner/ProcessorSplitLogStringNative.h"
+#include "plugin/processor/inner/ProcessorSplitMultilineLogStringNative.h"
+#include "pipeline/queue/BoundedProcessQueue.h"
+#include "pipeline/queue/ProcessQueueManager.h"
+#include "pipeline/queue/QueueKeyManager.h"
 #include "unittest/Unittest.h"
 #include "unittest/plugin/PluginMock.h"
 
@@ -44,6 +45,8 @@ public:
     void OnInputFileWithJsonMultiline() const;
     void OnInputFileWithContainerDiscovery() const;
     void TestProcess() const;
+    void TestSend() const;
+    void TestFlushBatch() const;
 
 protected:
     static void SetUpTestCase() {
@@ -55,6 +58,12 @@ protected:
 
     static void TearDownTestCase() { PluginRegistry::GetInstance()->UnloadPlugins(); }
 
+    void TearDown() override {
+        TimeoutFlushManager::GetInstance()->mTimeoutRecords.clear();
+        QueueKeyManager::GetInstance()->Clear();
+        ProcessQueueManager::GetInstance()->Clear();
+    }
+
 private:
     const string configName = "test_config";
 };
@@ -63,7 +72,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     unique_ptr<Json::Value> configJson;
     Json::Value goPipelineWithInput, goPipelineWithoutInput;
     string configStr, goPipelineWithInputStr, goPipelineWithoutInputStr, errorMsg;
-    unique_ptr<Config> config;
+    unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
 
     // with sls flusher
@@ -91,7 +100,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -101,7 +110,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("test_project", pipeline->GetContext().GetProjectName());
     APSARA_TEST_EQUAL("test_logstore", pipeline->GetContext().GetLogstoreName());
     APSARA_TEST_EQUAL("test_region", pipeline->GetContext().GetRegion());
-    APSARA_TEST_EQUAL(GenerateLogstoreFeedBackKey("test_project", "test_logstore"),
+    APSARA_TEST_EQUAL(QueueKeyManager::GetInstance()->GetKey("test_config-flusher_sls-test_project#test_logstore"),
                       pipeline->GetContext().GetLogstoreKey());
 
     // without sls flusher
@@ -124,7 +133,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -135,7 +144,8 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetLogstoreName());
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetRegion());
 #ifndef __ENTERPRISE__
-    APSARA_TEST_EQUAL(GenerateLogstoreFeedBackKey("", ""), pipeline->GetContext().GetLogstoreKey());
+    APSARA_TEST_EQUAL(QueueKeyManager::GetInstance()->GetKey("test_config-flusher_sls-"),
+                      pipeline->GetContext().GetLogstoreKey());
 #endif
 
     // extensions and extended global param
@@ -178,7 +188,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
             },
             "inputs": [
                 {
-                    "type": "metric_container_info",
+                    "type": "metric_container_info/2",
                     "detail": {
                         "CollectingContainersMeta": true,
                         "LogPath": "/home",
@@ -189,7 +199,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ],
             "extensions": [
                 {
-                    "type": "ext_basicauth",
+                    "type": "ext_basicauth/7",
                     "detail": {}
                 }
             ]
@@ -203,15 +213,21 @@ void PipelineUnittest::OnSuccessfulInit() const {
                 "DefaultLogQueueSize" : 10,
                 "DefaultLogGroupQueueSize": 3
             },
+            "aggregators": [
+                {
+                    "type": "aggregator_default/5",
+                    "detail": {}
+                }
+            ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ],
             "extensions": [
                 {
-                    "type": "ext_basicauth",
+                    "type": "ext_basicauth/7",
                     "detail": {}
                 }
             ]
@@ -221,7 +237,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -229,12 +245,55 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithInput.clear();
     goPipelineWithoutInput.clear();
+
+    // router
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_file",
+                    "FilePaths": [
+                        "/home/test.log"
+                    ]
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint"
+                },
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_2",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": {
+                        "Type": "event_type",
+                        "Value": "log"
+                    }
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
+    APSARA_TEST_EQUAL(1U, pipeline->mRouter.mConditions.size());
+    APSARA_TEST_EQUAL(1U, pipeline->mRouter.mAlwaysMatchedFlusherIdx.size());
 }
 
 void PipelineUnittest::OnFailedInit() const {
     unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
-    unique_ptr<Config> config;
+    unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
 
     // invalid input
@@ -259,7 +318,7 @@ void PipelineUnittest::OnFailedInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
@@ -294,7 +353,7 @@ void PipelineUnittest::OnFailedInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
@@ -319,7 +378,70 @@ void PipelineUnittest::OnFailedInit() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
+
+    // invalid router
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_file",
+                    "FilePaths": [
+                        "/home/test.log"
+                    ]
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": "unknown"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
+
+    // invalid inputs ack support
+    configStr = R"(
+        {
+            "createTime": 123456789,
+            "inputs": [
+                {
+                    "Type": "input_mock"
+                },
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore_1",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint",
+                    "Match": "unknown"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_FALSE(pipeline->Init(std::move(*config)));
@@ -329,7 +451,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     unique_ptr<Json::Value> configJson;
     Json::Value goPipelineWithInput, goPipelineWithoutInput;
     string configStr, goPipelineWithInputStr, goPipelineWithoutInputStr, errorMsg;
-    unique_ptr<Config> config;
+    unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
 
     // topology 1: native -> native -> native
@@ -364,7 +486,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -403,7 +525,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 3: (native, extended) -> native -> native
@@ -441,7 +563,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 4: native -> extended -> native
@@ -458,11 +580,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "processors": [
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -486,19 +603,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/4",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/6",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -509,7 +626,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -517,7 +634,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 5: extended -> extended -> native
@@ -531,11 +648,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "processors": [
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -558,25 +670,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/2",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/3",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/4",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -587,14 +699,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -617,11 +729,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -636,7 +743,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 7: native -> (native -> extended) -> native
@@ -661,11 +768,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -687,19 +789,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -710,7 +812,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -718,7 +820,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 8: extended -> (native -> extended) -> native
@@ -740,11 +842,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -759,7 +856,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 9: (native, extended) -> (native -> extended) -> native
@@ -787,11 +884,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -806,7 +898,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 10: native -> none -> native
@@ -833,7 +925,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -849,11 +941,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "inputs": [
                 {
                     "Type": "service_docker_stdout"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -876,19 +963,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/2",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/3",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -899,14 +986,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -924,11 +1011,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -943,7 +1025,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 13: native -> native -> extended
@@ -965,11 +1047,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -986,13 +1063,13 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ]
@@ -1001,7 +1078,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -1009,7 +1086,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 14: extended -> native -> extended
@@ -1028,11 +1105,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1042,7 +1114,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 15: (native, extended) -> native -> extended
@@ -1067,11 +1139,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1081,7 +1148,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 16: native -> extended -> extended
@@ -1100,11 +1167,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1121,19 +1183,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/4",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ]
@@ -1142,7 +1204,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -1150,7 +1212,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 17: extended -> extended -> extended
@@ -1164,11 +1226,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "processors": [
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1186,25 +1243,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/2",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/3",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/4",
                     "detail": {}
                 }
             ]
@@ -1213,14 +1270,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -1243,11 +1300,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1257,7 +1309,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 19: native -> (native -> extended) -> extended
@@ -1282,11 +1334,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1303,19 +1350,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/7",
                     "detail": {}
                 }
             ]
@@ -1324,7 +1371,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -1332,7 +1379,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 20: extended -> (native -> extended) -> extended
@@ -1354,11 +1401,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1368,7 +1410,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 21: (native, extended) -> (native -> extended) -> extended
@@ -1396,11 +1438,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1410,7 +1447,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 22: native -> none -> extended
@@ -1422,11 +1459,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "FilePaths": [
                         "/home/test.log"
                     ]
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1445,13 +1477,13 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/4",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/5",
                     "detail": {}
                 }
             ]
@@ -1460,7 +1492,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -1468,7 +1500,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 23: extended -> none -> extended
@@ -1477,11 +1509,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "inputs": [
                 {
                     "Type": "service_docker_stdout"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1499,19 +1526,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/2",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/3",
                     "detail": {}
                 }
             ]
@@ -1520,14 +1547,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(0U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -1545,11 +1572,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "service_docker_stdout"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_kafka_v2"
@@ -1559,7 +1581,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 25: native -> native -> (native, extended) (future changes maybe applied)
@@ -1581,11 +1603,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1610,19 +1627,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/6",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/7",
                     "detail": {}
                 }
             ]
@@ -1631,7 +1648,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -1639,7 +1656,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 26: extended -> native -> (native, extended)
@@ -1656,11 +1673,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "SourceKey": "content",
                     "Regex": ".*",
                     "Keys": ["key"]
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1680,7 +1692,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 27: (native, extended) -> native -> (native, extended)
@@ -1705,11 +1717,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Keys": ["key"]
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1727,7 +1734,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 28: native -> extended -> (native, extended)
@@ -1744,11 +1751,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "processors": [
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1775,25 +1777,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/4",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/5",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/6",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/7",
                     "detail": {}
                 }
             ]
@@ -1802,7 +1804,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -1810,7 +1812,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 29: extended -> extended -> (native, extended)
@@ -1824,11 +1826,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "processors": [
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1854,31 +1851,31 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/2",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/3",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/4",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/5",
                     "detail": {}
                 }
             ]
@@ -1887,14 +1884,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -1917,11 +1914,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -1939,7 +1931,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 31: native -> (native -> extended) -> (native, extended)
@@ -1962,11 +1954,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                 },
                 {
                     "Type": "processor_regex"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -1993,25 +1980,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/8",
                     "detail": {}
                 }
             ]
@@ -2020,7 +2007,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -2028,7 +2015,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(1U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 32: extended -> (native -> extended) -> (native, extended)
@@ -2050,11 +2037,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2072,7 +2054,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 33: (native, extended) -> (native -> extended) -> (native, extended)
@@ -2100,11 +2082,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_regex"
                 }
             ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
-                }
-            ],
             "flushers": [
                 {
                     "Type": "flusher_sls",
@@ -2122,7 +2099,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 34: native -> none -> (native, extended) (future changes maybe applied)
@@ -2134,11 +2111,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "FilePaths": [
                         "/home/test.log"
                     ]
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -2165,19 +2137,19 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/4",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/5",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/6",
                     "detail": {}
                 }
             ]
@@ -2186,7 +2158,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -2194,7 +2166,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithInput.isNull());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithoutInput.clear();
 
     // topology 35: extended -> none -> (native, extended)
@@ -2203,11 +2175,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
             "inputs": [
                 {
                     "Type": "service_docker_stdout"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -2233,25 +2200,25 @@ void PipelineUnittest::OnInitVariousTopology() const {
             },
             "inputs": [
                 {
-                    "type": "service_docker_stdout",
+                    "type": "service_docker_stdout/1",
                     "detail": {}
                 }
             ],
             "aggregators": [
                 {
-                    "type": "aggregator_context",
+                    "type": "aggregator_default/2",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/3",
                     "detail": {
                         "EnableShardHash": false
                     }
                 },
                 {
-                    "type": "flusher_kafka_v2",
+                    "type": "flusher_kafka_v2/4",
                     "detail": {}
                 }
             ]
@@ -2260,14 +2227,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(0U, pipeline->mInputs.size());
     APSARA_TEST_EQUAL(0U, pipeline->mProcessorLine.size());
     APSARA_TEST_EQUAL(1U, pipeline->GetFlushers().size());
-    APSARA_TEST_TRUE(goPipelineWithInput == pipeline->mGoPipelineWithInput);
+    APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
     APSARA_TEST_TRUE(pipeline->mGoPipelineWithoutInput.isNull());
     goPipelineWithInput.clear();
 
@@ -2283,11 +2250,6 @@ void PipelineUnittest::OnInitVariousTopology() const {
                 },
                 {
                     "Type": "service_docker_stdout"
-                }
-            ],
-            "aggregators": [
-                {
-                    "Type": "aggregator_context"
                 }
             ],
             "flushers": [
@@ -2307,17 +2269,17 @@ void PipelineUnittest::OnInitVariousTopology() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void PipelineUnittest::TestProcessQueue() const {
     unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
-    unique_ptr<Config> config;
+    unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
     QueueKey key;
-    list<ProcessQueue>::iterator que;
+    ProcessQueueManager::ProcessQueueIterator que;
 
     // new pipeline
     configStr = R"(
@@ -2346,38 +2308,36 @@ void PipelineUnittest::TestProcessQueue() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
-    que = ProcessQueueManager::GetInstance()->mQueues[key];
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::BOUNDED, ProcessQueueManager::GetInstance()->mQueues[key].second);
     // queue level
-    APSARA_TEST_EQUAL(configName, que->GetConfigName());
-    APSARA_TEST_EQUAL(key, que->GetKey());
-    APSARA_TEST_EQUAL(0U, que->GetPriority());
-    APSARA_TEST_EQUAL(1U, que->mUpStreamFeedbacks.size());
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(0U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks.size());
     APSARA_TEST_EQUAL(InputFeedbackInterfaceRegistry::GetInstance()->GetFeedbackInterface("input_file"),
-                      que->mUpStreamFeedbacks[0]);
-    APSARA_TEST_EQUAL(1U, que->mDownStreamQueues.size());
+                      static_cast<BoundedProcessQueue*>(que->get())->mUpStreamFeedbacks[0]);
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
     // pipeline level
     APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
     // manager level
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[0].size());
     APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[0].begin()
-                     == ProcessQueueManager::GetInstance()->mQueues[key]);
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
 
     // update pipeline with different priority
     configStr = R"(
         {
             "inputs": [
                 {
-                    "Type": "input_file",
-                    "FilePaths": [
-                        "/home/test.log"
-                    ]
+                    "Type": "input_mock"
                 }
             ],
             "flushers": [
@@ -2393,28 +2353,74 @@ void PipelineUnittest::TestProcessQueue() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
 
     key = QueueKeyManager::GetInstance()->GetKey(configName);
-    que = ProcessQueueManager::GetInstance()->mQueues[key];
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::BOUNDED, ProcessQueueManager::GetInstance()->mQueues[key].second);
     // queue level
-    APSARA_TEST_EQUAL(configName, que->GetConfigName());
-    APSARA_TEST_EQUAL(key, que->GetKey());
-    APSARA_TEST_EQUAL(3U, que->GetPriority());
-    APSARA_TEST_EQUAL(1U, que->mUpStreamFeedbacks.size());
-    APSARA_TEST_EQUAL(InputFeedbackInterfaceRegistry::GetInstance()->GetFeedbackInterface("input_file"),
-                      que->mUpStreamFeedbacks[0]);
-    APSARA_TEST_EQUAL(1U, que->mDownStreamQueues.size());
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(3U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
     // pipeline level
     APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
     // manager level
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
     APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[3].size());
     APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[3].begin()
-                     == ProcessQueueManager::GetInstance()->mQueues[key]);
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
+
+    // update pipeline with different type
+    configStr = R"(
+        {
+            "inputs": [
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                },
+                {
+                    "Type": "input_mock",
+                    "SupportAck": false
+                }
+            ],
+            "flushers": [
+                {
+                    "Type": "flusher_sls",
+                    "Project": "test_project",
+                    "Logstore": "test_logstore",
+                    "Region": "test_region",
+                    "Endpoint": "test_endpoint"
+                }
+            ]
+        }
+    )";
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
+    APSARA_TEST_TRUE(config->Parse());
+    pipeline.reset(new Pipeline());
+    APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
+
+    key = QueueKeyManager::GetInstance()->GetKey(configName);
+    que = ProcessQueueManager::GetInstance()->mQueues[key].first;
+    APSARA_TEST_EQUAL(ProcessQueueManager::QueueType::CIRCULAR,
+                      ProcessQueueManager::GetInstance()->mQueues[key].second);
+    // queue level
+    APSARA_TEST_EQUAL(configName, (*que)->GetConfigName());
+    APSARA_TEST_EQUAL(key, (*que)->GetKey());
+    APSARA_TEST_EQUAL(3U, (*que)->GetPriority());
+    APSARA_TEST_EQUAL(1U, (*que)->mDownStreamQueues.size());
+    // pipeline level
+    APSARA_TEST_EQUAL(key, pipeline->GetContext().GetProcessQueueKey());
+    // manager level
+    APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mQueues.size());
+    APSARA_TEST_EQUAL(1U, ProcessQueueManager::GetInstance()->mPriorityQueue[3].size());
+    APSARA_TEST_TRUE(ProcessQueueManager::GetInstance()->mPriorityQueue[3].begin()
+                     == ProcessQueueManager::GetInstance()->mQueues[key].first);
 
     // delete pipeline
     pipeline->RemoveProcessQueue();
@@ -2426,7 +2432,7 @@ void PipelineUnittest::TestProcessQueue() const {
 void PipelineUnittest::OnInputFileWithJsonMultiline() const {
     unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
-    unique_ptr<Config> config;
+    unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
 
     // first processor is native json parser
@@ -2460,7 +2466,7 @@ void PipelineUnittest::OnInputFileWithJsonMultiline() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -2497,7 +2503,7 @@ void PipelineUnittest::OnInputFileWithJsonMultiline() const {
     )";
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -2509,7 +2515,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
     unique_ptr<Json::Value> configJson;
     Json::Value goPipelineWithInput, goPipelineWithoutInput;
     string configStr, goPipelineWithoutInputStr, goPipelineWithInputStr, errorMsg;
-    unique_ptr<Config> config;
+    unique_ptr<PipelineConfig> config;
     unique_ptr<Pipeline> pipeline;
 
     // native processing
@@ -2547,7 +2553,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             },
             "inputs": [
                 {
-                    "type": "metric_container_info",
+                    "type": "metric_container_info/2",
                     "detail": {
                         "CollectingContainersMeta": true,
                         "LogPath": "/home",
@@ -2561,7 +2567,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
     configJson.reset(new Json::Value());
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
@@ -2609,7 +2615,7 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             },
             "inputs": [
                 {
-                    "type": "metric_container_info",
+                    "type": "metric_container_info/2",
                     "detail": {
                         "CollectingContainersMeta": true,
                         "LogPath": "/home",
@@ -2629,13 +2635,19 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             },
             "processors": [
                 {
-                    "type": "processor_regex",
+                    "type": "processor_regex/5",
+                    "detail": {}
+                }
+            ],
+            "aggregators": [
+                {
+                    "type": "aggregator_default/6",
                     "detail": {}
                 }
             ],
             "flushers": [
                 {
-                    "type": "flusher_sls",
+                    "type": "flusher_sls/7",
                     "detail": {
                         "EnableShardHash": false
                     }
@@ -2647,25 +2659,28 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
-    config.reset(new Config(configName, std::move(configJson)));
+    config.reset(new PipelineConfig(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
     APSARA_TEST_TRUE(pipeline->Init(std::move(*config)));
     APSARA_TEST_EQUAL(goPipelineWithInput.toStyledString(), pipeline->mGoPipelineWithInput.toStyledString());
-    APSARA_TEST_TRUE(goPipelineWithoutInput == pipeline->mGoPipelineWithoutInput);
+    APSARA_TEST_EQUAL(goPipelineWithoutInput.toStyledString(), pipeline->mGoPipelineWithoutInput.toStyledString());
     goPipelineWithInput.clear();
     goPipelineWithoutInput.clear();
 }
 
 void PipelineUnittest::TestProcess() const {
     Pipeline pipeline;
-    uint32_t pluginIdx = 0;
+    pipeline.mPluginID.store(0);
     PipelineContext ctx;
+    ctx.SetPipeline(pipeline);
     Json::Value tmp;
-    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, to_string(++pluginIdx));
-    input->Init(Json::Value(), ctx, pluginIdx, 0, tmp);
+
+    auto input = PluginRegistry::GetInstance()->CreateInput(InputMock::sName, pipeline.GenNextPluginMeta(false));
+    input->Init(Json::Value(), ctx, 0, tmp);
     pipeline.mInputs.emplace_back(std::move(input));
-    auto processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, to_string(++pluginIdx));
+    auto processor
+        = PluginRegistry::GetInstance()->CreateProcessor(ProcessorMock::sName, pipeline.GenNextPluginMeta(false));
     processor->Init(Json::Value(), ctx);
     pipeline.mProcessorLine.emplace_back(std::move(processor));
 
@@ -2677,6 +2692,140 @@ void PipelineUnittest::TestProcess() const {
     APSARA_TEST_EQUAL(1U, static_cast<const ProcessorMock*>(pipeline.mProcessorLine[0]->mPlugin.get())->mCnt);
 }
 
+void PipelineUnittest::TestSend() const {
+    {
+        // no route
+        Pipeline pipeline;
+        pipeline.mPluginID.store(0);
+        PipelineContext ctx;
+        ctx.SetPipeline(pipeline);
+        Json::Value tmp;
+        {
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+            flusher->Init(Json::Value(), ctx, tmp);
+            pipeline.mFlushers.emplace_back(std::move(flusher));
+        }
+        {
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+            flusher->Init(Json::Value(), ctx, tmp);
+            pipeline.mFlushers.emplace_back(std::move(flusher));
+        }
+        vector<pair<size_t, const Json::Value*>> configs;
+        configs.emplace_back(0, nullptr);
+        configs.emplace_back(1, nullptr);
+        pipeline.mRouter.Init(configs, ctx);
+        {
+            // all valid
+            vector<PipelineEventGroup> group;
+            group.emplace_back(make_shared<SourceBuffer>());
+            APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
+        }
+        {
+            // some flusher not valid
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = false;
+            vector<PipelineEventGroup> group;
+            group.emplace_back(make_shared<SourceBuffer>());
+            APSARA_TEST_FALSE(pipeline.Send(std::move(group)));
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = true;
+        }
+    }
+    {
+        // with route
+        Pipeline pipeline;
+        pipeline.mPluginID.store(0);
+        PipelineContext ctx;
+        ctx.SetPipeline(pipeline);
+        Json::Value tmp;
+        {
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+            flusher->Init(Json::Value(), ctx, tmp);
+            pipeline.mFlushers.emplace_back(std::move(flusher));
+        }
+        {
+            auto flusher
+                = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+            flusher->Init(Json::Value(), ctx, tmp);
+            pipeline.mFlushers.emplace_back(std::move(flusher));
+        }
+
+        Json::Value configJson;
+        string errorMsg;
+        string configStr = R"(
+            [
+                {
+                    "Type": "event_type",
+                    "Value": "log"
+                }
+            ]
+        )";
+        APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+        vector<pair<size_t, const Json::Value*>> configs;
+        for (Json::Value::ArrayIndex i = 0; i < configJson.size(); ++i) {
+            configs.emplace_back(i, &configJson[i]);
+        }
+        configs.emplace_back(configJson.size(), nullptr);
+        pipeline.mRouter.Init(configs, ctx);
+
+        {
+            vector<PipelineEventGroup> group;
+            group.emplace_back(make_shared<SourceBuffer>());
+            group[0].AddLogEvent();
+            APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
+        }
+        {
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = false;
+            vector<PipelineEventGroup> group;
+            group.emplace_back(make_shared<SourceBuffer>());
+            group[0].AddMetricEvent();
+            APSARA_TEST_TRUE(pipeline.Send(std::move(group)));
+            const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid
+                = true;
+        }
+    }
+}
+
+void PipelineUnittest::TestFlushBatch() const {
+    Pipeline pipeline;
+    pipeline.mName = configName;
+    pipeline.mPluginID.store(0);
+    PipelineContext ctx;
+    ctx.SetPipeline(pipeline);
+    Json::Value tmp;
+    {
+        auto flusher
+            = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+        flusher->Init(Json::Value(), ctx, tmp);
+        pipeline.mFlushers.emplace_back(std::move(flusher));
+    }
+    {
+        auto flusher
+            = PluginRegistry::GetInstance()->CreateFlusher(FlusherMock::sName, pipeline.GenNextPluginMeta(false));
+        flusher->Init(Json::Value(), ctx, tmp);
+        pipeline.mFlushers.emplace_back(std::move(flusher));
+    }
+    {
+        // all successful
+        TimeoutFlushManager::GetInstance()->UpdateRecord(configName, 0, 1, 3, nullptr);
+        TimeoutFlushManager::GetInstance()->UpdateRecord(configName, 1, 1, 3, nullptr);
+        APSARA_TEST_TRUE(pipeline.FlushBatch());
+        APSARA_TEST_TRUE(TimeoutFlushManager::GetInstance()->mTimeoutRecords.empty());
+    }
+    {
+        // some failed
+        const_cast<FlusherMock*>(static_cast<const FlusherMock*>(pipeline.mFlushers[0]->GetPlugin()))->mIsValid = false;
+        TimeoutFlushManager::GetInstance()->UpdateRecord(configName, 0, 1, 3, nullptr);
+        TimeoutFlushManager::GetInstance()->UpdateRecord(configName, 1, 1, 3, nullptr);
+        APSARA_TEST_FALSE(pipeline.FlushBatch());
+        APSARA_TEST_TRUE(TimeoutFlushManager::GetInstance()->mTimeoutRecords.empty());
+    }
+}
+
 UNIT_TEST_CASE(PipelineUnittest, OnSuccessfulInit)
 UNIT_TEST_CASE(PipelineUnittest, OnFailedInit)
 UNIT_TEST_CASE(PipelineUnittest, TestProcessQueue)
@@ -2684,6 +2833,8 @@ UNIT_TEST_CASE(PipelineUnittest, OnInitVariousTopology)
 UNIT_TEST_CASE(PipelineUnittest, OnInputFileWithJsonMultiline)
 UNIT_TEST_CASE(PipelineUnittest, OnInputFileWithContainerDiscovery)
 UNIT_TEST_CASE(PipelineUnittest, TestProcess)
+UNIT_TEST_CASE(PipelineUnittest, TestSend)
+UNIT_TEST_CASE(PipelineUnittest, TestFlushBatch)
 
 } // namespace logtail
 

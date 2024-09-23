@@ -1,3 +1,5 @@
+// Copyright 2024 iLogtail Authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -347,7 +349,7 @@ func newSeries(ms pipeline.MetricSet, labelValues []string) Series {
 func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr string) {
 	log.Contents = append(log.Contents,
 		&protocol.Log_Content{Key: metricName, Value: metricValueStr},
-		&protocol.Log_Content{Key: SelfMetricNameKey, Value: metricName})
+		&protocol.Log_Content{Key: pipeline.SelfMetricNameKey, Value: metricName})
 
 	for _, v := range s.ConstLabels() {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: v.Key, Value: v.Value})
@@ -362,7 +364,7 @@ func (s Series) SerializeWithStr(log *protocol.Log, metricName, metricValueStr s
 func (s Series) Export(metricName, metricValue string) map[string]string {
 	ret := make(map[string]string, len(s.ConstLabels())+len(s.labelValues)+2)
 	ret[metricName] = metricValue
-	ret[SelfMetricNameKey] = metricName
+	ret[pipeline.SelfMetricNameKey] = metricName
 
 	for _, v := range s.ConstLabels() {
 		ret[v.Key] = v.Value

@@ -13,56 +13,20 @@
 // limitations under the License.
 
 #include "LogtailMetric.h"
-#include "common/StringTools.h"
+
 #include "MetricConstants.h"
-#include "logger/Logger.h"
-#include "common/TimeUtil.h"
 #include "app_config/AppConfig.h"
+#include "common/StringTools.h"
+#include "common/TimeUtil.h"
+#include "logger/Logger.h"
 
 
 using namespace sls_logs;
 
 namespace logtail {
 
-Counter::Counter(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
-}
-
-uint64_t Counter::GetValue() const {
-    return mVal;
-}
-
-const std::string& Counter::GetName() const {
-    return mName;
-}
-
-Counter* Counter::CopyAndReset() {
-    return new Counter(mName, mVal.exchange(0));
-}
-
-void Counter::Add(uint64_t value) {
-    mVal += value;
-}
-
-Gauge::Gauge(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
-}
-
-uint64_t Gauge::GetValue() const {
-    return mVal;
-}
-
-const std::string& Gauge::GetName() const {
-    return mName;
-}
-
-Gauge* Gauge::CopyAndReset() {
-    return new Gauge(mName, mVal.exchange(0));
-}
-
-void Gauge::Set(uint64_t value) {
-    mVal = value;
-}
-
-MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
+MetricsRecord::MetricsRecord(MetricLabelsPtr labels, DynamicMetricLabelsPtr dynamicLabels)
+    : mLabels(labels), mDynamicLabels(dynamicLabels), mDeleted(false) {
 }
 
 CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
@@ -71,9 +35,15 @@ CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
     return counterPtr;
 }
 
-GaugePtr MetricsRecord::CreateGauge(const std::string& name) {
-    GaugePtr gaugePtr = std::make_shared<Gauge>(name);
-    mGauges.emplace_back(gaugePtr);
+IntGaugePtr MetricsRecord::CreateIntGauge(const std::string& name) {
+    IntGaugePtr gaugePtr = std::make_shared<IntGauge>(name);
+    mIntGauges.emplace_back(gaugePtr);
+    return gaugePtr;
+}
+
+DoubleGaugePtr MetricsRecord::CreateDoubleGauge(const std::string& name) {
+    DoubleGaugePtr gaugePtr = std::make_shared<Gauge<double>>(name);
+    mDoubleGauges.emplace_back(gaugePtr);
     return gaugePtr;
 }
 
@@ -85,27 +55,39 @@ bool MetricsRecord::IsDeleted() const {
     return mDeleted;
 }
 
-const LabelsPtr& MetricsRecord::GetLabels() const {
+const MetricLabelsPtr& MetricsRecord::GetLabels() const {
     return mLabels;
+}
+
+const DynamicMetricLabelsPtr& MetricsRecord::GetDynamicLabels() const {
+    return mDynamicLabels;
 }
 
 const std::vector<CounterPtr>& MetricsRecord::GetCounters() const {
     return mCounters;
 }
 
-const std::vector<GaugePtr>& MetricsRecord::GetGauges() const {
-    return mGauges;
+const std::vector<IntGaugePtr>& MetricsRecord::GetIntGauges() const {
+    return mIntGauges;
 }
 
-MetricsRecord* MetricsRecord::CopyAndReset() {
-    MetricsRecord* metrics = new MetricsRecord(mLabels);
+const std::vector<DoubleGaugePtr>& MetricsRecord::GetDoubleGauges() const {
+    return mDoubleGauges;
+}
+
+MetricsRecord* MetricsRecord::Collect() {
+    MetricsRecord* metrics = new MetricsRecord(mLabels, mDynamicLabels);
     for (auto& item : mCounters) {
-        CounterPtr newPtr(item->CopyAndReset());
+        CounterPtr newPtr(item->Collect());
         metrics->mCounters.emplace_back(newPtr);
     }
-    for (auto& item : mGauges) {
-        GaugePtr newPtr(item->CopyAndReset());
-        metrics->mGauges.emplace_back(newPtr);
+    for (auto& item : mIntGauges) {
+        IntGaugePtr newPtr(item->Collect());
+        metrics->mIntGauges.emplace_back(newPtr);
+    }
+    for (auto& item : mDoubleGauges) {
+        DoubleGaugePtr newPtr(item->Collect());
+        metrics->mDoubleGauges.emplace_back(newPtr);
     }
     return metrics;
 }
@@ -124,20 +106,99 @@ MetricsRecordRef::~MetricsRecordRef() {
     }
 }
 
-
 void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
+}
+
+const MetricLabelsPtr& MetricsRecordRef::GetLabels() const {
+    return mMetrics->GetLabels();
+}
+
+const DynamicMetricLabelsPtr& MetricsRecordRef::GetDynamicLabels() const {
+    return mMetrics->GetDynamicLabels();
 }
 
 CounterPtr MetricsRecordRef::CreateCounter(const std::string& name) {
     return mMetrics->CreateCounter(name);
 }
-GaugePtr MetricsRecordRef::CreateGauge(const std::string& name) {
-    return mMetrics->CreateGauge(name);
+
+IntGaugePtr MetricsRecordRef::CreateIntGauge(const std::string& name) {
+    return mMetrics->CreateIntGauge(name);
+}
+
+DoubleGaugePtr MetricsRecordRef::CreateDoubleGauge(const std::string& name) {
+    return mMetrics->CreateDoubleGauge(name);
 }
 
 const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
+}
+
+void MetricsRecordRef::AddLabels(MetricLabels&& labels) {
+    mMetrics->GetLabels()->insert(mMetrics->GetLabels()->end(), labels.begin(), labels.end());
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
+bool MetricsRecordRef::HasLabel(const std::string& key, const std::string& value) const {
+    for (auto item : *(mMetrics->GetLabels())) {
+        if (item.first == key && item.second == value) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
+// ReentrantMetricsRecord相关操作可以无锁，因为mCounters、mGauges只在初始化时会添加内容，后续只允许Get操作
+void ReentrantMetricsRecord::Init(MetricLabels& labels, std::unordered_map<std::string, MetricType>& metricKeys) {
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+    for (auto metric : metricKeys) {
+        switch (metric.second) {
+            case MetricType::METRIC_TYPE_COUNTER:
+                mCounters[metric.first] = mMetricsRecordRef.CreateCounter(metric.first);
+                break;
+            case MetricType::METRIC_TYPE_INT_GAUGE:
+                mIntGauges[metric.first] = mMetricsRecordRef.CreateIntGauge(metric.first);
+                break;
+            case MetricType::METRIC_TYPE_DOUBLE_GAUGE:
+                mDoubleGauges[metric.first] = mMetricsRecordRef.CreateDoubleGauge(metric.first);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+const MetricLabelsPtr& ReentrantMetricsRecord::GetLabels() const {
+    return mMetricsRecordRef->GetLabels();
+}
+
+const DynamicMetricLabelsPtr& ReentrantMetricsRecord::GetDynamicLabels() const {
+    return mMetricsRecordRef->GetDynamicLabels();
+}
+
+CounterPtr ReentrantMetricsRecord::GetCounter(const std::string& name) {
+    auto it = mCounters.find(name);
+    if (it != mCounters.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+IntGaugePtr ReentrantMetricsRecord::GetIntGauge(const std::string& name) {
+    auto it = mIntGauges.find(name);
+    if (it != mIntGauges.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+DoubleGaugePtr ReentrantMetricsRecord::GetDoubleGauge(const std::string& name) {
+    auto it = mDoubleGauges.find(name);
+    if (it != mDoubleGauges.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 WriteMetrics::~WriteMetrics() {
@@ -148,23 +209,44 @@ void WriteMetrics::PreparePluginCommonLabels(const std::string& projectName,
                                              const std::string& logstoreName,
                                              const std::string& region,
                                              const std::string& configName,
-                                             const std::string& pluginName,
+                                             const std::string& pluginType,
                                              const std::string& pluginID,
+                                             const std::string& nodeID,
+                                             const std::string& childNodeID,
                                              MetricLabels& labels) {
-    labels.emplace_back(std::make_pair("project", projectName));
-    labels.emplace_back(std::make_pair("logstore", logstoreName));
-    labels.emplace_back(std::make_pair("region", region));
-    labels.emplace_back(std::make_pair("config_name", configName));
-    labels.emplace_back(std::make_pair("plugin_name", pluginName));
-    labels.emplace_back(std::make_pair("plugin_id", pluginID));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_PROJECT, projectName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_LOGSTORE, logstoreName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_REGION, region));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_CONFIG_NAME, configName));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_NAME, pluginType));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_PLUGIN_ID, pluginID));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_NODE_ID, nodeID));
+    labels.emplace_back(std::make_pair(METRIC_LABEL_CHILD_NODE_ID, childNodeID));
 }
 
-void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels) {
-    MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels));
+void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref,
+                                           MetricLabels&& labels,
+                                           DynamicMetricLabels&& dynamicLabels) {
+    MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels),
+                                           std::make_shared<DynamicMetricLabels>(dynamicLabels));
     ref.SetMetricsRecord(cur);
     std::lock_guard<std::mutex> lock(mMutex);
     cur->SetNext(mHead);
     mHead = cur;
+}
+
+void WriteMetrics::CreateMetricsRecordRef(MetricsRecordRef& ref,
+                                          MetricLabels&& labels,
+                                          DynamicMetricLabels&& dynamicLabels) {
+    MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels),
+                                           std::make_shared<DynamicMetricLabels>(dynamicLabels));
+    ref.SetMetricsRecord(cur);
+}
+
+void WriteMetrics::CommitMetricsRecordRef(MetricsRecordRef& ref) {
+    std::lock_guard<std::mutex> lock(mMutex);
+    ref.mMetrics->SetNext(mHead);
+    mHead = ref.mMetrics;
 }
 
 MetricsRecord* WriteMetrics::GetHead() {
@@ -207,7 +289,7 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
                 tmp->SetNext(toDeleteHead);
                 toDeleteHead = tmp;
                 tmp = preTmp->GetNext();
-                writeMetricsTotal ++;
+                writeMetricsTotal++;
             } else {
                 // find head
                 mHead = tmp;
@@ -226,22 +308,22 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
 
     // copy head
     if (preTmp) {
-        MetricsRecord* newMetrics = preTmp->CopyAndReset();
+        MetricsRecord* newMetrics = preTmp->Collect();
         newMetrics->SetNext(snapshot);
         snapshot = newMetrics;
         metricsSnapshotTotal++;
-        writeMetricsTotal ++;
+        writeMetricsTotal++;
     }
 
     while (tmp) {
-        writeMetricsTotal ++;
+        writeMetricsTotal++;
         if (tmp->IsDeleted()) {
             preTmp->SetNext(tmp->GetNext());
             tmp->SetNext(toDeleteHead);
             toDeleteHead = tmp;
             tmp = preTmp->GetNext();
         } else {
-            MetricsRecord* newMetrics = tmp->CopyAndReset();
+            MetricsRecord* newMetrics = tmp->Collect();
             newMetrics->SetNext(snapshot);
             snapshot = newMetrics;
             preTmp = tmp;
@@ -254,9 +336,11 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
         MetricsRecord* toDelete = toDeleteHead;
         toDeleteHead = toDeleteHead->GetNext();
         delete toDelete;
-        writeMetricsDeleteTotal ++;
+        writeMetricsDeleteTotal++;
     }
-    LOG_INFO(sLogger, ("writeMetricsTotal", writeMetricsTotal)("writeMetricsDeleteTotal", writeMetricsDeleteTotal)("metricsSnapshotTotal", metricsSnapshotTotal));
+    LOG_INFO(sLogger,
+             ("writeMetricsTotal", writeMetricsTotal)("writeMetricsDeleteTotal", writeMetricsDeleteTotal)(
+                 "metricsSnapshotTotal", metricsSnapshotTotal));
     return snapshot;
 }
 
@@ -269,7 +353,7 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
     MetricsRecord* tmp = mHead;
     while (tmp) {
         Log* logPtr = nullptr;
-        // for (auto &item: tmp->GetLabels()) {
+
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
             std::pair<std::string, std::string> pair = *item;
             if (METRIC_FIELD_REGION == pair.first) {
@@ -307,6 +391,12 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_key(LABEL_PREFIX + pair.first);
             contentPtr->set_value(pair.second);
         }
+        for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
+            std::pair<std::string, std::function<std::string()>> pair = *item;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(LABEL_PREFIX + pair.first);
+            contentPtr->set_value(pair.second());
+        }
 
         for (auto& item : tmp->GetCounters()) {
             CounterPtr counter = item;
@@ -314,8 +404,14 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));
         }
-        for (auto& item : tmp->GetGauges()) {
-            GaugePtr gauge = item;
+        for (auto& item : tmp->GetIntGauges()) {
+            IntGaugePtr gauge = item;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
+            contentPtr->set_value(ToString(gauge->GetValue()));
+        }
+        for (auto& item : tmp->GetDoubleGauges()) {
+            DoubleGaugePtr gauge = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
             contentPtr->set_value(ToString(gauge->GetValue()));
@@ -324,6 +420,51 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
     }
 }
 
+void ReadMetrics::ReadAsFileBuffer(std::string& metricsContent) const {
+    ReadLock lock(mReadWriteLock);
+
+    std::ostringstream oss;
+
+    MetricsRecord* tmp = mHead;
+    while (tmp) {
+        Json::Value metricsRecordValue;
+        auto now = GetCurrentLogtailTime();
+        metricsRecordValue["time"]
+            = AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec;
+
+        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+            std::pair<std::string, std::string> pair = *item;
+            metricsRecordValue[LABEL_PREFIX + pair.first] = pair.second;
+        }
+        for (auto item = tmp->GetDynamicLabels()->begin(); item != tmp->GetDynamicLabels()->end(); ++item) {
+            std::pair<std::string, std::function<std::string()>> pair = *item;
+            metricsRecordValue[LABEL_PREFIX + pair.first] = pair.second();
+        }
+
+        for (auto& item : tmp->GetCounters()) {
+            CounterPtr counter = item;
+            metricsRecordValue[VALUE_PREFIX + counter->GetName()] = ToString(counter->GetValue());
+        }
+
+        for (auto& item : tmp->GetIntGauges()) {
+            IntGaugePtr gauge = item;
+            metricsRecordValue[VALUE_PREFIX + gauge->GetName()] = ToString(gauge->GetValue());
+        }
+
+        for (auto& item : tmp->GetDoubleGauges()) {
+            DoubleGaugePtr gauge = item;
+            metricsRecordValue[VALUE_PREFIX + gauge->GetName()] = ToString(gauge->GetValue());
+        }
+
+        Json::StreamWriterBuilder writer;
+        writer["indentation"] = "";
+        std::string jsonString = Json::writeString(writer, metricsRecordValue);
+        oss << jsonString << '\n';
+
+        tmp = tmp->GetNext();
+    }
+    metricsContent = oss.str();
+}
 
 void ReadMetrics::UpdateMetrics() {
     MetricsRecord* snapshot = WriteMetrics::GetInstance()->DoSnapshot();

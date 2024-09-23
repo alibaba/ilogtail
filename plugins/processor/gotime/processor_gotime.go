@@ -28,6 +28,7 @@ const (
 	fixedSecondsTimestampPattern      = "seconds"
 	fixedMillisecondsTimestampPattern = "milliseconds"
 	fixedMicrosecondsTimestampPattern = "microseconds"
+	fixedNanosecondsTimestampPattern  = "nanoseconds"
 )
 
 type ProcessorGotime struct {
@@ -50,23 +51,23 @@ type ProcessorGotime struct {
 }
 
 const (
-	pluginName      = "processor_gotime"
+	pluginType      = "processor_gotime"
 	machineTimeZone = -100
 )
 
 // Init called for init some system resources, like socket, mutex...
 func (p *ProcessorGotime) Init(context pipeline.Context) error {
 	if p.SourceKey == "" {
-		return fmt.Errorf("must specify SourceKey for plugin %v", pluginName)
+		return fmt.Errorf("must specify SourceKey for plugin %v", pluginType)
 	}
 	if p.SourceFormat == "" {
-		return fmt.Errorf("must specify SourceFormat for plugin %v", pluginName)
+		return fmt.Errorf("must specify SourceFormat for plugin %v", pluginType)
 	}
 	if p.DestKey == "" {
-		return fmt.Errorf("must specify DestKey for plugin %v", pluginName)
+		return fmt.Errorf("must specify DestKey for plugin %v", pluginType)
 	}
 	if p.DestFormat == "" {
-		return fmt.Errorf("must specify DestFormat for plugin %v", pluginName)
+		return fmt.Errorf("must specify DestFormat for plugin %v", pluginType)
 	}
 	p.sourceLocation = time.Local
 	if p.SourceLocation != machineTimeZone {
@@ -91,6 +92,11 @@ func (p *ProcessorGotime) Init(context pipeline.Context) error {
 	case fixedMillisecondsTimestampPattern:
 		p.timestampParseFunc = func(timestamp int64) time.Time {
 			return time.Unix(timestamp/1e3, (timestamp%1e3)*1e6)
+		}
+		p.timestampFormat = true
+	case fixedNanosecondsTimestampPattern:
+		p.timestampParseFunc = func(timestamp int64) time.Time {
+			return time.Unix(0, timestamp)
 		}
 		p.timestampFormat = true
 	}
@@ -160,7 +166,7 @@ func (p *ProcessorGotime) processLog(log *protocol.Log) {
 }
 
 func init() {
-	pipeline.Processors[pluginName] = func() pipeline.Processor {
+	pipeline.Processors[pluginType] = func() pipeline.Processor {
 		return &ProcessorGotime{
 			SourceKey:      "",
 			SourceFormat:   "",

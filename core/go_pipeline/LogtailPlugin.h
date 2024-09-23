@@ -28,8 +28,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "flusher/FlusherSLS.h"
-#include "log_pb/sls_logs.pb.h"
+#include "plugin/flusher/sls/FlusherSLS.h"
+#include "protobuf/sls/sls_logs.pb.h"
 
 extern "C" {
 // The definition of Golang type is copied from PluginAdaptor.h that
@@ -77,6 +77,22 @@ struct innerContainerMeta {
     char** envsKey;
     char** envsVal;
 };
+
+typedef struct {
+    char* key;
+    char* value;
+} InnerKeyValue;
+
+typedef struct {
+    InnerKeyValue** keyValues;
+    int count;
+} InnerPluginMetric;
+
+typedef struct {
+    InnerPluginMetric** metrics;
+    int count;
+} InnerPluginMetrics;
+
 struct K8sContainerMeta {
     std::string PodName;
     std::string K8sNamespace;
@@ -127,6 +143,7 @@ typedef GoInt (*InitPluginBaseV2Fun)(GoString cfg);
 typedef GoInt (*ProcessLogsFun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
 typedef GoInt (*ProcessLogGroupFun)(GoString c, GoSlice l, GoString p);
 typedef struct innerContainerMeta* (*GetContainerMetaFun)(GoString containerID);
+typedef InnerPluginMetrics* (*GetGoMetricsFun)(GoString metricType);
 
 // Methods export by adapter.
 typedef int (*IsValidToSendFun)(long long logstoreKey);
@@ -196,7 +213,7 @@ public:
                       const std::string& project = "",
                       const std::string& logstore = "",
                       const std::string& region = "",
-                      logtail::LogstoreFeedBackKey logstoreKey = 0);
+                      logtail::QueueKey logstoreKey = 0);
     void HoldOn(bool exitFlag);
     void Resume();
 
@@ -247,6 +264,8 @@ public:
 
     K8sContainerMeta GetContainerMeta(const std::string& containerID);
 
+    void GetGoMetrics(std::vector<std::map<std::string, std::string>>& metircsList, const std::string& metricType);
+
 private:
     void* mPluginBasePtr;
     void* mPluginAdapterPtr;
@@ -265,6 +284,7 @@ private:
     ProcessLogsFun mProcessLogsFun;
     ProcessLogGroupFun mProcessLogGroupFun;
     GetContainerMetaFun mGetContainerMetaFun;
+    GetGoMetricsFun mGetGoMetricsFun;
 
     // Configuration for plugin system in JSON format.
     Json::Value mPluginCfg;

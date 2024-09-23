@@ -13,7 +13,11 @@
 | `config_scan_interval`    | Int | 本地配置热加载的更新间隔，单位为秒。 |
 | `data_server_port`    | Int |<p>用于控制 `flusher_sls` 往 `SLS` 发送的协议类型。</p> <p>取值范围：443（默认），表示使用 `HTTPS` 协议发送；80表示使用 `HTTP` 协议发送。</p><p>如果使用`SLS`内网域名写入，建议使用`HTTP`协议发送，提高传输性能。</p> |
 | `send_running_status`    | Bool | 为了更好的了解 `iLogtail` 的使用情况，以便做出更有针对性的发展规划，`iLogtail` 会上报一些脱敏后的运行统计信息。您也可以手动关闭此开关。                                              |
-| `host_path_blacklist` | String | 全局主机路径黑名单，黑名单为子串匹配，Linux下多个子串以:分隔，Windows下以;分隔。比如禁止采集NAS挂载，可以配置为`/volumes/kubernetes.io~csi/nas-`。
+| `host_path_blacklist` | String | 全局主机路径黑名单，黑名单为子串匹配，Linux下多个子串以:分隔，Windows下以;分隔。比如禁止采集NAS挂载，可以配置为`/volumes/kubernetes.io~csi/nas-`。 |
+| `metrics_report_method` | String | <p>自身指标输出方式。默认为空，即不输出指标。</p><p>当前支持的值：</br>`file`：每分钟将指标输出到`ilogtail`运行目录下的`self_metrics`目录，文件格式为`self-metrics-&{time}.json`，最多保留60个指标文件（即1小时的数据）。该方式适合本地调试使用。</p> |
+| `ebpf.receive_event_chan_cap` | Int | 用于接收内核事件的队列大小，默认为 4096 |
+| `ebpf.admin_config.debug_mode` | Bool | 是否开启 ebpf debug 模式，默认为 false |
+| `ebpf.admin_config.log_level` | String | ebpf 相关的日志级别，包括 info warn 和 debug，默认为 warn |
 
 ### 典型配置
 
@@ -26,13 +30,24 @@
 }
 ```
 
+```json
+{
+    "ebpf": {
+        "receive_event_chan_cap": 4096,
+        "admin_config": {
+            "debug_mode": false,
+            "log_level": "warn"
+        }
+    }
+}
+```
+
 ## 环境变量
 
 ### containerd runtime相关环境变量配置
 
 | 参数                      | 类型     | 说明                                                                                                         |
 | ----------------------- |--------|------------------------------------------------------------------------------------------------------------|
-| `USE_CONTAINERD`       | Bool   | 是否使用containerd runtime，非必选。ilogtail会自动通过接口探测。                                                              |
 | `CONTAINERD_SOCK_PATH`       | String | 自定义containerd sock路径，非必选。默认为/run/containerd/containerd.sock。自定义取值可以通过查看/etc/containerd/config.toml grpc.address字段获取。 |
 | `CONTAINERD_STATE_DIR` | String | 自定义containerd 数据目录，非必选。自定义取值可以通过查看/etc/containerd/config.toml state字段获取。                                             |
 | `LOGTAIL_LOG_LEVEL` | String |  用于控制/apsara/sls/ilogtail和golang插件的日志等级，支持通用日志等级，如trace, debug，info，warning，error，fatal|
