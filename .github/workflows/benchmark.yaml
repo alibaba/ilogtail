@@ -101,18 +101,19 @@ jobs:
           auto-push: false
           summary-always: true
       
-      # - name: Store benchmark result other agents
-      #   run: |
-      #     git checkout gh-pages
-      #     cp test/benchmark/report/records_all.json dev/bench/records_all.js
-      #     sed -i '1s/^\[/window.BENCHMARK_RECORDS = [/' dev/bench/records_all.js
-      #     git add dev/bench/records_all.js
-      #     last_commit_message=$(git log -1 --pretty=%B)
-      #     git -c user.name=github-action-benchmark -c user.email=github@users.noreply.github.com commit --amend -m "$last_commit_message"
+      - name: Store benchmark result other agents
+        run: |
+          git checkout gh-pages
+          cp test/benchmark/report/records_all.json dev/bench/records_all.js
+          sed -i '1s/^\[/window.BENCHMARK_RECORDS = [/' dev/bench/records_all.js
+          git add dev/bench/records_all.js
+          last_commit_message=$(git log -1 --pretty=%B)
+          git -c user.name=github-action-benchmark -c user.email=github@users.noreply.github.com commit --amend -m "$last_commit_message"
       
-      # # Push gh-pages branch by yourself
-      # - name: Push benchmark result
-      #   run: git push 'https://alibaba:${{ secrets.GITHUB_TOKEN }}@github.com/alibaba/ilogtail.git' gh-pages:gh-pages
+      # Push gh-pages branch by yourself
+      - name: Push benchmark result
+        # run: git push 'https://alibaba:${{ secrets.GITHUB_TOKEN }}@github.com/alibaba/ilogtail.git' gh-pages:gh-pages
+        run: git push 'https://Assassin718:${{ secrets.GITHUB_TOKEN }}@github.com/Assassin718/ilogtail.git' gh-pages:gh-pages
 
   result:
     if: github.event.pull_request.merged == true
