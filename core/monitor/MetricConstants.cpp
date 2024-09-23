@@ -183,7 +183,8 @@ const std::string METRIC_COMPONENT_QUEUE_DISCARDED_EVENTS_CNT = "component_disca
 const std::string METRIC_PIPELINE_START_TIME = "pipeline_start_time";
 const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENTS_CNT = "pipeline_processors_in_events_total";
 const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUPS_CNT = "pipeline_processors_in_event_groups_total";
-const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES = "pipeline_processors_in_event_group_size_bytes";
+const std::string METRIC_PIPELINE_PROCESSORS_IN_EVENT_GROUP_SIZE_BYTES
+    = "pipeline_processors_in_event_group_size_bytes";
 const std::string METRIC_PIPELINE_PROCESSORS_TOTAL_DELAY_MS = "pipeline_processors_total_delay_ms";
 
 //////////////////////////////////////////////////////////////////////////
@@ -214,5 +215,8 @@ const std::string METRIC_RUNNER_FILE_WATCHED_DIRS_CNT = "runner_watched_dirs_tot
 const std::string METRIC_RUNNER_FILE_ACTIVE_READERS_CNT = "runner_active_readers_total";
 const std::string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG
     = "runner_enable_file_included_by_multi_configs";
+const std::string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE = "runner_polling_modify_cache_size";
+const std::string METRIC_RUNNER_FILE_POLLING_DIR_CACHE_SIZE = "runner_polling_dir_cache_size";
+const std::string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE = "runner_polling_file_cache_size";
 
 } // namespace logtail

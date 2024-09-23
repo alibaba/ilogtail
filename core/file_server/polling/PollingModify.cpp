@@ -24,10 +24,11 @@
 #include "common/Flags.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
+#include "file_server/FileServer.h"
 #include "file_server/event/Event.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
-#include "file_server/FileServer.h"
+#include "monitor/MetricConstants.h"
 
 using namespace std;
 
@@ -48,7 +49,8 @@ PollingModify::~PollingModify() {
 
 void PollingModify::Start() {
     ClearCache();
-    mPollingModifySize = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge("polling_modify_size");
+    mPollingModifySize
+        = FileServer::GetInstance()->GetMetricsRecordRef().CreateIntGauge(METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE);
 
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });

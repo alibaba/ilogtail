@@ -206,5 +206,8 @@ extern const std::string METRIC_RUNNER_FLUSHER_WAITING_ITEMS_CNT;
 extern const std::string METRIC_RUNNER_FILE_WATCHED_DIRS_CNT;
 extern const std::string METRIC_RUNNER_FILE_ACTIVE_READERS_CNT;
 extern const std::string METRIC_RUNNER_FILE_ENABLE_FILE_INCLUDED_BY_MULTI_CONFIGS_FLAG;
+extern const std::string METRIC_RUNNER_FILE_POLLING_MODIFY_CACHE_SIZE;
+extern const std::string METRIC_RUNNER_FILE_POLLING_DIR_CACHE_SIZE;
+extern const std::string METRIC_RUNNER_FILE_POLLING_FILE_CACHE_SIZE;
 
 } // namespace logtail
