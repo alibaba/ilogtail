@@ -73,5 +73,5 @@ func init() {
 }
 
 func (g *GoProfile) GetMode() pipeline.InputModeType {
-	return pipeline.PUSH
+	return pipeline.PULL
 }

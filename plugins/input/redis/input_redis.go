@@ -275,5 +275,5 @@ func init() {
 }
 
 func (r *InputRedis) GetMode() pipeline.InputModeType {
-	return pipeline.PUSH
+	return pipeline.PULL
 }
