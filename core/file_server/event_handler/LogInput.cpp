@@ -16,8 +16,6 @@
 
 #include <time.h>
 
-#include "file_server/event_handler/EventHandler.h"
-#include "file_server/event_handler/HistoryFileImporter.h"
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
 #include "checkpoint/CheckPointManager.h"
@@ -27,18 +25,20 @@
 #include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
+#include "file_server/ConfigManager.h"
 #include "file_server/EventDispatcher.h"
 #include "file_server/event/BlockEventManager.h"
-#include "file_server/ConfigManager.h"
-#include "logger/Logger.h"
-#include "monitor/LogtailAlarm.h"
-#include "monitor/Monitor.h"
+#include "file_server/event_handler/EventHandler.h"
+#include "file_server/event_handler/HistoryFileImporter.h"
 #include "file_server/polling/PollingCache.h"
 #include "file_server/polling/PollingDirFile.h"
 #include "file_server/polling/PollingEventQueue.h"
 #include "file_server/polling/PollingModify.h"
 #include "file_server/reader/GloablFileDescriptorManager.h"
 #include "file_server/reader/LogFileReader.h"
+#include "logger/Logger.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/Monitor.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -89,8 +89,7 @@ void LogInput::Start() {
     mInteruptFlag = false;
 
     mAgentOpenFdTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_OPEN_FD_TOTAL);
-    mAgentRegisterHandlerTotal
-        = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
+    mAgentRegisterHandlerTotal = LoongCollectorMonitor::GetInstance()->GetIntGauge(METRIC_AGENT_REGISTER_HANDLER_TOTAL);
 
     new Thread([this]() { ProcessLoop(); });
 }
@@ -104,7 +103,7 @@ void LogInput::Resume() {
 
 void LogInput::HoldOn() {
     LOG_INFO(sLogger, ("event handle daemon pause", "starts"));
-    if (BOOL_FLAG(enable_full_drain_mode)) {
+    if (BOOL_FLAG(enable_full_drain_mode) && Application::GetInstance()->IsExiting()) {
         unique_lock<mutex> lock(mThreadRunningMux);
         mStopCV.wait(lock, [this]() { return mInteruptFlag; });
     } else {
