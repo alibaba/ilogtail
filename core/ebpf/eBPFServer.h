@@ -29,6 +29,8 @@
 #include "ebpf/handler/AbstractHandler.h"
 #include "ebpf/handler/ObserveHandler.h"
 #include "ebpf/handler/SecurityHandler.h"
+#include "monitor/LoongCollectorMetricTypes.h"
+#include "ebpf/SelfMonitor.h"
 
 namespace logtail {
 namespace ebpf {
@@ -53,7 +55,7 @@ public:
     bool EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options);
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref);
 
     bool DisablePlugin(const std::string& pipeline_name, nami::PluginType type);
 
@@ -65,7 +67,7 @@ private:
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options);
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref);
     eBPFServer() = default;
     ~eBPFServer() = default;
 
@@ -85,6 +87,8 @@ private:
 
     eBPFAdminConfig mAdminConfig;
     volatile bool mInited = false;
+
+    std::unique_ptr<eBPFSelfMonitorMgr> mMonitorMgr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;

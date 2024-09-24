@@ -146,4 +146,21 @@ const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL = "flusher_quota_error_total"
 const std::string METRIC_FLUSHER_RETRIES_TOTAL = "flusher_retries_total";
 const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL = "flusher_retries_error_total";
 
+// input ebpf plugins metrics
+const std::string METRIC_EBPF_RECV_KERNEL_EVENTS_TOTAL = "ebpf_recv_kernel_events_total";
+const std::string METRIC_EBPF_LOSS_KERNEL_EVENTS_TOTAL = "ebpf_loss_kernel_events_total";
+const std::string METRIC_EBPF_PUSH_CALLBACK_EVENTS_TOTAL = "ebpf_push_callback_events_total";
+const std::string METRIC_EBPF_PUSH_CALLBACK_SPANS_TOTAL = "ebpf_push_callback_spans_total";
+const std::string METRIC_EBPF_PUSH_CALLBACK_METRICS_TOTAL = "ebpf_push_callback_metrics_total";
+const std::string METRIC_EBPF_PUSH_QUEUE_EVENTS_TOTAL = "ebpf_push_queue_events_total";
+
+const std::string METRIC_EBPF_NETWORK_OBSERVER_CONNTRACKER_NUM = "ebpf_network_observer_conntracker_num";
+const std::string METRIC_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL = "ebpf_network_observer_worker_handle_events_total";
+const std::string METRIC_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL = "ebpf_network_observer_parse_records_total";
+const std::string METRIC_EBPF_NETWORK_OBSERVER_AGGREGATE_EVENTS_TOTAL = "ebpf_network_observer_aggregate_events_total";
+const std::string METRIC_EBPF_NETWORK_OBSERVER_AGGREGATE_KEY_NUM = "ebpf_network_observer_aggregate_key_num";
+
+const std::string METRIC_EBPF_PROCESS_CACHE_ENTRIES_NUM = "ebpf_process_cache_entries_num";
+const std::string METRIC_EBPF_PROCESS_CACHE_MISS_TOTAL = "ebpf_process_cache_miss_total";
+
 } // namespace logtail

@@ -139,4 +139,19 @@ extern const std::string METRIC_FLUSHER_QUOTA_ERROR_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_TOTAL;
 extern const std::string METRIC_FLUSHER_RETRIES_ERROR_TOTAL;
 
+// input ebpf plugins metrics
+extern const std::string METRIC_EBPF_RECV_KERNEL_EVENTS_TOTAL;
+extern const std::string METRIC_EBPF_LOSS_KERNEL_EVENTS_TOTAL;
+extern const std::string METRIC_EBPF_PUSH_CALLBACK_EVENTS_TOTAL;
+extern const std::string METRIC_EBPF_PUSH_CALLBACK_METRICS_TOTAL;
+extern const std::string METRIC_EBPF_PUSH_CALLBACK_SPANS_TOTAL;
+extern const std::string METRIC_EBPF_PUSH_QUEUE_EVENTS_TOTAL;
+extern const std::string METRIC_EBPF_NETWORK_OBSERVER_CONNTRACKER_NUM;
+extern const std::string METRIC_EBPF_NETWORK_OBSERVER_WORKER_HANDLE_EVENTS_TOTAL;
+extern const std::string METRIC_EBPF_NETWORK_OBSERVER_PROTOCOL_PARSE_RECORDS_TOTAL;
+extern const std::string METRIC_EBPF_NETWORK_OBSERVER_AGGREGATE_EVENTS_TOTAL;
+extern const std::string METRIC_EBPF_NETWORK_OBSERVER_AGGREGATE_KEY_NUM;
+extern const std::string METRIC_EBPF_PROCESS_CACHE_ENTRIES_NUM;
+extern const std::string METRIC_EBPF_PROCESS_CACHE_MISS_TOTAL;
+
 } // namespace logtail

@@ -18,6 +18,8 @@
 #include "ebpf/eBPFServer.h"
 #include "ebpf/config.h"
 #include "logger/Logger.h"
+#include "monitor/MetricConstants.h"
+#include "monitor/PluginMetricManager.h"
 
 using namespace std;
 
@@ -36,7 +38,7 @@ bool InputNetworkObserver::Init(const Json::Value& config, Json::Value& optional
 }
 
 bool InputNetworkObserver::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK_OBSERVE, mContext, &mNetworkOption);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK_OBSERVE, mContext, &mNetworkOption, GetMetricsRecordRef());
 }
 
 bool InputNetworkObserver::Stop(bool isPipelineRemoving) {

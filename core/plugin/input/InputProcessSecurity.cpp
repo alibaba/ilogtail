@@ -34,7 +34,7 @@ bool InputProcessSecurity::Init(const Json::Value& config, Json::Value& optional
 }
 
 bool InputProcessSecurity::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::PROCESS_SECURITY,mContext, &mSecurityOptions);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::PROCESS_SECURITY,mContext, &mSecurityOptions, GetMetricsRecordRef());
 }
 
 bool InputProcessSecurity::Stop(bool isPipelineRemoving) {
