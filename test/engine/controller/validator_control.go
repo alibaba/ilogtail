@@ -185,12 +185,12 @@ func (c *ValidatorController) flushSummaryReport() {
 // staticLogGroupCheck checks the log contents to find the static logs of the e2e test case.
 func staticLogGroupCheck(logGroup *protocol.LogGroup) (projectMatch bool, typeMatch bool) {
 	for _, log := range logGroup.Logs {
-		if helper.GetMetricName(log) == "raw_log" {
+		if helper.GetMetricName(log) == "value.raw_log" {
 			typeMatch = true
 		}
 
 		for _, content := range log.Contents {
-			if content.Key == "project" && content.Value == E2EProjectName {
+			if content.Key == "label.project" && content.Value == E2EProjectName {
 				projectMatch = true
 			}
 		}
