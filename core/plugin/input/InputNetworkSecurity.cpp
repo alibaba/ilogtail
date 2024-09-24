@@ -39,7 +39,7 @@ bool InputNetworkSecurity::Init(const Json::Value& config, Json::Value& optional
 }
 
 bool InputNetworkSecurity::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK_SECURITY, mContext, &mSecurityOptions);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::NETWORK_SECURITY, mContext, &mSecurityOptions, GetMetricsRecordRef());
 }
 
 bool InputNetworkSecurity::Stop(bool isPipelineRemoving) {
