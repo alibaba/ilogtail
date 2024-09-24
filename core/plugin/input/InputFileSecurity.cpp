@@ -40,7 +40,7 @@ bool InputFileSecurity::Init(const Json::Value& config, Json::Value& optionalGoP
 }
 
 bool InputFileSecurity::Start() {
-    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::FILE_SECURITY, mContext, &mSecurityOptions);
+    return ebpf::eBPFServer::GetInstance()->EnablePlugin(mContext->GetConfigName(), mIndex, nami::PluginType::FILE_SECURITY, mContext, &mSecurityOptions, GetMetricsRecordRef());
 }
 
 bool InputFileSecurity::Stop(bool isPipelineRemoving) {
