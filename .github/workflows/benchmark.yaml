@@ -103,7 +103,7 @@ jobs:
       
       - name: Store benchmark result other agents
         run: |
-          git checkout gh-pages
+          git checkout -b gh-pages
           cp test/benchmark/report/records_all.json dev/bench/records_all.js
           sed -i '1s/^\[/window.BENCHMARK_RECORDS = [/' dev/bench/records_all.js
           git add dev/bench/records_all.js
