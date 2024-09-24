@@ -85,11 +85,11 @@ jobs:
           WITHOUTGDB: ON
         run: make benchmark
 
-      - name: Download previous benchmark data
-        uses: actions/cache@v4
-        with:
-          path: ./cache
-          key: ${{ runner.os }}-benchmark
+      # - name: Download previous benchmark data
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ./cache
+      #     key: ${{ runner.os }}-benchmark
 
       - name: Store benchmark result iLogtail
         uses: benchmark-action/github-action-benchmark@v1
@@ -97,13 +97,13 @@ jobs:
           name: benchmark
           tool: "customSmallerIsBetter"
           output-file-path: "test/benchmark/report/ilogtail_statistic_all.json"
-          external-data-json-path: ./cache/ilogtail_statistic.json
+          # external-data-json-path: ./cache/ilogtail_statistic.json
           auto-push: false
           summary-always: true
       
       - name: Store benchmark result other agents
         run: |
-          git checkout -b gh-pages
+          git checkout gh-pages
           cp test/benchmark/report/records_all.json dev/bench/records_all.js
           sed -i '1s/^\[/window.BENCHMARK_RECORDS = [/' dev/bench/records_all.js
           git add dev/bench/records_all.js
