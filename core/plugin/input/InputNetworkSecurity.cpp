@@ -28,7 +28,7 @@ const std::string InputNetworkSecurity::sName = "input_network_security";
 // update: init -> stop(false) -> start
 // stop: stop(true)
 bool InputNetworkSecurity::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
-    if (!ebpf::eBPFServer::GetInstance()->IsSupportedEnv()) {
+    if (!ebpf::eBPFServer::GetInstance()->IsSupportedEnv(nami::PluginType::NETWORK_SECURITY)) {
         return false;
     }
     std::string prev_pipeline_name = ebpf::eBPFServer::GetInstance()->CheckLoadedPipelineName(nami::PluginType::NETWORK_SECURITY);
