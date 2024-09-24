@@ -25,6 +25,8 @@
 #include "ebpf/include/export.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/MachineInfoUtil.h"
+#include "monitor/PluginMetricManager.h"
+#include "common/Lock.h"
 
 DEFINE_FLAG_INT64(kernel_min_version_for_ebpf,
                   "the minimum kernel version that supported eBPF normal running, 4.19.0.0 -> 4019000000",
@@ -144,6 +146,10 @@ void eBPFServer::Init() {
         return;
     }
     mInited = true;
+    // check env
+
+    mMonitorMgr = std::make_unique<eBPFSelfMonitorMgr>();
+
     mSourceManager = std::make_unique<SourceManager>();
     mSourceManager->Init();
     // ebpf config
@@ -186,7 +192,7 @@ void eBPFServer::Stop() {
 bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const logtail::PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref) {
 
     std::string prev_pipeline_name = CheckLoadedPipelineName(type);
     if (prev_pipeline_name.size() && prev_pipeline_name != pipeline_name) {
@@ -197,9 +203,15 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
 
     UpdatePipelineName(type, pipeline_name);
 
+    // init self monitor
+    mMonitorMgr->Init(type, pipeline_name, ref->GetLabels());
+
     // step1: convert options to export type
     std::variant<nami::NetworkObserveConfig, nami::ProcessConfig, nami::NetworkSecurityConfig, nami::FileSecurityConfig> config;
     bool ret = false;
+    auto eBPFConfig = std::make_unique<nami::eBPFConfig>();
+    eBPFConfig->plugin_type_ = type;
+    eBPFConfig->stats_handler_ = [this](auto stats){ return mMonitorMgr->HandleStatistic(std::move(stats)); };
     // call update function
     // step2: call init function
     switch(type) {
@@ -211,7 +223,8 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         config = std::move(pconfig);
         // UpdateContext must ahead of StartPlugin
         mProcessSecureCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
-        ret = mSourceManager->StartPlugin(type, config);
+        eBPFConfig->config_ = config;
+        ret = mSourceManager->StartPlugin(type, std::move(eBPFConfig));
         break;
     }
 
@@ -221,21 +234,25 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         if (opts->mEnableMetric) {
             nconfig.enable_metric_ = true;
             nconfig.measure_cb_ = [this](auto events, auto ts) { return mMeterCB->handle(std::move(events), ts); };
+            nconfig.enable_metric_ = true;
             mMeterCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
         if (opts->mEnableSpan) {
             nconfig.enable_span_ = true;
             nconfig.span_cb_ = [this](auto events) { return mSpanCB->handle(std::move(events)); };
+            nconfig.enable_span_ = true;
             mSpanCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
         if (opts->mEnableLog) {
             nconfig.enable_event_ = true;
             nconfig.event_cb_ = [this](auto events) { return mEventCB->handle(std::move(events)); };
+            nconfig.enable_event_ = true;
             mEventCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
         }
 
         config = std::move(nconfig);
-        ret = mSourceManager->StartPlugin(type, config);
+        eBPFConfig->config_ = config;
+        ret = mSourceManager->StartPlugin(type, std::move(eBPFConfig));
         break;
     }
 
@@ -245,9 +262,10 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         nconfig.options_ = opts->mOptionList;
         config = std::move(nconfig);
+        eBPFConfig->config_ = config;
         // UpdateContext must ahead of StartPlugin
         mNetworkSecureCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
-        ret = mSourceManager->StartPlugin(type, config);
+        ret = mSourceManager->StartPlugin(type, std::move(eBPFConfig));
         break;
     }
 
@@ -257,9 +275,10 @@ bool eBPFServer::StartPluginInternal(const std::string& pipeline_name, uint32_t 
         SecurityOptions* opts = std::get<SecurityOptions*>(options);
         fconfig.options_ = opts->mOptionList;
         config = std::move(fconfig);
+        eBPFConfig->config_ = config;
         // UpdateContext must ahead of StartPlugin
         mFileSecureCB->UpdateContext(ctx, ctx->GetProcessQueueKey(), plugin_index);
-        ret = mSourceManager->StartPlugin(type, config);
+        ret = mSourceManager->StartPlugin(type, std::move(eBPFConfig));
         break;
     }
     default:
@@ -281,11 +300,11 @@ bool eBPFServer::HasRegisteredPlugins() const {
 bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_index,
                         nami::PluginType type, 
                         const PipelineContext* ctx, 
-                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
+                        const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options, MetricsRecordRef& ref) {
     if (!IsSupportedEnv(type)) {
         return false;
     }
-    return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options);
+    return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options, ref);
 }
 
 bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginType type) {
