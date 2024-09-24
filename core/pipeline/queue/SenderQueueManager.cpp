@@ -116,18 +116,6 @@ void SenderQueueManager::GetAllAvailableItems(vector<SenderQueueItem*>& items, b
     ExactlyOnceQueueManager::GetInstance()->GetAllAvailableSenderQueueItems(items, withLimits);
 }
 
-
-void SenderQueueManager::GetAllAvailableItems(QueueKey key, std::vector<SenderQueueItem*>& items, bool withLimits) {
-    {
-        lock_guard<mutex> lock(mQueueMux);
-        auto iter = mQueues.find(key);
-        if (iter != mQueues.end()) {
-            iter->second.GetAllAvailableItems(items, withLimits);
-            return;
-        }
-    }
-}
-
 bool SenderQueueManager::RemoveItem(QueueKey key, SenderQueueItem* item) {
     {
         lock_guard<mutex> lock(mQueueMux);
@@ -206,6 +194,14 @@ void SenderQueueManager::Trigger() {
         mValidToPop = true;
     }
     mCond.notify_one();
+}
+
+void SenderQueueManager::SetPipelineForItems(QueueKey key, std::shared_ptr<Pipeline>& p) {
+    lock_guard<mutex> lock(mQueueMux);
+    auto iter = mQueues.find(key);
+    if (iter != mQueues.end()) {
+        iter->second.SetPipelineForItems(p);
+    }
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN

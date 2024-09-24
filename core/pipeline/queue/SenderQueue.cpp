@@ -142,4 +142,12 @@ void SenderQueue::GetAllAvailableItems(vector<SenderQueueItem*>& items, bool wit
     }
 }
 
+void SenderQueue::SetPipelineForItems(std::shared_ptr<Pipeline>& pipeline) const {
+    for (auto& item : mQueue) {
+        if (!item->mPipeline) {
+            item->mPipeline = pipeline;
+        }
+    }
+}
+
 } // namespace logtail

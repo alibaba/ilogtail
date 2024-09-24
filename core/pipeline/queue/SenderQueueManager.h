@@ -58,11 +58,11 @@ public:
     // 0: success, 1: queue is full, 2: queue not found
     int PushQueue(QueueKey key, std::unique_ptr<SenderQueueItem>&& item);
     void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true);
-    void GetAllAvailableItems(QueueKey key, std::vector<SenderQueueItem*>& items, bool withLimits = true);
     bool RemoveItem(QueueKey key, SenderQueueItem* item);
     bool IsAllQueueEmpty() const;
     void ClearUnusedQueues();
     void NotifyPipelineStop(QueueKey key, const std::string& configName);
+    void SetPipelineForItems(QueueKey key, std::shared_ptr<Pipeline>& p);
 
     bool Wait(uint64_t ms);
     void Trigger();

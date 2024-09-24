@@ -106,27 +106,19 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
     return false;
 }
 
-bool LogtailPlugin::UnloadPipeline(const std::string& project,
-                                   const std::string& logstore,
-                                   const std::string& pipelineName) {
+bool LogtailPlugin::UnloadPipeline(const std::string& pipelineName) {
     if (!mPluginValid) {
         LOG_ERROR(sLogger, ("UnloadPipeline", "plugin not valid"));
         return false;
     }
 
     if (mPluginValid && mUnloadPipelineFun != NULL) {
-        GoString goProject;
-        GoString goLogstore;
         GoString goConfigName;
 
-        goProject.n = project.size();
-        goProject.p = project.c_str();
-        goLogstore.n = logstore.size();
-        goLogstore.p = logstore.c_str();
         goConfigName.n = pipelineName.size();
         goConfigName.p = pipelineName.c_str();
 
-        return mUnloadPipelineFun(goProject, goLogstore, goConfigName) == 0;
+        return mUnloadPipelineFun(goConfigName) == 0;
     }
 
     return false;
@@ -139,7 +131,7 @@ void LogtailPlugin::StopAll(bool withInputFlag) {
         mStopAllFun(withInputFlag ? 1 : 0);
         auto stopAllCost = GetCurrentTimeInMilliSeconds() - stopAllStart;
         LOG_INFO(sLogger, ("Go pipelines stop all", "succeeded")("cost", ToString(stopAllCost) + "ms"));
-        if (stopAllCost >= 60 * 1000) {
+        if (stopAllCost >= 10 * 1000) {
             LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
                                                    "Stopping all Go pipelines took " + ToString(stopAllCost) + "ms");
         }
@@ -156,10 +148,18 @@ void LogtailPlugin::Stop(const std::string& configName, bool removedFlag) {
         mStopFun(goConfigName, removedFlag ? 1 : 0);
         auto stopCost = GetCurrentTimeInMilliSeconds() - stopStart;
         LOG_INFO(sLogger, ("Go pipelines stop", "succeeded")("config", configName)("cost", ToString(stopCost) + "ms"));
-        if (stopCost >= 30 * 1000) {
+        if (stopCost >= 10 * 1000) {
             LogtailAlarm::GetInstance()->SendAlarm(
                 HOLD_ON_TOO_SLOW_ALARM, "Stopping Go pipeline " + configName + " took " + ToString(stopCost) + "ms");
         }
+    }
+}
+
+void LogtailPlugin::StopBuiltIn() {
+    if (mPluginValid && mStopFun != NULL) {
+        LOG_INFO(sLogger, ("Go pipelines stop built-in", "starts"));
+        mStopBuiltInFun();
+        LOG_INFO(sLogger, ("Go pipelines stop built-in", "succeeded"));
     }
 }
 
@@ -395,6 +395,12 @@ bool LogtailPlugin::LoadPluginBase() {
         mStopFun = (StopFun)loader.LoadMethod("Stop", error);
         if (!error.empty()) {
             LOG_ERROR(sLogger, ("load Stop error, Message", error));
+            return mPluginValid;
+        }
+        // 停止内置功能
+        mStopBuiltInFun = (StopBuiltInFun)loader.LoadMethod("StopBuiltIn", error);
+        if (!error.empty()) {
+            LOG_ERROR(sLogger, ("load StopBuiltIn error, Message", error));
             return mPluginValid;
         }
         // 插件恢复

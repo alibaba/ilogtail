@@ -89,7 +89,7 @@ private:
                                Json::Value& dst);
     void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
     bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
-    void WaitAllInProcessFinish();
+    void WaitAllItemsInProcessFinished();
 
     std::string mName;
     std::vector<std::unique_ptr<InputInstance>> mInputs;

@@ -19,7 +19,6 @@ package pluginmanager
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -74,7 +73,7 @@ func (s *configUpdateTestSuite) TestConfigUpdate() {
 	// Since independently load config, reload block config will be allowed
 	s.NoError(LoadAndStartMockConfig(noblockUpdateConfigName, noblockUpdateConfigName, noblockUpdateConfigName, GetTestConfig(noblockUpdateConfigName)))
 	LogtailConfigLock.RLock()
-	s.Nil(LogtailConfig[updateConfigName], "the stopping config only allow to load same config when stopped")
+	s.NotNil(LogtailConfig[updateConfigName])
 	s.NotNil(LogtailConfig[noblockUpdateConfigName])
 	LogtailConfigLock.RUnlock()
 
@@ -98,12 +97,10 @@ func (s *configUpdateTestSuite) TestConfigUpdateMany() {
 
 	s.Equal(0, checkFlusher.GetLogCount(), "the hold on block flusher checker doesn't have any logs")
 	// load block config
-	for i := 0; i < 3; i++ {
-		Stop(updateConfigName, false)
-		err := LoadAndStartMockConfig(updateConfigName, updateConfigName, updateConfigName, GetTestConfig(updateConfigName))
-		s.True(strings.Contains(err.Error(), "failed to create config because timeout stop has happened on it"))
-		s.Nil(LogtailConfig[updateConfigName], "the stopping config only allow to load same config when stopped")
-	}
+	Stop(updateConfigName, false)
+	err := LoadAndStartMockConfig(updateConfigName, updateConfigName, updateConfigName, GetTestConfig(updateConfigName))
+	s.Nil(err)
+	s.NotNil(LogtailConfig[updateConfigName])
 	s.Equal(0, checkFlusher.GetLogCount(), "the hold on block flusher checker doesn't have any logs")
 	checkFlusher.Block = false
 	time.Sleep(time.Second * time.Duration(5))

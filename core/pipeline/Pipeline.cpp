@@ -415,7 +415,7 @@ void Pipeline::Stop(bool isRemoving) {
     }
 
     ProcessQueueManager::GetInstance()->DisablePop(mName, isRemoving);
-    WaitAllInProcessFinish();
+    WaitAllItemsInProcessFinished();
 
     if (!isRemoving) {
         FlushBatch();
@@ -514,8 +514,7 @@ bool Pipeline::LoadGoPipelines() const {
                                                    mContext.GetLogstoreName(),
                                                    mContext.GetRegion());
             if (!mGoPipelineWithoutInput.isNull()) {
-                LogtailPlugin::GetInstance()->UnloadPipeline(
-                    mContext.GetProjectName(), mContext.GetLogstoreName(), GetConfigNameOfGoPipelineWithoutInput());
+                LogtailPlugin::GetInstance()->UnloadPipeline(GetConfigNameOfGoPipelineWithoutInput());
             }
             return false;
         }
@@ -539,13 +538,13 @@ PluginInstance::PluginMeta Pipeline::GenNextPluginMeta(bool lastOne) {
         std::to_string(mPluginID.load()), std::to_string(mPluginID.load()), std::to_string(childNodeID));
 }
 
-void Pipeline::WaitAllInProcessFinish() {
+void Pipeline::WaitAllItemsInProcessFinished() {
     uint64_t startTime = GetCurrentTimeInMilliSeconds();
     bool alarmOnce = false;
     while (mInProcessCnt.load() != 0) {
-        usleep(1000 * 10); // 10ms
+        this_thread::sleep_for(chrono::milliseconds(100)); // 100ms
         uint64_t duration = GetCurrentTimeInMilliSeconds() - startTime;
-        if (!alarmOnce && duration > 1000) { // 1s
+        if (!alarmOnce && duration > 10000) { // 10s
             LOG_ERROR(sLogger, ("pipeline stop", "too slow")("config", mName)("cost", duration));
             LogtailAlarm::GetInstance()->SendAlarm(CONFIG_UPDATE_ALARM,
                                                    string("pipeline stop too slow, config: ") + mName

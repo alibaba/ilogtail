@@ -47,6 +47,7 @@ public:
 
     void SetRateLimiter(uint32_t maxRate);
     void SetConcurrencyLimiters(std::vector<std::shared_ptr<ConcurrencyLimiter>>&& limiters);
+    void SetPipelineForItems(std::shared_ptr<Pipeline>& p) const = 0;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     std::optional<RateLimiter>& GetRateLimiter() { return mRateLimiter; }

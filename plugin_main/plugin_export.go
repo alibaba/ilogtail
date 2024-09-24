@@ -154,9 +154,9 @@ func LoadPipeline(project string, logstore string, configName string, logstoreKe
 }
 
 //export UnloadPipeline
-func UnloadPipeline(project string, logstore string, configName string) int {
+func UnloadPipeline(configName string) int {
 	logger.Debug(context.Background(), "unload config", configName)
-	err := pluginmanager.UnloadLogstoreConfig(util.StringDeepCopy(project), util.StringDeepCopy(logstore), util.StringDeepCopy(configName))
+	err := pluginmanager.UnloadPartiallyLoadedConfig(util.StringDeepCopy(configName))
 	if err != nil {
 		return 1
 	}
@@ -205,6 +205,11 @@ func Stop(configName string, removedFlag int) {
 	if err != nil {
 		logger.Error(context.Background(), "PLUGIN_ALARM", "stop error", err)
 	}
+}
+
+//export StopBuiltIn
+func StopBuiltIn() {
+	pluginmanager.StopBuiltInConfig()
 }
 
 //export Start
@@ -315,20 +320,6 @@ func initPluginBase(cfgStr string) int {
 	rst := 0
 	initOnce.Do(func() {
 		logger.Init()
-		if pluginmanager.StatisticsConfig != nil {
-			pluginmanager.StatisticsConfig.Start()
-		}
-		if pluginmanager.AlarmConfig != nil {
-			pluginmanager.AlarmConfig.Start()
-		}
-		if pluginmanager.ContainerConfig != nil {
-			pluginmanager.ContainerConfig.Start()
-		}
-		err := pluginmanager.CheckPointManager.Init()
-		if err != nil {
-			logger.Error(context.Background(), "CHECKPOINT_INIT_ALARM", "init checkpoint manager error", err)
-		}
-		pluginmanager.CheckPointManager.Start()
 		InitHTTPServer()
 		setGCPercentForSlowStart()
 		logger.Info(context.Background(), "init plugin base, version", config.BaseVersion)
@@ -347,6 +338,20 @@ func initPluginBase(cfgStr string) int {
 			logger.Error(context.Background(), "PLUGIN_ALARM", "init plugin error", err)
 			rst = 1
 		}
+		if pluginmanager.StatisticsConfig != nil {
+			pluginmanager.StatisticsConfig.Start()
+		}
+		if pluginmanager.AlarmConfig != nil {
+			pluginmanager.AlarmConfig.Start()
+		}
+		if pluginmanager.ContainerConfig != nil {
+			pluginmanager.ContainerConfig.Start()
+		}
+		err := pluginmanager.CheckPointManager.Init()
+		if err != nil {
+			logger.Error(context.Background(), "CHECKPOINT_INIT_ALARM", "init checkpoint manager error", err)
+		}
+		pluginmanager.CheckPointManager.Start()
 	})
 	return rst
 }

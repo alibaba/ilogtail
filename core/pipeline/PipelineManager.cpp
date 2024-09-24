@@ -231,6 +231,7 @@ void PipelineManager::StopAllPipelines() {
     FileServer::GetInstance()->Stop();
 
     LogtailPlugin::GetInstance()->StopAll(true);
+    LogtailPlugin::GetInstance()->StopBuiltIn();
 
     bool logProcessFlushFlag = false;
     for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {

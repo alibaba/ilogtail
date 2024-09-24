@@ -664,8 +664,8 @@ func LoadLogstoreConfig(project string, logstore string, configName string, logs
 	return nil
 }
 
-func UnloadLogstoreConfig(project string, logstore string, configName string) error {
-	logger.Info(context.Background(), "unload config", configName, "logstore", logstore)
+func UnloadPartiallyLoadedConfig(configName string) error {
+	logger.Info(context.Background(), "unload config", configName)
 	if ToStartPipelineConfigWithInput.ConfigNameWithSuffix == configName {
 		ToStartPipelineConfigWithInput = nil
 		return nil

@@ -29,8 +29,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-var stopBuildinOnce sync.Once
-
 // Following variables are exported so that tests of main package can reference them.
 var LogtailConfigLock sync.RWMutex
 var LogtailConfig map[string]*LogstoreConfig
@@ -171,7 +169,7 @@ func timeoutStop(config *LogstoreConfig, removedFlag bool) bool {
 	}
 }
 
-// StopAll stops all config instance and checkpoint manager so that it is ready
+// StopAll stops all config instance so that it is ready
 // to quit.
 // For user-defined config, timeoutStop is used to avoid hanging.
 func StopAll(withInput bool) error {
@@ -195,6 +193,7 @@ func StopAll(withInput bool) error {
 				// TODO: This alarm can not be sent to server in current alarm design.
 				logger.Error(logstoreConfig.Context.GetRuntimeContext(), "CONFIG_STOP_TIMEOUT_ALARM",
 					"timeout when stop config, goroutine might leak")
+				// TODO: The key should be versioned. Current implementation will overwrite the previous version when reload a block config multiple times.
 				DisabledLogtailConfigLock.Lock()
 				DisabledLogtailConfig[logstoreConfig.ConfigNameWithSuffix] = logstoreConfig
 				DisabledLogtailConfigLock.Unlock()
@@ -204,40 +203,42 @@ func StopAll(withInput bool) error {
 	LogtailConfig = make(map[string]*LogstoreConfig)
 	LogtailConfigLock.Unlock()
 
-	stopBuildinOnce.Do(func() {
-		if StatisticsConfig != nil {
-			if *flags.ForceSelfCollect {
-				logger.Info(context.Background(), "force collect the static metrics")
-				control := pipeline.NewAsyncControl()
-				StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-				control.WaitCancel()
-			}
-			_ = StatisticsConfig.Stop(true)
-			StatisticsConfig = nil
-		}
-		if AlarmConfig != nil {
-			if *flags.ForceSelfCollect {
-				logger.Info(context.Background(), "force collect the alarm metrics")
-				control := pipeline.NewAsyncControl()
-				AlarmConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-				control.WaitCancel()
-			}
-			_ = AlarmConfig.Stop(true)
-			AlarmConfig = nil
-		}
-		if ContainerConfig != nil {
-			if *flags.ForceSelfCollect {
-				logger.Info(context.Background(), "force collect the container metrics")
-				control := pipeline.NewAsyncControl()
-				ContainerConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
-				control.WaitCancel()
-			}
-			_ = ContainerConfig.Stop(true)
-			ContainerConfig = nil
-		}
-		CheckPointManager.Stop()
-	})
 	return nil
+}
+
+// StopBuiltInConfig stops built-in services (self monitor, alarm, container and checkpoint manager).
+func StopBuiltInConfig() {
+	if StatisticsConfig != nil {
+		if *flags.ForceSelfCollect {
+			logger.Info(context.Background(), "force collect the static metrics")
+			control := pipeline.NewAsyncControl()
+			StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+			control.WaitCancel()
+		}
+		_ = StatisticsConfig.Stop(true)
+		StatisticsConfig = nil
+	}
+	if AlarmConfig != nil {
+		if *flags.ForceSelfCollect {
+			logger.Info(context.Background(), "force collect the alarm metrics")
+			control := pipeline.NewAsyncControl()
+			AlarmConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+			control.WaitCancel()
+		}
+		_ = AlarmConfig.Stop(true)
+		AlarmConfig = nil
+	}
+	if ContainerConfig != nil {
+		if *flags.ForceSelfCollect {
+			logger.Info(context.Background(), "force collect the container metrics")
+			control := pipeline.NewAsyncControl()
+			ContainerConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+			control.WaitCancel()
+		}
+		_ = ContainerConfig.Stop(true)
+		ContainerConfig = nil
+	}
+	CheckPointManager.Stop()
 }
 
 // Stop stop the given config. ConfigName is with suffix.
