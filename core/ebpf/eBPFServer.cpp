@@ -37,65 +37,82 @@ static const uint16_t KERNEL_VERSION_310 = 3010; // for centos7
 static const std::string KERNEL_NAME_CENTOS = "CentOS";
 static const uint16_t KERNEL_CENTOS_MIN_VERSION = 7006;
 
-bool eBPFServer::IsSupportedEnv() {
-    if (mCheckStatus.load() != int(CheckStatus::UNKNOWN)) {
-        return mCheckStatus.load() == int(CheckStatus::SUPPORT);
+bool EnvManager::IsSupportedEnv(nami::PluginType type) {
+    if (!mInited) InitEnvInfo();
+    switch (type)
+    {
+    case nami::PluginType::NETWORK_OBSERVE:
+        return mArchSupport && (mBTFSupport || m310Support);
+    case nami::PluginType::FILE_SECURITY:
+    case nami::PluginType::NETWORK_SECURITY:
+    case nami::PluginType::PROCESS_SECURITY: {
+        return mArchSupport && mBTFSupport;
     }
+    default:
+        return false;
+    }
+}
+
+void EnvManager::InitEnvInfo() {
+    if (mInited) return;
+    mInited = true;
+
 #ifdef _MSC_VER
     LOG_WARNING(sLogger, ("MS", "not supported"));
-    mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-    return false;
+    mArchSupport = false;
+    return;
 #elif defined(__aarch64__)
     LOG_WARNING(sLogger, ("aarch64", "not supported"));
-    mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-    return false;
+    mArchSupport = false;
+    return;
 #elif defined(__arm__)
     LOG_WARNING(sLogger, ("arm", "not supported"));
-    mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-    return false;
+    mArchSupport = false;
+    return;
 #elif defined(__i386__)
     LOG_WARNING(sLogger, ("i386", "not supported"));
-    mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-    return false;
+    mArchSupport = false;
+    return;
 #endif
-    std::string release;
-    int64_t version;
-    GetKernelInfo(release, version);
-    LOG_INFO(sLogger, ("ebpf kernel release", release) ("kernel version", version));
-    if (release.empty()) {
+    mArchSupport = true;
+    GetKernelInfo(mRelease, mVersion);
+    LOG_INFO(sLogger, ("ebpf kernel release", mRelease) ("kernel version", mVersion));
+    if (mRelease.empty()) {
         LOG_WARNING(sLogger, ("cannot find kernel release", ""));
-        mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-        return false;
+        mBTFSupport = false;
+        return;
     }
-    if (version >= INT64_FLAG(kernel_min_version_for_ebpf)) {
-        mCheckStatus = int(CheckStatus::SUPPORT);
-        return true;
+    if (mVersion >= INT64_FLAG(kernel_min_version_for_ebpf)) {
+        mBTFSupport = true;
+        return;
     }
-    if (version / 1000000 != KERNEL_VERSION_310) {
+    if (mVersion / 1000000 != KERNEL_VERSION_310) {
         LOG_WARNING(sLogger, 
-            ("unsupported kernel version, will not start eBPF plugin ... version", version));
-        mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-        return false;
+            ("unsupported kernel version, will not start eBPF plugin ... version", mVersion));
+        m310Support = false;
+        return;
     }
-    std::string os;
-    int64_t osVersion;
-    if (GetRedHatReleaseInfo(os, osVersion, STRING_FLAG(default_container_host_path))
-        || GetRedHatReleaseInfo(os, osVersion)) {
-        if(os == KERNEL_NAME_CENTOS && osVersion >= KERNEL_CENTOS_MIN_VERSION) {
-            mCheckStatus = int(CheckStatus::SUPPORT);
-            return true;
+    if (GetRedHatReleaseInfo(mOs, mOsVersion, STRING_FLAG(default_container_host_path))
+        || GetRedHatReleaseInfo(mOs, mOsVersion)) {
+        if(mOs == KERNEL_NAME_CENTOS && mOsVersion >= KERNEL_CENTOS_MIN_VERSION) {
+            m310Support = false;
+            return;
         } else {
             LOG_WARNING(sLogger, 
                 ("unsupported os for 310 kernel, will not start eBPF plugin ...", "") 
-                ("os", os)("version", osVersion));
-            mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-            return false;
+                ("os", mOs)("version", mOsVersion));
+            m310Support = false;
+            return;
         }
     }
     LOG_WARNING(sLogger, 
         ("not redhat release, will not start eBPF plugin ...", ""));
-    mCheckStatus = int(CheckStatus::NOT_SUPPORT);
-    return false;
+    m310Support = true;
+    return;
+}
+
+bool eBPFServer::IsSupportedEnv(nami::PluginType type) {
+    return mEnvMgr.IsSupportedEnv(type);
 }
 
 void eBPFServer::Init() {
@@ -103,10 +120,7 @@ void eBPFServer::Init() {
         return;
     }
     mInited = true;
-    // check running env, including aarch / kernel version / os
-    if (!IsSupportedEnv()) {
-        return;
-    }
+    mEnvMgr.InitEnvInfo();
     mSourceManager = std::make_unique<SourceManager>();
     mSourceManager->Init();
     // ebpf config
@@ -246,14 +260,14 @@ bool eBPFServer::EnablePlugin(const std::string& pipeline_name, uint32_t plugin_
                         const PipelineContext* ctx, 
                         const std::variant<SecurityOptions*, nami::ObserverNetworkOption*> options) {
     Init();
-    if (!IsSupportedEnv()) {
+    if (!IsSupportedEnv(type)) {
         return false;
     }
     return StartPluginInternal(pipeline_name, plugin_index, type, ctx, options);
 }
 
 bool eBPFServer::DisablePlugin(const std::string& pipeline_name, nami::PluginType type) {
-    if (!IsSupportedEnv()) {
+    if (!IsSupportedEnv(type)) {
         return true;
     }
     std::string prev_pipeline = CheckLoadedPipelineName(type);
@@ -281,7 +295,7 @@ void eBPFServer::UpdatePipelineName(nami::PluginType type, const std::string& na
 }
 
 bool eBPFServer::SuspendPlugin(const std::string& pipeline_name, nami::PluginType type) {
-    if (!IsSupportedEnv()) {
+    if (!IsSupportedEnv(type)) {
         return false;
     }
     // mark plugin status is update

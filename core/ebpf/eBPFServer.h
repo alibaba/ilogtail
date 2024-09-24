@@ -33,6 +33,24 @@
 namespace logtail {
 namespace ebpf {
 
+class EnvManager {
+public:
+    void InitEnvInfo();
+    bool IsSupportedEnv(nami::PluginType type);
+private:
+    volatile bool mInited = false;
+    std::string mRelease;
+    int64_t mVersion = -1;
+    std::string mOs;
+    int64_t mOsVersion;
+    std::atomic_bool mArchSupport = false;
+    std::atomic_bool mBTFSupport = false;
+    std::atomic_bool m310Support = false;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class eBPFServerUnittest;
+#endif
+};
+
 class eBPFServer : public InputRunner {
 public:
     eBPFServer(const eBPFServer&) = delete;
@@ -62,7 +80,7 @@ public:
 
     bool HasRegisteredPlugins() const override;
 
-    bool IsSupportedEnv();
+    bool IsSupportedEnv(nami::PluginType type);
 
 private:
     bool StartPluginInternal(const std::string& pipeline_name, uint32_t plugin_index,
@@ -89,9 +107,7 @@ private:
     eBPFAdminConfig mAdminConfig;
     volatile bool mInited = false;
 
-    // TODO @qianlu.kk each plugin has it's own env requirements, so we need to implement an env checker class
-    enum class CheckStatus {UNKNOWN, SUPPORT, NOT_SUPPORT};
-    std::atomic_int mCheckStatus = int(CheckStatus::UNKNOWN);
+    EnvManager mEnvMgr;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class eBPFServerUnittest;
