@@ -36,7 +36,7 @@ public:
 
     bool Push(std::unique_ptr<ProcessQueueItem>&& item) override;
     bool Pop(std::unique_ptr<ProcessQueueItem>& item) override;
-    void SetPipelineForItems(std::shared_ptr<Pipeline>& p) const override;
+    void SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const override;
 
     void SetUpStreamFeedbacks(std::vector<FeedbackInterface*>&& feedbacks);
 

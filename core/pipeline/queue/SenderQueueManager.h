@@ -62,7 +62,7 @@ public:
     bool IsAllQueueEmpty() const;
     void ClearUnusedQueues();
     void NotifyPipelineStop(QueueKey key, const std::string& configName);
-    void SetPipelineForItems(QueueKey key, std::shared_ptr<Pipeline>& p);
+    void SetPipelineForItems(QueueKey key, const std::shared_ptr<Pipeline>& p);
 
     bool Wait(uint64_t ms);
     void Trigger();

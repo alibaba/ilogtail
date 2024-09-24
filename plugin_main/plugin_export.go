@@ -207,9 +207,9 @@ func Stop(configName string, removedFlag int) {
 	}
 }
 
-//export StopBuiltIn
-func StopBuiltIn() {
-	pluginmanager.StopBuiltInConfig()
+//export StopBuiltInModules
+func StopBuiltInModules() {
+	pluginmanager.StopBuiltInModulesConfig()
 }
 
 //export Start

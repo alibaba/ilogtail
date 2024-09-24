@@ -154,7 +154,7 @@ void ExactlyOnceQueueManager::DisablePopProcessQueue(const string& configName, b
         if (iter.second->GetConfigName() == configName) {
             iter.second->DisablePop();
             if (!isPipelineRemoving) {
-                auto p = PipelineManager::GetInstance()->FindConfigByName(configName);
+                const auto& p = PipelineManager::GetInstance()->FindConfigByName(configName);
                 if (p) {
                     iter.second->SetPipelineForItems(p);
                 }
@@ -279,7 +279,7 @@ uint32_t ExactlyOnceQueueManager::GetProcessQueueCnt() const {
     return mProcessQueues.size();
 }
 
-void ExactlyOnceQueueManager::SetPipelineForSenderItems(QueueKey key, std::shared_ptr<Pipeline>& p) {
+void ExactlyOnceQueueManager::SetPipelineForSenderItems(QueueKey key, const std::shared_ptr<Pipeline>& p) {
     lock_guard<mutex> lock(mSenderQueueMux);
     auto iter = mSenderQueues.find(key);
     if (iter != mSenderQueues.end()) {

@@ -206,8 +206,8 @@ func StopAll(withInput bool) error {
 	return nil
 }
 
-// StopBuiltInConfig stops built-in services (self monitor, alarm, container and checkpoint manager).
-func StopBuiltInConfig() {
+// StopBuiltInModulesConfig stops built-in services (self monitor, alarm, container and checkpoint manager).
+func StopBuiltInModulesConfig() {
 	if StatisticsConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")

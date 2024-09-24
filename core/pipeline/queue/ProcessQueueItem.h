@@ -38,7 +38,7 @@ struct ProcessQueueItem {
         if (mPipeline) {
             mPipeline->AddInProcessCnt();
         } else {
-            auto p = PipelineManager::GetInstance()->FindConfigByName(configName);
+            const auto& p = PipelineManager::GetInstance()->FindConfigByName(configName);
             if (p) {
                 p->AddInProcessCnt();
             }

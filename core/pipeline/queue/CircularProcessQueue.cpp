@@ -73,7 +73,7 @@ bool CircularProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     return true;
 }
 
-void CircularProcessQueue::SetPipelineForItems(std::shared_ptr<Pipeline>& p) const {
+void CircularProcessQueue::SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const {
     for (auto& item : mQueue) {
         if (!item->mPipeline) {
             item->mPipeline = p;

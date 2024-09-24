@@ -68,7 +68,7 @@ bool BoundedProcessQueue::Pop(unique_ptr<ProcessQueueItem>& item) {
     return true;
 }
 
-void BoundedProcessQueue::SetPipelineForItems(std::shared_ptr<Pipeline>& p) const {
+void BoundedProcessQueue::SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const {
     for (auto& item : mQueue) {
         if (!item->mPipeline) {
             item->mPipeline = p;

@@ -36,7 +36,7 @@ public:
     bool Push(std::unique_ptr<SenderQueueItem>&& item) override;
     bool Remove(SenderQueueItem* item) override;
     void GetAllAvailableItems(std::vector<SenderQueueItem*>& items, bool withLimits = true) override;
-    void SetPipelineForItems(std::shared_ptr<Pipeline>& p) const override;
+    void SetPipelineForItems(const std::shared_ptr<Pipeline>& p) const override;
 
 private:
     size_t Size() const override { return mSize; }
@@ -49,6 +49,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderQueueUnittest;
     friend class SenderQueueManagerUnittest;
+    friend class FlusherUnittest;
 #endif
 };
 

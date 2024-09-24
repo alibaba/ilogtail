@@ -37,7 +37,7 @@ bool Flusher::Stop(bool isPipelineRemoving) {
 
 void Flusher::SetPipelineForItemsWhenStop() {
     if (HasContext()) {
-        auto pipeline = PipelineManager::GetInstance()->FindConfigByName(mContext->GetConfigName());
+        const auto& pipeline = PipelineManager::GetInstance()->FindConfigByName(mContext->GetConfigName());
         if (!pipeline) {
             LOG_ERROR(sLogger, ("failed to get pipeline context", "context not found")("action", "not set pipeline"));
             return;

@@ -136,7 +136,7 @@ typedef GoInt (*LoadPipelineFun)(GoString p, GoString l, GoString c, GoInt64 k, 
 typedef GoInt (*UnloadPipelineFun)(GoString c);
 typedef void (*StopAllFun)(GoInt);
 typedef void (*StopFun)(GoString, GoInt);
-typedef void (*StopBuiltInFun)();
+typedef void (*StopBuiltInModulesFun)();
 typedef void (*StartFun)(GoString);
 typedef GoInt (*InitPluginBaseFun)();
 typedef GoInt (*InitPluginBaseV2Fun)(GoString cfg);
@@ -216,7 +216,7 @@ public:
     bool UnloadPipeline(const std::string& pipelineName);
     void StopAll(bool withInputFlag);
     void Stop(const std::string& configName, bool removingFlag);
-    void StopBuiltIn();
+    void StopBuiltInModules();
     void Start(const std::string& configName);
 
     bool IsPluginOpened() { return mPluginValid; }
@@ -266,7 +266,7 @@ private:
     UnloadPipelineFun mUnloadPipelineFun;
     StopAllFun mStopAllFun;
     StopFun mStopFun;
-    StopBuiltInFun mStopBuiltInFun;
+    StopBuiltInModulesFun mStopBuiltInModulesFun;
     StartFun mStartFun;
     volatile bool mPluginValid;
     logtail::FlusherSLS mPluginAlarmConfig;

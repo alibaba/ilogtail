@@ -155,10 +155,10 @@ void LogtailPlugin::Stop(const std::string& configName, bool removedFlag) {
     }
 }
 
-void LogtailPlugin::StopBuiltIn() {
+void LogtailPlugin::StopBuiltInModules() {
     if (mPluginValid && mStopFun != NULL) {
         LOG_INFO(sLogger, ("Go pipelines stop built-in", "starts"));
-        mStopBuiltInFun();
+        mStopBuiltInModulesFun();
         LOG_INFO(sLogger, ("Go pipelines stop built-in", "succeeded"));
     }
 }
@@ -398,9 +398,9 @@ bool LogtailPlugin::LoadPluginBase() {
             return mPluginValid;
         }
         // 停止内置功能
-        mStopBuiltInFun = (StopBuiltInFun)loader.LoadMethod("StopBuiltIn", error);
+        mStopBuiltInModulesFun = (StopBuiltInModulesFun)loader.LoadMethod("StopBuiltInModules", error);
         if (!error.empty()) {
-            LOG_ERROR(sLogger, ("load StopBuiltIn error, Message", error));
+            LOG_ERROR(sLogger, ("load StopBuiltInModules error, Message", error));
             return mPluginValid;
         }
         // 插件恢复

@@ -22,13 +22,11 @@
 #include "prometheus/PrometheusInputRunner.h"
 #if defined(__linux__) && !defined(__ANDROID__)
 #include "ebpf/eBPFServer.h"
-#include "observer/ObserverManager.h"
 #endif
 #include "runner/LogProcess.h"
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
 #include "app_config/AppConfig.h"
 #include "shennong/ShennongManager.h"
-#include "streamlog/StreamLogManager.h"
 #endif
 #include "config/feedbacker/ConfigFeedbackReceiver.h"
 #include "pipeline/queue/ProcessQueueManager.h"
@@ -42,9 +40,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     static bool isFileServerStarted = false, isInputObserverStarted = false;
-#if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
-    static bool isInputStreamStarted = false;
-#endif
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false,
          isInputContainerStdioChanged = false;
     for (const auto& name : diff.mRemoved) {
@@ -73,14 +68,6 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
         ShennongManager::GetInstance()->Pause();
     }
-    if (isInputStreamStarted && isInputStreamChanged) {
-        StreamLogManager::GetInstance()->ShutdownConfigUsage();
-    }
-#endif
-#if defined(__linux__) && !defined(__ANDROID__)
-    if (isInputObserverStarted && isInputObserverChanged) {
-        ObserverManager::GetInstance()->HoldOn(false);
-    }
 #endif
     if (isFileServerStarted && (isInputFileChanged || isInputContainerStdioChanged)) {
         FileServer::GetInstance()->Pause();
@@ -98,7 +85,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config)); // auto reuse old pipeline's process queue and sender queue
         if (!p) {
-                        LOG_WARNING(sLogger,
+            LOG_WARNING(sLogger,
                         ("failed to build pipeline for existing config",
                          "keep current pipeline running")("config", config.mName));
             LogtailAlarm::GetInstance()->SendAlarm(
@@ -126,7 +113,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
-                        LOG_WARNING(sLogger,
+            LOG_WARNING(sLogger,
                         ("failed to build pipeline for new config", "skip current object")("config", config.mName));
             LogtailAlarm::GetInstance()->SendAlarm(
                 CATEGORY_CONFIG_ALARM,
@@ -159,29 +146,7 @@ void logtail::PipelineManager::UpdatePipelines(PipelineConfigDiff& diff) {
         }
     }
 
-#if defined(__linux__) && !defined(__ANDROID__)
-    if (isInputObserverChanged) {
-        if (isInputObserverStarted) {
-            ObserverManager::GetInstance()->Resume();
-        } else {
-            // input_observer_network always relies on PluginBase
-            LogtailPlugin::GetInstance()->LoadPluginBase();
-            ObserverManager::GetInstance()->Reload();
-            isInputObserverStarted = true;
-        }
-    }
-#endif
 #if defined(__ENTERPRISE__) && defined(__linux__) && !defined(__ANDROID__)
-    if (isInputStreamChanged) {
-        if (isInputStreamStarted) {
-            StreamLogManager::GetInstance()->StartupConfigUsage();
-        } else {
-            if (AppConfig::GetInstance()->GetOpenStreamLog()) {
-                StreamLogManager::GetInstance()->Init();
-                isInputStreamStarted = true;
-            }
-        }
-    }
     if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
         ShennongManager::GetInstance()->Resume();
     }
@@ -225,13 +190,12 @@ void PipelineManager::StopAllPipelines() {
 #endif
     PrometheusInputRunner::GetInstance()->Stop();
 #if defined(__linux__) && !defined(__ANDROID__)
-    ObserverManager::GetInstance()->HoldOn(true);
     ebpf::eBPFServer::GetInstance()->Stop();
 #endif
     FileServer::GetInstance()->Stop();
 
     LogtailPlugin::GetInstance()->StopAll(true);
-    LogtailPlugin::GetInstance()->StopBuiltIn();
+    LogtailPlugin::GetInstance()->StopBuiltInModules();
 
     bool logProcessFlushFlag = false;
     for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
