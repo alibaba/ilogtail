@@ -40,7 +40,7 @@ type SlsFlusher struct { // nolint:revive
 func (p *SlsFlusher) Init(context pipeline.Context) error {
 	p.context = context
 	metricsRecord := context.GetMetricRecord()
-	p.lenCounter = helper.NewCounterMetricAndRegister(metricsRecord, "flush_sls_size")
+	p.lenCounter = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginOutBufferSizeBytes)
 	return nil
 }
 

@@ -52,7 +52,7 @@ func (p *ProcessorJSON) Init(context pipeline.Context) error {
 	}
 	p.context = context
 	metricsRecord := p.context.GetMetricRecord()
-	p.procParseInSizeBytes = helper.NewCounterMetricAndRegister(metricsRecord, "proc_parse_in_size_bytes")
+	p.procParseInSizeBytes = helper.NewCounterMetricAndRegister(metricsRecord, helper.MetricPluginInBufferSizeBytes)
 	return nil
 }
 

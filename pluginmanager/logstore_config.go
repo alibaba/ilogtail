@@ -122,7 +122,7 @@ type LogstoreConfig struct {
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
-	labels := pipeline.GetCommonLabels(context, &pipeline.PluginMeta{})
+	labels := helper.GetCommonLabels(context, &pipeline.PluginMeta{})
 	metricsRecord := context.RegisterLogstoreConfigMetricRecord(labels)
 	p.CollecLatencytMetric = helper.NewLatencyMetricAndRegister(metricsRecord, "collect_latency")
 	p.RawLogMetric = helper.NewCounterMetricAndRegister(metricsRecord, "raw_log")
