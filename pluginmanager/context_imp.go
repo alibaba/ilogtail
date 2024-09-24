@@ -43,6 +43,9 @@ func (p *ContextImp) GetRuntimeContext() context.Context {
 	return p.ctx
 }
 
+// GetExtension returns the extension by name.
+// name can be a plugin type with instance name, i.e., ext_basicauth/1, ext_basicauth/shared
+// name can be also just a plugin type, i.e., ext_basicauth
 func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, error) {
 	if p.logstoreC == nil || p.logstoreC.PluginRunner == nil {
 		return nil, fmt.Errorf("pipeline not initialized")

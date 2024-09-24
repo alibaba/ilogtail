@@ -575,3 +575,28 @@ func Test_genPluginMeta(t *testing.T) {
 		assert.Regexp(t, `-1`, result.ChildNodeID)
 	}
 }
+
+func Test_getPluginTypeWithID(t *testing.T) {
+	{
+		input := "ext_basicauth/123"
+		assert.Equal(t, "ext_basicauth", getPluginType(input))
+		assert.Equal(t, "123", getPluginID(input))
+		assert.Equal(t, "ext_basicauth", getPluginTypeAndName(input))
+		assert.Equal(t, false, isPluginTypeWithID(input))
+
+	}
+	{
+		input := "ext_basicauth"
+		assert.Equal(t, "ext_basicauth", getPluginType(input))
+		assert.Equal(t, "", getPluginID(input))
+		assert.Equal(t, "ext_basicauth", getPluginTypeAndName(input))
+		assert.Equal(t, false, isPluginTypeWithID(input))
+	}
+	{
+		input := "ext_basicauth/name/123"
+		assert.Equal(t, "ext_basicauth", getPluginType(input))
+		assert.Equal(t, "123", getPluginID(input))
+		assert.Equal(t, "ext_basicauth/name", getPluginTypeAndName(input))
+		assert.Equal(t, true, isPluginTypeWithID(input))
+	}
+}

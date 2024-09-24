@@ -114,7 +114,7 @@ func (p *pluginv2Runner) AddPlugin(pluginMeta *pipeline.PluginMeta, category plu
 		}
 	case pluginExtension:
 		if extension, ok := plugin.(pipeline.Extension); ok {
-			return p.addExtension(pluginMeta.PluginTypeWithID, extension)
+			return p.addExtension(getPluginTypeAndName(pluginMeta.PluginTypeWithID), extension)
 		}
 	default:
 		return pluginCategoryUndefinedError(category)
