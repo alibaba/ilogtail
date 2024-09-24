@@ -1570,17 +1570,22 @@ int32_t AppConfig::MergeInt32(int32_t defaultValue,
                               const Json::Value& localConf,
                               const Json::Value& envConfig,
                               const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int32_t value)>& validateFn) {
     int32_t res = defaultValue;
-    if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
-        res = localConf[name].asInt64();
+    if (localConf.isMember(name) && localConf[name].isInt() && validateFn(name, localConf[name].asInt())) {
+        res = localConf[name].asInt();
     }
-    if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
-        res = envConfig[name].asInt64();
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt()
+        && validateFn(name, localInstanceConfig[name].asInt())) {
+        res = localInstanceConfig[name].asInt();
     }
-    if (remoteConf.isMember(name) && remoteConf[name].isInt64() && validateFn(name, remoteConf[name].asInt64())) {
-        res = remoteConf[name].asInt64();
+    if (envConfig.isMember(name) && envConfig[name].isInt() && validateFn(name, envConfig[name].asInt())) {
+        res = envConfig[name].asInt();
+    }
+    if (remoteConf.isMember(name) && remoteConf[name].isInt() && validateFn(name, remoteConf[name].asInt())) {
+        res = remoteConf[name].asInt();
     }
     return res;
 }
@@ -1589,11 +1594,16 @@ int64_t AppConfig::MergeInt64(int64_t defaultValue,
                               const Json::Value& localConf,
                               const Json::Value& envConfig,
                               const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int64_t value)>& validateFn) {
     int64_t res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isInt64() && validateFn(name, localConf[name].asInt64())) {
         res = localConf[name].asInt64();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isInt64()
+        && validateFn(name, localInstanceConfig[name].asInt64())) {
+        res = localInstanceConfig[name].asInt64();
     }
     if (envConfig.isMember(name) && envConfig[name].isInt64() && validateFn(name, envConfig[name].asInt64())) {
         res = envConfig[name].asInt64();
@@ -1608,11 +1618,16 @@ bool AppConfig::MergeBool(bool defaultValue,
                           const Json::Value& localConf,
                           const Json::Value& envConfig,
                           const Json::Value& remoteConf,
+                          const Json::Value& localInstanceConfig,
                           const std::string name,
                           const std::function<bool(const std::string key, const bool value)>& validateFn) {
     bool res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isBool() && validateFn(name, localConf[name].asBool())) {
         res = localConf[name].asBool();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isBool()
+        && validateFn(name, localInstanceConfig[name].asBool())) {
+        res = localInstanceConfig[name].asBool();
     }
     if (envConfig.isMember(name) && envConfig[name].isBool() && validateFn(name, envConfig[name].asBool())) {
         res = envConfig[name].asBool();
@@ -1628,11 +1643,16 @@ AppConfig::MergeString(const std::string& defaultValue,
                        const Json::Value& localConf,
                        const Json::Value& envConfig,
                        const Json::Value& remoteConf,
+                       const Json::Value& localInstanceConfig,
                        const std::string name,
                        const std::function<bool(const std::string key, const std::string& value)>& validateFn) {
     std::string res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isString() && validateFn(name, localConf[name].asString())) {
         res = localConf[name].asString();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isString()
+        && validateFn(name, localInstanceConfig[name].asString())) {
+        res = localInstanceConfig[name].asString();
     }
     if (envConfig.isMember(name) && envConfig[name].isString() && validateFn(name, envConfig[name].asString())) {
         res = envConfig[name].asString();
@@ -1647,11 +1667,16 @@ double AppConfig::MergeDouble(double defaultValue,
                               const Json::Value& localConf,
                               const Json::Value& envConfig,
                               const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const double value)>& validateFn) {
     double res = defaultValue;
     if (localConf.isMember(name) && localConf[name].isDouble() && validateFn(name, localConf[name].asDouble())) {
         res = localConf[name].asDouble();
+    }
+    if (localInstanceConfig.isMember(name) && localInstanceConfig[name].isDouble()
+        && validateFn(name, localInstanceConfig[name].asDouble())) {
+        res = localInstanceConfig[name].asDouble();
     }
     if (envConfig.isMember(name) && envConfig[name].isDouble() && validateFn(name, envConfig[name].asDouble())) {
         res = envConfig[name].asDouble();

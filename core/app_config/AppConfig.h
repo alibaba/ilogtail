@@ -282,6 +282,7 @@ public:
 
     // 获取全局参数方法
     const Json::Value& GetLocalConfig() { return mLocalConfig; };
+    const Json::Value& GetLocalInstanceConfig() { return mLocalInstanceConfig; };
     const Json::Value& GetEnvConfig() { return mEnvConfig; };
     const Json::Value& GetRemoteConfig() { return mRemoteConfig; };
 
@@ -289,6 +290,7 @@ public:
                               const Json::Value& localConf,
                               const Json::Value& envConfig,
                               const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int32_t value)>& validateFn);
 
@@ -296,6 +298,7 @@ public:
                               const Json::Value& localConf,
                               const Json::Value& envConfig,
                               const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const int64_t value)>& validateFn);
 
@@ -303,6 +306,7 @@ public:
                           const Json::Value& localConf,
                           const Json::Value& envConfig,
                           const Json::Value& remoteConf,
+                          const Json::Value& localInstanceConfig,
                           const std::string name,
                           const std::function<bool(const std::string key, const bool value)>& validateFn);
 
@@ -311,6 +315,7 @@ public:
                 const Json::Value& localConf,
                 const Json::Value& envConfig,
                 const Json::Value& remoteConf,
+                const Json::Value& localInstanceConfig,
                 const std::string name,
                 const std::function<bool(const std::string key, const std::string& value)>& validateFn);
 
@@ -318,6 +323,7 @@ public:
                               const Json::Value& localConf,
                               const Json::Value& envConfig,
                               const Json::Value& remoteConf,
+                              const Json::Value& localInstanceConfig,
                               const std::string name,
                               const std::function<bool(const std::string key, const double value)>& validateFn);
 

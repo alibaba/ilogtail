@@ -53,6 +53,7 @@ bool FlusherRunner::Init() {
 
 bool FlusherRunner::LoadModuleConfig(bool isInit) {
     const auto& localConf = AppConfig::GetInstance()->GetLocalConfig();
+    const auto& localInstanceConfig = AppConfig::GetInstance()->GetLocalInstanceConfig();
     const auto& envConf = AppConfig::GetInstance()->GetEnvConfig();
     const auto& remoteConf = AppConfig::GetInstance()->GetRemoteConfig();
     auto ValidateFn = [](const std::string& key, const int32_t value) -> bool {
@@ -69,14 +70,20 @@ bool FlusherRunner::LoadModuleConfig(bool isInit) {
                                                    localConf,
                                                    envConf,
                                                    remoteConf,
+                                                   localInstanceConfig,
                                                    "max_bytes_per_sec",
                                                    ValidateFn);
         AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
         UpdateSendFlowControl();
         return true;
     }
-    auto maxBytePerSec = AppConfig::MergeInt32(
-        AppConfig::GetInstance()->GetMaxBytePerSec(), localConf, envConf, remoteConf, "max_bytes_per_sec", ValidateFn);
+    auto maxBytePerSec = AppConfig::MergeInt32(AppConfig::GetInstance()->GetMaxBytePerSec(),
+                                               localConf,
+                                               envConf,
+                                               remoteConf,
+                                               localInstanceConfig,
+                                               "max_bytes_per_sec",
+                                               ValidateFn);
     AppConfig::GetInstance()->SetMaxBytePerSec(maxBytePerSec);
     UpdateSendFlowControl();
 
